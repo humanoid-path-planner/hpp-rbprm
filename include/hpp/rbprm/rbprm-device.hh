@@ -34,7 +34,7 @@ namespace hpp {
     struct HPP_RBPRM_DLLAPI RbPrmDevice
     {
     public:
-        static RbPrmDevicePtr_t create (const DevicePtr_t& robotTrunk, const DevicePtr_t& robotRom) throw();
+        static RbPrmDevicePtr_t create (const DevicePtr_t& robotTrunk, const DevicePtr_t& robotRom);
 
     public:
         /// Get current configuration
@@ -52,7 +52,7 @@ namespace hpp {
       const DevicePtr_t robotRom_;
 
     protected:
-      RbPrmDevice (const DevicePtr_t& robotTrunk, const DevicePtr_t& robotRom) throw();
+      RbPrmDevice (const DevicePtr_t& robotTrunk, const DevicePtr_t& robotRom);
     }; // class ConfigValidation
   } // namespace rbprm
 } // namespace hpp

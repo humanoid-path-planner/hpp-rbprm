@@ -19,18 +19,36 @@
 namespace hpp {
   namespace model {
 
-    RbPrmDevicePtr_t RbPrmDevice::create (const DevicePtr_t& robotTrunk, const DevicePtr_t& robotRom) throw()
+
+      class rbprmexception : public std::exception
+      {
+      public:
+          rbprmexception(const std::string& message)
+              : exception()
+              , message_(message) {}
+
+          ~rbprmexception() throw(){}
+
+          const char * what () const throw ()
+          {
+              return message_.c_str();
+          }
+      public:
+          const std::string message_;
+      };
+
+    RbPrmDevicePtr_t RbPrmDevice::create (const DevicePtr_t& robotTrunk, const DevicePtr_t& robotRom)
     {
         RbPrmDevice* res = new RbPrmDevice(robotTrunk, robotRom);
         return RbPrmDevicePtr_t(res);
     }
 
-    RbPrmDevice::RbPrmDevice (const DevicePtr_t& robotTrunk, const DevicePtr_t& robotRom) throw()
+    RbPrmDevice::RbPrmDevice (const DevicePtr_t& robotTrunk, const DevicePtr_t& robotRom)
         : robotTrunk_(robotTrunk)
         , robotRom_(robotRom)
     {
         if(robotTrunk->configSize() != robotRom->configSize())
-            throw std::runtime_error(
+            throw rbprmexception(
                     "In RbPrmDevice initialization; trunk and rom must have the same dimensionality.");
     }
 
