@@ -17,6 +17,7 @@
 #ifndef HPP_RBPRM_SHOOTER_HH
 # define HPP_RBPRM_SHOOTER_HH
 
+# include <hpp/rbprm/config.hh>
 # include <hpp/model/joint.hh>
 # include <hpp/model/joint-configuration.hh>
 # include <hpp/core/configuration-shooter.hh>
@@ -26,7 +27,7 @@ namespace hpp {
 /// \{
 
 /// Samples configuration which respect the reachability condition
-    class RbPrmShooter : public core::ConfigurationShooter{
+    class HPP_RBPRM_DLLAPI RbPrmShooter : public core::ConfigurationShooter{
     ///
     /// Note that translation joints have to be bounded.
     RbPrmShooter (const core::DevicePtr_t& robot);

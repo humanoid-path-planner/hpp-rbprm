@@ -19,6 +19,7 @@
 #ifndef HPP_RBPRM_DEVICE_HH
 # define HPP_RBPRM_DEVICE_HH
 
+# include <hpp/rbprm/config.hh>
 # include <hpp/model/device.hh>
 
 namespace hpp {
@@ -30,7 +31,7 @@ namespace hpp {
     struct RbPrmDevice;
     typedef boost::shared_ptr <RbPrmDevice> RbPrmDevicePtr_t;
 
-    struct RbPrmDevice
+    struct HPP_RBPRM_DLLAPI RbPrmDevice
     {
     public:
         static RbPrmDevicePtr_t create (const DevicePtr_t& robotTrunk, const DevicePtr_t& robotRom) throw();

@@ -15,6 +15,7 @@
 // hpp-rbprm. If not, see <http://www.gnu.org/licenses/>.
 
 #include "hpp/rbprm/rbprm-validation.hh"
+#include "hpp/core/collision-validation.hh"
 
 
 namespace hpp {
@@ -24,7 +25,7 @@ namespace hpp {
     RbPrmValidationPtr_t RbPrmValidation::create
     (const model::RbPrmDevicePtr_t& robot)
     {
-      RbPrmValidationPtr_t* ptr = new RbPrmValidation (robot);
+      RbPrmValidation* ptr = new RbPrmValidation (robot);
       return RbPrmValidationPtr_t (ptr);
     }
 
