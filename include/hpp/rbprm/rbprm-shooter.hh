@@ -18,25 +18,52 @@
 # define HPP_RBPRM_SHOOTER_HH
 
 # include <hpp/rbprm/config.hh>
+# include <hpp/rbprm/rbprm-device.hh>
+# include <hpp/rbprm/rbprm-validation.hh>
 # include <hpp/model/joint.hh>
 # include <hpp/model/joint-configuration.hh>
 # include <hpp/core/configuration-shooter.hh>
 
+# include <vector>
+
 namespace hpp {
+    namespace rbprm {
+
+    struct TrianglePoints
+    {
+        fcl::Vec3f p1, p2, p3;
+    };
+
 /// \addtogroup configuration_sampling
 /// \{
-
+    typedef std::vector<fcl::CollisionObjectConstPtr_t> T_CollisionObject;
 /// Samples configuration which respect the reachability condition
     class HPP_RBPRM_DLLAPI RbPrmShooter : public core::ConfigurationShooter{
     ///
+    public:
     /// Note that translation joints have to be bounded.
-    RbPrmShooter (const core::DevicePtr_t& robot);
+    RbPrmShooter (const model::RbPrmDevicePtr_t& robot,
+                  const T_CollisionObject &geometries,
+                  rbprm::RbPrmValidationPtr_t& validator);
+
     virtual core::ConfigurationPtr_t shoot () const;
 
-  private:
-    const core::DevicePtr_t& robot_;
+    public:
+        typedef std::pair<fcl::Vec3f, TrianglePoints> T_TriangleNormal;
+
+    private:
+        void InitWeightedTriangles(const T_CollisionObject &geometries);
+        const T_TriangleNormal& RandomPointIntriangle() const;
+        const T_TriangleNormal& WeightedTriangle() const;
+
+    private:
+        std::vector<double> weights_;
+        std::vector<T_TriangleNormal> triangles_;
+        const model::RbPrmDevicePtr_t& robot_;
+        rbprm::RbPrmValidationPtr_t& validator_;
     }; // class RbprmShooter
 /// \}
+    } // namespace rbprm
 } // namespace hpp
 #endif // HPP_RBPRM_SHOOTER_HH
 
