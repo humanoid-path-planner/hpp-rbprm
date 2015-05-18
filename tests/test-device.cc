@@ -44,20 +44,32 @@ using hpp::model::CollisionObject;
 using hpp::model::CollisionObjectPtr_t;
 using fcl::CollisionGeometry;
 using fcl::CollisionGeometryPtr_t;
+using hpp::rbprm::RbPrmValidation;
+using hpp::rbprm::RbPrmValidationPtr_t;
 
 
 namespace
 {
     void InitGeometries(JointPtr_t romJoint, JointPtr_t trunkJoint)
     {
-        CollisionGeometryPtr_t box (new fcl::Box (.2, .4, .6));
-        CollisionObjectPtr_t obstacle = CollisionObject::create
-            (box, fcl::Transform3f (), "box");
+        CollisionGeometryPtr_t trunk (new fcl::Box (1, 1, 1));
+        CollisionObjectPtr_t obstacleTrunk = CollisionObject::create
+            (trunk, fcl::Transform3f (), "trunkbox");
+
+        CollisionGeometryPtr_t rom (new fcl::Box (1, 1, 1));
+        CollisionObjectPtr_t obstacleRom = CollisionObject::create
+            (rom, fcl::Transform3f (), "rombox");
+
+        obstacleTrunk->move(fcl::Vec3f(0,0,0));
+        obstacleRom->move(fcl::Vec3f(0.5,0,0));
         BodyPtr_t body = new Body;
         body->name ("trunk");
-        body->addInnerObject(obstacle, true, true);
         trunkJoint->setLinkedBody (body);
+        body->addInnerObject(obstacleTrunk, true, true);
+        body = new Body;
+        body->name ("rom");
         romJoint->setLinkedBody (body);
+        body->addInnerObject(obstacleRom, true, true);
     }
 
     RbPrmDevicePtr_t initRbPrmDeviceTest()
@@ -72,6 +84,7 @@ namespace
         trunk->rootJoint(jointTrTrunk);
         jointTrRom->addChildJoint (jointSO3Rom);
         jointTrTrunk->addChildJoint (jointSO3Trunk);
+        InitGeometries(jointTrRom, jointTrTrunk);
         RbPrmDevicePtr_t rbPrmDevice = RbPrmDevice::create(trunk, rom);
         return rbPrmDevice;
     }
@@ -93,6 +106,23 @@ BOOST_AUTO_TEST_CASE (dualCreationDifferentDofsInRobotFail) {
     delete jointSO3;
 }
 
+BOOST_AUTO_TEST_CASE (dualCreationReachabilityCondition) {
+    RbPrmDevicePtr_t robot = initRbPrmDeviceTest();
+    RbPrmValidationPtr_t validator(RbPrmValidation::create(robot));
+
+    CollisionGeometryPtr_t colGeom (new fcl::Box (1, 1, 1));
+    CollisionObjectPtr_t colObject = CollisionObject::create(colGeom, fcl::Transform3f (), "obstacle");
+    colObject->move(fcl::Vec3f(1.3,0,0));
+    validator->addObstacle(colObject);
+    BOOST_CHECK_MESSAGE (validator->validate(robot->currentConfiguration()), "Reachability condition should be verified");
+
+    colObject->move(fcl::Vec3f(0.5,0,0));
+    BOOST_CHECK_MESSAGE (!validator->validate(robot->currentConfiguration()),
+                                              "Reachability condition should not be verified: collision with trunk");
+    colObject->move(fcl::Vec3f(-0.5,0,0));
+    BOOST_CHECK_MESSAGE (!validator->validate(robot->currentConfiguration()),
+                                              "Reachability condition should not be verified: no collision with rom");
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
