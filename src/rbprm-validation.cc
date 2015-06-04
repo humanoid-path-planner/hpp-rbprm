@@ -30,7 +30,7 @@ namespace hpp {
     }
 
     RbPrmValidation::RbPrmValidation (const model::RbPrmDevicePtr_t& robot)
-        : trunkValidation_(CollisionValidation::create(robot->robotTrunk_))
+        : trunkValidation_(CollisionValidation::create(robot))
         , romValidation_(CollisionValidation::create(robot->robotRom_))
     {
         // NOTHING

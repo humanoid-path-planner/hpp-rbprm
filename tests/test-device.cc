@@ -29,14 +29,14 @@ BOOST_AUTO_TEST_CASE (dualCreation) {
     initRbPrmDeviceTest();
 }
 
-BOOST_AUTO_TEST_CASE (dualCreationDifferentDofsInRobotFail) {
+/*BOOST_AUTO_TEST_CASE (dualCreationDifferentDofsInRobotFail) {
     DevicePtr_t trunk = Device::create("trunk");
     DevicePtr_t rom = Device::create("rom");
     JointSO3* jointSO3 = new JointSO3 (fcl::Transform3f());
     rom->rootJoint(jointSO3);
     BOOST_CHECK_THROW(RbPrmDevice::create(trunk, rom), std::exception);
     delete jointSO3;
-}
+}*/
 
 BOOST_AUTO_TEST_CASE (dualCreationReachabilityCondition) {
     RbPrmDevicePtr_t robot = initRbPrmDeviceTest();
@@ -46,13 +46,13 @@ BOOST_AUTO_TEST_CASE (dualCreationReachabilityCondition) {
     CollisionObjectPtr_t colObject = CollisionObject::create(colGeom, fcl::Transform3f (), "obstacle");
     colObject->move(fcl::Vec3f(1.3,0,0));
     validator->addObstacle(colObject);
-    BOOST_CHECK_MESSAGE (validator->validate(robot->currentConfiguration()), "Reachability condition should be verified");
+    BOOST_CHECK_MESSAGE (validator->validate(robot->Device::currentConfiguration()), "Reachability condition should be verified");
 
     colObject->move(fcl::Vec3f(0.5,0,0));
-    BOOST_CHECK_MESSAGE (!validator->validate(robot->currentConfiguration()),
+    BOOST_CHECK_MESSAGE (!validator->validate(robot->Device::currentConfiguration()),
                                               "Reachability condition should not be verified: collision with trunk");
     colObject->move(fcl::Vec3f(-0.5,0,0));
-    BOOST_CHECK_MESSAGE (!validator->validate(robot->currentConfiguration()),
+    BOOST_CHECK_MESSAGE (!validator->validate(robot->Device::currentConfiguration()),
                                               "Reachability condition should not be verified: no collision with rom");
 }
 

@@ -14,10 +14,11 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-rbprm. If not, see <http://www.gnu.org/licenses/>.
 
-#include "hpp/rbprm/rbprm-shooter.hh"
-#include "hpp/model/collision-object.hh"
+#include <hpp/rbprm/rbprm-shooter.hh>
+#include <hpp/model/collision-object.hh>
 #include <hpp/fcl/collision_object.h>
 #include <hpp/fcl/BVH/BVH_model.h>
+#include <hpp/core/collision-validation.hh>
 
 namespace hpp {
 using namespace core;
@@ -44,6 +45,29 @@ namespace
         double s = 0.5 * (a + b + c);
         return sqrt(s * (s-a) * (s-b) * (s-c));
     }
+
+    void SetConfigTranslation(ConfigurationPtr_t config, const Vec3f& translation)
+    {
+        for(int i =0; i<3; ++i)
+        {
+            (*config)(i)=translation[i];
+        }
+    }
+
+    void SetConfigRotation(ConfigurationPtr_t config, const Vec3f& rotation)
+    {
+        for(int i =0; i<3; ++i)
+        {
+            (*config)(i+3)=rotation[i];
+        }
+    }
+
+    void SetConfig6D(ConfigurationPtr_t config, const Vec3f& translation, const Vec3f& rotation)
+    {
+        SetConfigTranslation(config, translation);
+        SetConfigRotation(config, rotation);
+    }
+
 } // namespace
 
   namespace rbprm {
@@ -108,12 +132,39 @@ namespace
 
 hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
 {
-    const DevicePtr_t& robot = robot_->robotTrunk_;
-    JointVector_t jv = robot->getJointVector ();
-    ConfigurationPtr_t config (new Configuration_t (robot->configSize ()));
-    int limit = 10000;
+    //const DevicePtr_t& robot = robot_->robotTrunk_;
+    JointVector_t jv = robot_->getJointVector ();
+    ConfigurationPtr_t config (new Configuration_t (robot_->configSize()));
+    std::size_t limit = 10000;
+    //std::size_t limit2 = 100; // TODO PARAMETERIZE ?
     while(limit >0)
     {
+        // pick one triangle randomly
+        const T_TriangleNormal* sampled(0);
+        double r = ((double) rand() / (RAND_MAX));
+        if(r > 0.3)
+            sampled = &RandomPointIntriangle();
+        else
+            sampled = &WeightedTriangle();
+        const TrianglePoints& tri = sampled->second;
+        //const Vec3f& triangleNormal = sampled->first;
+        //http://stackoverflow.com/questions/4778147/sample-random-point-in-triangle
+        double r1, r2;
+        r1 = ((double) rand() / (RAND_MAX)); r2 = ((double) rand() / (RAND_MAX));
+        Vec3f p = (1 - sqrt(r1)) * tri.p1 + (sqrt(r1) * (1 - r2)) * tri.p2
+                + (sqrt(r1) * r2) * tri.p3;
+
+        //set configuration position to sampled point
+        SetConfigTranslation(config, p);
+        /*while(!validator_->validate(*config) || validator_->romValidation_->validate(*config))
+        {
+
+        }*/
+
+
+
+
+
         for (JointVector_t::const_iterator itJoint = jv.begin ();
          itJoint != jv.end (); itJoint++)
         {
@@ -121,12 +172,12 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
             (*itJoint)->configuration ()->uniformlySample (rank, *config);
         }
         // Shoot extra configuration variables
-        size_type extraDim = robot->extraConfigSpace ().dimension ();
-        size_type offset = robot->configSize () - extraDim;
+        size_type extraDim = robot_->extraConfigSpace ().dimension ();
+        size_type offset = robot_->configSize () - extraDim;
         for (size_type i=0; i<extraDim; ++i)
         {
-            value_type lower = robot->extraConfigSpace ().lower (i);
-            value_type upper = robot->extraConfigSpace ().upper (i);
+            value_type lower = robot_->extraConfigSpace ().lower (i);
+            value_type upper = robot_->extraConfigSpace ().upper (i);
             value_type range = upper - lower;
             if ((range < 0) ||
               (range == std::numeric_limits<double>::infinity()))

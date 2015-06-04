@@ -37,30 +37,41 @@ namespace hpp {
           const std::string message_;
       };
 
-    RbPrmDevicePtr_t RbPrmDevice::create (const DevicePtr_t& robotTrunk, const DevicePtr_t& robotRom)
+    RbPrmDevicePtr_t RbPrmDevice::create (const std::string& name, DevicePtr_t& robotRom)
     {
-        RbPrmDevice* res = new RbPrmDevice(robotTrunk, robotRom);
-        return RbPrmDevicePtr_t(res);
+        RbPrmDevice* rbprmDevice = new RbPrmDevice(name, robotRom);
+        RbPrmDevicePtr_t res (rbprmDevice);
+        res->init (res);
+        return res;
     }
 
-    RbPrmDevice::RbPrmDevice (const DevicePtr_t& robotTrunk, const DevicePtr_t& robotRom)
-        : robotTrunk_(robotTrunk)
-        , robotRom_(robotRom)
+    RbPrmDevice::~RbPrmDevice()
     {
-        if(robotTrunk->configSize() != robotRom->configSize())
-            throw rbprmexception(
-                    "In RbPrmDevice initialization; trunk and rom must have the same dimensionality.");
+        // NOTHING
+    }
+
+    // ========================================================================
+
+    void RbPrmDevice::init(const RbPrmDeviceWkPtr_t& weakPtr)
+    {
+        Device::init (weakPtr);
+        weakPtr_ = weakPtr;
     }
 
     bool RbPrmDevice::currentConfiguration (ConfigurationIn_t configuration)
     {
-        robotTrunk_->currentConfiguration(configuration);
-        return robotRom_->currentConfiguration(configuration);
+        return Device::currentConfiguration(configuration) &&
+        robotRom_->currentConfiguration(configuration);
     }
 
-    const Configuration_t& RbPrmDevice::currentConfiguration () const
+    RbPrmDevice::RbPrmDevice (const std::string& name, const DevicePtr_t& robotRom)
+        : Device(name)
+        , robotRom_(robotRom)
+        , weakPtr_()
     {
-        return robotTrunk_->currentConfiguration();
+        /*if(robotTrunk->configSize() != robotRom->configSize())
+            throw rbprmexception(
+                    "In RbPrmDevice initialization; trunk and rom must have the same dimensionality.");*/
     }
   } // model
 } //hpp

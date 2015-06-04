@@ -33,13 +33,17 @@ BOOST_AUTO_TEST_CASE (shooterCreation) {
     RbPrmValidationPtr_t validator(RbPrmValidation::create(robot));
 
     CollisionObjectPtr_t colObject = MeshObstacleBox();
-    colObject->move(fcl::Vec3f(1.3,0,0));
+    colObject->move(fcl::Vec3f(11.3,0,0));
     validator->addObstacle(colObject);
 
     T_CollisionObject collisionObjects;
     collisionObjects.push_back(colObject->fcl());
     RbPrmShooter shooter(robot, collisionObjects, validator);
-    shooter.shoot();
+    for(int i =0; i< 1000; ++i)
+    {
+        BOOST_CHECK_MESSAGE (validator->validate(*(shooter.shoot()), false),
+                                                  "Reachability condition should be verified by shooter");
+    }
 
 
 }

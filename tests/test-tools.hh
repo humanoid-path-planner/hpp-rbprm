@@ -73,8 +73,8 @@ namespace
 
     RbPrmDevicePtr_t initRbPrmDeviceTest()
     {
-        DevicePtr_t trunk = Device::create("trunk");
         DevicePtr_t rom = Device::create("rom");
+        RbPrmDevicePtr_t trunk = RbPrmDevice::create("trunk", rom);
         JointSO3* jointSO3Trunk = new JointSO3 (fcl::Transform3f());
         JointSO3* jointSO3Rom = new JointSO3 (fcl::Transform3f());
         jointSO3Trunk->isBounded (0, true);
@@ -125,8 +125,7 @@ namespace
         jointTrRom->addChildJoint (jointSO3Rom);
         jointTrTrunk->addChildJoint (jointSO3Trunk);
         InitGeometries(jointTrRom, jointTrTrunk);
-        RbPrmDevicePtr_t rbPrmDevice = RbPrmDevice::create(trunk, rom);
-        return rbPrmDevice;
+        return trunk;
     }
 
     CollisionObjectPtr_t MeshObstacleBox()

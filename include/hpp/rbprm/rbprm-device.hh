@@ -25,34 +25,39 @@
 namespace hpp {
 
   namespace model {
+    HPP_PREDEF_CLASS(RbPrmDevice);
+
     /// Dual representation of a robot for Reachability Based planning:
     /// Collision free part of the robot vs Range Of Motion of the limbs.
     ///
-    struct RbPrmDevice;
+    class RbPrmDevice;
     typedef boost::shared_ptr <RbPrmDevice> RbPrmDevicePtr_t;
 
-    struct HPP_RBPRM_DLLAPI RbPrmDevice
+    class HPP_RBPRM_DLLAPI RbPrmDevice : public Device
     {
     public:
-        static RbPrmDevicePtr_t create (const DevicePtr_t& robotTrunk, const DevicePtr_t& robotRom);
+        static RbPrmDevicePtr_t create (const std::string& name, DevicePtr_t& robotRom);
 
     public:
-        /// Get current configuration
-        const Configuration_t& currentConfiguration () const;
-
-        /// Set current configuration
-        /// \return True if the current configuration was modified and false if
-        ///         the current configuration did not change.
-        bool currentConfiguration (ConfigurationIn_t configuration);
+        virtual ~RbPrmDevice();
 
     public:
-      /// Collision free part of the dual representation
-      const DevicePtr_t robotTrunk_;
+        virtual bool currentConfiguration (ConfigurationIn_t configuration);
+
+    public:
       /// Range Of Motion of the robot
       const DevicePtr_t robotRom_;
 
     protected:
-      RbPrmDevice (const DevicePtr_t& robotTrunk, const DevicePtr_t& robotRom);
+      RbPrmDevice (const std::string& name, const DevicePtr_t& robotRom);
+
+      ///
+      /// \brief Initialization.
+      ///
+      void init (const RbPrmDeviceWkPtr_t& weakPtr);
+
+    private:
+      RbPrmDeviceWkPtr_t weakPtr_;
     }; // class ConfigValidation
   } // namespace rbprm
 } // namespace hpp
