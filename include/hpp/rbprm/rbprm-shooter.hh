@@ -44,12 +44,18 @@ namespace hpp {
     /// Note that translation joints have to be bounded.
     RbPrmShooter (const model::RbPrmDevicePtr_t& robot,
                   const T_CollisionObject &geometries,
-                  rbprm::RbPrmValidationPtr_t& validator);
+                  rbprm::RbPrmValidationPtr_t& validator,
+                  const std::size_t shootLimit = 10000,
+                  const std::size_t displacementLimit = 100);
 
     virtual core::ConfigurationPtr_t shoot () const;
 
     public:
         typedef std::pair<fcl::Vec3f, TrianglePoints> T_TriangleNormal;
+
+    public:
+        const std::size_t shootLimit_;
+        const std::size_t displacementLimit_;
 
     private:
         void InitWeightedTriangles(const T_CollisionObject &geometries);

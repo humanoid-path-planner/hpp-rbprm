@@ -36,7 +36,7 @@ namespace hpp {
         // NOTHING
     }
 
-
+#include <iostream>
     bool RbPrmValidation::validate (const Configuration_t& config,
                     bool throwIfInValid)
     {

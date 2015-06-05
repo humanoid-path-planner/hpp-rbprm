@@ -19,8 +19,7 @@
 namespace hpp {
   namespace model {
 
-
-      class rbprmexception : public std::exception
+      /*class rbprmexception : public std::exception
       {
       public:
           rbprmexception(const std::string& message)
@@ -35,7 +34,7 @@ namespace hpp {
           }
       public:
           const std::string message_;
-      };
+      };*/
 
     RbPrmDevicePtr_t RbPrmDevice::create (const std::string& name, DevicePtr_t& robotRom)
     {
@@ -60,9 +59,15 @@ namespace hpp {
 
     bool RbPrmDevice::currentConfiguration (ConfigurationIn_t configuration)
     {
-        return Device::currentConfiguration(configuration) &&
-        robotRom_->currentConfiguration(configuration);
+        Device::currentConfiguration(configuration);
+        return robotRom_->currentConfiguration(configuration);
     }
+
+    /*bool RbPrmDevice::setCurrentConfiguration (ConfigurationIn_t configuration)
+    {
+        Device::setCurrentConfiguration(configuration);
+        return robotRom_->setCurrentConfiguration(configuration);
+    }*/
 
     RbPrmDevice::RbPrmDevice (const std::string& name, const DevicePtr_t& robotRom)
         : Device(name)

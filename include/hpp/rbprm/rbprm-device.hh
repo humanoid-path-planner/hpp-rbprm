@@ -43,6 +43,7 @@ namespace hpp {
 
     public:
         virtual bool currentConfiguration (ConfigurationIn_t configuration);
+        //virtual bool setCurrentConfiguration(ConfigurationIn_t configuration);
 
     public:
       /// Range Of Motion of the robot
