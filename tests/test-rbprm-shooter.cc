@@ -38,10 +38,10 @@ BOOST_AUTO_TEST_CASE (shooterCreation) {
 
     T_CollisionObject collisionObjects;
     collisionObjects.push_back(colObject->fcl());
-    RbPrmShooter shooter(robot, collisionObjects, validator);
-    for(int i =0; i< 1000; ++i)
+    RbPrmShooterPtr_t shooter = RbPrmShooter::create(robot, collisionObjects, validator);
+    for(int i =0; i< 100; ++i)
     {
-        BOOST_CHECK_MESSAGE (validator->validate(*(shooter.shoot()), false),
+        BOOST_CHECK_MESSAGE (validator->validate(*(shooter->shoot()), false),
                                                   "Reachability condition should be verified by shooter");
     }
 

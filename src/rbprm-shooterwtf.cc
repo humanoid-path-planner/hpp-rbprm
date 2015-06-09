@@ -129,9 +129,9 @@ namespace
           {
               TrianglePoints tri;
               Triangle fcltri = model->tri_indices[i];
-              tri.p1 = (*objit)->getRotation() * model->vertices[fcltri[0]] + (*objit)->getTranslation();
-              tri.p2 = (*objit)->getRotation() * model->vertices[fcltri[1]] + (*objit)->getTranslation();
-              tri.p3 = (*objit)->getRotation() * model->vertices[fcltri[2]] + (*objit)->getTranslation();;
+              tri.p1 =model->vertices[fcltri[0]];
+              tri.p2 =model->vertices[fcltri[1]];
+              tri.p3 =model->vertices[fcltri[2]];
               double weight = TriangleArea(tri);
               sum += weight;
               weights_.push_back(weight);
@@ -173,6 +173,7 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
     JointVector_t jv = robot_->getJointVector ();
     ConfigurationPtr_t config (new Configuration_t (robot_->configSize()));
     std::size_t limit = shootLimit_;
+    //std::size_t limit2 = 100; // TODO PARAMETERIZE ?
     while(limit >0)
     {
         // pick one triangle randomly
@@ -218,9 +219,8 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
                 // retrieve Contact information
                 const Vec3f& direction = report.result.getContact(0).normal;
                 // v0 move away from normal
-                Translate(config, -direction *
-                (std::abs (report.result.getContact(0).penetration_depth)
-                + ((double) rand() / (RAND_MAX))));
+                Translate(config, -direction * report.result.getContact(0).penetration_depth +
+                 ((double) rand() / (RAND_MAX)));
                  limitDis--;
             }
         }
@@ -245,6 +245,7 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
         }
         if(found)
         {
+        std::cout << "nb trials " << this->shootLimit_ - limit << std::endl;
             return config;
         }
         limit--;

@@ -33,6 +33,9 @@ namespace hpp {
     {
         fcl::Vec3f p1, p2, p3;
     };
+    HPP_PREDEF_CLASS (RbPrmShooter);
+    typedef boost::shared_ptr <RbPrmShooter>
+    RbPrmShooterPtr_t;
 
 /// \addtogroup configuration_sampling
 /// \{
@@ -41,13 +44,12 @@ namespace hpp {
     class HPP_RBPRM_DLLAPI RbPrmShooter : public core::ConfigurationShooter{
     ///
     public:
-    /// Note that translation joints have to be bounded.
-    RbPrmShooter (const model::RbPrmDevicePtr_t& robot,
-                  const T_CollisionObject &geometries,
-                  rbprm::RbPrmValidationPtr_t& validator,
-                  const std::size_t shootLimit = 10000,
-                  const std::size_t displacementLimit = 100);
-
+        static RbPrmShooterPtr_t create (const model::RbPrmDevicePtr_t& robot,
+                                         const T_CollisionObject &geometries,
+                                         rbprm::RbPrmValidationPtr_t& validator,
+                                         const std::size_t shootLimit = 10000,
+                                         const std::size_t displacementLimit = 100);
+// todo so needs advanced fcl requests on COllisionValidation
     virtual core::ConfigurationPtr_t shoot () const;
 
     public:
@@ -56,6 +58,17 @@ namespace hpp {
     public:
         const std::size_t shootLimit_;
         const std::size_t displacementLimit_;
+
+
+    protected:
+    /// Note that translation joints have to be bounded.
+    RbPrmShooter (const model::RbPrmDevicePtr_t& robot,
+                  const T_CollisionObject &geometries,
+                  rbprm::RbPrmValidationPtr_t& validator,
+                  const std::size_t shootLimit = 10000,
+                  const std::size_t displacementLimit = 100);
+
+    void init (const RbPrmShooterPtr_t& self);
 
     private:
         void InitWeightedTriangles(const T_CollisionObject &geometries);
@@ -67,6 +80,7 @@ namespace hpp {
         std::vector<T_TriangleNormal> triangles_;
         const model::RbPrmDevicePtr_t& robot_;
         rbprm::RbPrmValidationPtr_t& validator_;
+        RbPrmShooterWkPtr_t weak_;
     }; // class RbprmShooter
 /// \}
     } // namespace rbprm

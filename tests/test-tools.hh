@@ -135,10 +135,10 @@ namespace
         p1.push_back(fcl::Vec3f(1,-1,-1));p1.push_back(fcl::Vec3f(1,-1,1));p1.push_back(fcl::Vec3f(-1,-1,1));p1.push_back(fcl::Vec3f(-1,-1,-1));
         p1.push_back(fcl::Vec3f(1,1,-1));p1.push_back(fcl::Vec3f(1,1,1));p1.push_back(fcl::Vec3f(-1,1,1));p1.push_back(fcl::Vec3f(-1,1,-1));
         std::vector<fcl::Triangle> t1;
-        t1.push_back(fcl::Triangle(2,3,4));t1.push_back(fcl::Triangle(8,7,6));t1.push_back(fcl::Triangle(5,6,2));
-        t1.push_back(fcl::Triangle(6,7,3));t1.push_back(fcl::Triangle(3,7,8));t1.push_back(fcl::Triangle(1,4,8));
-        t1.push_back(fcl::Triangle(1,2,4));t1.push_back(fcl::Triangle(5,8,6));t1.push_back(fcl::Triangle(1,5,2));
-        t1.push_back(fcl::Triangle(2,6,3));t1.push_back(fcl::Triangle(4,3,8));t1.push_back(fcl::Triangle(5,1,8));
+        t1.push_back(fcl::Triangle(1,2,3));t1.push_back(fcl::Triangle(7,6,5));t1.push_back(fcl::Triangle(4,5,1));
+        t1.push_back(fcl::Triangle(5,6,2));t1.push_back(fcl::Triangle(2,6,7));t1.push_back(fcl::Triangle(0,3,7));
+        t1.push_back(fcl::Triangle(0,1,3));t1.push_back(fcl::Triangle(4,7,5));t1.push_back(fcl::Triangle(0,4,1));
+        t1.push_back(fcl::Triangle(1,5,2));t1.push_back(fcl::Triangle(3,2,7));t1.push_back(fcl::Triangle(4,0,7));
         m1->beginModel();
         m1->addSubModel(p1, t1);
         m1->endModel();

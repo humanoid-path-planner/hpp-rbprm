@@ -18,6 +18,16 @@
 #include "hpp/core/collision-validation.hh"
 
 
+namespace
+{
+    hpp::core::CollisionValidationPtr_t tuneFclValidation(const hpp::model::RbPrmDevicePtr_t& robot)
+    {
+        hpp::core::CollisionValidationPtr_t validation = hpp::core::CollisionValidation::create(robot);
+        validation->collisionRequest_.enable_contact = true;
+        return validation;
+    }
+}
+
 namespace hpp {
   using namespace core;
   namespace rbprm {
@@ -30,7 +40,7 @@ namespace hpp {
     }
 
     RbPrmValidation::RbPrmValidation (const model::RbPrmDevicePtr_t& robot)
-        : trunkValidation_(CollisionValidation::create(robot))
+        : trunkValidation_(tuneFclValidation(robot))
         , romValidation_(CollisionValidation::create(robot->robotRom_))
     {
         // NOTHING
@@ -48,8 +58,8 @@ namespace hpp {
                     ValidationReport& validationReport,
                     bool throwIfInValid)
     {
-        return trunkValidation_->validate(config, throwIfInValid)
-             && !romValidation_->validate(config, validationReport, throwIfInValid);
+        return trunkValidation_->validate(config, validationReport, throwIfInValid)
+             && !romValidation_->validate(config, throwIfInValid);
     }
 
     void RbPrmValidation::addObstacle (const CollisionObjectPtr_t& object)
