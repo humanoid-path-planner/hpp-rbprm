@@ -39,17 +39,16 @@ namespace hpp {
 
 /// \addtogroup configuration_sampling
 /// \{
-    typedef std::vector<fcl::CollisionObjectConstPtr_t> T_CollisionObject;
 /// Samples configuration which respect the reachability condition
     class HPP_RBPRM_DLLAPI RbPrmShooter : public core::ConfigurationShooter{
     ///
     public:
         static RbPrmShooterPtr_t create (const model::RbPrmDevicePtr_t& robot,
-                                         const T_CollisionObject &geometries,
+                                         const core::ObjectVector_t &geometries,
                                          rbprm::RbPrmValidationPtr_t& validator,
                                          const std::size_t shootLimit = 10000,
                                          const std::size_t displacementLimit = 100);
-// todo so needs advanced fcl requests on COllisionValidation
+
     virtual core::ConfigurationPtr_t shoot () const;
 
     public:
@@ -63,7 +62,7 @@ namespace hpp {
     protected:
     /// Note that translation joints have to be bounded.
     RbPrmShooter (const model::RbPrmDevicePtr_t& robot,
-                  const T_CollisionObject &geometries,
+                  const core::ObjectVector_t &geometries,
                   rbprm::RbPrmValidationPtr_t& validator,
                   const std::size_t shootLimit = 10000,
                   const std::size_t displacementLimit = 100);
@@ -71,7 +70,7 @@ namespace hpp {
     void init (const RbPrmShooterPtr_t& self);
 
     private:
-        void InitWeightedTriangles(const T_CollisionObject &geometries);
+        void InitWeightedTriangles(const model::ObjectVector_t &geometries);
         const T_TriangleNormal& RandomPointIntriangle() const;
         const T_TriangleNormal& WeightedTriangle() const;
 

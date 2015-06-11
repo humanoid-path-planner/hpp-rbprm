@@ -87,7 +87,7 @@ namespace
 
   namespace rbprm {
     RbPrmShooterPtr_t RbPrmShooter::create (const model::RbPrmDevicePtr_t& robot,
-                                            const T_CollisionObject& geometries,
+                                            const ObjectVector_t& geometries,
                                             rbprm::RbPrmValidationPtr_t& validator,
                                             const std::size_t shootLimit,
                                             const std::size_t displacementLimit)
@@ -105,8 +105,8 @@ namespace
     }
 // TODO: outward
 
-  RbPrmShooter::RbPrmShooter (const model::RbPrmDevicePtr_t& robot,
-                              const T_CollisionObject& geometries,
+    RbPrmShooter::RbPrmShooter (const model::RbPrmDevicePtr_t& robot,
+                              const ObjectVector_t& geometries,
                               rbprm::RbPrmValidationPtr_t& validator,
                               const std::size_t shootLimit,
                               const std::size_t displacementLimit)
@@ -114,40 +114,41 @@ namespace
     , displacementLimit_(displacementLimit)
     , robot_ (robot)
     , validator_(validator)
-  {
-      this->InitWeightedTriangles(geometries);
-  }
+    {
+        this->InitWeightedTriangles(geometries);
+    }
 
-  void RbPrmShooter::InitWeightedTriangles(const rbprm::T_CollisionObject& geometries)
-  {
-      double sum = 0;
-      for(rbprm::T_CollisionObject::const_iterator objit = geometries.begin();
+    void RbPrmShooter::InitWeightedTriangles(const model::ObjectVector_t& geometries)
+    {
+        double sum = 0;
+        for(model::ObjectVector_t::const_iterator objit = geometries.begin();
           objit != geometries.end(); ++objit)
-      {
-          BVHModelOBConst_Ptr_t model =  GetModel(*objit); // TODO NOT TRIANGLES
-          for(int i =0; i < model->num_tris; ++i)
-          {
-              TrianglePoints tri;
-              Triangle fcltri = model->tri_indices[i];
-              tri.p1 = (*objit)->getRotation() * model->vertices[fcltri[0]] + (*objit)->getTranslation();
-              tri.p2 = (*objit)->getRotation() * model->vertices[fcltri[1]] + (*objit)->getTranslation();
-              tri.p3 = (*objit)->getRotation() * model->vertices[fcltri[2]] + (*objit)->getTranslation();;
-              double weight = TriangleArea(tri);
-              sum += weight;
-              weights_.push_back(weight);
-              // TODO COMPUTE NORMALS
-              fcl::Vec3f normal = (tri.p3 - tri.p1).cross(tri.p2 - tri.p1);
-              triangles_.push_back(std::make_pair(normal,tri));
-          }
-          double previousWeight = 0;
-          for(std::vector<double>::iterator wit = weights_.begin();
-              wit != weights_.end(); ++wit)
-          {
-              previousWeight += (*wit) / sum;
-              (*wit) = previousWeight;
-          }
-      }
-  }
+        {
+            const  fcl::CollisionObjectPtr_t& colObj = (*objit)->fcl();
+            BVHModelOBConst_Ptr_t model =  GetModel(colObj); // TODO NOT TRIANGLES
+            for(int i =0; i < model->num_tris; ++i)
+            {
+                TrianglePoints tri;
+                Triangle fcltri = model->tri_indices[i];
+                tri.p1 = colObj->getRotation() * model->vertices[fcltri[0]] + colObj->getTranslation();
+                tri.p2 = colObj->getRotation() * model->vertices[fcltri[1]] + colObj->getTranslation();
+                tri.p3 = colObj->getRotation() * model->vertices[fcltri[2]] + colObj->getTranslation();;
+                double weight = TriangleArea(tri);
+                sum += weight;
+                weights_.push_back(weight);
+                // TODO COMPUTE NORMALS
+                fcl::Vec3f normal = (tri.p3 - tri.p1).cross(tri.p2 - tri.p1);
+                triangles_.push_back(std::make_pair(normal,tri));
+            }
+            double previousWeight = 0;
+            for(std::vector<double>::iterator wit = weights_.begin();
+                wit != weights_.end(); ++wit)
+            {
+                previousWeight += (*wit) / sum;
+                (*wit) = previousWeight;
+            }
+        }
+    }
 
 
   const RbPrmShooter::T_TriangleNormal &RbPrmShooter::RandomPointIntriangle() const
