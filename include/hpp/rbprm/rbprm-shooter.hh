@@ -43,7 +43,7 @@ namespace hpp {
     class HPP_RBPRM_DLLAPI RbPrmShooter : public core::ConfigurationShooter{
     ///
     public:
-        static RbPrmShooterPtr_t create (const model::RbPrmDevicePtr_t& robot,
+        static HPP_RBPRM_DLLAPI RbPrmShooterPtr_t create (const model::RbPrmDevicePtr_t& robot,
                                          const core::ObjectVector_t &geometries,
                                          rbprm::RbPrmValidationPtr_t& validator,
                                          const std::size_t shootLimit = 10000,

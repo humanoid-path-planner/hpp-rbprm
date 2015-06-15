@@ -18,7 +18,7 @@
 # define HPP_RBPRM_PLANNER_HH
 
 #include <hpp/util/pointer.hh>
-
+#include <hpp/rbprm/config.hh>
 #include <hpp/core/path-planner.hh>
 
 namespace hpp {
@@ -38,7 +38,7 @@ typedef boost::shared_ptr <RbPrmPlanner> RbPrmPlannerPtr_t;
     /// of its limbs one the one hand (A_{ROM}), and the integrity of the robot trunk on the other hand (A_{TRUNK}).
     /// If the generated configuration has a collision between A_{ROM} and the environment, and if A_{TRUNK} is collision free,
     /// then the configuration is considered valid.
-    class RbPrmPlanner : public core::PathPlanner
+    class HPP_RBPRM_DLLAPI RbPrmPlanner : public core::PathPlanner
     {
     public:
       /// Create an instance and return a shared pointer to the instance
