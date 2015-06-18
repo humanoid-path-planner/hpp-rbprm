@@ -88,11 +88,10 @@ namespace
   namespace rbprm {
     RbPrmShooterPtr_t RbPrmShooter::create (const model::RbPrmDevicePtr_t& robot,
                                             const ObjectVector_t& geometries,
-                                            rbprm::RbPrmValidationPtr_t& validator,
                                             const std::size_t shootLimit,
                                             const std::size_t displacementLimit)
     {
-        RbPrmShooter* ptr = new RbPrmShooter (robot, geometries, validator, shootLimit, displacementLimit);
+        RbPrmShooter* ptr = new RbPrmShooter (robot, geometries, shootLimit, displacementLimit);
         RbPrmShooterPtr_t shPtr (ptr);
         ptr->init (shPtr);
         return shPtr;
@@ -107,14 +106,18 @@ namespace
 
     RbPrmShooter::RbPrmShooter (const model::RbPrmDevicePtr_t& robot,
                               const ObjectVector_t& geometries,
-                              rbprm::RbPrmValidationPtr_t& validator,
                               const std::size_t shootLimit,
                               const std::size_t displacementLimit)
     : shootLimit_(shootLimit)
     , displacementLimit_(displacementLimit)
     , robot_ (robot)
-    , validator_(validator)
+    , validator_(rbprm::RbPrmValidation::create(robot_))
     {
+        for(hpp::core::ObjectVector_t::const_iterator cit = geometries.begin();
+            cit != geometries.end(); ++cit)
+        {
+            validator_->addObstacle(*cit);
+        }
         this->InitWeightedTriangles(geometries);
     }
 
@@ -172,7 +175,7 @@ namespace
 hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
 {
     JointVector_t jv = robot_->getJointVector ();
-    ConfigurationPtr_t config (new Configuration_t (robot_->configSize()));
+    ConfigurationPtr_t config (new Configuration_t (robot_->Device::currentConfiguration()));
     std::size_t limit = shootLimit_;
     while(limit >0)
     {

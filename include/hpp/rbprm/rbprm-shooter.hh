@@ -45,7 +45,6 @@ namespace hpp {
     public:
         static HPP_RBPRM_DLLAPI RbPrmShooterPtr_t create (const model::RbPrmDevicePtr_t& robot,
                                          const core::ObjectVector_t &geometries,
-                                         rbprm::RbPrmValidationPtr_t& validator,
                                          const std::size_t shootLimit = 10000,
                                          const std::size_t displacementLimit = 100);
 
@@ -63,7 +62,6 @@ namespace hpp {
     /// Note that translation joints have to be bounded.
     RbPrmShooter (const model::RbPrmDevicePtr_t& robot,
                   const core::ObjectVector_t &geometries,
-                  rbprm::RbPrmValidationPtr_t& validator,
                   const std::size_t shootLimit = 10000,
                   const std::size_t displacementLimit = 100);
 
@@ -77,8 +75,8 @@ namespace hpp {
     private:
         std::vector<double> weights_;
         std::vector<T_TriangleNormal> triangles_;
-        const model::RbPrmDevicePtr_t& robot_;
-        rbprm::RbPrmValidationPtr_t& validator_;
+        const model::RbPrmDevicePtr_t robot_;
+        rbprm::RbPrmValidationPtr_t validator_;
         RbPrmShooterWkPtr_t weak_;
     }; // class RbprmShooter
 /// \}
