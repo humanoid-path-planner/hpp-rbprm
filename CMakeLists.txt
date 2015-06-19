@@ -37,11 +37,11 @@ SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
  ADD_REQUIRED_DEPENDENCY("hpp-fcl")
  ADD_REQUIRED_DEPENDENCY("hpp-constraints >= 3")
  ADD_REQUIRED_DEPENDENCY("hpp-model >= 3")
+ ADD_REQUIRED_DEPENDENCY("hpp-model-urdf >= 3")
 
 # Declare Headers
 SET(${PROJECT_NAME}_HEADERS
-  include/hpp/rbprm/rbprm-device.hh
-  include/hpp/rbprm/rbprm-planner.hh
+	include/hpp/rbprm/rbprm-device.hh
   include/hpp/rbprm/rbprm-shooter.hh
   include/hpp/rbprm/rbprm-validation.hh
   )

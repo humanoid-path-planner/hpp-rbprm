@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE (shooterCreation) {
 
     model::ObjectVector_t collisionObjects;
     collisionObjects.push_back(colObject);
-    RbPrmShooterPtr_t shooter = RbPrmShooter::create(robot, collisionObjects, validator);
+    RbPrmShooterPtr_t shooter = RbPrmShooter::create(robot, collisionObjects);
     for(int i =0; i< 100; ++i)
     {
         BOOST_CHECK_MESSAGE (validator->validate(*(shooter->shoot()), false),
