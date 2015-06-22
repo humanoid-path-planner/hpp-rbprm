@@ -91,6 +91,7 @@ namespace
                                             const std::size_t shootLimit,
                                             const std::size_t displacementLimit)
     {
+        srand ((unsigned int)(time(NULL)));
         RbPrmShooter* ptr = new RbPrmShooter (robot, geometries, shootLimit, displacementLimit);
         RbPrmShooterPtr_t shPtr (ptr);
         ptr->init (shPtr);
@@ -141,6 +142,7 @@ namespace
                 weights_.push_back(weight);
                 // TODO COMPUTE NORMALS
                 fcl::Vec3f normal = (tri.p3 - tri.p1).cross(tri.p2 - tri.p1);
+                normal.normalize();
                 triangles_.push_back(std::make_pair(normal,tri));
             }
             double previousWeight = 0;
@@ -177,7 +179,11 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
     JointVector_t jv = robot_->getJointVector ();
     ConfigurationPtr_t config (new Configuration_t (robot_->Device::currentConfiguration()));
     std::size_t limit = shootLimit_;
-    while(limit >0)
+
+
+
+    bool found(false);
+    while(limit >0 && !found)
     {
         // pick one triangle randomly
         const T_TriangleNormal* sampled(0);
@@ -198,8 +204,8 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
         // rotate and translate randomly until valid configuration found or
         // no obstacle is reachable
         CollisionValidationReport report;
-        bool found(false);
         std::size_t limitDis = displacementLimit_;
+        Vec3f lastDirection(1,0,0);
         while(!found && limitDis >0)
         {
             if(validator_->trunkValidation_->validate(*config, report)
@@ -210,9 +216,15 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
             else if(!report.result.isCollision())
             {
                 // try to rotate to reach rom
-                for(std::size_t i =0; i< limitDis && !found; ++i, --limitDis)
+                for(; limitDis>0 && !found; --limitDis)
                 {
                     SampleRotation(config, jv);
+                    found = validator_->validate(*config);
+                    if(!found)
+                    {
+                        Translate(config, lastDirection *
+                                  0.05 * ((double) rand() / (RAND_MAX)));
+                    }
                     found = validator_->validate(*config);
                 }
                 if(!found) break;
@@ -220,11 +232,13 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
             else // move out of collision
             {
                 // retrieve Contact information
-                const Vec3f& direction = report.result.getContact(0).normal;
+                //lastDirection = -report.result.getContact(0).normal;
+                // mouve out by penetration depth
                 // v0 move away from normal
-                Translate(config, -direction *
-                (std::abs (report.result.getContact(0).penetration_depth)
-                + ((double) rand() / (RAND_MAX))));
+                //get normal from collision tri
+                lastDirection = triangles_[report.result.getContact(0).b2].first;
+                Translate(config, -lastDirection *
+                          (std::abs(report.result.getContact(0).penetration_depth) +0.03));
                  limitDis--;
             }
         }
@@ -247,12 +261,9 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
             }
             (*config) [offset + i] = (upper - lower) * rand ()/RAND_MAX;
         }
-        if(found)
-        {
-            return config;
-        }
         limit--;
     }
+    if (!found) std::cout << "no config found" << std::endl;
     return config;
 }
 
