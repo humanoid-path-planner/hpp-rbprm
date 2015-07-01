@@ -201,6 +201,7 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
 
         //set configuration position to sampled point
         SetConfigTranslation(config, p);
+        SampleRotation(config, jv);
         // rotate and translate randomly until valid configuration found or
         // no obstacle is reachable
         CollisionValidationReport report;
@@ -222,8 +223,8 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
                     found = validator_->validate(*config);
                     if(!found)
                     {
-                        Translate(config, lastDirection *
-                                  0.05 * ((double) rand() / (RAND_MAX)));
+                        Translate(config, -lastDirection *
+                                  /*1*/ * ((double) rand() / (RAND_MAX)));
                     }
                     found = validator_->validate(*config);
                 }
