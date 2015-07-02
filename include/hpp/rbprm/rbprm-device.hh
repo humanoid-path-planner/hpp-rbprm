@@ -59,7 +59,7 @@ namespace hpp {
 
     private:
       RbPrmDeviceWkPtr_t weakPtr_;
-    }; // class ConfigValidation
+    }; // class RbPrmDevice
   } // namespace rbprm
 } // namespace hpp
 

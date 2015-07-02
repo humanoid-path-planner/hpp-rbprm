@@ -23,6 +23,7 @@ SET(${LIBRARY_NAME}_SOURCES
 	 rbprm-shooter.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-shooter.hh
 	 rbprm-validation.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-validation.hh
 	 rbprm-device.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-device.hh
+	 sampling/sample.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/sampling/sample.hh
   )
 
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/src)

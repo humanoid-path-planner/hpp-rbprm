@@ -224,7 +224,7 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
                     if(!found)
                     {
                         Translate(config, -lastDirection *
-                                  /*1*/ * ((double) rand() / (RAND_MAX)));
+                                  1 * ((double) rand() / (RAND_MAX)));
                     }
                     found = validator_->validate(*config);
                 }

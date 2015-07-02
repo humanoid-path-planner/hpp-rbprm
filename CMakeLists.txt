@@ -44,9 +44,11 @@ SET(${PROJECT_NAME}_HEADERS
 	include/hpp/rbprm/rbprm-device.hh
   include/hpp/rbprm/rbprm-shooter.hh
   include/hpp/rbprm/rbprm-validation.hh
+	include/hpp/rbprm/sampling/sample.hh
   )
 
 ADD_SUBDIRECTORY(src)
+#ADD_SUBDIRECTORY(tools)
 ADD_SUBDIRECTORY(tests)
 
 
