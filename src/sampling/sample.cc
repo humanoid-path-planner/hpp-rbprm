@@ -107,7 +107,6 @@ std::deque<Sample> hpp::rbprm::sampling::GenerateSamples(const model::JointPtr_t
             current = current->childJoint(0);
             current->configuration ()->uniformlySample (current->rankInConfiguration(), config);
         }
-        std::cout << "config" << config << std::endl;
         device->currentConfiguration (config);
         device->computeForwardKinematics();
         result.push_back(Sample(clone, config.segment(startRank_, length_)));

@@ -38,7 +38,15 @@ namespace hpp {
     class HPP_RBPRM_DLLAPI Sample
     {
     public:
+        /// Creates sample from Configuration
+        /// in presented joint
+        /// \param limb root of the considered limb
+        /// the Configuration_t of this limb will be used to compute the sample
         Sample(const model::JointPtr_t limb);
+        /// Creates sample from Configuration
+        /// in presented joint
+        /// \param limb root of the considered limb
+        /// \param configuration used to compute the sample
         Sample(const model::JointPtr_t limb, const model::Configuration_t& configuration);
         Sample(const Sample &clone);
        ~Sample(){}

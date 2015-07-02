@@ -45,6 +45,7 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/rbprm/rbprm-shooter.hh
   include/hpp/rbprm/rbprm-validation.hh
 	include/hpp/rbprm/sampling/sample.hh
+	include/hpp/rbprm/sampling/sample-container.hh
   )
 
 ADD_SUBDIRECTORY(src)

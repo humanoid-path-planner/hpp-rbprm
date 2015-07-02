@@ -17,7 +17,7 @@
 // along with hpp-core.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "test-tools.hh"
-#include <hpp/rbprm/sampling/sample.hh>
+#include <hpp/rbprm/sampling/sample-container.hh>
 #include <hpp/fcl/octree.h>
 
 #define BOOST_TEST_MODULE test-sampling
@@ -128,6 +128,20 @@ BOOST_AUTO_TEST_CASE (sampleGeneration) {
                                                   "Sample should contain 8  variables");
     }
 }
+
+BOOST_AUTO_TEST_CASE (sampleContainerGeneration) {
+    DevicePtr_t robot = initDevice();
+    JointPtr_t joint = robot->getJointByName("arm");
+    SampleContainer sc(joint,10,0.1);
+    for(std::deque<Sample>::const_iterator cit = sc.samples_.begin();
+        cit != sc.samples_.end(); ++cit)
+    {
+        const Sample& s = *cit;
+        BOOST_CHECK_MESSAGE (s.configuration_.rows()==8,
+                                                  "Sample should contain 8  variables");
+    }
+}
+
 
 BOOST_AUTO_TEST_CASE (octreeCreation) {
     tg();
