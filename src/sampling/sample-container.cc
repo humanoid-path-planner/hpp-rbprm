@@ -28,28 +28,30 @@ using namespace fcl;
  namespace
  {
 
-    fcl::OcTree GenerateOctree(const std::deque<Sample>& samples, const double resolution)
+    fcl::OcTree* GenerateOctree(const std::deque<Sample>& samples, const double resolution)
     {
         octomap::OcTree* octTree = new octomap::OcTree(resolution);
-        octomap::Pointcloud octPointCloud;
         for(std::deque<Sample>::const_iterator cit = samples.begin();
             cit != samples.end(); ++cit)
         {
             const fcl::Vec3f& position = cit->effectorPosition_;
             octomap::point3d endpoint((float)position[0],(float)position[1],(float)position[2]);
-            octPointCloud.push_back(endpoint);
+            const octomap::OcTreeKey& key = octTree->coordToKey(endpoint);
+            std::cout << "point" << position[0] << " " << position[1] << " " << position [2] << std::endl;
+            std::cout << "key" << key[0] << " " << key[1] << " " << key [2] << std::endl;
+            octomap::OcTreeKey::KeyHash hash;
+            std::cout << "super key " << hash(key) << std::endl;
+            std::cout << "super key " << octTree->updateNode(endpoint, true) - octTree->getRoot()  << std::endl;
         }
-        octomap::point3d origin(0.0,0.0,0.0);
-        octTree->insertPointCloud(octPointCloud,origin);
         octTree->updateInnerOccupancy();
-        return fcl::OcTree(boost::shared_ptr<const octomap::OcTree>(octTree));
+        return new fcl::OcTree(boost::shared_ptr<const octomap::OcTree>(octTree));
     }
 
     std::vector<fcl::CollisionObject*> generateBoxesFromOctomap(const fcl::OcTree& tree)
     {
         std::vector<fcl::CollisionObject*> boxes;
         std::vector<boost::array<FCL_REAL, 6> > boxes_ = tree.toBoxes();
-
+        boxes.reserve(boxes_.size());
         for(std::size_t i = 0; i < boxes_.size(); ++i)
         {
             FCL_REAL x = boxes_[i][0];
@@ -72,12 +74,18 @@ using namespace fcl;
 SampleContainer::SampleContainer(const model::JointPtr_t limb, const std::size_t nbSamples, const double resolution)
     : samples_(GenerateSamples(limb,nbSamples))
     , octree_(GenerateOctree(samples_, resolution))
-    , boxes_(generateBoxesFromOctomap(octree_))
+    , geometry_(boost::shared_ptr<fcl::CollisionGeometry>(octree_))
+    , treeObject_(geometry_)
+    , boxes_(generateBoxesFromOctomap(*octree_))
 {
     // NOTHING
 }
 
 SampleContainer::~SampleContainer()
 {
-    // NOTHING
+    for (std::vector<fcl::CollisionObject*>::const_iterator it = boxes_.begin();
+         it != boxes_.end(); ++it)
+    {
+        delete *it;
+    }
 }

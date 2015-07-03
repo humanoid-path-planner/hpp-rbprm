@@ -16,8 +16,8 @@
 // hpp-core  If not, see
 // <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_RBPRM_SAMPLE_CONTAINER_HH
-# define HPP_RBPRM_SAMPLE_CONTAINER_HH
+#ifndef HPP_OCTREE_NODE_HH
+# define HPP_OCTREE_NODE_HH
 
 #include <hpp/rbprm/sampling/sample.hh>
 #include <hpp/fcl/octree.h>
@@ -26,16 +26,16 @@ namespace hpp {
 
   namespace rbprm {
   namespace sampling{
-    HPP_PREDEF_CLASS(SampleContainer);
+    HPP_PREDEF_CLASS(OctreeNode);
 
     /// Sample container for a given limb of a robot.
     /// Stores a list of Sample in two ways: a deque,
     /// and an octree for spatial requests.
     /// indexes of the octree corresponds to end effector positions.
-    class SampleContainer;
-    typedef boost::shared_ptr <SampleContainer> SampleContainerPtr_t;
+    class OctreeNode;
+    typedef boost::shared_ptr <OctreeNode> OctreeNodePtr_t;
 
-    class HPP_RBPRM_DLLAPI SampleContainer
+    class HPP_RBPRM_DLLAPI OctreeNode
     {
     public:
         /// Creates sample from Configuration
@@ -43,11 +43,10 @@ namespace hpp {
         /// \param limb root joint for the considered limb
         /// \param nbSamples number of samples to generate
         /// \param resolution, resolution of the octree voxels
-        SampleContainer(const model::JointPtr_t limb, const std::size_t nbSamples, const double resolution = 0.1);
-       ~SampleContainer();
+        OctreeNode(const model::JointPtr_t limb, const std::size_t nbSamples, const double resolution = 0.1);
+       ~OctreeNode();
 
     private:
-        SampleContainer(const SampleContainer& sContainer);
 
     public:
         /// samples generated
@@ -63,8 +62,8 @@ namespace hpp {
         const std::vector<fcl::CollisionObject*> boxes_;
 
 
-    }; // class SampleContainer
+    }; // class OctreeNode
   } // namespace sampling
 } // namespace rbprm
 } // namespace hpp
-#endif // HPP_RBPRM_SAMPLE_CONTAINER_HH
+#endif // HPP_OCTREE_NODE_HH

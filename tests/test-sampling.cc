@@ -19,6 +19,8 @@
 #include "test-tools.hh"
 #include <hpp/rbprm/sampling/sample-container.hh>
 #include <hpp/fcl/octree.h>
+#include <hpp/fcl/distance.h>
+#include <hpp/fcl/collision.h>
 
 #define BOOST_TEST_MODULE test-sampling
 #include <boost/test/included/unit_test.hpp>
@@ -91,25 +93,22 @@ DevicePtr_t initDevice()
 }
 
 
-void tg()
+bool tg()
 {
-    // create empty tree with resolution 0.1
-    octomap::OcTree* octTree = new octomap::OcTree(0.01);
-    octomap::Pointcloud octPointCloud;
-    //Filter laser data if needed
-    for(int i = 0;i<1000;i++)
-    {
-        octomap::point3d endpoint((float) i *0.01f,(float) i *0.01f,(float) i *0.01f);
-        octPointCloud.push_back(endpoint);
-    }
-    octomap::point3d origin(0.0,0.0,0.0);
-    octTree->insertPointCloud(octPointCloud,origin);
-    octTree->updateInnerOccupancy();
-    //octTree->writeBinary("static_occ.bt");
 
-    // convert the octomap::octree to fcl::octree fcl_octree object
-    //fcl::OcTree* tree2 = new fcl::OcTree(boost::shared_ptr<const octomap::OcTree>(octTree));
-
+    CollisionObjectPtr_t obstacle =  MeshObstacleBox();
+    DevicePtr_t robot = initDevice();
+    JointPtr_t joint = robot->getJointByName("arm");
+    SampleContainer sc(joint,100,0.1);
+    fcl::DistanceResult result;
+    fcl::DistanceRequest request;
+    fcl::distance(&sc.treeObject_, obstacle->fcl().get(), request, result);
+    std::cout << result.b1 << "\n" << result.b2 << std::endl;
+    fcl::CollisionRequest req(10);
+    fcl::CollisionResult res;
+    fcl::collide(&sc.treeObject_, obstacle->fcl().get(), req, res);
+    bool tg(false);
+    return tg;
 }
 
 }
@@ -144,6 +143,7 @@ BOOST_AUTO_TEST_CASE (sampleContainerGeneration) {
 
 
 BOOST_AUTO_TEST_CASE (octreeCreation) {
+    CollisionObjectPtr_t obstacle =  MeshObstacleBox();
     tg();
 }
 
