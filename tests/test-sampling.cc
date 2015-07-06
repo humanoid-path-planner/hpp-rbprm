@@ -92,48 +92,6 @@ DevicePtr_t initDevice()
     return rom;
 }
 
-
-bool tg()
-{
-
-    CollisionObjectPtr_t obstacle =  MeshObstacleBox();
-    DevicePtr_t robot = initDevice();
-    JointPtr_t joint = robot->getJointByName("arm");
-    SampleContainer sc(joint,100,0.1);
-    fcl::DistanceResult result;
-    fcl::DistanceRequest request;
-    fcl::distance(&sc.treeObject_, obstacle->fcl().get(), request, result);
-    std::cout << result.b1 << "\n" << result.b2 << std::endl;
-    fcl::CollisionRequest req(10);
-    fcl::CollisionResult res;
-    fcl::collide(&sc.treeObject_, obstacle->fcl().get(), req, res);
-    std::vector<fcl::Contact> contacts; res.getContacts(contacts);
-    for(std::vector<fcl::Contact>::const_iterator cit = contacts.begin();
-        cit!= contacts.end(); ++cit)
-    {
-        std::cout << "contact id " << cit->b1 << std::endl;
-        sampling::SampleContainer::T_VoxelSample::const_iterator voxelIt = sc.voxelSamples_.find(cit->b1);
-        if(voxelIt != sc.voxelSamples_.end())
-        {
-            std::cout <<  "found" << std::endl;
-            const std::vector<const sampling::Sample*>& samples = voxelIt->second;
-            for(std::vector<const sampling::Sample*>::const_iterator sit = samples.begin();
-                sit != samples.end(); ++sit)
-            {
-                std::cout << "sample position \n" << (*sit)->effectorPosition_ << std::endl;
-            }
-        }
-        else
-        {
-            std::cout <<  "not found" << std::endl;
-        }
-    }
-    bool tg(false);
-    return tg;
-}
-
-}
-
 BOOST_AUTO_TEST_SUITE(test_generation_samples)
 
 BOOST_AUTO_TEST_CASE (sampleGeneration) {
@@ -163,9 +121,25 @@ BOOST_AUTO_TEST_CASE (sampleContainerGeneration) {
 }
 
 
-BOOST_AUTO_TEST_CASE (octreeCreation) {
+BOOST_AUTO_TEST_CASE (octreeRequest) {
     CollisionObjectPtr_t obstacle =  MeshObstacleBox();
-    tg();
+    DevicePtr_t robot = initDevice();
+    JointPtr_t joint = robot->getJointByName("arm");
+    SampleContainer sc(joint,100,0.1);
+    rbprm::sampling::T_OctreeReport reports = rbprm::sampling::GetCandidates(sc, fcl::Transform3f(),obstacle,Eigen::Vector3d(1,0,0));
+    double manipulability = std::numeric_limits<double>::max();
+    BOOST_CHECK_MESSAGE (!reports.empty(), "No matching found, this should not be the case");
+    for(rbprm::sampling::T_OctreeReport::const_iterator cit = reports.begin(); cit != reports.end(); ++cit)
+    {
+        const rbprm::sampling::OctreeReport& report = *cit;
+        BOOST_CHECK_MESSAGE ( report.manipulability_ <= manipulability, "samples must be ordered by their decreasing manipulability");
+        manipulability = report.manipulability_;
+    }
+    fcl::Transform3f toofarLocation;
+    toofarLocation.setTranslation(fcl::Vec3f(-10,-10,-10));
+    reports = rbprm::sampling::GetCandidates(sc, toofarLocation, obstacle,Eigen::Vector3d(1,0,0));
+    BOOST_CHECK_MESSAGE (reports.empty(), "samples found by request");
+}
 }
 
 BOOST_AUTO_TEST_SUITE_END()

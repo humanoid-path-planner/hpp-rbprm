@@ -31,6 +31,24 @@ namespace hpp {
   namespace sampling{
     HPP_PREDEF_CLASS(SampleContainer);
 
+
+    struct OctreeReport
+    {
+        OctreeReport(const Sample*, const fcl::Contact, const double);
+        const Sample* sample_;
+        fcl::Contact contact_;
+        double manipulability_;
+    };
+
+
+    struct sample_compare {
+        bool operator() (const OctreeReport& lhs, const OctreeReport& rhs) const{
+            return lhs.manipulability_ > rhs.manipulability_;
+        }
+    };
+
+    typedef std::set<OctreeReport, sample_compare> T_OctreeReport;
+
     /// Sample container for a given limb of a robot.
     /// Stores a list of Sample in two ways: a deque,
     /// and an octree for spatial requests.
@@ -41,6 +59,9 @@ namespace hpp {
     struct SamplePImpl;
     class HPP_RBPRM_DLLAPI SampleContainer
     {
+    public:
+        typedef std::map<std::size_t, std::vector<const Sample*> > T_VoxelSample;
+
     public:
         /// Creates sample from Configuration
         /// in presented joint
@@ -61,17 +82,23 @@ namespace hpp {
         std::auto_ptr<SamplePImpl> pImpl_;
 
     public:
-        typedef std::map<std::size_t, std::vector<const Sample*> > T_VoxelSample;
-
-    public:
+        /// fcl collision object used for collisions with environment
         const fcl::CollisionObject treeObject_;
         /// Samples sorted by voxel id in the octree
         const T_VoxelSample voxelSamples_;
         /// Bounding boxes of areas of interest of the octree
         const std::vector<fcl::CollisionObject*> boxes_;
 
+        friend T_OctreeReport GetCandidates(const SampleContainer& sc, const fcl::Transform3f& treeTrf,
+                                                const hpp::model::CollisionObjectPtr_t& o2,
+                                                const Eigen::Vector3d& direction);
 
     }; // class SampleContainer
+
+    /// Sorted by manipulability
+    T_OctreeReport GetCandidates(const SampleContainer& sc, const fcl::Transform3f& treeTrf,
+                                            const hpp::model::CollisionObjectPtr_t& o2,
+                                            const Eigen::Vector3d& direction);
   } // namespace sampling
 } // namespace rbprm
 } // namespace hpp
