@@ -107,6 +107,27 @@ bool tg()
     fcl::CollisionRequest req(10);
     fcl::CollisionResult res;
     fcl::collide(&sc.treeObject_, obstacle->fcl().get(), req, res);
+    std::vector<fcl::Contact> contacts; res.getContacts(contacts);
+    for(std::vector<fcl::Contact>::const_iterator cit = contacts.begin();
+        cit!= contacts.end(); ++cit)
+    {
+        std::cout << "contact id " << cit->b1 << std::endl;
+        sampling::SampleContainer::T_VoxelSample::const_iterator voxelIt = sc.voxelSamples_.find(cit->b1);
+        if(voxelIt != sc.voxelSamples_.end())
+        {
+            std::cout <<  "found" << std::endl;
+            const std::vector<const sampling::Sample*>& samples = voxelIt->second;
+            for(std::vector<const sampling::Sample*>::const_iterator sit = samples.begin();
+                sit != samples.end(); ++sit)
+            {
+                std::cout << "sample position \n" << (*sit)->effectorPosition_ << std::endl;
+            }
+        }
+        else
+        {
+            std::cout <<  "not found" << std::endl;
+        }
+    }
     bool tg(false);
     return tg;
 }

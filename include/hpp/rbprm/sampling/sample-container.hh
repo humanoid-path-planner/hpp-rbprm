@@ -22,6 +22,9 @@
 #include <hpp/rbprm/sampling/sample.hh>
 #include <hpp/fcl/octree.h>
 
+#include <map>
+#include <memory>
+
 namespace hpp {
 
   namespace rbprm {
@@ -35,6 +38,7 @@ namespace hpp {
     class SampleContainer;
     typedef boost::shared_ptr <SampleContainer> SampleContainerPtr_t;
 
+    struct SamplePImpl;
     class HPP_RBPRM_DLLAPI SampleContainer
     {
     public:
@@ -54,11 +58,15 @@ namespace hpp {
         const std::deque<Sample> samples_;
 
     private:
-        fcl::OcTree* octree_; // deleted with geometry_
-        const boost::shared_ptr<fcl::CollisionGeometry> geometry_;
+        std::auto_ptr<SamplePImpl> pImpl_;
+
+    public:
+        typedef std::map<std::size_t, std::vector<const Sample*> > T_VoxelSample;
 
     public:
         const fcl::CollisionObject treeObject_;
+        /// Samples sorted by voxel id in the octree
+        const T_VoxelSample voxelSamples_;
         /// Bounding boxes of areas of interest of the octree
         const std::vector<fcl::CollisionObject*> boxes_;
 
