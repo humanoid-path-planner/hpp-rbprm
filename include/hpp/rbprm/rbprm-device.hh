@@ -36,7 +36,7 @@ namespace hpp {
     class HPP_RBPRM_DLLAPI RbPrmDevice : public Device
     {
     public:
-        static RbPrmDevicePtr_t create (const std::string& name, DevicePtr_t& robotRom);
+        static RbPrmDevicePtr_t create (const std::string& name, DevicePtr_t& robotRom, DevicePtr_t& fullBody);
 
     public:
         virtual ~RbPrmDevice();
@@ -48,9 +48,10 @@ namespace hpp {
     public:
       /// Range Of Motion of the robot
       const DevicePtr_t robotRom_;
+      const DevicePtr_t fullBody_;
 
     protected:
-      RbPrmDevice (const std::string& name, const DevicePtr_t& robotRom);
+      RbPrmDevice (const std::string& name, const DevicePtr_t& robotRom, const DevicePtr_t& fullBody);
 
       ///
       /// \brief Initialization.

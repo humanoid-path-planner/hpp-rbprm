@@ -36,9 +36,9 @@ namespace hpp {
           const std::string message_;
       };*/
 
-    RbPrmDevicePtr_t RbPrmDevice::create (const std::string& name, DevicePtr_t& robotRom)
+    RbPrmDevicePtr_t RbPrmDevice::create (const std::string& name, DevicePtr_t& robotRom, DevicePtr_t &fullBody)
     {
-        RbPrmDevice* rbprmDevice = new RbPrmDevice(name, robotRom);
+        RbPrmDevice* rbprmDevice = new RbPrmDevice(name, robotRom, fullBody);
         RbPrmDevicePtr_t res (rbprmDevice);
         res->init (res);
         return res;
@@ -69,9 +69,10 @@ namespace hpp {
         return robotRom_->setCurrentConfiguration(configuration);
     }*/
 
-    RbPrmDevice::RbPrmDevice (const std::string& name, const DevicePtr_t& robotRom)
+    RbPrmDevice::RbPrmDevice (const std::string& name, const DevicePtr_t& robotRom, const DevicePtr_t& fullBody)
         : Device(name)
         , robotRom_(robotRom)
+        , fullBody_(fullBody)
         , weakPtr_()
     {
         /*if(robotTrunk->configSize() != robotRom->configSize())

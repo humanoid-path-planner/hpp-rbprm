@@ -74,7 +74,7 @@ namespace
     RbPrmDevicePtr_t initRbPrmDeviceTest()
     {
         DevicePtr_t rom = Device::create("rom");
-        RbPrmDevicePtr_t trunk = RbPrmDevice::create("trunk", rom);
+        RbPrmDevicePtr_t trunk = RbPrmDevice::create("trunk", rom, rom);
         JointSO3* jointSO3Trunk = new JointSO3 (fcl::Transform3f());
         JointSO3* jointSO3Rom = new JointSO3 (fcl::Transform3f());
         jointSO3Trunk->isBounded (0, true);
