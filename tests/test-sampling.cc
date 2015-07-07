@@ -33,65 +33,6 @@ using namespace sampling;
 namespace
 {
 
-DevicePtr_t initDevice()
-{
-    DevicePtr_t rom = Device::create("rom");
-
-
-    JointSO3* jointSO3Rom2 = new JointSO3 (fcl::Transform3f(fcl::Vec3f(1,0,0)));
-
-    jointSO3Rom2->name("elbow");
-    jointSO3Rom2->isBounded (0, true);
-    jointSO3Rom2->isBounded (1, true);
-    jointSO3Rom2->isBounded (2, true);
-    jointSO3Rom2->lowerBound(0,-3.);
-    jointSO3Rom2->upperBound(0,3.);
-    jointSO3Rom2->lowerBound(1,-3.);
-    jointSO3Rom2->upperBound(1,3.);
-    jointSO3Rom2->lowerBound(2,-3.);
-    jointSO3Rom2->upperBound(2,3.);
-
-    JointSO3* jointSO3Rom = new JointSO3 (fcl::Transform3f());
-
-    jointSO3Rom->name("arm");
-    jointSO3Rom->isBounded (0, true);
-    jointSO3Rom->isBounded (1, true);
-    jointSO3Rom->isBounded (2, true);
-    jointSO3Rom->lowerBound(0,-3.);
-    jointSO3Rom->upperBound(0,3.);
-    jointSO3Rom->lowerBound(1,-3.);
-    jointSO3Rom->upperBound(1,3.);
-    jointSO3Rom->lowerBound(2,-3.);
-    jointSO3Rom->upperBound(2,3.);
-
-    JointTranslation<3>* jointTrRom = new JointTranslation<3> (fcl::Transform3f());
-
-    jointTrRom->isBounded (0, true);
-    jointTrRom->isBounded (1, true);
-    jointTrRom->isBounded (2, true);
-    jointTrRom->lowerBound(0,0.);
-    jointTrRom->upperBound(0,0.);
-    jointTrRom->lowerBound(1,0.);
-    jointTrRom->upperBound(1,0.);
-    jointTrRom->lowerBound(2,0.);
-    jointTrRom->upperBound(2,0.);
-
-    rom->rootJoint(jointTrRom);
-    jointTrRom->addChildJoint (jointSO3Rom);
-    jointSO3Rom->addChildJoint (jointSO3Rom2);
-
-    CollisionGeometryPtr_t romcg (new fcl::Box (1, 1, 1));
-    CollisionObjectPtr_t obstacleRom = CollisionObject::create
-        (romcg, fcl::Transform3f (), "rombox");
-
-    obstacleRom->move(fcl::Vec3f(0,0,0));
-    BodyPtr_t body = new Body;
-    body->name ("rom");
-    jointTrRom->setLinkedBody (body);
-    body->addInnerObject(obstacleRom, true, true);
-    return rom;
-}
-
 BOOST_AUTO_TEST_SUITE(test_generation_samples)
 
 BOOST_AUTO_TEST_CASE (sampleGeneration) {

@@ -16,51 +16,50 @@
 // hpp-core  If not, see
 // <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_RBPRM_DEVICE_HH
-# define HPP_RBPRM_DEVICE_HH
+#ifndef HPP_RBPRM_LIMB_HH
+# define HPP_RBPRM_LIMB_HH
 
 # include <hpp/rbprm/config.hh>
+# include <hpp/rbprm/sampling/sample-container.hh>
 # include <hpp/model/device.hh>
 
 namespace hpp {
+  namespace rbprm {
+    HPP_PREDEF_CLASS(RbPrmLimb);
 
-  namespace model {
-    HPP_PREDEF_CLASS(RbPrmDevice);
-
-    /// Dual representation of a robot for Reachability Based planning:
-    /// Collision free part of the robot vs Range Of Motion of the limbs.
+    /// Representation of a robot limb.
+    /// Contains a SampleContainer used for computing contact candidates
     ///
-    class RbPrmDevice;
-    typedef boost::shared_ptr <RbPrmDevice> RbPrmDevicePtr_t;
+    class RbPrmLimb;
+    typedef boost::shared_ptr <RbPrmLimb> RbPrmLimbPtr_t;
+    typedef std::map<std::string, const rbprm::RbPrmLimbPtr_t > T_Limb;
 
-    class HPP_RBPRM_DLLAPI RbPrmDevice : public Device
+    class HPP_RBPRM_DLLAPI RbPrmLimb
     {
     public:
-        static RbPrmDevicePtr_t create (const std::string& name, DevicePtr_t& robotRom);
+        static RbPrmLimbPtr_t create (const model::JointPtr_t& limb,
+                                      const std::size_t nbSamples, const double resolution);
 
     public:
-        virtual ~RbPrmDevice();
+        ~RbPrmLimb();
 
     public:
-        virtual bool currentConfiguration (ConfigurationIn_t configuration);
-        //virtual bool setCurrentConfiguration(ConfigurationIn_t configuration);
-
-    public:
-      /// Range Of Motion of the robot
-      const DevicePtr_t robotRom_;
+        const model::JointPtr_t limb_;
+        const sampling::SampleContainer sampleContainer_;
 
     protected:
-      RbPrmDevice (const std::string& name, const DevicePtr_t& robotRom);
+      RbPrmLimb (const model::JointPtr_t& limb,
+                 const std::size_t nbSamples, const double resolution);
 
       ///
       /// \brief Initialization.
       ///
-      void init (const RbPrmDeviceWkPtr_t& weakPtr);
+      void init (const RbPrmLimbWkPtr_t& weakPtr);
 
     private:
-      RbPrmDeviceWkPtr_t weakPtr_;
-    }; // class RbPrmDevice
+      RbPrmLimbWkPtr_t weakPtr_;
+    }; // class RbPrmLimb
   } // namespace rbprm
 } // namespace hpp
 
-#endif // HPP_RBPRM_DEVICE_HH
+#endif // HPP_RBPRM_LIMB_HH

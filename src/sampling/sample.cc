@@ -90,6 +90,11 @@ Sample::Sample(const Sample &clone)
     // NOTHING
 }
 
+void hpp::rbprm::sampling::Load(model::DevicePtr_t& robot) const
+{
+
+}
+
 std::deque<Sample> hpp::rbprm::sampling::GenerateSamples(const model::JointPtr_t model,  const std::size_t nbSamples)
 {
     std::deque<Sample> result;
