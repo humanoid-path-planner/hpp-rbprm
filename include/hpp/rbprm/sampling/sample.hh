@@ -52,10 +52,6 @@ namespace hpp {
        ~Sample(){}
 
     public:
-        /// LoadSample into robot
-        void Load(model::DevicePtr_t& robot) const;
-
-    public:
       const std::size_t startRank_;
       const std::size_t length_;
       const model::Configuration_t configuration_;
@@ -67,6 +63,8 @@ namespace hpp {
     }; // class Sample
 
 std::deque<Sample> GenerateSamples(const model::JointPtr_t model,  const std::size_t nbSamples);
+/// LoadSample into robot
+void Load(const Sample& sample, model::DevicePtr_t& robot);
 
   } // namespace sampling
 } // namespace rbprm
