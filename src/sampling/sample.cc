@@ -90,9 +90,9 @@ Sample::Sample(const Sample &clone)
     // NOTHING
 }
 
-void hpp::rbprm::sampling::Load(const Sample& /*sample*/, model::DevicePtr_t& /*robot*/)
+void hpp::rbprm::sampling::Load(const Sample& sample, Configuration_t & configuration)
 {
-    // TODO
+    configuration.segment(sample.startRank_, sample.length_) = sample.configuration_;
 }
 
 std::deque<Sample> hpp::rbprm::sampling::GenerateSamples(const model::JointPtr_t model,  const std::size_t nbSamples)

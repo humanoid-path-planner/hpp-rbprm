@@ -89,9 +89,9 @@ namespace hpp {
         /// Bounding boxes of areas of interest of the octree
         const std::vector<fcl::CollisionObject*> boxes_;
 
-        friend T_OctreeReport GetCandidates(const SampleContainer& sc, const fcl::Transform3f& treeTrf,
+        friend bool GetCandidates(const SampleContainer& sc, const fcl::Transform3f& treeTrf,
                                                 const hpp::model::CollisionObjectPtr_t& o2,
-                                                const Eigen::Vector3d& direction);
+                                                const Eigen::Vector3d& direction, T_OctreeReport& report);
 
     }; // class SampleContainer
 
@@ -99,6 +99,10 @@ namespace hpp {
     T_OctreeReport GetCandidates(const SampleContainer& sc, const fcl::Transform3f& treeTrf,
                                             const hpp::model::CollisionObjectPtr_t& o2,
                                             const Eigen::Vector3d& direction);
+
+    bool GetCandidates(const SampleContainer& sc, const fcl::Transform3f& treeTrf,
+                                            const hpp::model::CollisionObjectPtr_t& o2,
+                                            const Eigen::Vector3d& direction, T_OctreeReport& report);
   } // namespace sampling
 } // namespace rbprm
 } // namespace hpp

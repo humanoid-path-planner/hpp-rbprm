@@ -36,12 +36,22 @@ hpp::rbprm::RbPrmFullBodyPtr_t initFullBodyDevice()
     DevicePtr_t device = initDevice();
     hpp::rbprm::RbPrmFullBodyPtr_t robot =
             RbPrmFullBody::create(device);
-    robot->AddLimb("elbow", 100, 0.1);
+    robot->AddLimb("elbow", 1000, 0.1);
     return robot;
 }
 
 BOOST_AUTO_TEST_CASE (fullbody) {
     RbPrmFullBodyPtr_t fb = initFullBodyDevice();
+    CollisionObjectPtr_t colObject = MeshObstacleBox();
+    ObjectVector_t objects;
+    objects.push_back(colObject);
+    const Configuration_t& configuration = fb->device_->currentConfiguration();
+    hpp::rbprm::State state =
+            ComputeContacts(fb, configuration, objects,Eigen::Vector3d(1,0,0));
+    BOOST_CHECK_MESSAGE (state.contacts_["elbow"],
+                                              "limb should be in contact");
+    BOOST_CHECK_MESSAGE (state.configuration_ != configuration,
+                                              "Configuration should be altered by contact generation");
 }
 BOOST_AUTO_TEST_SUITE_END()
 

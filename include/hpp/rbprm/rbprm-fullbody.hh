@@ -20,6 +20,7 @@
 # define HPP_RBPRM_FULLBODY_HH
 
 # include <hpp/rbprm/config.hh>
+# include <hpp/rbprm/rbprm-state.hh>
 # include <hpp/model/device.hh>
 # include <hpp/rbprm/rbprm-limb.hh>
 
@@ -67,7 +68,11 @@ namespace hpp {
     private:
       RbPrmFullBodyWkPtr_t weakPtr_;
     }; // class RbPrmDevice
+
+    hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const model::Configuration_t& configuration,
+                                      const model::ObjectVector_t& collisionObjects, const Eigen::Vector3d& direction);
   } // namespace rbprm
+
 } // namespace hpp
 
 #endif // HPP_RBPRM_DEVICE_HH

@@ -64,7 +64,7 @@ namespace hpp {
 
 std::deque<Sample> GenerateSamples(const model::JointPtr_t model,  const std::size_t nbSamples);
 /// LoadSample into robot
-void Load(const Sample& sample, model::DevicePtr_t& robot);
+void Load(const Sample& sample, model::Configuration_t& robot);
 
   } // namespace sampling
 } // namespace rbprm

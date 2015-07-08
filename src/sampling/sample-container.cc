@@ -134,15 +134,14 @@ OctreeReport::OctreeReport(const Sample* s, const fcl::Contact c, const double m
 }
 
 // TODO include dot product with normal
-rbprm::sampling::T_OctreeReport rbprm::sampling::GetCandidates(const SampleContainer& sc, const fcl::Transform3f& treeTrf,
+bool rbprm::sampling::GetCandidates(const SampleContainer& sc, const fcl::Transform3f& treeTrf,
                                                                           const hpp::model::CollisionObjectPtr_t& o2,
-                                                                          const Eigen::Vector3d& direction)
+                                                                          const Eigen::Vector3d& direction, hpp::rbprm::sampling::T_OctreeReport &reports)
 {
     fcl::CollisionRequest req(10, true);
     fcl::CollisionResult cResult;
     fcl::CollisionObjectPtr_t obj = o2->fcl();
     fcl::collide(sc.pImpl_->geometry_.get(), treeTrf, obj->collisionGeometry().get(), obj->getTransform(), req, cResult);
-    T_OctreeReport result;
     sampling::SampleContainer::T_VoxelSample::const_iterator voxelIt;
     for(std::size_t index=0; index<cResult.numContacts(); ++index)
     {
@@ -153,8 +152,18 @@ rbprm::sampling::T_OctreeReport rbprm::sampling::GetCandidates(const SampleConta
             sit != samples.end(); ++sit)
         {
             OctreeReport report(*sit, contact, direction.transpose() * (*sit)->jacobianProduct_.block<3,3>(0,0) * direction);
-            result.insert(report);
+            reports.insert(report);
         }
     }
-    return result;
+    return !reports.empty();
+}
+
+
+rbprm::sampling::T_OctreeReport rbprm::sampling::GetCandidates(const SampleContainer& sc, const fcl::Transform3f& treeTrf,
+                                                                          const hpp::model::CollisionObjectPtr_t& o2,
+                                                                          const Eigen::Vector3d& direction)
+{
+    rbprm::sampling::T_OctreeReport report;
+    GetCandidates(sc, treeTrf, o2, direction, report);
+    return report;
 }
