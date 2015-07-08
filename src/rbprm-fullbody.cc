@@ -15,6 +15,7 @@
 // hpp-rbprm. If not, see <http://www.gnu.org/licenses/>.
 
 #include <hpp/rbprm/rbprm-fullbody.hh>
+#include <hpp/model/joint.hh>
 
 namespace hpp {
   namespace rbprm {
@@ -65,7 +66,7 @@ namespace hpp {
                           const model::ObjectVector_t &collisionObjects, const Eigen::Vector3d& direction, fcl::Vec3f& position, fcl::Vec3f& normal)
       {
           sampling::T_OctreeReport finalSet;
-          fcl::Transform3f transform; // get root transform from configuration
+          fcl::Transform3f transform = limb->limb_->robot()->rootJoint()->currentTransformation (); // get root transform from configuration
           std::vector<sampling::T_OctreeReport> reports(collisionObjects.size());
           std::size_t i (0);
           //#pragma omp parallel for
