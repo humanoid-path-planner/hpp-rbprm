@@ -42,12 +42,12 @@ namespace hpp {
         /// in presented joint
         /// \param limb root of the considered limb
         /// the Configuration_t of this limb will be used to compute the sample
-        Sample(const model::JointPtr_t limb);
+        Sample(const model::JointPtr_t limb, const std::size_t id =0);
         /// Creates sample from Configuration
         /// in presented joint
         /// \param limb root of the considered limb
         /// \param configuration used to compute the sample
-        Sample(const model::JointPtr_t limb, const model::Configuration_t& configuration);
+        Sample(const model::JointPtr_t limb, const model::Configuration_t& configuration, const std::size_t id =0);
         Sample(const Sample &clone);
        ~Sample(){}
 
@@ -59,6 +59,8 @@ namespace hpp {
       const fcl::Vec3f effectorPosition_;
       const Eigen::MatrixXd jacobian_;
       const Eigen::Matrix <model::value_type, 6, 6> jacobianProduct_;
+      /// id in sample container
+      const std::size_t id_;
       //const fcl::Transform3f rotation_; TODO
     }; // class Sample
 

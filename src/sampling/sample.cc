@@ -28,7 +28,7 @@ model::JointPtr_t GetEffector(const model::JointPtr_t limb)
     Joint* current = limb;
     while(current->numberChildJoints() !=0)
     {
-        assert(current->numberChildJoints() ==1);
+        //assert(current->numberChildJoints() ==1);
         current = current->childJoint(0);
     }
     return current;
@@ -56,24 +56,26 @@ Eigen::MatrixXd Jacobian(const model::JointPtr_t limb)
     return current->jacobian().block(0,limb->rankInVelocity(),6, current->rankInVelocity() - limb->rankInVelocity());
 }
 
-Sample::Sample(const model::JointPtr_t limb)
+Sample::Sample(const model::JointPtr_t limb, std::size_t id)
     : startRank_(limb->rankInConfiguration())
     , length_ (ComputeLength(limb))
     , configuration_ (limb->robot()->currentConfiguration().segment(startRank_, length_))
     , effectorPosition_(ComputeEffectorPosition(limb))
     , jacobian_(Jacobian(limb))
     , jacobianProduct_(jacobian_*jacobian_.transpose())
+    , id_(id)
 {
     // NOTHING
 }
 
-Sample::Sample(const model::JointPtr_t limb, const model::Configuration_t& configuration)
+Sample::Sample(const model::JointPtr_t limb, const model::Configuration_t& configuration, std::size_t id)
     : startRank_(limb->rankInConfiguration())
     , length_ (ComputeLength(limb))
     , configuration_ (configuration)
     , effectorPosition_(ComputeEffectorPosition(limb))
     , jacobian_(Jacobian(limb))
     , jacobianProduct_(jacobian_*jacobian_.transpose())
+    , id_(id)
 {
     // NOTHING
 }
@@ -86,6 +88,7 @@ Sample::Sample(const Sample &clone)
     , effectorPosition_(clone.effectorPosition_)
     , jacobian_(clone.jacobian_)
     , jacobianProduct_(clone.jacobianProduct_)
+    , id_(clone.id_)
 {
     // NOTHING
 }
@@ -114,7 +117,7 @@ std::deque<Sample> hpp::rbprm::sampling::GenerateSamples(const model::JointPtr_t
         }
         device->currentConfiguration (config);
         device->computeForwardKinematics();
-        result.push_back(Sample(clone, config.segment(startRank_, length_)));
+        result.push_back(Sample(clone, config.segment(startRank_, length_), i));
     }
     return result;
 }
