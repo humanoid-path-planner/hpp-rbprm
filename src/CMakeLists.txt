@@ -28,6 +28,7 @@ SET(${LIBRARY_NAME}_SOURCES
 	${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-state.hh
 	sampling/sample.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/sampling/sample.hh
 	sampling/sample-container.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/sampling/sample-container.hh
+        tools.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/tools.hh
   )
 
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/src)

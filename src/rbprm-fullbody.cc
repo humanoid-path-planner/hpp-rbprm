@@ -17,6 +17,10 @@
 #include <hpp/rbprm/rbprm-fullbody.hh>
 #include <hpp/model/joint.hh>
 
+#include <hpp/core/constraint-set.hh>
+#include <hpp/constraints/position.hh>
+#include <hpp/constraints/orientation.hh>
+
 namespace hpp {
   namespace rbprm {
 
@@ -62,7 +66,8 @@ namespace hpp {
         // NOTHING
     }
 
-      bool ComputeContact(const hpp::rbprm::RbPrmLimbPtr_t& limb, model::Configuration_t& configuration,
+      bool ComputeContact(const hpp::rbprm::RbPrmFullBodyPtr_t& body,
+                          const hpp::rbprm::RbPrmLimbPtr_t& limb, model::Configuration_t& configuration,
                           const model::ObjectVector_t &collisionObjects, const Eigen::Vector3d& direction, fcl::Vec3f& position, fcl::Vec3f& normal)
       {
           sampling::T_OctreeReport finalSet;
@@ -84,7 +89,13 @@ namespace hpp {
           // pick first sample
           const sampling::OctreeReport& bestReport = *finalSet.begin();
           sampling::Load(*bestReport.sample_, configuration);
-          position = bestReport.sample_->effectorPosition_;
+          position = bestReport.contact_.pos;
+          // Add constraints to resolve Ik
+          core::ConstraintSetPtr_t cSet = core::ConstraintSet::create (body->device_, "aName");
+          cSet->addConstraint(constraints::Position::create(body->device_,
+                                                            limb->limb_,fcl::Vec3f(0,0,0), position));
+          cSet->addConstraint(constraints::Orientation::create(body->device_,
+                                                            limb->limb_,fcl::Vec3f(0,0,0), position));
           normal = -bestReport.contact_.normal;
           return !finalSet.empty();
       }
