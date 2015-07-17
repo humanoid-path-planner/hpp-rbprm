@@ -18,6 +18,7 @@
 #include <hpp/model/joint.hh>
 
 #include <hpp/core/constraint-set.hh>
+#include <hpp/core/config-projector.hh>
 #include <hpp/constraints/position.hh>
 #include <hpp/constraints/orientation.hh>
 
@@ -66,61 +67,72 @@ namespace hpp {
         // NOTHING
     }
 
-      bool ComputeContact(const hpp::rbprm::RbPrmFullBodyPtr_t& body,
-                          const hpp::rbprm::RbPrmLimbPtr_t& limb, model::Configuration_t& configuration,
-                          const model::ObjectVector_t &collisionObjects, const Eigen::Vector3d& direction, fcl::Vec3f& position, fcl::Vec3f& normal)
+    void LockJointRec(const std::string& limb, const model::JointPtr_t joint, core::ConfigProjectorPtr_t& projector )
+    {
+        if(joint->name() == limb) return;
+        core::size_type rankInConfiguration_ (joint->rankInConfiguration ());
       {
-          sampling::T_OctreeReport finalSet;
-          fcl::Transform3f transform = limb->limb_->robot()->rootJoint()->currentTransformation (); // get root transform from configuration
-          std::vector<sampling::T_OctreeReport> reports(collisionObjects.size());
-          std::size_t i (0);
-          //#pragma omp parallel for
-          for(model::ObjectVector_t::const_iterator oit = collisionObjects.begin();
-              oit != collisionObjects.end(); ++oit, ++i)
-          {
-              sampling::GetCandidates(limb->sampleContainer_, transform, *oit, direction, reports[i]);
-          }
-          for(std::vector<sampling::T_OctreeReport>::const_iterator cit = reports.begin();
-              cit != reports.end(); ++cit)
-          {
-              finalSet.insert(cit->begin(), cit->end());
-          }
-          if(finalSet.empty()) return false;
-          // pick first sample
-          const sampling::OctreeReport& bestReport = *finalSet.begin();
-          sampling::Load(*bestReport.sample_, configuration);
-          position = bestReport.contact_.pos;
-          // Add constraints to resolve Ik
-          core::ConstraintSetPtr_t cSet = core::ConstraintSet::create (body->device_, "aName");
-          cSet->addConstraint(constraints::Position::create(body->device_,
-                                                            limb->limb_,fcl::Vec3f(0,0,0), position));
-          cSet->addConstraint(constraints::Orientation::create(body->device_,
-                                                            limb->limb_,fcl::Vec3f(0,0,0), position));
-          normal = -bestReport.contact_.normal;
-          return !finalSet.empty();
-      }
+        rightHandSide (value);
+        assert (rhsSize () == joint->configSize ());
+        projector->add(core::LockedJoint::create(joint, joint->));
+    }
 
-      hpp::rbprm::State ComputeContacts(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const model::Configuration_t& configuration,
-                                        const model::ObjectVector_t& collisionObjects, const Eigen::Vector3d& direction)
+    bool ComputeContact(const hpp::rbprm::RbPrmFullBodyPtr_t& body,
+                      const hpp::rbprm::RbPrmLimbPtr_t& limb, model::Configuration_t& configuration,
+                      const model::ObjectVector_t &collisionObjects, const Eigen::Vector3d& direction, fcl::Vec3f& position, fcl::Vec3f& normal)
+    {
+      sampling::T_OctreeReport finalSet;
+      fcl::Transform3f transform = limb->limb_->robot()->rootJoint()->currentTransformation (); // get root transform from configuration
+      std::vector<sampling::T_OctreeReport> reports(collisionObjects.size());
+      std::size_t i (0);
+      //#pragma omp parallel for
+      for(model::ObjectVector_t::const_iterator oit = collisionObjects.begin();
+          oit != collisionObjects.end(); ++oit, ++i)
       {
-        const T_Limb& limbs = body->GetLimbs();
-        State result;
-        result.configuration_ = configuration;
-        for(T_Limb::const_iterator lit = limbs.begin(); lit != limbs.end(); ++lit)
-        {
-            fcl::Vec3f normal, position;
-            if(ComputeContact(lit->second, result.configuration_, collisionObjects, direction, normal, position))
-            {
-                result.contacts_[lit->first] = true;
-                result.contactNormals_[lit->first] = normal;
-                result.contactPositions_[lit->first] = position;
-            }
-            else
-            {
-                result.contacts_[lit->first] = false;
-            }
-        }
-        return result;
+          sampling::GetCandidates(limb->sampleContainer_, transform, *oit, direction, reports[i]);
       }
+      for(std::vector<sampling::T_OctreeReport>::const_iterator cit = reports.begin();
+          cit != reports.end(); ++cit)
+      {
+          finalSet.insert(cit->begin(), cit->end());
+      }
+      if(finalSet.empty()) return false;
+      // pick first sample
+      const sampling::OctreeReport& bestReport = *finalSet.begin();
+      sampling::Load(*bestReport.sample_, configuration);
+      position = bestReport.contact_.pos;
+      // Add constraints to resolve Ik
+      core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 20);
+      proj->add(core::NumericalConstraint::create (constraints::Position::create(body->device_, limb->limb_,fcl::Vec3f(0,0,0), position)));
+      //proj->addFunction(constraints::Position::create(body->device_, limb->limb_,fcl::Vec3f(0,0,0), position));
+    //          /proj->addFunction(constraints::Orientation::create(body->device_,limb->limb_,fcl::Vec3f(0,0,0), position));
+      //lock all joints
+      configuration body->device_->con
+      normal = -bestReport.contact_.normal;
+      return !finalSet.empty();
+    }
+
+    hpp::rbprm::State ComputeContacts(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const model::Configuration_t& configuration,
+                                    const model::ObjectVector_t& collisionObjects, const Eigen::Vector3d& direction)
+    {
+    const T_Limb& limbs = body->GetLimbs();
+    State result;
+    result.configuration_ = configuration;
+    for(T_Limb::const_iterator lit = limbs.begin(); lit != limbs.end(); ++lit)
+    {
+        fcl::Vec3f normal, position;
+        if(ComputeContact(body, lit->second, result.configuration_, collisionObjects, direction, normal, position))
+        {
+            result.contacts_[lit->first] = true;
+            result.contactNormals_[lit->first] = normal;
+            result.contactPositions_[lit->first] = position;
+        }
+        else
+        {
+            result.contacts_[lit->first] = false;
+        }
+    }
+    return result;
+    }
   } // rbprm
 } //hpp

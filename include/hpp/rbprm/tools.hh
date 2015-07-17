@@ -26,7 +26,7 @@
 namespace hpp {
   namespace tools {
   /// Uses Rodriguez formula to find transformation between two vectors.
-  fcl::Transform3f GetRotationMatrix(const fcl::Vec3f& from, const fcl::Vec3f& to);
+  Eigen::Matrix3d GetRotationMatrix(const Eigen::Vector3d& from, const Eigen::Vector3d& to);
   } // namespace rbprm
 } // namespace hpp
 
