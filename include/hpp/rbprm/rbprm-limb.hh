@@ -37,7 +37,7 @@ namespace hpp {
     class HPP_RBPRM_DLLAPI RbPrmLimb
     {
     public:
-        static RbPrmLimbPtr_t create (const model::JointPtr_t& limb,
+        static RbPrmLimbPtr_t create (const model::JointPtr_t limb,
                                       const std::size_t nbSamples, const double resolution);
 
     public:
@@ -45,6 +45,7 @@ namespace hpp {
 
     public:
         const model::JointPtr_t limb_;
+        const model::JointPtr_t effector_;
         const sampling::SampleContainer sampleContainer_;
 
     protected:

@@ -15,11 +15,12 @@
 // hpp-rbprm. If not, see <http://www.gnu.org/licenses/>.
 
 #include <hpp/rbprm/rbprm-limb.hh>
+#include <hpp/model/joint.hh>
 
 namespace hpp {
   namespace rbprm {
 
-    RbPrmLimbPtr_t RbPrmLimb::create (const model::JointPtr_t& limb,
+    RbPrmLimbPtr_t RbPrmLimb::create (const model::JointPtr_t limb,
                                       const std::size_t nbSamples, const double resolution)
     {
         RbPrmLimb* rbprmDevice = new RbPrmLimb(limb, nbSamples, resolution);
@@ -40,9 +41,21 @@ namespace hpp {
         weakPtr_ = weakPtr;
     }
 
+    model::JointPtr_t GetEffector(const model::JointPtr_t limb)
+    {
+        model::JointPtr_t current = limb;
+        while(current->numberChildJoints() !=0)
+        {
+            //assert(current->numberChildJoints() ==1);
+            current = current->childJoint(0);
+        }
+        return current;
+    }
+
     RbPrmLimb::RbPrmLimb (const model::JointPtr_t& limb,
                           const std::size_t nbSamples, const double resolution)
         : limb_(limb)
+        , effector_(GetEffector(limb))
         , sampleContainer_(limb, nbSamples, resolution)
     {
         // TODO

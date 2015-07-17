@@ -19,6 +19,7 @@
 
 #include <hpp/core/constraint-set.hh>
 #include <hpp/core/config-projector.hh>
+#include <hpp/core/locked-joint.hh>
 #include <hpp/constraints/position.hh>
 #include <hpp/constraints/orientation.hh>
 
@@ -70,11 +71,15 @@ namespace hpp {
     void LockJointRec(const std::string& limb, const model::JointPtr_t joint, core::ConfigProjectorPtr_t& projector )
     {
         if(joint->name() == limb) return;
-        core::size_type rankInConfiguration_ (joint->rankInConfiguration ());
-      {
-        rightHandSide (value);
-        assert (rhsSize () == joint->configSize ());
-        projector->add(core::LockedJoint::create(joint, joint->));
+        const core::Configuration_t& c = joint->robot()->currentConfiguration();
+        core::size_type rankInConfiguration (joint->rankInConfiguration ());
+        {
+            projector->add(core::LockedJoint::create(joint,c.segment(rankInConfiguration, joint->configSize())));
+        }
+        for(std::size_t i=0; i< joint->numberChildJoints(); ++i)
+        {
+            LockJointRec(limb,joint->childJoint(i), projector);
+        }
     }
 
     bool ComputeContact(const hpp::rbprm::RbPrmFullBodyPtr_t& body,
@@ -103,11 +108,17 @@ namespace hpp {
       position = bestReport.contact_.pos;
       // Add constraints to resolve Ik
       core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 20);
-      proj->add(core::NumericalConstraint::create (constraints::Position::create(body->device_, limb->limb_,fcl::Vec3f(0,0,0), position)));
-      //proj->addFunction(constraints::Position::create(body->device_, limb->limb_,fcl::Vec3f(0,0,0), position));
-    //          /proj->addFunction(constraints::Orientation::create(body->device_,limb->limb_,fcl::Vec3f(0,0,0), position));
+      LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
+      proj->add(core::NumericalConstraint::create (constraints::Position::create(body->device_, limb->effector_,fcl::Vec3f(0,0,0), position)));
       //lock all joints
-      configuration body->device_->con
+      proj->apply(configuration);
+std::cout << "efector " << limb->effector_->name() << std::endl;
+std::cout << "sample pos " << bestReport.sample_->effectorPosition_ << std::endl;
+std::cout << "contact pos " << bestReport.contact_.pos << std::endl;
+std::cout << "best found " << bestReport.sample_->id_ << std::endl;
+std::cout << "robot pos " << bestReport.sample_->id_ << std::endl;
+      //core::Configuration_t projectedConf = body->device_->currentConfiguration();
+      //body->device_->currentConfiguration(projectedConf);
       normal = -bestReport.contact_.normal;
       return !finalSet.empty();
     }
@@ -115,6 +126,7 @@ namespace hpp {
     hpp::rbprm::State ComputeContacts(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const model::Configuration_t& configuration,
                                     const model::ObjectVector_t& collisionObjects, const Eigen::Vector3d& direction)
     {
+std::cout << "config " << configuration <<  std::endl;
     const T_Limb& limbs = body->GetLimbs();
     State result;
     result.configuration_ = configuration;
@@ -132,6 +144,7 @@ namespace hpp {
             result.contacts_[lit->first] = false;
         }
     }
+std::cout << "config " << configuration <<  std::endl;
     return result;
     }
   } // rbprm
