@@ -57,16 +57,15 @@ namespace hpp {
             model::JointPtr_t joint = device_->getJointByName(name);
             rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(joint, offset, nbSamples,resolution);
             // adding collision validation
-            core::CollisionValidationPtr_t colVal = core::CollisionValidation::create(device_);
+            //core::CollisionValidationPtr_t colVal = core::CollisionValidation::create(device_);
             for(model::ObjectVector_t::const_iterator cit = collisionObjects.begin();
                 cit != collisionObjects.end(); ++cit)
             {
-                colVal->addObstacle(*cit);
+                collisionValidation_->addObstacle(*cit);
                 //remove effector collision
-                colVal->removeObstacleFromJoint(limb->effector_, *cit);
+                collisionValidation_->removeObstacleFromJoint(limb->effector_, *cit);
             }
             limbs_.insert(std::make_pair(name, limb));
-            collisionValidation_.insert(std::make_pair(name, colVal));
         }
     }
 
@@ -77,6 +76,7 @@ namespace hpp {
 
     RbPrmFullBody::RbPrmFullBody (const model::DevicePtr_t& device)
         : device_(device)
+        , collisionValidation_(core::CollisionValidation::create(device))
         , weakPtr_()
     {
         // NOTHING
@@ -122,15 +122,15 @@ namespace hpp {
       for(;!found_sample && it!=finalSet.end(); ++it)
       {
 
-          const sampling::OctreeReport& bestReport = *finalSet.begin();
+          const sampling::OctreeReport& bestReport = *it;
           sampling::Load(*bestReport.sample_, configuration);
-          if(validation->validate(configuration)) {}
+
           {
               position = bestReport.contact_.pos;
               // the normal is given by the normal of the contacted object
               const fcl::Vec3f z(0,0,1);
               normal = bestReport.normal_;
-//normal = z;
+normal = z;
               // Add constraints to resolve Ik
               core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 20);
               LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
@@ -141,7 +141,12 @@ namespace hpp {
                                                                                             boost::assign::list_of (true)(true)(true))));
 
               if(proj->apply(configuration))
-                found_sample = true;
+              {
+                if(validation->validate(configuration))
+                {
+                    found_sample = true;
+                }
+              }
           }
       }
       return found_sample;
@@ -156,7 +161,7 @@ namespace hpp {
     for(T_Limb::const_iterator lit = limbs.begin(); lit != limbs.end(); ++lit)
     {
         fcl::Vec3f normal, position;
-        if(ComputeContact(body, body->collisionValidation_[lit->first], lit->second, result.configuration_, collisionObjects, direction, normal, position))
+        if(ComputeContact(body, body->collisionValidation_, lit->second, result.configuration_, collisionObjects, direction, normal, position))
         {
             result.contacts_[lit->first] = true;
             result.contactNormals_[lit->first] = normal;

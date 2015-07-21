@@ -56,8 +56,7 @@ namespace hpp {
         const model::DevicePtr_t device_;
 
     private:
-        typedef std::map<std::string, core::CollisionValidationPtr_t > T_Validation;
-        T_Validation collisionValidation_;
+        core::CollisionValidationPtr_t collisionValidation_;
         rbprm::T_Limb limbs_;
 
 
