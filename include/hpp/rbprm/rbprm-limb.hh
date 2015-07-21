@@ -37,7 +37,7 @@ namespace hpp {
     class HPP_RBPRM_DLLAPI RbPrmLimb
     {
     public:
-        static RbPrmLimbPtr_t create (const model::JointPtr_t limb,
+        static RbPrmLimbPtr_t create (const model::JointPtr_t limb, const fcl::Vec3f &offset,
                                       const std::size_t nbSamples, const double resolution);
 
     public:
@@ -47,9 +47,10 @@ namespace hpp {
         const model::JointPtr_t limb_;
         const model::JointPtr_t effector_;
         const sampling::SampleContainer sampleContainer_;
+        const fcl::Vec3f offset_; // effector location
 
     protected:
-      RbPrmLimb (const model::JointPtr_t& limb,
+      RbPrmLimb (const model::JointPtr_t& limb, const fcl::Vec3f &offset,
                  const std::size_t nbSamples, const double resolution);
 
       ///

@@ -20,10 +20,10 @@
 namespace hpp {
   namespace rbprm {
 
-    RbPrmLimbPtr_t RbPrmLimb::create (const model::JointPtr_t limb,
+    RbPrmLimbPtr_t RbPrmLimb::create (const model::JointPtr_t limb, const fcl::Vec3f &offset,
                                       const std::size_t nbSamples, const double resolution)
     {
-        RbPrmLimb* rbprmDevice = new RbPrmLimb(limb, nbSamples, resolution);
+        RbPrmLimb* rbprmDevice = new RbPrmLimb(limb, offset, nbSamples, resolution);
         RbPrmLimbPtr_t res (rbprmDevice);
         res->init (res);
         return res;
@@ -53,10 +53,11 @@ namespace hpp {
     }
 
     RbPrmLimb::RbPrmLimb (const model::JointPtr_t& limb,
-                          const std::size_t nbSamples, const double resolution)
+                          const fcl::Vec3f &offset, const std::size_t nbSamples, const double resolution)
         : limb_(limb)
         , effector_(GetEffector(limb))
         , sampleContainer_(limb, nbSamples, resolution)
+        , offset_(offset)
     {
         // TODO
     }

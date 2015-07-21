@@ -34,11 +34,13 @@ namespace hpp {
 
     struct OctreeReport
     {
-        OctreeReport(const Sample*, const fcl::Contact, const double);
+        OctreeReport(const Sample*, const fcl::Contact, const double, const fcl::Vec3f& normal);
         const Sample* sample_;
         fcl::Contact contact_;
         double manipulability_;
+        fcl::Vec3f normal_;
     };
+
 
 
     struct sample_compare {
@@ -66,6 +68,7 @@ namespace hpp {
         /// Creates sample from Configuration
         /// in presented joint
         /// \param limb root joint for the considered limb
+        /// \param offset position of the effector in joint coordinates
         /// \param nbSamples number of samples to generate
         /// \param resolution, resolution of the octree voxels
         SampleContainer(const model::JointPtr_t limb, const std::size_t nbSamples, const double resolution = 0.1);
@@ -91,18 +94,18 @@ namespace hpp {
 
         friend bool GetCandidates(const SampleContainer& sc, const fcl::Transform3f& treeTrf,
                                                 const hpp::model::CollisionObjectPtr_t& o2,
-                                                const Eigen::Vector3d& direction, T_OctreeReport& report);
+                                                const fcl::Vec3f& direction, T_OctreeReport& report);
 
     }; // class SampleContainer
 
     /// Sorted by manipulability
     T_OctreeReport GetCandidates(const SampleContainer& sc, const fcl::Transform3f& treeTrf,
                                             const hpp::model::CollisionObjectPtr_t& o2,
-                                            const Eigen::Vector3d& direction);
+                                            const fcl::Vec3f& direction);
 
     bool GetCandidates(const SampleContainer& sc, const fcl::Transform3f& treeTrf,
                                             const hpp::model::CollisionObjectPtr_t& o2,
-                                            const Eigen::Vector3d& direction, T_OctreeReport& report);
+                                            const fcl::Vec3f& direction, T_OctreeReport& report);
   } // namespace sampling
 } // namespace rbprm
 } // namespace hpp

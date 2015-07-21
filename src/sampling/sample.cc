@@ -68,7 +68,7 @@ Sample::Sample(const model::JointPtr_t limb, std::size_t id)
     // NOTHING
 }
 
-Sample::Sample(const model::JointPtr_t limb, const model::Configuration_t& configuration, std::size_t id)
+Sample::Sample(const model::JointPtr_t limb, model::ConfigurationIn_t configuration, std::size_t id)
     : startRank_(limb->rankInConfiguration())
     , length_ (ComputeLength(limb))
     , configuration_ (configuration)
@@ -93,12 +93,12 @@ Sample::Sample(const Sample &clone)
     // NOTHING
 }
 
-void hpp::rbprm::sampling::Load(const Sample& sample, Configuration_t & configuration)
+void hpp::rbprm::sampling::Load(const Sample& sample, ConfigurationOut_t configuration)
 {
     configuration.segment(sample.startRank_, sample.length_) = sample.configuration_;
 }
 
-std::deque<Sample> hpp::rbprm::sampling::GenerateSamples(const model::JointPtr_t model,  const std::size_t nbSamples)
+std::deque<Sample> hpp::rbprm::sampling::GenerateSamples(const model::JointPtr_t model, const std::size_t nbSamples)
 {
     std::deque<Sample> result;
     model::DevicePtr_t device(model->robot()->clone());

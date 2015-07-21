@@ -31,23 +31,24 @@ using namespace hpp::rbprm;
 using namespace hpp::rbprm::sampling;
 
 
-hpp::rbprm::RbPrmFullBodyPtr_t initFullBodyDevice()
+hpp::rbprm::RbPrmFullBodyPtr_t initFullBodyDevice(const ObjectVector_t& collisionObjects)
 {
     DevicePtr_t device = initDevice();
+    fcl::Vec3f offset(0,0,0);
     hpp::rbprm::RbPrmFullBodyPtr_t robot =
             RbPrmFullBody::create(device);
-    robot->AddLimb("elbow", 1000, 0.1);
+    robot->AddLimb("elbow",offset, collisionObjects, 1000, 0.1);
     return robot;
 }
 
 BOOST_AUTO_TEST_CASE (fullbody) {
-    RbPrmFullBodyPtr_t fb = initFullBodyDevice();
     CollisionObjectPtr_t colObject = MeshObstacleBox();
     ObjectVector_t objects;
     objects.push_back(colObject);
+    RbPrmFullBodyPtr_t fb = initFullBodyDevice(objects);
     const Configuration_t& configuration = fb->device_->currentConfiguration();
     hpp::rbprm::State state =
-            ComputeContacts(fb, configuration, objects,Eigen::Vector3d(1,0,0));
+            ComputeContacts(fb, configuration, objects,fcl::Vec3f(1,0,0));
     BOOST_CHECK_MESSAGE (state.contacts_["elbow"],
                                               "limb should be in contact");
     BOOST_CHECK_MESSAGE (state.configuration_ != configuration,

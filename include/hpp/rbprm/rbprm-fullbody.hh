@@ -23,6 +23,7 @@
 # include <hpp/rbprm/rbprm-state.hh>
 # include <hpp/model/device.hh>
 # include <hpp/rbprm/rbprm-limb.hh>
+#include  <hpp/core/collision-validation.hh>
 
 namespace hpp {
   namespace rbprm {
@@ -46,7 +47,8 @@ namespace hpp {
         /// Creates a Limb for the robot,
         /// identified by its name. Stores a sample
         /// container, used for requests
-        void AddLimb(const std::string& name,
+        void AddLimb(const std::string& name, const fcl::Vec3f& offset,
+                     const model::ObjectVector_t& collisionObjects,
                      const std::size_t nbSamples, const double resolution);
 
     public:
@@ -54,6 +56,8 @@ namespace hpp {
         const model::DevicePtr_t device_;
 
     private:
+        typedef std::map<std::string, core::CollisionValidationPtr_t > T_Validation;
+        T_Validation collisionValidation_;
         rbprm::T_Limb limbs_;
 
 
@@ -67,10 +71,13 @@ namespace hpp {
 
     private:
       RbPrmFullBodyWkPtr_t weakPtr_;
+      friend hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration,
+                                        const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction);
+
     }; // class RbPrmDevice
 
-    hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const model::Configuration_t& configuration,
-                                      const model::ObjectVector_t& collisionObjects, const Eigen::Vector3d& direction);
+    hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration,
+                                      const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction);
   } // namespace rbprm
 
 } // namespace hpp

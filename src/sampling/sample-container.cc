@@ -17,6 +17,7 @@
 #include <hpp/rbprm/sampling/sample-container.hh>
 #include <hpp/fcl/shape/geometric_shapes.h>
 #include <hpp/fcl/collision.h>
+#include <hpp/fcl/BVH/BVH_model.h>
 #include <hpp/model/collision-object.hh>
 
 #include <vector>
@@ -125,20 +126,21 @@ SampleContainer::~SampleContainer()
 }
 
 
-OctreeReport::OctreeReport(const Sample* s, const fcl::Contact c, const double m)
+OctreeReport::OctreeReport(const Sample* s, const fcl::Contact c, const double m, const fcl::Vec3f& normal)
     : sample_(s)
     , contact_(c)
     , manipulability_(m)
+    , normal_(normal)
 {
     // NOTHING
 }
 
-// TODO include dot product with normal
+// TODO Samples should be Vec3f
 bool rbprm::sampling::GetCandidates(const SampleContainer& sc, const fcl::Transform3f& treeTrf,
                                                                           const hpp::model::CollisionObjectPtr_t& o2,
-                                                                          const Eigen::Vector3d& direction, hpp::rbprm::sampling::T_OctreeReport &reports)
+                                                                          const fcl::Vec3f& direction, hpp::rbprm::sampling::T_OctreeReport &reports)
 {
-    fcl::CollisionRequest req(10, true);
+    fcl::CollisionRequest req(30, true);
     fcl::CollisionResult cResult;
     fcl::CollisionObjectPtr_t obj = o2->fcl();
     fcl::collide(sc.pImpl_->geometry_.get(), treeTrf, obj->collisionGeometry().get(), obj->getTransform(), req, cResult);
@@ -151,7 +153,21 @@ bool rbprm::sampling::GetCandidates(const SampleContainer& sc, const fcl::Transf
         for(std::vector<const sampling::Sample*>::const_iterator sit = samples.begin();
             sit != samples.end(); ++sit)
         {
-            OctreeReport report(*sit, contact, direction.transpose() * (*sit)->jacobianProduct_.block<3,3>(0,0) * direction);
+            //find normal id
+            assert(contact.o2->getObjectType() == fcl::OT_BVH); // only works with meshes
+            const fcl::BVHModel<fcl::RSS>* surface = static_cast<const fcl::BVHModel<fcl::RSS>*> (contact.o2);
+            fcl::Vec3f normal; // = -bestReport.contact_.normal;
+            const fcl::Triangle& tr = *surface->tri_indices;
+            const fcl::Vec3f& v1 = surface->vertices[tr[0]];
+            const fcl::Vec3f& v2 = surface->vertices[tr[1]];
+            const fcl::Vec3f& v3 = surface->vertices[tr[2]];
+            normal = (v2 - v1).cross(v3 - v1);
+            normal.normalize();
+            Eigen::Vector3d eNormal(normal[0], normal[1], normal[2]);
+            Eigen::Vector3d eDir(direction[0], direction[1], direction[2]);
+            double EFORT = eDir.transpose() * (*sit)->jacobianProduct_.block<3,3>(0,0) * eDir;
+            EFORT *= (eDir.dot(eNormal));
+            OctreeReport report(*sit, contact,EFORT , normal);
             reports.insert(report);
         }
     }
@@ -161,7 +177,7 @@ bool rbprm::sampling::GetCandidates(const SampleContainer& sc, const fcl::Transf
 
 rbprm::sampling::T_OctreeReport rbprm::sampling::GetCandidates(const SampleContainer& sc, const fcl::Transform3f& treeTrf,
                                                                           const hpp::model::CollisionObjectPtr_t& o2,
-                                                                          const Eigen::Vector3d& direction)
+                                                                          const fcl::Vec3f& direction)
 {
     rbprm::sampling::T_OctreeReport report;
     GetCandidates(sc, treeTrf, o2, direction, report);

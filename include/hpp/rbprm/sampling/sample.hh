@@ -47,7 +47,7 @@ namespace hpp {
         /// in presented joint
         /// \param limb root of the considered limb
         /// \param configuration used to compute the sample
-        Sample(const model::JointPtr_t limb, const model::Configuration_t& configuration, const std::size_t id =0);
+        Sample(const model::JointPtr_t limb, model::ConfigurationIn_t configuration, const std::size_t id =0);
         Sample(const Sample &clone);
        ~Sample(){}
 
@@ -64,9 +64,9 @@ namespace hpp {
       //const fcl::Transform3f rotation_; TODO
     }; // class Sample
 
-std::deque<Sample> GenerateSamples(const model::JointPtr_t model,  const std::size_t nbSamples);
+std::deque<Sample> GenerateSamples(const model::JointPtr_t model, const std::size_t nbSamples);
 /// LoadSample into robot
-void Load(const Sample& sample, model::Configuration_t& robot);
+void Load(const Sample& sample, model::ConfigurationOut_t robot);
 
   } // namespace sampling
 } // namespace rbprm
