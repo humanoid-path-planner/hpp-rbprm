@@ -152,6 +152,45 @@ normal = z;
       return found_sample;
     }
 
+    bool ComputeContact(const State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body,
+                        core::CollisionValidationPtr_t validation,
+                        const hpp::rbprm::RbPrmLimbPtr_t& limb, model::ConfigurationOut_t configuration,
+                        const model::ObjectVector_t &collisionObjects, const fcl::Vec3f& direction, fcl::Vec3f& position, fcl::Vec3f& normal)
+    {
+        bool hasContact(false);
+        const std::string& name = limb->limb_->name();
+        std::map<std::string,bool>::const_iterator contactIt = previous.contacts_.find(name);
+        if(contactIt != previous.contacts_.end() && contactIt->second)
+        {
+const fcl::Vec3f z(0,0,1);
+            // try to maintain contact
+            const fcl::Vec3f& ppos  =previous.contactPositions_.at(name);
+            const fcl::Vec3f& pnorm  =previous.contactNormals_.at(name);
+            core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 20);
+            LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
+            proj->add(core::NumericalConstraint::create (constraints::Position::create(body->device_, limb->effector_,fcl::Vec3f(0,0,0), ppos - limb->offset_)));
+            proj->add(core::NumericalConstraint::create (constraints::Orientation::create(body->device_,
+                                                                                          limb->effector_,
+                                                                                          tools::GetRotationMatrix(z,pnorm),
+                                                                                          boost::assign::list_of (true)(true)(true))));
+            if(proj->apply(configuration))
+            {
+              if(validation->validate(configuration))
+              {
+                  hasContact = true;
+                  position = ppos;
+                  normal = pnorm;
+              }
+            }
+        }
+        // V0 always recreate contacts
+        else
+        {
+            return ComputeContact(body,validation,limb,configuration,collisionObjects,direction,position,normal);
+        }
+        return hasContact;
+    }
+
     hpp::rbprm::State ComputeContacts(const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration,
                                     const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction)
     {
@@ -164,7 +203,35 @@ normal = z;
     for(T_Limb::const_iterator lit = limbs.begin(); lit != limbs.end(); ++lit)
     {
         fcl::Vec3f normal, position;
-        if(ComputeContact(body, body->collisionValidation_, lit->second, result.configuration_, collisionObjects, direction, normal, position))
+        if(ComputeContact(body, body->collisionValidation_, lit->second, result.configuration_, collisionObjects, direction, position, normal))
+        {
+            result.contacts_[lit->first] = true;
+            result.contactNormals_[lit->first] = normal;
+            result.contactPositions_[lit->first] = position;
+        }
+        else
+        {
+            result.contacts_[lit->first] = false;
+        }
+    }
+    // reload previous configuration
+    body->device_->currentConfiguration(save);
+    return result;
+    }
+
+    hpp::rbprm::State ComputeContacts(const hpp::rbprm::State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration,
+                                    const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction)
+    {
+    const T_Limb& limbs = body->GetLimbs();
+    State result;
+    // save old configuration
+    core::ConfigurationIn_t save = body->device_->currentConfiguration();
+    result.configuration_ = configuration;
+    body->device_->currentConfiguration(configuration);
+    for(T_Limb::const_iterator lit = limbs.begin(); lit != limbs.end(); ++lit)
+    {
+        fcl::Vec3f normal, position;
+        if(ComputeContact(previous, body, body->collisionValidation_, lit->second, result.configuration_, collisionObjects, direction, position, normal))
         {
             result.contacts_[lit->first] = true;
             result.contactNormals_[lit->first] = normal;

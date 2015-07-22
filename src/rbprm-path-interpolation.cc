@@ -50,8 +50,7 @@ namespace hpp {
             direction.normalize(&nonZero);
             if(!nonZero) direction = fcl::Vec3f(0,0,1.);
             configuration.head(configPosition.rows()) = configPosition;
-            std::cout << "position " << configuration.head<3>() << std::endl;
-            states.push_back(ComputeContacts(robot_,configuration,collisionObjects,direction));
+            states.push_back(ComputeContacts(previous, robot_,configuration,collisionObjects,direction));
         }
         states.push_back(this->end_);
         return states;
