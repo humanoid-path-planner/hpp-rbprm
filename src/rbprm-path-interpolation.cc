@@ -43,14 +43,14 @@ namespace hpp {
         {
             const State& previous = states.back();
             core::Configuration_t configuration = previous.configuration_;
-            const core::ConfigurationIn_t& configPosition = path_->operator ()(i);
-            std::cout << "position " << configPosition << std::endl;
+            const core::Configuration_t configPosition = path_->operator ()(i);
             Eigen::Vector3d dir = configPosition.head<3>() - previous.configuration_.head<3>();
             fcl::Vec3f direction(dir[0], dir[1], dir[2]);
             bool nonZero(false);
             direction.normalize(&nonZero);
             if(!nonZero) direction = fcl::Vec3f(0,0,1.);
             configuration.head(configPosition.rows()) = configPosition;
+            std::cout << "position " << configuration.head<3>() << std::endl;
             states.push_back(ComputeContacts(robot_,configuration,collisionObjects,direction));
         }
         states.push_back(this->end_);

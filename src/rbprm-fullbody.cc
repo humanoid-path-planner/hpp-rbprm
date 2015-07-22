@@ -157,7 +157,10 @@ normal = z;
     {
     const T_Limb& limbs = body->GetLimbs();
     State result;
+    // save old configuration
+    core::ConfigurationIn_t save = body->device_->currentConfiguration();
     result.configuration_ = configuration;
+    body->device_->currentConfiguration(configuration);
     for(T_Limb::const_iterator lit = limbs.begin(); lit != limbs.end(); ++lit)
     {
         fcl::Vec3f normal, position;
@@ -172,6 +175,8 @@ normal = z;
             result.contacts_[lit->first] = false;
         }
     }
+    // reload previous configuration
+    body->device_->currentConfiguration(save);
     return result;
     }
   } // rbprm
