@@ -30,6 +30,8 @@ SET(${LIBRARY_NAME}_SOURCES
 	sampling/sample.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/sampling/sample.hh
 	sampling/sample-container.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/sampling/sample-container.hh
         tools.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/tools.hh
+	stability/stability.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/stability/stability.hh
+	stability/support.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/stability/support.hh
   )
 
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/src)
@@ -38,11 +40,14 @@ ADD_LIBRARY(${LIBRARY_NAME}
   ${${LIBRARY_NAME}_SOURCES}
   )
 
+TARGET_LINK_LIBRARIES(${LIBRARY_NAME} polytope)
+
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-core)
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-util)
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-statistics)
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-constraints)
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-fcl)
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-model)
+PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} polytope)
 
 INSTALL(TARGETS ${LIBRARY_NAME} DESTINATION lib)

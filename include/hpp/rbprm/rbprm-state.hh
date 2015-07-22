@@ -26,10 +26,55 @@
 namespace hpp {
   namespace rbprm {
   struct HPP_RBPRM_DLLAPI State{
+      State():nbContacts(0){}
+      State(const State& other)
+          : configuration_(other.configuration_)
+          , nbContacts(other.nbContacts)
+      {
+
+          contacts_= (other.contacts_);
+          contactNormals_ = (other.contactNormals_);
+          contactPositions_ = (other.contactPositions_);
+      }
+
         hpp::model::Configuration_t configuration_;
         std::map<std::string, bool> contacts_;
         std::map<std::string, fcl::Vec3f> contactNormals_;
         std::map<std::string, fcl::Vec3f> contactPositions_;
+        unsigned int nbContacts;
+
+        void print()
+        {
+            /*std::cout << " State " << std::endl;
+            std::cout << " \t Configuration " << std::endl;
+            for(int i = 0; i< configuration_.rows(); ++i)
+            {
+                std::cout << configuration_[i] << " ";
+            }
+            std::cout << std::endl;
+
+            std::cout << " \t contacts " << std::endl;
+            for(std::map<std::string, bool>::const_iterator cit =
+                contacts_.begin(); cit != contacts_.end(); ++cit)
+            {
+                std::cout << cit->first << ": " <<  cit->second << std::endl;
+            }
+
+            std::cout << " \t positions " << std::endl;
+            for(std::map<std::string, fcl::Vec3f>::const_iterator cit =
+                contactPositions_.begin(); cit != contactPositions_.end(); ++cit)
+            {
+                std::cout << cit->first << ": " <<  cit->second << std::endl;
+            }
+            std::cout << " \t contactNormals_ " << std::endl;
+            for(std::map<std::string, fcl::Vec3f>::const_iterator cit =
+                contactNormals_.begin(); cit != contactNormals_.end(); ++cit)
+            {
+                std::cout << cit->first << ": " <<  cit->second << std::endl;
+            }
+            std::cout << std::endl;*/
+        }
+
     }; // struct State
   } // namespace rbprm
 } // namespace hpp

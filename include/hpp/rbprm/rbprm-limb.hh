@@ -38,6 +38,7 @@ namespace hpp {
     {
     public:
         static RbPrmLimbPtr_t create (const model::JointPtr_t limb, const fcl::Vec3f &offset,
+                                      const fcl::Vec3f &normal,const double x, const double y,
                                       const std::size_t nbSamples, const double resolution);
 
     public:
@@ -48,9 +49,13 @@ namespace hpp {
         const model::JointPtr_t effector_;
         const sampling::SampleContainer sampleContainer_;
         const fcl::Vec3f offset_; // effector location
+        const fcl::Vec3f normal_; // effector normal for surface
+        const double x_; // half width
+        const double y_; // half length of contact surface
 
     protected:
       RbPrmLimb (const model::JointPtr_t& limb, const fcl::Vec3f &offset,
+                 const fcl::Vec3f &normal,const double x, const double y,
                  const std::size_t nbSamples, const double resolution);
 
       ///

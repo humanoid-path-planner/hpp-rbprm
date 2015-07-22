@@ -47,8 +47,9 @@ namespace hpp {
         /// Creates a Limb for the robot,
         /// identified by its name. Stores a sample
         /// container, used for requests
-        void AddLimb(const std::string& name, const fcl::Vec3f& offset,
-                     const model::ObjectVector_t& collisionObjects,
+        void AddLimb(const std::string& name, const fcl::Vec3f &offset,
+                     const fcl::Vec3f &normal,const double x, const double y,
+                     const model::ObjectVector_t &collisionObjects,
                      const std::size_t nbSamples, const double resolution);
 
     public:

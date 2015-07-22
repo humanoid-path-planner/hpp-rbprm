@@ -15,6 +15,7 @@
 // hpp-rbprm. If not, see <http://www.gnu.org/licenses/>.
 
 #include <hpp/rbprm/rbprm-path-interpolation.hh>
+#include <hpp/rbprm/stability/stability.hh>
 
 namespace hpp {
   namespace rbprm {
@@ -39,7 +40,8 @@ namespace hpp {
         std::vector<State> states;
         states.push_back(this->start_);
         const core::interval_t& range = path_->timeRange();
-        for(double i = range.first; i< range.second; i+= timeStep)
+        int id = 1;
+        for(double i = range.first; i< range.second; i+= timeStep, ++id)
         {
             const State& previous = states.back();
             core::Configuration_t configuration = previous.configuration_;
@@ -50,7 +52,8 @@ namespace hpp {
             direction.normalize(&nonZero);
             if(!nonZero) direction = fcl::Vec3f(0,0,1.);
             configuration.head(configPosition.rows()) = configPosition;
-            states.push_back(ComputeContacts(previous, robot_,configuration,collisionObjects,direction));
+            // TODO Direction 6d
+            states.push_back(ComputeContacts(previous, robot_,configuration,collisionObjects,-direction));
         }
         states.push_back(this->end_);
         return states;

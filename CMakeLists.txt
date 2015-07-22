@@ -38,6 +38,7 @@ SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
  ADD_REQUIRED_DEPENDENCY("hpp-constraints >= 3")
  ADD_REQUIRED_DEPENDENCY("hpp-model >= 3")
  ADD_REQUIRED_DEPENDENCY("hpp-model-urdf >= 3")
+ ADD_REQUIRED_DEPENDENCY("polytope")
 
 FIND_PACKAGE( OpenMP REQUIRED)
 if(OPENMP_FOUND)
@@ -58,6 +59,8 @@ SET(${PROJECT_NAME}_HEADERS
     include/hpp/rbprm/rbprm-validation.hh
     include/hpp/rbprm/sampling/sample.hh
     include/hpp/rbprm/sampling/sample-container.hh
+		include/hpp/rbprm/stability/stability.hh
+		include/hpp/rbprm/stability/support.hh
     include/hpp/rbprm/tools.hh
   )
 

@@ -20,6 +20,8 @@
 #include "test-tools.hh"
 #include "hpp/rbprm/rbprm-fullbody.hh"
 
+#include "hpp/rbprm/stability/stability.hh"
+
 #define BOOST_TEST_MODULE test-fullbody
 #include <boost/test/included/unit_test.hpp>
 
@@ -35,9 +37,10 @@ hpp::rbprm::RbPrmFullBodyPtr_t initFullBodyDevice(const ObjectVector_t& collisio
 {
     DevicePtr_t device = initDevice();
     fcl::Vec3f offset(0,0,0);
+    fcl::Vec3f normal(0,0,1);
     hpp::rbprm::RbPrmFullBodyPtr_t robot =
             RbPrmFullBody::create(device);
-    robot->AddLimb("elbow",offset, collisionObjects, 1000, 0.1);
+    robot->AddLimb("elbow",offset, normal, 0.1,0.1, collisionObjects, 1000, 0.1);
     return robot;
 }
 
