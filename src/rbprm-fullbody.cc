@@ -253,7 +253,7 @@ normal = z;
               }
           }
       }
-      if(found_sample)
+      if(found_sample && (stableForOneContact || current.nbContacts > 0 ))
       {
           std::cout << "stable contact found for " << limb->limb_->name() << std::endl;
           current.stable = true;
