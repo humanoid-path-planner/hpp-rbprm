@@ -37,6 +37,7 @@ namespace rbprm {
 namespace stability{
 
     const polytope::vector3_t gravity(0,0,-9.81);
+    static bool init = false;
 
     const polytope::ProjectedCone* computeCone(const RbPrmFullBodyPtr_t fullbody, const State& state)
     {
@@ -76,6 +77,11 @@ namespace stability{
 
     bool IsStable(const RbPrmFullBodyPtr_t fullbody, const State& state)
     {
+        if(!init)
+        {
+            polytope::init_library();
+            init = true;
+        }
         std::vector<std::string> contacts;
         for(std::map<std::string,bool>::const_iterator cit = state.contacts_.begin();
             cit!=state.contacts_.end(); ++ cit)

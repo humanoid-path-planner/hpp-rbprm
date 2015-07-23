@@ -210,7 +210,8 @@ normal = z;
                               State& current,
                               core::CollisionValidationPtr_t validation,
                               const hpp::rbprm::RbPrmLimbPtr_t& limb, model::ConfigurationOut_t configuration,
-                              const model::ObjectVector_t &collisionObjects, const fcl::Vec3f& direction, fcl::Vec3f& position, fcl::Vec3f& normal)
+                              const model::ObjectVector_t &collisionObjects, const fcl::Vec3f& direction, fcl::Vec3f& position, fcl::Vec3f& normal,
+                              bool contactIfFails = true)
     {
       sampling::T_OctreeReport finalSet;
       fcl::Transform3f transform = limb->limb_->robot()->rootJoint()->currentTransformation (); // get root transform from configuration
@@ -273,7 +274,7 @@ normal = z;
                         tmp.print();
                         found_sample = true;
                     }
-                    else if(!unstableContact)
+                    else if(!unstableContact && contactIfFails)
                     {
                         unstableContact = true;
                         unstableContactConfiguration = configuration;
@@ -342,6 +343,20 @@ normal = z;
     return result;
     }
 
+    std::vector<std::string> sortContactLimbs(const fcl::Vec3f& /*direction*/, const State& result, const hpp::rbprm::RbPrmFullBodyPtr_t& /*body*/)
+    {
+        //TODO
+        std::vector<std::string> res;
+        //std::vector<double> vals;
+        for(std::map<std::string,fcl::Vec3f>::const_iterator cit = result.contactPositions_.begin();
+            cit != result.contactPositions_.end(); ++cit)
+        {
+            res.push_back(cit->first);
+        }
+        //direction.dot()
+        return res;
+    }
+
     hpp::rbprm::State ComputeContacts(const hpp::rbprm::State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration,
                                     const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction)
     {
@@ -366,8 +381,23 @@ normal = z;
     }
     // reload previous configuration
     static int id = 0;
-    //std::cout << "state " << ++id << " stable ? " << stability::IsStablePoly(body,result) << std::endl;
     std::cout << "state " << ++id << " stable ? " << stability::IsStable(body,result) << std::endl;
+    // no stable contact was found / limb maintained
+    if(!stability::IsStablePoly(body,result))
+    {
+        // replace existing contacts
+        std::vector<std::string> limbnames = sortContactLimbs(direction, result, body);
+        for(std::vector<std::string>::const_iterator cit = limbnames.begin(); cit !=
+            limbnames.end(); ++cit)
+        {
+            fcl::Vec3f normal, position;
+            //if(ComputeStableContact(body, result, body->collisionValidation_, body->GetLimbs().at(*cit), config, collisionObjects, direction, position, normal, false))
+            {
+                break;
+            }
+        }
+    }
+    std::cout << "state " << ++id << " stable ? " << stability::IsStablePoly(body,result) << std::endl;
     body->device_->currentConfiguration(save);
     result.print();
     return result;
