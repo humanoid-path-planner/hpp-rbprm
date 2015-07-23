@@ -26,10 +26,11 @@
 namespace hpp {
   namespace rbprm {
   struct HPP_RBPRM_DLLAPI State{
-      State():nbContacts(0){}
+      State():nbContacts(0), stable(false){}
       State(const State& other)
           : configuration_(other.configuration_)
           , nbContacts(other.nbContacts)
+          , stable(other.stable)
       {
 
           contacts_= (other.contacts_);
@@ -42,6 +43,7 @@ namespace hpp {
         std::map<std::string, fcl::Vec3f> contactNormals_;
         std::map<std::string, fcl::Vec3f> contactPositions_;
         unsigned int nbContacts;
+        bool stable;
 
         void print()
         {

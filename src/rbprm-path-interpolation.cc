@@ -37,11 +37,11 @@ namespace hpp {
 
     std::vector<State> RbPrmInterpolation::Interpolate(const model::ObjectVector_t &collisionObjects, const double timeStep)
     {
+        std::cout << "interpolation " << std::endl;
         std::vector<State> states;
         states.push_back(this->start_);
         const core::interval_t& range = path_->timeRange();
-        int id = 1;
-        for(double i = range.first; i< range.second; i+= timeStep, ++id)
+        for(double i = range.first + timeStep; i< range.second; i+= timeStep)
         {
             const State& previous = states.back();
             core::Configuration_t configuration = previous.configuration_;

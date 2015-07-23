@@ -5,7 +5,11 @@ TODO:
 
 Assumes 6 DOF abstraction
 
-Add rotation matrix to state information to compute stability
+Add cone to state to avoid stability recomputation
+
+optimize stability request (escpecially for the ocllision free case)
+
+Point offset depends on rotation with normal when matching contact
 
 Handle not only position but also rotation in effector contact point offset.
 (especially when initializing default start and goal states in corba server)
