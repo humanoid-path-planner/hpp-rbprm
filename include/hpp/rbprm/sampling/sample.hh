@@ -42,12 +42,12 @@ namespace hpp {
         /// in presented joint
         /// \param limb root of the considered limb
         /// the Configuration_t of this limb will be used to compute the sample
-        Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, const std::size_t id =0);
+        Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, const fcl::Vec3f& offset = fcl::Vec3f(0,0,0),  const std::size_t id =0);
         /// Creates sample from Configuration
         /// in presented joint
         /// \param limb root of the considered limb
         /// \param configuration used to compute the sample
-        Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, model::ConfigurationIn_t configuration, const std::size_t id =0);
+        Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, model::ConfigurationIn_t configuration, const fcl::Vec3f& offset = fcl::Vec3f(0,0,0), const std::size_t id =0);
         Sample(const Sample &clone);
        ~Sample(){}
 
@@ -64,7 +64,7 @@ namespace hpp {
       //const fcl::Transform3f rotation_; TODO
     }; // class Sample
 
-std::deque<Sample> GenerateSamples(const model::JointPtr_t model,  const std::string& effector, const std::size_t nbSamples);
+std::deque<Sample> GenerateSamples(const model::JointPtr_t model,  const std::string& effector,  const std::size_t nbSamples,const fcl::Vec3f& offset = fcl::Vec3f(0,0,0));
 /// LoadSample into robot
 void Load(const Sample& sample, model::ConfigurationOut_t robot);
 

@@ -71,7 +71,7 @@ namespace hpp {
         /// \param offset position of the effector in joint coordinates
         /// \param nbSamples number of samples to generate
         /// \param resolution, resolution of the octree voxels
-        SampleContainer(const model::JointPtr_t limb, const std::string& effector, const std::size_t nbSamples, const double resolution = 0.1);
+        SampleContainer(const model::JointPtr_t limb, const std::string& effector, const std::size_t nbSamples, const fcl::Vec3f& offset = fcl::Vec3f(0,0,0), const double resolution = 0.1);
        ~SampleContainer();
 
     private:

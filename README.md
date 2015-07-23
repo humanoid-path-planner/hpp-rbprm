@@ -4,6 +4,8 @@ Implementation of RB-PRM planner using hpp
 
 TODO:
 
+Init value of HRP2 ankle really weird?
+
 only samples until effector position 
 
 Assumes 6 DOF abstraction

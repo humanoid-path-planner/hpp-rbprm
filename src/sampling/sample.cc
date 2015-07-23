@@ -33,9 +33,10 @@ std::size_t ComputeLength(const model::JointPtr_t limb, const model::JointPtr_t 
 }
 
 
-fcl::Vec3f ComputeEffectorPosition(const model::JointPtr_t /*limb*/, const model::JointPtr_t effector)
+fcl::Vec3f ComputeEffectorPosition(const model::JointPtr_t /*limb*/, const model::JointPtr_t effector, const fcl::Vec3f& /*offset*/)
 {
-    return effector->currentTransformation().getTranslation();
+    const fcl::Transform3f& transform = effector->currentTransformation();
+    return transform.getTranslation();// + transform.getRotation() * offset ;
 }
 
 Eigen::MatrixXd Jacobian(const model::JointPtr_t limb, const model::JointPtr_t effector)
@@ -43,11 +44,11 @@ Eigen::MatrixXd Jacobian(const model::JointPtr_t limb, const model::JointPtr_t e
     return effector->jacobian().block(0,limb->rankInVelocity(),6, effector->rankInVelocity() - limb->rankInVelocity());
 }
 
-Sample::Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, std::size_t id)
+Sample::Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, const fcl::Vec3f& offset, std::size_t id)
     : startRank_(limb->rankInConfiguration())
     , length_ (ComputeLength(limb, effector))
     , configuration_ (limb->robot()->currentConfiguration().segment(startRank_, length_))
-    , effectorPosition_(ComputeEffectorPosition(limb, effector))
+    , effectorPosition_(ComputeEffectorPosition(limb, effector,offset))
     , jacobian_(Jacobian(limb, effector))
     , jacobianProduct_(jacobian_*jacobian_.transpose())
     , id_(id)
@@ -55,11 +56,11 @@ Sample::Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, s
     // NOTHING
 }
 
-Sample::Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, model::ConfigurationIn_t configuration, std::size_t id)
+Sample::Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, model::ConfigurationIn_t configuration,  const fcl::Vec3f& offset, std::size_t id)
     : startRank_(limb->rankInConfiguration())
     , length_ (ComputeLength(limb, effector))
     , configuration_ (configuration)
-    , effectorPosition_(ComputeEffectorPosition(limb,effector))
+    , effectorPosition_(ComputeEffectorPosition(limb,effector,offset))
     , jacobian_(Jacobian(limb,effector))
     , jacobianProduct_(jacobian_*jacobian_.transpose())
     , id_(id)
@@ -86,7 +87,7 @@ void hpp::rbprm::sampling::Load(const Sample& sample, ConfigurationOut_t configu
 }
 
 std::deque<Sample> hpp::rbprm::sampling::GenerateSamples(const model::JointPtr_t model, const std::string& effector
-                                                         , const std::size_t nbSamples)
+                                                         , const std::size_t nbSamples, const fcl::Vec3f& offset)
 {
     std::deque<Sample> result;
     model::DevicePtr_t device(model->robot()->clone());
@@ -106,7 +107,7 @@ std::deque<Sample> hpp::rbprm::sampling::GenerateSamples(const model::JointPtr_t
         }
         device->currentConfiguration (config);
         device->computeForwardKinematics();
-        result.push_back(Sample(clone, effectorClone, config.segment(startRank_, length_), i));
+        result.push_back(Sample(clone, effectorClone, config.segment(startRank_, length_), offset, i));
     }
     return result;
 }

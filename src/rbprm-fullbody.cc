@@ -121,10 +121,11 @@ namespace hpp {
             const fcl::Vec3f& pnorm  =previous.contactNormals_.at(name);
             core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 20);
             LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
-            proj->add(core::NumericalConstraint::create (constraints::Position::create(body->device_, limb->effector_,fcl::Vec3f(0,0,0), ppos - limb->offset_)));
+            fcl::Matrix3f rotation = tools::GetRotationMatrix(z,pnorm);
+            proj->add(core::NumericalConstraint::create (constraints::Position::create(body->device_, limb->effector_,fcl::Vec3f(0,0,0), ppos - rotation * limb->offset_)));
             proj->add(core::NumericalConstraint::create (constraints::Orientation::create(body->device_,
                                                                                           limb->effector_,
-                                                                                          tools::GetRotationMatrix(z,pnorm),
+                                                                                          rotation,
                                                                                           boost::assign::list_of (true)(true)(true))));
             if(proj->apply(current.configuration_) && validation->validate(current.configuration_))
             {
@@ -166,6 +167,29 @@ namespace hpp {
         return false;
     }
 
+    // assumes unit direction
+    std::vector<bool> setRotationConstraints(const fcl::Vec3f& /*direction*/)
+    {
+        std::vector<bool> res;
+        for(std::size_t i =0; i <3; ++i)
+        {
+            //res.push_back(std::abs(direction[i]) < 2*std::numeric_limits<double>::epsilon());
+            res.push_back(true);
+        }
+        return res;
+    }
+
+
+    std::vector<bool> setTranslationConstraints(const fcl::Vec3f& normal)
+    {
+        std::vector<bool> res;
+        for(std::size_t i =0; i <3; ++i)
+        {
+            res.push_back(std::abs(normal[i]) > 2*std::numeric_limits<double>::epsilon());
+        }
+        return res;
+    }
+
     bool ComputeStableContact(const hpp::rbprm::RbPrmFullBodyPtr_t& body,
                               State& current,
                               core::CollisionValidationPtr_t validation,
@@ -179,7 +203,7 @@ namespace hpp {
          if (ComputeCollisionFreeConfiguration(body, current, validation, limb, configuration)) return true;
       }
       sampling::T_OctreeReport finalSet;
-      fcl::Transform3f transform = limb->limb_->robot()->rootJoint()->currentTransformation (); // get root transform from configuration
+      fcl::Transform3f transform = limb->limb_->robot()->rootJoint()->childJoint(0)->currentTransformation (); // get root transform from configuration
       std::vector<sampling::T_OctreeReport> reports(collisionObjects.size());
       std::size_t i (0);
       //#pragma omp parallel for
@@ -211,18 +235,25 @@ namespace hpp {
               // the normal is given by the normal of the contacted object
               const fcl::Vec3f& z= limb->normal_;
               normal = bestReport.normal_;
-normal = z;
+normal = fcl::Vec3f(0,0,1);
               // Add constraints to resolve Ik
               core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 20);
+              fcl::Matrix3f rotation = tools::GetRotationMatrix(z,normal);
               LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
-              proj->add(core::NumericalConstraint::create (constraints::Position::create(body->device_, limb->effector_,fcl::Vec3f(0,0,0), position - limb->offset_)));
+              proj->add(core::NumericalConstraint::create (constraints::Position::create(body->device_,
+                                                                                         limb->effector_,
+                                                                                         fcl::Vec3f(0,0,0),
+                                                                                         position - rotation * limb->offset_))); /*,
+                                                                                         model::matrix3_t::getIdentity(),
+                                                                                         setTranslationConstraints(normal))));*/
+
               proj->add(core::NumericalConstraint::create (constraints::Orientation::create(body->device_,
                                                                                             limb->effector_,
-                                                                                            tools::GetRotationMatrix(z,normal),
-                                                                                            boost::assign::list_of (true)(true)(true))));
-
+                                                                                            rotation,
+                                                                                            setRotationConstraints(z))));
               if(proj->apply(configuration))
               {
+                  //std::cout << "rotation " << rotation << " \n current rotation \n" << limb->effector_->currentTransformation().getRotation() << std::endl;
                 if(validation->validate(configuration))
                 {
                     // stabgle
@@ -277,7 +308,6 @@ normal = z;
           current.contactOrder_.push(name);
           current.print();
           std::cout << "state stable ? " << stability::IsStablePoly(body,current) << std::endl;
-          //std::cout << "state stable ? " << stability::IsStable(body,current) << std::endl;
       }
       return found_sample;
     }
