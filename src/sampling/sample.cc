@@ -23,57 +23,44 @@ using namespace hpp::model;
 using namespace hpp::rbprm;
 using namespace hpp::rbprm::sampling;
 
-model::JointPtr_t GetEffector(const model::JointPtr_t limb)
-{
-    Joint* current = limb;
-    while(current->numberChildJoints() !=0)
-    {
-        //assert(current->numberChildJoints() ==1);
-        current = current->childJoint(0);
-    }
-    return current;
-}
 
-std::size_t ComputeLength(const model::JointPtr_t limb)
+std::size_t ComputeLength(const model::JointPtr_t limb, const model::JointPtr_t effector)
 {
     std::size_t start = limb->rankInConfiguration();
-    const Joint* current = GetEffector(limb);
-    std::size_t end = current->rankInConfiguration()
-            + current->neutralConfiguration().rows();
+    std::size_t end = effector->rankInConfiguration()
+            + effector->neutralConfiguration().rows();
     return end - start;
 }
 
 
-fcl::Vec3f ComputeEffectorPosition(const model::JointPtr_t limb)
+fcl::Vec3f ComputeEffectorPosition(const model::JointPtr_t /*limb*/, const model::JointPtr_t effector)
 {
-    const Joint* current = GetEffector(limb);
-    return current->currentTransformation().getTranslation();
+    return effector->currentTransformation().getTranslation();
 }
 
-Eigen::MatrixXd Jacobian(const model::JointPtr_t limb)
+Eigen::MatrixXd Jacobian(const model::JointPtr_t limb, const model::JointPtr_t effector)
 {
-    const Joint* current = GetEffector(limb);
-    return current->jacobian().block(0,limb->rankInVelocity(),6, current->rankInVelocity() - limb->rankInVelocity());
+    return effector->jacobian().block(0,limb->rankInVelocity(),6, effector->rankInVelocity() - limb->rankInVelocity());
 }
 
-Sample::Sample(const model::JointPtr_t limb, std::size_t id)
+Sample::Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, std::size_t id)
     : startRank_(limb->rankInConfiguration())
-    , length_ (ComputeLength(limb))
+    , length_ (ComputeLength(limb, effector))
     , configuration_ (limb->robot()->currentConfiguration().segment(startRank_, length_))
-    , effectorPosition_(ComputeEffectorPosition(limb))
-    , jacobian_(Jacobian(limb))
+    , effectorPosition_(ComputeEffectorPosition(limb, effector))
+    , jacobian_(Jacobian(limb, effector))
     , jacobianProduct_(jacobian_*jacobian_.transpose())
     , id_(id)
 {
     // NOTHING
 }
 
-Sample::Sample(const model::JointPtr_t limb, model::ConfigurationIn_t configuration, std::size_t id)
+Sample::Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, model::ConfigurationIn_t configuration, std::size_t id)
     : startRank_(limb->rankInConfiguration())
-    , length_ (ComputeLength(limb))
+    , length_ (ComputeLength(limb, effector))
     , configuration_ (configuration)
-    , effectorPosition_(ComputeEffectorPosition(limb))
-    , jacobian_(Jacobian(limb))
+    , effectorPosition_(ComputeEffectorPosition(limb,effector))
+    , jacobian_(Jacobian(limb,effector))
     , jacobianProduct_(jacobian_*jacobian_.transpose())
     , id_(id)
 {
@@ -98,14 +85,16 @@ void hpp::rbprm::sampling::Load(const Sample& sample, ConfigurationOut_t configu
     configuration.segment(sample.startRank_, sample.length_) = sample.configuration_;
 }
 
-std::deque<Sample> hpp::rbprm::sampling::GenerateSamples(const model::JointPtr_t model, const std::size_t nbSamples)
+std::deque<Sample> hpp::rbprm::sampling::GenerateSamples(const model::JointPtr_t model, const std::string& effector
+                                                         , const std::size_t nbSamples)
 {
     std::deque<Sample> result;
     model::DevicePtr_t device(model->robot()->clone());
     Configuration_t config = device->currentConfiguration();
     JointPtr_t clone = device->getJointByName(model->name());
+    JointPtr_t effectorClone = device->getJointByName(effector);
     std::size_t startRank_(model->rankInConfiguration());
-    std::size_t length_ (ComputeLength(model));
+    std::size_t length_ (ComputeLength(model, effectorClone));
     for(std::size_t i = 0; i< nbSamples; ++i)
     {
         clone->configuration ()->uniformlySample (clone->rankInConfiguration (), config);
@@ -117,7 +106,7 @@ std::deque<Sample> hpp::rbprm::sampling::GenerateSamples(const model::JointPtr_t
         }
         device->currentConfiguration (config);
         device->computeForwardKinematics();
-        result.push_back(Sample(clone, config.segment(startRank_, length_), i));
+        result.push_back(Sample(clone, effectorClone, config.segment(startRank_, length_), i));
     }
     return result;
 }

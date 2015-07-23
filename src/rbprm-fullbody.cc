@@ -46,10 +46,10 @@ namespace hpp {
     }
 
 
-    void RbPrmFullBody::AddLimb(const std::string& name, const fcl::Vec3f &offset,
-                                const fcl::Vec3f &normal,const double x, const double y,
-                                const model::ObjectVector_t &collisionObjects,
-                                const std::size_t nbSamples, const double resolution)
+    void RbPrmFullBody::AddLimb(const std::string& name, const std::string &effectorName,
+                                const fcl::Vec3f &offset,const fcl::Vec3f &normal, const double x,
+                                const double y,
+                                const model::ObjectVector_t &collisionObjects, const std::size_t nbSamples, const double resolution)
     {
         rbprm::T_Limb::const_iterator cit = limbs_.find(name);
         if(cit != limbs_.end())
@@ -60,7 +60,7 @@ namespace hpp {
         else
         {
             model::JointPtr_t joint = device_->getJointByName(name);
-            rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(joint, offset,normal,x,y, nbSamples,resolution);
+            rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(joint, effectorName, offset,normal,x,y, nbSamples,resolution);
             // adding collision validation
             //core::CollisionValidationPtr_t colVal = core::CollisionValidation::create(device_);
             for(model::ObjectVector_t::const_iterator cit = collisionObjects.begin();

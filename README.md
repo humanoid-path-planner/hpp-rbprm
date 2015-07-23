@@ -1,7 +1,10 @@
 Implementation of RB-PRM planner using hpp
 
 
+
 TODO:
+
+only samples until effector position 
 
 Assumes 6 DOF abstraction
 

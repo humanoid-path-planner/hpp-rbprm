@@ -106,8 +106,8 @@ using namespace fcl;
      const boost::shared_ptr<fcl::CollisionGeometry> geometry_;
  };
 
-SampleContainer::SampleContainer(const model::JointPtr_t limb, const std::size_t nbSamples, const double resolution)
-    : samples_(GenerateSamples(limb,nbSamples))
+SampleContainer::SampleContainer(const model::JointPtr_t limb, const std::string& effector, const std::size_t nbSamples, const double resolution)
+    : samples_(GenerateSamples(limb,effector,nbSamples))
     , pImpl_(new SamplePImpl(samples_, resolution))
     , treeObject_(pImpl_->geometry_)
     , voxelSamples_(SortSamples(pImpl_->octomapTree_,samples_))

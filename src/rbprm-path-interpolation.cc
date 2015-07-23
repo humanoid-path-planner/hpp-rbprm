@@ -53,7 +53,30 @@ namespace hpp {
             if(!nonZero) direction = fcl::Vec3f(0,0,1.);
             configuration.head(configPosition.rows()) = configPosition;
             // TODO Direction 6d
-            states.push_back(ComputeContacts(previous, robot_,configuration,collisionObjects,-direction));
+            states.push_back(ComputeContacts(previous, robot_,configuration,collisionObjects,direction));
+        }
+        states.push_back(this->end_);
+        return states;
+    }
+
+    std::vector<State> RbPrmInterpolation::Interpolate(const std::vector<core::ConfigurationIn_t>& configurations, const model::ObjectVector_t &collisionObjects)
+    {
+        std::vector<State> states;
+        states.push_back(this->start_);
+        for(std::vector<core::ConfigurationIn_t>::const_iterator cit = configurations.begin();
+            cit != configurations.end(); ++cit)
+        {
+            const State& previous = states.back();
+            core::Configuration_t configuration = previous.configuration_;
+            const core::Configuration_t& configPosition = *cit;
+            Eigen::Vector3d dir = configPosition.head<3>() - previous.configuration_.head<3>();
+            fcl::Vec3f direction(dir[0], dir[1], dir[2]);
+            bool nonZero(false);
+            direction.normalize(&nonZero);
+            if(!nonZero) direction = fcl::Vec3f(0,0,1.);
+            configuration.head(configPosition.rows()) = configPosition;
+            // TODO Direction 6d
+            states.push_back(ComputeContacts(previous, robot_,configuration,collisionObjects,direction));
         }
         states.push_back(this->end_);
         return states;

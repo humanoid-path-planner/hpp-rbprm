@@ -30,6 +30,16 @@ namespace hpp {
         return res;
     }
 
+    RbPrmLimbPtr_t RbPrmLimb::create (const model::JointPtr_t limb, const std::string& effectorName, const fcl::Vec3f &offset,
+                                      const fcl::Vec3f &normal,const double x, const double y,
+                                      const std::size_t nbSamples, const double resolution)
+    {
+        RbPrmLimb* rbprmDevice = new RbPrmLimb(limb, effectorName, offset, normal, x, y, nbSamples, resolution);
+        RbPrmLimbPtr_t res (rbprmDevice);
+        res->init (res);
+        return res;
+    }
+
     RbPrmLimb::~RbPrmLimb()
     {
         // NOTHING
@@ -42,13 +52,14 @@ namespace hpp {
         weakPtr_ = weakPtr;
     }
 
-    model::JointPtr_t GetEffector(const model::JointPtr_t limb)
+    model::JointPtr_t GetEffector(const model::JointPtr_t limb, const std::string name ="")
     {
         model::JointPtr_t current = limb;
         while(current->numberChildJoints() !=0)
         {
             //assert(current->numberChildJoints() ==1);
             current = current->childJoint(0);
+            if(current->name() == name) break;
         }
         return current;
     }
@@ -57,7 +68,20 @@ namespace hpp {
                           const fcl::Vec3f &offset, const fcl::Vec3f &normal, const double x, const double y, const std::size_t nbSamples, const double resolution)
         : limb_(limb)
         , effector_(GetEffector(limb))
-        , sampleContainer_(limb, nbSamples, resolution)
+        , sampleContainer_(limb, effector_->name(), nbSamples, resolution)
+        , offset_(offset)
+        , normal_(normal)
+        , x_(x)
+        , y_(y)
+    {
+        // TODO
+    }
+
+    RbPrmLimb::RbPrmLimb (const model::JointPtr_t& limb, const std::string& effectorName,
+                          const fcl::Vec3f &offset, const fcl::Vec3f &normal, const double x, const double y, const std::size_t nbSamples, const double resolution)
+        : limb_(limb)
+        , effector_(GetEffector(limb, effectorName))
+        , sampleContainer_(limb, effector_->name(), nbSamples, resolution)
         , offset_(offset)
         , normal_(normal)
         , x_(x)

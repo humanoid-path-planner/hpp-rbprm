@@ -41,6 +41,10 @@ namespace hpp {
                                       const fcl::Vec3f &normal,const double x, const double y,
                                       const std::size_t nbSamples, const double resolution);
 
+        static RbPrmLimbPtr_t create (const model::JointPtr_t limb, const std::string& effectorName, const fcl::Vec3f &offset,
+                                      const fcl::Vec3f &normal,const double x, const double y,
+                                      const std::size_t nbSamples, const double resolution);
+
     public:
         ~RbPrmLimb();
 
@@ -54,7 +58,11 @@ namespace hpp {
         const double y_; // half length of contact surface
 
     protected:
-      RbPrmLimb (const model::JointPtr_t& limb, const fcl::Vec3f &offset,
+      RbPrmLimb (const model::JointPtr_t& limb,  const fcl::Vec3f &offset,
+                 const fcl::Vec3f &normal,const double x, const double y,
+                 const std::size_t nbSamples, const double resolution);
+
+      RbPrmLimb (const model::JointPtr_t& limb, const std::string& effectorName,  const fcl::Vec3f &offset,
                  const fcl::Vec3f &normal,const double x, const double y,
                  const std::size_t nbSamples, const double resolution);
 

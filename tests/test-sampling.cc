@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_SUITE(test_generation_samples)
 BOOST_AUTO_TEST_CASE (sampleGeneration) {
     DevicePtr_t robot = initDevice();
     JointPtr_t joint = robot->getJointByName("arm");
-    std::deque<Sample> res = GenerateSamples(joint, 10);
+    std::deque<Sample> res = GenerateSamples(joint, "elbow", 10);
     for(std::deque<Sample>::const_iterator cit = res.begin();
         cit != res.end(); ++cit)
     {
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE (sampleGeneration) {
 BOOST_AUTO_TEST_CASE (sampleContainerGeneration) {
     DevicePtr_t robot = initDevice();
     JointPtr_t joint = robot->getJointByName("arm");
-    SampleContainer sc(joint,10,0.1);
+    SampleContainer sc(joint, "elbow", 10,0.1);
     for(std::deque<Sample>::const_iterator cit = sc.samples_.begin();
         cit != sc.samples_.end(); ++cit)
     {
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE (octreeRequest) {
     CollisionObjectPtr_t obstacle =  MeshObstacleBox();
     DevicePtr_t robot = initDevice();
     JointPtr_t joint = robot->getJointByName("arm");
-    SampleContainer sc(joint,100,0.1);
+    SampleContainer sc(joint,"elbow",100,0.1);
     rbprm::sampling::T_OctreeReport reports = rbprm::sampling::GetCandidates(sc, fcl::Transform3f(),obstacle,fcl::Vec3f(1,0,0));
     double manipulability = std::numeric_limits<double>::max();
     BOOST_CHECK_MESSAGE (!reports.empty(), "No matching found, this should not be the case");

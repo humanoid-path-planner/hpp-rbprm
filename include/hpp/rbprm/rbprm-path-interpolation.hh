@@ -45,6 +45,7 @@ namespace hpp {
         ~RbPrmInterpolation();
 
         std::vector<State> Interpolate(const model::ObjectVector_t &collisionObjects, const double timeStep = 0.01);
+        std::vector<State> Interpolate(const std::vector<core::ConfigurationIn_t>& configurations, const model::ObjectVector_t &collisionObjects);
 
     public:
         const core::PathVectorConstPtr_t path_;
