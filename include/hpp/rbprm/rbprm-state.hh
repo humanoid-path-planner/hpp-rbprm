@@ -22,17 +22,17 @@
 # include <hpp/rbprm/config.hh>
 # include <hpp/model/device.hh>
 # include <hpp/rbprm/rbprm-limb.hh>
-
+# include <queue>
 namespace hpp {
   namespace rbprm {
   struct HPP_RBPRM_DLLAPI State{
       State():nbContacts(0), stable(false){}
       State(const State& other)
           : configuration_(other.configuration_)
+          , contactOrder_(other.contactOrder_)
           , nbContacts(other.nbContacts)
           , stable(other.stable)
       {
-
           contacts_= (other.contacts_);
           contactNormals_ = (other.contactNormals_);
           contactPositions_ = (other.contactPositions_);
@@ -42,6 +42,7 @@ namespace hpp {
         std::map<std::string, bool> contacts_;
         std::map<std::string, fcl::Vec3f> contactNormals_;
         std::map<std::string, fcl::Vec3f> contactPositions_;
+        std::queue<std::string> contactOrder_;
         unsigned int nbContacts;
         bool stable;
 

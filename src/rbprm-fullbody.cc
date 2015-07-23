@@ -27,6 +27,8 @@
 
 #include <hpp/fcl/BVH/BVH_model.h>
 
+#include <stack>
+
 namespace hpp {
   namespace rbprm {
 
@@ -106,41 +108,37 @@ namespace hpp {
         core::ConfigurationIn_t save = body->device_->currentConfiguration();
         current.configuration_ = configuration;
         body->device_->currentConfiguration(configuration);
-        for(T_Limb::const_iterator lit = body->GetLimbs().begin(); lit != body->GetLimbs().end(); ++lit)
+        // iterate over contact filo list
+        std::queue<std::string> previousStack = previous.contactOrder_;
+        while(!previousStack.empty())
         {
-            const RbPrmLimbPtr_t limb = lit->second;
-            const std::string& name = limb->limb_->name();
-            std::map<std::string,bool>::const_iterator contactIt = previous.contacts_.find(name);
-            if(contactIt != previous.contacts_.end() && contactIt->second == true)
+            const std::string name = previousStack.front();
+            previousStack.pop();
+            const RbPrmLimbPtr_t limb = body->GetLimbs().at(name);
+            const fcl::Vec3f& z= limb->normal_;
+            // try to maintain contact
+            const fcl::Vec3f& ppos  =previous.contactPositions_.at(name);
+            const fcl::Vec3f& pnorm  =previous.contactNormals_.at(name);
+            core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 20);
+            LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
+            proj->add(core::NumericalConstraint::create (constraints::Position::create(body->device_, limb->effector_,fcl::Vec3f(0,0,0), ppos - limb->offset_)));
+            proj->add(core::NumericalConstraint::create (constraints::Orientation::create(body->device_,
+                                                                                          limb->effector_,
+                                                                                          tools::GetRotationMatrix(z,pnorm),
+                                                                                          boost::assign::list_of (true)(true)(true))));
+            if(proj->apply(current.configuration_) && validation->validate(current.configuration_))
             {
-                const fcl::Vec3f& z= limb->normal_;
-                // try to maintain contact
-                const fcl::Vec3f& ppos  =previous.contactPositions_.at(name);
-                const fcl::Vec3f& pnorm  =previous.contactNormals_.at(name);
-                core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 20);
-                LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
-                proj->add(core::NumericalConstraint::create (constraints::Position::create(body->device_, limb->effector_,fcl::Vec3f(0,0,0), ppos - limb->offset_)));
-                proj->add(core::NumericalConstraint::create (constraints::Orientation::create(body->device_,
-                                                                                              limb->effector_,
-                                                                                              tools::GetRotationMatrix(z,pnorm),
-                                                                                              boost::assign::list_of (true)(true)(true))));
-                if(proj->apply(current.configuration_) && validation->validate(current.configuration_))
-                {
-                    // stable?
-                    current.contacts_[name] = true;
-                    current.contactPositions_[name] = previous.contactPositions_.at(name);
-                    current.contactNormals_[name] = previous.contactNormals_.at(name);
-                    ++current.nbContacts;
-                    std::cout << "\t maintaining contact " << name << std::endl;
-                }
-                else
-                {
-                    std::cout << "\t breaking contact " << name << std::endl;
-                }
+                // stable?
+                current.contacts_[name] = true;
+                current.contactPositions_[name] = previous.contactPositions_.at(name);
+                current.contactNormals_[name] = previous.contactNormals_.at(name);
+                ++current.nbContacts;
+                current.contactOrder_.push(name);
+                std::cout << "\t maintaining contact " << name << std::endl;
             }
-            else // TODO find collision free position
+            else
             {
-                //current.contacts_[name] = false;
+                std::cout << "\t breaking contact " << name << std::endl;
             }
         }
         // reload previous configuration
@@ -276,11 +274,57 @@ normal = z;
           current.contactPositions_[name] = position;
           current.configuration_ = configuration;
           ++current.nbContacts;
+          current.contactOrder_.push(name);
           current.print();
           std::cout << "state stable ? " << stability::IsStablePoly(body,current) << std::endl;
           //std::cout << "state stable ? " << stability::IsStable(body,current) << std::endl;
       }
       return found_sample;
+    }
+
+    void RepositionContacts(State& result, const hpp::rbprm::RbPrmFullBodyPtr_t& body,core::CollisionValidationPtr_t validation,
+                            model::ConfigurationOut_t config,
+                            const model::ObjectVector_t &collisionObjects, const fcl::Vec3f& direction)
+    {
+        // replace existing contacts
+        // start with older contact created
+        std::stack<std::string> poppedContacts;
+        std::queue<std::string> oldOrder = result.contactOrder_;
+        std::queue<std::string> newOrder;
+        core::Configuration_t savedConfig = config;
+        std::string nContactName ="";
+        while(!result.stable &&  !oldOrder.empty())
+        {
+            std::string current = oldOrder.front();
+            oldOrder.pop();
+            fcl::Vec3f normal, position;
+            if(ComputeStableContact(body, result, validation, body->GetLimbs().at(current), config, collisionObjects, direction, position, normal, false))
+            {
+                std::cout << "state saved with ? " << current << std::endl;
+                result.stable = true;
+                nContactName = current;
+            }
+            else
+            {
+                config = savedConfig;
+                poppedContacts.push(current);
+            }
+        }
+        while(!poppedContacts.empty())
+        {
+            newOrder.push(poppedContacts.top());
+            poppedContacts.pop();
+        }
+        while(!oldOrder.empty())
+        {
+            newOrder.push(oldOrder.front());
+            oldOrder.pop();
+        }
+        if(result.stable)
+        {
+            newOrder.push(nContactName);
+        }
+        result.contactOrder_ = newOrder;
     }
 
     hpp::rbprm::State ComputeContacts(const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration,
@@ -302,20 +346,6 @@ normal = z;
         return result;
     }
 
-    std::vector<std::string> sortContactLimbs(const fcl::Vec3f& /*direction*/, const State& result, const hpp::rbprm::RbPrmFullBodyPtr_t& /*body*/)
-    {
-        //TODO
-        std::vector<std::string> res;
-        //std::vector<double> vals;
-        for(std::map<std::string,fcl::Vec3f>::const_iterator cit = result.contactPositions_.begin();
-            cit != result.contactPositions_.end(); ++cit)
-        {
-            res.push_back(cit->first);
-        }
-        //direction.dot()
-        return res;
-    }
-
     hpp::rbprm::State ComputeContacts(const hpp::rbprm::State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration,
                                     const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction)
     {
@@ -327,36 +357,19 @@ normal = z;
     core::Configuration_t config = configuration;
     for(T_Limb::const_iterator lit = limbs.begin(); lit != limbs.end(); ++lit)
     {
-        // V0 only recreate non existing contacts
         fcl::Vec3f normal, position;
         if(result.contacts_.find(lit->first) == result.contacts_.end())
         {
             ComputeStableContact(body, result, body->collisionValidation_, lit->second, config, collisionObjects, direction, position, normal);
         }
-        else
-        {
-            //result.contacts_[lit->first] = false;
-        }
     }
     // reload previous configuration
     static int id = 0;
     // no stable contact was found / limb maintained
-    if(!stability::IsStablePoly(body,result))
-    //if(false)
+    if(!result.stable)
     {
-        std::cout << "replanning unstable state " << id << std::endl;
-        // replace existing contacts
-        std::vector<std::string> limbnames = sortContactLimbs(direction, result, body);
-        for(std::vector<std::string>::const_iterator cit = limbnames.begin(); cit !=
-            limbnames.end(); ++cit)
-        {
-            fcl::Vec3f normal, position;
-            if(ComputeStableContact(body, result, body->collisionValidation_, body->GetLimbs().at(*cit), config, collisionObjects, direction, position, normal, false))
-            {
-                std::cout << "state saved with ? " << *cit << std::endl;
-                break;
-            }
-        }
+        std::cout << "replanning unstable state " << id+1 << std::endl;
+        RepositionContacts(result, body, body->collisionValidation_, config, collisionObjects, direction);
     }
     std::cout << "state " << ++id << " stable ? " << stability::IsStablePoly(body,result) << std::endl;
     body->device_->currentConfiguration(save);
