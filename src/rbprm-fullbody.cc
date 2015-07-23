@@ -267,7 +267,8 @@ normal = z;
                     tmp.contactNormals_[limb->limb_->name()] = normal;
                     tmp.configuration_ = configuration;
                     ++tmp.nbContacts;
-                    if(stability::IsStablePoly(body,tmp))
+                    //if(stability::IsStablePoly(body,tmp))
+                    if(stability::IsStable(body,tmp))
                     {
                         tmp.print();
                         found_sample = true;
@@ -306,7 +307,8 @@ normal = z;
           current.configuration_ = configuration;
           ++current.nbContacts;
           current.print();
-          std::cout << "state stable ? " << stability::IsStablePoly(body,current) << std::endl;
+          //std::cout << "state stable ? " << stability::IsStablePoly(body,current) << std::endl;
+          std::cout << "state stable ? " << stability::IsStable(body,current) << std::endl;
       }
       return found_sample;
     }
@@ -364,7 +366,8 @@ normal = z;
     }
     // reload previous configuration
     static int id = 0;
-    std::cout << "state " << ++id << " stable ? " << stability::IsStablePoly(body,result) << std::endl;
+    //std::cout << "state " << ++id << " stable ? " << stability::IsStablePoly(body,result) << std::endl;
+    std::cout << "state " << ++id << " stable ? " << stability::IsStable(body,result) << std::endl;
     body->device_->currentConfiguration(save);
     result.print();
     return result;
