@@ -66,9 +66,17 @@ namespace hpp {
             for(model::ObjectVector_t::const_iterator cit = collisionObjects.begin();
                 cit != collisionObjects.end(); ++cit)
             {
-                collisionValidation_->addObstacle(*cit);
+                if(limbs_.empty())
+                {
+                    collisionValidation_->addObstacle(*cit);
+                }
                 //remove effector collision
-                collisionValidation_->removeObstacleFromJoint(limb->effector_, *cit);
+                model::JointPtr_t collisionFree = limb->effector_;
+                while(collisionFree)
+                {
+                    collisionValidation_->removeObstacleFromJoint(collisionFree, *cit);
+                    collisionFree = collisionFree->numberChildJoints()>0 ? collisionFree->childJoint(0) : 0;
+                }
             }
             limbs_.insert(std::make_pair(name, limb));
         }
@@ -99,6 +107,30 @@ namespace hpp {
         }
     }
 
+
+    // assumes unit direction
+    std::vector<bool> setRotationConstraints(const fcl::Vec3f& direction)
+    {
+        std::vector<bool> res;
+        for(std::size_t i =0; i <3; ++i)
+        {
+            res.push_back(std::abs(direction[i]) < 2*std::numeric_limits<double>::epsilon());
+            //res.push_back(true);
+        }
+        return res;
+    }
+
+
+    std::vector<bool> setTranslationConstraints(const fcl::Vec3f& normal)
+    {
+        std::vector<bool> res;
+        for(std::size_t i =0; i <3; ++i)
+        {
+            res.push_back(std::abs(normal[i]) > 2*std::numeric_limits<double>::epsilon());
+        }
+        return res;
+    }
+
     // first step
     State MaintainPreviousContacts(const State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body,
                                   core::CollisionValidationPtr_t validation, model::ConfigurationIn_t configuration)
@@ -126,7 +158,8 @@ namespace hpp {
             proj->add(core::NumericalConstraint::create (constraints::Orientation::create(body->device_,
                                                                                           limb->effector_,
                                                                                           rotation,
-                                                                                          boost::assign::list_of (true)(true)(true))));
+                                                                                          setRotationConstraints(pnorm))));
+                                                                                          //boost::assign::list_of (true)(true)(true))));
             if(proj->apply(current.configuration_) && validation->validate(current.configuration_))
             {
                 // stable?
@@ -165,29 +198,6 @@ namespace hpp {
         }
         std::cout << "no collision free configuration to maintain balance" << limb->limb_->name() << std::endl;
         return false;
-    }
-
-    // assumes unit direction
-    std::vector<bool> setRotationConstraints(const fcl::Vec3f& /*direction*/)
-    {
-        std::vector<bool> res;
-        for(std::size_t i =0; i <3; ++i)
-        {
-            //res.push_back(std::abs(direction[i]) < 2*std::numeric_limits<double>::epsilon());
-            res.push_back(true);
-        }
-        return res;
-    }
-
-
-    std::vector<bool> setTranslationConstraints(const fcl::Vec3f& normal)
-    {
-        std::vector<bool> res;
-        for(std::size_t i =0; i <3; ++i)
-        {
-            res.push_back(std::abs(normal[i]) > 2*std::numeric_limits<double>::epsilon());
-        }
-        return res;
     }
 
     bool ComputeStableContact(const hpp::rbprm::RbPrmFullBodyPtr_t& body,
@@ -243,9 +253,9 @@ normal = fcl::Vec3f(0,0,1);
               proj->add(core::NumericalConstraint::create (constraints::Position::create(body->device_,
                                                                                          limb->effector_,
                                                                                          fcl::Vec3f(0,0,0),
-                                                                                         position - rotation * limb->offset_))); /*,
+                                                                                         position - rotation * limb->offset_, //)));
                                                                                          model::matrix3_t::getIdentity(),
-                                                                                         setTranslationConstraints(normal))));*/
+                                                                                         setTranslationConstraints(normal))));//
 
               proj->add(core::NumericalConstraint::create (constraints::Orientation::create(body->device_,
                                                                                             limb->effector_,
@@ -253,14 +263,14 @@ normal = fcl::Vec3f(0,0,1);
                                                                                             setRotationConstraints(z))));
               if(proj->apply(configuration))
               {
-                  //std::cout << "rotation " << rotation << " \n current rotation \n" << limb->effector_->currentTransformation().getRotation() << std::endl;
+                //  std::cout << "rotation " << rotation << " \n current rotation \n" << limb->effector_->currentTransformation().getRotation() << std::endl;
                 if(validation->validate(configuration))
                 {
                     // stabgle
                     // create new state
                     State tmp (current);
                     tmp.contacts_[limb->limb_->name()] = true;
-                    tmp.contactPositions_[limb->limb_->name()] = position;
+                    tmp.contactPositions_[limb->limb_->name()] = limb->effector_->currentTransformation().getTranslation();
                     tmp.contactNormals_[limb->limb_->name()] = normal;
                     tmp.configuration_ = configuration;
                     ++tmp.nbContacts;

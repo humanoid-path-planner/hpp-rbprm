@@ -6,6 +6,8 @@ TODO:
 
 Init value of HRP2 ankle really weird?
 
+Configure tolerance individually for each effector (translation, rotation)
+
 only samples until effector position 
 
 Assumes 6 DOF abstraction
