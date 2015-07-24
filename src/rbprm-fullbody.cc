@@ -46,6 +46,22 @@ namespace hpp {
     }
 
 
+    void RemoveNonLimbCollisionRec(const model::JointPtr_t joint, const std::string& limbname,
+                                   const model::ObjectVector_t &collisionObjects,
+                                   core::CollisionValidationPtr_t& collisionValidation)
+    {
+        if(joint->name() == limbname) return;
+        for(model::ObjectVector_t::const_iterator cit = collisionObjects.begin();
+            cit != collisionObjects.end(); ++cit)
+        {
+            collisionValidation->removeObstacleFromJoint(joint, *cit);
+        }
+        for(std::size_t i=0; i<joint->numberChildJoints(); ++i)
+        {
+            RemoveNonLimbCollisionRec(joint->childJoint(i), limbname, collisionObjects, collisionValidation);
+        }
+    }
+
     void RbPrmFullBody::AddLimb(const std::string& name, const std::string &effectorName,
                                 const fcl::Vec3f &offset,const fcl::Vec3f &normal, const double x,
                                 const double y,
@@ -61,6 +77,7 @@ namespace hpp {
         {
             model::JointPtr_t joint = device_->getJointByName(name);
             rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(joint, effectorName, offset,normal,x,y, nbSamples,resolution);
+            core::CollisionValidationPtr_t limbcollisionValidation_ = core::CollisionValidation::create(this->device_);
             // adding collision validation
             //core::CollisionValidationPtr_t colVal = core::CollisionValidation::create(device_);
             for(model::ObjectVector_t::const_iterator cit = collisionObjects.begin();
@@ -70,15 +87,19 @@ namespace hpp {
                 {
                     collisionValidation_->addObstacle(*cit);
                 }
+                limbcollisionValidation_->addObstacle(*cit);
                 //remove effector collision
                 model::JointPtr_t collisionFree = limb->effector_;
                 while(collisionFree)
                 {
                     collisionValidation_->removeObstacleFromJoint(collisionFree, *cit);
+                    limbcollisionValidation_->removeObstacleFromJoint(collisionFree,*cit);
                     collisionFree = collisionFree->numberChildJoints()>0 ? collisionFree->childJoint(0) : 0;
                 }
             }
             limbs_.insert(std::make_pair(name, limb));
+            RemoveNonLimbCollisionRec(device_->rootJoint(),name,collisionObjects,limbcollisionValidation_);
+            limbcollisionValidations_.insert(std::make_pair(name, limbcollisionValidation_));
         }
     }
 
@@ -109,31 +130,54 @@ namespace hpp {
 
 
     // assumes unit direction
-    std::vector<bool> setRotationConstraints(const fcl::Vec3f& direction)
+    std::vector<bool> setRotationConstraints(const fcl::Vec3f& )//direction)
     {
         std::vector<bool> res;
         for(std::size_t i =0; i <3; ++i)
         {
-            res.push_back(std::abs(direction[i]) < 2*std::numeric_limits<double>::epsilon());
-            //res.push_back(true);
+            //res.push_back(std::abs(direction[i]) < 2*std::numeric_limits<double>::epsilon());
+            res.push_back(true);
         }
         return res;
     }
 
 
-    std::vector<bool> setTranslationConstraints(const fcl::Vec3f& normal)
+    std::vector<bool> setTranslationConstraints(const fcl::Vec3f& )//normal)
     {
         std::vector<bool> res;
         for(std::size_t i =0; i <3; ++i)
         {
-            res.push_back(std::abs(normal[i]) > 2*std::numeric_limits<double>::epsilon());
+            //res.push_back(std::abs(normal[i]) > 2*std::numeric_limits<double>::epsilon());
+            res.push_back(true);
         }
         return res;
+    }
+
+    bool ComputeCollisionFreeConfiguration(const hpp::rbprm::RbPrmFullBodyPtr_t& body,
+                              State& current,
+                              core::CollisionValidationPtr_t validation,
+                              const hpp::rbprm::RbPrmLimbPtr_t& limb, model::ConfigurationOut_t configuration,
+                                           bool stability = true)
+    {
+        for(std::deque<sampling::Sample>::const_iterator cit = limb->sampleContainer_.samples_.begin();
+            cit != limb->sampleContainer_.samples_.end(); ++cit)
+        {
+            sampling::Load(*cit, configuration);
+            if(validation->validate(configuration) && (!stability || stability::IsStablePoly(body,current)))
+            {
+                current.configuration_ = configuration;
+                std::cout << "found collision free non contact for " << limb->limb_->name() << std::endl;
+                return true;
+            }
+        }
+        std::cout << "no collision free configuration to maintain balance" << limb->limb_->name() << std::endl;
+        return false;
     }
 
     // first step
     State MaintainPreviousContacts(const State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body,
-                                  core::CollisionValidationPtr_t validation, model::ConfigurationIn_t configuration)
+                                   std::map<std::string,core::CollisionValidationPtr_t>& limbValidations,
+                                   model::ConfigurationIn_t configuration)
     {
         // iterate over every existing contact and try to maintain them
         State current;
@@ -147,57 +191,38 @@ namespace hpp {
             const std::string name = previousStack.front();
             previousStack.pop();
             const RbPrmLimbPtr_t limb = body->GetLimbs().at(name);
-            const fcl::Vec3f& z= limb->normal_;
             // try to maintain contact
             const fcl::Vec3f& ppos  =previous.contactPositions_.at(name);
-            const fcl::Vec3f& pnorm  =previous.contactNormals_.at(name);
+            //const fcl::Vec3f& pnorm  =previous.contactNormals_.at(name);
             core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 20);
             LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
-            fcl::Matrix3f rotation = tools::GetRotationMatrix(z,pnorm);
-            proj->add(core::NumericalConstraint::create (constraints::Position::create(body->device_, limb->effector_,fcl::Vec3f(0,0,0), ppos - rotation * limb->offset_)));
+            const fcl::Matrix3f& rotation = previous.contactRotation_.at(name);
+            proj->add(core::NumericalConstraint::create (constraints::Position::create(body->device_, limb->effector_,fcl::Vec3f(0,0,0), ppos /*- rotation * limb->offset_*/)));
             proj->add(core::NumericalConstraint::create (constraints::Orientation::create(body->device_,
                                                                                           limb->effector_,
                                                                                           rotation,
-                                                                                          setRotationConstraints(pnorm))));
-                                                                                          //boost::assign::list_of (true)(true)(true))));
-            if(proj->apply(current.configuration_) && validation->validate(current.configuration_))
+                                                                                          boost::assign::list_of (true)(true)(true))));
+            if(proj->apply(current.configuration_) && limbValidations.at(name)->validate(current.configuration_))
             {
                 // stable?
                 current.contacts_[name] = true;
                 current.contactPositions_[name] = previous.contactPositions_.at(name);
                 current.contactNormals_[name] = previous.contactNormals_.at(name);
+                current.contactRotation_[name] = previous.contactRotation_.at(name);
                 ++current.nbContacts;
                 current.contactOrder_.push(name);
                 std::cout << "\t maintaining contact " << name << std::endl;
             }
             else
             {
+                body->device_->currentConfiguration(save);
                 std::cout << "\t breaking contact " << name << std::endl;
+                ComputeCollisionFreeConfiguration(body,current,limbValidations.at(name),limb,current.configuration_,false);
             }
         }
         // reload previous configuration
         body->device_->currentConfiguration(save);
         return current;
-    }
-
-    bool ComputeCollisionFreeConfiguration(const hpp::rbprm::RbPrmFullBodyPtr_t& body,
-                              State& current,
-                              core::CollisionValidationPtr_t validation,
-                              const hpp::rbprm::RbPrmLimbPtr_t& limb, model::ConfigurationOut_t configuration)
-    {
-        for(std::deque<sampling::Sample>::const_iterator cit = limb->sampleContainer_.samples_.begin();
-            cit != limb->sampleContainer_.samples_.end(); ++cit)
-        {
-            sampling::Load(*cit, configuration);
-            if(validation->validate(configuration) && stability::IsStablePoly(body,current))
-            {
-                current.configuration_ = configuration;
-                std::cout << "found collision free non contact for " << limb->limb_->name() << std::endl;
-                return true;
-            }
-        }
-        std::cout << "no collision free configuration to maintain balance" << limb->limb_->name() << std::endl;
-        return false;
     }
 
     bool ComputeStableContact(const hpp::rbprm::RbPrmFullBodyPtr_t& body,
@@ -212,6 +237,7 @@ namespace hpp {
       {
          if (ComputeCollisionFreeConfiguration(body, current, validation, limb, configuration)) return true;
       }
+      fcl::Matrix3f rotation;
       sampling::T_OctreeReport finalSet;
       fcl::Transform3f transform = limb->limb_->robot()->rootJoint()->childJoint(0)->currentTransformation (); // get root transform from configuration
       std::vector<sampling::T_OctreeReport> reports(collisionObjects.size());
@@ -248,19 +274,20 @@ namespace hpp {
 normal = fcl::Vec3f(0,0,1);
               // Add constraints to resolve Ik
               core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 20);
-              fcl::Matrix3f rotation = tools::GetRotationMatrix(z,normal);
+              rotation = tools::GetRotationMatrix(z,normal);
               LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
               proj->add(core::NumericalConstraint::create (constraints::Position::create(body->device_,
                                                                                          limb->effector_,
                                                                                          fcl::Vec3f(0,0,0),
                                                                                          position - rotation * limb->offset_, //)));
                                                                                          model::matrix3_t::getIdentity(),
-                                                                                         setTranslationConstraints(normal))));//
+                                                                                         setTranslationConstraints(normal))));//*/
 
-              proj->add(core::NumericalConstraint::create (constraints::Orientation::create(body->device_,
+
+              /*proj->add(core::NumericalConstraint::create (constraints::Orientation::create(body->device_,
                                                                                             limb->effector_,
                                                                                             rotation,
-                                                                                            setRotationConstraints(z))));
+                                                                                            setRotationConstraints(z))));*/
               if(proj->apply(configuration))
               {
                 //  std::cout << "rotation " << rotation << " \n current rotation \n" << limb->effector_->currentTransformation().getRotation() << std::endl;
@@ -269,8 +296,11 @@ normal = fcl::Vec3f(0,0,1);
                     // stabgle
                     // create new state
                     State tmp (current);
+                    position = limb->effector_->currentTransformation().getTranslation();
+                    rotation = limb->effector_->currentTransformation().getRotation();
                     tmp.contacts_[limb->limb_->name()] = true;
-                    tmp.contactPositions_[limb->limb_->name()] = limb->effector_->currentTransformation().getTranslation();
+                    tmp.contactPositions_[limb->limb_->name()] = position;
+                    tmp.contactRotation_[limb->limb_->name()] = rotation;
                     tmp.contactNormals_[limb->limb_->name()] = normal;
                     tmp.configuration_ = configuration;
                     ++tmp.nbContacts;
@@ -313,6 +343,7 @@ normal = fcl::Vec3f(0,0,1);
           current.contacts_[name] = true;
           current.contactNormals_[name] = normal;
           current.contactPositions_[name] = position;
+          current.contactRotation_[name] = rotation;
           current.configuration_ = configuration;
           ++current.nbContacts;
           current.contactOrder_.push(name);
@@ -379,7 +410,7 @@ normal = fcl::Vec3f(0,0,1);
         for(T_Limb::const_iterator lit = limbs.begin(); lit != limbs.end(); ++lit)
         {
             fcl::Vec3f normal, position;
-            ComputeStableContact(body, result, body->collisionValidation_, lit->second, result.configuration_, collisionObjects, direction, position, normal, true, false);
+            ComputeStableContact(body, result, body->limbcollisionValidations_.at(lit->first), lit->second, result.configuration_, collisionObjects, direction, position, normal, true, false);
         }
         // reload previous configuration
         body->device_->currentConfiguration(save);
@@ -393,14 +424,14 @@ normal = fcl::Vec3f(0,0,1);
     // save old configuration
     core::ConfigurationIn_t save = body->device_->currentConfiguration();
     body->device_->currentConfiguration(configuration);
-    State result = MaintainPreviousContacts(previous,body,body->collisionValidation_, configuration);
+    State result = MaintainPreviousContacts(previous,body, body->limbcollisionValidations_, configuration);
     core::Configuration_t config = configuration;
     for(T_Limb::const_iterator lit = limbs.begin(); lit != limbs.end(); ++lit)
     {
         fcl::Vec3f normal, position;
         if(result.contacts_.find(lit->first) == result.contacts_.end())
         {
-            ComputeStableContact(body, result, body->collisionValidation_, lit->second, config, collisionObjects, direction, position, normal);
+            ComputeStableContact(body, result, body->limbcollisionValidations_.at(lit->first), lit->second, config, collisionObjects, direction, position, normal);
         }
     }
     // reload previous configuration

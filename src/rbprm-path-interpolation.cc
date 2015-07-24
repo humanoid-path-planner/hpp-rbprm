@@ -53,7 +53,7 @@ namespace hpp {
             if(!nonZero) direction = fcl::Vec3f(0,0,1.);
             configuration.head(configPosition.rows()) = configPosition;
             // TODO Direction 6d
-            states.push_back(ComputeContacts(previous, robot_,configuration,collisionObjects,direction));
+            states.push_back(ComputeContacts(previous, robot_,configuration,collisionObjects,-direction));
         }
         states.push_back(this->end_);
         return states;

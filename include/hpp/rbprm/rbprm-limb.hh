@@ -51,6 +51,7 @@ namespace hpp {
     public:
         const model::JointPtr_t limb_;
         const model::JointPtr_t effector_;
+        const fcl::Matrix3f effectorDefaultRotation_; // effector transform in rest pose
         const sampling::SampleContainer sampleContainer_;
         const fcl::Vec3f offset_; // effector location
         const fcl::Vec3f normal_; // effector normal for surface

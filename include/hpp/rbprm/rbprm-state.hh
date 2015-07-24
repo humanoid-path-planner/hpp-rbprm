@@ -36,12 +36,14 @@ namespace hpp {
           contacts_= (other.contacts_);
           contactNormals_ = (other.contactNormals_);
           contactPositions_ = (other.contactPositions_);
+          contactRotation_ = (other.contactRotation_);
       }
 
         hpp::model::Configuration_t configuration_;
         std::map<std::string, bool> contacts_;
         std::map<std::string, fcl::Vec3f> contactNormals_;
         std::map<std::string, fcl::Vec3f> contactPositions_;
+        std::map<std::string, fcl::Matrix3f> contactRotation_;
         std::queue<std::string> contactOrder_;
         unsigned int nbContacts;
         bool stable;

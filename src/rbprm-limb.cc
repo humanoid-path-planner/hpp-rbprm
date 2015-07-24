@@ -64,13 +64,23 @@ namespace hpp {
         return current;
     }
 
+    fcl::Matrix3f GetEffectorTransform(const model::JointPtr_t effector)
+    {
+        model::Configuration_t save = effector->robot()->currentConfiguration ();
+        effector->robot()->currentConfiguration (effector->robot()->neutralConfiguration());
+        fcl::Matrix3f rot = effector->currentTransformation().getRotation();
+        effector->robot()->currentConfiguration (save);
+        return rot.transpose();
+    }
+
     RbPrmLimb::RbPrmLimb (const model::JointPtr_t& limb,
                           const fcl::Vec3f &offset, const fcl::Vec3f &normal, const double x, const double y, const std::size_t nbSamples, const double resolution)
         : limb_(limb)
         , effector_(GetEffector(limb))
+        , effectorDefaultRotation_(GetEffectorTransform(limb))
         , sampleContainer_(limb, effector_->name(), nbSamples, offset, resolution)
-        , offset_(offset)
-        , normal_(normal)
+        , offset_(effectorDefaultRotation_* offset)
+        , normal_(effectorDefaultRotation_* normal)
         , x_(x)
         , y_(y)
     {
@@ -81,9 +91,10 @@ namespace hpp {
                           const fcl::Vec3f &offset, const fcl::Vec3f &normal, const double x, const double y, const std::size_t nbSamples, const double resolution)
         : limb_(limb)
         , effector_(GetEffector(limb, effectorName))
+        , effectorDefaultRotation_(GetEffectorTransform(limb))
         , sampleContainer_(limb, effector_->name(), nbSamples, offset, resolution)
-        , offset_(offset)
-        , normal_(normal)
+        , offset_(effectorDefaultRotation_* offset)
+        , normal_(effectorDefaultRotation_* normal)
         , x_(x)
         , y_(y)
     {

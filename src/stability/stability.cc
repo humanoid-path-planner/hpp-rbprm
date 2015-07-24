@@ -174,6 +174,7 @@ rotations.block<3,3>(3*c,0) = Eigen::Matrix3d::Identity();
         polytope::vector3_t com;
         const fcl::Vec3f comfcl = fullbody->device_->positionCenterOfMass();
         for(int i=0; i< 3; ++i) com(i)=comfcl[i];
+        fullbody->device_->currentConfiguration(save);
         return Contains(positions,com,xs,ys);
     }
 }

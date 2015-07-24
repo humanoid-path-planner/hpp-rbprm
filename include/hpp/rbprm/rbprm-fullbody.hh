@@ -58,6 +58,7 @@ namespace hpp {
 
     private:
         core::CollisionValidationPtr_t collisionValidation_;
+        std::map<std::string, core::CollisionValidationPtr_t> limbcollisionValidations_;
         rbprm::T_Limb limbs_;
 
 
