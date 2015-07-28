@@ -19,11 +19,13 @@
 #ifndef HPP_RBPRM_FULLBODY_HH
 # define HPP_RBPRM_FULLBODY_HH
 
-# include <hpp/rbprm/config.hh>
-# include <hpp/rbprm/rbprm-state.hh>
-# include <hpp/model/device.hh>
-# include <hpp/rbprm/rbprm-limb.hh>
+#include <hpp/rbprm/config.hh>
+#include <hpp/rbprm/rbprm-state.hh>
+#include <hpp/model/device.hh>
+#include <hpp/rbprm/rbprm-limb.hh>
 #include  <hpp/core/collision-validation.hh>
+
+#include  <vector>
 
 namespace hpp {
   namespace rbprm {
@@ -47,19 +49,24 @@ namespace hpp {
         /// Creates a Limb for the robot,
         /// identified by its name. Stores a sample
         /// container, used for requests
-        void AddLimb(const std::string& name, const std::string& effectorName, const fcl::Vec3f &offset,
+        void AddLimb(const std::string& id, const std::string& name, const std::string& effectorName, const fcl::Vec3f &offset,
                      const fcl::Vec3f &normal,const double x, const double y,
                      const model::ObjectVector_t &collisionObjects,
                      const std::size_t nbSamples, const double resolution);
 
     public:
+        typedef std::map<std::string, std::vector<std::string> > T_LimbGroup;
+
+    public:
         const rbprm::T_Limb& GetLimbs() {return limbs_;}
+        const T_LimbGroup& GetGroups() {return limbGroups_;}
         const model::DevicePtr_t device_;
 
     private:
         core::CollisionValidationPtr_t collisionValidation_;
         std::map<std::string, core::CollisionValidationPtr_t> limbcollisionValidations_;
         rbprm::T_Limb limbs_;
+        T_LimbGroup limbGroups_;
 
 
     protected:

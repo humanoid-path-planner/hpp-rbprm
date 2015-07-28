@@ -51,7 +51,7 @@ namespace hpp {
             bool nonZero(false);
             direction.normalize(&nonZero);
             if(!nonZero) direction = fcl::Vec3f(0,0,1.);
-            configuration.head(configPosition.rows()) = configPosition;
+            configuration.head<7>() = configPosition.head<7>();
             // TODO Direction 6d
             states.push_back(ComputeContacts(previous, robot_,configuration,collisionObjects,-direction));
         }
@@ -74,7 +74,7 @@ namespace hpp {
             bool nonZero(false);
             direction.normalize(&nonZero);
             if(!nonZero) direction = fcl::Vec3f(0,0,1.);
-            configuration.head(configPosition.rows()) = configPosition;
+            configuration.head<7>() = configPosition.head<7>();
             // TODO Direction 6d
             states.push_back(ComputeContacts(previous, robot_,configuration,collisionObjects,direction));
         }

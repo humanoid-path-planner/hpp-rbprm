@@ -149,6 +149,10 @@ rotations.block<3,3>(3*c,0) = Eigen::Matrix3d::Identity();
         const std::size_t nbContacts = contacts.size();
         hpp::model::ConfigurationIn_t save = fullbody->device_->currentConfiguration();
         fullbody->device_->currentConfiguration(state.configuration_);
+        model::Device::Computation_t flag = fullbody->device_->computationFlag ();
+        model::Device::Computation_t newflag = static_cast <model::Device::Computation_t> (model::Device::JOINT_POSITION | model::Device::COM);
+        fullbody->device_->controlComputation (newflag);
+        fullbody->device_->computeForwardKinematics ();
         polytope::T_rotation_t rotations(nbContacts*3, 3);
         polytope::vector_t positions(nbContacts*3);
         polytope::vector_t frictions(nbContacts);
@@ -175,6 +179,7 @@ rotations.block<3,3>(3*c,0) = Eigen::Matrix3d::Identity();
         const fcl::Vec3f comfcl = fullbody->device_->positionCenterOfMass();
         for(int i=0; i< 3; ++i) com(i)=comfcl[i];
         fullbody->device_->currentConfiguration(save);
+        fullbody->device_->controlComputation (flag);
         return Contains(positions,com,xs,ys);
     }
 }

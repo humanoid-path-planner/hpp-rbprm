@@ -48,15 +48,15 @@ namespace hpp {
         unsigned int nbContacts;
         bool stable;
 
-        void print()
+        void print() const
         {
-            /*std::cout << " State " << std::endl;
-            std::cout << " \t Configuration " << std::endl;
+            std::cout << " State " << std::endl;
+            /*std::cout << " \t Configuration " << std::endl;
             for(int i = 0; i< configuration_.rows(); ++i)
             {
                 std::cout << configuration_[i] << " ";
             }
-            std::cout << std::endl;
+            std::cout << std::endl;*/
 
             std::cout << " \t contacts " << std::endl;
             for(std::map<std::string, bool>::const_iterator cit =
@@ -65,7 +65,9 @@ namespace hpp {
                 std::cout << cit->first << ": " <<  cit->second << std::endl;
             }
 
-            std::cout << " \t positions " << std::endl;
+            std::cout << "\t stable " << this->stable  << std::endl;
+
+            /*std::cout << " \t positions " << std::endl;
             for(std::map<std::string, fcl::Vec3f>::const_iterator cit =
                 contactPositions_.begin(); cit != contactPositions_.end(); ++cit)
             {
@@ -76,8 +78,8 @@ namespace hpp {
                 contactNormals_.begin(); cit != contactNormals_.end(); ++cit)
             {
                 std::cout << cit->first << ": " <<  cit->second << std::endl;
-            }
-            std::cout << std::endl;*/
+            }*/
+            std::cout << std::endl;
         }
 
     }; // struct State

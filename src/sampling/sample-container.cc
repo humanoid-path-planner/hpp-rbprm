@@ -145,7 +145,9 @@ bool rbprm::sampling::GetCandidates(const SampleContainer& sc, const fcl::Transf
     fcl::CollisionObjectPtr_t obj = o2->fcl();
     fcl::collide(sc.pImpl_->geometry_.get(), treeTrf, obj->collisionGeometry().get(), obj->getTransform(), req, cResult);
     sampling::SampleContainer::T_VoxelSample::const_iterator voxelIt;
+    //const fcl::Vec3f rotatedDir = treeTrf.getRotation() * direction;
     Eigen::Vector3d eDir(direction[0], direction[1], direction[2]);
+    //Eigen::Vector3d eRotDir(rotatedDir[0], rotatedDir[1], rotatedDir[2]);
     for(std::size_t index=0; index<cResult.numContacts(); ++index)
     {
         const Contact& contact = cResult.getContact(index);
@@ -174,7 +176,20 @@ bool rbprm::sampling::GetCandidates(const SampleContainer& sc, const fcl::Transf
         for(std::vector<const sampling::Sample*>::const_iterator sit = samples.begin();
             sit != samples.end(); ++sit)
         {
-            OctreeReport report(*sit, contact, eDir.transpose() * (*sit)->jacobianProduct_.block<3,3>(0,0) * eDir, contact.normal);
+            //find normal id
+            assert(contact.o2->getObjectType() == fcl::OT_BVH); // only works with meshes
+            const fcl::BVHModel<fcl::OBBRSS>* surface = static_cast<const fcl::BVHModel<fcl::OBBRSS>*> (contact.o2);
+            fcl::Vec3f normal; // = -bestReport.contact_.normal;
+
+            const fcl::Triangle& tr = surface->tri_indices[contact.b2];
+            const fcl::Vec3f& v1 = surface->vertices[tr[0]];
+            const fcl::Vec3f& v2 = surface->vertices[tr[1]];
+            const fcl::Vec3f& v3 = surface->vertices[tr[2]];
+            normal = (v2 - v1).cross(v3 - v1);
+            normal.normalize();
+            double EFORT = eDir.transpose() * (*sit)->jacobianProduct_.block<3,3>(0,0) * eDir;
+            EFORT *= (direction.dot(normal));
+            OctreeReport report(*sit, contact,EFORT, normal);
             reports.insert(report);
         }
     }

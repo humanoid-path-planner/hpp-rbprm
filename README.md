@@ -4,6 +4,9 @@ Implementation of RB-PRM planner using hpp
 
 TODO:
 
+So far only handles free flyer robots (first joint is 3d translation, second is 
+SO(3) )
+
 Init value of HRP2 ankle really weird?
 
 Configure tolerance individually for each effector (translation, rotation)
