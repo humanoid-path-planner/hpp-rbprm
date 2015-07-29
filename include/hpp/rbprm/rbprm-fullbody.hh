@@ -83,14 +83,14 @@ namespace hpp {
                                         const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction);
 
       friend hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(const hpp::rbprm::State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration,
-                                        const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction);
+                                        const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction, bool& contactMaintained, bool& multipleBreaks, const bool allowFailure);
     }; // class RbPrmDevice
 
     hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration,
                                       const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction);
 
     hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(const hpp::rbprm::State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration,
-                                            const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction);
+                                            const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction, bool& contactMaintained, bool& multipleBreaks, const bool allowFailure);
   } // namespace rbprm
 
 } // namespace hpp

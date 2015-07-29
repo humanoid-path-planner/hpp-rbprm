@@ -37,10 +37,13 @@ namespace hpp {
 
     std::vector<State> RbPrmInterpolation::Interpolate(const model::ObjectVector_t &collisionObjects, const double timeStep)
     {
+        int nbFailures = 0;
         std::cout << "interpolation " << std::endl;
         std::vector<State> states;
         states.push_back(this->start_);
         const core::interval_t& range = path_->timeRange();
+        std::size_t nbRecontacts = 0;
+        bool allowFailure = true;
         for(double i = range.first + timeStep; i< range.second; i+= timeStep)
         {
             const State& previous = states.back();
@@ -53,16 +56,38 @@ namespace hpp {
             if(!nonZero) direction = fcl::Vec3f(0,0,1.);
             configuration.head<7>() = configPosition.head<7>();
             // TODO Direction 6d
-            states.push_back(ComputeContacts(previous, robot_,configuration,collisionObjects,-direction));
+            bool sameAsPrevious(true);
+            bool multipleBreaks(false);
+            State newState = ComputeContacts(previous, robot_,configuration,collisionObjects,fcl::Vec3f(0,0,1),sameAsPrevious,multipleBreaks,allowFailure);
+            if(allowFailure && multipleBreaks) ++ nbFailures;
+            if(multipleBreaks && !allowFailure)
+            {
+                ++nbRecontacts;
+                i -= timeStep;
+            }
+            else
+            {
+                nbRecontacts = 0;
+            }
+            if(sameAsPrevious)
+            {
+                states.pop_back();
+            }
+            states.push_back(newState);
+            allowFailure = nbRecontacts > robot_->GetLimbs().size();
         }
         states.push_back(this->end_);
+        std::cout << "nbfailure " << nbFailures <<std::endl;
         return states;
     }
 
     std::vector<State> RbPrmInterpolation::Interpolate(const std::vector<core::ConfigurationIn_t>& configurations, const model::ObjectVector_t &collisionObjects)
     {
+        bool sameAsPrevious;
+        bool multipleBreaks(false);
         std::vector<State> states;
         states.push_back(this->start_);
+        bool allowFailure = false;
         for(std::vector<core::ConfigurationIn_t>::const_iterator cit = configurations.begin();
             cit != configurations.end(); ++cit)
         {
@@ -76,7 +101,7 @@ namespace hpp {
             if(!nonZero) direction = fcl::Vec3f(0,0,1.);
             configuration.head<7>() = configPosition.head<7>();
             // TODO Direction 6d
-            states.push_back(ComputeContacts(previous, robot_,configuration,collisionObjects,direction));
+            states.push_back(ComputeContacts(previous, robot_,configuration,collisionObjects,direction,sameAsPrevious,multipleBreaks,allowFailure));
         }
         states.push_back(this->end_);
         return states;
