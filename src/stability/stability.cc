@@ -100,13 +100,13 @@ namespace stability{
         {
             const RbPrmLimbPtr_t limb =fullbody->GetLimbs().at(contacts[c]);
             const fcl::Transform3f& transform = limb->effector_->currentTransformation();
-rotations.block<3,3>(3*c,0) = Eigen::Matrix3d::Identity();
+//rotations.block<3,3>(3*c,0) = Eigen::Matrix3d::Identity();
             for(int i = 0; i<3; ++i)
             {
-                /*for(int j =0; j<3; ++j)
+                for(int j =0; j<3; ++j)
                 {
                     rotations(i+3*c,j) = transform.getRotation()(i,j);
-                }*/
+                }
                 positions(i+3*c) = transform.getTranslation()[i];
             }
             frictions(c) = 0.7; // TODO parametrize

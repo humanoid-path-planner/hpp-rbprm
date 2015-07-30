@@ -366,8 +366,10 @@ namespace hpp {
                                                                                             rotation,
                                                                                             setRotationConstraints(z))));
 
+              std::cout << configuration << std::endl;
               if(proj->apply(configuration))
               {
+                  std::cout << configuration << std::endl;
                 apply = true;
                 //  std::cout << "rotation " << rotation << " \n current rotation \n" << limb->effector_->currentTransformation().getRotation() << std::endl;
                 if(validation->validate(configuration))
@@ -434,6 +436,7 @@ namespace hpp {
           current.contactPositions_[limbId] = position;
           current.contactRotation_[limbId] = rotation;
           current.configuration_ = configuration;
+          std::cout << configuration << std::endl;
           ++current.nbContacts;
           current.contactOrder_.push(limbId);
       }
