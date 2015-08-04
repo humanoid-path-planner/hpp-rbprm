@@ -18,6 +18,8 @@
 #include <hpp/model/joint.hh>
 #include <hpp/model/joint-configuration.hh>
 
+#include <Eigen/Eigen>
+
 using namespace hpp;
 using namespace hpp::model;
 using namespace hpp::rbprm;
@@ -44,6 +46,13 @@ Eigen::MatrixXd Jacobian(const model::JointPtr_t limb, const model::JointPtr_t e
     return effector->jacobian().block(0,limb->rankInVelocity(),6, effector->rankInVelocity() - limb->rankInVelocity());
 }
 
+
+double Manipulability(const Eigen::MatrixXd& product)
+{
+    double det = product.determinant();
+    return det > 0 ? sqrt(det) : 0;
+}
+
 Sample::Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, const fcl::Vec3f& offset, std::size_t id)
     : startRank_(limb->rankInConfiguration())
     , length_ (ComputeLength(limb, effector))
@@ -52,6 +61,7 @@ Sample::Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, c
     , jacobian_(Jacobian(limb, effector))
     , jacobianProduct_(jacobian_*jacobian_.transpose())
     , id_(id)
+    , manipulability_(Manipulability(jacobianProduct_))
 {
     // NOTHING
 }
@@ -64,6 +74,7 @@ Sample::Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, m
     , jacobian_(Jacobian(limb,effector))
     , jacobianProduct_(jacobian_*jacobian_.transpose())
     , id_(id)
+    , manipulability_(Manipulability(jacobianProduct_))
 {
     // NOTHING
 }
@@ -77,6 +88,7 @@ Sample::Sample(const Sample &clone)
     , jacobian_(clone.jacobian_)
     , jacobianProduct_(clone.jacobianProduct_)
     , id_(clone.id_)
+    , manipulability_(clone.manipulability_)
 {
     // NOTHING
 }

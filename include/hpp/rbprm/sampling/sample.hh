@@ -61,6 +61,7 @@ namespace hpp {
       const Eigen::Matrix <model::value_type, 6, 6> jacobianProduct_;
       /// id in sample container
       const std::size_t id_;
+      const double manipulability_;
       //const fcl::Transform3f rotation_; TODO
     }; // class Sample
 

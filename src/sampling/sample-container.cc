@@ -78,7 +78,7 @@ using namespace fcl;
             SampleContainer::T_VoxelSample::iterator it = res.find(id);
             if(it!=res.end())
             {
-                if(it->second.size() < 20)
+                //if(it->second.size() < 20)
                 {
                     it->second.push_back(&(*cit));
                 }
@@ -190,8 +190,9 @@ bool rbprm::sampling::GetCandidates(const SampleContainer& sc, const fcl::Transf
             const fcl::Vec3f& v3 = surface->vertices[tr[2]];
             normal = (v2 - v1).cross(v3 - v1);
             normal.normalize();
-            double EFORT = eDir.transpose() * (*sit)->jacobianProduct_.block<3,3>(0,0) * eDir;
-            EFORT += (direction.dot(normal));
+            double EFORT = -eDir.transpose() * (*sit)->jacobianProduct_.block<3,3>(0,0) * (-eDir);
+            //EFORT = (direction.dot(normal));
+            EFORT += (*sit)->manipulability_ + (direction.dot(normal));
             OctreeReport report(*sit, contact,EFORT, normal);
             reports.insert(report);
         }

@@ -72,14 +72,14 @@ namespace hpp {
                 contactPositions_.begin(); cit != contactPositions_.end(); ++cit)
             {
                 std::cout << cit->first << ": " <<  cit->second << std::endl;
-            }
-            std::cout << " \t contactNormals_ " << std::endl;
+            }*/
+            /*std::cout << " \t contactNormals_ " << std::endl;
             for(std::map<std::string, fcl::Vec3f>::const_iterator cit =
                 contactNormals_.begin(); cit != contactNormals_.end(); ++cit)
             {
                 std::cout << cit->first << ": " <<  cit->second << std::endl;
-            }*/
-            std::cout << std::endl;
+            }
+            std::cout << std::endl;*/
         }
 
     }; // struct State

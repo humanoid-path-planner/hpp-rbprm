@@ -221,7 +221,7 @@ namespace hpp {
             // try to maintain contact
             const fcl::Vec3f& ppos  =previous.contactPositions_.at(name);
             //const fcl::Vec3f& pnorm  =previous.contactNormals_.at(name);
-            core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-2, 50);
+            core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 30);
             LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
             const fcl::Vec3f z = limb->effector_->currentTransformation().getRotation() * limb->normal_;
             //const fcl::Matrix3f alignRotation = tools::GetRotationMatrix(z,previous.contactNormals_.at(name));
@@ -266,7 +266,6 @@ namespace hpp {
                 brokenContacts.push_back(name);
             }
         }
-        current.stable = stability::IsStable(body,current);
         // reload previous configuration
         body->device_->currentConfiguration(save);
         if(brokenContacts.size() > 1)
@@ -450,7 +449,7 @@ namespace hpp {
         std::queue<std::string> newOrder;
         core::Configuration_t savedConfig = config;
         std::string nContactName ="";
-        //State previous = result;
+        State previous = result;
         while(!result.stable &&  !oldOrder.empty())
         {
             std::string previousContactName = oldOrder.front();
@@ -472,11 +471,11 @@ namespace hpp {
                     nContactName = *cit;
                     notFound = false;
                 }
-                /*else
+                else
                 {
                     result = previous;
                     config = savedConfig;
-                }*/
+                }
             }
             if(notFound)
             {
@@ -529,6 +528,7 @@ namespace hpp {
     hpp::rbprm::State ComputeContacts(const hpp::rbprm::State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration,
                                     const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction, bool& contactMaintained, bool& multipleBreaks, const bool allowFailure)
     {
+    static int id = 0;
     const T_Limb& limbs = body->GetLimbs();
     // save old configuration
     core::ConfigurationIn_t save = body->device_->currentConfiguration();
@@ -542,6 +542,8 @@ namespace hpp {
     {
         fcl::Vec3f normal, position;
         result = previous;
+//result.configuration_.head<3>() = previous.configuration_.head<3>() + (configuration - previous.configuration_).head<3>() * 0.05;
+        result.stable = false;
         std::string replaceContact =  result.contactOrder_.front();
         result.contactOrder_.pop();
         //result.contactOrder_.push(replaceContact);
@@ -551,6 +553,7 @@ namespace hpp {
         ComputeStableContact(body,result,body->limbcollisionValidations_.at(replaceContact),replaceContact,body->limbs_.at(replaceContact),config,collisionObjects,direction,position, normal);
         body->device_->currentConfiguration(save);
         body->device_->controlComputation (flag);
+        ++id;
         return result;
     }
     core::Configuration_t config = result.configuration_;
@@ -566,7 +569,6 @@ namespace hpp {
         }
     }
     // reload previous configuration
-    static int id = 0;
     // no stable contact was found / limb maintained
     if(!result.stable)
     {
@@ -574,7 +576,13 @@ namespace hpp {
         std::cout << "replanning unstable state " << id+1 << std::endl;
         RepositionContacts(result, body, body->collisionValidation_, config, collisionObjects, direction);
     }
-    std::cout << "state " << ++id << " stable ? " << stability::IsStable(body,result) << std::endl;
+    bool stab =  stability::IsStable(body,result);
+    std::cout << "state " << ++id << " stable ? " << stab << " " << result.stable << std::endl;
+    if(!stab && result.stable)
+    {
+        std::cout << "error " << std::endl;
+        result.stable = false;
+    }
     body->device_->currentConfiguration(save);    
     body->device_->controlComputation (flag);
     return result;

@@ -54,11 +54,15 @@ namespace hpp {
             bool nonZero(false);
             direction.normalize(&nonZero);
             if(!nonZero) direction = fcl::Vec3f(0,0,1.);
+
+{
+    direction = fcl::Vec3f(0.1,0,1);
+}
             configuration.head<7>() = configPosition.head<7>();
             // TODO Direction 6d
             bool sameAsPrevious(true);
             bool multipleBreaks(false);
-            State newState = ComputeContacts(previous, robot_,configuration,collisionObjects,-direction,sameAsPrevious,multipleBreaks,allowFailure);
+            State newState = ComputeContacts(previous, robot_,configuration,collisionObjects,direction,sameAsPrevious,multipleBreaks,allowFailure);
             if(allowFailure && multipleBreaks)
             {
                 ++ nbFailures;
