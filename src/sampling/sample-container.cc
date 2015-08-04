@@ -78,7 +78,10 @@ using namespace fcl;
             SampleContainer::T_VoxelSample::iterator it = res.find(id);
             if(it!=res.end())
             {
-                it->second.push_back(&(*cit));
+                if(it->second.size() < 20)
+                {
+                    it->second.push_back(&(*cit));
+                }
             }
             else
             {
@@ -140,7 +143,7 @@ bool rbprm::sampling::GetCandidates(const SampleContainer& sc, const fcl::Transf
                                                                           const hpp::model::CollisionObjectPtr_t& o2,
                                                                           const fcl::Vec3f& direction, hpp::rbprm::sampling::T_OctreeReport &reports)
 {
-    fcl::CollisionRequest req(30, true);
+    fcl::CollisionRequest req(50, true);
     fcl::CollisionResult cResult;
     fcl::CollisionObjectPtr_t obj = o2->fcl();
     fcl::collide(sc.pImpl_->geometry_.get(), treeTrf, obj->collisionGeometry().get(), obj->getTransform(), req, cResult);

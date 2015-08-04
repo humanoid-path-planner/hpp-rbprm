@@ -59,12 +59,6 @@ T_Point ConvexHull(const T_Point& points)
             {
                 endPoint = points[j];
             }
-
-            if( i > 10000 )
-            {
-                std::cout << " WTF " << std::endl << points[j] << std::endl;
-                //bool gtd = false;
-            }
         }
         res.push_back(pi);
         pointOnHull = endPoint;

@@ -167,13 +167,13 @@ namespace hpp {
     }
 
 
-    std::vector<bool> setTranslationConstraints(const fcl::Vec3f& normal)
+    std::vector<bool> setTranslationConstraints(const fcl::Vec3f&)// normal)
     {
         std::vector<bool> res;
         for(std::size_t i =0; i <3; ++i)
         {
-            res.push_back(std::abs(normal[i]) > 0.2);
-            //res.push_back(true);
+            //res.push_back(std::abs(normal[i]) > 0.2);
+            res.push_back(true);
         }
         return res;
     }
@@ -191,11 +191,11 @@ namespace hpp {
             if(validation->validate(configuration) && (!stability || stability::IsStable(body,current)))
             {
                 current.configuration_ = configuration;
-                std::cout << "found collision free non contact for " << limb->limb_->name() << std::endl;
+                //std::cout << "found collision free non contact for " << limb->limb_->name() << std::endl;
                 return true;
             }
         }
-        std::cout << "no collision free configuration to maintain balance" << limb->limb_->name() << std::endl;
+        //std::cout << "no collision free configuration to maintain balance" << limb->limb_->name() << std::endl;
         return false;
     }
 
@@ -204,7 +204,6 @@ namespace hpp {
                                    std::map<std::string,core::CollisionValidationPtr_t>& limbValidations,
                                    model::ConfigurationIn_t configuration, bool& contactMaintained, bool& multipleBreaks)
     {
-        static int nbBroken = 0;
         contactMaintained = true;
         std::vector<std::string> brokenContacts;
         // iterate over every existing contact and try to maintain them
@@ -222,7 +221,7 @@ namespace hpp {
             // try to maintain contact
             const fcl::Vec3f& ppos  =previous.contactPositions_.at(name);
             //const fcl::Vec3f& pnorm  =previous.contactNormals_.at(name);
-            core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-2, 30);
+            core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-2, 50);
             LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
             const fcl::Vec3f z = limb->effector_->currentTransformation().getRotation() * limb->normal_;
             //const fcl::Matrix3f alignRotation = tools::GetRotationMatrix(z,previous.contactNormals_.at(name));
@@ -248,13 +247,13 @@ namespace hpp {
                     ++current.nbContacts;
                     current.contactOrder_.push(name);
                     current.configuration_ = config;
-                    std::cout << "\t maintaining contact " << name << "position" << previous.contactPositions_.at(name) << std::endl;
-                    std::cout << "\t real position" << limb->effector_->currentTransformation().getTranslation() << std::endl;
+                    //std::cout << "\t maintaining contact " << name << "position" << previous.contactPositions_.at(name) << std::endl;
+                    //std::cout << "\t real position" << limb->effector_->currentTransformation().getTranslation() << std::endl;
                 }
                 else
                 {
                     contactMaintained = false;
-                    std::cout << "\t breaking contact (collision) " << name << std::endl;
+                    //std::cout << "\t breaking contact (collision) " << name << std::endl;
                     ComputeCollisionFreeConfiguration(body,current,limbValidations.at(name),limb,current.configuration_,false);
                     brokenContacts.push_back(name);
                 }
@@ -262,7 +261,7 @@ namespace hpp {
             else
             {
                 contactMaintained = false;
-                std::cout << "\t breaking contact (invalid configuration) " << name << std::endl;
+                //std::cout << "\t breaking contact (invalid configuration) " << name << std::endl;
                 ComputeCollisionFreeConfiguration(body,current,limbValidations.at(name),limb,current.configuration_,false);
                 brokenContacts.push_back(name);
             }
@@ -275,7 +274,7 @@ namespace hpp {
             contactMaintained = false;
             multipleBreaks = true;
             // replanning for last contact created.
-            std::cout << "*********** MULTI CONTACT BREK ****** " << brokenContacts.size() << " " << ++nbBroken << std::endl;
+            //std::cout << "*********** MULTI CONTACT BREK ****** " << brokenContacts.size() << " " << ++nbBroken << std::endl;
         }
         return current;
     }
@@ -366,10 +365,8 @@ namespace hpp {
                                                                                             rotation,
                                                                                             setRotationConstraints(z))));
 
-              std::cout << configuration << std::endl;
               if(proj->apply(configuration))
               {
-                  std::cout << configuration << std::endl;
                 apply = true;
                 //  std::cout << "rotation " << rotation << " \n current rotation \n" << limb->effector_->currentTransformation().getRotation() << std::endl;
                 if(validation->validate(configuration))
@@ -391,7 +388,7 @@ namespace hpp {
                         position = limb->effector_->currentTransformation().getTranslation();
                         rotation = limb->effector_->currentTransformation().getRotation();
                         found_sample = true;
-                        std::cout << "handled offset " << position - limb->offset_ << std::endl;
+                        //std::cout << "handled offset " << position - limb->offset_ << std::endl;
                     }
                     else if(!unstableContact && contactIfFails)
                     {
@@ -408,25 +405,25 @@ namespace hpp {
       }
       if(found_sample && (stableForOneContact || current.nbContacts > 0 ))
       {
-          std::cout << "stable contact found for " << limbId << std::endl;
+          //std::cout << "stable contact found for " << limbId << std::endl;
           current.stable = true;
       }
       else if(!found_sample && unstableContact)
       {
-          std::cout << "no stable contact found, chose one anyway " << limbId << std::endl;
+          //std::cout << "no stable contact found, chose one anyway " << limbId << std::endl;
           found_sample = true;
           configuration = unstableContactConfiguration;
       }
       else
       {
-          std::cout << "did not find any contact"  << limbId << std::endl;
+          //std::cout << "did not find any contact"  << limbId << std::endl;
           if(!found_sample)
           {
               ComputeCollisionFreeConfiguration(body, current, validation, limb, configuration,false);
           }
           if(apply)
           {
-              std::cout << "too many collisions found " << std::endl;
+              //std::cout << "too many collisions found " << std::endl;
           }
       }
       if(found_sample)
@@ -436,7 +433,6 @@ namespace hpp {
           current.contactPositions_[limbId] = position;
           current.contactRotation_[limbId] = rotation;
           current.configuration_ = configuration;
-          std::cout << configuration << std::endl;
           ++current.nbContacts;
           current.contactOrder_.push(limbId);
       }
@@ -454,6 +450,7 @@ namespace hpp {
         std::queue<std::string> newOrder;
         core::Configuration_t savedConfig = config;
         std::string nContactName ="";
+        //State previous = result;
         while(!result.stable &&  !oldOrder.empty())
         {
             std::string previousContactName = oldOrder.front();
@@ -470,11 +467,16 @@ namespace hpp {
                 if(ComputeStableContact(body, result, validation, *cit, body->GetLimbs().at(*cit), config, collisionObjects, direction, position, normal, false))
                 {
                     std::cout << "state saved with " << *cit << std::endl;
-                    std::cout << "position  " << result.contactPositions_.at(*cit) << std::endl;
+                    //std::cout << "position  " << result.contactPositions_.at(*cit) << std::endl;
                     result.stable = true;
                     nContactName = *cit;
                     notFound = false;
                 }
+                /*else
+                {
+                    result = previous;
+                    config = savedConfig;
+                }*/
             }
             if(notFound)
             {

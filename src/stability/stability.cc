@@ -20,6 +20,7 @@
 #include <hpp/rbprm/stability/support.hh>
 #include <hpp/model/device.hh>
 #include <hpp/model/joint.hh>
+#include <hpp/rbprm/tools.hh>
 
 #include <Eigen/Dense>
 
@@ -91,6 +92,7 @@ namespace stability{
         const std::size_t nbContacts = contacts.size();
         hpp::model::ConfigurationIn_t save = fullbody->device_->currentConfiguration();
         fullbody->device_->currentConfiguration(state.configuration_);
+        fullbody->device_->computeForwardKinematics();
         polytope::T_rotation_t rotations(nbContacts*3, 3);
         polytope::vector_t positions(nbContacts*3);
         polytope::vector_t frictions(nbContacts);
@@ -100,12 +102,17 @@ namespace stability{
         {
             const RbPrmLimbPtr_t limb =fullbody->GetLimbs().at(contacts[c]);
             const fcl::Transform3f& transform = limb->effector_->currentTransformation();
-//rotations.block<3,3>(3*c,0) = Eigen::Matrix3d::Identity();
+            //fcl::Matrix3f rotationInWorldCoordinates = limb->effectorDefaultRotation_;
+            //rotationInWorldCoordinates.transpose();
+            //fcl::Matrix3f tg = rotationInWorldCoordinates * transform.getRotation();
+            //rotationInWorldCoordinates = transform.getRotation() * rotationInWorldCoordinates;
+            fcl::Vec3f z(0,0,1);
+            const fcl::Matrix3f alignRotation = tools::GetRotationMatrix(z,state.contactNormals_.at(contacts[c]));
             for(int i = 0; i<3; ++i)
             {
                 for(int j =0; j<3; ++j)
                 {
-                    rotations(i+3*c,j) = transform.getRotation()(i,j);
+                    rotations(i+3*c,j) = alignRotation(i,j);
                 }
                 positions(i+3*c) = transform.getTranslation()[i];
             }
@@ -124,17 +131,18 @@ namespace stability{
         std::cout << "com  \n" << fullbody->device_->positionCenterOfMass() << std::endl;*/
 
 
-        fullbody->device_->currentConfiguration(save);
         const polytope::ProjectedCone* cone = polytope::U_stance(rotations,positions,frictions,xs,ys);
         if(cone)
         {
             polytope::vector3_t com;
             const fcl::Vec3f comfcl = fullbody->device_->positionCenterOfMass();
             for(int i=0; i< 3; ++i) com(i)=comfcl[i];
-            bool res = cone->IsValid(com,gravity,fullbody->device_->mass());
+            bool res = cone->IsValid(com,gravity,fullbody->device_->mass()) && cone->A.rows() >1;
             delete cone;
+            fullbody->device_->currentConfiguration(save);
             return res;
         }
+        fullbody->device_->currentConfiguration(save);
         return false;
     }
 

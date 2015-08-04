@@ -58,8 +58,12 @@ namespace hpp {
             // TODO Direction 6d
             bool sameAsPrevious(true);
             bool multipleBreaks(false);
-            State newState = ComputeContacts(previous, robot_,configuration,collisionObjects,fcl::Vec3f(0,0,1),sameAsPrevious,multipleBreaks,allowFailure);
-            if(allowFailure && multipleBreaks) ++ nbFailures;
+            State newState = ComputeContacts(previous, robot_,configuration,collisionObjects,-direction,sameAsPrevious,multipleBreaks,allowFailure);
+            if(allowFailure && multipleBreaks)
+            {
+                ++ nbFailures;
+                std::cout << "failed at state " << states.size() +1 << std::endl;
+            }
             if(multipleBreaks && !allowFailure)
             {
                 ++nbRecontacts;
