@@ -76,7 +76,7 @@ namespace stability{
         return polytope::U_stance(rotations,positions,frictions,xs,ys);
     }
 
-    bool IsStable(const RbPrmFullBodyPtr_t fullbody, const State& state)
+    bool IsStable(const RbPrmFullBodyPtr_t fullbody, State& state)
     {
         if(!init)
         {
@@ -136,6 +136,7 @@ namespace stability{
         {
             polytope::vector3_t com;
             const fcl::Vec3f comfcl = fullbody->device_->positionCenterOfMass();
+            state.com_ = comfcl;
             for(int i=0; i< 3; ++i) com(i)=comfcl[i];
             bool res = cone->IsValid(com,gravity,fullbody->device_->mass()) && cone->A.rows() >1;
             delete cone;

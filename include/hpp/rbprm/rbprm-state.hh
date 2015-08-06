@@ -29,6 +29,7 @@ namespace hpp {
       State():nbContacts(0), stable(false){}
       State(const State& other)
           : configuration_(other.configuration_)
+          , com_(other.com_)
           , contactOrder_(other.contactOrder_)
           , nbContacts(other.nbContacts)
           , stable(other.stable)
@@ -40,12 +41,13 @@ namespace hpp {
       }
 
         hpp::model::Configuration_t configuration_;
+        fcl::Vec3f com_;
         std::map<std::string, bool> contacts_;
         std::map<std::string, fcl::Vec3f> contactNormals_;
         std::map<std::string, fcl::Vec3f> contactPositions_;
         std::map<std::string, fcl::Matrix3f> contactRotation_;
         std::queue<std::string> contactOrder_;
-        unsigned int nbContacts;
+        std::size_t nbContacts;
         bool stable;
 
         void print() const
@@ -80,6 +82,35 @@ namespace hpp {
                 std::cout << cit->first << ": " <<  cit->second << std::endl;
             }
             std::cout << std::endl;*/
+        }
+
+        void print(std::stringstream& ss) const
+        {
+            ss << nbContacts;
+            std::map<std::string, fcl::Vec3f>::const_iterator cit = contactNormals_.begin();
+            for(unsigned int c=0; c < nbContacts; ++c, ++cit)
+            {
+                const std::string& name = cit->first;
+                const fcl::Vec3f& normal = contactNormals_.at(name);
+                const fcl::Vec3f& position = contactPositions_.at(name);
+                for(std::size_t i=0; i<3; ++i)
+                {
+                    ss << " " << position[i];
+                }
+                for(std::size_t i=0; i<3; ++i)
+                {
+                    ss << " " << normal[i];
+                }
+                for(std::size_t i=0; i<3; ++i)
+                {
+                    ss << " " << com_[i];
+                }
+                for(int i=0; i<configuration_.rows(); ++i)
+                {
+                    ss << " " << configuration_[i];
+                }
+                ss << "\n";
+            }
         }
 
     }; // struct State

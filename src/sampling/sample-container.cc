@@ -192,7 +192,7 @@ bool rbprm::sampling::GetCandidates(const SampleContainer& sc, const fcl::Transf
             normal.normalize();
             double EFORT = -eDir.transpose() * (*sit)->jacobianProduct_.block<3,3>(0,0) * (-eDir);
             //EFORT = (direction.dot(normal));
-            EFORT += (*sit)->manipulability_ + (direction.dot(normal));
+            EFORT *= ((*sit)->manipulability_ + (direction.dot(normal)));
             OctreeReport report(*sit, contact,EFORT, normal);
             reports.insert(report);
         }

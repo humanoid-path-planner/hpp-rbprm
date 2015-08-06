@@ -244,7 +244,6 @@ namespace hpp {
                     current.contactPositions_[name] = previous.contactPositions_.at(name);
                     current.contactNormals_[name] = previous.contactNormals_.at(name);
                     current.contactRotation_[name] = previous.contactRotation_.at(name);
-                    ++current.nbContacts;
                     current.contactOrder_.push(name);
                     current.configuration_ = config;
                     //std::cout << "\t maintaining contact " << name << "position" << previous.contactPositions_.at(name) << std::endl;
@@ -432,7 +431,6 @@ namespace hpp {
           current.contactPositions_[limbId] = position;
           current.contactRotation_[limbId] = rotation;
           current.configuration_ = configuration;
-          ++current.nbContacts;
           current.contactOrder_.push(limbId);
       }
       return found_sample;
@@ -585,6 +583,7 @@ namespace hpp {
     }
     body->device_->currentConfiguration(save);    
     body->device_->controlComputation (flag);
+    result.nbContacts = result.contactNormals_.size();
     return result;
     }
   } // rbprm

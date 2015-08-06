@@ -34,7 +34,8 @@ namespace hpp {
 
     const polytope::ProjectedCone* computeCone(const RbPrmFullBodyPtr_t fullbody, const State& state);
 
-    bool IsStable(const RbPrmFullBodyPtr_t fullbody, const State& state);
+    // sets the com position of the state
+    bool IsStable(const RbPrmFullBodyPtr_t fullbody, State& state);
     bool IsStablePoly(const RbPrmFullBodyPtr_t fullbody, const State& state);
 
   } // namespace stability
