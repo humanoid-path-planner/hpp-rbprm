@@ -92,7 +92,20 @@ namespace
                                             const std::size_t displacementLimit)
     {
         srand ((unsigned int)(time(NULL)));
-        RbPrmShooter* ptr = new RbPrmShooter (robot, geometries, shootLimit, displacementLimit);
+        const std::vector<std::string> filter;
+        RbPrmShooter* ptr = new RbPrmShooter (robot, geometries, filter, shootLimit, displacementLimit);
+        RbPrmShooterPtr_t shPtr (ptr);
+        ptr->init (shPtr);
+        return shPtr;
+    }
+
+    RbPrmShooterPtr_t RbPrmShooter::create (const model::RbPrmDevicePtr_t& robot,
+                                            const ObjectVector_t& geometries,
+                                            const std::vector<std::string>& filter,
+                                            const std::size_t shootLimit, const std::size_t displacementLimit)
+    {
+        srand ((unsigned int)(time(NULL)));
+        RbPrmShooter* ptr = new RbPrmShooter (robot, geometries, filter, shootLimit, displacementLimit);
         RbPrmShooterPtr_t shPtr (ptr);
         ptr->init (shPtr);
         return shPtr;
@@ -107,10 +120,12 @@ namespace
 
     RbPrmShooter::RbPrmShooter (const model::RbPrmDevicePtr_t& robot,
                               const ObjectVector_t& geometries,
+                              const std::vector<std::string>& filter,
                               const std::size_t shootLimit,
                               const std::size_t displacementLimit)
     : shootLimit_(shootLimit)
     , displacementLimit_(displacementLimit)
+    , filter_(filter)
     , robot_ (robot)
     , validator_(rbprm::RbPrmValidation::create(robot_))
     {
@@ -205,12 +220,13 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
         // rotate and translate randomly until valid configuration found or
         // no obstacle is reachable
         CollisionValidationReport report;
+        CollisionValidationReport unusedreport;
         std::size_t limitDis = displacementLimit_;
         Vec3f lastDirection(1,0,0);
         while(!found && limitDis >0)
         {
             if(validator_->trunkValidation_->validate(*config, report)
-            && !validator_->romValidation_->validate(*config))
+            && validator_->validateRoms(*config, filter_))
             {
                 found = true;
             }
@@ -220,13 +236,13 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
                 for(; limitDis>0 && !found; --limitDis)
                 {
                     SampleRotation(config, jv);
-                    found = validator_->validate(*config);
+                    found = validator_->validate(*config, unusedreport, filter_);
                     if(!found)
                     {
                         Translate(config, -lastDirection *
                                   1 * ((double) rand() / (RAND_MAX)));
                     }
-                    found = validator_->validate(*config);
+                    found = validator_->validate(*config, unusedreport, filter_);
                 }
                 if(!found) break;
             }

@@ -49,7 +49,7 @@ using hpp::rbprm::RbPrmValidationPtr_t;
 
 namespace
 {
-    void InitGeometries(JointPtr_t romJoint, JointPtr_t trunkJoint)
+    void InitGeometries(JointPtr_t romJoint, JointPtr_t romJoint2, JointPtr_t trunkJoint)
     {
         CollisionGeometryPtr_t trunk (new fcl::Box (1, 1, 1));
         CollisionObjectPtr_t obstacleTrunk = CollisionObject::create
@@ -59,8 +59,14 @@ namespace
         CollisionObjectPtr_t obstacleRom = CollisionObject::create
             (rom, fcl::Transform3f (), "rombox");
 
+
+        CollisionGeometryPtr_t rom2 (new fcl::Box (2.3, 1, 1));
+        CollisionObjectPtr_t obstacleRom2 = CollisionObject::create
+            (rom2, fcl::Transform3f (), "rombox2");
+
         obstacleTrunk->move(fcl::Vec3f(0,0,0));
         obstacleRom->move(fcl::Vec3f(0.5,0,0));
+        obstacleRom2->move(fcl::Vec3f(-0.5,0,0));
         BodyPtr_t body = new Body;
         body->name ("trunk");
         trunkJoint->setLinkedBody (body);
@@ -69,12 +75,20 @@ namespace
         body->name ("rom");
         romJoint->setLinkedBody (body);
         body->addInnerObject(obstacleRom, true, true);
+        body = new Body;
+        body->name ("rom2");
+        romJoint2->setLinkedBody (body);
+        body->addInnerObject(obstacleRom2, true, true);
     }
 
     RbPrmDevicePtr_t initRbPrmDeviceTest()
     {
         DevicePtr_t rom = Device::create("rom");
-        RbPrmDevicePtr_t trunk = RbPrmDevice::create("trunk", rom);
+        DevicePtr_t rom2 = Device::create("rom2");
+        hpp::model::T_Rom roms;
+        roms.insert(std::make_pair(rom->name(), rom));
+        roms.insert(std::make_pair(rom2->name(), rom2));
+        RbPrmDevicePtr_t trunk = RbPrmDevice::create("trunk", roms);
         JointSO3* jointSO3Trunk = new JointSO3 (fcl::Transform3f());
         JointSO3* jointSO3Rom = new JointSO3 (fcl::Transform3f());
         jointSO3Trunk->isBounded (0, true);
@@ -120,11 +134,17 @@ namespace
         jointTrRom->lowerBound(2,-3.);
         jointTrRom->upperBound(2,3.);
 
+
+        JointSO3* jointSO3Rom2 = new JointSO3 (*jointSO3Rom);
+        JointTranslation<3>* jointTrRom2 = new JointTranslation<3> (*jointTrRom);
+
         rom->rootJoint(jointTrRom);
+        rom2->rootJoint(jointTrRom2);
         trunk->rootJoint(jointTrTrunk);
         jointTrRom->addChildJoint (jointSO3Rom);
+        jointTrRom2->addChildJoint (jointSO3Rom2);
         jointTrTrunk->addChildJoint (jointSO3Trunk);
-        InitGeometries(jointTrRom, jointTrTrunk);
+        InitGeometries(jointTrRom, jointTrRom2, jointTrTrunk);
         return trunk;
     }
 

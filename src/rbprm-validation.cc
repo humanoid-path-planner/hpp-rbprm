@@ -26,6 +26,19 @@ namespace
         validation->collisionRequest_.enable_contact = true;
         return validation;
     }
+
+    hpp::rbprm::T_RomValidation createRomValidations(const hpp::model::RbPrmDevicePtr_t& robot)
+    {
+        hpp::rbprm::T_RomValidation result;
+        for(hpp::model::T_Rom::const_iterator cit = robot->robotRoms_.begin();
+            cit != robot->robotRoms_.end(); ++cit)
+        {
+            result.insert(std::make_pair(cit->first, hpp::core::CollisionValidation::create(cit->second)));
+        }
+        return result;
+    }
+
+    const std::vector<std::string> defaultFilter;
 }
 
 namespace hpp {
@@ -41,17 +54,39 @@ namespace hpp {
 
     RbPrmValidation::RbPrmValidation (const model::RbPrmDevicePtr_t& robot)
         : trunkValidation_(tuneFclValidation(robot))
-        , romValidation_(CollisionValidation::create(robot->robotRoms_.begin()->second))
+        , romValidations_(createRomValidations(robot))
     {
         // NOTHING
     }
 
-#include <iostream>
+    bool RbPrmValidation::validateRoms(const core::Configuration_t& config,
+                      const std::vector<std::string>& filter,
+                      bool throwIfInValid)
+    {
+        unsigned int filterMatch(0);
+        for(T_RomValidation::const_iterator cit = romValidations_.begin();
+            cit != romValidations_.end() && (filterMatch < 1 || filterMatch < filter.size()); ++cit)
+        {
+            if((filter.empty() || std::find(filter.begin(), filter.end(), cit->first) != filter.end())
+                    && !cit->second->validate(config, throwIfInValid))
+            {
+                ++filterMatch;
+            }
+        }
+        return filterMatch >= filter.size();
+    }
+
+    bool RbPrmValidation::validateRoms(const core::Configuration_t& config,
+                      bool throwIfInValid)
+    {
+        return validateRoms(config,defaultFilter,throwIfInValid);
+    }
+
     bool RbPrmValidation::validate (const Configuration_t& config,
                     bool throwIfInValid)
     {
         return trunkValidation_->validate(config, throwIfInValid)
-             && !romValidation_->validate(config, throwIfInValid);
+             && validateRoms(config, defaultFilter, throwIfInValid);
     }
 
     bool RbPrmValidation::validate (const Configuration_t& config,
@@ -59,20 +94,36 @@ namespace hpp {
                     bool throwIfInValid)
     {
         return trunkValidation_->validate(config, validationReport, throwIfInValid)
-             && !romValidation_->validate(config, throwIfInValid);
+                && validateRoms(config, defaultFilter, throwIfInValid);
+    }
+
+    bool RbPrmValidation::validate (const Configuration_t& config,
+                    ValidationReport& validationReport,
+                    const std::vector<std::string>& filter, bool throwIfInValid)
+    {
+        return trunkValidation_->validate(config, validationReport, throwIfInValid)
+                && validateRoms(config, filter, throwIfInValid);
     }
 
     void RbPrmValidation::addObstacle (const CollisionObjectPtr_t& object)
     {
         trunkValidation_->addObstacle(object);
-        romValidation_->addObstacle(object);
+        for(T_RomValidation::const_iterator cit = romValidations_.begin();
+            cit != romValidations_.end(); ++cit)
+        {
+            cit->second->addObstacle(object);
+        }
     }
 
     void RbPrmValidation::removeObstacleFromJoint
     (const JointPtr_t& joint, const CollisionObjectPtr_t& obstacle)
     {
         trunkValidation_->removeObstacleFromJoint(joint, obstacle);
-        romValidation_->removeObstacleFromJoint(joint, obstacle);
+        for(T_RomValidation::const_iterator cit = romValidations_.begin();
+            cit != romValidations_.end(); ++cit)
+        {
+            cit->second->removeObstacleFromJoint(joint, obstacle);
+        }
     }
 
   }// namespace rbprm

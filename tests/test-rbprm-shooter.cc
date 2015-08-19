@@ -46,6 +46,54 @@ BOOST_AUTO_TEST_CASE (shooterCreation) {
     }
 }
 
+BOOST_AUTO_TEST_CASE (shooterCreationWithFilters) {
+    RbPrmDevicePtr_t robot = initRbPrmDeviceTest();
+    RbPrmValidationPtr_t validator(RbPrmValidation::create(robot));
+
+    CollisionObjectPtr_t colObject = MeshObstacleBox();
+    colObject->move(fcl::Vec3f(11.3,0,0));
+    validator->addObstacle(colObject);
+
+    model::ObjectVector_t collisionObjects;
+    collisionObjects.push_back(colObject);
+
+    std::vector<std::string> filter;
+    hpp::core::CollisionValidationReport validationReport;
+
+    RbPrmShooterPtr_t shooter = RbPrmShooter::create(robot, collisionObjects, filter);
+    for(int i =0; i< 100; ++i)
+    {
+        BOOST_CHECK_MESSAGE (validator->validate(*(shooter->shoot()),validationReport, filter, false),
+                                                  "Reachability condition should be verified by shooter");
+    }
+
+    filter.push_back("rom");
+    shooter = RbPrmShooter::create(robot, collisionObjects, filter);
+    for(int i =0; i< 100; ++i)
+    {
+        BOOST_CHECK_MESSAGE (validator->validate(*(shooter->shoot()),validationReport, filter, false),
+                                                  "Reachability condition should be verified by shooter");
+    }
+
+
+    filter.push_back("rom2");
+    shooter = RbPrmShooter::create(robot, collisionObjects, filter);
+    for(int i =0; i< 100; ++i)
+    {
+        BOOST_CHECK_MESSAGE (validator->validate(*(shooter->shoot()),validationReport, filter, false),
+                                                  "Reachability condition should be verified by shooter");
+    }
+
+    filter.clear();
+    filter.push_back("rom2");
+    shooter = RbPrmShooter::create(robot, collisionObjects, filter);
+    for(int i =0; i< 100; ++i)
+    {
+        BOOST_CHECK_MESSAGE (validator->validate(*(shooter->shoot()),validationReport, filter, false),
+                                                  "Reachability condition should be verified by shooter");
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 

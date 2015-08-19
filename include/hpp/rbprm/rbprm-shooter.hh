@@ -48,6 +48,11 @@ namespace hpp {
                                          const std::size_t shootLimit = 10000,
                                          const std::size_t displacementLimit = 100);
 
+        static HPP_RBPRM_DLLAPI RbPrmShooterPtr_t create (const model::RbPrmDevicePtr_t& robot,
+                                         const core::ObjectVector_t &geometries,
+                                         const std::vector<std::string>& filter,
+                                         const std::size_t shootLimit = 10000,
+                                         const std::size_t displacementLimit = 100);
     virtual core::ConfigurationPtr_t shoot () const;
 
     public:
@@ -56,12 +61,14 @@ namespace hpp {
     public:
         const std::size_t shootLimit_;
         const std::size_t displacementLimit_;
+        const std::vector<std::string> filter_;
 
 
     protected:
     /// Note that translation joints have to be bounded.
     RbPrmShooter (const model::RbPrmDevicePtr_t& robot,
                   const core::ObjectVector_t &geometries,
+                  const std::vector<std::string>& filter,
                   const std::size_t shootLimit = 10000,
                   const std::size_t displacementLimit = 100);
 

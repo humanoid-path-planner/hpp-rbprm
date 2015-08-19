@@ -56,6 +56,42 @@ BOOST_AUTO_TEST_CASE (dualCreationReachabilityCondition) {
                                               "Reachability condition should not be verified: no collision with rom");
 }
 
+BOOST_AUTO_TEST_CASE (dualCreationReachabilityConditionWithFilters) {
+    RbPrmDevicePtr_t robot = initRbPrmDeviceTest();
+    RbPrmValidationPtr_t validator(RbPrmValidation::create(robot));
+
+    CollisionGeometryPtr_t colGeom (new fcl::Box (1, 1, 1));
+    CollisionObjectPtr_t colObject = CollisionObject::create(colGeom, fcl::Transform3f (), "obstacle");
+    colObject->move(fcl::Vec3f(1.3,0,0));
+    validator->addObstacle(colObject);
+    hpp::core::CollisionValidationReport validationReport;
+    std::vector<std::string> filter;
+    BOOST_CHECK_MESSAGE (validator->validate(robot->Device::currentConfiguration(),validationReport, filter), "Reachability condition should be verified");
+
+    filter.push_back("rom2");
+    BOOST_CHECK_MESSAGE (!validator->validate(robot->Device::currentConfiguration(),validationReport, filter), "Reachability condition should not be verified");
+
+    colObject->move(fcl::Vec3f(-1.3,0,0));
+    BOOST_CHECK_MESSAGE (validator->validate(robot->Device::currentConfiguration(), validationReport, filter),
+                                              "Reachability condition should be verified: collision with rom2");
+
+    filter.push_back("rom");
+    BOOST_CHECK_MESSAGE (!validator->validate(robot->Device::currentConfiguration(), validationReport, filter),
+                                              "Reachability condition should not be verified: no collision with rom");
+
+    colObject->move(fcl::Vec3f(0,0,0));
+    BOOST_CHECK_MESSAGE (!validator->validate(robot->Device::currentConfiguration(), validationReport, filter),
+                                              "Reachability condition should not be verified: collision with trunk");
+
+    BOOST_CHECK_MESSAGE (validator->validateRoms(robot->Device::currentConfiguration(), filter),
+                                              "Reachability condition should be verified: collision with rom AND rom2");
+
+    colObject->move(fcl::Vec3f(1.1,0,0));
+    BOOST_CHECK_MESSAGE (validator->validate(robot->Device::currentConfiguration(), validationReport, filter),
+                                              "Reachability condition should be verified: collision with rom and rom2");
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 

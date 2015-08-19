@@ -29,6 +29,7 @@ namespace hpp {
 
     class RbPrmValidation;
     typedef boost::shared_ptr <RbPrmValidation> RbPrmValidationPtr_t;
+    typedef std::map<std::string, core::CollisionValidationPtr_t> T_RomValidation;
 
     /// \addtogroup validation
     /// \{
@@ -61,6 +62,20 @@ namespace hpp {
                  core::ValidationReport& validationReport,
                  bool throwIfInValid = false);
 
+      /// Compute whether the configuration is valid
+      ///
+      /// \param config the config to check for validity,
+      /// \retval validationReport report on validation (used only for rom shape). This parameter will
+      ///         dynamically cast into CollisionValidationReport type,
+      /// \param filter specify constraints on all roms required to be in contact, will return
+      /// false if all specified roms are not colliding
+      /// \param throwIfInValid if true throw an exception if config is invalid,
+      /// \return whether the whole config is valid.
+      virtual bool validate (const core::Configuration_t& config,
+                 core::ValidationReport& validationReport,
+                 const std::vector<std::string>& filter,
+                 bool throwIfInValid = false);
+
       /// Add an obstacle
       /// \param object obstacle added
       /// Store obstacle and build a collision pair with each body of the robot.
@@ -76,11 +91,28 @@ namespace hpp {
       virtual void removeObstacleFromJoint
     (const core::JointPtr_t& joint, const core::CollisionObjectPtr_t& obstacle);
 
+      /// Compute whether the roms configurations are valid
+      /// \param config the config to check for validity,
+      /// \param filter specify constraints on all roms required to be in contact, will return
+      /// false if all specified roms are not colliding
+      /// \param throwIfInValid if true throw an exception if config is invalid,
+      /// \return whether the whole config is valid.
+      bool validateRoms(const core::Configuration_t& config,
+                        const std::vector<std::string>& filter,
+                        bool throwIfInValid = false);
+
+      /// Compute whether the roms configurations are valid
+      /// \param config the config to check for validity,
+      /// \param throwIfInValid if true throw an exception if config is invalid,
+      /// \return whether the whole config is valid.
+      bool validateRoms(const core::Configuration_t& config,
+                        bool throwIfInValid = false);
+
     public:
       /// CollisionValidation for the trunk
       const core::CollisionValidationPtr_t trunkValidation_;
       /// CollisionValidation for the range of motion of the limbs
-      const core::CollisionValidationPtr_t romValidation_;
+      const T_RomValidation romValidations_;
 
     protected:
       RbPrmValidation (const model::RbPrmDevicePtr_t& robot);
