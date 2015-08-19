@@ -45,6 +45,8 @@ hpp::rbprm::RbPrmFullBodyPtr_t initFullBodyDevice(const ObjectVector_t& collisio
 }
 
 BOOST_AUTO_TEST_CASE (fullbody) {
+    // TODO This test can not pass as his (cannot project configuration)
+    // UPDATE
     CollisionObjectPtr_t colObject = MeshObstacleBox();
     ObjectVector_t objects;
     objects.push_back(colObject);

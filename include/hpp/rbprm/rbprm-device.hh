@@ -19,13 +19,17 @@
 #ifndef HPP_RBPRM_DEVICE_HH
 # define HPP_RBPRM_DEVICE_HH
 
-# include <hpp/rbprm/config.hh>
-# include <hpp/model/device.hh>
+#include <hpp/rbprm/config.hh>
+#include <hpp/model/device.hh>
+
+#include <map>
 
 namespace hpp {
 
   namespace model {
     HPP_PREDEF_CLASS(RbPrmDevice);
+
+    typedef std::map<std::string, DevicePtr_t> T_Rom;
 
     /// Dual representation of a robot for Reachability Based planning:
     /// Collision free part of the robot vs Range Of Motion of the limbs.
@@ -37,6 +41,7 @@ namespace hpp {
     {
     public:
         static RbPrmDevicePtr_t create (const std::string& name, DevicePtr_t& robotRom);
+        static RbPrmDevicePtr_t create (const std::string& name, const T_Rom& robotRoms);
 
     public:
         virtual ~RbPrmDevice();
@@ -47,10 +52,10 @@ namespace hpp {
 
     public:
       /// Range Of Motion of the robot
-      const DevicePtr_t robotRom_;
+      const T_Rom robotRoms_;
 
     protected:
-      RbPrmDevice (const std::string& name, const DevicePtr_t& robotRom);
+      RbPrmDevice (const std::string& name, const T_Rom& robotRoms);
 
       ///
       /// \brief Initialization.

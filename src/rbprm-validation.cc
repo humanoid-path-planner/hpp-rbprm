@@ -41,7 +41,7 @@ namespace hpp {
 
     RbPrmValidation::RbPrmValidation (const model::RbPrmDevicePtr_t& robot)
         : trunkValidation_(tuneFclValidation(robot))
-        , romValidation_(CollisionValidation::create(robot->robotRom_))
+        , romValidation_(CollisionValidation::create(robot->robotRoms_.begin()->second))
     {
         // NOTHING
     }

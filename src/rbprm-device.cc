@@ -38,7 +38,17 @@ namespace hpp {
 
     RbPrmDevicePtr_t RbPrmDevice::create (const std::string& name, DevicePtr_t& robotRom)
     {
-        RbPrmDevice* rbprmDevice = new RbPrmDevice(name, robotRom);
+        hpp::model::T_Rom roms;
+        roms.insert(std::make_pair(robotRom->name(),robotRom));
+        RbPrmDevice* rbprmDevice = new RbPrmDevice(name, roms);
+        RbPrmDevicePtr_t res (rbprmDevice);
+        res->init (res);
+        return res;
+    }
+
+    RbPrmDevicePtr_t RbPrmDevice::create (const std::string& name, const hpp::model::T_Rom &robotRoms)
+    {
+        RbPrmDevice* rbprmDevice = new RbPrmDevice(name, robotRoms);
         RbPrmDevicePtr_t res (rbprmDevice);
         res->init (res);
         return res;
@@ -59,19 +69,17 @@ namespace hpp {
 
     bool RbPrmDevice::currentConfiguration (ConfigurationIn_t configuration)
     {
-        Device::currentConfiguration(configuration);
-        return robotRom_->currentConfiguration(configuration);
+        for(hpp::model::T_Rom::const_iterator cit = robotRoms_.begin();
+            cit != robotRoms_.end(); ++cit)
+        {
+            cit->second->currentConfiguration(configuration);
+        }
+        return Device::currentConfiguration(configuration);
     }
 
-    /*bool RbPrmDevice::setCurrentConfiguration (ConfigurationIn_t configuration)
-    {
-        Device::setCurrentConfiguration(configuration);
-        return robotRom_->setCurrentConfiguration(configuration);
-    }*/
-
-    RbPrmDevice::RbPrmDevice (const std::string& name, const DevicePtr_t& robotRom)
+    RbPrmDevice::RbPrmDevice (const std::string& name, const hpp::model::T_Rom &robotRoms)
         : Device(name)
-        , robotRom_(robotRom)
+        , robotRoms_(robotRoms)
         , weakPtr_()
     {
         /*if(robotTrunk->configSize() != robotRom->configSize())

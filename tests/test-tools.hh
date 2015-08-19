@@ -104,7 +104,7 @@ namespace
         jointTrTrunk->isBounded (1, true);
         jointTrTrunk->isBounded (2, true);
         jointTrTrunk->lowerBound(0,-3.);
-        jointTrTrunk->upperBound(0,3.);
+        jointTrTrunk->upperBound(0,12.);
         jointTrTrunk->lowerBound(1,-3.);
         jointTrTrunk->upperBound(1,3.);
         jointTrTrunk->lowerBound(2,-3.);
