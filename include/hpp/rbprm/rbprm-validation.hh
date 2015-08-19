@@ -42,6 +42,8 @@ namespace hpp {
     {
     public:
       static RbPrmValidationPtr_t create (const model::RbPrmDevicePtr_t& robot);
+      static RbPrmValidationPtr_t create (const model::RbPrmDevicePtr_t& robot,
+                                          const std::vector<std::string>& filter);
 
       /// Compute whether the configuration is valid
       ///
@@ -113,9 +115,11 @@ namespace hpp {
       const core::CollisionValidationPtr_t trunkValidation_;
       /// CollisionValidation for the range of motion of the limbs
       const T_RomValidation romValidations_;
+      const std::vector<std::string> defaultFilter_;
 
     protected:
-      RbPrmValidation (const model::RbPrmDevicePtr_t& robot);
+      RbPrmValidation (const model::RbPrmDevicePtr_t& robot,
+                       const std::vector<std::string>& filter);
     }; // class RbPrmValidation
     /// \}
   } // namespace rbprm

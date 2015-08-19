@@ -37,24 +37,32 @@ namespace
         }
         return result;
     }
-
-    const std::vector<std::string> defaultFilter;
 }
 
 namespace hpp {
   using namespace core;
   namespace rbprm {
 
+  RbPrmValidationPtr_t RbPrmValidation::create
+  (const model::RbPrmDevicePtr_t& robot)
+  {
+    const std::vector<std::string> filter;
+    RbPrmValidation* ptr = new RbPrmValidation (robot, filter);
+    return RbPrmValidationPtr_t (ptr);
+  }
+
     RbPrmValidationPtr_t RbPrmValidation::create
-    (const model::RbPrmDevicePtr_t& robot)
+    (const model::RbPrmDevicePtr_t& robot, const std::vector<std::string>& filter)
     {
-      RbPrmValidation* ptr = new RbPrmValidation (robot);
+      RbPrmValidation* ptr = new RbPrmValidation (robot, filter);
       return RbPrmValidationPtr_t (ptr);
     }
 
-    RbPrmValidation::RbPrmValidation (const model::RbPrmDevicePtr_t& robot)
+    RbPrmValidation::RbPrmValidation (const model::RbPrmDevicePtr_t& robot
+                                      , const std::vector<std::string>& filter)
         : trunkValidation_(tuneFclValidation(robot))
         , romValidations_(createRomValidations(robot))
+        , defaultFilter_(filter)
     {
         // NOTHING
     }
@@ -79,14 +87,14 @@ namespace hpp {
     bool RbPrmValidation::validateRoms(const core::Configuration_t& config,
                       bool throwIfInValid)
     {
-        return validateRoms(config,defaultFilter,throwIfInValid);
+        return validateRoms(config,defaultFilter_,throwIfInValid);
     }
 
     bool RbPrmValidation::validate (const Configuration_t& config,
                     bool throwIfInValid)
     {
         return trunkValidation_->validate(config, throwIfInValid)
-             && validateRoms(config, defaultFilter, throwIfInValid);
+             && validateRoms(config, defaultFilter_, throwIfInValid);
     }
 
     bool RbPrmValidation::validate (const Configuration_t& config,
@@ -94,7 +102,7 @@ namespace hpp {
                     bool throwIfInValid)
     {
         return trunkValidation_->validate(config, validationReport, throwIfInValid)
-                && validateRoms(config, defaultFilter, throwIfInValid);
+                && validateRoms(config, defaultFilter_, throwIfInValid);
     }
 
     bool RbPrmValidation::validate (const Configuration_t& config,
