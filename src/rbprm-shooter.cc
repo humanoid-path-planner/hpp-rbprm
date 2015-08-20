@@ -62,27 +62,20 @@ namespace
         }
     }
 
-    void SetConfigRotation(ConfigurationPtr_t config, const Vec3f& rotation)
+    void SampleRotationRec(ConfigurationPtr_t config, JointVector_t& jv, std::size_t& current)
     {
-        for(int i =0; i<3; ++i)
-        {
-            (*config)(i+3)=rotation[i];
-        }
+        JointPtr_t joint = jv[current++];
+        std::size_t rank = joint->rankInConfiguration ();
+        joint->configuration ()->uniformlySample (rank, *config);
+        if(current<jv.size())
+            SampleRotationRec(config,jv,current);
     }
 
     void SampleRotation(ConfigurationPtr_t config, JointVector_t& jv)
     {
-        JointPtr_t joint = jv[1];
-        std::size_t rank = joint->rankInConfiguration ();
-        joint->configuration ()->uniformlySample (rank, *config);
+        std::size_t id = 1;
+        SampleRotationRec(config,jv,id);
     }
-
-    void SetConfig6D(ConfigurationPtr_t config, const Vec3f& translation, const Vec3f& rotation)
-    {
-        SetConfigTranslation(config, translation);
-        SetConfigRotation(config, rotation);
-    }
-
 } // namespace
 
   namespace rbprm {

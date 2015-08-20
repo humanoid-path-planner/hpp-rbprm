@@ -58,7 +58,7 @@ namespace hpp {
 {
     direction = fcl::Vec3f(0.1,0,1);
 }
-            configuration.head<7>() = configPosition.head<7>();
+            configuration.head(configPosition.rows()) = configPosition;
             // TODO Direction 6d
             bool sameAsPrevious(true);
             bool multipleBreaks(false);
@@ -107,7 +107,7 @@ namespace hpp {
             bool nonZero(false);
             direction.normalize(&nonZero);
             if(!nonZero) direction = fcl::Vec3f(0,0,1.);
-            configuration.head<7>() = configPosition.head<7>();
+            configuration.head(configPosition.rows()) = configPosition;
             // TODO Direction 6d
             states.push_back(ComputeContacts(previous, robot_,configuration,collisionObjects,direction,sameAsPrevious,multipleBreaks,allowFailure));
         }
