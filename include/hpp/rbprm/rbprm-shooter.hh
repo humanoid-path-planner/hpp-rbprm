@@ -45,12 +45,8 @@ namespace hpp {
     public:
         static HPP_RBPRM_DLLAPI RbPrmShooterPtr_t create (const model::RbPrmDevicePtr_t& robot,
                                          const core::ObjectVector_t &geometries,
-                                         const std::size_t shootLimit = 10000,
-                                         const std::size_t displacementLimit = 100);
-
-        static HPP_RBPRM_DLLAPI RbPrmShooterPtr_t create (const model::RbPrmDevicePtr_t& robot,
-                                         const core::ObjectVector_t &geometries,
-                                         const std::vector<std::string>& filter,
+                                         const std::vector<std::string>& filter = std::vector<std::string>(),
+                                         const std::map<std::string, rbprm::NormalFilter>& normalFilters = std::map<std::string, rbprm::NormalFilter>(),
                                          const std::size_t shootLimit = 10000,
                                          const std::size_t displacementLimit = 100);
     virtual core::ConfigurationPtr_t shoot () const;
@@ -69,6 +65,7 @@ namespace hpp {
     RbPrmShooter (const model::RbPrmDevicePtr_t& robot,
                   const core::ObjectVector_t &geometries,
                   const std::vector<std::string>& filter,
+                  const std::map<std::string, rbprm::NormalFilter>& normalFilters,
                   const std::size_t shootLimit = 10000,
                   const std::size_t displacementLimit = 100);
 

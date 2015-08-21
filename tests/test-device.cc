@@ -91,6 +91,36 @@ BOOST_AUTO_TEST_CASE (dualCreationReachabilityConditionWithFilters) {
                                               "Reachability condition should be verified: collision with rom and rom2");
 }
 
+BOOST_AUTO_TEST_CASE (dualCreationReachabilityConditionWithNormalFilters) {
+    RbPrmDevicePtr_t robot = initRbPrmDeviceTest();
+    std::vector<std::string> filter;
+    std::map<std::string, hpp::rbprm::NormalFilter> normalFilter;
+    hpp::rbprm::NormalFilter nFilter;
+    normalFilter.insert(std::make_pair("rom2",nFilter));
+    RbPrmValidationPtr_t validator(RbPrmValidation::create(robot, filter, normalFilter));
+
+    CollisionObjectPtr_t colObject = MeshObstacleBox();
+    validator->addObstacle(colObject);
+    filter.push_back("rom2");
+    colObject->move(fcl::Vec3f(0,0,1.3));
+    BOOST_CHECK_MESSAGE (validator->validateRoms(robot->Device::currentConfiguration(), filter),
+                                              "Reachability condition should be verified: collision with rom2");
+
+    normalFilter.clear();
+    nFilter.unConstrained = false;
+    nFilter.normal = fcl::Vec3f(0,0,1);
+    nFilter.range = 0.9;
+    normalFilter.insert(std::make_pair("rom2",nFilter));
+    validator = RbPrmValidation::create(robot, filter, normalFilter);
+    validator->addObstacle(colObject);
+    BOOST_CHECK_MESSAGE (!validator->validateRoms(robot->Device::currentConfiguration(), filter),
+                                              "Reachability condition should not be verified: collision with rom2 but non z normal");
+
+
+    colObject->move(fcl::Vec3f(-0.5,0,-0.5));
+    BOOST_CHECK_MESSAGE (validator->validateRoms(robot->Device::currentConfiguration(), filter),
+                                              "Reachability condition should be verified: collision with rom2 with z normal");
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

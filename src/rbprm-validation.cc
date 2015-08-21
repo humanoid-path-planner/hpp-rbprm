@@ -27,13 +27,22 @@ namespace
         return validation;
     }
 
-    hpp::rbprm::T_RomValidation createRomValidations(const hpp::model::RbPrmDevicePtr_t& robot)
+    hpp::rbprm::T_RomValidation createRomValidations(const hpp::model::RbPrmDevicePtr_t& robot,
+                                                     const std::map<std::string, hpp::rbprm::NormalFilter>& normalFilters)
     {
         hpp::rbprm::T_RomValidation result;
         for(hpp::model::T_Rom::const_iterator cit = robot->robotRoms_.begin();
             cit != robot->robotRoms_.end(); ++cit)
         {
-            result.insert(std::make_pair(cit->first, hpp::rbprm::RbPrmRomValidation::create(cit->second)));
+            std::map<std::string, hpp::rbprm::NormalFilter>::const_iterator cfit = normalFilters.find(cit->first);
+            if(cfit != normalFilters.end())
+            {
+                result.insert(std::make_pair(cit->first, hpp::rbprm::RbPrmRomValidation::create(cit->second, cfit->second)));
+            }
+            else
+            {
+                result.insert(std::make_pair(cit->first, hpp::rbprm::RbPrmRomValidation::create(cit->second)));
+            }
         }
         return result;
     }
@@ -43,25 +52,17 @@ namespace hpp {
   using namespace core;
   namespace rbprm {
 
-  RbPrmValidationPtr_t RbPrmValidation::create
-  (const model::RbPrmDevicePtr_t& robot)
-  {
-    const std::vector<std::string> filter;
-    RbPrmValidation* ptr = new RbPrmValidation (robot, filter);
-    return RbPrmValidationPtr_t (ptr);
-  }
-
     RbPrmValidationPtr_t RbPrmValidation::create
-    (const model::RbPrmDevicePtr_t& robot, const std::vector<std::string>& filter)
+    (const model::RbPrmDevicePtr_t& robot, const std::vector<std::string>& filter, const std::map<std::string, rbprm::NormalFilter>& normalFilters)
     {
-      RbPrmValidation* ptr = new RbPrmValidation (robot, filter);
+      RbPrmValidation* ptr = new RbPrmValidation (robot, filter, normalFilters);
       return RbPrmValidationPtr_t (ptr);
     }
 
     RbPrmValidation::RbPrmValidation (const model::RbPrmDevicePtr_t& robot
-                                      , const std::vector<std::string>& filter)
+                                      , const std::vector<std::string>& filter, const std::map<std::string, rbprm::NormalFilter>& normalFilters)
         : trunkValidation_(tuneFclValidation(robot))
-        , romValidations_(createRomValidations(robot))
+        , romValidations_(createRomValidations(robot, normalFilters))
         , defaultFilter_(filter)
     {
         // NOTHING
@@ -76,7 +77,7 @@ namespace hpp {
             cit != romValidations_.end() && (filterMatch < 1 || filterMatch < filter.size()); ++cit)
         {
             if((filter.empty() || std::find(filter.begin(), filter.end(), cit->first) != filter.end())
-                    && !cit->second->validate(config, throwIfInValid))
+                    && cit->second->validate(config, throwIfInValid))
             {
                 ++filterMatch;
             }

@@ -42,9 +42,9 @@ namespace hpp {
     class HPP_RBPRM_DLLAPI RbPrmValidation : public core::ConfigValidation
     {
     public:
-      static RbPrmValidationPtr_t create (const model::RbPrmDevicePtr_t& robot);
       static RbPrmValidationPtr_t create (const model::RbPrmDevicePtr_t& robot,
-                                          const std::vector<std::string>& filter);
+                                          const std::vector<std::string>& filter = std::vector<std::string>(),
+                                          const std::map<std::string, rbprm::NormalFilter>& normalFilters = std::map<std::string, rbprm::NormalFilter>());
 
       /// Compute whether the configuration is valid
       ///
@@ -120,7 +120,8 @@ namespace hpp {
 
     protected:
       RbPrmValidation (const model::RbPrmDevicePtr_t& robot,
-                       const std::vector<std::string>& filter);
+                       const std::vector<std::string>& filter,
+                       const std::map<std::string, rbprm::NormalFilter>& normalFilters);
     }; // class RbPrmValidation
     /// \}
   } // namespace rbprm

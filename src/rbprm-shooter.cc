@@ -79,26 +79,15 @@ namespace
 } // namespace
 
   namespace rbprm {
-    RbPrmShooterPtr_t RbPrmShooter::create (const model::RbPrmDevicePtr_t& robot,
-                                            const ObjectVector_t& geometries,
-                                            const std::size_t shootLimit,
-                                            const std::size_t displacementLimit)
-    {
-        srand ((unsigned int)(time(NULL)));
-        const std::vector<std::string> filter;
-        RbPrmShooter* ptr = new RbPrmShooter (robot, geometries, filter, shootLimit, displacementLimit);
-        RbPrmShooterPtr_t shPtr (ptr);
-        ptr->init (shPtr);
-        return shPtr;
-    }
 
     RbPrmShooterPtr_t RbPrmShooter::create (const model::RbPrmDevicePtr_t& robot,
                                             const ObjectVector_t& geometries,
                                             const std::vector<std::string>& filter,
+                                            const std::map<std::string, rbprm::NormalFilter>& normalFilters,
                                             const std::size_t shootLimit, const std::size_t displacementLimit)
     {
         srand ((unsigned int)(time(NULL)));
-        RbPrmShooter* ptr = new RbPrmShooter (robot, geometries, filter, shootLimit, displacementLimit);
+        RbPrmShooter* ptr = new RbPrmShooter (robot, geometries, filter, normalFilters, shootLimit, displacementLimit);
         RbPrmShooterPtr_t shPtr (ptr);
         ptr->init (shPtr);
         return shPtr;
@@ -114,13 +103,14 @@ namespace
     RbPrmShooter::RbPrmShooter (const model::RbPrmDevicePtr_t& robot,
                               const ObjectVector_t& geometries,
                               const std::vector<std::string>& filter,
+                              const std::map<std::string, rbprm::NormalFilter>& normalFilters,
                               const std::size_t shootLimit,
                               const std::size_t displacementLimit)
     : shootLimit_(shootLimit)
     , displacementLimit_(displacementLimit)
     , filter_(filter)
     , robot_ (robot)
-    , validator_(rbprm::RbPrmValidation::create(robot_))
+    , validator_(rbprm::RbPrmValidation::create(robot_, filter, normalFilters))
     {
         for(hpp::core::ObjectVector_t::const_iterator cit = geometries.begin();
             cit != geometries.end(); ++cit)

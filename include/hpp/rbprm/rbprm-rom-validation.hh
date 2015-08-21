@@ -28,6 +28,8 @@ namespace hpp {
 
     struct NormalFilter
     {
+        NormalFilter()
+            : unConstrained(true){}
         bool unConstrained;
         fcl::Vec3f normal;
         double range;
@@ -47,9 +49,8 @@ namespace hpp {
     class HPP_RBPRM_DLLAPI RbPrmRomValidation : public core::CollisionValidation
     {
     public:
-      static RbPrmRomValidationPtr_t create (const model::DevicePtr_t& robot);
       static RbPrmRomValidationPtr_t create (const model::DevicePtr_t& robot,
-                                             const NormalFilter& normalFilter);
+                                             const NormalFilter& normalFilter = NormalFilter());
 
       /// Compute whether the configuration is valid
       ///
