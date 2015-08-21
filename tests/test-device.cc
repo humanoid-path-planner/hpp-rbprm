@@ -107,9 +107,9 @@ BOOST_AUTO_TEST_CASE (dualCreationReachabilityConditionWithNormalFilters) {
                                               "Reachability condition should be verified: collision with rom2");
 
     normalFilter.clear();
-    nFilter.unConstrained = false;
-    nFilter.normal = fcl::Vec3f(0,0,1);
-    nFilter.range = 0.9;
+    nFilter.unConstrained_ = false;
+    nFilter.normal_ = fcl::Vec3f(0,0,1);
+    nFilter.range_ = 0.9;
     normalFilter.insert(std::make_pair("rom2",nFilter));
     validator = RbPrmValidation::create(robot, filter, normalFilter);
     validator->addObstacle(colObject);

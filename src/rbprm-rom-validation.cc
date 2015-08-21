@@ -35,7 +35,7 @@ namespace hpp {
         : hpp::core::CollisionValidation(robot)
         , filter_(normalFilter)
     {
-        if(!normalFilter.unConstrained)
+        if(!normalFilter.unConstrained_)
         {
             collisionRequest_.enable_contact = true;
             collisionRequest_.num_max_contacts = 30;
@@ -55,7 +55,7 @@ namespace hpp {
                     bool throwIfInValid)
     {        
         bool collision = !hpp::core::CollisionValidation::validate(config, validationReport, throwIfInValid);
-        if(collision && !filter_.unConstrained)
+        if(collision && !filter_.unConstrained_)
         {
             collision = false;
             CollisionValidationReport& report =
@@ -72,7 +72,7 @@ namespace hpp {
                 const fcl::Vec3f& v3 = surface->vertices[tr[2]];
                 fcl::Vec3f normal = (v2 - v1).cross(v3 - v1);
                 normal.normalize();
-                if(normal.dot(filter_.normal)>filter_.range)
+                if(normal.dot(filter_.normal_)>=filter_.range_)
                     collision = true;
             }
         }

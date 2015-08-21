@@ -29,10 +29,12 @@ namespace hpp {
     struct NormalFilter
     {
         NormalFilter()
-            : unConstrained(true){}
-        bool unConstrained;
-        fcl::Vec3f normal;
-        double range;
+            : unConstrained_(true), normal_(0,0,1.), range_(0.){}
+        NormalFilter(const fcl::Vec3f& normal, const double range)
+            : unConstrained_(false), normal_(normal), range_(range){}
+        bool unConstrained_;
+        fcl::Vec3f normal_;
+        double range_;
     };
 
     class RbPrmRomValidation;
