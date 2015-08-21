@@ -22,6 +22,7 @@ SET(LIBRARY_NAME ${PROJECT_NAME})
 SET(${LIBRARY_NAME}_SOURCES
 	rbprm-shooter.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-shooter.hh
 	rbprm-validation.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-validation.hh
+        rbprm-rom-validation.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-rom-validation.hh
 	rbprm-device.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-device.hh
 	rbprm-limb.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-limb.hh
 	rbprm-path-interpolation.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-path-interpolation.hh

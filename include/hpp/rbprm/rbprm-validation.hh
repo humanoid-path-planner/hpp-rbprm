@@ -21,6 +21,7 @@
 
 # include <hpp/core/collision-validation-report.hh>
 # include <hpp/core/config-validation.hh>
+# include <hpp/rbprm/rbprm-rom-validation.hh>
 # include <hpp/rbprm/rbprm-device.hh>
 # include <hpp/rbprm/config.hh>
 
@@ -29,7 +30,7 @@ namespace hpp {
 
     class RbPrmValidation;
     typedef boost::shared_ptr <RbPrmValidation> RbPrmValidationPtr_t;
-    typedef std::map<std::string, core::CollisionValidationPtr_t> T_RomValidation;
+    typedef std::map<std::string, RbPrmRomValidationPtr_t> T_RomValidation;
 
     /// \addtogroup validation
     /// \{

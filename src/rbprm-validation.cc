@@ -33,7 +33,7 @@ namespace
         for(hpp::model::T_Rom::const_iterator cit = robot->robotRoms_.begin();
             cit != robot->robotRoms_.end(); ++cit)
         {
-            result.insert(std::make_pair(cit->first, hpp::core::CollisionValidation::create(cit->second)));
+            result.insert(std::make_pair(cit->first, hpp::rbprm::RbPrmRomValidation::create(cit->second)));
         }
         return result;
     }
