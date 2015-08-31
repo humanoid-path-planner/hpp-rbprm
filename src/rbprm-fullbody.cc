@@ -337,7 +337,41 @@ namespace hpp {
           sampling::Load(*bestReport.sample_, configuration);
           body->device_->currentConfiguration(configuration);
           {
+
+/********************/
+// Justin
               normal = bestReport.normal_;
+//normal = fcl::Vec3f(0,0,1);
+              position = bestReport.contact_.pos;
+              // the normal is given by the normal of the contacted object
+              //const fcl::Vec3f& z= limb->normal_;
+              fcl::Vec3f z = limb->effector_->currentTransformation().getRotation() * limb->normal_;
+              const fcl::Matrix3f alignRotation = tools::GetRotationMatrix(limb->normal_,normal);
+              const fcl::Matrix3f alignRotationPos = tools::GetRotationMatrix(z,normal);
+              rotation = alignRotationPos * limb->effector_->currentTransformation().getRotation();
+              // Add constraints to resolve Ik
+              core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 20);
+              //rotation = tools::GetRotationMatrix(z,normal);
+              // get current normal orientation
+              LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
+              proj->add(core::NumericalConstraint::create (constraints::Position::create(body->device_,
+                                                                                         limb->effector_,
+                                                                                         fcl::Vec3f(0,0,0),
+                                                                                         position - rotation * limb->offset_, //)));
+                                                                                         model::matrix3_t::getIdentity(),
+                                                                                         setTranslationConstraints(normal))));//*/
+
+
+              proj->add(core::NumericalConstraint::create (constraints::Orientation::create(body->device_,
+                                                                                            limb->effector_,
+                                                                                            alignRotation,
+                                                                                            setRotationConstraints(z))));
+/****************************/
+
+
+
+
+/*              normal = bestReport.normal_;
 //normal = fcl::Vec3f(0,0,1);
               position = bestReport.contact_.pos;
               // the normal is given by the normal of the contacted object
@@ -355,13 +389,13 @@ namespace hpp {
                                                                                          fcl::Vec3f(0,0,0),
                                                                                          position - rotation * limb->offset_, //)));
                                                                                          model::matrix3_t::getIdentity(),
-                                                                                         setTranslationConstraints(normal))));//*/
+                                                                                         setTranslationConstraints(normal))));//
 
 
               proj->add(core::NumericalConstraint::create (constraints::Orientation::create(body->device_,
                                                                                             limb->effector_,
                                                                                             rotation,
-                                                                                            setRotationConstraints(z))));
+                                                                                            setRotationConstraints(z))));*/
 
               if(proj->apply(configuration))
               {
