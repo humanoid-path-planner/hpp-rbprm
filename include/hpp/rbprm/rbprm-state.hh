@@ -84,15 +84,92 @@ namespace hpp {
             std::cout << std::endl;*/
         }
 
-        void print(std::stringstream& ss) const
+
+        void printInternal(std::stringstream& ss) const
         {
-            ss << nbContacts;
             std::map<std::string, fcl::Vec3f>::const_iterator cit = contactNormals_.begin();
             for(unsigned int c=0; c < nbContacts; ++c, ++cit)
             {
                 const std::string& name = cit->first;
+                //const fcl::Vec3f& normal = contactNormals_.at(name);
+                const fcl::Vec3f& position = contactPositions_.at(name);
+                ss << " " << name <<" ";
+                for(std::size_t i=0; i<3; ++i)
+                {
+                    ss << " " << position[i];
+                }
+                /*for(std::size_t i=0; i<3; ++i)
+                {
+                    ss << " " << normal[i];
+                }*/
+                ss << "\n";
+            }
+            ss << " com ";
+            for(std::size_t i=0; i<3; ++i)
+            {
+                ss << " " << com_[i];
+            }
+            ss << "\n configuration";
+            for(int i=0; i<configuration_.rows(); ++i)
+            {
+                ss << " " << configuration_[i];
+            }
+            ss << "\n \n";
+        }
+
+
+        void print(std::stringstream& ss) const
+        {
+            ss << nbContacts << "\n";
+            ss << "new Contacts ";
+            std::map<std::string, fcl::Vec3f>::const_iterator cit = contactNormals_.begin();
+            for(unsigned int c=0; c < nbContacts; ++c, ++cit)
+            {
+                ss << " " << cit->first << " ";
+            }
+            printInternal(ss);
+        }
+
+        void print(std::stringstream& ss, const State& previous) const
+        {
+            ss << nbContacts << "\n";
+            std::vector<std::string> ncontacts;
+            ss << "new Contacts ";
+            for(std::map<std::string, fcl::Vec3f>::const_iterator cit = contactPositions_.begin();
+                cit != contactPositions_.end(); ++cit)
+            {
+                const std::string& name = cit->first;
+                bool newContact(true);
+                if(previous.contactPositions_.find(name) != previous.contactPositions_.end())
+                {
+                    newContact = (previous.contactPositions_.at(name) - cit->second).norm() > 0.01;
+                }
+                if(newContact)
+                {
+                    ncontacts.push_back(name);
+                    ss << name << " ";
+                }
+            }
+            ss << "\n";
+            /*ss << "broken Contacts: ";
+            for(std::map<std::string, fcl::Vec3f>::const_iterator cit = previous.contactPositions_.begin();
+                cit != previous.contactPositions_.end(); ++cit)
+            {
+                const std::string& name = cit->first;
+                if(contactPositions_.find(name) == contactPositions_.end())
+                {
+                    ss << name << " ";
+                }
+            }
+            ss << "\n";*/
+            printInternal(ss);
+            /*for(std::vector<std::string>::const_iterator cit = ncontacts.begin();
+                cit != ncontacts.end(); ++cit)
+            {
+                const std::string& name = *cit;
                 const fcl::Vec3f& normal = contactNormals_.at(name);
                 const fcl::Vec3f& position = contactPositions_.at(name);
+                ss << " " << name <<": ";
                 for(std::size_t i=0; i<3; ++i)
                 {
                     ss << " " << position[i];
@@ -105,12 +182,13 @@ namespace hpp {
                 {
                     ss << " " << com_[i];
                 }
-                for(int i=0; i<configuration_.rows(); ++i)
-                {
-                    ss << " " << configuration_[i];
-                }
                 ss << "\n";
             }
+            for(int i=0; i<configuration_.rows(); ++i)
+            {
+                ss << " " << configuration_[i];
+            }
+            ss << "\n \n";*/
         }
 
     }; // struct State

@@ -346,8 +346,16 @@ namespace hpp {
               // the normal is given by the normal of the contacted object
               //const fcl::Vec3f& z= limb->normal_;
               fcl::Vec3f z = limb->effector_->currentTransformation().getRotation() * limb->normal_;
-              const fcl::Matrix3f alignRotation = tools::GetRotationMatrix(limb->normal_,normal);
+              fcl::Matrix3f alignRotation = tools::GetRotationMatrix(limb->normal_,normal);
               const fcl::Matrix3f alignRotationPos = tools::GetRotationMatrix(z,normal);
+              if(limbId.find("3Rarm")!=std::string::npos)
+              {
+                  fcl::Matrix3f zr;
+                  zr(0,0) = 0; zr(0,1) = -1; zr(0,2) = 0;
+                  zr(1,0) = 1;zr(1,1) = 0; zr(1,2) = 0;
+                  zr(2,0) = 0; zr(2,1) = 0; zr(2,2) = 1;
+                  alignRotation = alignRotation * zr;
+              }
               rotation = alignRotationPos * limb->effector_->currentTransformation().getRotation();
               // Add constraints to resolve Ik
               core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 20);
