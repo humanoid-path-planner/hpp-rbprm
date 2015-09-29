@@ -96,9 +96,6 @@ T_Point ConvexHull(const T_Point& points)
         }
     }
 
-	
-
-
 	// source http://softsurfer.com/Archive/algorithm_0103/algorithm_0103.htm#wn_PinPolygon()
     // wn_PnPoly(): winding double test for a Vector3 in a polygon
 	//      Input:   P = a Vector3,
@@ -165,11 +162,6 @@ T_Point ConvexHull(const T_Point& points)
             points.push_back(point + Eigen::Vector3d(-xs[i],-ys[i],0));
             points.push_back(point + Eigen::Vector3d(xs[i],-ys[i],0));
         }
-        /*for(std::size_t i =0; i< points.size(); ++i)
-        {
-            std::cout << "adding " << points[i] << std::endl;
-        }
-        std::cout << "com " << aPoint << std::endl;*/
         points = ConvexHull(points);
         return InPolygon(points,aPoint);
     }

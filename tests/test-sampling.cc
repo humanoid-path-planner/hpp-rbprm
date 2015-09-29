@@ -73,8 +73,8 @@ BOOST_AUTO_TEST_CASE (octreeRequest) {
     for(rbprm::sampling::T_OctreeReport::const_iterator cit = reports.begin(); cit != reports.end(); ++cit)
     {
         const rbprm::sampling::OctreeReport& report = *cit;
-        BOOST_CHECK_MESSAGE ( report.manipulability_ <= manipulability, "samples must be ordered by their decreasing manipulability");
-        manipulability = report.manipulability_;
+        BOOST_CHECK_MESSAGE ( report.value_ <= manipulability, "samples must be ordered by their decreasing manipulability");
+        manipulability = report.value_;
     }
     fcl::Transform3f toofarLocation;
     toofarLocation.setTranslation(fcl::Vec3f(-10,-10,-10));

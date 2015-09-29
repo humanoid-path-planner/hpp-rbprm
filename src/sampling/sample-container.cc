@@ -129,10 +129,10 @@ SampleContainer::~SampleContainer()
 }
 
 
-OctreeReport::OctreeReport(const Sample* s, const fcl::Contact c, const double m, const fcl::Vec3f& normal)
+OctreeReport::OctreeReport(const Sample* s, const fcl::Contact c, const double v, const fcl::Vec3f& normal)
     : sample_(s)
     , contact_(c)
-    , manipulability_(m)
+    , value_(v)
     , normal_(normal)
 {
     // NOTHING
@@ -156,26 +156,6 @@ bool rbprm::sampling::GetCandidates(const SampleContainer& sc, const fcl::Transf
         const Contact& contact = cResult.getContact(index);
         voxelIt = sc.voxelSamples_.find(contact.b1);
         const std::vector<const sampling::Sample*>& samples = voxelIt->second;
-        /*for(std::vector<const sampling::Sample*>::const_iterator sit = samples.begin();
-            sit != samples.end(); ++sit)
-        {
-            //find normal id
-            assert(contact.o2->getObjectType() == fcl::OT_BVH); // only works with meshes
-            const fcl::BVHModel<fcl::RSS>* surface = static_cast<const fcl::BVHModel<fcl::RSS>*> (contact.o2);
-            fcl::Vec3f normal; // = -bestReport.contact_.normal;
-            const fcl::Triangle& tr = *surface->tri_indices;
-            const fcl::Vec3f& v1 = surface->vertices[tr[0]];
-            const fcl::Vec3f& v2 = surface->vertices[tr[1]];
-            const fcl::Vec3f& v3 = surface->vertices[tr[2]];
-            normal = (v2 - v1).cross(v3 - v1);
-            normal.normalize();
-            Eigen::Vector3d eNormal(normal[0], normal[1], normal[2]);
-            Eigen::Vector3d eDir(direction[0], direction[1], direction[2]);
-            double EFORT = eDir.transpose() * (*sit)->jacobianProduct_.block<3,3>(0,0) * eDir;
-            //EFORT *= (eDir.dot(eNormal));
-            OctreeReport report(*sit, contact,EFORT , normal);
-            reports.insert(report);
-        }*/
         for(std::vector<const sampling::Sample*>::const_iterator sit = samples.begin();
             sit != samples.end(); ++sit)
         {
@@ -190,6 +170,7 @@ bool rbprm::sampling::GetCandidates(const SampleContainer& sc, const fcl::Transf
             const fcl::Vec3f& v3 = surface->vertices[tr[2]];
             normal = (v2 - v1).cross(v3 - v1);
             normal.normalize();
+            // TODO: externalize heuristics
             double EFORT = -eDir.transpose() * (*sit)->jacobianProduct_.block<3,3>(0,0) * (-eDir);
             //EFORT = (direction.dot(normal));
             EFORT *= ((*sit)->manipulability_ + (direction.dot(normal)));

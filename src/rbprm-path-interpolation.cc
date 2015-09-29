@@ -54,10 +54,6 @@ namespace hpp {
             bool nonZero(false);
             direction.normalize(&nonZero);
             if(!nonZero) direction = fcl::Vec3f(0,0,1.);
-
-{
-    direction = fcl::Vec3f(0.1,0,1);
-}
             configuration.head(configPosition.rows()) = configPosition;
             // TODO Direction 6d
             bool sameAsPrevious(true);

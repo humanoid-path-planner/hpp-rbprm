@@ -31,21 +31,28 @@ namespace hpp {
   namespace sampling{
     HPP_PREDEF_CLASS(SampleContainer);
 
-
+    /// Collision report for a Sample for which the octree node is
+    /// colliding with the environment.
     struct OctreeReport
     {
         OctreeReport(const Sample*, const fcl::Contact, const double, const fcl::Vec3f& normal);
+        /// Sample considered for contact generation
         const Sample* sample_;
+        /// Contact information returned from fcl
         fcl::Contact contact_;
-        double manipulability_;
+        /// heuristic evaluation of the sample
+        double value_;
+        /// normal vector of the surface in contact
         fcl::Vec3f normal_;
     };
 
 
-
+    /// Comparaison operator between Samples
+    /// Used to sort the contact candidates depending
+    /// on their heuristic value
     struct sample_compare {
         bool operator() (const OctreeReport& lhs, const OctreeReport& rhs) const{
-            return lhs.manipulability_ > rhs.manipulability_;
+            return lhs.value_ > rhs.value_;
         }
     };
 
@@ -65,11 +72,12 @@ namespace hpp {
         typedef std::map<std::size_t, std::vector<const Sample*> > T_VoxelSample;
 
     public:
-        /// Creates sample from Configuration
+        /// Creates Sample from Configuration
         /// in presented joint
         /// \param limb root joint for the considered limb
-        /// \param offset position of the effector in joint coordinates
+        /// \param effector joint to be considered as the effector of the limb
         /// \param nbSamples number of samples to generate
+        /// \param offset position of the effector in joint coordinates
         /// \param resolution, resolution of the octree voxels
         SampleContainer(const model::JointPtr_t limb, const std::string& effector, const std::size_t nbSamples, const fcl::Vec3f& offset = fcl::Vec3f(0,0,0), const double resolution = 0.1);
        ~SampleContainer();
@@ -82,6 +90,7 @@ namespace hpp {
         const std::deque<Sample> samples_;
 
     private:
+        /// private implementation
         std::auto_ptr<SamplePImpl> pImpl_;
 
     public:
@@ -98,11 +107,32 @@ namespace hpp {
 
     }; // class SampleContainer
 
-    /// Sorted by manipulability
+    /// Given the current position of a robot, returns a set
+    /// of candidate sample configurations for contact generation.
+    /// The set is strictly ordered using a heuristic to determine
+    /// the most relevant contacts.
+    /// \param sc the SampleContainer containing all the samples for a given limb
+    /// \param treeTrf the current transformation of the root of the robot
+    /// \param treeTrf the current transformation of the root of the robot
+    /// \param direction the current direction of motion, used to evaluate the sample
+    /// heuristically
+    /// \return a set of OctreeReport with all the possible candidates for contact
     T_OctreeReport GetCandidates(const SampleContainer& sc, const fcl::Transform3f& treeTrf,
                                             const hpp::model::CollisionObjectPtr_t& o2,
                                             const fcl::Vec3f& direction);
 
+
+    /// Given the current position of a robot, returns a set
+    /// of candidate sample configurations for contact generation.
+    /// The set is strictly ordered using a heuristic to determine
+    /// the most relevant contacts.
+    /// \param sc the SampleContainer containing all the samples for a given limb
+    /// \param treeTrf the current transformation of the root of the robot
+    /// \param treeTrf the current transformation of the root of the robot
+    /// \param direction the current direction of motion, used to evaluate the sample
+    /// heuristically
+    /// \param a set of OctreeReport updated as the samples are explored
+    /// \return true if at least one candidate was found
     bool GetCandidates(const SampleContainer& sc, const fcl::Transform3f& treeTrf,
                                             const hpp::model::CollisionObjectPtr_t& o2,
                                             const fcl::Vec3f& direction, T_OctreeReport& report);

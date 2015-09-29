@@ -33,6 +33,10 @@ namespace hpp {
 
     /// Dual representation of a robot for Reachability Based planning:
     /// Collision free part of the robot vs Range Of Motion of the limbs.
+    /// Used by RB-PRM in the initial planning phase.
+    /// Configurations are valid if the Device is collision free,
+    /// but the robotRoms are in collision. Exact conditions for validation
+    /// can be parametrized.
     ///
     class RbPrmDevice;
     typedef boost::shared_ptr <RbPrmDevice> RbPrmDevicePtr_t;
@@ -40,13 +44,25 @@ namespace hpp {
     class HPP_RBPRM_DLLAPI RbPrmDevice : public Device
     {
     public:
+        /// Creates a RbPrmDevice
+        /// \param name: the name of the Device
+        /// \param robotRom: a Device describe the range of motion of one
+        /// limb of the robot.
+        /// \return a smart pointer to the created RbPrmDevice
         static RbPrmDevicePtr_t create (const std::string& name, DevicePtr_t& robotRom);
+
+        /// Creates a RbPrmDevice
+        /// \param name: the name of the Device
+        /// \param robotRoms: list of devices, indexed by an identifiant
+        /// \return a smart pointer to the created RbPrmDevice
         static RbPrmDevicePtr_t create (const std::string& name, const T_Rom& robotRoms);
 
     public:
         virtual ~RbPrmDevice();
 
     public:
+        /// Sets the current configuration of the Device, and propagates it
+        /// to the ROMs of the Device.
         virtual bool currentConfiguration (ConfigurationIn_t configuration);
         //virtual bool setCurrentConfiguration(ConfigurationIn_t configuration);
 

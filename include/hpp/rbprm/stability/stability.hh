@@ -34,8 +34,19 @@ namespace hpp {
 
     const polytope::ProjectedCone* computeCone(const RbPrmFullBodyPtr_t fullbody, const State& state);
 
-    // sets the com position of the state
+    /// Using the polytope computation of the gravito inertial wrench cone, performs
+    /// a static equilibrium test on the robot.
+    /// \param fullbody The considered robot for static equilibrium
+    /// \param state The current State of the robots, in terms of contact creation
+    /// \return Whether the configuration is statically balanced
     bool IsStable(const RbPrmFullBodyPtr_t fullbody, State& state);
+
+    /// Using the convex hull of the contact points, performs a static equilibrium test on the robot.
+    /// This test is much faster than the polytope projection, but only accurate of contacts are coplanar,
+    /// or sufficient (not necessary) if the friction cones of the contact include the gravity.
+    /// \param fullbody The considered robot for static equilibrium
+    /// \param state The current State of the robots, in terms of contact creation
+    /// \return Whether the configuration is statically balanced
     bool IsStablePoly(const RbPrmFullBodyPtr_t fullbody, const State& state);
 
   } // namespace stability

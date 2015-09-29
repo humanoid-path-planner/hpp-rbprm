@@ -31,22 +31,27 @@ namespace hpp {
 
     /// Sample configuration for a robot limb, stored
     /// in an octree and used for proximity requests for contact creation.
-    /// assumes that joints are compact, ie they all are consecutive in configuration
+    /// assumes that joints are compact, ie they all are consecutive in configuration.
     class Sample;
     typedef boost::shared_ptr <Sample> SamplePtr_t;
 
     class HPP_RBPRM_DLLAPI Sample
     {
     public:
-        /// Creates sample from Configuration
-        /// in presented joint
+        /// Creates a sample configuration, given the current configuration of a limb.
+        /// the current Configuration_t of the limb will be used to compute the sample.
         /// \param limb root of the considered limb
-        /// the Configuration_t of this limb will be used to compute the sample
+        /// \param effector joint to be considered as the effector of the limb
+        /// \param offset location of the contact point of the effector, relatively to the effector joint
+        /// \param id optional identifier for the sample
         Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, const fcl::Vec3f& offset = fcl::Vec3f(0,0,0),  const std::size_t id =0);
-        /// Creates sample from Configuration
-        /// in presented joint
+
+        /// Creates sample configuration for a limb, extracted from a complete robot configuration, passed as a parameter
         /// \param limb root of the considered limb
-        /// \param configuration used to compute the sample
+        /// \param the configuration from which the limb sample will be extracted
+        /// \param effector joint to be considered as the effector of the limb
+        /// \param offset location of the contact point of the effector, relatively to the effector joint
+        /// \param id optional identifier for the sample
         Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, model::ConfigurationIn_t configuration, const fcl::Vec3f& offset = fcl::Vec3f(0,0,0), const std::size_t id =0);
         Sample(const Sample &clone);
        ~Sample(){}
@@ -58,6 +63,7 @@ namespace hpp {
       /// Position relative to robot root (ie, robot base at 0 everywhere)
       const fcl::Vec3f effectorPosition_;
       const Eigen::MatrixXd jacobian_;
+      /// Product of the jacobian by its transpose
       const Eigen::Matrix <model::value_type, 6, 6> jacobianProduct_;
       /// id in sample container
       const std::size_t id_;
@@ -65,8 +71,17 @@ namespace hpp {
       //const fcl::Transform3f rotation_; TODO
     }; // class Sample
 
-std::deque<Sample> GenerateSamples(const model::JointPtr_t model,  const std::string& effector,  const std::size_t nbSamples,const fcl::Vec3f& offset = fcl::Vec3f(0,0,0));
-/// LoadSample into robot
+/// Automatically generates a deque of sample configuration for a given limb of a robot
+    /// \param limb root of the considered limb
+    /// \param effector tag identifying the end effector of the limb
+    /// \param nbSamples number of samples to be generated
+    /// \param offset location of the contact point of the effector relatively to the effector joint origin
+    /// \return a deque of sample configurations respecting joint limits.
+std::deque<Sample> GenerateSamples(const model::JointPtr_t limb,  const std::string& effector,  const std::size_t nbSamples,const fcl::Vec3f& offset = fcl::Vec3f(0,0,0));
+
+/// Assigns the limb configuration associated with a sample to a robot configuration
+/// \param sample The limb configuration to load
+/// \param robot the configuration to be modified
 void Load(const Sample& sample, model::ConfigurationOut_t robot);
 
   } // namespace sampling
