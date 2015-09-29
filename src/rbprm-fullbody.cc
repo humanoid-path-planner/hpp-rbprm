@@ -612,9 +612,29 @@ namespace hpp {
     // no stable contact was found / limb maintained
     if(!result.stable)
     {
-        contactMaintained = false;
-        std::cout << "replanning unstable state " << id+1 << std::endl;
-        RepositionContacts(result, body, body->collisionValidation_, config, collisionObjects, direction);
+        if(contactMaintained)
+        {
+            contactMaintained = false;
+            std::cout << "replanning unstable state " << id+1 << std::endl;
+            RepositionContacts(result, body, body->collisionValidation_, config, collisionObjects, direction);
+        }
+        else // already broke contact; state is invalid
+        {
+            //std::cout << "contact broken and replaced contact unstable, replanning " << id+1 << std::endl;
+            fcl::Vec3f normal, position;
+            result = previous;
+            result.stable = false;
+            std::string replaceContact =  result.contactOrder_.front();
+            result.contactOrder_.pop();
+            model::Configuration_t config = previous.configuration_;
+            body->device_->currentConfiguration(config);
+            body->device_->computeForwardKinematics();
+            ComputeStableContact(body,result,body->limbcollisionValidations_.at(replaceContact),replaceContact,body->limbs_.at(replaceContact),config,collisionObjects,direction,position, normal);
+            body->device_->currentConfiguration(save);
+            body->device_->controlComputation (flag);
+            ++id;
+            return result;
+        }
     }
     bool stab =  stability::IsStable(body,result);
     std::cout << "state " << ++id << " stable ? " << stab << " " << result.stable << std::endl;
