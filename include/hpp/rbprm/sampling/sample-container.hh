@@ -74,6 +74,7 @@ namespace hpp {
     public:
         /// Creates Sample from Configuration
         /// in presented joint
+        ///
         /// \param limb root joint for the considered limb
         /// \param effector joint to be considered as the effector of the limb
         /// \param nbSamples number of samples to generate
@@ -111,6 +112,7 @@ namespace hpp {
     /// of candidate sample configurations for contact generation.
     /// The set is strictly ordered using a heuristic to determine
     /// the most relevant contacts.
+    ///
     /// \param sc the SampleContainer containing all the samples for a given limb
     /// \param treeTrf the current transformation of the root of the robot
     /// \param treeTrf the current transformation of the root of the robot
@@ -126,6 +128,7 @@ namespace hpp {
     /// of candidate sample configurations for contact generation.
     /// The set is strictly ordered using a heuristic to determine
     /// the most relevant contacts.
+    ///
     /// \param sc the SampleContainer containing all the samples for a given limb
     /// \param treeTrf the current transformation of the root of the robot
     /// \param treeTrf the current transformation of the root of the robot

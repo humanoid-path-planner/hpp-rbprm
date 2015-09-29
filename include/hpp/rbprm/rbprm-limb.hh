@@ -37,10 +37,39 @@ namespace hpp {
     class HPP_RBPRM_DLLAPI RbPrmLimb
     {
     public:
+        /// Creates a Limb a Fullbody instance  Stores a sample
+        /// container, used for proximity requests. The Effector is considered as the last joint
+        /// of the depth first search on the kinematic subchain.
+        ///
+        /// \param limb Joint instance that serves as a root for the limb
+        /// \param effectorName name of the joint to be considered as the effector of the limb
+        /// \param offset position of the effector in joint coordinates relatively to the effector joint
+        /// \param unit normal vector of the contact point, expressed in the effector joint coordinates
+        /// \param x width of the default support polygon of the effector
+        /// \param y height of the default support polygon of the effector
+        /// \param nbSamples number of samples to generate for the limb
+        /// \param resolution, resolution of the octree voxels. The samples generated are stored in an octree data
+        /// structure to perform efficient proximity requests. The resulution of the octree, in meters, specifies the size
+        /// of the unit voxel of the octree. The larger they are, the more samples will be considered as candidates for contact.
+        /// This can be problematic in terms of performance. The default value is 3 cm.
         static RbPrmLimbPtr_t create (const model::JointPtr_t limb, const fcl::Vec3f &offset,
                                       const fcl::Vec3f &normal,const double x, const double y,
                                       const std::size_t nbSamples, const double resolution);
 
+
+        /// Creates a Limb a Fullbody instance  Stores a sample
+        /// container, used for proximity requests.
+        ///
+        /// \param limb Joint instance that serves as a root for the limb
+        /// \param offset position of the effector in joint coordinates relatively to the effector joint
+        /// \param unit normal vector of the contact point, expressed in the effector joint coordinates
+        /// \param x width of the default support polygon of the effector
+        /// \param y height of the default support polygon of the effector
+        /// \param nbSamples number of samples to generate for the limb
+        /// \param resolution, resolution of the octree voxels. The samples generated are stored in an octree data
+        /// structure to perform efficient proximity requests. The resulution of the octree, in meters, specifies the size
+        /// of the unit voxel of the octree. The larger they are, the more samples will be considered as candidates for contact.
+        /// This can be problematic in terms of performance. The default value is 3 cm.
         static RbPrmLimbPtr_t create (const model::JointPtr_t limb, const std::string& effectorName, const fcl::Vec3f &offset,
                                       const fcl::Vec3f &normal,const double x, const double y,
                                       const std::size_t nbSamples, const double resolution);

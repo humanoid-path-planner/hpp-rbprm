@@ -30,8 +30,8 @@ namespace hpp {
   namespace rbprm {
     HPP_PREDEF_CLASS(RbPrmInterpolation);
 
-    /// Representation of a robot limb.
-    /// Contains a SampleContainer used for computing contact candidates
+    /// Interpolation class for transforming a path computed by RB-PRM into
+    /// a discrete sequence of balanced contact configurations.
     ///
     class RbPrmInterpolation;
     typedef boost::shared_ptr <RbPrmInterpolation> RbPrmInterpolationPtr_t;
@@ -39,11 +39,24 @@ namespace hpp {
     class HPP_RBPRM_DLLAPI RbPrmInterpolation
     {
     public:
+        /// Creates a smart pointer to the Interpolation class
+        ///
+        /// \param path the path returned by RB-PRM computation
+        /// \param robot the FullBody instance considered for extending the part
+        /// \param start the start full body configuration of the problem
+        /// \param end the end full body configuration of the problem
+        /// \return a pointer to the created RbPrmInterpolation instance
         static RbPrmInterpolationPtr_t create (const core::PathVectorConstPtr_t path, const RbPrmFullBodyPtr_t robot, const State& start, const State& end);
 
     public:
         ~RbPrmInterpolation();
 
+        /// Transforms the path computed by RB-PRM into
+        /// a discrete sequence of balanced contact configurations.
+        ///
+        /// \param collisionObjects the objects to consider for contact and collision avoidance
+        /// \param timeStep the discretization step of the path.
+        /// \return a pointer to the created RbPrmInterpolation instance
         std::vector<State> Interpolate(const model::ObjectVector_t &collisionObjects, const double timeStep = 0.01);
         std::vector<State> Interpolate(const std::vector<core::ConfigurationIn_t>& configurations, const model::ObjectVector_t &collisionObjects);
 

@@ -45,6 +45,7 @@ namespace hpp {
     {
     public:
         /// Creates a RbPrmDevice
+        ///
         /// \param name: the name of the Device
         /// \param robotRom: a Device describe the range of motion of one
         /// limb of the robot.
@@ -52,6 +53,7 @@ namespace hpp {
         static RbPrmDevicePtr_t create (const std::string& name, DevicePtr_t& robotRom);
 
         /// Creates a RbPrmDevice
+        ///
         /// \param name: the name of the Device
         /// \param robotRoms: list of devices, indexed by an identifiant
         /// \return a smart pointer to the created RbPrmDevice

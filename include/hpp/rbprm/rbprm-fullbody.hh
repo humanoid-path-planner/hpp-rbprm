@@ -31,8 +31,10 @@ namespace hpp {
   namespace rbprm {
     HPP_PREDEF_CLASS(RbPrmFullBody);
 
-    /// Dual representation of a robot for Reachability Based planning:
-    /// Collision free part of the robot vs Range Of Motion of the limbs.
+    /// Encapsulation of a Device class to handle the generation of contacts
+    /// configurations for the user defined limbs of the Device.
+    /// Uses an internal representation for the limbs, and handles
+    /// collisions and balance criteria for generating their subconfigurations.
     ///
     class RbPrmFullBody;
     typedef boost::shared_ptr <RbPrmFullBody> RbPrmFullBodyPtr_t;
@@ -49,10 +51,25 @@ namespace hpp {
         /// Creates a Limb for the robot,
         /// identified by its name. Stores a sample
         /// container, used for requests
+        ///
+        /// \param id: user defined id for the limb. Must be unique.
+        /// The id is used if several contact points are defined for the same limb (ex: the knee and the foot)
+        /// \param name: name of the joint corresponding to the root of the limb.
+        /// \param effectorName name of the joint to be considered as the effector of the limb
+        /// \param offset position of the effector in joint coordinates relatively to the effector joint
+        /// \param unit normal vector of the contact point, expressed in the effector joint coordinates
+        /// \param x width of the default support polygon of the effector
+        /// \param y height of the default support polygon of the effector
+        /// \param collisionObjects objects to be considered for collisions with the limb. TODO remove
+        /// \param nbSamples number of samples to generate for the limb
+        /// \param resolution, resolution of the octree voxels. The samples generated are stored in an octree data
+        /// structure to perform efficient proximity requests. The resulution of the octree, in meters, specifies the size
+        /// of the unit voxel of the octree. The larger they are, the more samples will be considered as candidates for contact.
+        /// This can be problematic in terms of performance. The default value is 3 cm.
         void AddLimb(const std::string& id, const std::string& name, const std::string& effectorName, const fcl::Vec3f &offset,
                      const fcl::Vec3f &normal,const double x, const double y,
                      const model::ObjectVector_t &collisionObjects,
-                     const std::size_t nbSamples, const double resolution);
+                     const std::size_t nbSamples, const double resolution = 0.03);
 
     public:
         typedef std::map<std::string, std::vector<std::string> > T_LimbGroup;
@@ -86,9 +103,32 @@ namespace hpp {
                                         const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction, bool& contactMaintained, bool& multipleBreaks, const bool allowFailure);
     }; // class RbPrmDevice
 
+    /// Generates a balanced contact configuration, considering the
+    /// given current configuration of the robot, and a direction of motion.
+    /// Typically used to generate a start and / or goal configuration automatically for a planning problem.
+    ///
+    /// \param body The considered FullBody robot for which to generate contacts
+    /// \param configuration Current full body configuration.
+    /// \param collisionObjects the set of 3D objects to consider for collision and contact creation.
+    /// \param direction An estimation of the direction of motion of the character.
+    /// \return a State describing the computed contact configuration, with relevant contact information and balance information.
     hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration,
                                       const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction);
 
+    /// Generates a balanced contact configuration, considering the
+    /// given current configuration of the robot, and a previous, balanced configuration.
+    /// Existing contacts are maintained provided joint limits and balance remains respected.
+    /// Otherwise a contact generation strategy is employed.
+    ///
+    /// \param previous The previously computed State of the robot
+    /// \param body The considered FullBody robot for which to generate contacts
+    /// \param configuration Current full body configuration.
+    /// \param collisionObjects the set of 3D objects to consider for collision and contact creation.
+    /// \param direction An estimation of the direction of motion of the character.
+    /// \param contactMaintained parameter set to true if all the contacts were maintained, regarding the previous state
+    /// \param multipleBreaks If the contact generation failed at this stage because multiple contacts were broken, is set to true.
+    /// \param allowFailure allow multiple breaks in the contact computation.
+    /// \return a State describing the computed contact configuration, with relevant contact information and balance information.
     hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(const hpp::rbprm::State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration,
                                             const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction, bool& contactMaintained, bool& multipleBreaks, const bool allowFailure);
   } // namespace rbprm

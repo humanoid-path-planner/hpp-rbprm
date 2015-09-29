@@ -14,6 +14,7 @@ namespace stability
 {
     /// Implementation of the gift wrapping algorithm to determine the 2D projection of the convex hull of a 3D set of rectangles
     /// and whether a point belongs to it or not.
+    ///
     /// \param support a Vector containing all the points at the center of the rectangles used to determine the convex hull
     /// \param aPoint The point for which to test belonging the the convex hull
     /// \param xs Vector of width offsets for the rectangle in support
