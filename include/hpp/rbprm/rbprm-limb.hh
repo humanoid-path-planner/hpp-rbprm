@@ -21,6 +21,7 @@
 
 # include <hpp/rbprm/config.hh>
 # include <hpp/rbprm/sampling/sample-container.hh>
+# include <hpp/rbprm/sampling/heuristic.hh>
 # include <hpp/model/device.hh>
 
 namespace hpp {
@@ -48,13 +49,14 @@ namespace hpp {
         /// \param x width of the default support polygon of the effector
         /// \param y height of the default support polygon of the effector
         /// \param nbSamples number of samples to generate for the limb
+        /// \param evaluate heuristic method used to bias sample generation
         /// \param resolution, resolution of the octree voxels. The samples generated are stored in an octree data
         /// structure to perform efficient proximity requests. The resulution of the octree, in meters, specifies the size
         /// of the unit voxel of the octree. The larger they are, the more samples will be considered as candidates for contact.
         /// This can be problematic in terms of performance. The default value is 3 cm.
         static RbPrmLimbPtr_t create (const model::JointPtr_t limb, const fcl::Vec3f &offset,
                                       const fcl::Vec3f &normal,const double x, const double y,
-                                      const std::size_t nbSamples, const double resolution);
+                                      const std::size_t nbSamples, const sampling::heuristic evaluate, const double resolution);
 
 
         /// Creates a Limb a Fullbody instance  Stores a sample
@@ -66,13 +68,14 @@ namespace hpp {
         /// \param x width of the default support polygon of the effector
         /// \param y height of the default support polygon of the effector
         /// \param nbSamples number of samples to generate for the limb
+        /// \param evaluate heuristic method used to bias sample generation
         /// \param resolution, resolution of the octree voxels. The samples generated are stored in an octree data
         /// structure to perform efficient proximity requests. The resulution of the octree, in meters, specifies the size
         /// of the unit voxel of the octree. The larger they are, the more samples will be considered as candidates for contact.
         /// This can be problematic in terms of performance. The default value is 3 cm.
         static RbPrmLimbPtr_t create (const model::JointPtr_t limb, const std::string& effectorName, const fcl::Vec3f &offset,
                                       const fcl::Vec3f &normal,const double x, const double y,
-                                      const std::size_t nbSamples, const double resolution);
+                                      const std::size_t nbSamples, const sampling::heuristic evaluate, const double resolution);
 
     public:
         ~RbPrmLimb();
@@ -90,11 +93,11 @@ namespace hpp {
     protected:
       RbPrmLimb (const model::JointPtr_t& limb,  const fcl::Vec3f &offset,
                  const fcl::Vec3f &normal,const double x, const double y,
-                 const std::size_t nbSamples, const double resolution);
+                 const std::size_t nbSamples, const sampling::heuristic evaluate, const double resolution);
 
       RbPrmLimb (const model::JointPtr_t& limb, const std::string& effectorName,  const fcl::Vec3f &offset,
                  const fcl::Vec3f &normal,const double x, const double y,
-                 const std::size_t nbSamples, const double resolution);
+                 const std::size_t nbSamples, const sampling::heuristic evaluate, const double resolution);
 
       ///
       /// \brief Initialization.

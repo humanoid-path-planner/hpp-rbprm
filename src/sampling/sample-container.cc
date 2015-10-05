@@ -109,15 +109,38 @@ using namespace fcl;
      const boost::shared_ptr<fcl::CollisionGeometry> geometry_;
  };
 
-SampleContainer::SampleContainer(const model::JointPtr_t limb, const std::string& effector, const std::size_t nbSamples, const fcl::Vec3f& offset, const double resolution)
+namespace
+{
+    double DefaultHeuristic (const sampling::Sample* sample,
+                          const Eigen::Vector3d& direction, const Eigen::Vector3d& normal)
+    {
+        return (sample->manipulability_ + (direction.dot(normal)));
+    }
+}
+
+ SampleContainer::SampleContainer(const model::JointPtr_t limb, const std::string& effector, const std::size_t nbSamples, const Vec3f &offset, const double resolution)
+     : samples_(GenerateSamples(limb,effector,nbSamples, offset))
+     , pImpl_(new SamplePImpl(samples_, resolution))
+     , treeObject_(pImpl_->geometry_)
+     , voxelSamples_(SortSamples(pImpl_->octomapTree_,samples_))
+     , boxes_(generateBoxesFromOctomap(pImpl_->octree_))
+     , evaluate_(&DefaultHeuristic)
+ {
+     // NOTHING
+ }
+
+SampleContainer::SampleContainer(const model::JointPtr_t limb, const std::string& effector, const std::size_t nbSamples, const hpp::rbprm::sampling::heuristic evaluate, const Vec3f &offset, const double resolution)
     : samples_(GenerateSamples(limb,effector,nbSamples, offset))
     , pImpl_(new SamplePImpl(samples_, resolution))
     , treeObject_(pImpl_->geometry_)
     , voxelSamples_(SortSamples(pImpl_->octomapTree_,samples_))
     , boxes_(generateBoxesFromOctomap(pImpl_->octree_))
+    , evaluate_(evaluate)
 {
     // NOTHING
 }
+
+
 
 SampleContainer::~SampleContainer()
 {
@@ -170,11 +193,8 @@ bool rbprm::sampling::GetCandidates(const SampleContainer& sc, const fcl::Transf
             const fcl::Vec3f& v3 = surface->vertices[tr[2]];
             normal = (v2 - v1).cross(v3 - v1);
             normal.normalize();
-            // TODO: externalize heuristics
-            double EFORT = -eDir.transpose() * (*sit)->jacobianProduct_.block<3,3>(0,0) * (-eDir);
-            //EFORT = (direction.dot(normal));
-            EFORT *= ((*sit)->manipulability_ + (direction.dot(normal)));
-            OctreeReport report(*sit, contact,EFORT, normal);
+            Eigen::Vector3d eNormal(normal[0], normal[1], normal[2]);
+            OctreeReport report(*sit, contact,(*sc.evaluate_)(*sit, eDir, eNormal), normal);
             reports.insert(report);
         }
     }

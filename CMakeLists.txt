@@ -42,10 +42,10 @@ SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
 FIND_PACKAGE( OpenMP REQUIRED)
 if(OPENMP_FOUND)
-		message("OPENMP FOUND")
-		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-		set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+    message("OPENMP FOUND")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 
 # Declare Headers
@@ -53,15 +53,16 @@ SET(${PROJECT_NAME}_HEADERS
     include/hpp/rbprm/rbprm-device.hh
     include/hpp/rbprm/rbprm-fullbody.hh
     include/hpp/rbprm/rbprm-limb.hh
-		include/hpp/rbprm/rbprm-path-interpolation.hh
+    include/hpp/rbprm/rbprm-path-interpolation.hh
     include/hpp/rbprm/rbprm-shooter.hh
     include/hpp/rbprm/rbprm-state.hh
     include/hpp/rbprm/rbprm-validation.hh
     include/hpp/rbprm/rbprm-rom-validation.hh
     include/hpp/rbprm/sampling/sample.hh
     include/hpp/rbprm/sampling/sample-container.hh
-		include/hpp/rbprm/stability/stability.hh
-		include/hpp/rbprm/stability/support.hh
+    include/hpp/rbprm/sampling/heuristic.hh
+    include/hpp/rbprm/stability/stability.hh
+    include/hpp/rbprm/stability/support.hh
     include/hpp/rbprm/tools.hh
   )
 

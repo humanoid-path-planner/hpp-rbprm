@@ -21,6 +21,7 @@
 
 #include <hpp/rbprm/sampling/sample.hh>
 #include <hpp/fcl/octree.h>
+#include <hpp/rbprm/sampling/heuristic.hh>
 
 #include <map>
 #include <memory>
@@ -80,7 +81,22 @@ namespace hpp {
         /// \param nbSamples number of samples to generate
         /// \param offset position of the effector in joint coordinates
         /// \param resolution, resolution of the octree voxels
-        SampleContainer(const model::JointPtr_t limb, const std::string& effector, const std::size_t nbSamples, const fcl::Vec3f& offset = fcl::Vec3f(0,0,0), const double resolution = 0.1);
+        SampleContainer(const model::JointPtr_t limb, const std::string& effector,
+                        const std::size_t nbSamples, const fcl::Vec3f& offset = fcl::Vec3f(0,0,0),
+                        const double resolution = 0.1);
+
+        /// Creates Sample from Configuration
+        /// in presented joint
+        ///
+        /// \param limb root joint for the considered limb
+        /// \param effector joint to be considered as the effector of the limb
+        /// \param nbSamples number of samples to generate
+        /// \param offset position of the effector in joint coordinates
+        /// \param resolution, resolution of the octree voxels
+        SampleContainer(const model::JointPtr_t limb, const std::string& effector,
+                        const std::size_t nbSamples, const heuristic evaluate, const fcl::Vec3f& offset = fcl::Vec3f(0,0,0),
+                        const double resolution = 0.1);
+
        ~SampleContainer();
 
     private:
@@ -101,6 +117,9 @@ namespace hpp {
         const T_VoxelSample voxelSamples_;
         /// Bounding boxes of areas of interest of the octree
         const std::vector<fcl::CollisionObject*> boxes_;
+        /// heuristic method
+        const heuristic evaluate_;
+
 
         friend bool GetCandidates(const SampleContainer& sc, const fcl::Transform3f& treeTrf,
                                                 const hpp::model::CollisionObjectPtr_t& o2,

@@ -63,21 +63,33 @@ namespace hpp {
         }
     }
 
+
+    bool RbPrmFullBody::AddHeuristic(const std::string& name, const sampling::heuristic func)
+    {
+        return factory_.AddHeuristic(name, func);
+    }
+
     void RbPrmFullBody::AddLimb(const std::string& id, const std::string& name, const std::string &effectorName,
                                 const fcl::Vec3f &offset,const fcl::Vec3f &normal, const double x,
                                 const double y,
-                                const model::ObjectVector_t &collisionObjects, const std::size_t nbSamples, const double resolution)
+                                const model::ObjectVector_t &collisionObjects, const std::size_t nbSamples, const std::string &heuristicName, const double resolution)
     {
         rbprm::T_Limb::const_iterator cit = limbs_.find(id);
+        std::map<std::string, const sampling::heuristic>::const_iterator hit = factory_.heuristics_.find(heuristicName);
         if(cit != limbs_.end())
         {
             throw std::runtime_error ("Impossible to add limb for joint "
                                       + id + " to robot; limb already exists");
         }
+        else if(hit == factory_.heuristics_.end())
+        {
+            throw std::runtime_error ("Impossible to add limb for joint "
+                                      + id + " to robot; heuristic not found " + heuristicName +".");
+        }
         else
         {
             model::JointPtr_t joint = device_->getJointByName(name);
-            rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(joint, effectorName, offset,normal,x,y, nbSamples,resolution);
+            rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(joint, effectorName, offset,normal,x,y, nbSamples, hit->second, resolution);
             core::CollisionValidationPtr_t limbcollisionValidation_ = core::CollisionValidation::create(this->device_);
             // adding collision validation
             //core::CollisionValidationPtr_t colVal = core::CollisionValidation::create(device_);
@@ -340,7 +352,7 @@ namespace hpp {
 
 /********************/
 // Justin
-              normal = bestReport.normal_;
+ /*             normal = bestReport.normal_;
 //normal = fcl::Vec3f(0,0,1);
               position = bestReport.contact_.pos;
               // the normal is given by the normal of the contacted object
@@ -367,19 +379,19 @@ namespace hpp {
                                                                                          fcl::Vec3f(0,0,0),
                                                                                          position - rotation * limb->offset_, //)));
                                                                                          model::matrix3_t::getIdentity(),
-                                                                                         setTranslationConstraints(normal))));//*/
+                                                                                         setTranslationConstraints(normal))));//
 
 
               proj->add(core::NumericalConstraint::create (constraints::Orientation::create(body->device_,
                                                                                             limb->effector_,
                                                                                             alignRotation,
-                                                                                            setRotationConstraints(z))));
+                                                                                            setRotationConstraints(z))));*/
 /****************************/
 
 
 
 
-/*              normal = bestReport.normal_;
+              normal = bestReport.normal_;
 //normal = fcl::Vec3f(0,0,1);
               position = bestReport.contact_.pos;
               // the normal is given by the normal of the contacted object
@@ -403,7 +415,7 @@ namespace hpp {
               proj->add(core::NumericalConstraint::create (constraints::Orientation::create(body->device_,
                                                                                             limb->effector_,
                                                                                             rotation,
-                                                                                            setRotationConstraints(z))));*/
+                                                                                            setRotationConstraints(z))));
 
               if(proj->apply(configuration))
               {

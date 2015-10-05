@@ -23,7 +23,8 @@
 #include <hpp/rbprm/rbprm-state.hh>
 #include <hpp/model/device.hh>
 #include <hpp/rbprm/rbprm-limb.hh>
-#include  <hpp/core/collision-validation.hh>
+#include <hpp/core/collision-validation.hh>
+#include <hpp/rbprm/sampling/heuristic.hh>
 
 #include  <vector>
 
@@ -69,7 +70,14 @@ namespace hpp {
         void AddLimb(const std::string& id, const std::string& name, const std::string& effectorName, const fcl::Vec3f &offset,
                      const fcl::Vec3f &normal,const double x, const double y,
                      const model::ObjectVector_t &collisionObjects,
-                     const std::size_t nbSamples, const double resolution = 0.03);
+                     const std::size_t nbSamples, const std::string& heuristic = "EFORT", const double resolution = 0.03);
+
+        /// Add a new heuristic for biasing sample candidate selection
+        ///
+        /// \param name: name used to identify the heuristic
+        /// \param func the actual heuristic method
+        /// \return whether the heuristic has been added. False is returned if a heuristic with that name already exists.
+        bool AddHeuristic(const std::string& name, const sampling::heuristic func);
 
     public:
         typedef std::map<std::string, std::vector<std::string> > T_LimbGroup;
@@ -84,6 +92,7 @@ namespace hpp {
         std::map<std::string, core::CollisionValidationPtr_t> limbcollisionValidations_;
         rbprm::T_Limb limbs_;
         T_LimbGroup limbGroups_;
+        sampling::HeuristicFactory factory_;
 
 
     protected:

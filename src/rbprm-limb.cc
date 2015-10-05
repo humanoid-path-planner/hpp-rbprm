@@ -22,9 +22,9 @@ namespace hpp {
 
     RbPrmLimbPtr_t RbPrmLimb::create (const model::JointPtr_t limb, const fcl::Vec3f &offset,
                                       const fcl::Vec3f &normal,const double x, const double y,
-                                      const std::size_t nbSamples, const double resolution)
+                                      const std::size_t nbSamples, const sampling::heuristic evaluate, const double resolution)
     {
-        RbPrmLimb* rbprmDevice = new RbPrmLimb(limb, offset, normal, x, y, nbSamples, resolution);
+        RbPrmLimb* rbprmDevice = new RbPrmLimb(limb, offset, normal, x, y, nbSamples,evaluate, resolution);
         RbPrmLimbPtr_t res (rbprmDevice);
         res->init (res);
         return res;
@@ -32,9 +32,9 @@ namespace hpp {
 
     RbPrmLimbPtr_t RbPrmLimb::create (const model::JointPtr_t limb, const std::string& effectorName, const fcl::Vec3f &offset,
                                       const fcl::Vec3f &normal,const double x, const double y,
-                                      const std::size_t nbSamples, const double resolution)
+                                      const std::size_t nbSamples, const hpp::rbprm::sampling::heuristic evaluate, const double resolution)
     {
-        RbPrmLimb* rbprmDevice = new RbPrmLimb(limb, effectorName, offset, normal, x, y, nbSamples, resolution);
+        RbPrmLimb* rbprmDevice = new RbPrmLimb(limb, effectorName, offset, normal, x, y, nbSamples,evaluate, resolution);
         RbPrmLimbPtr_t res (rbprmDevice);
         res->init (res);
         return res;
@@ -74,11 +74,12 @@ namespace hpp {
     }
 
     RbPrmLimb::RbPrmLimb (const model::JointPtr_t& limb,
-                          const fcl::Vec3f &offset, const fcl::Vec3f &normal, const double x, const double y, const std::size_t nbSamples, const double resolution)
+                          const fcl::Vec3f &offset, const fcl::Vec3f &normal, const double x, const double y, const std::size_t nbSamples,
+                          const hpp::rbprm::sampling::heuristic evaluate, const double resolution)
         : limb_(limb)
         , effector_(GetEffector(limb))
         , effectorDefaultRotation_(GetEffectorTransform(limb))
-        , sampleContainer_(limb, effector_->name(), nbSamples, offset, resolution)
+        , sampleContainer_(limb, effector_->name(), nbSamples, evaluate, offset, resolution)
         , offset_(effectorDefaultRotation_* offset)
         , normal_(effectorDefaultRotation_* normal)
         , x_(x)
@@ -88,11 +89,12 @@ namespace hpp {
     }
 
     RbPrmLimb::RbPrmLimb (const model::JointPtr_t& limb, const std::string& effectorName,
-                          const fcl::Vec3f &offset, const fcl::Vec3f &normal, const double x, const double y, const std::size_t nbSamples, const double resolution)
+                          const fcl::Vec3f &offset, const fcl::Vec3f &normal, const double x, const double y, const std::size_t nbSamples,
+                          const hpp::rbprm::sampling::heuristic evaluate, const double resolution)
         : limb_(limb)
         , effector_(GetEffector(limb, effectorName))
         , effectorDefaultRotation_(GetEffectorTransform(limb))
-        , sampleContainer_(limb, effector_->name(), nbSamples, offset, resolution)
+        , sampleContainer_(limb, effector_->name(), nbSamples, evaluate, offset, resolution)
         , offset_(effectorDefaultRotation_* offset)
         , normal_(effectorDefaultRotation_* normal)
         , x_(x)
