@@ -16,9 +16,12 @@
 
 #include <hpp/rbprm/rbprm-shooter.hh>
 #include <hpp/model/collision-object.hh>
+#include <hpp/model/joint.hh>
 #include <hpp/fcl/collision_object.h>
 #include <hpp/fcl/BVH/BVH_model.h>
 #include <hpp/core/collision-validation.hh>
+#include <Eigen/Geometry>
+
 
 namespace hpp {
 using namespace core;
@@ -71,11 +74,75 @@ namespace
             SampleRotationRec(config,jv,current);
     }
 
-    void SampleRotation(ConfigurationPtr_t config, JointVector_t& jv)
+    void SampleRotation(model::DevicePtr_t so3, ConfigurationPtr_t config, JointVector_t& jv)
     {
         std::size_t id = 1;
-        SampleRotationRec(config,jv,id);
+        if(so3->rootJoint())
+        {
+            Eigen::Matrix <value_type, 3, 1> confso3;
+            id+=1;
+            model::JointPtr_t joint = so3->rootJoint();
+            for(int i =0; i <3; ++i)
+            {
+                joint->configuration()->uniformlySample (i, confso3);
+            }
+            Eigen::Quaterniond qt = Eigen::AngleAxisd(confso3(0), Eigen::Vector3d::UnitZ())
+              * Eigen::AngleAxisd(confso3(1), Eigen::Vector3d::UnitY())
+              * Eigen::AngleAxisd(confso3(2), Eigen::Vector3d::UnitX());
+            std::size_t rank = 3;
+            (*config)(rank+0) = qt.w();
+            (*config)(rank+1) = qt.x();
+            (*config)(rank+2) = qt.y();
+            (*config)(rank+3) = qt.z();
+        }
+        if(id < jv.size())
+            SampleRotationRec(config,jv,id);
     }
+
+    model::DevicePtr_t initSo3()
+    {
+        DevicePtr_t so3Robot = model::Device::create("so3Robot");
+        /*model::JointPtr_t res = new model::JointSO3(fcl::Transform3f());
+        res->name("defaultSO3");*/
+        //so3Robot->rootJoint(0);
+        return so3Robot;
+    }
+
+    void seRotationtLimits (model::DevicePtr_t so3Robot, const std::vector<double>& limitszyx)
+    {
+        model::Joint* previous = so3Robot->rootJoint();
+        if(previous == 0)
+        {
+            // init joints
+            previous = new model::jointRotation::Bounded(fcl::Transform3f());
+            model::Joint * jy = new model::jointRotation::Bounded(fcl::Transform3f());
+            model::Joint * jx = new model::jointRotation::Bounded(fcl::Transform3f());
+            so3Robot->rootJoint(previous);
+            previous->addChildJoint (jy);
+            jy->addChildJoint (jx);
+            previous->name("so3z");
+            jy->name("so3y");
+            jx->name("so3x");
+        }
+        // set limits model::JointPtr_t
+        assert(limitszyx.size() == 6);
+        int i = 0;
+        model::JointPtr_t current = previous;
+        for(std::vector<double>::const_iterator cit = limitszyx.begin();
+            cit != limitszyx.end(); ++cit, ++i)
+        {
+            if(i % 2 == 0)
+            {
+                current->lowerBound(0, *cit);
+            }
+            else
+            {
+                current->upperBound(0, *cit);
+                current = current->numberChildJoints() > 0 ? current->childJoint(0) : 0;
+            }
+        }
+    }
+
 } // namespace
 
   namespace rbprm {
@@ -98,6 +165,13 @@ namespace
         ConfigurationShooter::init (self);
         weak_ = self;
     }
+
+
+    void RbPrmShooter::BoundSO3(const std::vector<double>& limitszyx)
+    {
+        seRotationtLimits(eulerSo3_, limitszyx);
+    }
+
 // TODO: outward
 
     RbPrmShooter::RbPrmShooter (const model::RbPrmDevicePtr_t& robot,
@@ -111,6 +185,7 @@ namespace
     , filter_(filter)
     , robot_ (robot)
     , validator_(rbprm::RbPrmValidation::create(robot_, filter, normalFilters))
+    , eulerSo3_(initSo3())
     {
         for(hpp::core::ObjectVector_t::const_iterator cit = geometries.begin();
             cit != geometries.end(); ++cit)
@@ -199,7 +274,7 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
 
         //set configuration position to sampled point
         SetConfigTranslation(config, p);
-        SampleRotation(config, jv);
+        SampleRotation(eulerSo3_, config, jv);
         // rotate and translate randomly until valid configuration found or
         // no obstacle is reachable
         CollisionValidationReport report;
@@ -218,7 +293,7 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
                 // try to rotate to reach rom
                 for(; limitDis>0 && !found; --limitDis)
                 {
-                    SampleRotation(config, jv);
+                    SampleRotation(eulerSo3_, config, jv);
                     found = validator_->validate(*config, unusedreport, filter_);
                     if(!found)
                     {

@@ -19,6 +19,8 @@
 #include "test-tools.hh"
 #include <hpp/rbprm/rbprm-shooter.hh>
 
+#include <Eigen/Geometry>
+
 #define BOOST_TEST_MODULE test-rbprm-shooter
 #include <boost/test/included/unit_test.hpp>
 
@@ -91,6 +93,35 @@ BOOST_AUTO_TEST_CASE (shooterCreationWithFilters) {
     {
         BOOST_CHECK_MESSAGE (validator->validate(*(shooter->shoot()),validationReport, filter, false),
                                                   "Reachability condition should be verified by shooter");
+    }
+}
+
+// TODO: how to assert other than 0 angle?
+BOOST_AUTO_TEST_CASE (shooterCreationWithSO3Limits) {
+    RbPrmDevicePtr_t robot = initRbPrmDeviceTest();
+
+    CollisionObjectPtr_t colObject = MeshObstacleBox();
+    colObject->move(fcl::Vec3f(11.3,0,0));
+
+    model::ObjectVector_t collisionObjects;
+    collisionObjects.push_back(colObject);
+
+    std::vector<std::string> filter;
+
+    RbPrmShooterPtr_t shooter = RbPrmShooter::create(robot, collisionObjects, filter);
+    std::vector<double> bounds;
+    bounds.push_back(0);bounds.push_back(0);
+    //bounds.push_back(-1);bounds.push_back(1);
+    bounds.push_back(0);bounds.push_back(0);
+    bounds.push_back(-1);bounds.push_back(1);
+    //bounds.push_back(0);bounds.push_back(0);
+    shooter->BoundSO3(bounds);
+    for(int i =0; i< 100; ++i)
+    {
+        Eigen::VectorXd config =  *(shooter->shoot()) ;
+        Eigen::Quaterniond q(config(3),config(4),config(5),config(6));
+        Eigen::Vector3d ea = q.toRotationMatrix().eulerAngles(2, 1, 0);
+        //std::cout << "q " << config << "\n ea " << ea << std::endl;
     }
 }
 

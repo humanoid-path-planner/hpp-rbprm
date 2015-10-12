@@ -68,6 +68,15 @@ namespace hpp {
                                          const std::size_t displacementLimit = 100);
     virtual core::ConfigurationPtr_t shoot () const;
 
+
+    public:
+        /// Sets limits on robot orientation, described according to Euler's ZYX rotation order
+        ///
+        /// \param limitszyx 6D vector with the lower and upperBound for each rotation axis in sequence
+        /// expressed in gradients
+        /// [z_inf, z_sup, y_inf, y_sup, x_inf, x_sup]
+        void BoundSO3(const std::vector<double>& limitszyx);
+
     public:
         typedef std::pair<fcl::Vec3f, TrianglePoints> T_TriangleNormal;
 
@@ -99,6 +108,7 @@ namespace hpp {
         const model::RbPrmDevicePtr_t robot_;
         rbprm::RbPrmValidationPtr_t validator_;
         RbPrmShooterWkPtr_t weak_;
+        model::DevicePtr_t eulerSo3_;
     }; // class RbprmShooter
 /// \}
     } // namespace rbprm
