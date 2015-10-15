@@ -120,10 +120,10 @@ namespace hpp {
         /// heuristic method
         const heuristic evaluate_;
 
-
         friend bool GetCandidates(const SampleContainer& sc, const fcl::Transform3f& treeTrf,
+                                                const fcl::Transform3f& treeTrf2,
                                                 const hpp::model::CollisionObjectPtr_t& o2,
-                                                const fcl::Vec3f& direction, T_OctreeReport& report);
+                                                const fcl::Vec3f& direction, T_OctreeReport& report, const heuristic evaluate);
 
     }; // class SampleContainer
 
@@ -139,8 +139,26 @@ namespace hpp {
     /// heuristically
     /// \return a set of OctreeReport with all the possible candidates for contact
     T_OctreeReport GetCandidates(const SampleContainer& sc, const fcl::Transform3f& treeTrf,
+                                            const fcl::Transform3f& treeTrf2,
                                             const hpp::model::CollisionObjectPtr_t& o2,
                                             const fcl::Vec3f& direction);
+
+    /// Given the current position of a robot, returns a set
+    /// of candidate sample configurations for contact generation.
+    /// The set is strictly ordered using a heuristic to determine
+    /// the most relevant contacts.
+    ///
+    /// \param sc the SampleContainer containing all the samples for a given limb
+    /// \param treeTrf the current transformation of the root of the robot
+    /// \param treeTrf the current transformation of the root of the robot
+    /// \param direction the current direction of motion, used to evaluate the sample
+    /// heuristically
+    /// \param evaluate heuristic used to sort candidates
+    /// \return a set of OctreeReport with all the possible candidates for contact
+    T_OctreeReport GetCandidates(const SampleContainer& sc, const fcl::Transform3f& treeTrf,
+                                            const fcl::Transform3f& treeTrf2,
+                                            const hpp::model::CollisionObjectPtr_t& o2,
+                                            const fcl::Vec3f& direction, const heuristic evaluate);
 
 
     /// Given the current position of a robot, returns a set
@@ -156,8 +174,28 @@ namespace hpp {
     /// \param a set of OctreeReport updated as the samples are explored
     /// \return true if at least one candidate was found
     bool GetCandidates(const SampleContainer& sc, const fcl::Transform3f& treeTrf,
+                                            const fcl::Transform3f& treeTrf2,
                                             const hpp::model::CollisionObjectPtr_t& o2,
                                             const fcl::Vec3f& direction, T_OctreeReport& report);
+
+
+    /// Given the current position of a robot, returns a set
+    /// of candidate sample configurations for contact generation.
+    /// The set is strictly ordered using a heuristic to determine
+    /// the most relevant contacts.
+    ///
+    /// \param sc the SampleContainer containing all the samples for a given limb
+    /// \param treeTrf the current transformation of the root of the robot
+    /// \param treeTrf the current transformation of the root of the robot
+    /// \param direction the current direction of motion, used to evaluate the sample
+    /// heuristically
+    /// \param a set of OctreeReport updated as the samples are explored
+    /// \param evaluate heuristic used to sort candidates
+    /// \return true if at least one candidate was found
+    bool GetCandidates(const SampleContainer& sc, const fcl::Transform3f& treeTrf,
+                                            const fcl::Transform3f& treeTrf2,
+                                            const hpp::model::CollisionObjectPtr_t& o2,
+                                            const fcl::Vec3f& direction, T_OctreeReport& report, const heuristic evaluate);
   } // namespace sampling
 } // namespace rbprm
 } // namespace hpp

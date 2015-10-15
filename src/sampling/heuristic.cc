@@ -15,6 +15,7 @@
 // hpp-rbprm. If not, see <http://www.gnu.org/licenses/>.
 
 #include <hpp/rbprm/sampling/heuristic.hh>
+#include <time.h>
 
 #include <Eigen/Eigen>
 
@@ -36,14 +37,32 @@ double ManipulabilityHeuristic(const sampling::Sample* sample,
                       const Eigen::Vector3d& direction, const Eigen::Vector3d& normal)
 {
     double EFORT = -direction.transpose() * sample->jacobianProduct_.block<3,3>(0,0) * (-direction);
-    return EFORT * (sample->manipulability_ + (direction.dot(normal)));
+    return EFORT *  (sample->manipulability_ + (direction.dot(normal)));
+}
+
+double RandomHeuristic(const sampling::Sample* /*sample*/,
+                      const Eigen::Vector3d& /*direction*/, const Eigen::Vector3d& /*normal*/)
+{
+    //return EFORT *  (sample->manipulability_ + (direction.dot(normal)));
+    return  /*direction.dot(normal) * 10 **/ ((double)rand()) / ((double)(RAND_MAX));
+}
+
+
+double ForwardHeuristic(const sampling::Sample* sample,
+                      const Eigen::Vector3d& direction, const Eigen::Vector3d& normal)
+{
+    //return EFORT *  (sample->manipulability_ + (direction.dot(normal)));
+    return  direction.dot(normal) * 10 * sample->effectorPosition_.dot(fcl::Vec3f(direction(0),direction(1),direction(2))) * ((double)rand()) / ((double)(RAND_MAX));
 }
 }
 
 HeuristicFactory::HeuristicFactory()
 {
+    srand ( (unsigned int) (time(NULL)) );
     heuristics_.insert(std::make_pair("EFORT", &EFORTHeuristic));
     heuristics_.insert(std::make_pair("manipulability", &ManipulabilityHeuristic));
+    heuristics_.insert(std::make_pair("random", &RandomHeuristic));
+    heuristics_.insert(std::make_pair("forward", &ForwardHeuristic));
 }
 
 HeuristicFactory::~HeuristicFactory(){}

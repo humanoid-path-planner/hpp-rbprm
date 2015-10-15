@@ -1,6 +1,7 @@
 Implementation of RB-PRM planner using hpp
 
-
+BUG:
+root mobile, transform root
 
 TODO:
 

@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE (shooterCreationWithSO3Limits) {
     {
         Eigen::VectorXd config =  *(shooter->shoot()) ;
         Eigen::Quaterniond q(config(3),config(4),config(5),config(6));
-        Eigen::Vector3d ea = q.toRotationMatrix().eulerAngles(2, 1, 0);
+        //Eigen::Vector3d ea = q.toRotationMatrix().eulerAngles(2, 1, 0);
         //std::cout << "q " << config << "\n ea " << ea << std::endl;
     }
 }

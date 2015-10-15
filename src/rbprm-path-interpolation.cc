@@ -35,6 +35,17 @@ namespace hpp {
 
     // ========================================================================
 
+    namespace
+    {
+    core::Configuration_t configPosition(core::ConfigurationIn_t previous, const core::PathVectorConstPtr_t path, double i)
+    {
+        core::Configuration_t configuration = previous;
+        const core::Configuration_t configPosition = path->operator ()(std::min(i, path->timeRange().second));
+        configuration.head(configPosition.rows()) = configPosition;
+        return configuration;
+    }
+    }
+
     std::vector<State> RbPrmInterpolation::Interpolate(const model::ObjectVector_t &collisionObjects, const double timeStep)
     {
         int nbFailures = 0;
@@ -47,22 +58,22 @@ namespace hpp {
         for(double i = range.first + timeStep; i< range.second; i+= timeStep)
         {
             const State& previous = states.back();
-            core::Configuration_t configuration = previous.configuration_;
-            const core::Configuration_t configPosition = path_->operator ()(i);
-            Eigen::Vector3d dir = configPosition.head<3>() - previous.configuration_.head<3>();
+            core::Configuration_t configuration = configPosition(previous.configuration_,path_,i);
+            core::Configuration_t nextconfiguration = configPosition(previous.configuration_,path_,i+timeStep);
+            Eigen::Vector3d dir = configuration.head<3>() - previous.configuration_.head<3>();
             fcl::Vec3f direction(dir[0], dir[1], dir[2]);
             bool nonZero(false);
             direction.normalize(&nonZero);
             if(!nonZero) direction = fcl::Vec3f(0,0,1.);
-            configuration.head(configPosition.rows()) = configPosition;
             // TODO Direction 6d
             bool sameAsPrevious(true);
             bool multipleBreaks(false);
-            State newState = ComputeContacts(previous, robot_,configuration,collisionObjects,direction,sameAsPrevious,multipleBreaks,allowFailure);
+            State newState = ComputeContacts(previous, robot_,configuration,nextconfiguration,collisionObjects,direction,sameAsPrevious,multipleBreaks,allowFailure);
             if(allowFailure && multipleBreaks)
             {
                 ++ nbFailures;
                 std::cout << "failed at state " << states.size() +1 << std::endl;
+                i += timeStep;
             }
             if(multipleBreaks && !allowFailure)
             {
@@ -82,32 +93,6 @@ namespace hpp {
         }
         states.push_back(this->end_);
         std::cout << "nbfailure " << nbFailures <<std::endl;
-        return states;
-    }
-
-    std::vector<State> RbPrmInterpolation::Interpolate(const std::vector<core::ConfigurationIn_t>& configurations, const model::ObjectVector_t &collisionObjects)
-    {
-        bool sameAsPrevious;
-        bool multipleBreaks(false);
-        std::vector<State> states;
-        states.push_back(this->start_);
-        bool allowFailure = false;
-        for(std::vector<core::ConfigurationIn_t>::const_iterator cit = configurations.begin();
-            cit != configurations.end(); ++cit)
-        {
-            const State& previous = states.back();
-            core::Configuration_t configuration = previous.configuration_;
-            const core::Configuration_t& configPosition = *cit;
-            Eigen::Vector3d dir = configPosition.head<3>() - previous.configuration_.head<3>();
-            fcl::Vec3f direction(dir[0], dir[1], dir[2]);
-            bool nonZero(false);
-            direction.normalize(&nonZero);
-            if(!nonZero) direction = fcl::Vec3f(0,0,1.);
-            configuration.head(configPosition.rows()) = configPosition;
-            // TODO Direction 6d
-            states.push_back(ComputeContacts(previous, robot_,configuration,collisionObjects,direction,sameAsPrevious,multipleBreaks,allowFailure));
-        }
-        states.push_back(this->end_);
         return states;
     }
 

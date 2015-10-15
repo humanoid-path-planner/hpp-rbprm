@@ -49,7 +49,7 @@ namespace hpp {
     /// \param fullbody The considered robot for static equilibrium
     /// \param state The current State of the robots, in terms of contact creation
     /// \return Whether the configuration is statically balanced
-    bool IsStablePoly(const RbPrmFullBodyPtr_t fullbody, const State& state);
+    bool IsStablePoly(const RbPrmFullBodyPtr_t fullbody, State& state);
 
   } // namespace stability
 } // namespace rbprm

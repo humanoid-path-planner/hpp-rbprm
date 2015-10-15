@@ -58,7 +58,6 @@ namespace hpp {
         /// \param timeStep the discretization step of the path.
         /// \return a pointer to the created RbPrmInterpolation instance
         std::vector<State> Interpolate(const model::ObjectVector_t &collisionObjects, const double timeStep = 0.01);
-        std::vector<State> Interpolate(const std::vector<core::ConfigurationIn_t>& configurations, const model::ObjectVector_t &collisionObjects);
 
     public:
         const core::PathVectorConstPtr_t path_;
