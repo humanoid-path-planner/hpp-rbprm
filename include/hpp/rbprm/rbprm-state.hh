@@ -40,6 +40,9 @@ namespace hpp {
           contactRotation_ = (other.contactRotation_);
       }
 
+
+      ~State(){}
+
         hpp::model::Configuration_t configuration_;
         fcl::Vec3f com_;
         std::map<std::string, bool> contacts_;
@@ -49,6 +52,66 @@ namespace hpp {
         std::queue<std::string> contactOrder_;
         std::size_t nbContacts;
         bool stable;
+
+        State& operator= (const State& other)
+        {
+            if (this != &other) // protect against invalid self-assignment
+            {
+                contacts_ = other.contacts_;
+                contactNormals_ = other.contactNormals_;
+                contactPositions_ = other.contactPositions_;
+                contactRotation_ = other.contactRotation_;
+                contactOrder_ = other.contactOrder_;
+                nbContacts = other.nbContacts;
+                com_ = other.com_;
+                stable = other.stable;
+                configuration_ = other.configuration_;
+            }
+            // by convention, always return *this
+            return *this;
+        }
+
+        bool RemoveContact(const std::string& contactId)
+        {
+            if(contacts_.erase(contactId))
+            {
+                contactNormals_.erase(contactId);
+                contactPositions_.erase(contactId);
+                contactRotation_.erase(contactId);
+                contactNormals_.erase(contactId);
+                --nbContacts;
+                stable = false;
+                std::queue<std::string> newQueue;
+                std::string currentContact;
+                while(!contactOrder_.empty())
+                {
+                    currentContact =  contactOrder_.front();
+                    contactOrder_.pop();
+                    if(contactId != currentContact)
+                    {
+                        newQueue.push(currentContact);
+                    }
+                }
+                contactOrder_ = newQueue;
+                return true;
+            }
+            return false;
+        }
+
+        std::string RemoveFirstContact()
+        {
+            if(contactOrder_.empty()) return "";
+            std::string contactId =  contactOrder_.front();
+            contactOrder_.pop();
+            contacts_.erase(contactId);
+            contactNormals_.erase(contactId);
+            contactPositions_.erase(contactId);
+            contactRotation_.erase(contactId);
+            contactNormals_.erase(contactId);
+            stable = false;
+            --nbContacts;
+            return contactId;
+        }
 
         void print() const
         {

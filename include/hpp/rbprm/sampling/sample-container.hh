@@ -116,7 +116,7 @@ namespace hpp {
         /// Samples sorted by voxel id in the octree
         const T_VoxelSample voxelSamples_;
         /// Bounding boxes of areas of interest of the octree
-        const std::vector<fcl::CollisionObject*> boxes_;
+        const std::map<std::size_t, fcl::CollisionObject*> boxes_;
         /// heuristic method
         const heuristic evaluate_;
 

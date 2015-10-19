@@ -46,11 +46,12 @@ using namespace fcl;
         return octTree;
     }
 
-    std::vector<fcl::CollisionObject*> generateBoxesFromOctomap(const fcl::OcTree* tree)
+    std::map<std::size_t, fcl::CollisionObject*> generateBoxesFromOctomap(const boost::shared_ptr<const octomap::OcTree>& octTree,
+                                                                const fcl::OcTree* tree)
     {
-        std::vector<fcl::CollisionObject*> boxes;
+        std::map<std::size_t, fcl::CollisionObject*> boxes;
         std::vector<boost::array<FCL_REAL, 6> > boxes_ = tree->toBoxes();
-        boxes.reserve(boxes_.size());
+        //boxes.reserve(boxes_.size());
         for(std::size_t i = 0; i < boxes_.size(); ++i)
         {
             FCL_REAL x = boxes_[i][0];
@@ -59,12 +60,13 @@ using namespace fcl;
             FCL_REAL size = boxes_[i][3];
             FCL_REAL cost = boxes_[i][4];
             FCL_REAL threshold = boxes_[i][5];
+            std::size_t id = octTree->search(x,y,z) - octTree->getRoot();
 
             Box* box = new Box(size, size, size);
             box->cost_density = cost;
             box->threshold_occupied = threshold;
             fcl::CollisionObject* obj = new fcl::CollisionObject(boost::shared_ptr<fcl::CollisionGeometry>(box), Transform3f(Vec3f(x, y, z)));
-            boxes.push_back(obj);
+            boxes.insert(std::make_pair(id,obj));
         }
         return boxes;
     }
@@ -124,7 +126,7 @@ namespace
      , pImpl_(new SamplePImpl(samples_, resolution))
      , treeObject_(pImpl_->geometry_)
      , voxelSamples_(SortSamples(pImpl_->octomapTree_,samples_))
-     , boxes_(generateBoxesFromOctomap(pImpl_->octree_))
+     , boxes_(generateBoxesFromOctomap(pImpl_->octomapTree_, pImpl_->octree_))
      , evaluate_(&DefaultHeuristic)
  {
      // NOTHING
@@ -135,7 +137,7 @@ SampleContainer::SampleContainer(const model::JointPtr_t limb, const std::string
     , pImpl_(new SamplePImpl(samples_, resolution))
     , treeObject_(pImpl_->geometry_)
     , voxelSamples_(SortSamples(pImpl_->octomapTree_,samples_))
-    , boxes_(generateBoxesFromOctomap(pImpl_->octree_))
+    , boxes_(generateBoxesFromOctomap(pImpl_->octomapTree_, pImpl_->octree_))
     , evaluate_(evaluate)
 {
     // NOTHING
@@ -145,10 +147,10 @@ SampleContainer::SampleContainer(const model::JointPtr_t limb, const std::string
 
 SampleContainer::~SampleContainer()
 {
-    for (std::vector<fcl::CollisionObject*>::const_iterator it = boxes_.begin();
+    for (std::map<std::size_t, fcl::CollisionObject*>::const_iterator it = boxes_.begin();
          it != boxes_.end(); ++it)
     {
-        delete *it;
+        delete it->second;
     }
 }
 
@@ -164,11 +166,13 @@ OctreeReport::OctreeReport(const Sample* s, const fcl::Contact c, const double v
 
 // TODO Samples should be Vec3f
 bool rbprm::sampling::GetCandidates(const SampleContainer& sc, const fcl::Transform3f& treeTrf,
-                                    const fcl::Transform3f& /*treeTrf2*/,
+                                    const fcl::Transform3f& treeTrf2,
                                     const hpp::model::CollisionObjectPtr_t& o2,
                                     const fcl::Vec3f& direction, hpp::rbprm::sampling::T_OctreeReport &reports,
                                     const heuristic evaluate)
 {
+    bool nextDiffers = treeTrf.getQuatRotation() != treeTrf2.getQuatRotation() ||
+            (treeTrf.getTranslation() - treeTrf2.getTranslation()).norm() > 10e-3;
     fcl::CollisionRequest req(1000, true);
     fcl::CollisionResult cResult;
     fcl::CollisionObjectPtr_t obj = o2->fcl();
@@ -184,25 +188,39 @@ bool rbprm::sampling::GetCandidates(const SampleContainer& sc, const fcl::Transf
         if(std::find(visited.begin(), visited.end(), contact.b1) == visited.end())
         {
             visited.push_back(contact.b1);
-            voxelIt = sc.voxelSamples_.find(contact.b1);
-            const std::vector<const sampling::Sample*>& samples = voxelIt->second;
-            for(std::vector<const sampling::Sample*>::const_iterator sit = samples.begin();
-                sit != samples.end(); ++sit)
+            //verifying that position is theoritically reachable from next position
+            bool intersectNext = !nextDiffers;
+            if(nextDiffers)
             {
-                //find normal id
-                assert(contact.o2->getObjectType() == fcl::OT_BVH); // only works with meshes
-                const fcl::BVHModel<fcl::OBBRSS>* surface = static_cast<const fcl::BVHModel<fcl::OBBRSS>*> (contact.o2);
-                fcl::Vec3f normal; // = -bestReport.contact_.normal;
+                fcl::CollisionRequest reqTrees;
+                fcl::CollisionResult cResultTrees;
+                const fcl::CollisionObject* box = sc.boxes_.at(contact.b1);
+                fcl::Transform3f pos = treeTrf;
+                pos.setTranslation(pos.getTranslation() + box->getTranslation());
+                intersectNext = fcl::collide(box->collisionGeometry().get(), pos, sc.pImpl_->geometry_.get(),treeTrf2, reqTrees, cResultTrees);
+            }
+            if(intersectNext)
+            {
+                voxelIt = sc.voxelSamples_.find(contact.b1);
+                const std::vector<const sampling::Sample*>& samples = voxelIt->second;
+                for(std::vector<const sampling::Sample*>::const_iterator sit = samples.begin();
+                    sit != samples.end(); ++sit)
+                {
+                    //find normal id
+                    assert(contact.o2->getObjectType() == fcl::OT_BVH); // only works with meshes
+                    const fcl::BVHModel<fcl::OBBRSS>* surface = static_cast<const fcl::BVHModel<fcl::OBBRSS>*> (contact.o2);
+                    fcl::Vec3f normal; // = -bestReport.contact_.normal;
 
-                const fcl::Triangle& tr = surface->tri_indices[contact.b2];
-                const fcl::Vec3f& v1 = surface->vertices[tr[0]];
-                const fcl::Vec3f& v2 = surface->vertices[tr[1]];
-                const fcl::Vec3f& v3 = surface->vertices[tr[2]];
-                normal = (v2 - v1).cross(v3 - v1);
-                normal.normalize();
-                Eigen::Vector3d eNormal(normal[0], normal[1], normal[2]);
-                OctreeReport report(*sit, contact,(*evaluate)(*sit, eDir, eNormal), normal);
-                reports.insert(report);
+                    const fcl::Triangle& tr = surface->tri_indices[contact.b2];
+                    const fcl::Vec3f& v1 = surface->vertices[tr[0]];
+                    const fcl::Vec3f& v2 = surface->vertices[tr[1]];
+                    const fcl::Vec3f& v3 = surface->vertices[tr[2]];
+                    normal = (v2 - v1).cross(v3 - v1);
+                    normal.normalize();
+                    Eigen::Vector3d eNormal(normal[0], normal[1], normal[2]);
+                    OctreeReport report(*sit, contact,(*evaluate)(*sit, eDir, eNormal), normal);
+                    reports.insert(report);
+                }
             }
         }
     }

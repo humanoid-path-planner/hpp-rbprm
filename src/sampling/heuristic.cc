@@ -34,17 +34,17 @@ double EFORTHeuristic(const sampling::Sample* sample,
 }
 
 double ManipulabilityHeuristic(const sampling::Sample* sample,
-                      const Eigen::Vector3d& direction, const Eigen::Vector3d& normal)
+                      const Eigen::Vector3d& direction, const Eigen::Vector3d& /*normal*/)
 {
     double EFORT = -direction.transpose() * sample->jacobianProduct_.block<3,3>(0,0) * (-direction);
-    return EFORT *  (sample->manipulability_ + (direction.dot(normal)));
+    return EFORT *  (sample->manipulability_ * 10000 /*(direction.dot(normal)))*/) + ((double)rand()) / ((double)(RAND_MAX));
 }
 
 double RandomHeuristic(const sampling::Sample* /*sample*/,
-                      const Eigen::Vector3d& /*direction*/, const Eigen::Vector3d& /*normal*/)
+                      const Eigen::Vector3d& /*direction*/, const Eigen::Vector3d& normal)
 {
     //return EFORT *  (sample->manipulability_ + (direction.dot(normal)));
-    return  /*direction.dot(normal) * 10 **/ ((double)rand()) / ((double)(RAND_MAX));
+    return  Eigen::Vector3d::UnitZ().dot(normal) * 10 + ((double)rand()) / ((double)(RAND_MAX));
 }
 
 
@@ -52,7 +52,7 @@ double ForwardHeuristic(const sampling::Sample* sample,
                       const Eigen::Vector3d& direction, const Eigen::Vector3d& normal)
 {
     //return EFORT *  (sample->manipulability_ + (direction.dot(normal)));
-    return  direction.dot(normal) * 10 * sample->effectorPosition_.dot(fcl::Vec3f(direction(0),direction(1),direction(2))) * ((double)rand()) / ((double)(RAND_MAX));
+    return sample->manipulability_ * 10000 * Eigen::Vector3d::UnitZ().dot(normal) * 10  + sample->effectorPosition_.dot(fcl::Vec3f(direction(0),direction(1),direction(2))) + ((double)rand()) / ((double)(RAND_MAX));
 }
 }
 

@@ -89,7 +89,7 @@ namespace hpp {
                 states.pop_back();
             }
             states.push_back(newState);
-            allowFailure = nbRecontacts > robot_->GetLimbs().size();
+            allowFailure = nbRecontacts > robot_->GetLimbs().size() + 8;
         }
         states.push_back(this->end_);
         std::cout << "nbfailure " << nbFailures <<std::endl;
