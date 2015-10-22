@@ -272,7 +272,7 @@ namespace hpp {
             else
             {
                 contactMaintained = false;
-                std::cout << "\t breaking contact (invalid configuration) " << name << " posi " << ppos << std::endl;
+//std::cout << "\t breaking contact (invalid configuration) " << name << " posi " << ppos << std::endl;
                 ComputeCollisionFreeConfiguration(body,current,limbValidations.at(name),limb,current.configuration_,false);
                 brokenContacts.push_back(name);
             }
@@ -284,7 +284,7 @@ namespace hpp {
             contactMaintained = false;
             multipleBreaks = true;
             // replanning for last contact created.
-    std::cout << "*********** MULTI CONTACT BREK ****** " << brokenContacts.size() << " " << std::endl;
+// std::cout << "*********** MULTI CONTACT BREK ****** " << brokenContacts.size() << " " << std::endl;
         }
         return current;
     }
@@ -350,7 +350,7 @@ namespace hpp {
       {
           finalSet.insert(cit->begin(), cit->end());
       }
-std::cout << "candidates " << finalSet.size() << std::endl;
+//std::cout << "candidates " << finalSet.size() << std::endl;
       // pick first sample which is collision free
       bool found_sample(false);
       bool unstableContact(false); //set to true in case no stable contact is found
@@ -520,7 +520,7 @@ std::cout << "candidates " << finalSet.size() << std::endl;
             std::string previousContactName = oldOrder.front();
             std::string groupName = body->GetLimbs().at(previousContactName)->limb_->name();
             const std::vector<std::string>& group = body->GetGroups().at(groupName);
-            std::cout << " testing state " << groupName << std::endl;
+//std::cout << " testing state " << groupName << std::endl;
             oldOrder.pop();
             fcl::Vec3f normal, position;
             core::ConfigurationIn_t save = body->device_->currentConfiguration();
@@ -644,12 +644,12 @@ std::cout << "candidates " << finalSet.size() << std::endl;
         if(contactMaintained)
         {
             contactMaintained = false;
-            std::cout << "replanning unstable state " << id+1 << std::endl;
+//std::cout << "replanning unstable state " << id+1 << std::endl;
             RepositionContacts(result, body, body->collisionValidation_, config, collisionObjects, direction);
         }
         else // already broke contact; state is invalid
         {
-std::cout << "contact broken and replaced contact unstable, replanning " << id+1 << std::endl;
+//std::cout << "contact broken and replaced contact unstable, replanning " << id+1 << std::endl;
             fcl::Vec3f normal, position;
             result = previous;
             result.stable = false;

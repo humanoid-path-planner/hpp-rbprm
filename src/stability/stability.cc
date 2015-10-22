@@ -68,7 +68,7 @@ namespace stability{
                 }
                 positions(i+3*c) = transform.getTranslation()[i];
             }
-            frictions(c) = 0.3; // TODO parametrize
+            frictions(c) = 0.1; // TODO parametrize
             xs(c) = limb->x_;
             ys(c) = limb->y_;
         }
@@ -76,7 +76,7 @@ namespace stability{
         return polytope::U_stance(rotations,positions,frictions,xs,ys);
     }
 
-    bool IsStable(const RbPrmFullBodyPtr_t fullbody, State& state)
+    bool IsStablePoly(const RbPrmFullBodyPtr_t fullbody, State& state)
     {
         if(!init)
         {
@@ -116,7 +116,7 @@ namespace stability{
                 }
                 positions(i+3*c) = transform.getTranslation()[i];
             }
-            frictions(c) = 0.7; // TODO parametrize
+            frictions(c) = 0.3; // TODO parametrize
             xs(c) = limb->x_;
             ys(c) = limb->y_;
         }
@@ -147,7 +147,7 @@ namespace stability{
         return false;
     }
 
-    bool IsStablePoly(const RbPrmFullBodyPtr_t fullbody, State& state)
+    bool IsStable(const RbPrmFullBodyPtr_t fullbody, State& state)
     {
         std::vector<std::string> contacts;
         for(std::map<std::string,bool>::const_iterator cit = state.contacts_.begin();

@@ -41,10 +41,10 @@ double ManipulabilityHeuristic(const sampling::Sample* sample,
 }
 
 double RandomHeuristic(const sampling::Sample* /*sample*/,
-                      const Eigen::Vector3d& /*direction*/, const Eigen::Vector3d& normal)
+                      const Eigen::Vector3d& /*direction*/, const Eigen::Vector3d& /*normal*/)
 {
     //return EFORT *  (sample->manipulability_ + (direction.dot(normal)));
-    return  Eigen::Vector3d::UnitZ().dot(normal) * 10 + ((double)rand()) / ((double)(RAND_MAX));
+    return ((double)rand()) / ((double)(RAND_MAX));
 }
 
 
@@ -52,7 +52,7 @@ double ForwardHeuristic(const sampling::Sample* sample,
                       const Eigen::Vector3d& direction, const Eigen::Vector3d& normal)
 {
     //return EFORT *  (sample->manipulability_ + (direction.dot(normal)));
-    return sample->manipulability_ * 10000 * Eigen::Vector3d::UnitZ().dot(normal) * 10  + sample->effectorPosition_.dot(fcl::Vec3f(direction(0),direction(1),direction(2))) + ((double)rand()) / ((double)(RAND_MAX));
+    return sample->manipulability_ * 10000 * Eigen::Vector3d::UnitZ().dot(normal) * 100  + sample->effectorPosition_.dot(fcl::Vec3f(direction(0),direction(1),direction(2))) + ((double)rand()) / ((double)(RAND_MAX));
 }
 }
 
