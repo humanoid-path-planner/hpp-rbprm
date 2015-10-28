@@ -35,13 +35,12 @@ std::size_t ComputeLength(const model::JointPtr_t limb, const model::JointPtr_t 
 }
 
 
-fcl::Vec3f ComputeEffectorPosition(const model::JointPtr_t /*limb*/, const model::JointPtr_t effector, const fcl::Vec3f& offset)
+fcl::Vec3f ComputeEffectorPosition(const model::JointPtr_t limb, const model::JointPtr_t effector, const fcl::Vec3f& offset)
 {
     const fcl::Transform3f& transform = effector->currentTransformation();
-    return transform.getTranslation() + transform.getRotation() * offset ;
-    //fcl::Transform3f parentT = limb->parentJoint()->currentTransformation();
-    //fcl::Matrix3f rot = parentT.getRotation();
-    //return (transform.getTranslation() + offset) - parentT.getTranslation();
+    //return transform.getTranslation() + transform.getRotation() * offset ;
+    fcl::Transform3f parentT = fcl::inverse(limb->parentJoint()->currentTransformation());
+    return (parentT * fcl::Transform3f(transform.getTranslation() + offset)).getTranslation();
 }
 
 Eigen::MatrixXd Jacobian(const model::JointPtr_t limb, const model::JointPtr_t effector)
