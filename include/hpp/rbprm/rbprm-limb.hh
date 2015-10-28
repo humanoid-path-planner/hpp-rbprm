@@ -81,6 +81,9 @@ namespace hpp {
         ~RbPrmLimb();
 
     public:
+        fcl::Transform3f octreeRoot() const;
+
+    public:
         const model::JointPtr_t limb_;
         const model::JointPtr_t effector_;
         const fcl::Matrix3f effectorDefaultRotation_; // effector transform in rest pose

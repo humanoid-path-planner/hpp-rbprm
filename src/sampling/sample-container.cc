@@ -77,7 +77,7 @@ using namespace fcl;
         for(std::deque<Sample>::const_iterator cit=samples.begin(); cit!=samples.end();++cit)
         {
             const fcl::Vec3f& position = cit->effectorPosition_;
-            std::size_t id = octTree->search(position[0],position[1],position[2]) - octTree->getRoot();
+            long int id = octTree->search(position[0],position[1],position[2]) - octTree->getRoot();
             SampleContainer::T_VoxelSample::iterator it = res.find(id);
             if(it!=res.end())
             {
@@ -123,6 +123,7 @@ namespace
 
  SampleContainer::SampleContainer(const model::JointPtr_t limb, const std::string& effector, const std::size_t nbSamples, const Vec3f &offset, const double resolution)
      : samples_(GenerateSamples(limb,effector,nbSamples, offset))
+     , resolution_(resolution)
      , pImpl_(new SamplePImpl(samples_, resolution))
      , treeObject_(pImpl_->geometry_)
      , voxelSamples_(SortSamples(pImpl_->octomapTree_,samples_))
@@ -134,6 +135,7 @@ namespace
 
 SampleContainer::SampleContainer(const model::JointPtr_t limb, const std::string& effector, const std::size_t nbSamples, const hpp::rbprm::sampling::heuristic evaluate, const Vec3f &offset, const double resolution)
     : samples_(GenerateSamples(limb,effector,nbSamples, offset))
+    , resolution_(resolution)
     , pImpl_(new SamplePImpl(samples_, resolution))
     , treeObject_(pImpl_->geometry_)
     , voxelSamples_(SortSamples(pImpl_->octomapTree_,samples_))

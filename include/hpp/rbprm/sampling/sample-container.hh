@@ -70,7 +70,7 @@ namespace hpp {
     class HPP_RBPRM_DLLAPI SampleContainer
     {
     public:
-        typedef std::map<std::size_t, std::vector<const Sample*> > T_VoxelSample;
+        typedef std::map<long int, std::vector<const Sample*> > T_VoxelSample;
 
     public:
         /// Creates Sample from Configuration
@@ -105,6 +105,7 @@ namespace hpp {
     public:
         /// samples generated
         const std::deque<Sample> samples_;
+        const double resolution_;
 
     private:
         /// private implementation

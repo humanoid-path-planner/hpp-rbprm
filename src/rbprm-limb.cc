@@ -102,5 +102,12 @@ namespace hpp {
     {
         // TODO
     }
+
+    fcl::Transform3f RbPrmLimb::octreeRoot() const
+    {
+        hpp::model::Configuration_t config = limb_->robot()->currentConfiguration().head(7);
+        fcl::Quaternion3f quat (config[3],config[4],config[5],config[6]);
+        return fcl::Transform3f(quat,fcl::Vec3f(config[0],config[1],config[2]));
+    }
   } // model
 } //hpp

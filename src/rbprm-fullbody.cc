@@ -235,13 +235,11 @@ namespace hpp {
             //const fcl::Vec3f& pnorm  =previous.contactNormals_.at(name);
             core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-2, 30);
             LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
-const fcl::Vec3f z = limb->effector_->currentTransformation().getRotation() * limb->normal_;
-            //const fcl::Matrix3f alignRotation = tools::GetRotationMatrix(z,previous.contactNormals_.at(name));
-            //const fcl::Matrix3f rotation = alignRotation * limb->effector_->currentTransformation().getRotation();
-const fcl::Matrix3f& rotation = previous.contactRotation_.at(name);
+            const fcl::Vec3f z = limb->effector_->currentTransformation().getRotation() * limb->normal_;
+            const fcl::Matrix3f& rotation = previous.contactRotation_.at(name);
             proj->add(core::NumericalConstraint::create (constraints::Position::create(body->device_, limb->effector_,fcl::Vec3f(0,0,0), ppos /*- rotation * limb->offset_*/)));
             /**/
-proj->add(core::NumericalConstraint::create (constraints::Orientation::create(body->device_,
+            proj->add(core::NumericalConstraint::create (constraints::Orientation::create(body->device_,
                                                                               limb->effector_,
                                                                               rotation,//previous.contactRotation_.at(name),
                                                                               setMaintainRotationConstraints(z))));
@@ -328,12 +326,12 @@ proj->add(core::NumericalConstraint::create (constraints::Orientation::create(bo
 
       limb->limb_->robot()->currentConfiguration(nextrbconfiguration);
       limb->limb_->robot()->computeForwardKinematics ();
-      fcl::Transform3f transformNext = limb->limb_->robot()->rootJoint()->childJoint(0)->currentTransformation (); // get root transform from configuration
+      fcl::Transform3f transformNext = limb->octreeRoot(); // get root transform from configuration
       //fcl::Transform3f transformNext = limb->limb_->parentJoint()->currentTransformation (); // get root transform from configuration
       //transformNext.inverse();
       limb->limb_->robot()->currentConfiguration(rbconfiguration);
       limb->limb_->robot()->computeForwardKinematics ();
-      fcl::Transform3f transform = limb->limb_->robot()->rootJoint()->childJoint(0)->currentTransformation (); // get root transform from configuration
+      fcl::Transform3f transform = limb->octreeRoot(); // get root transform from configuration
       //fcl::Transform3f transform = limb->limb_->parentJoint()->currentTransformation (); // get root transform from configuration
       //transform.inverse();
       std::vector<sampling::T_OctreeReport> reports(collisionObjects.size());
@@ -345,6 +343,7 @@ proj->add(core::NumericalConstraint::create (constraints::Orientation::create(bo
           oit != collisionObjects.end(); ++oit, ++i)
       {
           sampling::GetCandidates(limb->sampleContainer_, transform,transformNext, *oit, direction, reports[i], eval);
+          //sampling::GetCandidates(limb->sampleContainer_, transform,transform, *oit, direction, reports[i], eval);
       }
       // order samples according to EFORT
       for(std::vector<sampling::T_OctreeReport>::const_iterator cit = reports.begin();
