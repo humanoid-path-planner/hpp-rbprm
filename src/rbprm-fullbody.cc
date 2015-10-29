@@ -351,7 +351,7 @@ namespace hpp {
       {
           finalSet.insert(cit->begin(), cit->end());
       }
-      std::cout << "candidates " << limb->effector_->name() << finalSet.size() << std::endl;
+      //std::cout << "candidates " << limb->effector_->name() << ": " << finalSet.size() << std::endl;
       // pick first sample which is collision free
       bool found_sample(false);
       bool unstableContact(false); //set to true in case no stable contact is found

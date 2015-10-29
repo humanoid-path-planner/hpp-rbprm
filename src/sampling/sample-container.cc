@@ -183,28 +183,34 @@ bool rbprm::sampling::GetCandidates(const SampleContainer& sc, const fcl::Transf
     //const fcl::Vec3f rotatedDir = treeTrf.getRotation() * direction;
     Eigen::Vector3d eDir(direction[0], direction[1], direction[2]);
     //Eigen::Vector3d eRotDir(rotatedDir[0], rotatedDir[1], rotatedDir[2]);
-    std::vector<int> visited;
+    std::vector<long int> visited;
+    std::vector<long int> intersecting;
+    int totalSamples = 0;
     for(std::size_t index=0; index<cResult.numContacts(); ++index)
     {
         const Contact& contact = cResult.getContact(index);
         if(std::find(visited.begin(), visited.end(), contact.b1) == visited.end())
         {
-            visited.push_back(contact.b1);
+            //visited.push_back(contact.b1);
             //verifying that position is theoritically reachable from next position
-            bool intersectNext = !nextDiffers;
-            if(nextDiffers)
+            bool intersectNext = !nextDiffers ||
+                    std::find(intersecting.begin(), intersecting.end(), contact.b1) != intersecting.end();
+            if(nextDiffers && !intersectNext)
             {
                 fcl::CollisionRequest reqTrees;
                 fcl::CollisionResult cResultTrees;
                 const fcl::CollisionObject* box = sc.boxes_.at(contact.b1);
-                fcl::Transform3f pos = treeTrf;
-                pos.setTranslation(pos.getTranslation() + box->getTranslation());
-                intersectNext = fcl::collide(box->collisionGeometry().get(), pos, sc.pImpl_->geometry_.get(),treeTrf2, reqTrees, cResultTrees);
+                /*fcl::Transform3f pos = treeTrf;
+                pos.setTranslation(pos.getTranslation() + box->getTranslation());*/
+                intersectNext = fcl::collide(box->collisionGeometry().get(), treeTrf, sc.pImpl_->geometry_.get(),treeTrf2, reqTrees, cResultTrees);
+                if(intersectNext)
+                    intersecting.push_back(contact.b1);
             }
             if(intersectNext)
             {
                 voxelIt = sc.voxelSamples_.find(contact.b1);
                 const std::vector<const sampling::Sample*>& samples = voxelIt->second;
+                totalSamples += (int)samples.size();
                 for(std::vector<const sampling::Sample*>::const_iterator sit = samples.begin();
                     sit != samples.end(); ++sit)
                 {
@@ -226,6 +232,7 @@ bool rbprm::sampling::GetCandidates(const SampleContainer& sc, const fcl::Transf
             }
         }
     }
+    //std::cout << "total samples " << totalSamples << std::endl;
     return !reports.empty();
 }
 
