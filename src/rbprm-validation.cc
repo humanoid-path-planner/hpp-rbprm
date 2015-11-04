@@ -65,7 +65,14 @@ namespace hpp {
         , romValidations_(createRomValidations(robot, normalFilters))
         , defaultFilter_(filter)
     {
-        // NOTHING
+        for(std::vector<std::string>::const_iterator cit = defaultFilter_.begin();
+            cit != defaultFilter_.end(); ++cit)
+        {
+            if(romValidations_.find(*cit) == romValidations_.end())
+            {
+                std::cout << "warning: default filter impossible to match in rbprmshooter" << std::endl;
+            }
+        }
     }
 
     bool RbPrmValidation::validateRoms(const core::Configuration_t& config,
@@ -82,6 +89,8 @@ namespace hpp {
                 ++filterMatch;
             }
         }
+        /*std::string tr = (filterMatch >= filter.size()) ? "true" : "false";
+        std::cout << " validate romes ?" << filterMatch << " " <<  tr << std::endl;*/
         return filterMatch >= filter.size();
     }
 

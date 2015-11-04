@@ -57,7 +57,7 @@ namespace hpp {
         }
     };
 
-    typedef std::set<OctreeReport, sample_compare> T_OctreeReport;
+    typedef std::multiset<OctreeReport, sample_compare> T_OctreeReport;
 
     /// Sample container for a given limb of a robot.
     /// Stores a list of Sample in two ways: a deque,

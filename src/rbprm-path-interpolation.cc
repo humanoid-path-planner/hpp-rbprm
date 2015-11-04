@@ -74,6 +74,7 @@ namespace hpp {
                 ++ nbFailures;
                 std::cout << "failed at state " << states.size() +1 << std::endl;
                 i += timeStep;
+if (nbFailures > 1) return states;
             }
             if(multipleBreaks && !allowFailure)
             {

@@ -30,7 +30,7 @@ double EFORTHeuristic(const sampling::Sample* sample,
                       const Eigen::Vector3d& direction, const Eigen::Vector3d& normal)
 {
     double EFORT = -direction.transpose() * sample->jacobianProduct_.block<3,3>(0,0) * (-direction);
-    return EFORT * direction.dot(normal);
+    return EFORT * Eigen::Vector3d::UnitZ().dot(normal);
 }
 
 double ManipulabilityHeuristic(const sampling::Sample* sample,

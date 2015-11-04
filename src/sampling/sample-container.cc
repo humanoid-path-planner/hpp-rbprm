@@ -186,12 +186,15 @@ bool rbprm::sampling::GetCandidates(const SampleContainer& sc, const fcl::Transf
     std::vector<long int> visited;
     std::vector<long int> intersecting;
     int totalSamples = 0;
+    int total_rejected = 0;
+    int okay = 0;
     for(std::size_t index=0; index<cResult.numContacts(); ++index)
     {
         const Contact& contact = cResult.getContact(index);
-        if(std::find(visited.begin(), visited.end(), contact.b1) == visited.end())
+        if(true)
         {
-            //visited.push_back(contact.b1);
+            if(std::find(visited.begin(), visited.end(), contact.b1) == visited.end())
+                visited.push_back(contact.b1);
             //verifying that position is theoritically reachable from next position
             bool intersectNext = !nextDiffers ||
                     std::find(intersecting.begin(), intersecting.end(), contact.b1) != intersecting.end();
@@ -206,7 +209,7 @@ bool rbprm::sampling::GetCandidates(const SampleContainer& sc, const fcl::Transf
                 if(intersectNext)
                     intersecting.push_back(contact.b1);
             }
-            if(intersectNext)
+            if(true || intersectNext)
             {
                 voxelIt = sc.voxelSamples_.find(contact.b1);
                 const std::vector<const sampling::Sample*>& samples = voxelIt->second;
@@ -227,12 +230,21 @@ bool rbprm::sampling::GetCandidates(const SampleContainer& sc, const fcl::Transf
                     normal.normalize();
                     Eigen::Vector3d eNormal(normal[0], normal[1], normal[2]);
                     OctreeReport report(*sit, contact,(*evaluate)(*sit, eDir, eNormal), normal);
+                    ++okay;
                     reports.insert(report);
                 }
             }
+            else
+            {
+                total_rejected +=1;
+            }
         }
     }
-    //std::cout << "total samples " << totalSamples << std::endl;
+
+/*std::cout << "numcontact " << visited.size();
+std::cout << "okay " << okay;
+std::cout << "total_rejected " << total_rejected;
+std::cout << "total samples " << totalSamples << std::endl;*/
     return !reports.empty();
 }
 

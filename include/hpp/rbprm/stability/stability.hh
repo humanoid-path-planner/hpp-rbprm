@@ -40,7 +40,7 @@ namespace hpp {
     /// \param fullbody The considered robot for static equilibrium
     /// \param state The current State of the robots, in terms of contact creation
     /// \return Whether the configuration is statically balanced
-    bool IsStable(const RbPrmFullBodyPtr_t fullbody, State& state);
+    double IsStable(const RbPrmFullBodyPtr_t fullbody, State& state);
 
     /// Using the convex hull of the contact points, performs a static equilibrium test on the robot.
     /// This test is much faster than the polytope projection, but only accurate of contacts are coplanar,
@@ -49,7 +49,7 @@ namespace hpp {
     /// \param fullbody The considered robot for static equilibrium
     /// \param state The current State of the robots, in terms of contact creation
     /// \return Whether the configuration is statically balanced
-    bool IsStablePoly(const RbPrmFullBodyPtr_t fullbody, State& state);
+    double IsStablePoly(const RbPrmFullBodyPtr_t fullbody, State& state);
 
   } // namespace stability
 } // namespace rbprm

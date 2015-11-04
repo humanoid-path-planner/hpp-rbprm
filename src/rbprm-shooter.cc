@@ -49,19 +49,42 @@ namespace
         return sqrt(s * (s-a) * (s-b) * (s-c));
     }
 
-    void SetConfigTranslation(ConfigurationPtr_t config, const Vec3f& translation)
+    std::vector<double> getTranslationBounds(const model::RbPrmDevicePtr_t robot)
     {
-        for(int i =0; i<3; ++i)
+        const JointPtr_t root = robot->rootJoint();
+        std::vector<double> res;
+        for(std::size_t i =0; i<3; ++i)
         {
-            (*config)(i)=translation[i];
+            if(root->isBounded(i))
+            {
+                res.push_back(root->lowerBound(i));
+                res.push_back(root->upperBound(i));
+            }
+            else            {
+
+                res.push_back(-std::numeric_limits<double>::max());
+                res.push_back(std::numeric_limits<double>::max());
+            }
+        }
+        return res;
+    }
+
+    void SetConfigTranslation(const model::RbPrmDevicePtr_t robot, ConfigurationPtr_t config, const Vec3f& translation)
+    {
+        std::vector<double> bounds = getTranslationBounds(robot);
+        for(std::size_t i =0; i<3; ++i)
+        {
+            (*config)(i)= std::min(bounds[2*i+1], std::max(bounds[2*i], translation[i]));
         }
     }
 
-    void Translate(ConfigurationPtr_t config, const Vec3f& translation)
+    void Translate(const model::RbPrmDevicePtr_t robot, ConfigurationPtr_t config, const Vec3f& translation)
     {
+        // bound to positions limits
+        std::vector<double> bounds = getTranslationBounds(robot);
         for(int i =0; i<3; ++i)
         {
-            (*config)(i)+=translation[i];
+            (*config)(i)=std::min(bounds[2*i+1], std::max(bounds[2*i], (*config)(i)+translation[i]));
         }
     }
 
@@ -252,9 +275,6 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
     JointVector_t jv = robot_->getJointVector ();
     ConfigurationPtr_t config (new Configuration_t (robot_->Device::currentConfiguration()));
     std::size_t limit = shootLimit_;
-
-
-
     bool found(false);
     while(limit >0 && !found)
     {
@@ -273,7 +293,7 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
                 + (sqrt(r1) * r2) * tri.p3;
 
         //set configuration position to sampled point
-        SetConfigTranslation(config, p);
+        SetConfigTranslation(robot_,config, p);
         SampleRotation(eulerSo3_, config, jv);
         // rotate and translate randomly until valid configuration found or
         // no obstacle is reachable
@@ -297,7 +317,7 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
                     found = validator_->validate(*config, unusedreport, filter_);
                     if(!found)
                     {
-                        Translate(config, -lastDirection *
+                        Translate(robot_, config, -lastDirection *
                                   1 * ((double) rand() / (RAND_MAX)));
                     }
                     found = validator_->validate(*config, unusedreport, filter_);
@@ -312,7 +332,7 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
                 // v0 move away from normal
                 //get normal from collision tri
                 lastDirection = triangles_[report.result.getContact(0).b2].first;
-                Translate(config, -lastDirection *
+                Translate(robot_,config, -lastDirection *
                           (std::abs(report.result.getContact(0).penetration_depth) +0.03));
                  limitDis--;
             }
