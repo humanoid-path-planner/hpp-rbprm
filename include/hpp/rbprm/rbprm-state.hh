@@ -33,6 +33,7 @@ namespace hpp {
           , contactOrder_(other.contactOrder_)
           , nbContacts(other.nbContacts)
           , stable(other.stable)
+          , robustness(other.robustness)
       {
           contacts_= (other.contacts_);
           contactNormals_ = (other.contactNormals_);
@@ -52,6 +53,7 @@ namespace hpp {
         std::queue<std::string> contactOrder_;
         std::size_t nbContacts;
         bool stable;
+        double robustness;
 
         State& operator= (const State& other)
         {
@@ -131,6 +133,7 @@ namespace hpp {
             }
 
             std::cout << "\t stable " << this->stable  << std::endl;
+            std::cout << "\t robustness " << this->robustness  << std::endl;
 
             /*std::cout << " \t positions " << std::endl;
             for(std::map<std::string, fcl::Vec3f>::const_iterator cit =

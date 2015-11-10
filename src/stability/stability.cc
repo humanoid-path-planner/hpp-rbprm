@@ -85,12 +85,14 @@ namespace stability{
             const RbPrmLimbPtr_t limb =fullbody->GetLimbs().at(contacts[c]);
             const fcl::Vec3f& n = state.contactNormals_.at(contacts[c]);
             Vector3 normal(n[0],n[1],n[2]);
+//if(normal.dot(Vector3(0,0,1)) < 0.3) return false;
             computeRectangleContact(limb,positions.middleRows<4>(c*4));
             for(int i =0; i < 4; ++i)
             {
                 normals.middleRows<1>(4*c+i) = normal;
             }
         }
+//return true;
         robust_equilibrium::Vector3 com;
         const fcl::Vec3f comfcl = fullbody->device_->positionCenterOfMass();
         state.com_ = comfcl;
@@ -99,8 +101,14 @@ namespace stability{
         StaticEquilibrium staticEquilibrium(fullbody->device_->name(), fullbody->device_->mass(),4,SOLVER_LP_QPOASES);
         staticEquilibrium.setNewContacts(positions,normals,frictions,STATIC_EQUILIBRIUM_ALGORITHM_DLP);
         double res;
-        if(staticEquilibrium.computeEquilibriumRobustness(com,res) != LP_STATUS_OPTIMAL)
+        LP_status status = staticEquilibrium.computeEquilibriumRobustness(com,res);
+        if(status != LP_STATUS_OPTIMAL)
+        {
+            //std::cout << "nb contacts " << nbContacts << " normals " << normals << std::endl;
+            if(status == LP_STATUS_INFEASIBLE || status == LP_STATUS_UNBOUNDED)
+                return 1.1; // completely arbitrary: TODO
             return -std::numeric_limits<double>::max();
+        }
         return res ;
     }
 
