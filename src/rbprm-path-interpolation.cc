@@ -49,7 +49,7 @@ namespace hpp {
     std::vector<State> RbPrmInterpolation::Interpolate(const model::ObjectVector_t &collisionObjects, const double timeStep)
     {
         int nbFailures = 0;
-        std::cout << "interpolation " << std::endl;
+//std::cout << "interpolation " << std::endl;
         std::vector<State> states;
         states.push_back(this->start_);
         const core::interval_t& range = path_->timeRange();
@@ -72,7 +72,7 @@ namespace hpp {
             if(allowFailure && multipleBreaks)
             {
                 ++ nbFailures;
-                std::cout << "failed at state " << states.size() +1 << std::endl;
+//std::cout << "failed at state " << states.size() +1 << std::endl;
                 i += timeStep;
 if (nbFailures > 1) return states;
             }
@@ -93,7 +93,7 @@ if (nbFailures > 1) return states;
             allowFailure = nbRecontacts > robot_->GetLimbs().size() + 8;
         }
         states.push_back(this->end_);
-        std::cout << "nbfailure " << nbFailures <<std::endl;
+//std::cout << "nbfailure " << nbFailures <<std::endl;
         return states;
     }
 

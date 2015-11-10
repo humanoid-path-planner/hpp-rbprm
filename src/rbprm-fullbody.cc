@@ -481,20 +481,20 @@ const fcl::Matrix3f& rotation = previous.contactRotation_.at(name);
       else if(unstableContact)
       {          
           status = UNSTABLE_CONTACT;
-std::cout << "no stable contact found, chose one anyway " << limbId << std::endl;
+//std::cout << "no stable contact found, chose one anyway " << limbId << std::endl;
           //found_sample = true;
           configuration = moreRobust;
       }
       else
       {
-std::cout << "did not find any contact"  << limbId << std::endl;
+//std::cout << "did not find any contact"  << limbId << std::endl;
           if(!found_sample)
           {
               ComputeCollisionFreeConfiguration(body, current, validation, limb, configuration,false);
           }
           if(apply)
           {
-std::cout << "too many collisions found " << std::endl;
+//std::cout << "too many collisions found " << std::endl;
           }
       }
       if(found_sample || unstableContact)
@@ -696,7 +696,7 @@ static int id = 0;
                                      configuration, nextconfiguration, config,
                                      collisionObjects,direction,position, normal) != STABLE_CONTACT)
                 {
-std::cout << "could not replace contact " << replaceContact << " " << id+1 << std::endl;
+//std::cout << "could not replace contact " << replaceContact << " " << id+1 << std::endl;
                     multipleBreaks = true;
                     result = previous;
                     result.contactOrder_.pop();
@@ -709,13 +709,13 @@ std::cout << "could not replace contact " << replaceContact << " " << id+1 << st
             return result;
         }
     }
-    double stab =  stability::IsStable(body,result);
-    std::cout << "state " << ++id << " stable ? " << stab << " " << result.stable << std::endl;
-    if(stab <0 && result.stable)
+    //double stab =  stability::IsStable(body,result);
+    //std::cout << "state " << ++id << " stable ? " << stab << " " << result.stable << std::endl;
+    /*if(stab <0 && result.stable)
     {
         std::cout << "error " << std::endl;
         result.stable = false;
-    }
+    }*/
     body->device_->currentConfiguration(save);    
     body->device_->controlComputation (flag);
     result.nbContacts = result.contactNormals_.size();

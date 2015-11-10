@@ -240,11 +240,6 @@ bool rbprm::sampling::GetCandidates(const SampleContainer& sc, const fcl::Transf
             }
         }
     }
-
-/*std::cout << "numcontact " << visited.size();
-std::cout << "okay " << okay;
-std::cout << "total_rejected " << total_rejected;
-std::cout << "total samples " << totalSamples << std::endl;*/
     return !reports.empty();
 }
 
