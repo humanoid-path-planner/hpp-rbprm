@@ -27,6 +27,10 @@ SET(PROJECT_DESCRIPTION
  )
  SET(PROJECT_URL "")
 
+
+# Set to 1 for profiling
+add_definitions(-DPROFILE)
+
 # Where to compile shared objects
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
@@ -64,12 +68,14 @@ SET(${PROJECT_NAME}_HEADERS
     include/hpp/rbprm/stability/stability.hh
     include/hpp/rbprm/stability/support.hh
     include/hpp/rbprm/tools.hh
+    include/hpp/rbprm/rbprm-profiler.hh
+    include/utils/Stdafx.hh
+    include/utils/stop-watch.hh
   )
 
 ADD_SUBDIRECTORY(src)
 #ADD_SUBDIRECTORY(tools)
 ADD_SUBDIRECTORY(tests)
-
 
 SETUP_PROJECT_FINALIZE()
 string (REPLACE "-Werror" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})

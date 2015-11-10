@@ -31,6 +31,10 @@
 #include <map>
 #include <string>
 
+#ifdef PROFILE
+    #include "hpp/rbprm/rbprm-profiler.hh"
+#endif
+
 using namespace hpp;
 using namespace hpp::core;
 using namespace hpp::model;
@@ -98,10 +102,18 @@ namespace stability{
         state.com_ = comfcl;
         for(int i=0; i< 3; ++i) com(i)=comfcl[i];
         fullbody->device_->currentConfiguration(save);
+#ifdef PROFILE
+    RbPrmProfiler& watch = getRbPrmProfiler();
+    watch.start("test balance");
+#endif
         StaticEquilibrium staticEquilibrium(fullbody->device_->name(), fullbody->device_->mass(),4,SOLVER_LP_QPOASES);
         staticEquilibrium.setNewContacts(positions,normals,frictions,STATIC_EQUILIBRIUM_ALGORITHM_DLP);
         double res;
+
         LP_status status = staticEquilibrium.computeEquilibriumRobustness(com,res);
+#ifdef PROFILE
+    watch.stop("test balance");
+#endif
         if(status != LP_STATUS_OPTIMAL)
         {
             //std::cout << "nb contacts " << nbContacts << " normals " << normals << std::endl;

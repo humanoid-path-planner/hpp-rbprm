@@ -17,6 +17,10 @@
 #include <hpp/rbprm/rbprm-path-interpolation.hh>
 #include <hpp/rbprm/stability/stability.hh>
 
+#ifdef PROFILE
+    #include "hpp/rbprm/rbprm-profiler.hh"
+#endif
+
 namespace hpp {
   namespace rbprm {
 
@@ -55,6 +59,10 @@ namespace hpp {
         const core::interval_t& range = path_->timeRange();
         std::size_t nbRecontacts = 0;
         bool allowFailure = true;
+#ifdef PROFILE
+    RbPrmProfiler& watch = getRbPrmProfiler();
+    watch.start("complete generation");
+#endif
         for(double i = range.first + timeStep; i< range.second; i+= timeStep)
         {
             const State& previous = states.back();
@@ -94,6 +102,10 @@ if (nbFailures > 1) return states;
         }
         states.push_back(this->end_);
 //std::cout << "nbfailure " << nbFailures <<std::endl;
+#ifdef PROFILE
+        watch.stop("complete generation");
+        watch.report_all_and_count();
+#endif
         return states;
     }
 

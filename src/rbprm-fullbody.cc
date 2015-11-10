@@ -30,6 +30,10 @@
 
 #include <stack>
 
+#ifdef PROFILE
+    #include "hpp/rbprm/rbprm-profiler.hh"
+#endif
+
 namespace hpp {
   namespace rbprm {
 
@@ -477,6 +481,10 @@ const fcl::Matrix3f& rotation = previous.contactRotation_.at(name);
       {
           status = STABLE_CONTACT;
           current.stable = true;
+#ifdef PROFILE
+    RbPrmProfiler& watch = getRbPrmProfiler();
+    watch.add_to_count("contact", 1);
+#endif
       }
       else if(unstableContact)
       {          
@@ -484,9 +492,17 @@ const fcl::Matrix3f& rotation = previous.contactRotation_.at(name);
 //std::cout << "no stable contact found, chose one anyway " << limbId << std::endl;
           //found_sample = true;
           configuration = moreRobust;
+#ifdef PROFILE
+    RbPrmProfiler& watch = getRbPrmProfiler();
+    watch.add_to_count("unstable contact", 1);
+#endif
       }
       else
       {
+#ifdef PROFILE
+    RbPrmProfiler& watch = getRbPrmProfiler();
+    watch.add_to_count("no contact", 1);
+#endif
 //std::cout << "did not find any contact"  << limbId << std::endl;
           if(!found_sample)
           {
