@@ -52,6 +52,10 @@ if(OPENMP_FOUND)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 
+# remove flag that makes all warnings into errors
+string (REPLACE "-Werror" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+MESSAGE( STATUS "CMAKE_CXX_FLAGS: " ${CMAKE_CXX_FLAGS} )
+
 # Declare Headers
 SET(${PROJECT_NAME}_HEADERS
     include/hpp/rbprm/rbprm-device.hh
@@ -68,6 +72,7 @@ SET(${PROJECT_NAME}_HEADERS
     include/hpp/rbprm/stability/stability.hh
     include/hpp/rbprm/stability/support.hh
     include/hpp/rbprm/tools.hh
+    include/hpp/rbprm/ik-solver.hh
     include/hpp/rbprm/rbprm-profiler.hh
     include/utils/Stdafx.hh
     include/utils/stop-watch.hh

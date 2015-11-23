@@ -159,15 +159,19 @@ namespace hpp {
                 const std::string& name = cit->first;
                 //const fcl::Vec3f& normal = contactNormals_.at(name);
                 const fcl::Vec3f& position = contactPositions_.at(name);
-                ss << " " << name <<" ";
+                const fcl::Matrix3f& rotation = contactRotation_.at(name);
+                ss << name.substr(1);
                 for(std::size_t i=0; i<3; ++i)
                 {
                     ss << " " << position[i];
                 }
-                /*for(std::size_t i=0; i<3; ++i)
+                for(std::size_t i=0; i<3; ++i)
                 {
-                    ss << " " << normal[i];
-                }*/
+                    for(std::size_t j=0; j<3; ++j)
+                    {
+                        ss << " " << rotation(i,j);
+                    }
+                }
                 ss << "\n";
             }
             ss << "com ";
@@ -214,7 +218,7 @@ namespace hpp {
                 if(newContact)
                 {
                     ncontacts.push_back(name);
-                    ss << name << " ";
+                    ss << name.substr(1) << " ";
                 }
             }
             ss << "\n";

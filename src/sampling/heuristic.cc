@@ -33,6 +33,13 @@ double EFORTHeuristic(const sampling::Sample* sample,
     return EFORT * Eigen::Vector3d::UnitZ().dot(normal);
 }
 
+double EFORTNormalHeuristic(const sampling::Sample* sample,
+                      const Eigen::Vector3d& direction, const Eigen::Vector3d& normal)
+{
+    double EFORT = -direction.transpose() * sample->jacobianProduct_.block<3,3>(0,0) * (-direction);
+    return EFORT * direction.dot(normal);
+}
+
 double ManipulabilityHeuristic(const sampling::Sample* sample,
                                const Eigen::Vector3d& /*direction*/, const Eigen::Vector3d& normal)
 {
@@ -60,6 +67,7 @@ HeuristicFactory::HeuristicFactory()
 {
     srand ( (unsigned int) (time(NULL)) );
     heuristics_.insert(std::make_pair("EFORT", &EFORTHeuristic));
+    heuristics_.insert(std::make_pair("EFORT_Normal", &EFORTNormalHeuristic));
     heuristics_.insert(std::make_pair("manipulability", &ManipulabilityHeuristic));
     heuristics_.insert(std::make_pair("random", &RandomHeuristic));
     heuristics_.insert(std::make_pair("forward", &ForwardHeuristic));

@@ -34,6 +34,7 @@ SET(${LIBRARY_NAME}_SOURCES
         tools.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/tools.hh
 	stability/stability.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/stability/stability.hh
 	stability/support.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/stability/support.hh
+        ik-solver.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/ik-solver.hh
         utils/stop-watch.cc ${PROJECT_SOURCE_DIR}/include/utils/stop-watch.hh
         rbprm-profiler.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-profiler.hh
         ${PROJECT_SOURCE_DIR}/include/utils/Stdafx.hh

@@ -52,15 +52,22 @@ public:
       }
   }
 
-  void report_all_and_count(int precision=2, std::ostream& output = std::cout)
+
+  void report_count(std::ostream& output = std::cout)
   {
-      report_all(precision,output);
       for(std::map<std::string, int>::iterator it = count_.begin();
           it != count_.end(); ++it)
       {
           output << it->first << ": " << it->second << std::endl;
       }
   }
+
+  void report_all_and_count(int precision=2, std::ostream& output = std::cout)
+  {
+      report_all(precision,output);
+      report_count(output);
+  }
+
 
 private:
   std::map<std::string, int> count_;

@@ -83,7 +83,7 @@ namespace stability{
         fullbody->device_->computeForwardKinematics();
         robust_equilibrium::MatrixX3 normals  (nbContacts*4,3);
         robust_equilibrium::MatrixX3 positions(nbContacts*4,3);
-        double frictions = 0.5;
+        double frictions = 1;
         for(std::size_t c = 0; c< nbContacts; ++c)
         {
             const RbPrmLimbPtr_t limb =fullbody->GetLimbs().at(contacts[c]);

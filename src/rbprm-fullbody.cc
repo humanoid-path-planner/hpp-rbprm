@@ -18,6 +18,7 @@
 #include <hpp/model/joint.hh>
 #include <hpp/rbprm/tools.hh>
 #include <hpp/rbprm/stability/stability.hh>
+#include <hpp/rbprm/ik-solver.hh>
 
 #include <hpp/core/constraint-set.hh>
 #include <hpp/core/config-projector.hh>
@@ -36,6 +37,8 @@
 
 namespace hpp {
   namespace rbprm {
+
+    const double robustnessTreshold = 0;
 
     RbPrmFullBodyPtr_t RbPrmFullBody::create (const model::DevicePtr_t &device)
     {
@@ -204,7 +207,7 @@ namespace hpp {
             cit != limb->sampleContainer_.samples_.end(); ++cit)
         {
             sampling::Load(*cit, configuration);
-            if(validation->validate(configuration) && (!stability || stability::IsStable(body,current) >= 0))
+            if(validation->validate(configuration) && (!stability || stability::IsStable(body,current) >=robustnessTreshold))
             {
                 current.configuration_ = configuration;
                 //std::cout << "found collision free non contact for " << limb->limb_->name() << std::endl;
@@ -248,6 +251,11 @@ const fcl::Matrix3f& rotation = previous.contactRotation_.at(name);
                                                                               rotation,//previous.contactRotation_.at(name),
                                                                               setMaintainRotationConstraints(z))));
 
+
+            //if(ik::apply(*limb, ppos, rotation, config))
+            {
+                //std::cout << "apply " << std::endl;
+            }
             if(proj->apply(config))
             {
                  //boost::assign::list_of (true)(true)(true))));
@@ -437,12 +445,25 @@ const fcl::Matrix3f& rotation = previous.contactRotation_.at(name);
                                                                                             limb->effector_,
                                                                                             rotation,
                                                                                             setRotationConstraints(z))));
-
+#ifdef PROFILE
+    RbPrmProfiler& watch = getRbPrmProfiler();
+    watch.start("ik");
+#endif
               if(proj->apply(configuration))
               {
+#ifdef PROFILE
+    watch.stop("ik");
+#endif
                 apply = true;
+#ifdef PROFILE
+    RbPrmProfiler& watch = getRbPrmProfiler();
+    watch.start("collision");
+#endif
                 if(validation->validate(configuration))
                 {
+#ifdef PROFILE
+    watch.stop("collision");
+#endif
                     // test stability of new configuration
                     body->device_->currentConfiguration(configuration);
                     body->device_->computeForwardKinematics();
@@ -454,7 +475,7 @@ const fcl::Matrix3f& rotation = previous.contactRotation_.at(name);
                     tmp.configuration_ = configuration;
                     ++tmp.nbContacts;
                     double robustness = stability::IsStable(body,tmp);
-                    if((tmp.nbContacts == 1 && !stableForOneContact) || robustness>=0)
+                    if((tmp.nbContacts == 1 && !stableForOneContact) || robustness>=robustnessTreshold)
                     {
                         maxRob = std::max(robustness, maxRob);
                         position = limb->effector_->currentTransformation().getTranslation();
@@ -471,8 +492,16 @@ const fcl::Matrix3f& rotation = previous.contactRotation_.at(name);
                         rotation = limb->effector_->currentTransformation().getRotation();
                         unstableContact = true;
                     }
-                }
+                }                
+#ifdef PROFILE
+else
+       watch.stop("collision");
+#endif
               }
+#ifdef PROFILE
+else
+       watch.stop("ik");
+#endif
           }
       }
 
@@ -725,9 +754,9 @@ static int id = 0;
             return result;
         }
     }
-    //double stab =  stability::IsStable(body,result);
-    //std::cout << "state " << ++id << " stable ? " << stab << " " << result.stable << std::endl;
-    /*if(stab <0 && result.stable)
+    /*double stab =  stability::IsStable(body,result);
+    std::cout << "state " << ++id << " stable ? " << stab << " " << result.stable << std::endl;
+    if(stab <0 && result.stable)
     {
         std::cout << "error " << std::endl;
         result.stable = false;

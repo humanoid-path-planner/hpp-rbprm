@@ -46,7 +46,8 @@ namespace hpp {
         /// \param start the start full body configuration of the problem
         /// \param end the end full body configuration of the problem
         /// \return a pointer to the created RbPrmInterpolation instance
-        static RbPrmInterpolationPtr_t create (const core::PathVectorConstPtr_t path, const RbPrmFullBodyPtr_t robot, const State& start, const State& end);
+        static RbPrmInterpolationPtr_t create (const RbPrmFullBodyPtr_t robot, const State& start, const State& end,
+                                               const core::PathVectorConstPtr_t path = core::PathVectorConstPtr_t());
 
     public:
         ~RbPrmInterpolation();
@@ -58,6 +59,14 @@ namespace hpp {
         /// \param timeStep the discretization step of the path.
         /// \return a pointer to the created RbPrmInterpolation instance
         std::vector<State> Interpolate(const model::ObjectVector_t &collisionObjects, const double timeStep = 0.01);
+
+        /// Transforms a discrete sequence of configurations into
+        /// a discrete sequence of balanced contact configurations.
+        ///
+        /// \param collisionObjects the objects to consider for contact and collision avoidance
+        /// \param timeStep the discretization step of the path.
+        /// \return a pointer to the created RbPrmInterpolation instance
+        std::vector<State> Interpolate(const model::ObjectVector_t &collisionObjects, const std::vector<model::Configuration_t>& configs);
 
     public:
         const core::PathVectorConstPtr_t path_;

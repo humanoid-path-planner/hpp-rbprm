@@ -195,7 +195,7 @@ void Stopwatch::report_all(int precision, std::ostream& output)
 {
   if (!active) return;
   
-  output<< "\n*** PROFILING RESULTS [ms] (min - avg - max - lastTime - nSamples) ***\n";
+  output<< "\n*** PROFILING RESULTS [ms] (min - avg - max - total time - nSamples) ***\n";
   map<string, PerformanceData>::iterator it;
   for (it = records_of->begin(); it != records_of->end(); ++it) {
     report(it->first, precision, output);
@@ -256,7 +256,7 @@ void Stopwatch::report(string perf_name, int precision, std::ostream& output)
   output << std::fixed << std::setprecision(precision) 
          << (perf_info.max_time*1e3) << "\t";
   output << std::fixed << std::setprecision(precision)
-         << (perf_info.last_time*1e3) << "\t";
+         << (perf_info.total_time*1e3) << "\t";
   output << std::fixed << std::setprecision(precision)
          << perf_info.stops << std::endl;
 

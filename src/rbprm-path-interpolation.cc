@@ -24,7 +24,9 @@
 namespace hpp {
   namespace rbprm {
 
-    RbPrmInterpolationPtr_t RbPrmInterpolation::create (const core::PathVectorConstPtr_t path, const hpp::rbprm::RbPrmFullBodyPtr_t robot, const hpp::rbprm::State &start, const hpp::rbprm::State &end)
+    RbPrmInterpolationPtr_t RbPrmInterpolation::create (const hpp::rbprm::RbPrmFullBodyPtr_t robot,
+                                                        const hpp::rbprm::State &start, const hpp::rbprm::State &end,
+                                                        const core::PathVectorConstPtr_t path)
     {
         RbPrmInterpolation* rbprmDevice = new RbPrmInterpolation(path, robot, start, end);
         RbPrmInterpolationPtr_t res (rbprmDevice);
@@ -52,18 +54,82 @@ namespace hpp {
 
     std::vector<State> RbPrmInterpolation::Interpolate(const model::ObjectVector_t &collisionObjects, const double timeStep)
     {
+        if(!path_) throw std::runtime_error ("Can not interpolate; not path given to interpolator ");
+        std::vector<model::Configuration_t> configs;
+        const core::interval_t& range = path_->timeRange();
+        configs.push_back(start_.configuration_);
+        for(double i = range.first + timeStep; i< range.second; i+= timeStep)
+        {
+            configs.push_back(configPosition(configs.back(),path_,i));
+        }
+        return Interpolate(collisionObjects, configs);
+    }
+
+    std::vector<State> RbPrmInterpolation::Interpolate(const model::ObjectVector_t &collisionObjects, const std::vector<model::Configuration_t>& configs)
+    {
         int nbFailures = 0;
 //std::cout << "interpolation " << std::endl;
         std::vector<State> states;
         states.push_back(this->start_);
-        const core::interval_t& range = path_->timeRange();
         std::size_t nbRecontacts = 0;
         bool allowFailure = true;
 #ifdef PROFILE
     RbPrmProfiler& watch = getRbPrmProfiler();
+    watch.reset_all();
     watch.start("complete generation");
 #endif
-        for(double i = range.first + timeStep; i< range.second; i+= timeStep)
+        for(std::vector<model::Configuration_t>::const_iterator cit = configs.begin()+1; cit != configs.end(); ++cit)
+        {
+            const State& previous = states.back();
+            core::Configuration_t configuration = *cit;
+            core::Configuration_t nextconfiguration = (cit+1!=configs.end()) ? *(cit+1) : *cit;
+            Eigen::Vector3d dir = configuration.head<3>() - previous.configuration_.head<3>();
+            fcl::Vec3f direction(dir[0], dir[1], dir[2]);
+            bool nonZero(false);
+            direction.normalize(&nonZero);
+            if(!nonZero) direction = fcl::Vec3f(0,0,1.);
+            // TODO Direction 6d
+            bool sameAsPrevious(true);
+            bool multipleBreaks(false);
+            State newState = ComputeContacts(previous, robot_,configuration,nextconfiguration,collisionObjects,direction,sameAsPrevious,multipleBreaks,allowFailure);
+            if(allowFailure && multipleBreaks)
+            {
+                ++ nbFailures;
+//std::cout << "failed at state " << states.size() +1 << std::endl;
+                ++cit;
+if (nbFailures > 1)
+{
+#ifdef PROFILE
+    watch.stop("complete generation");
+    watch.add_to_count("planner failed", 1);
+    std::ofstream fout;
+    fout.open("log.txt", std::fstream::out | std::fstream::app);
+    std::ostream* fp = &fout;
+    watch.report_count(*fp);
+    fout.close();
+#endif
+    return states;
+}
+            }
+            if(multipleBreaks && !allowFailure)
+            {
+                ++nbRecontacts;
+                cit--;
+            }
+            else
+            {
+                nbRecontacts = 0;
+            }
+            if(sameAsPrevious)
+            {
+                states.pop_back();
+            }
+            newState.nbContacts = newState.contactNormals_.size();
+            states.push_back(newState);
+            allowFailure = nbRecontacts > robot_->GetLimbs().size() + 8;
+        }
+
+        /*for(double i = range.first + timeStep; i< range.second; i+= timeStep)
         {
             const State& previous = states.back();
             core::Configuration_t configuration = configPosition(previous.configuration_,path_,i);
@@ -82,7 +148,19 @@ namespace hpp {
                 ++ nbFailures;
 //std::cout << "failed at state " << states.size() +1 << std::endl;
                 i += timeStep;
-if (nbFailures > 1) return states;
+if (nbFailures > 1)
+{
+#ifdef PROFILE
+    watch.stop("complete generation");
+    watch.add_to_count("planner failed", 1);
+    std::ofstream fout;
+    fout.open("log.txt", std::fstream::out | std::fstream::app);
+    std::ostream* fp = &fout;
+    watch.report_count(*fp);
+    fout.close();
+#endif
+    return states;
+}
             }
             if(multipleBreaks && !allowFailure)
             {
@@ -97,14 +175,20 @@ if (nbFailures > 1) return states;
             {
                 states.pop_back();
             }
+            newState.nbContacts = newState.contactNormals_.size();
             states.push_back(newState);
             allowFailure = nbRecontacts > robot_->GetLimbs().size() + 8;
-        }
+        }*/
         states.push_back(this->end_);
 //std::cout << "nbfailure " << nbFailures <<std::endl;
 #ifdef PROFILE
+        watch.add_to_count("planner succeeded", 1);
         watch.stop("complete generation");
-        watch.report_all_and_count();
+        std::ofstream fout;
+        fout.open("log.txt", std::fstream::out | std::fstream::app);
+        std::ostream* fp = &fout;
+        watch.report_all_and_count(2,*fp);
+        fout.close();
 #endif
         return states;
     }
