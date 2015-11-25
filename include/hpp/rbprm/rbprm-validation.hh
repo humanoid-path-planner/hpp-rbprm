@@ -65,6 +65,9 @@ namespace hpp {
                  core::ValidationReport& validationReport,
                  bool throwIfInValid = false);
 
+      virtual bool validate (const core::Configuration_t& config,
+                 core::ValidationReportPtr_t& validationReport);
+
       /// Compute whether the configuration is valid
       ///
       /// \param config the config to check for validity,

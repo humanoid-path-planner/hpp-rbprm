@@ -42,9 +42,11 @@ SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
  ADD_REQUIRED_DEPENDENCY("hpp-constraints >= 3")
  ADD_REQUIRED_DEPENDENCY("hpp-model >= 3")
  ADD_REQUIRED_DEPENDENCY("hpp-model-urdf >= 3")
- ADD_REQUIRED_DEPENDENCY("polytope")
 
 FIND_PACKAGE( OpenMP REQUIRED)
+find_package(Boost)
+find_package(Boost 1.54.0 COMPONENTS filesystem system REQUIRED)
+
 if(OPENMP_FOUND)
     message("OPENMP FOUND")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")

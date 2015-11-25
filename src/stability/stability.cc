@@ -46,7 +46,6 @@ namespace rbprm {
 namespace stability{
 
     const polytope::vector3_t gravity(0,0,-9.81);
-    static bool init = false;
 
     void computeRectangleContact(const RbPrmLimbPtr_t limb, Ref_matrix43 p)
     {

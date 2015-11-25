@@ -116,6 +116,13 @@ namespace hpp {
     }
 
     bool RbPrmValidation::validate (const Configuration_t& config,
+               ValidationReportPtr_t& validationReport)
+    {
+        return trunkValidation_->validate(config, validationReport)
+                && validateRoms(config, defaultFilter_);
+    }
+
+    bool RbPrmValidation::validate (const Configuration_t& config,
                     ValidationReport& validationReport,
                     const std::vector<std::string>& filter, bool throwIfInValid)
     {
