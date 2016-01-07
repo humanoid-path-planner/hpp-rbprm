@@ -38,7 +38,6 @@
 namespace hpp {
   namespace rbprm {
 
-    const double robustnessTreshold = 0;
 
     RbPrmFullBodyPtr_t RbPrmFullBody::create (const model::DevicePtr_t &device)
     {
@@ -99,7 +98,6 @@ namespace hpp {
             rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(joint, effectorName, offset,normal,x,y, nbSamples, hit->second, resolution);
             core::CollisionValidationPtr_t limbcollisionValidation_ = core::CollisionValidation::create(this->device_);
             // adding collision validation
-            //core::CollisionValidationPtr_t colVal = core::CollisionValidation::create(device_);
             for(model::ObjectVector_t::const_iterator cit = collisionObjects.begin();
                 cit != collisionObjects.end(); ++cit)
             {
@@ -168,7 +166,6 @@ namespace hpp {
         std::vector<bool> res;
         for(std::size_t i =0; i <3; ++i)
         {
-            //res.push_back(std::abs(direction[i]) < 0.2);
             res.push_back(true);
         }
         return res;
@@ -179,7 +176,6 @@ namespace hpp {
         std::vector<bool> res;
         for(std::size_t i =0; i <3; ++i)
         {
-            //res.push_back(std::abs(direction[i]) < 2*std::numeric_limits<double>::epsilon());
             res.push_back(true);
         }
         return res;
@@ -191,7 +187,6 @@ namespace hpp {
         std::vector<bool> res;
         for(std::size_t i =0; i <3; ++i)
         {
-            //res.push_back(std::abs(normal[i]) > 0.2);
             res.push_back(true);
         }
         return res;
@@ -201,7 +196,7 @@ namespace hpp {
                               State& current,
                               core::CollisionValidationPtr_t validation,
                               const hpp::rbprm::RbPrmLimbPtr_t& limb, model::ConfigurationOut_t configuration,
-                                           bool stability = true)
+                              const double robustnessTreshold, bool stability = true)
     {
         for(std::deque<sampling::Sample>::const_iterator cit = limb->sampleContainer_.samples_.begin();
             cit != limb->sampleContainer_.samples_.end(); ++cit)
@@ -210,18 +205,16 @@ namespace hpp {
             if(validation->validate(configuration) && (!stability || stability::IsStable(body,current) >=robustnessTreshold))
             {
                 current.configuration_ = configuration;
-                //std::cout << "found collision free non contact for " << limb->limb_->name() << std::endl;
                 return true;
             }
         }
-        //std::cout << "no collision free configuration to maintain balance" << limb->limb_->name() << std::endl;
         return false;
     }
 
     // first step
     State MaintainPreviousContacts(const State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body,
                                    std::map<std::string,core::CollisionValidationPtr_t>& limbValidations,
-                                   model::ConfigurationIn_t configuration, bool& contactMaintained, bool& multipleBreaks)
+                                   model::ConfigurationIn_t configuration, bool& contactMaintained, bool& multipleBreaks, const double robustnessTreshold)
     {
         contactMaintained = true;
         std::vector<std::string> brokenContacts;
@@ -239,26 +232,17 @@ namespace hpp {
             const RbPrmLimbPtr_t limb = body->GetLimbs().at(name);
             // try to maintain contact
             const fcl::Vec3f& ppos  =previous.contactPositions_.at(name);
-            //const fcl::Vec3f& pnorm  =previous.contactNormals_.at(name);
             core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-2, 30);
             LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
-const fcl::Vec3f z = limb->effector_->currentTransformation().getRotation() * limb->normal_;
-const fcl::Matrix3f& rotation = previous.contactRotation_.at(name);
-            proj->add(core::NumericalConstraint::create (constraints::Position::create(body->device_, limb->effector_,fcl::Vec3f(0,0,0), ppos /*- rotation * limb->offset_*/)));
-            /**/
-            proj->add(core::NumericalConstraint::create (constraints::Orientation::create(body->device_,
+            const fcl::Vec3f z = limb->effector_->currentTransformation().getRotation() * limb->normal_;
+            const fcl::Matrix3f& rotation = previous.contactRotation_.at(name);
+            proj->add(core::NumericalConstraint::create (constraints::Position::create(body->device_, limb->effector_,fcl::Vec3f(0,0,0), ppos)));
+            /*proj->add(core::NumericalConstraint::create (constraints::Orientation::create(body->device_,
                                                                               limb->effector_,
-                                                                              rotation,//previous.contactRotation_.at(name),
-                                                                              setMaintainRotationConstraints(z))));
-
-
-            //if(ik::apply(*limb, ppos, rotation, config))
-            {
-                //std::cout << "apply " << std::endl;
-            }
+                                                                              rotation,
+                                                                              setMaintainRotationConstraints(z))));*/
             if(proj->apply(config))
             {
-                 //boost::assign::list_of (true)(true)(true))));
                 if(limbValidations.at(name)->validate(config))
                 {
                     // stable?
@@ -268,22 +252,18 @@ const fcl::Matrix3f& rotation = previous.contactRotation_.at(name);
                     current.contactRotation_[name] = previous.contactRotation_.at(name);
                     current.contactOrder_.push(name);
                     current.configuration_ = config;
-                    //std::cout << "\t maintaining contact " << name << "position" << previous.contactPositions_.at(name) << std::endl;
-                    //std::cout << "\t real position" << limb->effector_->currentTransformation().getTranslation() << std::endl;
                 }
                 else
                 {
                     contactMaintained = false;
-//std::cout << "\t breaking contact (collision) " << name << std::endl;
-                    ComputeCollisionFreeConfiguration(body,current,limbValidations.at(name),limb,current.configuration_,false);
+                    ComputeCollisionFreeConfiguration(body,current,limbValidations.at(name),limb,current.configuration_,robustnessTreshold,false);
                     brokenContacts.push_back(name);
                 }
             }
             else
             {
                 contactMaintained = false;
-//std::cout << "\t breaking contact (invalid configuration) " << name << " posi " << ppos << std::endl;
-                ComputeCollisionFreeConfiguration(body,current,limbValidations.at(name),limb,current.configuration_,false);
+                ComputeCollisionFreeConfiguration(body,current,limbValidations.at(name),limb,current.configuration_,robustnessTreshold,false);
                 brokenContacts.push_back(name);
             }
         }
@@ -293,8 +273,6 @@ const fcl::Matrix3f& rotation = previous.contactRotation_.at(name);
         {
             contactMaintained = false;
             multipleBreaks = true;
-            // replanning for last contact created.
-// std::cout << "*********** MULTI CONTACT BREK ****** " << brokenContacts.size() << " " << std::endl;
         }
         return current;
     }
@@ -330,7 +308,8 @@ const fcl::Matrix3f& rotation = previous.contactRotation_.at(name);
                               const hpp::rbprm::RbPrmLimbPtr_t& limb,
                               model::ConfigurationIn_t rbconfiguration, model::ConfigurationIn_t nextrbconfiguration,
                               model::ConfigurationOut_t configuration,
-                              const model::ObjectVector_t &collisionObjects, const fcl::Vec3f& direction, fcl::Vec3f& position, fcl::Vec3f& normal,
+                              const model::ObjectVector_t &collisionObjects, const fcl::Vec3f& direction,
+                              fcl::Vec3f& position, fcl::Vec3f& normal, const double robustnessTreshold,
                               bool contactIfFails = true, bool stableForOneContact = true,
                               const sampling::heuristic evaluate = 0)
     {
@@ -360,7 +339,6 @@ const fcl::Matrix3f& rotation = previous.contactRotation_.at(name);
           oit != collisionObjects.end(); ++oit, ++i)
       {
           sampling::GetCandidates(limb->sampleContainer_, transform,transformNext, *oit, direction, reports[i], eval);
-          //sampling::GetCandidates(limb->sampleContainer_, transform,transform, *oit, direction, reports[i], eval);
       }
       // order samples according to EFORT
       for(std::vector<sampling::T_OctreeReport>::const_iterator cit = reports.begin();
@@ -368,61 +346,18 @@ const fcl::Matrix3f& rotation = previous.contactRotation_.at(name);
       {
           finalSet.insert(cit->begin(), cit->end());
       }
-//std::cout << "candidates " << limb->effector_->name() << finalSet.size() << std::endl;
       // pick first sample which is collision free
       bool found_sample(false);
       bool unstableContact(false); //set to true in case no stable contact is found
       core::Configuration_t moreRobust;
       double maxRob = -std::numeric_limits<double>::max();
       sampling::T_OctreeReport::const_iterator it = finalSet.begin();
-      for(;/*maxRob < 5 && */!found_sample && it!=finalSet.end(); ++it)
+      for(;!found_sample && it!=finalSet.end(); ++it)
       {
           const sampling::OctreeReport& bestReport = *it;
           sampling::Load(*bestReport.sample_, configuration);
           body->device_->currentConfiguration(configuration);
           {
-
-/********************/
-// Justin
- /*             normal = bestReport.normal_;
-//normal = fcl::Vec3f(0,0,1);
-              position = bestReport.contact_.pos;
-              // the normal is given by the normal of the contactequit object
-              //const fcl::Vec3f& z= limb->normal_;
-              fcl::Vec3f z = limb->effector_->currentTransformation().getRotation() * limb->normal_;
-              fcl::Matrix3f alignRotation = tools::GetRotationMatrix(limb->normal_,normal);
-              const fcl::Matrix3f alignRotationPos = tools::GetRotationMatrix(z,normal);
-              if(limbId.find("3Rarm")!=std::string::npos)
-              {
-                  fcl::Matrix3f zr;
-                  zr(0,0) = 0; zr(0,1) = -1; zr(0,2) = 0;
-                  zr(1,0) = 1;zr(1,1) = 0; zr(1,2) = 0;
-                  zr(2,0) = 0; zr(2,1) = 0; zr(2,2) = 1;
-                  alignRotation = alignRotation * zr;
-              }
-              rotation = alignRotationPos * limb->effector_->currentTransformation().getRotation();
-              // Add constraints to resolve Ik
-              core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 20);
-              //rotation = tools::GetRotationMatrix(z,normal);
-              // get current normal orientation
-              LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
-              proj->add(core::NumericalConstraint::create (constraints::Position::create(body->device_,
-                                                                                         limb->effector_,
-                                                                                         fcl::Vec3f(0,0,0),
-                                                                                         position - rotation * limb->offset_, //)));
-                                                                                         model::matrix3_t::getIdentity(),
-                                                                                         setTranslationConstraints(normal))));//
-
-
-              proj->add(core::NumericalConstraint::create (constraints::Orientation::create(body->device_,
-                                                                                            limb->effector_,
-                                                                                            alignRotation,
-                                                                                            setRotationConstraints(z))));*/
-/****************************/
-
-
-
-
               normal = bestReport.normal_;
               position = bestReport.contact_.pos;
               // the normal is given by the normal of the contacted object
@@ -441,10 +376,10 @@ const fcl::Matrix3f& rotation = previous.contactRotation_.at(name);
                                                                                          setTranslationConstraints(normal))));//
 
 
-              proj->add(core::NumericalConstraint::create (constraints::Orientation::create(body->device_,
+              /*proj->add(core::NumericalConstraint::create (constraints::Orientation::create(body->device_,
                                                                                             limb->effector_,
                                                                                             rotation,
-                                                                                            setRotationConstraints(z))));
+                                                                                            setRotationConstraints(z))));*/
 #ifdef PROFILE
     RbPrmProfiler& watch = getRbPrmProfiler();
     watch.start("ik");
@@ -518,8 +453,6 @@ else
       else if(unstableContact)
       {          
           status = UNSTABLE_CONTACT;
-//std::cout << "no stable contact found, chose one anyway " << limbId << std::endl;
-          //found_sample = true;
           configuration = moreRobust;
 #ifdef PROFILE
     RbPrmProfiler& watch = getRbPrmProfiler();
@@ -532,19 +465,13 @@ else
     RbPrmProfiler& watch = getRbPrmProfiler();
     watch.add_to_count("no contact", 1);
 #endif
-//std::cout << "did not find any contact"  << limbId << std::endl;
           if(!found_sample)
           {
-              ComputeCollisionFreeConfiguration(body, current, validation, limb, configuration,false);
-          }
-          if(apply)
-          {
-//std::cout << "too many collisions found " << std::endl;
+              ComputeCollisionFreeConfiguration(body, current, validation, limb, configuration,robustnessTreshold,false);
           }
       }
       if(found_sample || unstableContact)
       {
-//configuration = moreRobust;
           current.contacts_[limbId] = true;
           current.contactNormals_[limbId] = normal;
           current.contactPositions_[limbId] = position;
@@ -557,7 +484,7 @@ else
 
     bool RepositionContacts(State& result, const hpp::rbprm::RbPrmFullBodyPtr_t& body,core::CollisionValidationPtr_t validation,
                             model::ConfigurationOut_t config,
-                            const model::ObjectVector_t &collisionObjects, const fcl::Vec3f& direction)
+                            const model::ObjectVector_t &collisionObjects, const fcl::Vec3f& direction, const double robustnessTreshold)
     {
         // replace existing contacts
         // start with older contact created
@@ -579,7 +506,8 @@ else
             for(std::vector<std::string>::const_iterator cit = group.begin();
                 notFound && cit != group.end(); ++cit)
             {
-                if(ComputeStableContact(body, result, validation, *cit, body->GetLimbs().at(*cit),save,save, config, collisionObjects, direction, position, normal, false)
+                if(ComputeStableContact(body, result, validation, *cit, body->GetLimbs().at(*cit),save,save, config,
+                                        collisionObjects, direction, position, normal, robustnessTreshold, false)
                         == STABLE_CONTACT)
                 {
                     nContactName = *cit;
@@ -618,7 +546,7 @@ else
     }
 
     hpp::rbprm::State ComputeContacts(const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration,
-                                      const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction)
+                                      const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction, const double robustnessTreshold)
     {
         const T_Limb& limbs = body->GetLimbs();
         State result;
@@ -634,7 +562,7 @@ else
                 fcl::Vec3f normal, position;
                 ComputeStableContact(body,result, body->limbcollisionValidations_.at(lit->first), lit->first, lit->second,
                                      configuration, configuration,
-                                     result.configuration_, collisionObjects, direction, position, normal, true, false);
+                                     result.configuration_, collisionObjects, direction, position, normal, robustnessTreshold, true, false);
             }
             result.nbContacts = result.contactNormals_.size();
         }
@@ -644,10 +572,11 @@ else
     }
 
     hpp::rbprm::State ComputeContacts(const hpp::rbprm::State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration,
-                                      model::ConfigurationIn_t nextconfiguration,
-                                      const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction, bool& contactMaintained, bool& multipleBreaks, const bool allowFailure)
+                                      model::ConfigurationIn_t nextconfiguration, const model::ObjectVector_t& collisionObjects,
+                                      const fcl::Vec3f& direction, bool& contactMaintained, bool& multipleBreaks,
+                                      const bool allowFailure, const double robustnessTreshold)
     {
-static int id = 0;
+//static int id = 0;
     const T_Limb& limbs = body->GetLimbs();
     // save old configuration
     core::ConfigurationIn_t save = body->device_->currentConfiguration();
@@ -658,7 +587,7 @@ static int id = 0;
     body->device_->currentConfiguration(configuration);
     body->device_->computeForwardKinematics ();
     // try to maintain previous contacts
-    State result = MaintainPreviousContacts(previous,body, body->limbcollisionValidations_, configuration, contactMaintained, multipleBreaks);
+    State result = MaintainPreviousContacts(previous,body, body->limbcollisionValidations_, configuration, contactMaintained, multipleBreaks, robustnessTreshold);
     // If more than one are broken, go back to previous state
     // and reposition
     if(multipleBreaks && !allowFailure)
@@ -673,7 +602,7 @@ static int id = 0;
         // if no stable replacement contact found
         // modify contact order to try to replace another contact at the next step
         if(ComputeStableContact(body,result,body->limbcollisionValidations_.at(replaceContact),replaceContact,body->limbs_.at(replaceContact),
-                             configuration,nextconfiguration, config,collisionObjects,direction,position, normal, true, false, body->factory_.heuristics_["random"])
+                             configuration,nextconfiguration, config,collisionObjects,direction,position, normal, robustnessTreshold, true, false, body->factory_.heuristics_["random"])
                 != STABLE_CONTACT)
         {
             result = previous;
@@ -682,7 +611,7 @@ static int id = 0;
         }
         body->device_->currentConfiguration(save);
         body->device_->controlComputation (flag);
-++id;
+//++id;
         // in any case, returns state and raises failure flag
         return result;
     }
@@ -700,7 +629,7 @@ static int id = 0;
             // if the contactMaintained flag remains true,
             // the contacts have not changed, and the state can be merged with the previous one eventually
             contactCreated = ComputeStableContact(body, result, body->limbcollisionValidations_.at(lit->first), lit->first, lit->second, configuration, nextconfiguration,
-                                                  config, collisionObjects, direction, position, normal) != NO_CONTACT || contactCreated;
+                                                  config, collisionObjects, direction, position, normal, robustnessTreshold) != NO_CONTACT || contactCreated;
         }
     }
     contactMaintained = !contactCreated && contactMaintained;
@@ -713,9 +642,8 @@ static int id = 0;
         if(contactMaintained)
         {
             contactMaintained = false;
-//std::cout << "replanning unstable state " << id+1 << std::endl;
             // could not reposition any contact. Planner has failed
-            if (!RepositionContacts(result, body, body->collisionValidation_, config, collisionObjects, direction))
+            if (!RepositionContacts(result, body, body->collisionValidation_, config, collisionObjects, direction, robustnessTreshold))
             {
                 std::cout << "planner is stuck; failure " <<  std::endl;
             }
@@ -724,7 +652,6 @@ static int id = 0;
         // if a new contact was created
         else
         {
-//std::cout << "contact broken and replaced contact unstable, replanning " << id+1 << std::endl;
             fcl::Vec3f normal, position;
             result = previous;
             result.stable = false;
@@ -739,9 +666,8 @@ static int id = 0;
                 if(contactCreated || ComputeStableContact(body,result,body->limbcollisionValidations_.at(replaceContact),replaceContact,
                                      body->limbs_.at(replaceContact),
                                      configuration, nextconfiguration, config,
-                                     collisionObjects,direction,position, normal) != STABLE_CONTACT)
+                                     collisionObjects,direction,position, normal,robustnessTreshold) != STABLE_CONTACT)
                 {
-//std::cout << "could not replace contact " << replaceContact << " " << id+1 << std::endl;
                     multipleBreaks = true;
                     result = previous;
                     result.contactOrder_.pop();
@@ -750,17 +676,10 @@ static int id = 0;
             }
             body->device_->currentConfiguration(save);
             body->device_->controlComputation (flag);
-            ++id;
+//            ++id;
             return result;
         }
     }
-    /*double stab =  stability::IsStable(body,result);
-    std::cout << "state " << ++id << " stable ? " << stab << " " << result.stable << std::endl;
-    if(stab <0 && result.stable)
-    {
-        std::cout << "error " << std::endl;
-        result.stable = false;
-    }*/
     body->device_->currentConfiguration(save);    
     body->device_->controlComputation (flag);
     result.nbContacts = result.contactNormals_.size();

@@ -52,7 +52,7 @@ namespace hpp {
     }
     }
 
-    std::vector<State> RbPrmInterpolation::Interpolate(const model::ObjectVector_t &collisionObjects, const double timeStep)
+    std::vector<State> RbPrmInterpolation::Interpolate(const model::ObjectVector_t &collisionObjects, const double timeStep, const double robustnessTreshold)
     {
         if(!path_) throw std::runtime_error ("Can not interpolate; not path given to interpolator ");
         std::vector<model::Configuration_t> configs;
@@ -62,10 +62,11 @@ namespace hpp {
         {
             configs.push_back(configPosition(configs.back(),path_,i));
         }
-        return Interpolate(collisionObjects, configs);
+        return Interpolate(collisionObjects, configs, robustnessTreshold);
     }
 
-    std::vector<State> RbPrmInterpolation::Interpolate(const model::ObjectVector_t &collisionObjects, const std::vector<model::Configuration_t>& configs)
+    std::vector<State> RbPrmInterpolation::Interpolate(const model::ObjectVector_t &collisionObjects,
+                                                       const std::vector<model::Configuration_t>& configs, const double robustnessTreshold)
     {
         int nbFailures = 0;
 //std::cout << "interpolation " << std::endl;
@@ -91,11 +92,10 @@ namespace hpp {
             // TODO Direction 6d
             bool sameAsPrevious(true);
             bool multipleBreaks(false);
-            State newState = ComputeContacts(previous, robot_,configuration,nextconfiguration,collisionObjects,direction,sameAsPrevious,multipleBreaks,allowFailure);
+            State newState = ComputeContacts(previous, robot_,configuration,nextconfiguration,collisionObjects,direction,sameAsPrevious,multipleBreaks,allowFailure,robustnessTreshold);
             if(allowFailure && multipleBreaks)
             {
                 ++ nbFailures;
-//std::cout << "failed at state " << states.size() +1 << std::endl;
                 ++cit;
 if (nbFailures > 1)
 {
@@ -126,61 +126,9 @@ if (nbFailures > 1)
             }
             newState.nbContacts = newState.contactNormals_.size();
             states.push_back(newState);
-            allowFailure = nbRecontacts > robot_->GetLimbs().size() + 8;
+            allowFailure = nbRecontacts > robot_->GetLimbs().size() + 6;
         }
-
-        /*for(double i = range.first + timeStep; i< range.second; i+= timeStep)
-        {
-            const State& previous = states.back();
-            core::Configuration_t configuration = configPosition(previous.configuration_,path_,i);
-            core::Configuration_t nextconfiguration = configPosition(previous.configuration_,path_,i+timeStep);
-            Eigen::Vector3d dir = configuration.head<3>() - previous.configuration_.head<3>();
-            fcl::Vec3f direction(dir[0], dir[1], dir[2]);
-            bool nonZero(false);
-            direction.normalize(&nonZero);
-            if(!nonZero) direction = fcl::Vec3f(0,0,1.);
-            // TODO Direction 6d
-            bool sameAsPrevious(true);
-            bool multipleBreaks(false);
-            State newState = ComputeContacts(previous, robot_,configuration,nextconfiguration,collisionObjects,direction,sameAsPrevious,multipleBreaks,allowFailure);
-            if(allowFailure && multipleBreaks)
-            {
-                ++ nbFailures;
-//std::cout << "failed at state " << states.size() +1 << std::endl;
-                i += timeStep;
-if (nbFailures > 1)
-{
-#ifdef PROFILE
-    watch.stop("complete generation");
-    watch.add_to_count("planner failed", 1);
-    std::ofstream fout;
-    fout.open("log.txt", std::fstream::out | std::fstream::app);
-    std::ostream* fp = &fout;
-    watch.report_count(*fp);
-    fout.close();
-#endif
-    return states;
-}
-            }
-            if(multipleBreaks && !allowFailure)
-            {
-                ++nbRecontacts;
-                i -= timeStep;
-            }
-            else
-            {
-                nbRecontacts = 0;
-            }
-            if(sameAsPrevious)
-            {
-                states.pop_back();
-            }
-            newState.nbContacts = newState.contactNormals_.size();
-            states.push_back(newState);
-            allowFailure = nbRecontacts > robot_->GetLimbs().size() + 8;
-        }*/
         states.push_back(this->end_);
-//std::cout << "nbfailure " << nbFailures <<std::endl;
 #ifdef PROFILE
         watch.add_to_count("planner succeeded", 1);
         watch.stop("complete generation");

@@ -106,10 +106,10 @@ namespace hpp {
     private:
       RbPrmFullBodyWkPtr_t weakPtr_;
       friend hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration,
-                                        const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction);
+                                        const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction, const double robustnessTreshold);
 
       friend hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(const hpp::rbprm::State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration, model::ConfigurationIn_t nextconfiguration,
-                                        const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction, bool& contactMaintained, bool& multipleBreaks, const bool allowFailure);
+                                        const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction, bool& contactMaintained, bool& multipleBreaks, const bool allowFailure, const double robustnessTreshold);
     }; // class RbPrmDevice
 
     /// Generates a balanced contact configuration, considering the
@@ -120,9 +120,11 @@ namespace hpp {
     /// \param configuration Current full body configuration.
     /// \param collisionObjects the set of 3D objects to consider for collision and contact creation.
     /// \param direction An estimation of the direction of motion of the character.
+    /// \param robustnessTreshold minimum value of the static equilibrium robustness criterion required to accept the configuration (0 by default).
     /// \return a State describing the computed contact configuration, with relevant contact information and balance information.
     hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration,
-                                      const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction);
+                                      const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction,
+                                                       const double robustnessTreshold = 0);
 
     /// Generates a balanced contact configuration, considering the
     /// given current configuration of the robot, and a previous, balanced configuration.
@@ -137,9 +139,11 @@ namespace hpp {
     /// \param contactMaintained parameter set to true if all the contacts were maintained, regarding the previous state
     /// \param multipleBreaks If the contact generation failed at this stage because multiple contacts were broken, is set to true.
     /// \param allowFailure allow multiple breaks in the contact computation.
+    /// \param robustnessTreshold minimum value of the static equilibrium robustness criterion required to accept the configuration (0 by default).
     /// \return a State describing the computed contact configuration, with relevant contact information and balance information.
     hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(const hpp::rbprm::State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration, model::ConfigurationIn_t nextconfiguration,
-                                            const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction, bool& contactMaintained, bool& multipleBreaks, const bool allowFailure);
+                                            const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction, bool& contactMaintained, bool& multipleBreaks, const bool allowFailure,
+                                            const double robustnessTreshold = 0);
   } // namespace rbprm
 
 } // namespace hpp
