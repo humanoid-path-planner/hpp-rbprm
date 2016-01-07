@@ -26,6 +26,15 @@
 
 namespace hpp {
   namespace rbprm {
+
+  enum ContactType
+    {
+      _6_DOF  = 0,  // Position and orientation are considered (surface contact)
+      _3_DOF  = 1,  // Only 3D position is considered (punctual contact)
+      _UNDEFINED
+    };
+
+
     HPP_PREDEF_CLASS(RbPrmLimb);
 
     /// Representation of a robot limb.
@@ -54,9 +63,11 @@ namespace hpp {
         /// structure to perform efficient proximity requests. The resulution of the octree, in meters, specifies the size
         /// of the unit voxel of the octree. The larger they are, the more samples will be considered as candidates for contact.
         /// This can be problematic in terms of performance. The default value is 3 cm.
+        /// \param contactType Whether the contact is a surface contact (orientation matters) or a punctual contact
         static RbPrmLimbPtr_t create (const model::JointPtr_t limb, const fcl::Vec3f &offset,
                                       const fcl::Vec3f &normal,const double x, const double y,
-                                      const std::size_t nbSamples, const sampling::heuristic evaluate, const double resolution);
+                                      const std::size_t nbSamples, const sampling::heuristic evaluate,
+                                      const double resolution, ContactType contactType = _6_DOF);
 
 
         /// Creates a Limb a Fullbody instance  Stores a sample
@@ -73,9 +84,11 @@ namespace hpp {
         /// structure to perform efficient proximity requests. The resulution of the octree, in meters, specifies the size
         /// of the unit voxel of the octree. The larger they are, the more samples will be considered as candidates for contact.
         /// This can be problematic in terms of performance. The default value is 3 cm.
+        /// \param contactType Whether the contact is a surface contact (orientation matters) or a punctual contact
         static RbPrmLimbPtr_t create (const model::JointPtr_t limb, const std::string& effectorName, const fcl::Vec3f &offset,
                                       const fcl::Vec3f &normal,const double x, const double y,
-                                      const std::size_t nbSamples, const sampling::heuristic evaluate, const double resolution);
+                                      const std::size_t nbSamples, const sampling::heuristic evaluate,
+                                      const double resolution, ContactType contactType = _6_DOF);
 
     public:
         ~RbPrmLimb();
@@ -92,15 +105,18 @@ namespace hpp {
         const fcl::Vec3f normal_; // effector normal for surface
         const double x_; // half width
         const double y_; // half length of contact surface
+        const ContactType contactType_;
 
     protected:
       RbPrmLimb (const model::JointPtr_t& limb,  const fcl::Vec3f &offset,
                  const fcl::Vec3f &normal,const double x, const double y,
-                 const std::size_t nbSamples, const sampling::heuristic evaluate, const double resolution);
+                 const std::size_t nbSamples, const sampling::heuristic evaluate,
+                 const double resolution, ContactType contactType);
 
       RbPrmLimb (const model::JointPtr_t& limb, const std::string& effectorName,  const fcl::Vec3f &offset,
                  const fcl::Vec3f &normal,const double x, const double y,
-                 const std::size_t nbSamples, const sampling::heuristic evaluate, const double resolution);
+                 const std::size_t nbSamples, const sampling::heuristic evaluate,
+                 const double resolution, ContactType contactType);
 
       ///
       /// \brief Initialization.

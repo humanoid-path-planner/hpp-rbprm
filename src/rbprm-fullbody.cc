@@ -78,7 +78,8 @@ namespace hpp {
     void RbPrmFullBody::AddLimb(const std::string& id, const std::string& name, const std::string &effectorName,
                                 const fcl::Vec3f &offset,const fcl::Vec3f &normal, const double x,
                                 const double y,
-                                const model::ObjectVector_t &collisionObjects, const std::size_t nbSamples, const std::string &heuristicName, const double resolution)
+                                const model::ObjectVector_t &collisionObjects, const std::size_t nbSamples, const std::string &heuristicName, const double resolution,
+                                ContactType contactType)
     {
         rbprm::T_Limb::const_iterator cit = limbs_.find(id);
         std::map<std::string, const sampling::heuristic>::const_iterator hit = factory_.heuristics_.find(heuristicName);
@@ -95,7 +96,7 @@ namespace hpp {
         else
         {
             model::JointPtr_t joint = device_->getJointByName(name);
-            rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(joint, effectorName, offset,normal,x,y, nbSamples, hit->second, resolution);
+            rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(joint, effectorName, offset,normal,x,y, nbSamples, hit->second, resolution,contactType);
             core::CollisionValidationPtr_t limbcollisionValidation_ = core::CollisionValidation::create(this->device_);
             // adding collision validation
             for(model::ObjectVector_t::const_iterator cit = collisionObjects.begin();
@@ -237,10 +238,13 @@ namespace hpp {
             const fcl::Vec3f z = limb->effector_->currentTransformation().getRotation() * limb->normal_;
             const fcl::Matrix3f& rotation = previous.contactRotation_.at(name);
             proj->add(core::NumericalConstraint::create (constraints::Position::create(body->device_, limb->effector_,fcl::Vec3f(0,0,0), ppos)));
-            /*proj->add(core::NumericalConstraint::create (constraints::Orientation::create(body->device_,
-                                                                              limb->effector_,
-                                                                              rotation,
-                                                                              setMaintainRotationConstraints(z))));*/
+            if(limb->contactType_ == hpp::rbprm::_6_DOF)
+            {
+                proj->add(core::NumericalConstraint::create (constraints::Orientation::create(body->device_,
+                                                                                  limb->effector_,
+                                                                                  rotation,
+                                                                                  setMaintainRotationConstraints(z))));
+            }
             if(proj->apply(config))
             {
                 if(limbValidations.at(name)->validate(config))
@@ -313,7 +317,6 @@ namespace hpp {
                               bool contactIfFails = true, bool stableForOneContact = true,
                               const sampling::heuristic evaluate = 0)
     {
-        bool apply = false;
       // state already stable just find collision free configuration
       if(current.stable)
       {
@@ -376,10 +379,14 @@ namespace hpp {
                                                                                          setTranslationConstraints(normal))));//
 
 
-              /*proj->add(core::NumericalConstraint::create (constraints::Orientation::create(body->device_,
-                                                                                            limb->effector_,
-                                                                                            rotation,
-                                                                                            setRotationConstraints(z))));*/
+
+              if(limb->contactType_ == hpp::rbprm::_6_DOF)
+              {
+                  proj->add(core::NumericalConstraint::create (constraints::Orientation::create(body->device_,
+                                                                                                limb->effector_,
+                                                                                                rotation,
+                                                                                                setRotationConstraints(z))));
+              }
 #ifdef PROFILE
     RbPrmProfiler& watch = getRbPrmProfiler();
     watch.start("ik");
@@ -389,7 +396,6 @@ namespace hpp {
 #ifdef PROFILE
     watch.stop("ik");
 #endif
-                apply = true;
 #ifdef PROFILE
     RbPrmProfiler& watch = getRbPrmProfiler();
     watch.start("collision");
