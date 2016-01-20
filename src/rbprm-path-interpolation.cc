@@ -15,7 +15,6 @@
 // hpp-rbprm. If not, see <http://www.gnu.org/licenses/>.
 
 #include <hpp/rbprm/rbprm-path-interpolation.hh>
-#include <hpp/rbprm/stability/stability.hh>
 
 #ifdef PROFILE
     #include "hpp/rbprm/rbprm-profiler.hh"
