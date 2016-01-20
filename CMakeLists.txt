@@ -56,7 +56,7 @@ if(OPENMP_FOUND)
 endif()
 
 # remove flag that makes all warnings into errors
-string (REPLACE "-Werror" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+
 MESSAGE( STATUS "CMAKE_CXX_FLAGS: " ${CMAKE_CXX_FLAGS} )
 
 # Declare Headers
@@ -80,6 +80,12 @@ SET(${PROJECT_NAME}_HEADERS
     include/utils/Stdafx.hh
     include/utils/stop-watch.hh
   )
+
+# Activate hpp-util logging if requested
+SET (HPP_DEBUG FALSE CACHE BOOL "trigger hpp-util debug output")
+IF (HPP_DEBUG)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHPP_DEBUG")
+ENDIF()
 
 ADD_SUBDIRECTORY(src)
 #ADD_SUBDIRECTORY(tools)
