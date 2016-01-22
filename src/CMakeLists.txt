@@ -62,6 +62,8 @@ SET(${LIBRARY_NAME}_SOURCES
         ${PROJECT_SOURCE_DIR}/include/spline/MathDefs.h
         ${PROJECT_SOURCE_DIR}/include/utils/Stdafx.hh
         planner/dynamic-planner.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/planner/dynamic-planner.hh
+        planner/steering-dynamic.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/planner/steering-dynamic.hh
+
   )
 
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/src)

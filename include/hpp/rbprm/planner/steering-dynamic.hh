@@ -4,6 +4,7 @@
 # include <hpp/core/steering-method.hh>
 # include <hpp/core/straight-path.hh>
 # include <hpp/core/weighed-distance.hh>
+# include <hpp/core/problem.hh>
 
 
 namespace hpp {
@@ -56,13 +57,8 @@ namespace hpp {
       }
 
       /// create a path between two configurations
-      virtual core::PathPtr_t impl_compute (core::ConfigurationIn_t q1,
-                                      core::ConfigurationIn_t q2) const
-      {
-        core::value_type length = (*distance_) (q1, q2);
-        core::PathPtr_t path = core::StraightPath::create (problem_->robot(), q1, q2, length,constraints ());
-        return path;
-      }
+      virtual core::PathPtr_t impl_compute (core::ConfigurationIn_t q1,                           core::ConfigurationIn_t q2) const;
+
     protected:
       /// Constructor with robot
       /// Weighed distance is created from robot
