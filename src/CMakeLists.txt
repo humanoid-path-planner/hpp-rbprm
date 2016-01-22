@@ -60,6 +60,8 @@ SET(${LIBRARY_NAME}_SOURCES
         ${PROJECT_SOURCE_DIR}/include/spline/exact_cubic.h
         ${PROJECT_SOURCE_DIR}/include/spline/cubic_function.h
         ${PROJECT_SOURCE_DIR}/include/spline/MathDefs.h
+        ${PROJECT_SOURCE_DIR}/include/utils/Stdafx.hh
+        planner/dynamic-planner.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/planner/dynamic-planner.hh
   )
 
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/src)
