@@ -1,3 +1,21 @@
+//
+// Copyright (c) 2014 CNRS
+// Authors: Florent Lamiraux
+//
+// This file is part of hpp-core
+// hpp-core is free software: you can redistribute it
+// and/or modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation, either version
+// 3 of the License, or (at your option) any later version.
+//
+// hpp-core is distributed in the hope that it will be
+// useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+// of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Lesser Public License for more details.  You should have
+// received a copy of the GNU Lesser General Public License along with
+// hpp-core  If not, see
+// <http://www.gnu.org/licenses/>.
+#include <hpp/rbprm/planner/dynamic-planner.hh>
 #include <boost/tuple/tuple.hpp>
 #include <hpp/util/debug.hh>
 #include <hpp/model/configuration.hh>
@@ -9,18 +27,10 @@
 #include <hpp/core/path-validation.hh>
 #include <hpp/core/problem.hh>
 #include <hpp/core/roadmap.hh>
+#include <hpp/core/steering-method.hh>
 #include <hpp/core/basic-configuration-shooter.hh>
-#include <hpp/rbprm/planner/dynamic-planner.hh>
-#include <hpp/rbprm/planner/steering-dynamic.hh>
-/**
- *  Motion planning algorithm with dynamic : planning in state space and not in configuration space
- *
- *  each node is a state
- *
- *  the velocity of the randomly sampled state are not constrained : they only depend of the selected x_near velocity and the control applied by the steering method
- */
 
-namespace hpp{
+namespace hpp {
   namespace rbprm {
     using model::displayConfig;
 
@@ -38,15 +48,17 @@ namespace hpp{
     }
 
     DynamicPlanner::DynamicPlanner (const core::Problem& problem):
-      PathPlanner (problem),configurationShooter_ (problem.configurationShooter()),
-      qProj_ (problem.robot ()->configSize ())/*,sm_(SteeringDynamic::create(problem))*/
+      PathPlanner (problem),
+      configurationShooter_ (problem.configurationShooter()),
+      qProj_ (problem.robot ()->configSize ())
     {
     }
 
     DynamicPlanner::DynamicPlanner (const core::Problem& problem,
                                         const core::RoadmapPtr_t& roadmap) :
-      PathPlanner (problem, roadmap),configurationShooter_ (problem.configurationShooter()),
-      qProj_ (problem.robot ()->configSize ())/*,sm_(SteeringDynamic::create(problem))*/
+      PathPlanner (problem, roadmap),
+      configurationShooter_ (problem.configurationShooter()),
+      qProj_ (problem.robot ()->configSize ())
     {
     }
 
@@ -68,8 +80,8 @@ namespace hpp{
     core::PathPtr_t DynamicPlanner::extend (const core::NodePtr_t& near,
                                         const core::ConfigurationPtr_t& target)
     {
-      const core::SteeringMethodPtr_t& sm_ (problem ().steeringMethod ());
-      const core::ConstraintSetPtr_t& constraints (sm_->constraints ());
+      const core::SteeringMethodPtr_t& sm (problem ().steeringMethod ());
+      const core::ConstraintSetPtr_t& constraints (sm->constraints ());
       if (constraints) {
         core::ConfigProjectorPtr_t configProjector (constraints->configProjector ());
         if (configProjector) {
@@ -79,20 +91,14 @@ namespace hpp{
           qProj_ = *target;
         }
         if (constraints->apply (qProj_)) {
-          return (*sm_) (*(near->configuration ()), qProj_);
+          return (*sm) (*(near->configuration ()), qProj_);
         } else {
           return core::PathPtr_t ();
         }
       }
-      return (*sm_) (*(near->configuration ()), *target);
+      return (*sm) (*(near->configuration ()), *target);
     }
 
-    void DynamicPlanner::startSolve (){
-      PathPlanner::startSolve();  // inherited method
-      // done in python now, otherwise we can't specify initial or goal state with non null velocity
-     // problem().robot()->setDimensionExtraConfigSpace(problem().robot()->numberDof());  // add extra config space for velocity
-
-    }
 
     /// This method performs one step of RRT extension as follows
     ///  1. a random configuration "q_rand" is shot,
@@ -141,12 +147,14 @@ namespace hpp{
         core::NodePtr_t near = roadmap ()->nearestNode (q_rand, *itcc, distance);
         path = extend (near, q_rand);
         if (path) {
-          bool pathValid = pathValidation->validate (path, false, validPath);
+          core::PathValidationReportPtr_t report;
+          bool pathValid = pathValidation->validate (path, false, validPath,
+                                                     report);
           // Insert new path to q_near in roadmap
           core::value_type t_final = validPath->timeRange ().second;
           if (t_final != path->timeRange ().first) {
             core::ConfigurationPtr_t q_new (new core::Configuration_t
-                                      ((*validPath) (t_final)));
+                                      (validPath->end ()));
             if (!pathValid || !belongs (q_new, newNodes)) {
               newNodes.push_back (roadmap ()->addNodeAndEdges
                                   (near, q_new, validPath));
@@ -165,7 +173,7 @@ namespace hpp{
         const core::NodePtr_t& near = itEdge-> get <0> ();
         const core::ConfigurationPtr_t& q_new = itEdge-> get <1> ();
         const core::PathPtr_t& validPath = itEdge-> get <2> ();
-       core:: NodePtr_t newNode = roadmap ()->addNode (q_new);
+        core::NodePtr_t newNode = roadmap ()->addNode (q_new);
         roadmap ()->addEdge (near, newNode, validPath);
         core::interval_t timeRange = validPath->timeRange ();
         roadmap ()->addEdge (newNode, near, validPath->extract
@@ -176,6 +184,7 @@ namespace hpp{
       //
       // Second, try to connect new nodes together
       //
+      const core::SteeringMethodPtr_t& sm (problem ().steeringMethod ());
       for (core::Nodes_t::const_iterator itn1 = newNodes.begin ();
            itn1 != newNodes.end (); ++itn1) {
         for (core::Nodes_t::const_iterator itn2 = boost::next (itn1);
@@ -183,8 +192,10 @@ namespace hpp{
           core::ConfigurationPtr_t q1 ((*itn1)->configuration ());
           core::ConfigurationPtr_t q2 ((*itn2)->configuration ());
           assert (*q1 != *q2);
-          path = (*sm_) (*q1, *q2);
-          if (path && pathValidation->validate (path, false, validPath)) {
+          path = (*sm) (*q1, *q2);
+          core::PathValidationReportPtr_t report;
+          if (path && pathValidation->validate (path, false, validPath,
+                                                report)) {
             roadmap ()->addEdge (*itn1, *itn2, path);
             core::interval_t timeRange = path->timeRange ();
             roadmap ()->addEdge (*itn2, *itn1, path->extract
@@ -202,6 +213,5 @@ namespace hpp{
     }
 
 
-
-  }//namespace dyn
-}//namespace hpp
+  } // namespace core
+} // namespace hpp

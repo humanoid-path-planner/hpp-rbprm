@@ -1,65 +1,68 @@
-#ifndef DynamicPlanner_H
-#define DynamicPlanner_H
+//
+// Copyright (c) 2014 CNRS
+// Authors: Florent Lamiraux
+//
+// This file is part of hpp-core
+// hpp-core is free software: you can redistribute it
+// and/or modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation, either version
+// 3 of the License, or (at your option) any later version.
+//
+// hpp-core is distributed in the hope that it will be
+// useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+// of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Lesser Public License for more details.  You should have
+// received a copy of the GNU Lesser General Public License along with
+// hpp-core  If not, see
+// <http://www.gnu.org/licenses/>.
 
+#ifndef HPP_RBPRM_DYNAMIC_PLANNER_HH
+# define HPP_RBPRM_DYNAMIC_PLANNER_HH
 
-#include <hpp/util/pointer.hh>
-
-#include <hpp/core/basic-configuration-shooter.hh>
-#include <hpp/core/config-validations.hh>
-#include <hpp/core/connected-component.hh>
-#include <hpp/core/constraint-set.hh>
-#include <hpp/core/path-planner.hh>
-#include <hpp/core/path-validation.hh>
-#include <hpp/core/roadmap.hh>
-#include <hpp/core/steering-method.hh>
-#include <hpp/core/problem.hh>
-
+# include <hpp/core/path-planner.hh>
 
 namespace hpp {
   namespace rbprm {
+    /// \addtogroup path_planning
+    /// \{
+
     // forward declaration of class Planner
     HPP_PREDEF_CLASS (DynamicPlanner);
     // Planner objects are manipulated only via shared pointers
     typedef boost::shared_ptr <DynamicPlanner> DynamicPlannerPtr_t;
 
-    /// Example of path planner
-    class DynamicPlanner : public core::PathPlanner
+
+    /// Generic implementation of RRT algorithm
+    class  DynamicPlanner : public core::PathPlanner
     {
-      public:
-        /// Create an instance and return a shared pointer to the instance
-        static DynamicPlannerPtr_t create (const core::Problem& problem);
-        static DynamicPlannerPtr_t createWithRoadmap(const core::Problem& problem, const core::RoadmapPtr_t& roadmap);
-        void configurationShooter (const core::ConfigurationShooterPtr_t& shooter);
-
-        virtual void startSolve ();
-
-        virtual void oneStep ();
-
-      protected:
-        /// Protected constructor
-        /// Users need to call Planner::create in order to create instances.
-        DynamicPlanner (const core::Problem& problem,const core::RoadmapPtr_t& roadmap);
-        DynamicPlanner (const core::Problem &problem);
-
-        /// Extend a node in the direction of a configuration
-        /// \param near node in the roadmap,
-        /// \param target target configuration
-        virtual core::PathPtr_t extend (const core::NodePtr_t& near,
-                                  const core::ConfigurationPtr_t& target);
-
-        /// Store weak pointer to itself
-        void init (const DynamicPlannerWkPtr_t& weak);
-      private:
-        /// Configuration shooter to uniformly shoot random configurations
-        core::ConfigurationShooterPtr_t configurationShooter_;
-        mutable core::Configuration_t qProj_;
-        /// weak pointer to itself
-        DynamicPlannerWkPtr_t weakPtr_;
-        core::SteeringMethodPtr_t sm_;
-    }; // class Planner
-  } // namespace rbprm
+    public:
+      /// Return shared pointer to new object.
+      static DynamicPlannerPtr_t createWithRoadmap
+        (const core::Problem& problem, const core::RoadmapPtr_t& roadmap);
+      /// Return shared pointer to new object.
+      static DynamicPlannerPtr_t create (const core::Problem& problem);
+      /// One step of extension.
+      virtual void oneStep ();
+      /// Set configuration shooter.
+      void configurationShooter (const core::ConfigurationShooterPtr_t& shooter);
+    protected:
+      /// Constructor
+      DynamicPlanner (const core::Problem& problem, const core::RoadmapPtr_t& roadmap);
+      /// Constructor with roadmap
+      DynamicPlanner (const core::Problem& problem);
+      /// Store weak pointer to itself
+      void init (const DynamicPlannerWkPtr_t& weak);
+      /// Extend a node in the direction of a configuration
+      /// \param near node in the roadmap,
+      /// \param target target configuration
+      virtual core::PathPtr_t extend (const core::NodePtr_t& near,
+                                const core::ConfigurationPtr_t& target);
+    private:
+      core::ConfigurationShooterPtr_t configurationShooter_;
+      mutable core::Configuration_t qProj_;
+      DynamicPlannerWkPtr_t weakPtr_;
+    };
+    /// \}
+  } // namespace core
 } // namespace hpp
-
-
-
-#endif
+#endif // HPP_CORE_DIFFUSING_PLANNER_HH
