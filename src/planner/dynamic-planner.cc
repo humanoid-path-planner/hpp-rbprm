@@ -1,6 +1,6 @@
 //
-// Copyright (c) 2014 CNRS
-// Authors: Florent Lamiraux
+// Copyright (c) 2016 CNRS
+// Authors: Fernbach Pierre
 //
 // This file is part of hpp-core
 // hpp-core is free software: you can redistribute it
