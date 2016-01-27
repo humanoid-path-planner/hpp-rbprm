@@ -43,6 +43,9 @@ namespace hpp {
       static DynamicPlannerPtr_t create (const core::Problem& problem);
       /// One step of extension.
       virtual void oneStep ();
+
+      virtual void startSolve ();
+
       /// Set configuration shooter.
       void configurationShooter (const core::ConfigurationShooterPtr_t& shooter);
     protected:

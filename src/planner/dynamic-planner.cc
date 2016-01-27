@@ -77,6 +77,26 @@ namespace hpp {
       return false;
     }
 
+    void DynamicPlanner::startSolve ()
+    {      
+      // add 3 extraDof to save contact normal (used for parabola computation)
+      //hppDout(notice,"set extra conf");
+
+      //problem().robot()->setDimensionExtraConfigSpace(problem().robot()->extraConfigSpace().dimension() + 3);
+    //  PathPlanner::startSolve();
+      hppDout(notice,"startsolve");
+      problem().checkProblem ();
+      // Tag init and goal configurations in the roadmap
+      roadmap()->resetGoalNodes ();
+      roadmap()->initNode (problem().initConfig ());
+      const core::Configurations_t goals (problem().goalConfigs ());
+      for (core::Configurations_t::const_iterator itGoal = goals.begin ();
+           itGoal != goals.end (); ++itGoal) {
+        roadmap()->addGoalNode (*itGoal);
+      }
+      hppDout(notice,"startSolve OK");
+    }
+
     core::PathPtr_t DynamicPlanner::extend (const core::NodePtr_t& near,
                                         const core::ConfigurationPtr_t& target)
     {
