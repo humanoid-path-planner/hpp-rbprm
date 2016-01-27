@@ -146,6 +146,7 @@ namespace hpp {
 
     void DynamicPlanner::oneStep ()
     {
+      hppDout(notice,"oneStep begin");
       typedef boost::tuple <core::NodePtr_t, core::ConfigurationPtr_t, core::PathPtr_t>
         DelayedEdge_t;
       typedef std::vector <DelayedEdge_t> DelayedEdges_t;
@@ -154,14 +155,20 @@ namespace hpp {
       core::PathValidationPtr_t pathValidation (problem ().pathValidation ());
       core::Nodes_t newNodes;
       core::PathPtr_t validPath, path;
+      hppDout(notice,"random shoot begin");
       // Pick a random node
       core::ConfigurationPtr_t q_rand = configurationShooter_->shoot ();
+      hppDout(notice,"random shoot OK");
+
       //
       // First extend each connected component toward q_rand
       //
+      int i = 1;
       for (core::ConnectedComponents_t::const_iterator itcc =
              roadmap ()->connectedComponents ().begin ();
            itcc != roadmap ()->connectedComponents ().end (); ++itcc) {
+        hppDout(notice, "###### for connected components "<<i);
+        i++;
         // Find nearest node in roadmap
         core::value_type distance;
         core::NodePtr_t near = roadmap ()->nearestNode (q_rand, *itcc, distance);
@@ -187,6 +194,7 @@ namespace hpp {
           }
         }
       }
+      hppDout(notice,"extend OK");
       // Insert delayed edges
       for (DelayedEdges_t::const_iterator itEdge = delayedEdges.begin ();
            itEdge != delayedEdges.end (); ++itEdge) {
@@ -200,6 +208,7 @@ namespace hpp {
                              (core::interval_t (timeRange.second ,
                                           timeRange.first)));
       }
+      hppDout(notice,"add delayed edge OK");
 
       //
       // Second, try to connect new nodes together
@@ -224,6 +233,8 @@ namespace hpp {
           }
         }
       }
+      hppDout(notice,"connect new nodes OK");
+
     }
 
     void DynamicPlanner::configurationShooter
