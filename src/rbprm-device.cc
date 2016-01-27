@@ -69,10 +69,18 @@ namespace hpp {
 
     bool RbPrmDevice::currentConfiguration (ConfigurationIn_t configuration)
     {
+        // separate config and extra config :
+        size_type confSize = configSize() - extraConfigSpace().dimension();
+        hppDout(notice, "offset = "<<confSize);
+        ConfigurationPtr_t q(new Configuration_t(confSize));
+        for(size_type i = 0 ; i < confSize ; i++)
+          (*q)[1] = configuration[i];
+
+        // don't send extra config to robotRoms
         for(hpp::model::T_Rom::const_iterator cit = robotRoms_.begin();
             cit != robotRoms_.end(); ++cit)
         {
-            cit->second->currentConfiguration(configuration);
+            cit->second->currentConfiguration(*q);
         }
         return Device::currentConfiguration(configuration);
     }
