@@ -52,20 +52,22 @@ namespace hpp {
 
     bool RbPrmDevice::currentConfiguration (ConfigurationIn_t configuration)
     {
-        // separate config and extra config :
-        size_type confSize = configSize() - extraConfigSpace().dimension();
-        hppDout(notice, "offset = "<<confSize);
-        ConfigurationPtr_t q(new Configuration_t(confSize));
-        for(size_type i = 0 ; i < confSize ; i++)
-          (*q)[1] = configuration[i];
-
-        // don't send extra config to robotRoms
         for(hpp::model::T_Rom::const_iterator cit = robotRoms_.begin();
             cit != robotRoms_.end(); ++cit)
         {
-            cit->second->currentConfiguration(*q);
+            cit->second->currentConfiguration(configuration);
         }
         return Device::currentConfiguration(configuration);
+    }
+
+    void RbPrmDevice::setDimensionExtraConfigSpace (const size_type& dimension)
+    {
+      Device::setDimensionExtraConfigSpace(dimension); // call inherited method
+      // call method for each robotRoms :
+      for(hpp::model::T_Rom::const_iterator cit = robotRoms_.begin();
+          cit != robotRoms_.end(); ++cit){
+          cit->second->setDimensionExtraConfigSpace(dimension);
+        }
     }
 
     RbPrmDevice::RbPrmDevice (const std::string& name, const hpp::model::T_Rom &robotRoms)
