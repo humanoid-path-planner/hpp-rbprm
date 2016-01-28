@@ -29,7 +29,7 @@
 #include <hpp/core/roadmap.hh>
 #include <hpp/core/steering-method.hh>
 #include <hpp/core/basic-configuration-shooter.hh>
-
+#include <hpp/core/path-validation-report.hh>
 namespace hpp {
   namespace rbprm {
     using model::displayConfig;

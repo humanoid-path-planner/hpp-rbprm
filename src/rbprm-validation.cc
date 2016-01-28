@@ -136,9 +136,11 @@ namespace hpp {
                 ++filterMatch;
             }
         }
-
         std::string tr = (filterMatch >= filter.size()) ? "true" : "false";
         hppDout(notice," validate romes ?" << filterMatch << " " <<  tr );
+
+        //std::string tr = (filterMatch >= filter.size()) ? "true" : "false";
+        //hppDout(notice," validate romes ?" << filterMatch << " " <<  tr );
         return filterMatch >= filter.size();
     }
 

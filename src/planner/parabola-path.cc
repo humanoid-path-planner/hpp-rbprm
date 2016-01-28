@@ -23,6 +23,7 @@
 #include <hpp/model/joint-configuration.hh>
 #include <hpp/core/config-projector.hh>
 #include <hpp/rbprm/planner/parabola-path.hh>
+#include <hpp/core/straight-path.hh>
 
 namespace hpp {
   namespace rbprm {
@@ -145,15 +146,15 @@ namespace hpp {
       return true;
     }
 
-    core::PathPtr_t ParabolaPath::extract (const interval_t& /*subInterval*/) const throw (hpp::core::projection_error)
+    core::PathPtr_t ParabolaPath::extract (const interval_t& subInterval) const throw (hpp::core::projection_error)
     {
       bool success;
-      //Configuration_t q1 ((*this) (subInterval.first, success)); // straight
-      //Configuration_t q2 ((*this) (subInterval.second, success)); // straight
-      core::Configuration_t q1 ((*this) (length_, success));
-      core::Configuration_t q2 ((*this) (0, success));
-      core::PathPtr_t result = ParabolaPath::create (device_, q1, q2, length_,
-					       coefficients_);
+      core::Configuration_t q1 ((*this) (subInterval.first, success)); // straight
+      core::Configuration_t q2 ((*this) (subInterval.second, success)); // straight
+      //core::Configuration_t q1 ((*this) (length_, success));
+     // core::Configuration_t q2 ((*this) (0, success));
+      core::PathPtr_t result = core::StraightPath::create
+          (device_, q1, q2, std::abs((value_type)(subInterval.second-subInterval.first)), constraints ());
       return result;
     }
 
