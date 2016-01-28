@@ -176,21 +176,32 @@ namespace hpp {
         if (path) {
           hppDout(notice, "### path exist");
           core::PathValidationReportPtr_t report;
-          bool pathValid = pathValidation->validate (path, false, validPath,
-                                                     report);
+          bool pathValid = pathValidation->validate (path, false, validPath,report);
+
           // Insert new path to q_near in roadmap
           core::value_type t_final = validPath->timeRange ().second;
           if (t_final != path->timeRange ().first) {
+
+            if(!pathValid){
+              // here, the parabola path was invalid so a straight line was computed, we need ,to check this new path for colision :
+              hppDout(notice, "parabola path invalid");
+              path = validPath;
+              pathValid = pathValidation->validate (path, false, validPath,report);
+              if(pathValid)
+                hppDout(notice,"straight line path valid");
+              else
+                hppDout(notice,"straight line path not valid");
+            }
             hppDout(notice, "### path's length not null");
             core::ConfigurationPtr_t q_new (new core::Configuration_t
                                       (validPath->end ()));
             if (!pathValid || !belongs (q_new, newNodes)) {
-              hppDout(notice, "### path invalid, last conf = ");
+              hppDout(notice, "### add new node and edges: ");
               hppDout(notice, displayConfig(*q_new));
-              newNodes.push_back (roadmap ()->addNodeAndEdges
-                                  (near, q_new, validPath));
+              // here, the parabola path was invalid so a straight line was computed, we need ,to check this new path for colision :
+               newNodes.push_back (roadmap ()->addNodeAndEdges(near, q_new, validPath));
             } else {
-              hppDout(notice, "### pathValid");
+              hppDout(notice, "### add delayed edge");
 
               // Store edges to add for later insertion.
               // Adding edges while looping on connected components is indeed
