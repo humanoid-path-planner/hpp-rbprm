@@ -174,25 +174,33 @@ namespace hpp {
         core::NodePtr_t near = roadmap ()->nearestNode (q_rand, *itcc, distance);
         path = extend (near, q_rand);
         if (path) {
+          hppDout(notice, "### path exist");
           core::PathValidationReportPtr_t report;
           bool pathValid = pathValidation->validate (path, false, validPath,
                                                      report);
           // Insert new path to q_near in roadmap
           core::value_type t_final = validPath->timeRange ().second;
           if (t_final != path->timeRange ().first) {
+            hppDout(notice, "### path's length not null");
             core::ConfigurationPtr_t q_new (new core::Configuration_t
                                       (validPath->end ()));
             if (!pathValid || !belongs (q_new, newNodes)) {
+              hppDout(notice, "### path invalid, last conf = ");
+              hppDout(notice, displayConfig(*q_new));
               newNodes.push_back (roadmap ()->addNodeAndEdges
                                   (near, q_new, validPath));
             } else {
+              hppDout(notice, "### pathValid");
+
               // Store edges to add for later insertion.
               // Adding edges while looping on connected components is indeed
               // not recommended.
               delayedEdges.push_back (DelayedEdge_t (near, q_new, validPath));
             }
           }
-        }
+        }else
+          hppDout(notice, "### path dosen't exist");
+
       }
       hppDout(notice,"extend OK");
       // Insert delayed edges

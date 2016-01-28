@@ -37,7 +37,7 @@ namespace hpp {
     SteeringMethodParabola::SteeringMethodParabola (const core::ProblemPtr_t& problem) :
       SteeringMethod (problem), device_ (problem->robot()),
       distance_ (core::WeighedDistance::create (problem->robot())), weak_ (),
-      g_(9.81), V0max_ (6.5), Vimpmax_ (15), mu_ (0.5), Dalpha_ (0.001),
+      g_(9.81), V0max_ (15), Vimpmax_ (15), mu_ (1), Dalpha_ (0.001),
       workspaceDim_ (false)
     {
       hppDout(notice,"Constructor steering-method-parabola");
