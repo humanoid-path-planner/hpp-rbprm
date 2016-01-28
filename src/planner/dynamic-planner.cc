@@ -30,6 +30,10 @@
 #include <hpp/core/steering-method.hh>
 #include <hpp/core/basic-configuration-shooter.hh>
 #include <hpp/core/path-validation-report.hh>
+#include <hpp/core/steering-method-straight.hh>
+#include <hpp/core/path-projector.hh>
+
+
 namespace hpp {
   namespace rbprm {
     using model::displayConfig;
@@ -50,7 +54,8 @@ namespace hpp {
     DynamicPlanner::DynamicPlanner (const core::Problem& problem):
       PathPlanner (problem),
       configurationShooter_ (problem.configurationShooter()),
-      qProj_ (problem.robot ()->configSize ())
+      qProj_ (problem.robot ()->configSize ()),
+      smStraight_(core::SteeringMethodStraight::create((core::ProblemPtr_t(&problem))))
     {
     }
 
@@ -58,7 +63,8 @@ namespace hpp {
                                         const core::RoadmapPtr_t& roadmap) :
       PathPlanner (problem, roadmap),
       configurationShooter_ (problem.configurationShooter()),
-      qProj_ (problem.robot ()->configSize ())
+      qProj_ (problem.robot ()->configSize ()),
+      smStraight_(core::SteeringMethodStraight::create((core::ProblemPtr_t(&problem))))
     {
     }
 
@@ -102,6 +108,7 @@ namespace hpp {
     {
       const core::SteeringMethodPtr_t& sm (problem ().steeringMethod ());
       const core::ConstraintSetPtr_t& constraints (sm->constraints ());
+      core::PathPtr_t path;
       if (constraints) {
         core::ConfigProjectorPtr_t configProjector (constraints->configProjector ());
         if (configProjector) {
@@ -111,12 +118,22 @@ namespace hpp {
           qProj_ = *target;
         }
         if (constraints->apply (qProj_)) {
-          return (*sm) (*(near->configuration ()), qProj_);
+          path = (*sm) (*(near->configuration ()), qProj_);
+          if(!path){
+            hppDout(notice, "## parabola path fail, compute straight path");
+            path = (*smStraight_) (*(near->configuration ()), qProj_);
+          }
         } else {
           return core::PathPtr_t ();
         }
+      }else{
+        path = (*sm) (*(near->configuration ()), *target);
+        if(!path){
+          hppDout(notice, "## parabola path fail, compute straight path");
+          path = (*smStraight_) (*(near->configuration ()), *target);
+        }
       }
-      return (*sm) (*(near->configuration ()), *target);
+      return path;
     }
 
 
@@ -254,6 +271,45 @@ namespace hpp {
       }
       hppDout(notice,"connect new nodes OK");
 
+    }
+
+    void DynamicPlanner::tryDirectPath ()
+    {
+      // call steering method here to build a direct conexion
+      const core::SteeringMethodPtr_t& sm (problem ().steeringMethod ());
+      core::PathValidationPtr_t pathValidation (problem ().pathValidation ());
+      core::PathProjectorPtr_t pathProjector (problem ().pathProjector ());
+      core::PathPtr_t validPath, projPath, path;
+      core::NodePtr_t initNode = roadmap ()->initNode();
+      for (core::Nodes_t::const_iterator itn = roadmap ()->goalNodes ().begin();itn != roadmap ()->goalNodes ().end (); ++itn) {
+        core::ConfigurationPtr_t q1 ((initNode)->configuration ());
+        core::ConfigurationPtr_t q2 ((*itn)->configuration ());
+        assert (*q1 != *q2);
+        path = (*sm) (*q1, *q2);
+        if(!path){
+          hppDout(notice, "## parabola path fail, compute straight path");
+          path = (*smStraight_) (*q1, *q2);
+        }
+        if (!path) continue;
+        if (pathProjector) {
+          if (!pathProjector->apply (path, projPath)) continue;
+          } else {
+            projPath = path;
+          }
+        if (projPath) {
+          core::PathValidationReportPtr_t report;
+          bool pathValid = pathValidation->validate (projPath, false, validPath,
+          report);
+          if (pathValid && validPath->timeRange ().second !=
+            path->timeRange ().first) {
+            roadmap ()->addEdge (initNode, *itn, projPath);
+            core::interval_t timeRange = projPath->timeRange ();
+            roadmap ()->addEdge (*itn, initNode, projPath->extract
+            (core::interval_t (timeRange.second,
+            timeRange.first)));
+          }
+        }
+      }
     }
 
     void DynamicPlanner::configurationShooter

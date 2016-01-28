@@ -586,7 +586,10 @@ namespace hpp {
 	  hppDout (info, "cos(2*delta): " << cos2delta);
 	  *delta = 0.5*acos (cos2delta);
 	  hppDout (info, "delta: " << *delta);
-	  assert (*delta <= phi + 1e-5);
+	  if (*delta <= phi + 1e-5){
+	    hppDout(notice, "Problem with cone intersection, delta <= phi");
+	    return false;
+	  }
 	  return true;
 	}
 	else { // "vertical" cone
@@ -595,7 +598,10 @@ namespace hpp {
 	  hppDout (info, "cos(2*delta): " << cos2delta);
 	  *delta = 0.5*acos (cos2delta);
 	  hppDout (info, "delta: " << *delta);
-	  assert (*delta <= phi + 1e-5); //problem with cone intersection
+	  if (*delta <= phi + 1e-5){
+	    hppDout(notice, "Problem with cone intersection, delta <= phi");
+	    return false;
+	  }
 	  return true;
 	}
       }

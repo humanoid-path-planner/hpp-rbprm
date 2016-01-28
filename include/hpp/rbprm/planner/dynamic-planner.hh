@@ -20,6 +20,7 @@
 # define HPP_RBPRM_DYNAMIC_PLANNER_HH
 
 # include <hpp/core/path-planner.hh>
+# include <hpp/core/steering-method.hh>
 
 namespace hpp {
   namespace rbprm {
@@ -46,6 +47,8 @@ namespace hpp {
 
       virtual void startSolve ();
 
+      virtual void tryDirectPath();
+
       /// Set configuration shooter.
       void configurationShooter (const core::ConfigurationShooterPtr_t& shooter);
     protected:
@@ -64,6 +67,7 @@ namespace hpp {
       core::ConfigurationShooterPtr_t configurationShooter_;
       mutable core::Configuration_t qProj_;
       DynamicPlannerWkPtr_t weakPtr_;
+      core::SteeringMethodPtr_t smStraight_;
     };
     /// \}
   } // namespace core
