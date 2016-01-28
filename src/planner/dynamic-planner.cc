@@ -273,7 +273,7 @@ namespace hpp {
 
     }
 
-    void DynamicPlanner::tryDirectPath ()
+    /*void DynamicPlanner::tryDirectPath ()
     {
       // call steering method here to build a direct conexion
       const core::SteeringMethodPtr_t& sm (problem ().steeringMethod ());
@@ -310,7 +310,7 @@ namespace hpp {
           }
         }
       }
-    }
+    }*/
 
     void DynamicPlanner::configurationShooter
     (const core::ConfigurationShooterPtr_t& shooter)
