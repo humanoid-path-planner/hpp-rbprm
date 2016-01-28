@@ -114,6 +114,11 @@ namespace hpp {
       /// result is reversed.
       virtual core::PathPtr_t extract (const core::interval_t& subInterval) const throw (core::projection_error);
 
+      /// Reversion of a path
+      /// \return a new path that is this one reversed.
+      virtual core::PathPtr_t reverse () const;
+
+
       /// Modify initial configuration
       /// \param initial new initial configuration
       /// \pre input configuration should be of the same size as current initial

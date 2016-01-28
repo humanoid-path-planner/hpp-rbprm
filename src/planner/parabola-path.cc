@@ -146,15 +146,22 @@ namespace hpp {
       return true;
     }
 
+    // extract return a straight path, because configuration inside the parabola dosen't have a normal computed and thus we can't create a valid parabola path between them
     core::PathPtr_t ParabolaPath::extract (const interval_t& subInterval) const throw (hpp::core::projection_error)
     {
       bool success;
       core::Configuration_t q1 ((*this) (subInterval.first, success)); // straight
       core::Configuration_t q2 ((*this) (subInterval.second, success)); // straight
-      //core::Configuration_t q1 ((*this) (length_, success));
-     // core::Configuration_t q2 ((*this) (0, success));
       core::PathPtr_t result = core::StraightPath::create
           (device_, q1, q2, std::abs((value_type)(subInterval.second-subInterval.first)), constraints ());
+      return result;
+    }
+
+    core::PathPtr_t ParabolaPath::reverse () const{
+      core::Configuration_t q1 ((*this) (length_));
+      core::Configuration_t q2 ((*this) (0));
+      core::PathPtr_t result = ParabolaPath::create (device_, q1, q2, length_,
+                       coefficients_);
       return result;
     }
 
