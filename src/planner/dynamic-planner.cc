@@ -239,10 +239,7 @@ namespace hpp {
         const core::PathPtr_t& validPath = itEdge-> get <2> ();
         core::NodePtr_t newNode = roadmap ()->addNode (q_new);
         roadmap ()->addEdge (near, newNode, validPath);
-        core::interval_t timeRange = validPath->timeRange ();
-        roadmap ()->addEdge (newNode, near, validPath->extract
-                             (core::interval_t (timeRange.second ,
-                                          timeRange.first)));
+        roadmap ()->addEdge (newNode, near, validPath->reverse());
       }
       hppDout(notice,"add delayed edge OK");
 
@@ -259,13 +256,13 @@ namespace hpp {
           assert (*q1 != *q2);
           path = (*sm) (*q1, *q2);
           core::PathValidationReportPtr_t report;
-          if (path && pathValidation->validate (path, false, validPath,
-                                                report)) {
+          if(!(path && pathValidation->validate (path, false, validPath, report))){
+            hppDout(notice, "## parabola path fail, compute straight path");
+            path = (*smStraight_) (*q1, *q2);
+          }
+          if (path && pathValidation->validate (path, false, validPath, report)) {
             roadmap ()->addEdge (*itn1, *itn2, path);
-            core::interval_t timeRange = path->timeRange ();
-            roadmap ()->addEdge (*itn2, *itn1, path->extract
-                                 (core::interval_t (timeRange.second,
-                                              timeRange.first)));
+            roadmap ()->addEdge (*itn2, *itn1, path->reverse());
           }
         }
       }
@@ -304,9 +301,7 @@ namespace hpp {
             path->timeRange ().first) {
             roadmap ()->addEdge (initNode, *itn, projPath);
             core::interval_t timeRange = projPath->timeRange ();
-            roadmap ()->addEdge (*itn, initNode, projPath->extract
-            (core::interval_t (timeRange.second,
-            timeRange.first)));
+            roadmap ()->addEdge (*itn, initNode, projPath->reverse();
           }
         }
       }

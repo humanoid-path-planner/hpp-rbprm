@@ -158,6 +158,7 @@ namespace hpp {
     }
 
     core::PathPtr_t ParabolaPath::reverse () const{
+      hppDout(notice, "reverse path parabola !!!!!!!!!!!!!!!!!!!!!!!!");
       core::Configuration_t q1 ((*this) (length_));
       core::Configuration_t q2 ((*this) (0));
       core::PathPtr_t result = ParabolaPath::create (device_, q1, q2, length_,
