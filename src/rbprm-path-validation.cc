@@ -14,8 +14,22 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-rbprm. If not, see <http://www.gnu.org/licenses/>.
 
-#include "hpp/rbprm/rbprm-planner.hh"
+#include <hpp/rbprm/rbprm-path-validation.hh>
 
-namespace hpp
-{
+namespace hpp{
+  namespace rbprm {
+
+    RbPrmPathValidationPtr_t RbPrmPathValidation::create (const core::DevicePtr_t& robot, const core::value_type& stepSize)
+    {
+      RbPrmPathValidation* ptr (new RbPrmPathValidation(robot, stepSize));
+      RbPrmPathValidationPtr_t shPtr (ptr);
+      return shPtr;
+    }
+
+
+    RbPrmPathValidation::RbPrmPathValidation(const core::DevicePtr_t &robot, const core::value_type &stepSize) :
+      core::DiscretizedCollisionChecking(robot,stepSize){}
+
+
+  }//namespace rbprm
 } //namespace hpp

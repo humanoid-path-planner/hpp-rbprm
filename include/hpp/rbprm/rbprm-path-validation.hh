@@ -17,55 +17,33 @@
 #ifndef HPP_RBPRM_PATH_VALIDATION_HH
 # define HPP_RBPRM_PATH_VALIDATION_HH
 
+#include <hpp/core/discretized-collision-checking.hh>
 #include <hpp/util/pointer.hh>
 #include <hpp/rbprm/config.hh>
-#include <hpp/core/path-planner.hh>
 
 namespace hpp {
-namespace rbprm {
-// forward declaration of class Planner
-HPP_PREDEF_CLASS (RbprmPathValidation);
-// Planner objects are manipulated only via shared pointers
-typedef boost::shared_ptr <RbprmPathValidation> RbPrmPathValidationPtr_t;
+  namespace rbprm {
 
-    /// \addtogroup path_planning
-    /// \{
+    // forward declaration
+    HPP_PREDEF_CLASS (RbPrmPathValidation);
+    // Planner objects are manipulated only via shared pointers
+    typedef boost::shared_ptr <RbPrmPathValidation> RbPrmPathValidationPtr_t;
 
-    /// RBPRM planner
-    ///
-    /// Implementation of the Reachability based algorithm.
-    /// Planning generates configurations respecting the "Reachability condition":
-    /// a dual abstract representation of the robot is used, representing the reachability space
-    /// of its limbs one the one hand (A_{ROM}), and the integrity of the robot trunk on the other hand (A_{TRUNK}).
-    /// If the generated configuration has a collision between A_{ROM} and the environment, and if A_{TRUNK} is collision free,
-    /// then the configuration is considered valid.
-    class HPP_RBPRM_DLLAPI RbPrmPathValidation : public core::PathValidation
+
+    class HPP_RBPRM_DLLAPI RbPrmPathValidation : public core::DiscretizedCollisionChecking
     {
     public:
       /// Create an instance and return a shared pointer to the instance
-      static RbPrmPathValidationPtr_t create (const core::Problem& problem,
-                  const core::RoadmapPtr_t& roadmap)
-      {
-        RbPrmPathValidation* ptr = new RbPrmPathValidation (problem, roadmap);
-        RbPrmPathValidationPtr_t shPtr (ptr);
-        ptr->init (shPtr);
-        return shPtr;
-      }
+      static RbPrmPathValidationPtr_t create (const core::DevicePtr_t& robot, const core::value_type& stepSize);
 
 
     protected:
       /// Protected constructor
       /// Users need to call RbPrmPlanner::create in order to create instances.
-      RbPrmPathValidation (const core::Problem& problem,
-           const core::RoadmapPtr_t& roadmap);
+      RbPrmPathValidation (const core::DevicePtr_t& robot, const core::value_type& stepSize);
 
-      void init (const RbPrmPlannerWkPtr_t& weak);
 
-    private:
-      /// weak pointer to itself
-      RbprmPathValidationWkPtr_t weakPtr_;
-      /// \}
     }; // class RbPrmPlanner
-} // namespace rbprm
+  } // namespace rbprm
 } // namespace hpp
 # endif // HPP_RBPRM_PATH_VALIDATION_HH
