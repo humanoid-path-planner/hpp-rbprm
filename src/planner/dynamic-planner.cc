@@ -118,20 +118,37 @@ namespace hpp {
           qProj_ = *target;
         }
         if (constraints->apply (qProj_)) {
+          path = (*smStraight_) (*(near->configuration ()), qProj_);
+        } else {
+          return core::PathPtr_t ();
+        }
+      }else{
+        path = (*smStraight_) (*(near->configuration ()), *target);
+      }
+      return path;
+    }
+
+    core::PathPtr_t DynamicPlanner::extendParabola (const core::NodePtr_t& near,
+                                        const core::ConfigurationPtr_t& target)
+    {
+      const core::SteeringMethodPtr_t& sm (problem ().steeringMethod ());
+      const core::ConstraintSetPtr_t& constraints (sm->constraints ());
+      core::PathPtr_t path;
+      if (constraints) {
+        core::ConfigProjectorPtr_t configProjector (constraints->configProjector ());
+        if (configProjector) {
+          configProjector->projectOnKernel (*(near->configuration ()), *target,
+                                            qProj_);
+        } else {
+          qProj_ = *target;
+        }
+        if (constraints->apply (qProj_)) {
           path = (*sm) (*(near->configuration ()), qProj_);
-          if(!path){
-            hppDout(notice, "## parabola path fail, compute straight path");
-            path = (*smStraight_) (*(near->configuration ()), qProj_);
-          }
         } else {
           return core::PathPtr_t ();
         }
       }else{
         path = (*sm) (*(near->configuration ()), *target);
-        if(!path){
-          hppDout(notice, "## parabola path fail, compute straight path");
-          path = (*smStraight_) (*(near->configuration ()), *target);
-        }
       }
       return path;
     }
@@ -199,31 +216,33 @@ namespace hpp {
           core::value_type t_final = validPath->timeRange ().second;
           if (t_final != path->timeRange ().first) {
 
-            if(!pathValid){
-              // here, the parabola path was invalid so a straight line was computed, we need ,to check this new path for colision :
-              hppDout(notice, "parabola path invalid");
-              path = validPath;
-              pathValid = pathValidation->validate (path, false, validPath,report);
-              if(pathValid)
-                hppDout(notice,"straight line path valid");
-              else
-                hppDout(notice,"straight line path not valid");
-            }
             hppDout(notice, "### path's length not null");
-            core::ConfigurationPtr_t q_new (new core::Configuration_t
-                                      (validPath->end ()));
+            core::ConfigurationPtr_t q_new (new core::Configuration_t(validPath->end ()));
             if (!pathValid || !belongs (q_new, newNodes)) {
               hppDout(notice, "### add new node and edges: ");
               hppDout(notice, displayConfig(*q_new));
-              // here, the parabola path was invalid so a straight line was computed, we need ,to check this new path for colision :
-               newNodes.push_back (roadmap ()->addNodeAndEdges(near, q_new, validPath));
+              newNodes.push_back (roadmap ()->addNodeAndEdges(near, q_new, validPath));
             } else {
               hppDout(notice, "### add delayed edge");
-
               // Store edges to add for later insertion.
               // Adding edges while looping on connected components is indeed
               // not recommended.
               delayedEdges.push_back (DelayedEdge_t (near, q_new, validPath));
+            }
+
+            if(!pathValid){
+              hppDout(notice,"### Straight path not fully valid, try parabola path between qnew and qrand");
+              path = extendParabola(q_new, q_rand);
+              if (path) {
+                hppDout(notice,"### Parabola path exist");
+                bool paraPathValid = pathValidation->validate (path, false, validPath,report);
+
+                if (paraPathValid) { // only add if the full path is valid, otherwise it's the same as the straight line (because we can't extract a subpath of a parabola path)
+                  hppDout(notice, "#### parabola path valid !");
+                  core::ConfigurationPtr_t q_last (new core::Configuration_t(validPath->end ()));
+                  delayedEdges.push_back (DelayedEdge_t (q_new, q_last, validPath));
+
+              }
             }
           }
         }else
@@ -254,12 +273,12 @@ namespace hpp {
           core::ConfigurationPtr_t q1 ((*itn1)->configuration ());
           core::ConfigurationPtr_t q2 ((*itn2)->configuration ());
           assert (*q1 != *q2);
-          path = (*sm) (*q1, *q2);
+          path = (*smStraight_) (*q1, *q2);
           core::PathValidationReportPtr_t report;
-          if(!(path && pathValidation->validate (path, false, validPath, report))){
+        /*  if(!(path && pathValidation->validate (path, false, validPath, report))){
             hppDout(notice, "## parabola path fail, compute straight path");
             path = (*smStraight_) (*q1, *q2);
-          }
+          }*/
           if (path && pathValidation->validate (path, false, validPath, report)) {
             roadmap ()->addEdge (*itn1, *itn2, path);
             roadmap ()->addEdge (*itn2, *itn1, path->reverse());

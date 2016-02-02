@@ -64,6 +64,8 @@ namespace hpp {
       /// \param target target configuration
       virtual core::PathPtr_t extend (const core::NodePtr_t& near,
                                 const core::ConfigurationPtr_t& target);
+      virtual core::PathPtr_t extendParabola (const core::NodePtr_t& near,
+                                const core::ConfigurationPtr_t& target);
     private:
       core::ConfigurationShooterPtr_t configurationShooter_;
       mutable core::Configuration_t qProj_;
