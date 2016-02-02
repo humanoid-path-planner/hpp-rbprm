@@ -221,28 +221,29 @@ namespace hpp {
             if (!pathValid || !belongs (q_new, newNodes)) {
               hppDout(notice, "### add new node and edges: ");
               hppDout(notice, displayConfig(*q_new));
-              newNodes.push_back (roadmap ()->addNodeAndEdges(near, q_new, validPath));
+              core::NodePtr_t x_new = roadmap ()->addNodeAndEdges(near, q_new, validPath);
+              newNodes.push_back (x_new);
+              if(!pathValid){
+                hppDout(notice,"### Straight path not fully valid, try parabola path between qnew and qrand");
+                path = extendParabola(x_new, q_rand);
+                if (path) {
+                  hppDout(notice,"### Parabola path exist");
+                  bool paraPathValid = pathValidation->validate (path, false, validPath,report);
+
+                  if (paraPathValid) { // only add if the full path is valid, otherwise it's the same as the straight line (because we can't extract a subpath of a parabola path)
+                    hppDout(notice, "#### parabola path valid !");
+                    core::ConfigurationPtr_t q_last (new core::Configuration_t(validPath->end ()));
+                    delayedEdges.push_back (DelayedEdge_t (x_new, q_last, validPath));
+
+                }
+              }
+            }
             } else {
               hppDout(notice, "### add delayed edge");
               // Store edges to add for later insertion.
               // Adding edges while looping on connected components is indeed
               // not recommended.
               delayedEdges.push_back (DelayedEdge_t (near, q_new, validPath));
-            }
-
-            if(!pathValid){
-              hppDout(notice,"### Straight path not fully valid, try parabola path between qnew and qrand");
-              path = extendParabola(q_new, q_rand);
-              if (path) {
-                hppDout(notice,"### Parabola path exist");
-                bool paraPathValid = pathValidation->validate (path, false, validPath,report);
-
-                if (paraPathValid) { // only add if the full path is valid, otherwise it's the same as the straight line (because we can't extract a subpath of a parabola path)
-                  hppDout(notice, "#### parabola path valid !");
-                  core::ConfigurationPtr_t q_last (new core::Configuration_t(validPath->end ()));
-                  delayedEdges.push_back (DelayedEdge_t (q_new, q_last, validPath));
-
-              }
             }
           }
         }else
@@ -265,7 +266,6 @@ namespace hpp {
       //
       // Second, try to connect new nodes together
       //
-      const core::SteeringMethodPtr_t& sm (problem ().steeringMethod ());
       for (core::Nodes_t::const_iterator itn1 = newNodes.begin ();
            itn1 != newNodes.end (); ++itn1) {
         for (core::Nodes_t::const_iterator itn2 = boost::next (itn1);
