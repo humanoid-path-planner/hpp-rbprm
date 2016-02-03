@@ -290,7 +290,7 @@ namespace hpp {
 
     }
 
-    /*void DynamicPlanner::tryDirectPath ()
+    void DynamicPlanner::tryDirectPath ()
     {
       // call steering method here to build a direct conexion
       const core::SteeringMethodPtr_t& sm (problem ().steeringMethod ());
@@ -302,26 +302,20 @@ namespace hpp {
         core::ConfigurationPtr_t q1 ((initNode)->configuration ());
         core::ConfigurationPtr_t q2 ((*itn)->configuration ());
         assert (*q1 != *q2);
-        path = (*sm) (*q1, *q2);
-        if (!path) continue;
-        if (pathProjector) {
-          if (!pathProjector->apply (path, projPath)) continue;
-          } else {
-            projPath = path;
-          }
-        if (projPath) {
+        path = extend(initNode,q2);
+        if (path) {
           core::PathValidationReportPtr_t report;
-          bool pathValid = pathValidation->validate (projPath, false, validPath,
-          report);
-          if (pathValid && validPath->timeRange ().second !=
-            path->timeRange ().first) {
-            roadmap ()->addEdge (initNode, *itn, projPath);
-            core::interval_t timeRange = projPath->timeRange ();
-            roadmap ()->addEdge (*itn, initNode, projPath->reverse();
+          bool pathValid = pathValidation->validate (path, false, validPath,report);
+          if (pathValid ) {
+            roadmap ()->addEdge (initNode, *itn, path);
+            roadmap ()->addEdge (*itn, initNode, path->reverse());
+          }else if(validPath->timeRange ().second != path->timeRange ().first){
+            core::ConfigurationPtr_t q_new(new core::Configuration_t(validPath->end()));
+            roadmap()->addNodeAndEdges(initNode,q_new,validPath);
           }
         }
       }
-    }*/
+    }
 
     void DynamicPlanner::configurationShooter
     (const core::ConfigurationShooterPtr_t& shooter)

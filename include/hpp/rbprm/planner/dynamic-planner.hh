@@ -48,7 +48,7 @@ namespace hpp {
       virtual void startSolve ();
 
       // disabled during testing
-      //virtual void tryDirectPath();
+      virtual void tryDirectPath();
 
       /// Set configuration shooter.
       void configurationShooter (const core::ConfigurationShooterPtr_t& shooter);
