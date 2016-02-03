@@ -17,8 +17,9 @@
 #ifndef HPP_RBPRM_PATH_VALIDATION_HH
 # define HPP_RBPRM_PATH_VALIDATION_HH
 
-#include <hpp/core/discretized-collision-checking.hh>
+#include <hpp/core/discretized-path-validation.hh>
 #include <hpp/util/pointer.hh>
+#include <hpp/rbprm/rbprm-validation.hh>
 #include <hpp/rbprm/config.hh>
 
 namespace hpp {
@@ -30,11 +31,17 @@ namespace hpp {
     typedef boost::shared_ptr <RbPrmPathValidation> RbPrmPathValidationPtr_t;
 
 
-    class HPP_RBPRM_DLLAPI RbPrmPathValidation : public core::DiscretizedCollisionChecking
+    class HPP_RBPRM_DLLAPI RbPrmPathValidation : public core::DiscretizedPathValidation
     {
     public:
       /// Create an instance and return a shared pointer to the instance
       static RbPrmPathValidationPtr_t create (const core::DevicePtr_t& robot, const core::value_type& stepSize);
+
+      /// validate with custom filter for the rom validation
+      virtual bool validate (const core::PathPtr_t& path, bool reverse, core::PathPtr_t& validPart,			     core::PathValidationReportPtr_t& report,const std::vector<std::string>& filter);
+
+      /// Add a configuration validation object
+      virtual void add (const core::ConfigValidationPtr_t& configValidation);
 
 
     protected:
@@ -42,6 +49,9 @@ namespace hpp {
       /// Users need to call RbPrmPlanner::create in order to create instances.
       RbPrmPathValidation (const core::DevicePtr_t& robot, const core::value_type& stepSize);
 
+
+    private:
+      RbPrmValidationPtr_t rbprmValidation_;
 
     }; // class RbPrmPlanner
   } // namespace rbprm
