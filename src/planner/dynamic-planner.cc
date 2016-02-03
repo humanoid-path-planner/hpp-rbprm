@@ -33,7 +33,7 @@
 #include <hpp/core/steering-method-straight.hh>
 #include <hpp/core/path-projector.hh>
 #include <hpp/rbprm/planner/steering-method-parabola.hh>
-
+#include <hpp/rbprm/rbprm-path-validation.hh>
 namespace hpp {
   namespace rbprm {
     using model::displayConfig;
@@ -187,8 +187,10 @@ namespace hpp {
       DelayedEdges_t delayedEdges;
       core::DevicePtr_t robot (problem ().robot ());
       core::PathValidationPtr_t pathValidation (problem ().pathValidation ());
+      RbPrmPathValidationPtr_t rbprmPathValidation = boost::dynamic_pointer_cast<RbPrmPathValidation>(pathValidation);
       core::SteeringMethodPtr_t sm = problem().steeringMethod();
       core::Nodes_t newNodes;
+      std::vector<std::string> filter;
       core::PathPtr_t validPath, path;
       hppDout(notice,"random shoot begin");
       // Pick a random node
@@ -229,8 +231,8 @@ namespace hpp {
                 path = extendParabola(x_new, q_rand);
                 if (path) {
                   hppDout(notice,"### Parabola path exist");
-                  bool paraPathValid = pathValidation->validate (path, false, validPath,report);
-
+                  // call validate without constraint on limbs
+                  bool paraPathValid = rbprmPathValidation->validate (path, false, validPath, report, filter);
                   if (paraPathValid) { // only add if the full path is valid, otherwise it's the same as the straight line (because we can't extract a subpath of a parabola path)
                     hppDout(notice, "#### parabola path valid !");
                     core::ConfigurationPtr_t q_last (new core::Configuration_t(validPath->end ()));
@@ -293,10 +295,10 @@ namespace hpp {
     void DynamicPlanner::tryDirectPath ()
     {
       // call steering method here to build a direct conexion
-      const core::SteeringMethodPtr_t& sm (problem ().steeringMethod ());
       core::PathValidationPtr_t pathValidation (problem ().pathValidation ());
-      core::PathProjectorPtr_t pathProjector (problem ().pathProjector ());
-      core::PathPtr_t validPath, projPath, path;
+      core::PathPtr_t validPath,  path;
+      std::vector<std::string> filter;
+      RbPrmPathValidationPtr_t rbprmPathValidation = boost::dynamic_pointer_cast<RbPrmPathValidation>(pathValidation);
       core::NodePtr_t initNode = roadmap ()->initNode();
       for (core::Nodes_t::const_iterator itn = roadmap ()->goalNodes ().begin();itn != roadmap ()->goalNodes ().end (); ++itn) {
         core::ConfigurationPtr_t q1 ((initNode)->configuration ());
@@ -311,10 +313,22 @@ namespace hpp {
             roadmap ()->addEdge (*itn, initNode, path->reverse());
           }else if(validPath->timeRange ().second != path->timeRange ().first){
             core::ConfigurationPtr_t q_new(new core::Configuration_t(validPath->end()));
-            roadmap()->addNodeAndEdges(initNode,q_new,validPath);
-          }
-        }
-      }
+            core::NodePtr_t x_new = roadmap()->addNodeAndEdges(initNode,q_new,validPath);
+
+            hppDout(notice,"### Straight path not fully valid, try parabola path between qnew and qGoal");
+            path = extendParabola(x_new, q2);
+            if (path) {
+              hppDout(notice,"### Parabola path exist");
+              // call validate without constraint on limbs
+              bool paraPathValid = rbprmPathValidation->validate (path, false, validPath, report, filter);
+              if (paraPathValid) { // only add if the full path is valid, otherwise it's the same as the straight line (because we can't extract a subpath of a parabola path)
+                hppDout(notice, "#### parabola path valid !");
+                roadmap()->addEdge(x_new,*itn,validPath);
+              }
+            }// if path
+          } //else if path lenght not null
+        } //if path exist
+      } //for qgoals
     }
 
     void DynamicPlanner::configurationShooter
