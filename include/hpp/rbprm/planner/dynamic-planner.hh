@@ -70,7 +70,7 @@ namespace hpp {
       core::ConfigurationShooterPtr_t configurationShooter_;
       mutable core::Configuration_t qProj_;
       DynamicPlannerWkPtr_t weakPtr_;
-      core::SteeringMethodPtr_t smStraight_;
+      core::SteeringMethodPtr_t smParabola_;
     };
     /// \}
   } // namespace core

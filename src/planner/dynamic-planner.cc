@@ -32,7 +32,7 @@
 #include <hpp/core/path-validation-report.hh>
 #include <hpp/core/steering-method-straight.hh>
 #include <hpp/core/path-projector.hh>
-
+#include <hpp/rbprm/planner/steering-method-parabola.hh>
 
 namespace hpp {
   namespace rbprm {
@@ -55,7 +55,7 @@ namespace hpp {
       PathPlanner (problem),
       configurationShooter_ (problem.configurationShooter()),
       qProj_ (problem.robot ()->configSize ()),
-      smStraight_(core::SteeringMethodStraight::create((core::ProblemPtr_t(&problem))))
+      smParabola_(rbprm::SteeringMethodParabola::create((core::ProblemPtr_t(&problem))))
     {
     }
 
@@ -64,7 +64,7 @@ namespace hpp {
       PathPlanner (problem, roadmap),
       configurationShooter_ (problem.configurationShooter()),
       qProj_ (problem.robot ()->configSize ()),
-      smStraight_(core::SteeringMethodStraight::create((core::ProblemPtr_t(&problem))))
+      smParabola_(rbprm::SteeringMethodParabola::create((core::ProblemPtr_t(&problem))))
     {
     }
 
@@ -118,12 +118,12 @@ namespace hpp {
           qProj_ = *target;
         }
         if (constraints->apply (qProj_)) {
-          path = (*smStraight_) (*(near->configuration ()), qProj_);
+          path = (*sm) (*(near->configuration ()), qProj_);
         } else {
           return core::PathPtr_t ();
         }
       }else{
-        path = (*smStraight_) (*(near->configuration ()), *target);
+        path = (*sm) (*(near->configuration ()), *target);
       }
       return path;
     }
@@ -143,12 +143,12 @@ namespace hpp {
           qProj_ = *target;
         }
         if (constraints->apply (qProj_)) {
-          path = (*sm) (*(near->configuration ()), qProj_);
+          path = (*smParabola_) (*(near->configuration ()), qProj_);
         } else {
           return core::PathPtr_t ();
         }
       }else{
-        path = (*sm) (*(near->configuration ()), *target);
+        path = (*smParabola_) (*(near->configuration ()), *target);
       }
       return path;
     }
@@ -187,6 +187,7 @@ namespace hpp {
       DelayedEdges_t delayedEdges;
       core::DevicePtr_t robot (problem ().robot ());
       core::PathValidationPtr_t pathValidation (problem ().pathValidation ());
+      core::SteeringMethodPtr_t sm = problem().steeringMethod();
       core::Nodes_t newNodes;
       core::PathPtr_t validPath, path;
       hppDout(notice,"random shoot begin");
@@ -273,11 +274,11 @@ namespace hpp {
           core::ConfigurationPtr_t q1 ((*itn1)->configuration ());
           core::ConfigurationPtr_t q2 ((*itn2)->configuration ());
           assert (*q1 != *q2);
-          path = (*smStraight_) (*q1, *q2);
+          path = (*sm) (*q1, *q2);
           core::PathValidationReportPtr_t report;
         /*  if(!(path && pathValidation->validate (path, false, validPath, report))){
             hppDout(notice, "## parabola path fail, compute straight path");
-            path = (*smStraight_) (*q1, *q2);
+            path = (*sm) (*q1, *q2);
           }*/
           if (path && pathValidation->validate (path, false, validPath, report)) {
             roadmap ()->addEdge (*itn1, *itn2, path);
@@ -302,10 +303,6 @@ namespace hpp {
         core::ConfigurationPtr_t q2 ((*itn)->configuration ());
         assert (*q1 != *q2);
         path = (*sm) (*q1, *q2);
-        if(!path){
-          hppDout(notice, "## parabola path fail, compute straight path");
-          path = (*smStraight_) (*q1, *q2);
-        }
         if (!path) continue;
         if (pathProjector) {
           if (!pathProjector->apply (path, projPath)) continue;
