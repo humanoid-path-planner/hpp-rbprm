@@ -14,6 +14,7 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-rbprm. If not, see <http://www.gnu.org/licenses/>.
 
+#include <hpp/core/collision-validation-report.hh>
 #include <hpp/rbprm/rbprm-shooter.hh>
 #include <hpp/model/collision-object.hh>
 #include <hpp/model/joint.hh>
@@ -337,7 +338,6 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
                  limitDis--;
             }
         }
-
         // Shoot extra configuration variables
         size_type extraDim = robot_->extraConfigSpace ().dimension ();
         size_type offset = robot_->configSize () - extraDim;
@@ -356,7 +356,6 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
             }
             (*config) [offset + i] = (upper - lower) * rand ()/RAND_MAX;
         }
-
         // save the normal (code from Mylène)
         if(extraDim >= 3 ){
           size_type index = robot_->configSize() -3;  // rempli toujours les 3 derniers
