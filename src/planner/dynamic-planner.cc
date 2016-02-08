@@ -18,6 +18,7 @@
 #include <hpp/rbprm/planner/dynamic-planner.hh>
 #include <boost/tuple/tuple.hpp>
 #include <hpp/util/debug.hh>
+#include <hpp/util/timer.hh>
 #include <hpp/model/configuration.hh>
 #include <hpp/model/device.hh>
 #include <hpp/core/config-projector.hh>
@@ -209,7 +210,11 @@ namespace hpp {
         // Find nearest node in roadmap
         core::value_type distance;
         core::NodePtr_t near = roadmap ()->nearestNode (q_rand, *itcc, distance);
+
+        hppStartBenchmark(EXTEND);
         path = extend (near, q_rand);
+        hppStopBenchmark (EXTEND);
+        hppDisplayBenchmark (EXTEND);
         if (path) {
           hppDout(notice, "### path exist");
           core::PathValidationReportPtr_t report;
@@ -228,7 +233,10 @@ namespace hpp {
               newNodes.push_back (x_new);
               if(!pathValid){
                 hppDout(notice,"### Straight path not fully valid, try parabola path between qnew and qrand");
+                hppStartBenchmark(EXTENDPARA);
                 path = extendParabola(x_new, q_rand);
+                hppStopBenchmark (EXTENDPARA);
+                hppDisplayBenchmark (EXTENDPARA);
                 if (path) {
                   hppDout(notice,"### Parabola path exist");
                   // call validate without constraint on limbs
@@ -304,7 +312,10 @@ namespace hpp {
         core::ConfigurationPtr_t q1 ((initNode)->configuration ());
         core::ConfigurationPtr_t q2 ((*itn)->configuration ());
         assert (*q1 != *q2);
+        hppStartBenchmark(EXTEND);
         path = extend(initNode,q2);
+        hppStopBenchmark (EXTEND);
+        hppDisplayBenchmark (EXTEND);
         if (path) {
           core::PathValidationReportPtr_t report;
           bool pathValid = pathValidation->validate (path, false, validPath,report);
@@ -316,7 +327,10 @@ namespace hpp {
             core::NodePtr_t x_new = roadmap()->addNodeAndEdges(initNode,q_new,validPath);
 
             hppDout(notice,"### Straight path not fully valid, try parabola path between qnew and qGoal");
+            hppStartBenchmark(EXTENDPARA);
             path = extendParabola(x_new, q2);
+            hppStopBenchmark (EXTENDPARA);
+            hppDisplayBenchmark (EXTENDPARA);
             if (path) {
               hppDout(notice,"### Parabola path exist");
               // call validate without constraint on limbs
