@@ -200,6 +200,10 @@ namespace hpp {
       /// Copy constructor
       ParabolaPath (const ParabolaPath& path);
 
+      core::value_type computeLength(const core::ConfigurationIn_t q1, const core::ConfigurationIn_t q2) const;
+
+      core::value_type lengthFunction (const core::value_type x)const;
+
       void init (ParabolaPathPtr_t self)
       {
 	parent_t::init (self);

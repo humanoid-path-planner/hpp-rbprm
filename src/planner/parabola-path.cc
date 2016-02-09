@@ -146,14 +146,13 @@ namespace hpp {
       return true;
     }
 
-    // extract return a straight path, because configuration inside the parabola dosen't have a normal computed and thus we can't create a valid parabola path between them
+
     core::PathPtr_t ParabolaPath::extract (const interval_t& subInterval) const throw (hpp::core::projection_error)
     {
       bool success;
       core::Configuration_t q1 ((*this) (subInterval.first, success)); // straight
       core::Configuration_t q2 ((*this) (subInterval.second, success)); // straight
-      core::PathPtr_t result = core::StraightPath::create
-          (device_, q1, q2, std::abs((value_type)(subInterval.second-subInterval.first)), constraints ());
+      core::PathPtr_t result = rbprm::ParabolaPath::create(device_,q1,q2,computeLength(q1,q2),coefficients_);
       return result;
     }
 
@@ -169,6 +168,47 @@ namespace hpp {
     core::DevicePtr_t ParabolaPath::device () const
     {
       return device_;
+    }
+
+    value_type ParabolaPath::computeLength
+    (const core::ConfigurationIn_t q1, const core::ConfigurationIn_t q2) const {
+      const int N = 6; // number -1 of interval sub-divisions
+      // for N = 4, computation error ~= 1e-5.
+      // for N = 20, computation error ~= 1e-11.
+      value_type length = 0;
+      value_type x1 = q1 (0);
+      value_type x2 = q2 (0);
+
+      if (workspaceDim_) { // 3D
+        const value_type theta = coefficients_ (3);
+        x1 = cos(theta) * q1 (0)  + sin(theta) * q1 (1); // x_theta_0
+        x2 = cos(theta) * q2 (0) + sin(theta) * q2 (1); // x_theta_imp
+      }
+
+      // Define integration bounds
+      if (x1 > x2) { // re-order integration bounds
+        const value_type xtmp = x1;
+        x1 = x2;
+        x2 = xtmp;
+      }
+
+      const value_type dx = (x2 - x1) / N; // integration step size
+      for (int i=0; i<N; i++) {
+        length += dx*( 0.166666667*lengthFunction (x1 + i*dx)
+                       + 0.666666667*lengthFunction (x1 + (i+0.5)*dx )
+                       + 0.166666667*lengthFunction (x1 + (i+1)*dx ));
+        // apparently, 1/6 and 2/3 are not recognized as floats ...
+      }
+      hppDout (notice, "length = " << length);
+      return length;
+    }
+
+    // Function equivalent to sqrt( 1 + f'(x)^2 )
+    value_type ParabolaPath::lengthFunction (const value_type x)
+    const {
+      const value_type y = sqrt (1+(2*coefficients_ (0)*x+coefficients_(1))
+                                 * (2*coefficients_ (0)*x+coefficients_(1)));
+      return y;
     }
   } //   namespace rbprm
 } // namespace hpp
