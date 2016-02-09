@@ -74,8 +74,8 @@ namespace hpp {
       else
         pp = compute_3D_path (q1, q2);
 
-      if(!pp)
-        pp = compute_random_3D_path(q1,q2);
+      /*if(!pp)
+        pp = compute_random_3D_path(q1,q2);*/
       return pp;
     }
 

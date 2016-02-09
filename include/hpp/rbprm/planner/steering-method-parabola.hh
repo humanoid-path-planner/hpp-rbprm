@@ -79,6 +79,20 @@ namespace hpp {
       /// create a path between two configurations
       virtual core::PathPtr_t impl_compute (core::ConfigurationIn_t q1,
                                       core::ConfigurationIn_t q2) const;
+
+      core::PathPtr_t compute_random_3D_path (core::ConfigurationIn_t q1,
+                                 core::ConfigurationIn_t q2) const;
+
+
+      /// Compute fiveth constraint: compute intersection between coneS
+      /// and plane_theta. If not empty, compute the two lines and the angle
+      /// between them = 2*delta.
+      /// Equations have been obtained using Matlab.
+      bool fiveth_constraint (const core::ConfigurationIn_t q,
+            const value_type theta,
+            const int number,
+            value_type *delta) const;
+
     protected:
       /// Constructor with robot
       /// Weighed distance is created from robot
@@ -112,8 +126,7 @@ namespace hpp {
       core::PathPtr_t compute_3D_path (core::ConfigurationIn_t q1,
                                  core::ConfigurationIn_t q2) const;
 
-      core::PathPtr_t compute_random_3D_path (core::ConfigurationIn_t q1,
-                                 core::ConfigurationIn_t q2) const;
+
 
       /// Compute second constraint: V0 <= V0max
       /// return false if constraint can never be respected.
@@ -135,14 +148,7 @@ namespace hpp {
 			     value_type *alpha_imp_inf,
 			     const value_type n2_angle) const;
 		
-      /// Compute fiveth constraint: compute intersection between coneS
-      /// and plane_theta. If not empty, compute the two lines and the angle
-      /// between them = 2*delta.
-      /// Equations have been obtained using Matlab.
-      bool fiveth_constraint (const core::ConfigurationIn_t q,
-			      const value_type theta,
-			      const int number,
-			      value_type *delta) const;
+
 
       /// Compute sixth constraint: V_imp <= V_imp_max
       /// return false if constraint can never be respected.

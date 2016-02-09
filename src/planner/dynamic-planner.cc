@@ -15,8 +15,8 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-core  If not, see
 // <http://www.gnu.org/licenses/>.
+
 #include <hpp/rbprm/planner/dynamic-planner.hh>
-#include <boost/tuple/tuple.hpp>
 #include <hpp/util/debug.hh>
 #include <hpp/util/timer.hh>
 #include <hpp/model/configuration.hh>
@@ -35,6 +35,7 @@
 #include <hpp/core/path-projector.hh>
 #include <hpp/rbprm/planner/steering-method-parabola.hh>
 #include <hpp/rbprm/rbprm-path-validation.hh>
+
 namespace hpp {
   namespace rbprm {
     using model::displayConfig;
@@ -182,9 +183,6 @@ namespace hpp {
     void DynamicPlanner::oneStep ()
     {
       hppDout(notice,"oneStep begin");
-      typedef boost::tuple <core::NodePtr_t, core::ConfigurationPtr_t, core::PathPtr_t>
-        DelayedEdge_t;
-      typedef std::vector <DelayedEdge_t> DelayedEdges_t;
       DelayedEdges_t delayedEdges;
       core::DevicePtr_t robot (problem ().robot ());
       core::PathValidationPtr_t pathValidation (problem ().pathValidation ());
@@ -246,7 +244,7 @@ namespace hpp {
                     core::ConfigurationPtr_t q_last (new core::Configuration_t(validPath->end ()));
                     delayedEdges.push_back (DelayedEdge_t (x_new, q_last, validPath));
                   }else{
-                    hppDout(notice, "#### parabola path not valid !");
+                    hppDout(notice, "#### parabola path not valid, compute random parabola :");
                   }
                 }
               }
@@ -301,6 +299,51 @@ namespace hpp {
 
     }
 
+
+    // This method call SteeringMethodParabola, but we don't try to connect two confuration, instead we shoot a random alpha0 and V0 valide for the initiale configuration and then compute the final point.
+    // Then we check for collision (for the trunk)  and we check if the final point is in a valide configuration (trunk not in collision but limbs in accessible contact zone).
+    // (Not anymore ) If this is true we do a reverse collision check until we find the first valide configuration, then we check for the friction cone and impact velocity constraint.(Not anymore : can't find normal after this)
+    void DynamicPlanner::computeRandomParabola(core::NodePtr_t x_start, core::ConfigurationPtr_t q_target, DelayedEdges_t delayedEdge){
+      hppDout(notice,"### compute random parabola :");
+      std::vector<std::string> filter;
+      core::PathPtr_t validPath, landingPath;
+      core::PathValidationPtr_t pathValidation (problem ().pathValidation ());
+      RbPrmPathValidationPtr_t rbprmPathValidation = boost::dynamic_pointer_cast<RbPrmPathValidation>(pathValidation);
+      core::PathValidationReportPtr_t report;
+      core::ConfigurationPtr_t q_start(x_start->configuration());
+      core::PathPtr_t path = boost::dynamic_pointer_cast<SteeringMethodParabola>(smParabola_)->compute_random_3D_path(*(q_start),*q_target);
+
+      bool valid = rbprmPathValidation->validate (path, false, validPath, report, filter);
+      if((!valid) && validPath->timeRange ().second > path->timeRange().first){
+        hppDout(notice,"Random parabola have collision");
+        // check if obstacle are present in accessible zone of the limbs :
+        core::ConfigurationPtr_t q_new(new core::Configuration_t(validPath->end()));
+        bool contactValid = rbprmPathValidation->getValidator()->validateRoms(*q_new);
+        if(contactValid){
+          hppDout(notice,"Random parabola land with valid configuration");
+          fcl::Vec3f normal (boost::dynamic_pointer_cast<core::CollisionValidationReport>(report)->result.getContact(0).normal);
+          hppDout(notice,"normal = "<<normal);
+          // fill extraDof with normal :
+          core::size_type size = problem().robot()->configSize ();
+          (*q_new)[size-3]=normal[0];
+          (*q_new)[size-2]=normal[1];
+          (*q_new)[size-1]=normal[2];
+          //compute theta :
+          value_type X = (*q_new)[0] - (*q_start)[0];
+          value_type Y = (*q_new)[1] - (*q_start)[1];
+          const value_type theta = atan2 (Y, X);
+          value_type delta;
+          bool cone = boost::dynamic_pointer_cast<SteeringMethodParabola>(smParabola_)->fiveth_constraint (*q_new,theta,1,&delta);
+          hppDout(notice,"compute friction cone for landing point : "<<cone);
+          hppDout(notice,"delta = "<<delta);
+          const value_type n1_angle = atan2(normal[2], cos(theta)*normal[0] +
+                                            sin(theta)*normal[1]);
+        }
+      }else if (valid)
+        hppDout(notice,"random parabola doesn't land on obstacle");
+
+    }
+
     void DynamicPlanner::tryDirectPath ()
     {
       // call steering method here to build a direct conexion
@@ -349,6 +392,8 @@ namespace hpp {
         } //if path exist
       } //for qgoals
     }
+
+
 
     void DynamicPlanner::configurationShooter
     (const core::ConfigurationShooterPtr_t& shooter)

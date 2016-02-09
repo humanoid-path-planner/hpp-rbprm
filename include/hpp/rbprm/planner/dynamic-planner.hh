@@ -21,6 +21,8 @@
 
 # include <hpp/core/path-planner.hh>
 # include <hpp/core/steering-method.hh>
+# include <boost/tuple/tuple.hpp>
+
 
 namespace hpp {
   namespace rbprm {
@@ -31,7 +33,8 @@ namespace hpp {
     HPP_PREDEF_CLASS (DynamicPlanner);
     // Planner objects are manipulated only via shared pointers
     typedef boost::shared_ptr <DynamicPlanner> DynamicPlannerPtr_t;
-
+    typedef boost::tuple <core::NodePtr_t, core::ConfigurationPtr_t, core::PathPtr_t> DelayedEdge_t;
+    typedef std::vector <DelayedEdge_t> DelayedEdges_t;
 
     /// Generic implementation of RRT algorithm
     class  DynamicPlanner : public core::PathPlanner
@@ -49,6 +52,9 @@ namespace hpp {
 
       // disabled during testing
       virtual void tryDirectPath();
+
+
+      void computeRandomParabola(core::NodePtr_t x_start, core::ConfigurationPtr_t q_target, DelayedEdges_t delayedEdge);
 
       /// Set configuration shooter.
       void configurationShooter (const core::ConfigurationShooterPtr_t& shooter);

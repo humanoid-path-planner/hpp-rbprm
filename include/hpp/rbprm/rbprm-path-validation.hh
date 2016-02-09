@@ -43,6 +43,9 @@ namespace hpp {
       /// Add a configuration validation object
       virtual void add (const core::ConfigValidationPtr_t& configValidation);
 
+      RbPrmValidationPtr_t getValidator(){
+        return rbprmValidation_;
+      }
 
     protected:
       /// Protected constructor
