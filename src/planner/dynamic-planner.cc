@@ -245,10 +245,11 @@ namespace hpp {
                     hppDout(notice, "#### parabola path valid !");
                     core::ConfigurationPtr_t q_last (new core::Configuration_t(validPath->end ()));
                     delayedEdges.push_back (DelayedEdge_t (x_new, q_last, validPath));
-
+                  }else{
+                    hppDout(notice, "#### parabola path not valid !");
+                  }
                 }
               }
-            }
             } else {
               hppDout(notice, "### add delayed edge");
               // Store edges to add for later insertion.
@@ -337,7 +338,11 @@ namespace hpp {
               bool paraPathValid = rbprmPathValidation->validate (path, false, validPath, report, filter);
               if (paraPathValid) { // only add if the full path is valid, otherwise it's the same as the straight line (because we can't extract a subpath of a parabola path)
                 hppDout(notice, "#### parabola path valid !");
-                roadmap()->addEdge(x_new,*itn,validPath);
+                core::ConfigurationPtr_t q_last (new core::Configuration_t(validPath->end ()));
+                core::NodePtr_t x_last = roadmap()->addNode(q_last);
+                roadmap()->addEdge(x_new,x_last,validPath);
+              }else {
+                hppDout(notice, "#### parabola path not valid !");
               }
             }// if path
           } //else if path lenght not null

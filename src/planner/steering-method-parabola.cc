@@ -37,8 +37,8 @@ namespace hpp {
     SteeringMethodParabola::SteeringMethodParabola (const core::ProblemPtr_t& problem) :
       SteeringMethod (problem), device_ (problem->robot()),
       distance_ (core::WeighedDistance::create (problem->robot())), weak_ (),
-      g_(9.81), V0max_ (15), Vimpmax_ (15), mu_ (0.5), Dalpha_ (0.001),
-      workspaceDim_ (false)
+      g_(9.81), V0max_ (7), Vimpmax_ (10), mu_ (0.5), Dalpha_ (0.001),
+      workspaceDim_ (false),initialConstraint_(true)
     {
       hppDout(notice,"Constructor steering-method-parabola");
     }
@@ -46,8 +46,8 @@ namespace hpp {
     SteeringMethodParabola::SteeringMethodParabola
     (const core::ProblemPtr_t &problem, const core::WeighedDistancePtr_t& distance) :
       SteeringMethod (problem), device_ (problem->robot()), distance_ (distance),
-      weak_ (), g_(9.81), V0max_ (15), Vimpmax_ (15),  mu_ (1),
-      Dalpha_ (0.001), workspaceDim_ (false)
+      weak_ (), g_(9.81), V0max_ (7), Vimpmax_ (10),  mu_ (1),
+      Dalpha_ (0.001), workspaceDim_ (false),initialConstraint_(true)
     {
       hppDout(notice,"Constructor steering-method-parabola");
     }
@@ -73,6 +73,9 @@ namespace hpp {
         pp = compute_2D_path (q1, q2);
       else
         pp = compute_3D_path (q1, q2);
+
+      if(!pp)
+        pp = compute_random_3D_path(q1,q2);
       return pp;
     }
 
@@ -215,6 +218,89 @@ namespace hpp {
     }
 
 
+    core::PathPtr_t SteeringMethodParabola::compute_random_3D_path (core::ConfigurationIn_t q1,
+                                                             core::ConfigurationIn_t q2) const
+    {
+        /* Define some constants */
+        //const core::size_type index = device_.lock ()->configSize() - device_.lock ()->extraConfigSpace ().dimension (); // ecs index
+        const value_type x_0 = q1(0);
+        const value_type y_0 = q1(1);
+        const value_type z_0 = q1(2);
+        const value_type x_imp = q2(0);
+        const value_type y_imp = q2(1);
+        const value_type z_imp = q2(2);
+        value_type X = x_imp - x_0;
+        value_type Y = y_imp - y_0;
+        value_type Z = z_imp - z_0;
+        const value_type theta = atan2 (Y, X);
+        const value_type x_theta_0 = cos(theta) * x_0 +  sin(theta) * y_0;
+
+        value_type interval = (alpha_0_max_-alpha_0_min_)/2.;  // according to friction cone computed in compute_3d_path
+        value_type alpha = (((value_type) rand()/RAND_MAX) * interval) + alpha_0_min_;
+        value_type v0 = (((value_type) rand()/RAND_MAX) * V0max_);
+
+        hppDout(notice,"Compute random path :");
+        hppDout(notice,"alpha_rand = "<<alpha);
+        hppDout(notice,"v0_rand = "<<v0);
+
+        value_type t = 1; //TODO : find better way to do it
+        value_type x_theta_f = v0*cos(alpha)*t + x_theta_0;
+        value_type x_f = x_theta_f*cos(theta);
+        value_type y_f = x_theta_f*sin(theta);
+        value_type z_f = v0*sin(alpha)*t - 0.5*g_*t*t + z_0;
+
+        X = x_f - x_0;
+        Y = y_f - y_0;
+        Z = z_f - z_0;
+        hppDout(notice,"x_f = "<<x_f);
+        hppDout(notice,"y_f = "<<y_f);
+        hppDout(notice,"z_f = "<<z_f);
+        core::ConfigurationPtr_t qnew (new core::Configuration_t(q2));
+        (*qnew)[0] = x_f;
+        (*qnew)[1] = y_f;
+        (*qnew)[2] = z_f;
+
+
+        const value_type X_theta = X*cos(theta) + Y*sin(theta);
+
+        const value_type x_theta_0_dot = sqrt((g_ * X_theta * X_theta)
+                                              /(2 * (X_theta*tan(alpha) - Z)));
+        const value_type inv_x_th_dot_0_sq = 1/(x_theta_0_dot*x_theta_0_dot);
+        const value_type V0 = sqrt((1 + tan(alpha)*tan(alpha))) * x_theta_0_dot;
+        hppDout (notice, "V0: " << V0);
+        const value_type Vimp = sqrt(1 + (-g_*X*inv_x_th_dot_0_sq+tan(alpha)) *(-g_*X*inv_x_th_dot_0_sq+tan(alpha))) * x_theta_0_dot; // x_theta_0_dot > 0
+        hppDout (notice, "Vimp: " << Vimp);
+
+        /* Compute Parabola coefficients */
+        vector_t coefs (5);
+        coefs.resize (5);
+        coefs (0) = -0.5*g_*inv_x_th_dot_0_sq;
+        coefs (1) = tan(alpha) + g_*x_theta_0*inv_x_th_dot_0_sq;
+        coefs (2) = z_0 - tan(alpha)*x_theta_0 -
+            0.5*g_*x_theta_0*x_theta_0*inv_x_th_dot_0_sq;
+        coefs (3) = theta; // NOT tan(theta) !
+        coefs (4) = -tan(theta)*x_0 + y_0;
+        hppDout (info, "coefs: " << coefs.transpose ());
+
+        /* Verify that maximal height is not out of the bounds */
+        const value_type x_theta_max = - 0.5 * coefs (1) / coefs (0);
+        const value_type z_x_theta_max = coefs (0)*x_theta_max*x_theta_max +
+            coefs (1)*x_theta_max + coefs (2);
+        if (x_theta_0 <= x_theta_max && x_theta_max <= x_theta_f) {
+          if (z_x_theta_max > device_.lock ()->rootJoint()->upperBound (2)) {
+            hppDout (notice, "z_x_theta_max: " << z_x_theta_max);
+            hppDout (notice, "Path is out of the bounds");
+            return core::PathPtr_t ();
+          }
+        }
+        ParabolaPathPtr_t pp = ParabolaPath::create (device_.lock (), q1, *qnew,
+                                                     computeLength (q1, *qnew,coefs),
+                                                     coefs);
+        hppDout (notice, "path: " << *pp);
+        return pp;
+   }
+
+
     core::PathPtr_t SteeringMethodParabola::compute_3D_path (core::ConfigurationIn_t q1,
                                                              core::ConfigurationIn_t q2)
     const {
@@ -256,6 +342,7 @@ namespace hpp {
           > q1 (index+2) * q1 (index+2)) { // cone 1 not vertical
         if (!fiveth_constraint (q1, theta, 1, &delta1)) {
           hppDout (notice, "plane_theta not intersecting first cone");
+          initialConstraint_=false;
           return core::PathPtr_t ();
         }
       }
@@ -288,6 +375,8 @@ namespace hpp {
       
       const value_type alpha_0_min = n1_angle - delta1;
       const value_type alpha_0_max = n1_angle + delta1;
+      alpha_0_max_=alpha_0_max;
+      alpha_0_min_=alpha_0_min;
       hppDout (info, "alpha_0_min: " << alpha_0_min);
       hppDout (info, "alpha_0_max: " << alpha_0_max);
 

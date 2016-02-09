@@ -112,6 +112,9 @@ namespace hpp {
       core::PathPtr_t compute_3D_path (core::ConfigurationIn_t q1,
                                  core::ConfigurationIn_t q2) const;
 
+      core::PathPtr_t compute_random_3D_path (core::ConfigurationIn_t q1,
+                                 core::ConfigurationIn_t q2) const;
+
       /// Compute second constraint: V0 <= V0max
       /// return false if constraint can never be respected.
       /// fill alpha_lim_plus/minus angles limiting initial angle
@@ -168,6 +171,10 @@ namespace hpp {
       value_type mu_; // friction coefficient
       value_type Dalpha_; // alpha increment
       mutable bool workspaceDim_; // true for 3D, false for 2D
+      mutable bool initialConstraint_; // true if the constraint at the initial point are respected (5° for first cone, 1° and 2° constraints)
+      mutable value_type alpha_0_max_;
+      mutable value_type alpha_0_min_;
+
     }; // SteeringMethodParabola
     /// \}
   } // namespace core
