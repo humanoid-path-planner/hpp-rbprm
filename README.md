@@ -1,43 +1,49 @@
-Implementation of RB-PRM planner using hpp
+#  Humanoid Path Planner - RBPRM module
 
-BUG:
-root mobile, transform root
+Copyright 2015 LAAS-CNRS
 
-TODO:
+Author: Steve Tonneau
 
-So far only handles free flyer robots (first joint is 3d translation, second is 
-SO(3) )
+##Description
+HPP - RBPRM is a library written for the software Humanoid Path Planner [(link)](http://projects.laas.fr/gepetto/index.php/Software/Hpp).
+It implements the acyclic contact planner presented in two papers [(link)](http://stevetonneau.fr/files/publications/isrr15/isrr15.html):
 
-Init value of HRP2 ankle really weird?
+"An efficient acyclic contact planner for multiped robots" (submitted to IJRR).
 
-Configure tolerance individually for each effector (translation, rotation)
 
-only samples until effector position 
+"A Reachability-based planner for sequences of acyclic contacts in cluttered environments" (presented at ISRR 15).
 
-Assumes 6 DOF abstraction
+We recommend reading the IJRR submission before going using RB-PRM.
 
-Add cone to state to avoid stability recomputation
+The planner has applications in both robotics and computer graphics applications (click on the pictures to watch videos):
 
-optimize stability request (escpecially for the ocllision free case)
+[![IMAGE ALT TEXT](http://img.youtube.com/vi/7ShD_03P9K8/0.jpg)](https://www.youtube.com/watch?v=7ShD_03P9K8 "An efficient acyclic contact planner for multiped robots")
+[![IMAGE ALT TEXT](http://img.youtube.com/vi/YjL-DBQgXwk/0.jpg)](http://www.youtube.com/watch?v=YjL-DBQgXwk "https://www.youtube.com/watch?v=YjL-DBQgXwk")
+[![IMAGE ALT TEXT](http://img.youtube.com/vi/NhvL8jWlka0/0.jpg)](http://www.youtube.com/watch?v=NhvL8jWlka0 "Character contact re-positioning under large environment deformation")
 
-Point offset depends on rotation with normal when matching contact
+##Installation on ubuntu-14.04 64 bit with ros-indigo
 
-Handle not only position but also rotation in effector contact point offset.
-(especially when initializing default start and goal states in corba server)
+To install HPP-RBPRM: 
 
-Check rotation matrices given as a target for ik are the closest for current position
+  1. install HPP 
+	- see https://github.com/humanoid-path-planner/hpp-doc
 
-Tests for fullbody contact generation
+  2. install robust-equilibrium-lib, a library for quickly asserting static equilibrium
+	- see https://github.com/andreadelprete/robust-equilibrium-lib
 
-Tests for interpolation path
+ 
+  3. Use CMake to install the library. For instance:
 
-Implement RBPRM objects for HRP2,
-and an automatic generation program.
+				mkdir $HPP_RBPRM_DIR/build
+				cd $HPP_RBPRM_DIR/build
+				cd cmake ..
+				make install
 
-Implement and test stability criterion.
+  4. Optionally, install the python bindings for python, and example scripts (HPP-RBPRM-CORBA)
+	- see https://github.com/stonneau/hpp-rbprm-corba
+  
 
-Uniformize use of Vec3f vs Eigen
+##Documentation
 
-avoid always taking collision objects into parameters
-
-Adding documentation.
+  Open $DEVEL_DIR/install/share/doc/hpp-rbprm/doxygen-html/index.html in a web brower and you
+  will have access to the code documentation.
