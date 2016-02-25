@@ -49,6 +49,9 @@ namespace hpp {
       /// One step of extension.
       virtual void oneStep ();
 
+      //for debugging
+      virtual core::PathVectorPtr_t solve ();
+
       virtual void startSolve ();
 
       // disabled during testing

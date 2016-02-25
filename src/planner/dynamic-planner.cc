@@ -25,6 +25,7 @@
 #include <hpp/core/node.hh>
 #include <hpp/core/edge.hh>
 #include <hpp/core/path.hh>
+#include <hpp/core/path-vector.hh>
 #include <hpp/core/path-validation.hh>
 #include <hpp/core/problem.hh>
 #include <hpp/core/roadmap.hh>
@@ -455,6 +456,73 @@ namespace hpp {
     (const core::ConfigurationShooterPtr_t& shooter)
     {
       configurationShooter_ = shooter;
+    }
+
+    // for debugging
+    core::PathVectorPtr_t DynamicPlanner::solve (){
+      // call steering method here to build a direct conexion
+      core::PathValidationPtr_t pathValidation (problem ().pathValidation ());
+      core::PathPtr_t validPath,  path;
+      std::vector<std::string> filter;
+      RbPrmPathValidationPtr_t rbprmPathValidation = boost::dynamic_pointer_cast<RbPrmPathValidation>(pathValidation);
+      core::NodePtr_t initNode = roadmap ()->initNode();
+      for (core::Nodes_t::const_iterator itn = roadmap ()->goalNodes ().begin();itn != roadmap ()->goalNodes ().end (); ++itn) {
+        core::ConfigurationPtr_t q1 ((initNode)->configuration ());
+        core::ConfigurationPtr_t q2 ((*itn)->configuration ());
+        assert (*q1 != *q2);
+        hppStartBenchmark(EXTEND);
+        path = extend(initNode,q2);
+        hppStopBenchmark (EXTEND);
+        hppDisplayBenchmark (EXTEND);
+        if (path) {
+
+          core::PathValidationReportPtr_t report;
+          bool pathValid = pathValidation->validate (path, false, validPath,report);
+          if (pathValid ) {
+            roadmap ()->addEdge (initNode, *itn, path);
+            roadmap ()->addEdge (*itn, initNode, path->reverse());
+          }else if(validPath->timeRange ().second != path->timeRange ().first){
+            core::ConfigurationPtr_t q_new(new core::Configuration_t(validPath->end()));
+            core::NodePtr_t x_new = roadmap()->addNodeAndEdges(initNode,q_new,validPath);
+            core::PathVectorPtr_t pathVector = core::PathVector::create (validPath->outputSize (), validPath->outputDerivativeSize ());
+            pathVector->appendPath (validPath);
+            hppDout(notice,"### Straight path not fully valid, try parabola path between qnew and qGoal");
+            hppStartBenchmark(EXTENDPARA);
+            path = extendParabola(x_new, q2);
+            hppStopBenchmark (EXTENDPARA);
+            hppDisplayBenchmark (EXTENDPARA);
+            if (path) {
+              hppDout(notice,"### Parabola path exist");
+              // call validate without constraint on limbs
+              bool paraPathValid = rbprmPathValidation->validate (path, false, validPath, report, filter);
+              if (paraPathValid) { // only add if the full path is valid, otherwise it's the same as the straight line (because we can't extract a subpath of a parabola path)
+                hppDout(notice, "#### parabola path valid !");
+                core::ConfigurationPtr_t q_last (new core::Configuration_t(validPath->end ()));
+                core::NodePtr_t x_last = roadmap()->addNode(q_last);
+                roadmap()->addEdge(x_new,x_last,validPath);
+                pathVector->appendPath (validPath);
+              }else {
+                hppDout(notice, "#### parabola path not valid !");
+              }
+            }else{
+              hppDout(notice,"### Cannot compute parabola path, shoot random alpha0 and V0 :");
+              DelayedEdges_t delayedEdges;
+              computeRandomParabola(x_new,q2,delayedEdges);
+              for (DelayedEdges_t::const_iterator itEdge = delayedEdges.begin ();
+                   itEdge != delayedEdges.end (); ++itEdge) {
+                const core::NodePtr_t& near = itEdge-> get <0> ();
+                const core::ConfigurationPtr_t& q_new = itEdge-> get <1> ();
+                const core::PathPtr_t& validPath = itEdge-> get <2> ();
+                core::NodePtr_t newNode = roadmap ()->addNode (q_new);
+                roadmap ()->addEdge (near, newNode, validPath);
+                roadmap ()->addEdge (newNode, near, validPath->reverse());
+                pathVector->appendPath (validPath);
+              }
+              hppDout(notice,"add delayed edge OK");
+            }
+          } //else if path lenght not null
+        } //if path exist
+      } //for qgoals
     }
 
 
