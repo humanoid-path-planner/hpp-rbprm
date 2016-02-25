@@ -219,7 +219,7 @@ namespace hpp {
 
 
     core::PathPtr_t SteeringMethodParabola::compute_random_3D_path (core::ConfigurationIn_t q1,
-                                                             core::ConfigurationIn_t q2) const
+                                                             core::ConfigurationIn_t q2, value_type *alpha0, value_type *v0) const
     {
         /* Define some constants */
         //const core::size_type index = device_.lock ()->configSize() - device_.lock ()->extraConfigSpace ().dimension (); // ecs index
@@ -237,17 +237,18 @@ namespace hpp {
 
         value_type interval = (alpha_0_max_-alpha_0_min_)/2.;  // according to friction cone computed in compute_3d_path
         value_type alpha = (((value_type) rand()/RAND_MAX) * interval) + alpha_0_min_;
-        value_type v0 = (((value_type) rand()/RAND_MAX) * V0max_);
-
+        value_type v = (((value_type) rand()/RAND_MAX) * V0max_);
+        *alpha0 = alpha;
+        *v0 = v;
         hppDout(notice,"Compute random path :");
         hppDout(notice,"alpha_rand = "<<alpha);
-        hppDout(notice,"v0_rand = "<<v0);
+        hppDout(notice,"v_rand = "<<v);
 
         value_type t = 1; //TODO : find better way to do it
-        value_type x_theta_f = v0*cos(alpha)*t + x_theta_0;
+        value_type x_theta_f = v*cos(alpha)*t + x_theta_0;
         value_type x_f = x_theta_f*cos(theta);
         value_type y_f = x_theta_f*sin(theta);
-        value_type z_f = v0*sin(alpha)*t - 0.5*g_*t*t + z_0;
+        value_type z_f = v*sin(alpha)*t - 0.5*g_*t*t + z_0;
 
         X = x_f - x_0;
         Y = y_f - y_0;
@@ -266,8 +267,8 @@ namespace hpp {
         const value_type x_theta_0_dot = sqrt((g_ * X_theta * X_theta)
                                               /(2 * (X_theta*tan(alpha) - Z)));
         const value_type inv_x_th_dot_0_sq = 1/(x_theta_0_dot*x_theta_0_dot);
-        const value_type V0 = sqrt((1 + tan(alpha)*tan(alpha))) * x_theta_0_dot;
-        hppDout (notice, "V0: " << V0);
+        //const value_type v = sqrt((1 + tan(alpha)*tan(alpha))) * x_theta_0_dot;
+        //hppDout (notice, "v: " << v);
         const value_type Vimp = sqrt(1 + (-g_*X*inv_x_th_dot_0_sq+tan(alpha)) *(-g_*X*inv_x_th_dot_0_sq+tan(alpha))) * x_theta_0_dot; // x_theta_0_dot > 0
         hppDout (notice, "Vimp: " << Vimp);
 

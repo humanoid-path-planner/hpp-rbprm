@@ -245,6 +245,7 @@ namespace hpp {
                     delayedEdges.push_back (DelayedEdge_t (x_new, q_last, validPath));
                   }else{
                     hppDout(notice, "#### parabola path not valid, compute random parabola :");
+                    computeRandomParabola(x_new,q_rand,delayedEdges);
                   }
                 }
               }
@@ -303,7 +304,7 @@ namespace hpp {
     // This method call SteeringMethodParabola, but we don't try to connect two confuration, instead we shoot a random alpha0 and V0 valide for the initiale configuration and then compute the final point.
     // Then we check for collision (for the trunk)  and we check if the final point is in a valide configuration (trunk not in collision but limbs in accessible contact zone).
     // (Not anymore ) If this is true we do a reverse collision check until we find the first valide configuration, then we check for the friction cone and impact velocity constraint.(Not anymore : can't find normal after this)
-    void DynamicPlanner::computeRandomParabola(core::NodePtr_t x_start, core::ConfigurationPtr_t q_target, DelayedEdges_t delayedEdge){
+    void DynamicPlanner::computeRandomParabola(core::NodePtr_t x_start, core::ConfigurationPtr_t q_target, DelayedEdges_t delayedEdges){
       hppDout(notice,"### compute random parabola :");
       std::vector<std::string> filter;
       core::PathPtr_t validPath, landingPath;
@@ -311,7 +312,8 @@ namespace hpp {
       RbPrmPathValidationPtr_t rbprmPathValidation = boost::dynamic_pointer_cast<RbPrmPathValidation>(pathValidation);
       core::PathValidationReportPtr_t report;
       core::ConfigurationPtr_t q_start(x_start->configuration());
-      core::PathPtr_t path = boost::dynamic_pointer_cast<SteeringMethodParabola>(smParabola_)->compute_random_3D_path(*(q_start),*q_target);
+      value_type alpha0,v0;
+      core::PathPtr_t path = smParabola_->compute_random_3D_path(*(q_start),*q_target,&alpha0,&v0);
 
       bool valid = rbprmPathValidation->validate (path, false, validPath, report, filter);
       if((!valid) && validPath->timeRange ().second > path->timeRange().first){
@@ -320,7 +322,7 @@ namespace hpp {
         core::ConfigurationPtr_t q_new(new core::Configuration_t(validPath->end()));
         bool contactValid = rbprmPathValidation->getValidator()->validateRoms(*q_new);
         if(contactValid){
-          hppDout(notice,"Random parabola land with valid configuration");
+          hppDout(notice,"Random parabola land in obstacle");
           fcl::Vec3f normal (boost::dynamic_pointer_cast<core::CollisionValidationReport>(report)->result.getContact(0).normal);
           hppDout(notice,"normal = "<<normal);
           // fill extraDof with normal :
@@ -331,17 +333,57 @@ namespace hpp {
           //compute theta :
           value_type X = (*q_new)[0] - (*q_start)[0];
           value_type Y = (*q_new)[1] - (*q_start)[1];
+          value_type Z = (*q_new)[2] - (*q_start)[2];
           const value_type theta = atan2 (Y, X);
+          const value_type X_theta = X*cos(theta) + Y*sin(theta);
           value_type delta;
-          bool cone = boost::dynamic_pointer_cast<SteeringMethodParabola>(smParabola_)->fiveth_constraint (*q_new,theta,1,&delta);
-          hppDout(notice,"compute friction cone for landing point : "<<cone);
-          hppDout(notice,"delta = "<<delta);
-          const value_type n1_angle = atan2(normal[2], cos(theta)*normal[0] +
-                                            sin(theta)*normal[1]);
-        }
-      }else if (valid)
-        hppDout(notice,"random parabola doesn't land on obstacle");
+          // test impact velocity
+          const value_type x_theta_0_dot = sqrt((9.81 * X_theta * X_theta)/(2 * (X_theta*tan(alpha0) - Z)));
+          const value_type inv_x_th_dot_0_sq = 1/(x_theta_0_dot*x_theta_0_dot);
+          const value_type Vimp = sqrt(1 + (-9.81*X*inv_x_th_dot_0_sq+tan(alpha0)) *(-9.81*X*inv_x_th_dot_0_sq+tan(alpha0))) * x_theta_0_dot; // x_theta_0_dot > 0
+          hppDout (notice, "Vimp: " << Vimp);
+          if(Vimp < 0 || Vimp > smParabola_->getVImpMax()){
+            hppDout(notice,"Impact velocity invalid : vImp = "<<Vimp);
+            return;
+          }
 
+          bool coneOK = smParabola_->fiveth_constraint (*q_new,theta,1,&delta);
+          hppDout(notice,"compute friction cone for landing point : "<<coneOK);
+          hppDout(notice,"delta = "<<delta);
+          if(!coneOK){
+            hppDout(notice,"Failed to compute 2D cone (intersection with plan empty)");
+            return;
+          }
+
+          const value_type n_angle = atan2(normal[2], cos(theta)*normal[0] + sin(theta)*normal[1]);//normal
+          const value_type alpha_f_min = n_angle - delta;// limites cone 2D selon le plan du tir PI
+          const value_type alpha_f_max = n_angle + delta;
+          hppDout(notice,"n_angle = "<<n_angle);
+          hppDout(notice,"alpha_f_min = "<<alpha_f_min);
+          hppDout(notice,"alpha_f_max = "<<alpha_f_max);
+          value_type alpha_imp_inf; // bound on alpha0 wrt to landing friction cone constraint
+          value_type alpha_imp_sup;
+          bool fail3 = smParabola_->third_constraint(0, X_theta, Z, alpha_f_min, alpha_f_max, &alpha_imp_sup,&alpha_imp_inf, n_angle);
+          if (fail3) {
+            hppDout (notice, "failed to apply 3rd constraint");
+            return;
+          }
+          hppDout (info, "alpha_imp_sup: " << alpha_imp_sup);
+          hppDout (info, "alpha_imp_inf: " << alpha_imp_inf);
+          if(alpha0 > alpha_imp_sup || alpha0 < alpha_imp_inf){
+            hppDout(notice,"Parabola doesn't land inside friction cone");
+            return;
+          }
+
+          // Here everything is valid, adding node and edge to roadmap :
+          delayedEdges.push_back (DelayedEdge_t (x_start, q_new, validPath));
+
+
+        }//contactValid
+      }else if (valid){
+        hppDout(notice,"random parabola doesn't land on obstacle");
+        return;
+      }
     }
 
     void DynamicPlanner::tryDirectPath ()
@@ -387,7 +429,21 @@ namespace hpp {
               }else {
                 hppDout(notice, "#### parabola path not valid !");
               }
-            }// if path
+            }else{
+              hppDout(notice,"### Cannot compute parabola path, shoot random alpha0 and V0 :");
+              DelayedEdges_t delayedEdges;
+              computeRandomParabola(x_new,q2,delayedEdges);
+              for (DelayedEdges_t::const_iterator itEdge = delayedEdges.begin ();
+                   itEdge != delayedEdges.end (); ++itEdge) {
+                const core::NodePtr_t& near = itEdge-> get <0> ();
+                const core::ConfigurationPtr_t& q_new = itEdge-> get <1> ();
+                const core::PathPtr_t& validPath = itEdge-> get <2> ();
+                core::NodePtr_t newNode = roadmap ()->addNode (q_new);
+                roadmap ()->addEdge (near, newNode, validPath);
+                roadmap ()->addEdge (newNode, near, validPath->reverse());
+              }
+              hppDout(notice,"add delayed edge OK");
+            }
           } //else if path lenght not null
         } //if path exist
       } //for qgoals

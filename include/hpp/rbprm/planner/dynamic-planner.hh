@@ -22,6 +22,7 @@
 # include <hpp/core/path-planner.hh>
 # include <hpp/core/steering-method.hh>
 # include <boost/tuple/tuple.hpp>
+# include <hpp/rbprm/planner/steering-method-parabola.hh>
 
 
 namespace hpp {
@@ -54,7 +55,7 @@ namespace hpp {
       virtual void tryDirectPath();
 
 
-      void computeRandomParabola(core::NodePtr_t x_start, core::ConfigurationPtr_t q_target, DelayedEdges_t delayedEdge);
+      void computeRandomParabola(core::NodePtr_t x_start, core::ConfigurationPtr_t q_target, DelayedEdges_t delayedEdges);
 
       /// Set configuration shooter.
       void configurationShooter (const core::ConfigurationShooterPtr_t& shooter);
@@ -76,7 +77,7 @@ namespace hpp {
       core::ConfigurationShooterPtr_t configurationShooter_;
       mutable core::Configuration_t qProj_;
       DynamicPlannerWkPtr_t weakPtr_;
-      core::SteeringMethodPtr_t smParabola_;
+      SteeringMethodParabolaPtr_t smParabola_;
     };
     /// \}
   } // namespace core

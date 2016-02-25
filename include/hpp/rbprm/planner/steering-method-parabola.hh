@@ -81,7 +81,7 @@ namespace hpp {
                                       core::ConfigurationIn_t q2) const;
 
       core::PathPtr_t compute_random_3D_path (core::ConfigurationIn_t q1,
-                                 core::ConfigurationIn_t q2) const;
+                                 core::ConfigurationIn_t q2, value_type* alpha0, value_type* v0) const;
 
 
       /// Compute fiveth constraint: compute intersection between coneS
@@ -92,6 +92,30 @@ namespace hpp {
             const value_type theta,
             const int number,
             value_type *delta) const;
+
+      /// Compute third constraint : landing in the friction cone
+      /// return false if constraint can never be respected.
+      /// fill alpha_imp_sup/inf angles limiting initial angle
+      /// to respect the constraint.
+      bool third_constraint (bool fail, const value_type& X,
+           const value_type& Y,
+           const value_type alpha_imp_min,
+           const value_type alpha_imp_max,
+           value_type *alpha_imp_sup,
+           value_type *alpha_imp_inf,
+           const value_type n2_angle) const;
+
+
+
+      /// Compute sixth constraint: V_imp <= V_imp_max
+      /// return false if constraint can never be respected.
+      /// fill alpha_imp_plus/minus angles limiting initial angle
+      /// to respect the constraint.
+      bool sixth_constraint (const value_type& X, const value_type& Y,
+           value_type *alpha_imp_plus,
+           value_type *alpha_imp_minus) const;
+
+      value_type getVImpMax(){ return Vimpmax_;}
 
     protected:
       /// Constructor with robot
@@ -136,27 +160,6 @@ namespace hpp {
 			      value_type *alpha_lim_plus,
 			      value_type *alpha_lim_minus) const;
 
-      /// Compute third constraint : landing in the friction cone
-      /// return false if constraint can never be respected.
-      /// fill alpha_imp_sup/inf angles limiting initial angle
-      /// to respect the constraint.
-      bool third_constraint (bool fail, const value_type& X,
-			     const value_type& Y,
-			     const value_type alpha_imp_min,
-			     const value_type alpha_imp_max,
-			     value_type *alpha_imp_sup,
-			     value_type *alpha_imp_inf,
-			     const value_type n2_angle) const;
-		
-
-
-      /// Compute sixth constraint: V_imp <= V_imp_max
-      /// return false if constraint can never be respected.
-      /// fill alpha_imp_plus/minus angles limiting initial angle
-      /// to respect the constraint.
-      bool sixth_constraint (const value_type& X, const value_type& Y,
-			     value_type *alpha_imp_plus,
-			     value_type *alpha_imp_minus) const;
 
       /// Get the length of the path by numerical integration (Simpson method)
       /// Length is computed only when the path is created
