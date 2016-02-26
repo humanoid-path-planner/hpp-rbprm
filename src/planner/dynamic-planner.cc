@@ -58,7 +58,8 @@ namespace hpp {
       PathPlanner (problem),
       configurationShooter_ (problem.configurationShooter()),
       qProj_ (problem.robot ()->configSize ()),
-      smParabola_(rbprm::SteeringMethodParabola::create((core::ProblemPtr_t(&problem))))
+      smParabola_(rbprm::SteeringMethodParabola::create((core::ProblemPtr_t(&problem)))),
+      roadmap_(core::RbprmRoadmap::create (problem.distance (),problem.robot()))
     {
     }
 
@@ -67,7 +68,8 @@ namespace hpp {
       PathPlanner (problem, roadmap),
       configurationShooter_ (problem.configurationShooter()),
       qProj_ (problem.robot ()->configSize ()),
-      smParabola_(rbprm::SteeringMethodParabola::create((core::ProblemPtr_t(&problem))))
+      smParabola_(rbprm::SteeringMethodParabola::create((core::ProblemPtr_t(&problem)))),
+      roadmap_(core::RbprmRoadmap::create (problem.distance (),problem.robot()))
     {
     }
 

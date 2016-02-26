@@ -23,7 +23,7 @@
 # include <hpp/core/steering-method.hh>
 # include <boost/tuple/tuple.hpp>
 # include <hpp/rbprm/planner/steering-method-parabola.hh>
-
+# include <hpp/rbprm/planner/rbprm-roadmap.hh>
 
 namespace hpp {
   namespace rbprm {
@@ -73,6 +73,16 @@ namespace hpp {
 
       /// Set configuration shooter.
       void configurationShooter (const core::ConfigurationShooterPtr_t& shooter);
+
+      // we need both method, because smart_pointer inheritance is not implemented (compiler don't know that rbprmRoadmapPtr_t derive from RoadmapPtr_t).
+      virtual const core::RoadmapPtr_t& roadmap () const{
+        return roadmap_;
+      }
+
+      const core::RbprmRoadmapPtr_t& rbprmRoadmap() const {
+        return roadmap_;
+      }
+
     protected:
       /// Constructor
       DynamicPlanner (const core::Problem& problem, const core::RoadmapPtr_t& roadmap);
@@ -92,6 +102,7 @@ namespace hpp {
       mutable core::Configuration_t qProj_;
       DynamicPlannerWkPtr_t weakPtr_;
       SteeringMethodParabolaPtr_t smParabola_;
+      const core::RbprmRoadmapPtr_t roadmap_;
     };
     /// \}
   } // namespace core
