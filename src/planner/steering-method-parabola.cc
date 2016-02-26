@@ -235,6 +235,8 @@ namespace hpp {
         const value_type theta = atan2 (Y, X);
         const value_type x_theta_0 = cos(theta) * x_0 +  sin(theta) * y_0;
 
+        if(alpha_0_min_ < 0 )
+          alpha_0_min_ = 0; //otherwise we go in the wrong direction
         value_type interval = (alpha_0_max_-alpha_0_min_)/2.;  // according to friction cone computed in compute_3d_path
         value_type alpha = (((value_type) rand()/RAND_MAX) * interval) + alpha_0_min_;
         value_type v = (((value_type) rand()/RAND_MAX) * V0max_);
@@ -244,7 +246,7 @@ namespace hpp {
         hppDout(notice,"alpha_rand = "<<alpha);
         hppDout(notice,"v_rand = "<<v);
 
-        value_type t = 1; //TODO : find better way to do it
+        value_type t = 3; //TODO : find better way to do it
         value_type x_theta_f = v*cos(alpha)*t + x_theta_0;
         value_type x_f = x_theta_f*cos(theta);
         value_type y_f = x_theta_f*sin(theta);
@@ -270,7 +272,7 @@ namespace hpp {
         //const value_type v = sqrt((1 + tan(alpha)*tan(alpha))) * x_theta_0_dot;
         //hppDout (notice, "v: " << v);
         const value_type Vimp = sqrt(1 + (-g_*X*inv_x_th_dot_0_sq+tan(alpha)) *(-g_*X*inv_x_th_dot_0_sq+tan(alpha))) * x_theta_0_dot; // x_theta_0_dot > 0
-        hppDout (notice, "Vimp: " << Vimp);
+        hppDout (notice, "Vimp (after 3 seconde) : " << Vimp);
 
         /* Compute Parabola coefficients */
         vector_t coefs (5);
@@ -371,15 +373,15 @@ namespace hpp {
                                         sin(theta)*q1 (index+1));
       const value_type n2_angle = atan2(q2 (index+2), cos(theta)*q2 (index) +
                                         sin(theta)*q2 (index+1));
-      hppDout (info, "n1_angle: " << n1_angle);
-      hppDout (info, "n2_angle: " << n2_angle);
+      hppDout (notice, "n1_angle: " << n1_angle);
+      hppDout (notice, "n2_angle: " << n2_angle);
       
       const value_type alpha_0_min = n1_angle - delta1;
       const value_type alpha_0_max = n1_angle + delta1;
       alpha_0_max_=alpha_0_max;
       alpha_0_min_=alpha_0_min;
-      hppDout (info, "alpha_0_min: " << alpha_0_min);
-      hppDout (info, "alpha_0_max: " << alpha_0_max);
+      hppDout (notice, "alpha_0_min: " << alpha_0_min);
+      hppDout (notice, "alpha_0_max: " << alpha_0_max);
 
       value_type alpha_inf4;
       alpha_inf4 = atan (Z/X_theta);
@@ -595,6 +597,11 @@ namespace hpp {
       const value_type V = q (index+1);
       const value_type W = q (index+2);
       const value_type phi = atan (mu_);
+      if (1000 * (q (index) * q (index) + q (index+1) * q (index+1)) < q (index+2) * q (index+2)){// cone very vertical
+        hppDout (notice, "q: " << displayConfig (q));
+        *delta=phi;
+        return true;
+      }
       const value_type psi = M_PI/2 - atan2 (W,U*cos(theta)+V*sin(theta));
       hppDout (info, "psi: " << psi);
       const bool nonVerticalCone = (psi < -phi && psi >= -M_PI/2)

@@ -178,7 +178,7 @@ namespace
                                             const std::map<std::string, std::vector<std::string> >& affFilters,
                                             const std::size_t shootLimit, const std::size_t displacementLimit)
     {
-        srand (0);
+        srand ((unsigned int)(time(NULL)));
         RbPrmShooter* ptr = new RbPrmShooter (robot, geometries, affordances,
 					filter, affFilters, shootLimit, displacementLimit);
 

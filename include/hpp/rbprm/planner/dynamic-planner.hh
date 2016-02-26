@@ -50,7 +50,7 @@ namespace hpp {
       virtual void oneStep ();
 
       //for debugging
-      virtual core::PathVectorPtr_t solve ();
+      //virtual core::PathVectorPtr_t solve ();
 
       virtual void startSolve ();
 
@@ -58,7 +58,18 @@ namespace hpp {
       virtual void tryDirectPath();
 
 
-      void computeRandomParabola(core::NodePtr_t x_start, core::ConfigurationPtr_t q_target, DelayedEdges_t delayedEdges);
+      // This method call SteeringMethodParabola, but we don't try to connect two confuration, instead we shoot a random alpha0 and V0 valide for the initiale configuration and then compute the final point.
+      // Then we check for collision (for the trunk)  and we check if the final point is in a valide configuration (trunk not in collision but limbs in accessible contact zone).
+      // (Not anymore ) If this is true we do a reverse collision check until we find the first valide configuration, then we check for the friction cone and impact velocity constraint.(Not anymore : can't find normal after this)
+
+      /**
+       * @brief computeRandomParabola
+       * @param x_start initial node
+       * @param q_target target configuration (we shoot in this direction)
+       * @param delayedEdges delayedEdges, node and edges waiting to be added in roadmap at each iteration
+       * @return the path computed (valid or not)
+       */
+      core::PathPtr_t computeRandomParabola(core::NodePtr_t x_start, core::ConfigurationPtr_t q_target, DelayedEdges_t &delayedEdges);
 
       /// Set configuration shooter.
       void configurationShooter (const core::ConfigurationShooterPtr_t& shooter);
