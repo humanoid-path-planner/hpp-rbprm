@@ -178,13 +178,16 @@ namespace
                                             const std::map<std::string, std::vector<std::string> >& affFilters,
                                             const std::size_t shootLimit, const std::size_t displacementLimit)
     {
-        srand ((unsigned int)(time(NULL)));
-        RbPrmShooter* ptr = new RbPrmShooter (robot, geometries, affordances,
-					filter, affFilters, shootLimit, displacementLimit);
+      unsigned int seed = (unsigned int)(time(NULL));
+      srand (seed);
+      hppDout(notice,"&&&&&& SEED = "<<seed);
+      RbPrmShooter* ptr = new RbPrmShooter (robot, geometries, affordances,
+                                            filter, affFilters, shootLimit, displacementLimit);
 
-        RbPrmShooterPtr_t shPtr (ptr);
-        ptr->init (shPtr);
-        return shPtr;
+
+      RbPrmShooterPtr_t shPtr (ptr);
+      ptr->init (shPtr);
+      return shPtr;
     }
 
     void RbPrmShooter::init (const RbPrmShooterPtr_t& self)

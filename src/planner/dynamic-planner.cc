@@ -183,7 +183,7 @@ namespace hpp {
 
     void DynamicPlanner::oneStep ()
     {
-      hppDout(notice,"oneStep begin");
+      hppDout(notice,"# oneStep BEGIN");
       DelayedEdges_t delayedEdges;
       core::DevicePtr_t robot (problem ().robot ());
       core::PathValidationPtr_t pathValidation (problem ().pathValidation ());
@@ -192,10 +192,9 @@ namespace hpp {
       core::Nodes_t newNodes;
       std::vector<std::string> filter;
       core::PathPtr_t validPath, path;
-      hppDout(notice,"random shoot begin");
       // Pick a random node
       core::ConfigurationPtr_t q_rand = configurationShooter_->shoot ();
-      hppDout(notice,"random shoot OK");
+      hppDout(notice,"# random shoot OK");
 
       //
       // First extend each connected component toward q_rand
@@ -232,6 +231,18 @@ namespace hpp {
               newNodes.push_back (x_new);
               if(!pathValid){
                 hppDout(notice,"### Straight path not fully valid, try parabola path between qnew and qrand");
+                // get contact normal and update the extraDof
+                // TODO : aaprès modif validation report, recup normal des ROM et non du tronc
+               /* if(report->configurationReport)  {
+                  fcl::Vec3f normal ( - boost::dynamic_pointer_cast<core::CollisionValidationReport>(report->configurationReport)->result.getContact(0).normal);
+
+                  hppDout(notice,"normal = "<<normal);
+                  // fill extraDof with normal :
+                  core::size_type size = problem().robot()->configSize ();
+                  (*q_new)[size-3]=normal[0];
+                  (*q_new)[size-2]=normal[1];
+                  (*q_new)[size-1]=normal[2];
+                }*/
                 hppStartBenchmark(EXTENDPARA);
                 path = extendParabola(x_new, q_rand);
                 hppStopBenchmark (EXTENDPARA);
@@ -245,10 +256,15 @@ namespace hpp {
                     core::ConfigurationPtr_t q_last (new core::Configuration_t(validPath->end ()));
                     delayedEdges.push_back (DelayedEdge_t (x_new, q_last, validPath));
                   }else{
-                    hppDout(notice, "#### parabola path not valid, compute random parabola :");
+                    hppDout(notice, "#### Direct parabola path not valid, compute random parabola :");
                     computeRandomParabola(x_new,q_rand,delayedEdges);
                   }
+                }else{
+                  hppDout(notice, "#### No direct parabola path, compute random parabola :");
+                  computeRandomParabola(x_new,q_rand,delayedEdges);
                 }
+              }else{
+                hppDout(notice,"### straight path fully valid");
               }
             } else {
               hppDout(notice, "### add delayed edge");
@@ -257,12 +273,14 @@ namespace hpp {
               // not recommended.
               delayedEdges.push_back (DelayedEdge_t (near, q_new, validPath));
             }
+          }else{
+            hppDout(notice,"### path lenght null");
           }
         }else
           hppDout(notice, "### path dosen't exist");
 
       }
-      hppDout(notice,"extend OK");
+      hppDout(notice,"# extend OK");
       // Insert delayed edges
       for (DelayedEdges_t::const_iterator itEdge = delayedEdges.begin ();
            itEdge != delayedEdges.end (); ++itEdge) {
@@ -273,7 +291,7 @@ namespace hpp {
         roadmap ()->addEdge (near, newNode, validPath);
         roadmap ()->addEdge (newNode, near, validPath->reverse());
       }
-      hppDout(notice,"add delayed edge OK");
+      hppDout(notice,"# add delayed edge OK");
 
       //
       // Second, try to connect new nodes together
@@ -297,7 +315,7 @@ namespace hpp {
           }
         }
       }
-      hppDout(notice,"connect new nodes OK");
+      hppDout(notice,"# OneStep END");
 
     }
 
@@ -421,6 +439,7 @@ namespace hpp {
         hppDout(notice,"random parabola doesn't land on obstacle");
         return path;
       }
+      return path;
     }
 
     void DynamicPlanner::tryDirectPath ()

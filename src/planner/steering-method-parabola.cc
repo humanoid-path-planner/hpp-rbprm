@@ -299,7 +299,9 @@ namespace hpp {
         ParabolaPathPtr_t pp = ParabolaPath::create (device_.lock (), q1, *qnew,
                                                      computeLength (q1, *qnew,coefs),
                                                      coefs);
-        hppDout (notice, "path: " << *pp);
+        hppDout (notice, "Create path between : init : " << displayConfig(q1));
+        hppDout (notice, "Create path between : goal : " << displayConfig(*qnew));
+
         return pp;
    }
 
