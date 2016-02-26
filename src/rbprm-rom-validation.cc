@@ -46,5 +46,6 @@ namespace hpp {
     {       
 				return !hpp::core::CollisionValidation::validate(config, validationReport);
 		}
+
   }// namespace rbprm
 }// namespace hpp

@@ -24,6 +24,11 @@
 
 namespace hpp {
   namespace core {
+
+    HPP_PREDEF_CLASS(RbprmValidationReport);
+    typedef boost::shared_ptr <RbprmValidationReport>  RbprmValidationReportPtr_t;
+
+
     /// \addtogroup validation
     /// \{
 
@@ -32,7 +37,13 @@ namespace hpp {
     struct HPP_CORE_DLLAPI RbprmValidationReport : public CollisionValidationReport
     {
       /// Directing vector between collision point of geometries
-      fcl::Vec3f outwardCOllisionDirection;
+      std::map<std::string,CollisionValidationReport> ROMReports;
+      bool trunkInCollision;
+      bool romsValid;
+
+
+
+
     }; // class RbprmValidationReport
     /// \}
   } // namespace core

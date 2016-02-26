@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE (shooterCreationWithFilters) {
     RbPrmShooterPtr_t shooter = RbPrmShooter::create(robot, collisionObjects, filter);
     for(int i =0; i< 100; ++i)
     {
-        BOOST_CHECK_MESSAGE (validator->validate(*(shooter->shoot()), filter),
+        BOOST_CHECK_MESSAGE (validator->validate(*(shooter->shoot()),validationReport, filter),
                                                   "Reachability condition should be verified by shooter");
     }
 
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE (shooterCreationWithFilters) {
     shooter = RbPrmShooter::create(robot, collisionObjects, filter);
     for(int i =0; i< 100; ++i)
     {
-        BOOST_CHECK_MESSAGE (validator->validate(*(shooter->shoot()), filter),
+        BOOST_CHECK_MESSAGE (validator->validate(*(shooter->shoot()),validationReport, filter),
                                                   "Reachability condition should be verified by shooter");
     }
 
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE (shooterCreationWithFilters) {
     shooter = RbPrmShooter::create(robot, collisionObjects, filter);
     for(int i =0; i< 100; ++i)
     {
-        BOOST_CHECK_MESSAGE (validator->validate(*(shooter->shoot()), filter),
+        BOOST_CHECK_MESSAGE (validator->validate(*(shooter->shoot()),validationReport, filter),
                                                   "Reachability condition should be verified by shooter");
     }
 
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE (shooterCreationWithFilters) {
     shooter = RbPrmShooter::create(robot, collisionObjects, filter);
     for(int i =0; i< 100; ++i)
     {
-        BOOST_CHECK_MESSAGE (validator->validate(*(shooter->shoot()), filter),
+        BOOST_CHECK_MESSAGE (validator->validate(*(shooter->shoot()),validationReport, filter),
                                                   "Reachability condition should be verified by shooter");
     }
 }

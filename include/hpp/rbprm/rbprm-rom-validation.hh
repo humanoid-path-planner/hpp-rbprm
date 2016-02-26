@@ -56,8 +56,7 @@ namespace hpp {
       /// \retval validationReport report on validation (used only for rom shape). This parameter will
       ///         dynamically cast into CollisionValidationReport type,
       /// \return whether the whole config is valid.
-      virtual bool validate (const core::Configuration_t& config,
-                 core::ValidationReportPtr_t& validationReport);
+      virtual bool validate (const core::Configuration_t& config, core::ValidationReportPtr_t& validationReport);
 
     public:
       const std::vector<std::string> filter_;

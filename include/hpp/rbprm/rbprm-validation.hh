@@ -88,6 +88,9 @@ namespace hpp {
                  core::ValidationReportPtr_t& validationReport,
                  const std::vector<std::string>& filter);
 
+
+
+
       /// Add an obstacle to validation
       /// \param object obstacle added
       /// Store obstacle and build a collision pair with each body of the robot.
@@ -103,6 +106,20 @@ namespace hpp {
       virtual void removeObstacleFromJoint
     (const core::JointPtr_t& joint, const core::CollisionObjectPtr_t& obstacle);
 
+
+
+      /// Compute whether the roms configurations are valid
+      /// \param config the config to check for validity,
+      /// \return whether the whole config is valid.
+      bool validateRoms(const core::Configuration_t& config);
+
+      /// Compute whether the roms configurations are valid
+      /// \param config the config to check for validity,
+      /// \param validationReport the report (can be cast to rbprmValidationReport) with info on the trunk and ROM states,
+      /// \return whether the whole config is valid.
+      bool validateRoms(const core::Configuration_t& config,
+                         core::ValidationReportPtr_t &validationReport);
+
       /// Compute whether the roms configurations are valid
       /// \param config the config to check for validity,
       /// \param filter specify constraints on all roms required to be in contact, will return
@@ -111,10 +128,14 @@ namespace hpp {
       bool validateRoms(const core::Configuration_t& config,
                         const std::vector<std::string>& filter);
 
-      /// Compute whether the roms configurations are valid
       /// \param config the config to check for validity,
+      /// \param filter specify constraints on all roms required to be in contact, will return
+      /// \param validationReport the report (can be cast to rbprmValidationReport) with info on the trunk and ROM states,
       /// \return whether the whole config is valid.
-      bool validateRoms(const core::Configuration_t& config);
+      bool validateRoms(const core::Configuration_t& config,
+                        const std::vector<std::string>& filter,
+                         core::ValidationReportPtr_t &validationReport);
+
 
     public:
       /// CollisionValidation for the trunk

@@ -27,6 +27,13 @@ namespace hpp {
       ConnectedComponentPtr_t connectedComponent):
         Node(configuration,connectedComponent)
       {}
+
+      fcl::Vec3f getNormal(){
+        return normal_;
+      }
+
+    private:
+      fcl::Vec3f normal_;
     }; // class
 
   }//core

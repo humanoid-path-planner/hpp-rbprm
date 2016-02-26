@@ -14,9 +14,9 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-rbprm. If not, see <http://www.gnu.org/licenses/>.
 
-#include "hpp/rbprm/rbprm-validation.hh"
-#include "hpp/core/collision-validation.hh"
-
+#include <hpp/rbprm/rbprm-validation.hh>
+#include <hpp/core/collision-validation.hh>
+#include <hpp/rbprm/rbprm-validation-report.hh>
 
 namespace
 {
@@ -124,11 +124,27 @@ namespace hpp {
     }
 
     bool RbPrmValidation::validateRoms(const core::Configuration_t& config,
-                      const std::vector<std::string>& filter)
+                      const std::vector<std::string>& filter, ValidationReportPtr_t& validationReport)
     {
       /*  hppDout(notice, "Filters = ");
         for(std::vector<std::string>::const_iterator it = filter.begin() ; it != filter.end() ; ++it)
           hppDout(notice,"filter : "<<*it);*/
+
+        RbprmValidationReportPtr_t rbprmReport(new RbprmValidationReport);
+        if(validationReport){// if the trunk is in collision, we copy the informations in the new report
+          CollisionValidationReportPtr_t colReport = boost::dynamic_pointer_cast<CollisionValidationReport>(validationReport);
+          if(colReport->result.isCollision()){
+            rbprmReport->object1 = colReport->object1;
+            rbprmReport->object2 = colReport->object2;
+            rbprmReport->result = colReport->result;
+            rbprmReport->trunkInCollision = true;
+          }else{
+            rbprmReport->trunkInCollision=false;
+          }
+        }else{
+          rbprmReport->trunkInCollision=false;
+        }
+
         unsigned int filterMatch(0);
         for(T_RomValidation::const_iterator cit = romValidations_.begin();
             cit != romValidations_.end() && (filterMatch < 1 || filterMatch < filter.size()); ++cit)
@@ -139,18 +155,34 @@ namespace hpp {
                 ++filterMatch;
             }
         }
-        std::string tr = (filterMatch >= filter.size()) ? "true" : "false";
-        hppDout(notice," validate romes ?" << filterMatch << " " <<  tr );
 
+        if(filterMatch >= filter.size())
+          rbprmReport->romsValid=true;
+        else
+          rbprmReport->romsValid=false;
+        validationReport = rbprmReport;
         //std::string tr = (filterMatch >= filter.size()) ? "true" : "false";
         //hppDout(notice," validate romes ?" << filterMatch << " " <<  tr );
         return filterMatch >= filter.size();
     }
 
+    bool RbPrmValidation::validateRoms(const core::Configuration_t& config, ValidationReportPtr_t& validationReport)
+    {
+        return validateRoms(config,defaultFilter_,validationReport);
+    }
+
+    bool RbPrmValidation::validateRoms(const core::Configuration_t& config,const std::vector<std::string>& filter)
+    {
+        ValidationReportPtr_t unusedReport;
+        return validateRoms(config,filter,unusedReport);
+    }
+
     bool RbPrmValidation::validateRoms(const core::Configuration_t& config)
     {
-        return validateRoms(config,defaultFilter_);
+        ValidationReportPtr_t unusedReport;
+        return validateRoms(config,defaultFilter_,unusedReport);
     }
+
 
     bool RbPrmValidation::validate (const Configuration_t& config)
     {
@@ -162,8 +194,10 @@ namespace hpp {
                ValidationReportPtr_t& validationReport)
     {
         return trunkValidation_->validate(config, validationReport)
-                && validateRoms(config, defaultFilter_);
+                && validateRoms(config, defaultFilter_,validationReport);
     }
+
+
 
     bool RbPrmValidation::validate (const Configuration_t& config,
                const std::vector<std::string> &filter)
@@ -177,8 +211,9 @@ namespace hpp {
                     const std::vector<std::string>& filter)
     {
         return trunkValidation_->validate(config, validationReport)
-                && validateRoms(config, filter);
+                && validateRoms(config, filter,validationReport);
     }
+
 
     void RbPrmValidation::addObstacle (const CollisionObjectPtr_t& object)
     {
