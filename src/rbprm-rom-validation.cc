@@ -46,14 +46,20 @@ namespace hpp {
                     ValidationReportPtr_t& validationReport)
     {
       ValidationReportPtr_t romReport;
-      bool valid = !hpp::core::CollisionValidation::validate(config, romReport);
+      bool collision = !hpp::core::CollisionValidation::validate(config, romReport);
       RbprmValidationReportPtr_t rbprmReport =boost::dynamic_pointer_cast<RbprmValidationReport>(validationReport);
+      if(rbprmReport){
+        hppDout(notice,"rbprm-validation-report correctly cast");
+      }else{
+        hppDout(notice,"Validation report is not a valid rbprm-validation-report instance");
+      }
       if(rbprmReport){  // if the report is a correct rbprm report, we add the rom information
         rbprmReport->ROMReports.insert(std::make_pair(robot_->name(),boost::dynamic_pointer_cast<CollisionValidationReport>(romReport)));
+        rbprmReport->ROMFilters.insert(std::make_pair(robot_->name(),collision));
       }else{
         validationReport = romReport;
       }
-      return valid;
+      return collision;
     }
 
 

@@ -310,8 +310,9 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
         while(!found && limitDis >0)
         {
             bool valid = validator_->trunkValidation_->validate(*config, reportShPtr);
+            found = valid && validator_->validateRoms(*config, filter_,reportShPtr);
             CollisionValidationReport* report = static_cast<CollisionValidationReport*>(reportShPtr.get());
-            found = valid && validator_->validateRoms(*config, filter_);
+
             if(valid &!found)
             {
                 // try to rotate to reach rom

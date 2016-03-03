@@ -38,10 +38,25 @@ namespace hpp {
     {
       /// Directing vector between collision point of geometries
       std::map<std::string,CollisionValidationReportPtr_t> ROMReports;
+      std::map<std::string,bool> ROMFilters;
+
       bool trunkInCollision;
       bool romsValid;
 
-
+      /// Write report in a stream
+      virtual std::ostream& print (std::ostream& os) const
+      {
+        if(trunkInCollision){
+          os << "Collision between object " << object1->name () << " and " << object2->name ();
+        }
+        if (!romsValid){
+          os << "Rom filters not respected : "<<std::endl;
+          for(std::map<std::string,bool>::const_iterator it = ROMFilters.begin() ; it != ROMFilters.end() ; ++it){
+            os << " "<<it->first << std::endl;
+          }
+        }
+        return os;
+      }
 
 
     }; // class RbprmValidationReport
