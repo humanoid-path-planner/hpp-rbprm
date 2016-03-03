@@ -125,12 +125,20 @@ namespace hpp {
 
     bool RbPrmValidation::validateRoms(const core::Configuration_t& config,
                       const std::vector<std::string>& filter, ValidationReportPtr_t& validationReport)
+
     {
       /*  hppDout(notice, "Filters = ");
         for(std::vector<std::string>::const_iterator it = filter.begin() ; it != filter.end() ; ++it)
           hppDout(notice,"filter : "<<*it);*/
 
+      // build a rbprm report and copy trunk report informations
         RbprmValidationReportPtr_t rbprmReport(new RbprmValidationReport);
+
+        //hppDout(notice,"report in validateRoms = "<<rbprmReport);
+
+
+
+
         if(validationReport){// if the trunk is in collision, we copy the informations in the new report
           CollisionValidationReportPtr_t colReport = boost::dynamic_pointer_cast<CollisionValidationReport>(validationReport);
           if(colReport->result.isCollision()){
@@ -141,16 +149,23 @@ namespace hpp {
           }else{
             rbprmReport->trunkInCollision=false;
           }
+          //hppDout(notice, "trunk report exist");
         }else{
           rbprmReport->trunkInCollision=false;
+          //hppDout(notice, "trunk report doesn't exist");
         }
+
+        ValidationReportPtr_t rbprmReportCast =  rbprmReport;
+
+        //hppDout(notice,"after cast  = "<<rbprmReportCast);
+
 
         unsigned int filterMatch(0);
         for(T_RomValidation::const_iterator cit = romValidations_.begin();
             cit != romValidations_.end() && (filterMatch < 1 || filterMatch < filter.size()); ++cit)
         {
             if((filter.empty() || std::find(filter.begin(), filter.end(), cit->first) != filter.end())
-                    && cit->second->validate(config))
+                    && cit->second->validate(config, rbprmReportCast))
             {
                 ++filterMatch;
             }

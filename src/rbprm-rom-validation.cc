@@ -17,6 +17,7 @@
 #include "hpp/rbprm/rbprm-rom-validation.hh"
 #include <hpp/fcl/collision.h>
 #include <hpp/fcl/BVH/BVH_model.h>
+#include <hpp/rbprm/rbprm-validation-report.hh>
 
 
 namespace hpp {
@@ -43,9 +44,18 @@ namespace hpp {
 
     bool RbPrmRomValidation::validate (const Configuration_t& config,
                     ValidationReportPtr_t& validationReport)
-    {       
-				return !hpp::core::CollisionValidation::validate(config, validationReport);
-		}
+    {
+      ValidationReportPtr_t romReport;
+      bool valid = !hpp::core::CollisionValidation::validate(config, romReport);
+      RbprmValidationReportPtr_t rbprmReport =boost::dynamic_pointer_cast<RbprmValidationReport>(validationReport);
+      if(rbprmReport){  // if the report is a correct rbprm report, we add the rom information
+        rbprmReport->ROMReports.insert(std::make_pair(robot_->name(),boost::dynamic_pointer_cast<CollisionValidationReport>(romReport)));
+      }else{
+        validationReport = romReport;
+      }
+      return valid;
+    }
+
 
   }// namespace rbprm
 }// namespace hpp

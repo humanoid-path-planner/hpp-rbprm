@@ -37,7 +37,7 @@ namespace hpp {
     struct HPP_CORE_DLLAPI RbprmValidationReport : public CollisionValidationReport
     {
       /// Directing vector between collision point of geometries
-      std::map<std::string,CollisionValidationReport> ROMReports;
+      std::map<std::string,CollisionValidationReportPtr_t> ROMReports;
       bool trunkInCollision;
       bool romsValid;
 
