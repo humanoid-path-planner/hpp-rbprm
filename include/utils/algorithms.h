@@ -7,16 +7,25 @@
 #include <Eigen/Dense>
 #include <Eigen/src/Core/util/Macros.h>
 #include <vector>
+#include <hpp/fcl/collision_object.h>
 
 namespace geom
 {
 
-  typedef Eigen::Vector3d Point;
+  /*typedef Eigen::Vector3d Point;
   typedef std::vector<Point> T_Point;
   typedef T_Point::const_iterator CIT_Point;
+  typedef const Eigen::Ref<const Point>& CPointRef;
+*/
+
+  typedef fcl::Vec3f Point;
+  typedef std::vector<Point> T_Point;
+  typedef T_Point::const_iterator CIT_Point;
+  typedef const Point& CPointRef;
+
+
   typedef std::vector<Eigen::Vector2d> T_Point2D;
   typedef T_Point2D::const_iterator CIT_Point2D;
-  typedef const Eigen::Ref<const Eigen::Vector3d>& CPointRef;
 
   /// Implementation of the gift wrapping algorithm to determine the 2D projection of the convex hull of a set of points
   /// Dimension can be greater than two, in which case the points will be projected on the z = 0 plane
@@ -218,13 +227,11 @@ namespace geom
           if(dirS < 0)
             outputList.insert(outputList.end(), *S);
           else
-            outputList.insert(outputList.end(),
-                              lineSect(*S, *E, *edge, *(edge+1)));
+            outputList.insert(outputList.end(),lineSect(*S, *E, *edge, *(edge+1)));
         }
         else if(dirS < 0)
         {
-          outputList.insert(outputList.end(),
-                            lineSect(*S, *E, *edge, *(edge+1)));
+          outputList.insert(outputList.end(),lineSect(*S, *E, *edge, *(edge+1)));
           outputList.insert(outputList.end(),*S);
         }
       }

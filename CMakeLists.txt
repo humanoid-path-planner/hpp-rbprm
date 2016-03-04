@@ -109,6 +109,7 @@ SET(${PROJECT_NAME}_HEADERS
     include/hpp/rbprm/planner/rbprm-node.hh
     include/hpp/rbprm/planner/rbprm-roadmap.hh
     include/utils/algorithms.h
+    include/utils/conversions.h
   )
 
 # Activate hpp-util logging if requested

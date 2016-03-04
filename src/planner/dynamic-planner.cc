@@ -40,7 +40,7 @@
 #include <hpp/core/config-validations.hh>
 #include <hpp/fcl/collision_data.h>
 #include "utils/algorithms.h"
-
+#include "utils/conversions.h"
 
 namespace hpp {
   namespace rbprm {
@@ -667,6 +667,24 @@ namespace hpp {
       */
 
         // get intersection between the two objects :
+        obj1->fcl();
+        geom::T_Point vertices1;
+        geom::BVHModelOBConst_Ptr_t model1 =  geom::GetModel(obj1->fcl());
+        hppDout(notice,"vertices obj1 : "<<obj1->name()<< " ( "<<model1->num_vertices<<" ) ");
+        for(int i = 0 ; i < model1->num_vertices ; ++i)
+        {
+          vertices1.push_back(model1->vertices[i]);
+          hppDout(notice,"vertices : "<<model1->vertices[i]);
+        }
+        obj2->fcl();
+        geom::T_Point vertices2;
+        geom::BVHModelOBConst_Ptr_t model2 =  geom::GetModel(obj2->fcl());
+        hppDout(notice,"vertices obj1 : "<<obj2->name()<< " ( "<<model2->num_vertices<<" ) ");
+        for(int i = 0 ; i < model2->num_vertices ; ++i)
+        {
+          vertices2.push_back(model2->vertices[i]);
+          hppDout(notice,"vertices : "<<model2->vertices[i]);
+        }
       }
 
     }
