@@ -36,6 +36,10 @@
 #include <hpp/core/path-projector.hh>
 #include <hpp/rbprm/planner/steering-method-parabola.hh>
 #include <hpp/rbprm/rbprm-path-validation.hh>
+#include <hpp/rbprm/rbprm-validation-report.hh>
+#include <hpp/core/config-validations.hh>
+#include <hpp/fcl/collision_data.h>
+
 
 namespace hpp {
   namespace rbprm {
@@ -89,7 +93,7 @@ namespace hpp {
     }
 
     void DynamicPlanner::startSolve ()
-    {      
+    {
       // add 3 extraDof to save contact normal (used for parabola computation)
       //hppDout(notice,"set extra conf");
 
@@ -198,6 +202,7 @@ namespace hpp {
       core::ConfigurationPtr_t q_rand = configurationShooter_->shoot ();
       hppDout(notice,"# random shoot OK");
 
+
       //
       // First extend each connected component toward q_rand
       //
@@ -230,6 +235,8 @@ namespace hpp {
               hppDout(notice, "### add new node and edges: ");
               hppDout(notice, displayConfig(*q_new));
               core::NodePtr_t x_new = roadmap ()->addNodeAndEdges(near, q_new, validPath);
+              computeGIWC(x_new);
+
               newNodes.push_back (x_new);
               if(!pathValid){
                 hppDout(notice,"### Straight path not fully valid, try parabola path between qnew and qrand");
@@ -290,6 +297,7 @@ namespace hpp {
         const core::ConfigurationPtr_t& q_new = itEdge-> get <1> ();
         const core::PathPtr_t& validPath = itEdge-> get <2> ();
         core::NodePtr_t newNode = roadmap ()->addNode (q_new);
+        computeGIWC(newNode);
         roadmap ()->addEdge (near, newNode, validPath);
         roadmap ()->addEdge (newNode, near, validPath->reverse());
       }
@@ -469,7 +477,7 @@ namespace hpp {
           }else if(validPath->timeRange ().second != path->timeRange ().first){
             core::ConfigurationPtr_t q_new(new core::Configuration_t(validPath->end()));
             core::NodePtr_t x_new = roadmap()->addNodeAndEdges(initNode,q_new,validPath);
-
+            computeGIWC(x_new);
             hppDout(notice,"### Straight path not fully valid, try parabola path between qnew and qGoal");
             hppStartBenchmark(EXTENDPARA);
             path = extendParabola(x_new, q2);
@@ -483,7 +491,9 @@ namespace hpp {
                 hppDout(notice, "#### parabola path valid !");
                 core::ConfigurationPtr_t q_last (new core::Configuration_t(validPath->end ()));
                 core::NodePtr_t x_last = roadmap()->addNode(q_last);
+                computeGIWC(x_last);
                 roadmap()->addEdge(x_new,x_last,validPath);
+                roadmap()->addEdge(x_last,x_new,validPath->reverse());
               }else {
                 hppDout(notice, "#### parabola path not valid !");
               }
@@ -498,6 +508,7 @@ namespace hpp {
                 const core::ConfigurationPtr_t& q_new = itEdge-> get <1> ();
                 const core::PathPtr_t& validPath = itEdge-> get <2> ();
                 core::NodePtr_t newNode = roadmap ()->addNode (q_new);
+                computeGIWC(newNode);
                 roadmap ()->addEdge (near, newNode, validPath);
                 roadmap ()->addEdge (newNode, near, validPath->reverse());
               }
@@ -587,6 +598,77 @@ namespace hpp {
       return pathVector;
     }*/
 
+    void DynamicPlanner::computeGIWC(const core::NodePtr_t x){
+      core::ValidationReportPtr_t report;
+      problem().configValidations()->validate(*(x->configuration()),report);
+      computeGIWC(x,report);
+    }
+
+
+
+
+
+    void DynamicPlanner::computeGIWC(const core::NodePtr_t x, core::ValidationReportPtr_t report){
+
+      core::ConfigurationPtr_t q = x->configuration();
+      core::RbprmNodePtr_t x_cast = static_cast<core::RbprmNodePtr_t>(x);
+      // fil normal information in node
+      if(x_cast){
+        size_t cSize = problem().robot()->configSize();
+        hppDout(notice,"~~ NODE cast correctly");
+        x_cast->normal((*q)[cSize-3],(*q)[cSize-2],(*q)[cSize-1]);
+        hppDout(notice,"~~ normal = "<<x_cast->getNormal());
+
+      }else{
+        hppDout(error,"~~ NODE cannot be cast");
+        return;
+      }
+
+      hppDout(notice,"~~ q = "<<displayConfig(*q));
+
+      core::RbprmValidationReportPtr_t rbReport = boost::dynamic_pointer_cast<core::RbprmValidationReport> (report);
+      // checks :
+      if(!rbReport)
+      {
+        hppDout(error,"~~ Validation Report cannot be cast");
+        return;
+      }
+      if(rbReport->trunkInCollision)
+      {
+        hppDout(warning,"~~ ComputeGIWC : trunk is in collision"); // shouldn't happen
+      }
+      if(!rbReport->romsValid)
+      {
+        hppDout(warning,"~~ ComputeGIWC : roms filter not respected"); // shouldn't happen
+      }
+
+      // get the 2 object in contact for each ROM :
+      hppDout(notice,"~~ Number of roms in collision : "<<rbReport->ROMReports.size());
+      for(std::map<std::string,core::CollisionValidationReportPtr_t>::const_iterator it = rbReport->ROMReports.begin() ; it != rbReport->ROMReports.end() ; ++it)
+      {
+        hppDout(notice,"~~ for rom : "<<it->first);
+        core::CollisionObjectPtr_t obj1 = it->second->object1;
+        core::CollisionObjectPtr_t obj2 = it->second->object2;
+        hppDout(notice,"~~ collision between : "<<obj1->name() << " and "<<obj2->name());
+        fcl::CollisionResult result = it->second->result;
+       /* size_t numContact =result.numContacts();
+        hppDout(notice,"~~ number of contact : "<<numContact);
+        std::ostringstream ss;
+        ss<<"[";
+        for(size_t i = 0 ; i < numContact ; i++)
+        { // print with python formating :
+          ss<<"["<<result.getContact(i).pos[0]<<","<<result.getContact(i).pos[1]<<","<<result.getContact(i).pos[2]<<"]";
+          if(i< (numContact-1))
+             ss<<",";
+        }
+        ss<<"]";
+        std::cout<<ss.str()<<std::endl;
+      */
+
+        // get intersection between the two objects :
+      }
+
+    }
 
   } // namespace core
 } // namespace hpp

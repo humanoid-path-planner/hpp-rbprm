@@ -51,7 +51,8 @@ namespace hpp {
         }
         if (!romsValid){
           os << "Rom filters not respected : "<<std::endl;
-          for(std::map<std::string,bool>::const_iterator it = ROMFilters.begin() ; it != ROMFilters.end() ; ++it){
+          for(std::map<std::string,bool>::const_iterator it = ROMFilters.begin() ; it != ROMFilters.end() ; ++it)
+          {
             os << " "<<it->first << std::endl;
           }
         }

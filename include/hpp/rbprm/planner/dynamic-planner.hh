@@ -98,6 +98,21 @@ namespace hpp {
       virtual core::PathPtr_t extendParabola (const core::NodePtr_t& near,
                                 const core::ConfigurationPtr_t& target);
     private:
+
+      /**
+       * @brief computeGIWC compute the GIWC for the node configuration and fill the node attribut
+       * @param x the node
+       * @param report the RBPRM report corresponding to the node's configuration
+       */
+      void computeGIWC(const core::NodePtr_t x, core::ValidationReportPtr_t report);
+
+      /**
+       * @brief computeGIWC compute the GIWC for the node configuration and fill the node attribut, get validation report and call the second method
+       * @param x the node
+       */
+      void computeGIWC(const core::NodePtr_t x);
+
+
       core::ConfigurationShooterPtr_t configurationShooter_;
       mutable core::Configuration_t qProj_;
       DynamicPlannerWkPtr_t weakPtr_;

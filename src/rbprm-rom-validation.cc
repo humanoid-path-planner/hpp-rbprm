@@ -62,6 +62,5 @@ namespace hpp {
       return collision;
     }
 
-
   }// namespace rbprm
 }// namespace hpp

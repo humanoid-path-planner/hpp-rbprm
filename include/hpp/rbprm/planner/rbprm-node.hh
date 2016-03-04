@@ -2,6 +2,7 @@
 #define HPP_RBPRM_NODE_HH
 
 #include <hpp/core/node.hh>
+#include <hpp/rbprm/rbprm-validation-report.hh>
 
 namespace hpp {
   namespace core {
@@ -32,8 +33,27 @@ namespace hpp {
         return normal_;
       }
 
+      void normal(double x, double y, double z){
+        fcl::Vec3f n(x,y,z);
+        normal_=n;
+      }
+
+      void normal(fcl::Vec3f n){
+        normal_ = n;
+      }
+
+      RbprmValidationReportPtr_t getReport(){
+        return collisionReport_;
+      }
+
+      void collisionReport(RbprmValidationReportPtr_t report){
+        collisionReport_ = report;
+      }
+
     private:
       fcl::Vec3f normal_;
+      RbprmValidationReportPtr_t collisionReport_;
+
     }; // class
 
   }//core
