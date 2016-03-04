@@ -39,6 +39,7 @@
 #include <hpp/rbprm/rbprm-validation-report.hh>
 #include <hpp/core/config-validations.hh>
 #include <hpp/fcl/collision_data.h>
+#include "utils/algorithms.h"
 
 
 namespace hpp {
