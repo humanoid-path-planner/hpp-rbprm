@@ -12,18 +12,18 @@
 namespace geom
 {
 
-  /*typedef Eigen::Vector3d Point;
+  typedef Eigen::Vector3d Point;
   typedef std::vector<Point> T_Point;
   typedef T_Point::const_iterator CIT_Point;
   typedef const Eigen::Ref<const Point>& CPointRef;
-*/
 
+/*
   typedef fcl::Vec3f Point;
   typedef std::vector<Point> T_Point;
   typedef T_Point::const_iterator CIT_Point;
   typedef const Point& CPointRef;
 
-
+*/
   typedef std::vector<Eigen::Vector2d> T_Point2D;
   typedef T_Point2D::const_iterator CIT_Point2D;
 
@@ -125,7 +125,7 @@ namespace geom
             }
             res.insert(res.end(),pointOnHull);
             pointOnHull = lastPoint;
-        } while(lastPoint != *res.begin());
+        } while(lastPoint != *res.begin()); // infinite loop with fcl types (instead of eigen)
         res.insert(res.end(), lastPoint);
         return res;
     }

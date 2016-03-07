@@ -675,7 +675,7 @@ namespace hpp {
         ss1<<"[";
         for(int i = 0 ; i < model1->num_vertices ; ++i)
         {
-          vertices1.push_back(model1->vertices[i]);
+          vertices1.push_back(Eigen::Vector3d(model1->vertices[i][0], model1->vertices[i][1], model1->vertices[i][2]));
           //hppDout(notice,"vertices : "<<model1->vertices[i]);
           ss1<<"["<<model1->vertices[i][0]<<","<<model1->vertices[i][1]<<","<<model1->vertices[i][2]<<"]";
           if(i< (model1->num_vertices-1))
@@ -688,13 +688,13 @@ namespace hpp {
         obj2->fcl();
         geom::T_Point vertices2;
         geom::BVHModelOBConst_Ptr_t model2 =  geom::GetModel(obj2->fcl());
-        hppDout(notice,"vertices obj1 : "<<obj2->name()<< " ( "<<model2->num_vertices<<" ) ");
+        hppDout(notice,"vertices obj2 : "<<obj2->name()<< " ( "<<model2->num_vertices<<" ) ");
         std::ostringstream ss2;
         ss2<<"[";
         for(int i = 0 ; i < model2->num_vertices ; ++i)
         {
-          vertices2.push_back(model2->vertices[i]);
-        //  hppDout(notice,"vertices : "<<model2->vertices[i]);
+          vertices2.push_back(Eigen::Vector3d(model2->vertices[i][0], model2->vertices[i][1], model2->vertices[i][2]));
+         // hppDout(notice,"vertices : "<<model2->vertices[i]);
           ss2<<"["<<model2->vertices[i][0]<<","<<model2->vertices[i][1]<<","<<model2->vertices[i][2]<<"]";
           if(i< (model2->num_vertices -1))
              ss2<<",";
@@ -704,6 +704,33 @@ namespace hpp {
         std::cout<<ss2.str()<<std::endl;
 
 
+        // re order the vertices : (test)
+
+
+         hppDout(notice,"ordered obj2 : ");
+         geom::T_Point vert2Ordered = geom::convexHull(vertices2.begin(),vertices2.end());
+         std::ostringstream ss4;
+         ss4<<"[";
+         for(size_t i = 0; i < vert2Ordered.size() ; ++i){
+             ss4<<"["<<vert2Ordered[i][0]<<","<<vert2Ordered[i][1]<<","<<vert2Ordered[i][2]<<"]";
+             if(i< (vert2Ordered.size() -1))
+                ss4<<",";
+          }
+          ss4<<"]";
+          std::cout<<ss4.str()<<std::endl;
+
+
+          hppDout(notice,"ordered obj1 : ");
+          geom::T_Point vert1Ordered = geom::convexHull(vertices1.begin(),vertices1.end());
+          std::ostringstream ss3;
+          ss3<<"[";
+          for(size_t i = 0; i < vert1Ordered.size() ; ++i){
+              ss3<<"["<<vert1Ordered[i][0]<<","<<vert1Ordered[i][1]<<","<<vert1Ordered[i][2]<<"]";
+              if(i< (vert1Ordered.size() -1))
+                 ss3<<",";
+           }
+           ss3<<"]";
+           std::cout<<ss3.str()<<std::endl;
 
         // compute intersection
 
