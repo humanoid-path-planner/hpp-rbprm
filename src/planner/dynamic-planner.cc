@@ -671,19 +671,48 @@ namespace hpp {
         geom::T_Point vertices1;
         geom::BVHModelOBConst_Ptr_t model1 =  geom::GetModel(obj1->fcl());
         hppDout(notice,"vertices obj1 : "<<obj1->name()<< " ( "<<model1->num_vertices<<" ) ");
+        std::ostringstream ss1;
+        ss1<<"[";
         for(int i = 0 ; i < model1->num_vertices ; ++i)
         {
           vertices1.push_back(model1->vertices[i]);
-          hppDout(notice,"vertices : "<<model1->vertices[i]);
+          //hppDout(notice,"vertices : "<<model1->vertices[i]);
+          ss1<<"["<<model1->vertices[i][0]<<","<<model1->vertices[i][1]<<","<<model1->vertices[i][2]<<"]";
+          if(i< (model1->num_vertices-1))
+             ss1<<",";
         }
+        ss1<<"]";
+        std::cout<<ss1.str()<<std::endl;
+
+
         obj2->fcl();
         geom::T_Point vertices2;
         geom::BVHModelOBConst_Ptr_t model2 =  geom::GetModel(obj2->fcl());
         hppDout(notice,"vertices obj1 : "<<obj2->name()<< " ( "<<model2->num_vertices<<" ) ");
+        std::ostringstream ss2;
+        ss2<<"[";
         for(int i = 0 ; i < model2->num_vertices ; ++i)
         {
           vertices2.push_back(model2->vertices[i]);
-          hppDout(notice,"vertices : "<<model2->vertices[i]);
+        //  hppDout(notice,"vertices : "<<model2->vertices[i]);
+          ss2<<"["<<model2->vertices[i][0]<<","<<model2->vertices[i][1]<<","<<model2->vertices[i][2]<<"]";
+          if(i< (model2->num_vertices -1))
+             ss2<<",";
+
+        }
+        ss2<<"]";
+        std::cout<<ss2.str()<<std::endl;
+
+
+
+        // compute intersection
+
+        geom::T_Point inter = geom::computeIntersection(vertices1.begin(),vertices1.end(),vertices2.begin(),vertices2.end());
+
+        hppDout(notice,"~~ intersection size : "<<inter.size());
+        // debug display :
+        for(geom::T_Point::const_iterator it = inter.begin() ; it != inter.end() ; ++it){
+            hppDout(notice,"~~ intersection : "<<*it);
         }
       }
 

@@ -34,10 +34,9 @@ namespace geom
   /// \param pointsBegin, pointsEnd iterators to first and last points of a set
   /// \return clockwise traversal of the 2D convex hull of the points
   /// ATTENTION: first point is included twice in representation (it is also the last point)
-  /*template<typename T, int Dim=3, typename Numeric=double, typename Point=Eigen::Matrix<Numeric, Dim, 1>,
-             typename CPointRef= const Eigen::Ref<const Point>&, typename In>
-    T convexHull(In pointsBegin, In pointsEnd);
-*/
+
+    T_Point convexHull(CIT_Point pointsBegin, CIT_Point pointsEnd);
+
   /// Test whether a 2d point belongs to a 2d convex hull
   /// source http://softsurfer.com/Archive/algorithm_0103/algorithm_0103.htm#wn_PinPolygon()
   ///
@@ -80,9 +79,8 @@ namespace geom
 
   /// leftMost(): returns the point most "on the left" for a given set
   /// \param pointsBegin, pointsEnd iterators to first and last points of a set
-  /* template<int Dim=3, typename Numeric=double, typename Point=Eigen::Matrix<Numeric, Dim, 1>, typename In >
-    In leftMost(In pointsBegin, In pointsEnd);
-    */
+  CIT_Point leftMost(CIT_Point pointsBegin, CIT_Point pointsEnd);
+
 } //namespace geom
 
 namespace geom
@@ -100,10 +98,9 @@ namespace geom
   }
 
 
-  /* template<int Dim=3, typename Numeric=double, typename Point=Eigen::Matrix<Numeric, Dim, 1>, typename In >
-    In leftMost(In pointsBegin, In pointsEnd)
+    CIT_Point leftMost(CIT_Point pointsBegin, CIT_Point pointsEnd)
     {
-        In current = pointsBegin +1;In res = pointsBegin;
+        CIT_Point current = pointsBegin +1;CIT_Point res = pointsBegin;
         while(current!= pointsEnd)
         {
             if(current->operator[](0) < res->operator[](0))
@@ -112,18 +109,16 @@ namespace geom
         }
         return res;
     }
-*/
-  /*
-    template<typename T, int Dim=3, typename Numeric=double, typename Point=Eigen::Matrix<Numeric, Dim, 1>,
-             typename CPointRef= const Eigen::Ref<const Point>&, typename In>
-    T convexHull(In pointsBegin, In pointsEnd)
+
+
+    T_Point convexHull(CIT_Point pointsBegin, CIT_Point pointsEnd)
     {
-        T res;
+        T_Point res;
         Point pointOnHull = *leftMost(pointsBegin, pointsEnd);
         Point lastPoint = *pointsBegin;
         do {
             lastPoint = *pointsBegin;
-            for(In current = pointsBegin +1; current!= pointsEnd; ++current)
+            for(CIT_Point current = pointsBegin +1; current!= pointsEnd; ++current)
             {
                 if((lastPoint == pointOnHull) || (isLeft(pointOnHull, lastPoint,*current) > 0))
                     lastPoint = *current;
@@ -134,7 +129,7 @@ namespace geom
         res.insert(res.end(), lastPoint);
         return res;
     }
-*/
+
   /*
     template<int Dim=3, typename Numeric=double, typename Point=Eigen::Matrix<Numeric, Dim, 1>,
              typename Point2=Eigen::Matrix<Numeric, 2, 1>,
