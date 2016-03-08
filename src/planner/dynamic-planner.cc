@@ -39,6 +39,7 @@
 #include <hpp/rbprm/rbprm-validation-report.hh>
 #include <hpp/core/config-validations.hh>
 #include <hpp/fcl/collision_data.h>
+#include <hpp/fcl/intersect.h>
 #include "utils/algorithms.h"
 #include "utils/conversions.h"
 
@@ -706,7 +707,7 @@ namespace hpp {
 
         // re order the vertices : (test)
 
-
+/*
          hppDout(notice,"ordered obj2 : ");
          geom::T_Point vert2Ordered = geom::convexHull(vertices2.begin(),vertices2.end());
          std::ostringstream ss4;
@@ -731,19 +732,45 @@ namespace hpp {
            }
            ss3<<"]";
            std::cout<<ss3.str()<<std::endl;
-
+*/
         // compute intersection
 
-        geom::T_Point inter = geom::computeIntersection(vertices1.begin(),vertices1.end(),vertices2.begin(),vertices2.end());
+
+
+     /*   geom::T_Point inter = geom::computeIntersection(vertices1.begin(),vertices1.end(),vertices2.begin(),vertices2.end());
 
         hppDout(notice,"~~ intersection size : "<<inter.size());
         // debug display :
         for(geom::T_Point::const_iterator it = inter.begin() ; it != inter.end() ; ++it){
             hppDout(notice,"~~ intersection : "<<*it);
         }
-      }
+*/
 
-    }
+
+        // direct call to fcl ::
+        bool collision;
+        fcl::Vec3f contact_points;
+        unsigned int num_contact_points;
+        fcl::Vec3f normal;
+        fcl::FCL_REAL penetration_depth;
+        for(int i = 0 ; i < model1->num_tris ; ++i)
+        {
+            for(int j = 0 ; j < model2->num_tris ; ++j){
+                collision = fcl::Intersect::intersect_Triangle(model1->vertices[model1->tri_indices[i][0]],model1->vertices[model1->tri_indices[i][1]],model1->vertices[model1->tri_indices[i][2]],
+                                                                model2->vertices[model2->tri_indices[j][0]],model2->vertices[model2->tri_indices[j][1]],model2->vertices[model2->tri_indices[j][2]],
+                                                                &contact_points,&num_contact_points,&penetration_depth,&normal);
+
+                hppDout(notice,"for loop");
+                if(collision){
+                    hppDout(notice,"~ Collision between triangles detected : ");
+                    hppDout(notice,"~ number of contact points : "<<num_contact_points);
+                }
+            }
+        }
+
+      } // for each ROMS
+
+    }// computeGIWC
 
   } // namespace core
 } // namespace hpp
