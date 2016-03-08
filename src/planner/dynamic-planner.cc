@@ -707,8 +707,9 @@ namespace hpp {
 
         // re order the vertices : (test)
 
-/*
+
          hppDout(notice,"ordered obj2 : ");
+         geom::projectZ(vertices2.begin(),vertices2.end());
          geom::T_Point vert2Ordered = geom::convexHull(vertices2.begin(),vertices2.end());
          std::ostringstream ss4;
          ss4<<"[";
@@ -722,6 +723,7 @@ namespace hpp {
 
 
           hppDout(notice,"ordered obj1 : ");
+          geom::projectZ(vertices1.begin(),vertices1.end());          
           geom::T_Point vert1Ordered = geom::convexHull(vertices1.begin(),vertices1.end());
           std::ostringstream ss3;
           ss3<<"[";
@@ -732,25 +734,31 @@ namespace hpp {
            }
            ss3<<"]";
            std::cout<<ss3.str()<<std::endl;
-*/
+
         // compute intersection
 
 
 
-     /*   geom::T_Point inter = geom::computeIntersection(vertices1.begin(),vertices1.end(),vertices2.begin(),vertices2.end());
+       geom::T_Point inter = geom::computeIntersection(vert1Ordered,vert2Ordered);
 
         hppDout(notice,"~~ intersection size : "<<inter.size());
+        std::ostringstream ss5;
+        ss5<<"[";
         // debug display :
         for(geom::T_Point::const_iterator it = inter.begin() ; it != inter.end() ; ++it){
-            hppDout(notice,"~~ intersection : "<<*it);
+            ss5<<"["<<(*it)[0]<<","<<(*it)[1]<<","<<(*it)[2]<<"]";
+            if(it != (inter.end() - 1))
+               ss5<<",";
         }
-*/
+        ss5<<"]";
+        std::cout<<ss5.str()<<std::endl;
 
 
-        // direct call to fcl ::
-        bool collision;
+
+        // direct call to fcl (doesn't work)
+       /* bool collision;
         fcl::Vec3f contact_points;
-        unsigned int num_contact_points;
+        unsigned int num_contact_points=0;
         fcl::Vec3f normal;
         fcl::FCL_REAL penetration_depth;
         for(int i = 0 ; i < model1->num_tris ; ++i)
@@ -759,14 +767,13 @@ namespace hpp {
                 collision = fcl::Intersect::intersect_Triangle(model1->vertices[model1->tri_indices[i][0]],model1->vertices[model1->tri_indices[i][1]],model1->vertices[model1->tri_indices[i][2]],
                                                                 model2->vertices[model2->tri_indices[j][0]],model2->vertices[model2->tri_indices[j][1]],model2->vertices[model2->tri_indices[j][2]],
                                                                 &contact_points,&num_contact_points,&penetration_depth,&normal);
-
-                hppDout(notice,"for loop");
-                if(collision){
+                if(num_contact_points > 0){
                     hppDout(notice,"~ Collision between triangles detected : ");
                     hppDout(notice,"~ number of contact points : "<<num_contact_points);
+                    
                 }
             }
-        }
+        }*/
 
       } // for each ROMS
 

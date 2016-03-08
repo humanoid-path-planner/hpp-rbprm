@@ -15,6 +15,7 @@ namespace geom
   typedef Eigen::Vector3d Point;
   typedef std::vector<Point> T_Point;
   typedef T_Point::const_iterator CIT_Point;
+  typedef T_Point::iterator IT_Point;  
   typedef const Eigen::Ref<const Point>& CPointRef;
 
 /*
@@ -27,6 +28,8 @@ namespace geom
   typedef std::vector<Eigen::Vector2d> T_Point2D;
   typedef T_Point2D::const_iterator CIT_Point2D;
 
+  void projectZ(IT_Point pointsBegin, IT_Point pointsEnd);
+  
   /// Implementation of the gift wrapping algorithm to determine the 2D projection of the convex hull of a set of points
   /// Dimension can be greater than two, in which case the points will be projected on the z = 0 plane
   /// and whether a point belongs to it or not.
@@ -65,6 +68,13 @@ namespace geom
   /// \param bPointsBegin, bPointsEnd iterators to first and last points of the second polygon
   /// \return the convex polygon resulting from the intersection
   T_Point computeIntersection(CIT_Point aPointsBegin, CIT_Point aPointsEnd, CIT_Point bPointsBegin, CIT_Point bPointsEnd);
+  
+  /// Computes whether two convex polygons intersect
+  ///
+  /// \param subPolygon list of vertices of the first polygon
+  /// \param clipPolygon list of vertices of the first polygon
+  /// \return the convex polygon resulting from the intersection
+  T_Point computeIntersection(T_Point subPolygon, T_Point clipPolygon);
 
   /// isLeft(): tests if a point is Left|On|Right of an infinite line.
   /// \param lA 1st point of the line
@@ -110,9 +120,16 @@ namespace geom
         return res;
     }
 
+    void projectZ(IT_Point pointsBegin, IT_Point pointsEnd){
+      for(IT_Point current = pointsBegin ; current != pointsEnd; ++current){
+        (*current)[2]=0;
+      }
+    }
+    
 
     T_Point convexHull(CIT_Point pointsBegin, CIT_Point pointsEnd)
     {
+      
         T_Point res;
         Point pointOnHull = *leftMost(pointsBegin, pointsEnd);
         Point lastPoint = *pointsBegin;
@@ -129,6 +146,8 @@ namespace geom
         res.insert(res.end(), lastPoint);
         return res;
     }
+    
+    
 
   /*
     template<int Dim=3, typename Numeric=double, typename Point=Eigen::Matrix<Numeric, Dim, 1>,
@@ -212,8 +231,7 @@ namespace geom
     {
       CIT_Point E = from;
       double dirE, dirS = isLeft(*edge, *(edge+1), *E);
-      for(CIT_Point S= from+1;
-          S != to; ++E, ++S)
+      for(CIT_Point S= from+1; S != to; ++E, ++S)
       {
         dirE = dirS;
         dirS = isLeft(*edge, *(edge+1), *S);
@@ -240,6 +258,37 @@ namespace geom
       outputList.clear();
     }
     return inputList;
+  }
+  
+  T_Point computeIntersection(T_Point subPolygon, T_Point clipPolygon)
+  {
+    T_Point outputList, inputList;
+    double dirE ,dirS;
+    outputList = subPolygon;
+    for(CIT_Point edge = clipPolygon.begin() ; edge != clipPolygon.end()-1 ; ++edge){
+      inputList = outputList;
+      outputList.clear();
+      CIT_Point s = inputList.end()-1;
+      for(CIT_Point e = inputList.begin() ; e != inputList.end() ; ++e){
+        dirE = isLeft(*edge, *(edge+1),*e);
+        dirS = isLeft(*edge, *(edge+1),*s);
+        if(dirE <= 0 )// e is inside 
+        {
+          if(dirS > 0) // s not inside
+          {
+            outputList.insert(outputList.end(),lineSect(*s, *e, *edge, *(edge+1)));
+          }
+          outputList.insert(outputList.end(),*e);
+        }else if (dirS <= 0) // s is inside
+        {
+          outputList.insert(outputList.end(),lineSect(*s, *e, *edge, *(edge+1)));
+        }
+        s=e;
+      }
+      
+    }
+    return outputList;
+    
   }
 } //namespace geom
 
