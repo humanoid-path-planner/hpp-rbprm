@@ -32,7 +32,12 @@ namespace geom
     assert(object->collisionGeometry()->getNodeType() == fcl::BV_OBBRSS);
     const BVHModelOBConst_Ptr_t model = boost::static_pointer_cast<const BVHModelOB>(object->collisionGeometry());
     assert(model->getModelType() == fcl::BVH_MODEL_TRIANGLES);
-    return model;
+    // todo avoid recopy, but if we keep the same ptr the geometry is changed 
+    const BVHModelOBConst_Ptr_t modelTransform (new BVHModelOB(*model));
+    for(int i = 0 ; i < model->num_vertices ; i++){
+      modelTransform->vertices[i] = object->getTransform().transform(model->vertices[i]);
+    }
+    return modelTransform;
   }
 
 }//namespace geom
