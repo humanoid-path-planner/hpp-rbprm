@@ -46,20 +46,20 @@
 namespace hpp {
   namespace rbprm {
     using model::displayConfig;
-
+    
     DynamicPlannerPtr_t DynamicPlanner::createWithRoadmap
     (const core::Problem& problem, const core::RoadmapPtr_t& roadmap)
     {
       DynamicPlanner* ptr = new DynamicPlanner (problem, roadmap);
       return DynamicPlannerPtr_t (ptr);
     }
-
+    
     DynamicPlannerPtr_t DynamicPlanner::create (const core::Problem& problem)
     {
       DynamicPlanner* ptr = new DynamicPlanner (problem);
       return DynamicPlannerPtr_t (ptr);
     }
-
+    
     DynamicPlanner::DynamicPlanner (const core::Problem& problem):
       PathPlanner (problem),
       configurationShooter_ (problem.configurationShooter()),
@@ -68,9 +68,9 @@ namespace hpp {
       roadmap_(core::RbprmRoadmap::create (problem.distance (),problem.robot()))
     {
     }
-
+    
     DynamicPlanner::DynamicPlanner (const core::Problem& problem,
-                                        const core::RoadmapPtr_t& roadmap) :
+                                    const core::RoadmapPtr_t& roadmap) :
       PathPlanner (problem, roadmap),
       configurationShooter_ (problem.configurationShooter()),
       qProj_ (problem.robot ()->configSize ()),
@@ -78,13 +78,13 @@ namespace hpp {
       roadmap_(core::RbprmRoadmap::create (problem.distance (),problem.robot()))
     {
     }
-
+    
     void DynamicPlanner::init (const DynamicPlannerWkPtr_t& weak)
     {
       PathPlanner::init (weak);
       weakPtr_ = weak;
     }
-
+    
     bool belongs (const core::ConfigurationPtr_t& q, const core::Nodes_t& nodes)
     {
       for (core::Nodes_t::const_iterator itNode = nodes.begin ();
@@ -93,14 +93,14 @@ namespace hpp {
       }
       return false;
     }
-
+    
     void DynamicPlanner::startSolve ()
     {
       // add 3 extraDof to save contact normal (used for parabola computation)
       //hppDout(notice,"set extra conf");
-
+      
       //problem().robot()->setDimensionExtraConfigSpace(problem().robot()->extraConfigSpace().dimension() + 3);
-    //  PathPlanner::startSolve();
+      //  PathPlanner::startSolve();
       hppDout(notice,"startsolve");
       problem().checkProblem ();
       // Tag init and goal configurations in the roadmap
@@ -113,9 +113,9 @@ namespace hpp {
       }
       hppDout(notice,"startSolve OK");
     }
-
+    
     core::PathPtr_t DynamicPlanner::extend (const core::NodePtr_t& near,
-                                        const core::ConfigurationPtr_t& target)
+                                            const core::ConfigurationPtr_t& target)
     {
       const core::SteeringMethodPtr_t& sm (problem ().steeringMethod ());
       const core::ConstraintSetPtr_t& constraints (sm->constraints ());
@@ -138,9 +138,9 @@ namespace hpp {
       }
       return path;
     }
-
+    
     core::PathPtr_t DynamicPlanner::extendParabola (const core::NodePtr_t& near,
-                                        const core::ConfigurationPtr_t& target)
+                                                    const core::ConfigurationPtr_t& target)
     {
       const core::SteeringMethodPtr_t& sm (problem ().steeringMethod ());
       const core::ConstraintSetPtr_t& constraints (sm->constraints ());
@@ -163,8 +163,8 @@ namespace hpp {
       }
       return path;
     }
-
-
+    
+    
     /// This method performs one step of RRT extension as follows
     ///  1. a random configuration "q_rand" is shot,
     ///  2. for each connected component,
@@ -188,7 +188,7 @@ namespace hpp {
     ///  Note that edges are actually added to the roadmap after step 2 in order
     ///  to avoid iterating on the list of connected components while modifying
     ///  this list.
-
+    
     void DynamicPlanner::oneStep ()
     {
       hppDout(notice,"# oneStep BEGIN");
@@ -203,21 +203,21 @@ namespace hpp {
       // Pick a random node
       core::ConfigurationPtr_t q_rand = configurationShooter_->shoot ();
       hppDout(notice,"# random shoot OK");
-
-
+      
+      
       //
       // First extend each connected component toward q_rand
       //
       int i = 1;
       for (core::ConnectedComponents_t::const_iterator itcc =
-             roadmap ()->connectedComponents ().begin ();
+           roadmap ()->connectedComponents ().begin ();
            itcc != roadmap ()->connectedComponents ().end (); ++itcc) {
         hppDout(notice, "###### for connected components "<<i);
         i++;
         // Find nearest node in roadmap
         core::value_type distance;
         core::NodePtr_t near = roadmap ()->nearestNode (q_rand, *itcc, distance);
-
+        
         hppStartBenchmark(EXTEND);
         path = extend (near, q_rand);
         hppStopBenchmark (EXTEND);
@@ -226,11 +226,11 @@ namespace hpp {
           hppDout(notice, "### path exist");
           core::PathValidationReportPtr_t report;
           bool pathValid = pathValidation->validate (path, false, validPath,report);
-
+          
           // Insert new path to q_near in roadmap
           core::value_type t_final = validPath->timeRange ().second;
           if (t_final != path->timeRange ().first) {
-
+            
             hppDout(notice, "### path's length not null");
             core::ConfigurationPtr_t q_new (new core::Configuration_t(validPath->end ()));
             if (!pathValid || !belongs (q_new, newNodes)) {
@@ -238,15 +238,15 @@ namespace hpp {
               hppDout(notice, displayConfig(*q_new));
               core::NodePtr_t x_new = roadmap ()->addNodeAndEdges(near, q_new, validPath);
               computeGIWC(x_new);
-
+              
               newNodes.push_back (x_new);
               if(!pathValid){
                 hppDout(notice,"### Straight path not fully valid, try parabola path between qnew and qrand");
                 // get contact normal and update the extraDof
                 // TODO : aaprès modif validation report, recup normal des ROM et non du tronc
-               /* if(report->configurationReport)  {
+                /* if(report->configurationReport)  {
                   fcl::Vec3f normal ( - boost::dynamic_pointer_cast<core::CollisionValidationReport>(report->configurationReport)->result.getContact(0).normal);
-
+                  
                   hppDout(notice,"normal = "<<normal);
                   // fill extraDof with normal :
                   core::size_type size = problem().robot()->configSize ();
@@ -289,7 +289,7 @@ namespace hpp {
           }
         }else
           hppDout(notice, "### path dosen't exist");
-
+        
       }
       hppDout(notice,"# extend OK");
       // Insert delayed edges
@@ -304,7 +304,7 @@ namespace hpp {
         roadmap ()->addEdge (newNode, near, validPath->reverse());
       }
       hppDout(notice,"# add delayed edge OK");
-
+      
       //
       // Second, try to connect new nodes together
       //
@@ -317,7 +317,7 @@ namespace hpp {
           assert (*q1 != *q2);
           path = (*sm) (*q1, *q2);
           core::PathValidationReportPtr_t report;
-        /*  if(!(path && pathValidation->validate (path, false, validPath, report))){
+          /*  if(!(path && pathValidation->validate (path, false, validPath, report))){
             hppDout(notice, "## parabola path fail, compute straight path");
             path = (*sm) (*q1, *q2);
           }*/
@@ -328,10 +328,10 @@ namespace hpp {
         }
       }
       hppDout(notice,"# OneStep END");
-
+      
     }
-
-
+    
+    
     // This method call SteeringMethodParabola, but we don't try to connect two confuration, instead we shoot a random alpha0 and V0 valide for the initiale configuration and then compute the final point.
     // Then we check for collision (for the trunk)  and we check if the final point is in a valide configuration (trunk not in collision but limbs in accessible contact zone).
     // (Not anymore ) If this is true we do a reverse collision check until we find the first valide configuration, then we check for the friction cone and impact velocity constraint.(Not anymore : can't find normal after this)
@@ -380,8 +380,8 @@ namespace hpp {
             hppDout(notice,"Impact velocity invalid : vImp = "<<Vimp);
             return path;
           }
-
-
+          
+          
           hppDout(notice,"compute friction cone for landing point : ");
           bool coneOK = smParabola_->fiveth_constraint (*q_new,theta,1,&delta);
           if(!coneOK){
@@ -408,7 +408,7 @@ namespace hpp {
           }
           hppDout (notice, "alpha_imp_sup: " << alpha_imp_sup);
           hppDout (notice, "alpha_imp_inf: " << alpha_imp_inf);
-
+          
           value_type alpha_inf_bound = 0;
           value_type alpha_sup_bound = 0;
           value_type alpha_inf4;
@@ -432,11 +432,11 @@ namespace hpp {
             }
             alpha_sup_bound = std::min(M_PI/2, alpha_imp_sup);
           }
-
+          
           hppDout (notice, "alpha_inf_bound: " << alpha_inf_bound);
           hppDout (notice, "alpha_sup_bound: " << alpha_sup_bound);
-
-
+          
+          
           if(alpha0 > alpha_sup_bound || alpha0 < alpha_inf_bound){
             hppDout(notice,"Parabola doesn't land inside friction cone");
             return path;
@@ -444,8 +444,8 @@ namespace hpp {
           hppDout(notice,"# Landing point valid, add node and edges");
           // Here everything is valid, adding node and edge to roadmap :
           delayedEdges.push_back (DelayedEdge_t (x_start, q_new, validPath));
-
-
+          
+          
         }//contactValid
       }else if (valid){
         hppDout(notice,"random parabola doesn't land on obstacle");
@@ -453,7 +453,7 @@ namespace hpp {
       }
       return path;
     }
-
+    
     void DynamicPlanner::tryDirectPath ()
     {
       // call steering method here to build a direct conexion
@@ -520,17 +520,17 @@ namespace hpp {
         } //if path exist
       } //for qgoals
     }
-
-
-
+    
+    
+    
     void DynamicPlanner::configurationShooter
     (const core::ConfigurationShooterPtr_t& shooter)
     {
       configurationShooter_ = shooter;
     }
-
+    
     // for debugging
-   /* core::PathVectorPtr_t DynamicPlanner::solve (){
+    /* core::PathVectorPtr_t DynamicPlanner::solve (){
       startSolve();
       // call steering method here to build a direct conexion
       core::PathVectorPtr_t pathVector;
@@ -548,7 +548,7 @@ namespace hpp {
         hppStopBenchmark (EXTEND);
         hppDisplayBenchmark (EXTEND);
         if (path) {
-
+        
           core::PathValidationReportPtr_t report;
           bool pathValid = pathValidation->validate (path, false, validPath,report);
           if (pathValid ) {
@@ -599,19 +599,19 @@ namespace hpp {
       } //for qgoals
       return pathVector;
     }*/
-
+    
     void DynamicPlanner::computeGIWC(const core::NodePtr_t x){
       core::ValidationReportPtr_t report;
       problem().configValidations()->validate(*(x->configuration()),report);
       computeGIWC(x,report);
     }
-
-
-
-
-
+    
+    
+    
+    
+    
     void DynamicPlanner::computeGIWC(const core::NodePtr_t x, core::ValidationReportPtr_t report){
-
+      
       core::ConfigurationPtr_t q = x->configuration();
       core::RbprmNodePtr_t x_cast = static_cast<core::RbprmNodePtr_t>(x);
       // fil normal information in node
@@ -620,14 +620,14 @@ namespace hpp {
         hppDout(notice,"~~ NODE cast correctly");
         x_cast->normal((*q)[cSize-3],(*q)[cSize-2],(*q)[cSize-1]);
         hppDout(notice,"~~ normal = "<<x_cast->getNormal());
-
+        
       }else{
         hppDout(error,"~~ NODE cannot be cast");
         return;
       }
-
+      
       hppDout(notice,"~~ q = "<<displayConfig(*q));
-
+      
       core::RbprmValidationReportPtr_t rbReport = boost::dynamic_pointer_cast<core::RbprmValidationReport> (report);
       // checks :
       if(!rbReport)
@@ -643,7 +643,7 @@ namespace hpp {
       {
         hppDout(warning,"~~ ComputeGIWC : roms filter not respected"); // shouldn't happen
       }
-
+      
       // get the 2 object in contact for each ROM :
       hppDout(notice,"~~ Number of roms in collision : "<<rbReport->ROMReports.size());
       for(std::map<std::string,core::CollisionValidationReportPtr_t>::const_iterator it = rbReport->ROMReports.begin() ; it != rbReport->ROMReports.end() ; ++it)
@@ -653,7 +653,7 @@ namespace hpp {
         core::CollisionObjectPtr_t obj2 = it->second->object2;
         hppDout(notice,"~~ collision between : "<<obj1->name() << " and "<<obj2->name());
         fcl::CollisionResult result = it->second->result;
-       /* size_t numContact =result.numContacts();
+        /* size_t numContact =result.numContacts();
         hppDout(notice,"~~ number of contact : "<<numContact);
         std::ostringstream ss;
         ss<<"[";
@@ -666,7 +666,7 @@ namespace hpp {
         ss<<"]";
         std::cout<<ss.str()<<std::endl;
       */
-
+        
         // get intersection between the two objects :
         obj1->fcl();
         geom::T_Point vertices1;
@@ -680,12 +680,12 @@ namespace hpp {
           //hppDout(notice,"vertices : "<<model1->vertices[i]);
           ss1<<"["<<model1->vertices[i][0]<<","<<model1->vertices[i][1]<<","<<model1->vertices[i][2]<<"]";
           if(i< (model1->num_vertices-1))
-             ss1<<",";
+            ss1<<",";
         }
         ss1<<"]";
         std::cout<<ss1.str()<<std::endl;
-
-
+        
+        
         obj2->fcl();
         geom::T_Point vertices2;
         geom::BVHModelOBConst_Ptr_t model2 =  geom::GetModel(obj2->fcl());
@@ -695,89 +695,177 @@ namespace hpp {
         for(int i = 0 ; i < model2->num_vertices ; ++i)
         {
           vertices2.push_back(Eigen::Vector3d(model2->vertices[i][0], model2->vertices[i][1], model2->vertices[i][2]));
-         // hppDout(notice,"vertices : "<<model2->vertices[i]);
+          // hppDout(notice,"vertices : "<<model2->vertices[i]);
           ss2<<"["<<model2->vertices[i][0]<<","<<model2->vertices[i][1]<<","<<model2->vertices[i][2]<<"]";
           if(i< (model2->num_vertices -1))
-             ss2<<",";
-
+            ss2<<",";
+          
         }
         ss2<<"]";
         std::cout<<ss2.str()<<std::endl;
-
-
+        
+        
         // re order the vertices : (test)
-
-
-         hppDout(notice,"ordered obj2 : ");
-         geom::projectZ(vertices2.begin(),vertices2.end());
-         geom::T_Point vert2Ordered = geom::convexHull(vertices2.begin(),vertices2.end());
-         std::ostringstream ss4;
-         ss4<<"[";
-         for(size_t i = 0; i < vert2Ordered.size() ; ++i){
-             ss4<<"["<<vert2Ordered[i][0]<<","<<vert2Ordered[i][1]<<","<<vert2Ordered[i][2]<<"]";
-             if(i< (vert2Ordered.size() -1))
-                ss4<<",";
-          }
-          ss4<<"]";
-          std::cout<<ss4.str()<<std::endl;
-
-
-          hppDout(notice,"ordered obj1 : ");
-          geom::projectZ(vertices1.begin(),vertices1.end());          
-          geom::T_Point vert1Ordered = geom::convexHull(vertices1.begin(),vertices1.end());
-          std::ostringstream ss3;
-          ss3<<"[";
-          for(size_t i = 0; i < vert1Ordered.size() ; ++i){
-              ss3<<"["<<vert1Ordered[i][0]<<","<<vert1Ordered[i][1]<<","<<vert1Ordered[i][2]<<"]";
-              if(i< (vert1Ordered.size() -1))
-                 ss3<<",";
-           }
-           ss3<<"]";
-           std::cout<<ss3.str()<<std::endl;
-
+        
+        
+        hppDout(notice,"ordered obj2 : ");
+        geom::projectZ(vertices2.begin(),vertices2.end());
+        geom::T_Point vert2Ordered = geom::convexHull(vertices2.begin(),vertices2.end());
+        std::ostringstream ss4;
+        ss4<<"[";
+        for(size_t i = 0; i < vert2Ordered.size() ; ++i){
+          ss4<<"["<<vert2Ordered[i][0]<<","<<vert2Ordered[i][1]<<","<<vert2Ordered[i][2]<<"]";
+          if(i< (vert2Ordered.size() -1))
+            ss4<<",";
+        }
+        ss4<<"]";
+        std::cout<<ss4.str()<<std::endl;
+        
+        
+        hppDout(notice,"ordered obj1 : ");
+        geom::projectZ(vertices1.begin(),vertices1.end());          
+        geom::T_Point vert1Ordered = geom::convexHull(vertices1.begin(),vertices1.end());
+        std::ostringstream ss3;
+        ss3<<"[";
+        for(size_t i = 0; i < vert1Ordered.size() ; ++i){
+          ss3<<"["<<vert1Ordered[i][0]<<","<<vert1Ordered[i][1]<<","<<vert1Ordered[i][2]<<"]";
+          if(i< (vert1Ordered.size() -1))
+            ss3<<",";
+        }
+        ss3<<"]";
+        std::cout<<ss3.str()<<std::endl;
+        
         // compute intersection
-
-
-
-       geom::T_Point inter = geom::computeIntersection(vert1Ordered,vert2Ordered);
-
-        hppDout(notice,"~~ intersection size : "<<inter.size());
+        
+        
+        
+        geom::T_Point inter = geom::computeIntersection(vert1Ordered,vert2Ordered);
+        
+        hppDout(notice,"~~ 2D intersection size : "<<inter.size());
         std::ostringstream ss5;
         ss5<<"[";
         // debug display :
         for(geom::T_Point::const_iterator it = inter.begin() ; it != inter.end() ; ++it){
-            ss5<<"["<<(*it)[0]<<","<<(*it)[1]<<","<<(*it)[2]<<"]";
-            if(it != (inter.end() - 1))
-               ss5<<",";
+          ss5<<"["<<(*it)[0]<<","<<(*it)[1]<<","<<(*it)[2]<<"]";
+          if(it != (inter.end() - 1))
+            ss5<<",";
         }
         ss5<<"]";
         std::cout<<ss5.str()<<std::endl;
-
-
-
+        
+        
+        
         // direct call to fcl (doesn't work)
-       /* bool collision;
-        fcl::Vec3f contact_points;
-        unsigned int num_contact_points=0;
+        
+        bool collision;
+        fcl::Vec3f contact_points[3];
+        unsigned int num_penetrating_points=0;
+        unsigned int num_clipped_points=0;        
+        std::ostringstream ss6;
+        ss6<<"[";
+        std::ostringstream ss7;
+        ss7<<"[";
         fcl::Vec3f normal;
-        fcl::FCL_REAL penetration_depth;
-        for(int i = 0 ; i < model1->num_tris ; ++i)
-        {
-            for(int j = 0 ; j < model2->num_tris ; ++j){
-                collision = fcl::Intersect::intersect_Triangle(model1->vertices[model1->tri_indices[i][0]],model1->vertices[model1->tri_indices[i][1]],model1->vertices[model1->tri_indices[i][2]],
-                                                                model2->vertices[model2->tri_indices[j][0]],model2->vertices[model2->tri_indices[j][1]],model2->vertices[model2->tri_indices[j][2]],
-                                                                &contact_points,&num_contact_points,&penetration_depth,&normal);
-                if(num_contact_points > 0){
-                    hppDout(notice,"~ Collision between triangles detected : ");
-                    hppDout(notice,"~ number of contact points : "<<num_contact_points);
-                    
-                }
+        fcl::Vec3f distance;
+        fcl::Vec3f n2=0;
+        fcl::FCL_REAL t2=0;
+        fcl::Vec3f clip_point[8]; // see fcl::Intersect::MAX_TRIANGLE_CLIPS] (private)
+        
+        // TODO : pas pour tout les triangles mais uniquement pour les collisions pairs donnee par contact->bi
+        
+        for(size_t c = 0 ; c < result.numContacts() ; ++c){
+          int i = result.getContact(c).b1;  // triangle index
+          int j = result.getContact(c).b2;
+          
+
+          fcl::Vec3f tri[3] = {model1->vertices[model1->tri_indices[i][0]],model1->vertices[model1->tri_indices[i][1]],model1->vertices[model1->tri_indices[i][2]]};
+          fcl::Vec3f tri2[3] = {model2->vertices[model2->tri_indices[j][0]],model2->vertices[model2->tri_indices[j][1]],model2->vertices[model2->tri_indices[j][2]]}; 
+          fcl::Intersect::buildTrianglePlane(tri2[0],tri2[1],tri2[2], &n2, &t2);
+
+          geom::computeTrianglePlaneDistance(tri,n2,t2,&distance,&num_penetrating_points);
+          
+          hppDout(notice,"Intersection between triangles : ");
+          hppDout(notice,"[["<<tri[0][0]<<","<<tri[0][1]<<","<<tri[0][2]<<"],["<<tri[1][0]<<","<<tri[1][1]<<","<<tri[1][2]<<"],["<<tri[2][0]<<","<<tri[2][1]<<","<<tri[2][2]<<"],["<<tri[0][0]<<","<<tri[0][1]<<","<<tri[0][2]<<"]]");
+          hppDout(notice,"[["<<tri2[0][0]<<","<<tri2[0][1]<<","<<tri2[0][2]<<"],["<<tri2[1][0]<<","<<tri2[1][1]<<","<<tri2[1][2]<<"],["<<tri2[2][0]<<","<<tri2[2][1]<<","<<tri2[2][2]<<"],["<<tri2[0][0]<<","<<tri2[0][1]<<","<<tri2[0][2]<<"]]");  
+              
+          if(num_penetrating_points > 2 ){
+            hppDout(error,"triangle in the wrong side of the plane"); // shouldn't happen
+            return;
+          }
+          if(num_penetrating_points == 2 )
+            distance = - distance ; // like this we always work with the same case for later computation (one point of the triangle inside the plan)
+          
+         /* hppDout(notice,"deepest points : "<<num_penetrating_points);
+          for(unsigned int k = 0 ; k < 3 ; ++k){
+            hppDout(notice," # "<<distance[k]);
+          }*/
+          
+      
+          // distance have one and only one negative distance, we want to separate them
+          double dneg;
+          fcl::Vec3f pneg;
+          fcl::Vec3f ppos[2];
+          double dpos[2];
+          int numPos = 0;
+          for(int k = 0 ; k < 3 ; ++k){
+            if(distance[k] < 0 ){
+              dneg = distance[k];
+              pneg = tri[k];
+            }else{
+              dpos[numPos] = distance[k];
+              ppos[numPos] = tri[k];              
+              numPos++;
             }
-        }*/
-
+          }
+          // TODO case : intersection with vertice : only 1 intersection point
+          // compute the first intersection point
+          double s1 = dneg / (dneg - dpos[0]);
+          fcl::Vec3f i1 = pneg + (ppos[0] - pneg)*s1;
+          // compute the second intersection point
+          double s2 = dneg / (dneg - dpos[1]);
+          fcl::Vec3f i2 = pneg + (ppos[1] - pneg)*s2; 
+          if(geom::insideTriangle(tri2[0],tri2[1],tri2[2],i1))
+            hppDout(notice,"first intersection : "<<"["<<i1[0]<<","<<i1[1]<<","<<i1[2]<<"]");
+          if(geom::insideTriangle(tri2[0],tri2[1],tri2[2],i2))          
+          hppDout(notice,"second intersection : "<<"["<<i2[0]<<","<<i2[1]<<","<<i2[2]<<"]");
+          
+          
+          if(num_clipped_points > 0 ){
+            hppDout(notice,"clipped point = "<< num_clipped_points);
+            for (unsigned int k =0 ; k < num_clipped_points ; ++k){
+              //hppDout(notice," ["<<clip_point[k][0]<<","<<clip_point[k][1]<<","<<clip_point[k][2]<<"]");
+              ss7<<"["<<clip_point[k][0]<<","<<clip_point[k][1]<<","<<clip_point[k][2]<<"],";                    
+              
+            }
+          }
+        
+        
+        }
+        ss6<<"]";
+        std::cout<<ss6.str()<<std::endl;
+        hppDout(notice,"clipped point : ");        
+        ss7<<"]";
+        std::cout<<ss7.str()<<std::endl;
+        
+        // polygon clip test : 
+        /*
+        std::ostringstream ss8;
+        ss8<<"[";
+        fcl::Vec3f n(0,0,1);
+        fcl::FCL_REAL t=0.037172; // upper floor for jump_easy map
+        unsigned int num_clipped_points=0;        
+        fcl::Vec3f clip_point[100];
+        fcl::Intersect::clipPolygonByPlane(model1->vertices, model1->num_vertices, n, t,clip_point, &num_clipped_points);
+        for(unsigned int k = 0 ; k < num_clipped_points ; ++k){
+          ss8<<"["<<clip_point[k][0]<<","<<clip_point[k][1]<<","<<clip_point[k][2]<<"],";                    
+        }
+        ss8<<"]";
+        hppDout(notice, "fcl :: clipPolygonByPlane : ");
+        std::cout<<ss8.str()<<std::endl;
+      */
       } // for each ROMS
-
+      
     }// computeGIWC
-
+    
   } // namespace core
 } // namespace hpp
