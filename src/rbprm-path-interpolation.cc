@@ -82,7 +82,6 @@ namespace hpp {
         {
             const State& previous = states.back();
             core::Configuration_t configuration = *cit;
-            core::Configuration_t nextconfiguration = (cit+1!=configs.end()) ? *(cit+1) : *cit;
             Eigen::Vector3d dir = configuration.head<3>() - previous.configuration_.head<3>();
             fcl::Vec3f direction(dir[0], dir[1], dir[2]);
             bool nonZero(false);
@@ -91,7 +90,7 @@ namespace hpp {
             // TODO Direction 6d
             bool sameAsPrevious(true);
             bool multipleBreaks(false);
-            State newState = ComputeContacts(previous, robot_,configuration,nextconfiguration,collisionObjects,direction,sameAsPrevious,multipleBreaks,allowFailure,robustnessTreshold);
+            State newState = ComputeContacts(previous, robot_,configuration,collisionObjects,direction,sameAsPrevious,multipleBreaks,allowFailure,robustnessTreshold);
             if(allowFailure && multipleBreaks)
             {
                 ++ nbFailures;

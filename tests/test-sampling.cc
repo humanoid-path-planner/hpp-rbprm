@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE (octreeRequest) {
     DevicePtr_t robot = initDevice();
     JointPtr_t joint = robot->getJointByName("arm");
     SampleDB sc(joint,"elbow",100,0.1);
-    rbprm::sampling::T_OctreeReport reports = rbprm::sampling::GetCandidates(sc, fcl::Transform3f(),fcl::Transform3f(),obstacle,fcl::Vec3f(1,0,0));
+    rbprm::sampling::T_OctreeReport reports = rbprm::sampling::GetCandidates(sc, fcl::Transform3f(),obstacle,fcl::Vec3f(1,0,0));
     double manipulability = std::numeric_limits<double>::max();
     BOOST_CHECK_MESSAGE (!reports.empty(), "No matching found, this should not be the case");
     for(rbprm::sampling::T_OctreeReport::const_iterator cit = reports.begin(); cit != reports.end(); ++cit)
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE (octreeRequest) {
     }
     fcl::Transform3f toofarLocation;
     toofarLocation.setTranslation(fcl::Vec3f(-10,-10,-10));
-    reports = rbprm::sampling::GetCandidates(sc, toofarLocation,toofarLocation, obstacle,fcl::Vec3f(1,0,0));
+    reports = rbprm::sampling::GetCandidates(sc, toofarLocation, obstacle,fcl::Vec3f(1,0,0));
     BOOST_CHECK_MESSAGE (reports.empty(), "samples found by request");
 }
 }

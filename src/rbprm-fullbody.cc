@@ -310,7 +310,7 @@ namespace hpp {
                               core::CollisionValidationPtr_t validation,
                               const std::string& limbId,
                               const hpp::rbprm::RbPrmLimbPtr_t& limb,
-                              model::ConfigurationIn_t rbconfiguration, model::ConfigurationIn_t nextrbconfiguration,
+                              model::ConfigurationIn_t rbconfiguration,
                               model::ConfigurationOut_t configuration,
                               const model::ObjectVector_t &collisionObjects, const fcl::Vec3f& direction,
                               fcl::Vec3f& position, fcl::Vec3f& normal, const double robustnessTreshold,
@@ -325,10 +325,6 @@ namespace hpp {
       fcl::Matrix3f rotation;
       sampling::T_OctreeReport finalSet;
 
-      limb->limb_->robot()->currentConfiguration(nextrbconfiguration);
-      limb->limb_->robot()->computeForwardKinematics ();
-      fcl::Transform3f transformNext = limb->octreeRoot(); // get root transform from configuration
-
       limb->limb_->robot()->currentConfiguration(rbconfiguration);
       limb->limb_->robot()->computeForwardKinematics ();
       fcl::Transform3f transform = limb->octreeRoot(); // get root transform from configuration
@@ -342,9 +338,9 @@ namespace hpp {
           oit != collisionObjects.end(); ++oit, ++i)
       {
           if(eval)
-            sampling::GetCandidates(limb->sampleContainer_, transform,transformNext, *oit, direction, reports[i], eval);
+            sampling::GetCandidates(limb->sampleContainer_, transform, *oit, direction, reports[i], eval);
           else
-            sampling::GetCandidates(limb->sampleContainer_, transform,transformNext, *oit, direction, reports[i]);
+            sampling::GetCandidates(limb->sampleContainer_, transform, *oit, direction, reports[i]);
       }
       // order samples according to EFORT
       for(std::vector<sampling::T_OctreeReport>::const_iterator cit = reports.begin();
@@ -515,7 +511,7 @@ else
             for(std::vector<std::string>::const_iterator cit = group.begin();
                 notFound && cit != group.end(); ++cit)
             {
-                if(ComputeStableContact(body, result, validation, *cit, body->GetLimbs().at(*cit),save,save, config,
+                if(ComputeStableContact(body, result, validation, *cit, body->GetLimbs().at(*cit),save, config,
                                         collisionObjects, direction, position, normal, robustnessTreshold, false)
                         == STABLE_CONTACT)
                 {
@@ -570,7 +566,7 @@ else
             {
                 fcl::Vec3f normal, position;
                 ComputeStableContact(body,result, body->limbcollisionValidations_.at(lit->first), lit->first, lit->second,
-                                     configuration, configuration,
+                                     configuration,
                                      result.configuration_, collisionObjects, direction, position, normal, robustnessTreshold, true, false);
             }
             result.nbContacts = result.contactNormals_.size();
@@ -581,7 +577,7 @@ else
     }
 
     hpp::rbprm::State ComputeContacts(const hpp::rbprm::State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration,
-                                      model::ConfigurationIn_t nextconfiguration, const model::ObjectVector_t& collisionObjects,
+                                      const model::ObjectVector_t& collisionObjects,
                                       const fcl::Vec3f& direction, bool& contactMaintained, bool& multipleBreaks,
                                       const bool allowFailure, const double robustnessTreshold)
     {
@@ -611,7 +607,7 @@ else
         // if no stable replacement contact found
         // modify contact order to try to replace another contact at the next step
         if(ComputeStableContact(body,result,body->limbcollisionValidations_.at(replaceContact),replaceContact,body->limbs_.at(replaceContact),
-                             configuration,nextconfiguration, config,collisionObjects,direction,position, normal, robustnessTreshold, true, false, body->factory_.heuristics_["random"])
+                             configuration, config,collisionObjects,direction,position, normal, robustnessTreshold, true, false, body->factory_.heuristics_["random"])
                 != STABLE_CONTACT)
         {
             result = previous;
@@ -637,7 +633,7 @@ else
         {
             // if the contactMaintained flag remains true,
             // the contacts have not changed, and the state can be merged with the previous one eventually
-            contactCreated = ComputeStableContact(body, result, body->limbcollisionValidations_.at(lit->first), lit->first, lit->second, configuration, nextconfiguration,
+            contactCreated = ComputeStableContact(body, result, body->limbcollisionValidations_.at(lit->first), lit->first, lit->second, configuration,
                                                   config, collisionObjects, direction, position, normal, robustnessTreshold) != NO_CONTACT || contactCreated;
         }
     }
@@ -674,7 +670,7 @@ else
                 // raise failure and switch contact order.
                 if(contactCreated || ComputeStableContact(body,result,body->limbcollisionValidations_.at(replaceContact),replaceContact,
                                      body->limbs_.at(replaceContact),
-                                     configuration, nextconfiguration, config,
+                                     configuration, config,
                                      collisionObjects,direction,position, normal,robustnessTreshold) != STABLE_CONTACT)
                 {
                     multipleBreaks = true;
