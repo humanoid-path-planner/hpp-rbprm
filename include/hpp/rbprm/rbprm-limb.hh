@@ -66,8 +66,8 @@ namespace hpp {
         /// \param contactType Whether the contact is a surface contact (orientation matters) or a punctual contact
         static RbPrmLimbPtr_t create (const model::JointPtr_t limb, const fcl::Vec3f &offset,
                                       const fcl::Vec3f &normal,const double x, const double y,
-                                      const std::size_t nbSamples, const sampling::heuristic evaluate,
-                                      const double resolution, ContactType contactType = _6_DOF);
+                                      const std::size_t nbSamples, const sampling::heuristic evaluate = 0,
+                                      const double resolution = 0.1, ContactType contactType = _6_DOF);
 
 
         /// Creates a Limb a Fullbody instance  Stores a sample
@@ -87,8 +87,8 @@ namespace hpp {
         /// \param contactType Whether the contact is a surface contact (orientation matters) or a punctual contact
         static RbPrmLimbPtr_t create (const model::JointPtr_t limb, const std::string& effectorName, const fcl::Vec3f &offset,
                                       const fcl::Vec3f &normal,const double x, const double y,
-                                      const std::size_t nbSamples, const sampling::heuristic evaluate,
-                                      const double resolution, ContactType contactType = _6_DOF);
+                                      const std::size_t nbSamples, const sampling::heuristic evaluate = 0,
+                                      const double resolution = 0.1, ContactType contactType = _6_DOF);
 
     public:
         ~RbPrmLimb();
@@ -106,6 +106,7 @@ namespace hpp {
         const double x_; // half width
         const double y_; // half length of contact surface
         const ContactType contactType_;
+        sampling::heuristic evaluate_;
 
     protected:
       RbPrmLimb (const model::JointPtr_t& limb,  const fcl::Vec3f &offset,

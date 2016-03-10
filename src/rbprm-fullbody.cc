@@ -199,7 +199,7 @@ namespace hpp {
                               const hpp::rbprm::RbPrmLimbPtr_t& limb, model::ConfigurationOut_t configuration,
                               const double robustnessTreshold, bool stability = true)
     {
-        for(std::deque<sampling::Sample>::const_iterator cit = limb->sampleContainer_.samples_.begin();
+        for(std::vector<sampling::Sample>::const_iterator cit = limb->sampleContainer_.samples_.begin();
             cit != limb->sampleContainer_.samples_.end(); ++cit)
         {
             sampling::Load(*cit, configuration);
@@ -337,11 +337,14 @@ namespace hpp {
       std::size_t i (0);
       //#pragma omp parallel for
       // request samples which collide with each of the collision objects
-      sampling::heuristic eval = evaluate; if(!eval) eval =  limb->sampleContainer_.evaluate_;
+      sampling::heuristic eval = evaluate; if (!eval) eval =limb->evaluate_;
       for(model::ObjectVector_t::const_iterator oit = collisionObjects.begin();
           oit != collisionObjects.end(); ++oit, ++i)
       {
-          sampling::GetCandidates(limb->sampleContainer_, transform,transformNext, *oit, direction, reports[i], eval);
+          if(eval)
+            sampling::GetCandidates(limb->sampleContainer_, transform,transformNext, *oit, direction, reports[i], eval);
+          else
+            sampling::GetCandidates(limb->sampleContainer_, transform,transformNext, *oit, direction, reports[i]);
       }
       // order samples according to EFORT
       for(std::vector<sampling::T_OctreeReport>::const_iterator cit = reports.begin();
@@ -358,7 +361,7 @@ namespace hpp {
       for(;!found_sample && it!=finalSet.end(); ++it)
       {
           const sampling::OctreeReport& bestReport = *it;
-          sampling::Load(*bestReport.sample_, configuration);
+          sampling::Load(bestReport.sample_, configuration);
           body->device_->currentConfiguration(configuration);
           {
               normal = bestReport.normal_;

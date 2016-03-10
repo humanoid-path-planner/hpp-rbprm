@@ -81,12 +81,13 @@ namespace hpp {
         : limb_(limb)
         , effector_(GetEffector(limb))
         , effectorDefaultRotation_(GetEffectorTransform(limb))
-        , sampleContainer_(limb, effector_->name(), nbSamples, evaluate, offset, resolution)
+        , sampleContainer_(limb, effector_->name(), nbSamples, offset, resolution)
         , offset_(effectorDefaultRotation_* offset)
         , normal_(effectorDefaultRotation_* normal)
         , x_(x)
         , y_(y)
         , contactType_(contactType)
+        , evaluate_(evaluate)
     {
         // TODO
     }
@@ -97,12 +98,13 @@ namespace hpp {
         : limb_(limb)
         , effector_(GetEffector(limb, effectorName))
         , effectorDefaultRotation_(GetEffectorTransform(limb))
-        , sampleContainer_(limb, effector_->name(), nbSamples, evaluate, offset, resolution)
+        , sampleContainer_(limb, effector_->name(), nbSamples, offset, resolution)
         , offset_(effectorDefaultRotation_* offset)
         , normal_(effectorDefaultRotation_* normal)
         , x_(x)
         , y_(y)
         , contactType_(contactType)
+        , evaluate_(evaluate)
     {
         // TODO
     }

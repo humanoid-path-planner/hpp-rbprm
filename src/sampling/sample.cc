@@ -63,7 +63,7 @@ Sample::Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, c
     , jacobian_(Jacobian(limb, effector))
     , jacobianProduct_(jacobian_*jacobian_.transpose())
     , id_(id)
-    , manipulability_(Manipulability(jacobianProduct_))
+    , staticValue_(Manipulability(jacobianProduct_))
 {
     // NOTHING
 }
@@ -76,7 +76,7 @@ Sample::Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, m
     , jacobian_(Jacobian(limb,effector))
     , jacobianProduct_(jacobian_*jacobian_.transpose())
     , id_(id)
-    , manipulability_(Manipulability(jacobianProduct_))
+    , staticValue_(Manipulability(jacobianProduct_))
 {
     // NOTHING
 }
@@ -90,7 +90,7 @@ Sample::Sample(const Sample &clone)
     , jacobian_(clone.jacobian_)
     , jacobianProduct_(clone.jacobianProduct_)
     , id_(clone.id_)
-    , manipulability_(clone.manipulability_)
+    , staticValue_(clone.staticValue_)
 {
     // NOTHING
 }
@@ -100,10 +100,10 @@ void hpp::rbprm::sampling::Load(const Sample& sample, ConfigurationOut_t configu
     configuration.segment(sample.startRank_, sample.length_) = sample.configuration_;
 }
 
-std::deque<Sample> hpp::rbprm::sampling::GenerateSamples(const model::JointPtr_t model, const std::string& effector
+std::vector<Sample> hpp::rbprm::sampling::GenerateSamples(const model::JointPtr_t model, const std::string& effector
                                                          , const std::size_t nbSamples, const fcl::Vec3f& offset)
 {
-    std::deque<Sample> result;
+    std::vector<Sample> result; result.reserve(nbSamples);
     model::DevicePtr_t device(model->robot()->clone());
     Configuration_t config = device->currentConfiguration();
     JointPtr_t clone = device->getJointByName(model->name());

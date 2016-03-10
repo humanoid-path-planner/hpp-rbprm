@@ -30,7 +30,7 @@ SET(PROJECT_DESCRIPTION
 
 
 # Set to 1 for profiling
-#~ add_definitions(-DPROFILE)
+ add_definitions(-DPROFILE)
 
 # Where to compile shared objects
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
@@ -70,6 +70,7 @@ SET(${PROJECT_NAME}_HEADERS
     include/hpp/rbprm/rbprm-validation.hh
     include/hpp/rbprm/rbprm-rom-validation.hh
     include/hpp/rbprm/sampling/sample.hh
+    include/hpp/rbprm/sampling/sample-db.hh
     include/hpp/rbprm/sampling/sample-container.hh
     include/hpp/rbprm/sampling/heuristic.hh
     include/hpp/rbprm/stability/stability.hh

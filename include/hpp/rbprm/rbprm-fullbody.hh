@@ -71,7 +71,7 @@ namespace hpp {
         void AddLimb(const std::string& id, const std::string& name, const std::string& effectorName, const fcl::Vec3f &offset,
                      const fcl::Vec3f &normal,const double x, const double y,
                      const model::ObjectVector_t &collisionObjects,
-                     const std::size_t nbSamples, const std::string& heuristic = "EFORT", const double resolution = 0.03,
+                     const std::size_t nbSamples, const std::string& heuristic = "static", const double resolution = 0.03,
                      ContactType contactType = _6_DOF);
 
         /// Add a new heuristic for biasing sample candidate selection
