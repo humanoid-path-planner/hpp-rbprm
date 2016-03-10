@@ -20,7 +20,7 @@
 # define HPP_RBPRM_LIMB_HH
 
 # include <hpp/rbprm/config.hh>
-# include <hpp/rbprm/sampling/sample-container.hh>
+# include <hpp/rbprm/sampling/sample-db.hh>
 # include <hpp/rbprm/sampling/heuristic.hh>
 # include <hpp/model/device.hh>
 
@@ -38,7 +38,7 @@ namespace hpp {
     HPP_PREDEF_CLASS(RbPrmLimb);
 
     /// Representation of a robot limb.
-    /// Contains a SampleContainer used for computing contact candidates
+    /// Contains a SampleDB used for computing contact candidates
     ///
     class RbPrmLimb;
     typedef boost::shared_ptr <RbPrmLimb> RbPrmLimbPtr_t;
@@ -100,7 +100,7 @@ namespace hpp {
         const model::JointPtr_t limb_;
         const model::JointPtr_t effector_;
         const fcl::Matrix3f effectorDefaultRotation_; // effector transform in rest pose
-        const sampling::SampleContainer sampleContainer_;
+        const sampling::SampleDB sampleContainer_;
         const fcl::Vec3f offset_; // effector location
         const fcl::Vec3f normal_; // effector normal for surface
         const double x_; // half width

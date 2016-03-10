@@ -361,7 +361,7 @@ namespace hpp {
       for(;!found_sample && it!=finalSet.end(); ++it)
       {
           const sampling::OctreeReport& bestReport = *it;
-          sampling::Load(bestReport.sample_, configuration);
+          sampling::Load(*bestReport.sample_, configuration);
           body->device_->currentConfiguration(configuration);
           {
               normal = bestReport.normal_;

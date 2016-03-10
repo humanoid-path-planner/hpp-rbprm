@@ -15,6 +15,7 @@
 // hpp-rbprm. If not, see <http://www.gnu.org/licenses/>.
 
 #include <hpp/rbprm/rbprm-limb.hh>
+#include <hpp/rbprm/sampling/sample-db.hh>
 #include <hpp/model/joint.hh>
 
 namespace hpp {

@@ -28,8 +28,7 @@ SET(${LIBRARY_NAME}_SOURCES
 	rbprm-path-interpolation.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-path-interpolation.hh
 	rbprm-fullbody.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-fullbody.hh
 	${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-state.hh
-	sampling/sample.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/sampling/sample.hh
-	sampling/sample-container.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/sampling/sample-container.hh
+        sampling/sample.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/sampling/sample.hh
         sampling/heuristic.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/sampling/heuristic.hh
         sampling/sample-db.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/sampling/sample-db.hh
         tools.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/tools.hh

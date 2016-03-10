@@ -17,7 +17,7 @@
 // along with hpp-core.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "test-tools.hh"
-#include <hpp/rbprm/sampling/sample-container.hh>
+#include <hpp/rbprm/sampling/sample-db.hh>
 #include <hpp/fcl/octree.h>
 #include <hpp/fcl/distance.h>
 #include <hpp/fcl/collision.h>
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE (sampleGeneration) {
 BOOST_AUTO_TEST_CASE (sampleContainerGeneration) {
     DevicePtr_t robot = initDevice();
     JointPtr_t joint = robot->getJointByName("arm");
-    SampleContainer sc(joint, "elbow", 10,0.1);
+    SampleDB sc(joint, "elbow", 10,0.1);
     for(std::vector<Sample>::const_iterator cit = sc.samples_.begin();
         cit != sc.samples_.end(); ++cit)
     {
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE (octreeRequest) {
     CollisionObjectPtr_t obstacle =  MeshObstacleBox();
     DevicePtr_t robot = initDevice();
     JointPtr_t joint = robot->getJointByName("arm");
-    SampleContainer sc(joint,"elbow",100,0.1);
+    SampleDB sc(joint,"elbow",100,0.1);
     rbprm::sampling::T_OctreeReport reports = rbprm::sampling::GetCandidates(sc, fcl::Transform3f(),fcl::Transform3f(),obstacle,fcl::Vec3f(1,0,0));
     double manipulability = std::numeric_limits<double>::max();
     BOOST_CHECK_MESSAGE (!reports.empty(), "No matching found, this should not be the case");
