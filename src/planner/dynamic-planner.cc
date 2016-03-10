@@ -705,7 +705,10 @@ namespace hpp {
         std::cout<<ss2.str()<<std::endl;
         
         
-        // re order the vertices : (test)
+        
+        ////////// 2D code ///////////
+        
+        // re order the vertices : 
         
         
         hppDout(notice,"ordered obj2 : ");
@@ -753,99 +756,13 @@ namespace hpp {
         ss5<<"]";
         std::cout<<ss5.str()<<std::endl;
         
-        
+        ////////// end 2D code ///////////
         
         // direct call to fcl (doesn't work)
-        
-        bool collision;
-        fcl::Vec3f contact_points[3];
-        unsigned int num_penetrating_points=0;
-        unsigned int num_clipped_points=0;        
-        std::ostringstream ss6;
-        ss6<<"[";
-        std::ostringstream ss7;
-        ss7<<"[";
-        fcl::Vec3f normal;
-        fcl::Vec3f distance;
-        fcl::Vec3f n2=0;
-        fcl::FCL_REAL t2=0;
-        fcl::Vec3f clip_point[8]; // see fcl::Intersect::MAX_TRIANGLE_CLIPS] (private)
-        
-        // TODO : pas pour tout les triangles mais uniquement pour les collisions pairs donnee par contact->bi
-        
-        for(size_t c = 0 ; c < result.numContacts() ; ++c){
-          int i = result.getContact(c).b1;  // triangle index
-          int j = result.getContact(c).b2;
-          
+        geom::intersectGeoms(model1,model2,result);
 
-          fcl::Vec3f tri[3] = {model1->vertices[model1->tri_indices[i][0]],model1->vertices[model1->tri_indices[i][1]],model1->vertices[model1->tri_indices[i][2]]};
-          fcl::Vec3f tri2[3] = {model2->vertices[model2->tri_indices[j][0]],model2->vertices[model2->tri_indices[j][1]],model2->vertices[model2->tri_indices[j][2]]}; 
-          fcl::Intersect::buildTrianglePlane(tri2[0],tri2[1],tri2[2], &n2, &t2);
+        
 
-          geom::computeTrianglePlaneDistance(tri,n2,t2,&distance,&num_penetrating_points);
-          
-          hppDout(notice,"Intersection between triangles : ");
-          hppDout(notice,"[["<<tri[0][0]<<","<<tri[0][1]<<","<<tri[0][2]<<"],["<<tri[1][0]<<","<<tri[1][1]<<","<<tri[1][2]<<"],["<<tri[2][0]<<","<<tri[2][1]<<","<<tri[2][2]<<"],["<<tri[0][0]<<","<<tri[0][1]<<","<<tri[0][2]<<"]]");
-          hppDout(notice,"[["<<tri2[0][0]<<","<<tri2[0][1]<<","<<tri2[0][2]<<"],["<<tri2[1][0]<<","<<tri2[1][1]<<","<<tri2[1][2]<<"],["<<tri2[2][0]<<","<<tri2[2][1]<<","<<tri2[2][2]<<"],["<<tri2[0][0]<<","<<tri2[0][1]<<","<<tri2[0][2]<<"]]");  
-              
-          if(num_penetrating_points > 2 ){
-            hppDout(error,"triangle in the wrong side of the plane"); // shouldn't happen
-            return;
-          }
-          if(num_penetrating_points == 2 )
-            distance = - distance ; // like this we always work with the same case for later computation (one point of the triangle inside the plan)
-          
-         /* hppDout(notice,"deepest points : "<<num_penetrating_points);
-          for(unsigned int k = 0 ; k < 3 ; ++k){
-            hppDout(notice," # "<<distance[k]);
-          }*/
-          
-      
-          // distance have one and only one negative distance, we want to separate them
-          double dneg;
-          fcl::Vec3f pneg;
-          fcl::Vec3f ppos[2];
-          double dpos[2];
-          int numPos = 0;
-          for(int k = 0 ; k < 3 ; ++k){
-            if(distance[k] < 0 ){
-              dneg = distance[k];
-              pneg = tri[k];
-            }else{
-              dpos[numPos] = distance[k];
-              ppos[numPos] = tri[k];              
-              numPos++;
-            }
-          }
-          // TODO case : intersection with vertice : only 1 intersection point
-          // compute the first intersection point
-          double s1 = dneg / (dneg - dpos[0]);
-          fcl::Vec3f i1 = pneg + (ppos[0] - pneg)*s1;
-          // compute the second intersection point
-          double s2 = dneg / (dneg - dpos[1]);
-          fcl::Vec3f i2 = pneg + (ppos[1] - pneg)*s2; 
-          if(geom::insideTriangle(tri2[0],tri2[1],tri2[2],i1))
-            hppDout(notice,"first intersection : "<<"["<<i1[0]<<","<<i1[1]<<","<<i1[2]<<"]");
-          if(geom::insideTriangle(tri2[0],tri2[1],tri2[2],i2))          
-          hppDout(notice,"second intersection : "<<"["<<i2[0]<<","<<i2[1]<<","<<i2[2]<<"]");
-          
-          
-          if(num_clipped_points > 0 ){
-            hppDout(notice,"clipped point = "<< num_clipped_points);
-            for (unsigned int k =0 ; k < num_clipped_points ; ++k){
-              //hppDout(notice," ["<<clip_point[k][0]<<","<<clip_point[k][1]<<","<<clip_point[k][2]<<"]");
-              ss7<<"["<<clip_point[k][0]<<","<<clip_point[k][1]<<","<<clip_point[k][2]<<"],";                    
-              
-            }
-          }
-        
-        
-        }
-        ss6<<"]";
-        std::cout<<ss6.str()<<std::endl;
-        hppDout(notice,"clipped point : ");        
-        ss7<<"]";
-        std::cout<<ss7.str()<<std::endl;
         
         // polygon clip test : 
         /*
