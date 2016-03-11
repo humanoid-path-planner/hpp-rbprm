@@ -428,11 +428,11 @@ namespace geom
     
     
     geom::computeTrianglePlaneDistance(tri,n2,t2,&distance,&num_penetrating_points);
-    
+    /*
     hppDout(notice,"Intersection between triangles : ");
     hppDout(notice,"[["<<tri[0][0]<<","<<tri[0][1]<<","<<tri[0][2]<<"],["<<tri[1][0]<<","<<tri[1][1]<<","<<tri[1][2]<<"],["<<tri[2][0]<<","<<tri[2][1]<<","<<tri[2][2]<<"],["<<tri[0][0]<<","<<tri[0][1]<<","<<tri[0][2]<<"]]");
     hppDout(notice,"[["<<tri2[0][0]<<","<<tri2[0][1]<<","<<tri2[0][2]<<"],["<<tri2[1][0]<<","<<tri2[1][1]<<","<<tri2[1][2]<<"],["<<tri2[2][0]<<","<<tri2[2][1]<<","<<tri2[2][2]<<"],["<<tri2[0][0]<<","<<tri2[0][1]<<","<<tri2[0][2]<<"]]");  
-    
+    */
     if(num_penetrating_points > 2 ){
       hppDout(error,"triangle in the wrong side of the plane"); // shouldn't happen
       return res;
@@ -467,13 +467,13 @@ namespace geom
     fcl::Vec3f i2 = pneg + (ppos[1] - pneg)*s2; 
     if(geom::insideTriangle(tri2[0],tri2[1],tri2[2],i1)){
       res.push_back(Eigen::Vector3d(i1[0],i1[1],i1[2]));
-      hppDout(notice,"first intersection : "<<"["<<i1[0]<<","<<i1[1]<<","<<i1[2]<<"]");
+      //hppDout(notice,"first intersection : "<<"["<<i1[0]<<","<<i1[1]<<","<<i1[2]<<"]");
       if(ss)
         *ss<<"["<<i1[0]<<","<<i1[1]<<","<<i1[2]<<"],";                        
     }
     if(geom::insideTriangle(tri2[0],tri2[1],tri2[2],i2)){ 
       res.push_back(Eigen::Vector3d(i2[0],i2[1],i2[2]));      
-      hppDout(notice,"second intersection : "<<"["<<i2[0]<<","<<i2[1]<<","<<i2[2]<<"]");
+      //hppDout(notice,"second intersection : "<<"["<<i2[0]<<","<<i2[1]<<","<<i2[2]<<"]");
       if(ss)
         *ss<<"["<<i2[0]<<","<<i2[1]<<","<<i2[2]<<"],";                    
     }
@@ -485,40 +485,33 @@ namespace geom
     std::ostringstream ss;
     ss<<"[";
     
-    hppDout(notice,"here");
     
     for(size_t c = 0 ; c < result.numContacts() ; ++c){
-      hppDout(notice,"normal = "<<result.getContact(c).normal);
+      hppDout(info,"normal = "<<result.getContact(c).normal);
       if(result.getContact(c).normal.equal(-n,EPSILON)){ // only compute intersection for contact with the plane
         // need the -n because .normal are oriented from o1 to o2
         int i = result.getContact(c).b1;  // triangle index
         int j = result.getContact(c).b2;
         
-        hppDout(notice,"for");
         
         fcl::Vec3f tri[3] = {polygone->vertices[polygone->tri_indices[i][0]],polygone->vertices[polygone->tri_indices[i][1]],polygone->vertices[polygone->tri_indices[i][2]]};
         fcl::Vec3f tri2[3] = {model2->vertices[model2->tri_indices[j][0]],model2->vertices[model2->tri_indices[j][1]],model2->vertices[model2->tri_indices[j][2]]}; 
-        hppDout(notice,"tri");
         fcl::Vec3f n2=0;
         fcl::FCL_REAL t2=0;
         fcl::Intersect::buildTrianglePlane(tri2[0],tri2[1],tri2[2], &n2, &t2);
-        hppDout(notice,"n = "<<n2);
-        hppDout(notice,"t = "<<t2);
-        hppDout(notice,"plan");        
+        hppDout(info,"n = "<<n2);
+        hppDout(info,"t = "<<t2);
         if(n2.equal(n,EPSILON) && (t2 + EPSILON >= t ) && (t2-EPSILON <= t )){
-          hppDout(notice,"if");
           triRes = intersectTriangles(tri,tri2);
           res.insert(res.end(),triRes.begin(),triRes.end());
           triRes = intersectTriangles(tri2,tri);
           res.insert(res.end(),triRes.begin(),triRes.end());
-          hppDout(notice,"inter");
 
           
         }
       }
       
     } // for each contact point
-    hppDout(notice,"end for");
     if(res.empty()){
       hppDout(notice,"~ Intersection between polygon and plane is empty");
       return res;

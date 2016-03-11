@@ -612,22 +612,22 @@ namespace hpp {
     
     
     void DynamicPlanner::computeGIWC(const core::NodePtr_t x, core::ValidationReportPtr_t report){
-      
+      hppDout(notice,"## compute GIWC");
       core::ConfigurationPtr_t q = x->configuration();
       core::RbprmNodePtr_t x_cast = static_cast<core::RbprmNodePtr_t>(x);
       // fil normal information in node
       if(x_cast){
         size_t cSize = problem().robot()->configSize();
-        hppDout(notice,"~~ NODE cast correctly");
+        hppDout(info,"~~ NODE cast correctly");
         x_cast->normal((*q)[cSize-3],(*q)[cSize-2],(*q)[cSize-1]);
-        hppDout(notice,"~~ normal = "<<x_cast->getNormal());
+        hppDout(info,"~~ normal = "<<x_cast->getNormal());
         
       }else{
         hppDout(error,"~~ NODE cannot be cast");
         return;
       }
       
-      hppDout(notice,"~~ q = "<<displayConfig(*q));
+      hppDout(info,"~~ q = "<<displayConfig(*q));
       
       core::RbprmValidationReportPtr_t rbReport = boost::dynamic_pointer_cast<core::RbprmValidationReport> (report);
       // checks :
@@ -646,10 +646,10 @@ namespace hpp {
       }
       
       // get the 2 object in contact for each ROM :
-      hppDout(notice,"~~ Number of roms in collision : "<<rbReport->ROMReports.size());
+      hppDout(info,"~~ Number of roms in collision : "<<rbReport->ROMReports.size());
       for(std::map<std::string,core::CollisionValidationReportPtr_t>::const_iterator it = rbReport->ROMReports.begin() ; it != rbReport->ROMReports.end() ; ++it)
       {
-        hppDout(notice,"~~ for rom : "<<it->first);
+        hppDout(info,"~~ for rom : "<<it->first);
         core::CollisionObjectPtr_t obj1 = it->second->object1;
         core::CollisionObjectPtr_t obj2 = it->second->object2;
         hppDout(notice,"~~ collision between : "<<obj1->name() << " and "<<obj2->name());
@@ -672,7 +672,7 @@ namespace hpp {
         obj1->fcl();
         geom::T_Point vertices1;
         geom::BVHModelOBConst_Ptr_t model1 =  geom::GetModel(obj1->fcl());
-        hppDout(notice,"vertices obj1 : "<<obj1->name()<< " ( "<<model1->num_vertices<<" ) ");
+        hppDout(info,"vertices obj1 : "<<obj1->name()<< " ( "<<model1->num_vertices<<" ) ");
         std::ostringstream ss1;
         ss1<<"[";
         for(int i = 0 ; i < model1->num_vertices ; ++i)
@@ -684,13 +684,13 @@ namespace hpp {
             ss1<<",";
         }
         ss1<<"]";
-        std::cout<<ss1.str()<<std::endl;
+        //std::cout<<ss1.str()<<std::endl;
         
         
         obj2->fcl();
         geom::T_Point vertices2;
         geom::BVHModelOBConst_Ptr_t model2 =  geom::GetModel(obj2->fcl());
-        hppDout(notice,"vertices obj2 : "<<obj2->name()<< " ( "<<model2->num_vertices<<" ) ");
+        hppDout(info,"vertices obj2 : "<<obj2->name()<< " ( "<<model2->num_vertices<<" ) ");
         std::ostringstream ss2;
         ss2<<"[";
         for(int i = 0 ; i < model2->num_vertices ; ++i)
@@ -703,7 +703,7 @@ namespace hpp {
           
         }
         ss2<<"]";
-        std::cout<<ss2.str()<<std::endl;
+        //std::cout<<ss2.str()<<std::endl;
         
         
         
