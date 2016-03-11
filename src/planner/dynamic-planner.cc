@@ -201,6 +201,7 @@ namespace hpp {
       std::vector<std::string> filter;
       core::PathPtr_t validPath, path;
       // Pick a random node
+      hppDout(notice,"# random shoot begin");
       core::ConfigurationPtr_t q_rand = configurationShooter_->shoot ();
       hppDout(notice,"# random shoot OK");
       
@@ -710,7 +711,7 @@ namespace hpp {
         
         // re order the vertices : 
         
-        
+        /*
         hppDout(notice,"ordered obj2 : ");
         geom::projectZ(vertices2.begin(),vertices2.end());
         geom::T_Point vert2Ordered = geom::convexHull(vertices2.begin(),vertices2.end());
@@ -755,31 +756,16 @@ namespace hpp {
         }
         ss5<<"]";
         std::cout<<ss5.str()<<std::endl;
-        
+        */
         ////////// end 2D code ///////////
         
         // direct call to fcl (doesn't work)
-        geom::intersectGeoms(model1,model2,result);
+        geom::intersectPolygonePlane(model1,model2,fcl::Vec3f(0,0,1),geom::ZJUMP,result);
 
         
 
         
-        // polygon clip test : 
-        /*
-        std::ostringstream ss8;
-        ss8<<"[";
-        fcl::Vec3f n(0,0,1);
-        fcl::FCL_REAL t=0.037172; // upper floor for jump_easy map
-        unsigned int num_clipped_points=0;        
-        fcl::Vec3f clip_point[100];
-        fcl::Intersect::clipPolygonByPlane(model1->vertices, model1->num_vertices, n, t,clip_point, &num_clipped_points);
-        for(unsigned int k = 0 ; k < num_clipped_points ; ++k){
-          ss8<<"["<<clip_point[k][0]<<","<<clip_point[k][1]<<","<<clip_point[k][2]<<"],";                    
-        }
-        ss8<<"]";
-        hppDout(notice, "fcl :: clipPolygonByPlane : ");
-        std::cout<<ss8.str()<<std::endl;
-      */
+      
       } // for each ROMS
       
     }// computeGIWC

@@ -34,7 +34,7 @@ namespace geom
   typedef T_Point2D::const_iterator CIT_Point2D;
   
   const double EPSILON = 1e-5;
-  
+  const double ZJUMP = 0.037174; // value t for the floor in jump_easy_map
   
   
   void projectZ(IT_Point pointsBegin, IT_Point pointsEnd);
@@ -135,7 +135,18 @@ namespace geom
    * @param model2
    * @param result the collision report between the 2 geometries
    */
-  void intersectGeoms(BVHModelOBConst_Ptr_t model1,BVHModelOBConst_Ptr_t model2,fcl::CollisionResult result);
+  void intersect3DGeoms(BVHModelOBConst_Ptr_t model1,BVHModelOBConst_Ptr_t model2,fcl::CollisionResult result);
+  
+  /**
+   * @brief intersectPolygonePlane Compute the intersection of a polygon and a plane
+   * The returned point belongs to the surfaces of @param model2 corresponding to the plan equation.
+   * @param polygone the polygon
+   * @param model2 the meshs containing the plane
+   * @param n normal of the plan
+   * @param t offset of the plan
+   * @param result
+   */
+  T_Point intersectPolygonePlane(BVHModelOBConst_Ptr_t polygone,BVHModelOBConst_Ptr_t model2, fcl::Vec3f n , double t, fcl::CollisionResult result);  
   
   /**
    * @brief intersectTriangles compute intersection between 2 triangles (not commutative)
@@ -143,9 +154,9 @@ namespace geom
    * @param tri2 second triangle (used to compute the plane, the returned point belong to this triangle
    * @param ss 
    */
-  void intersectTriangles(fcl::Vec3f* tri, fcl::Vec3f* tri2,std::ostringstream* ss);
-
-    
+  T_Point intersectTriangles(fcl::Vec3f* tri, fcl::Vec3f* tri2,std::ostringstream* ss=0);
+  
+  
 } //namespace geom
 
 namespace geom
@@ -384,10 +395,10 @@ namespace geom
     return true;
   }
   
-  void intersectGeoms(BVHModelOBConst_Ptr_t model1,BVHModelOBConst_Ptr_t model2,fcl::CollisionResult result){
+  void intersect3DGeoms(BVHModelOBConst_Ptr_t model1,BVHModelOBConst_Ptr_t model2,fcl::CollisionResult result){
     std::ostringstream ss7;
     ss7<<"[";
-
+    
     
     
     for(size_t c = 0 ; c < result.numContacts() ; ++c){
@@ -407,13 +418,14 @@ namespace geom
     std::cout<<ss7.str()<<std::endl;
   }
   
-  void intersectTriangles(fcl::Vec3f* tri, fcl::Vec3f* tri2,std::ostringstream* ss){
+  T_Point intersectTriangles(fcl::Vec3f* tri, fcl::Vec3f* tri2,std::ostringstream* ss){
+    T_Point res;
     fcl::Vec3f n2=0;
     fcl::FCL_REAL t2=0;
     fcl::Intersect::buildTrianglePlane(tri2[0],tri2[1],tri2[2], &n2, &t2);
     fcl::Vec3f distance;
     unsigned int num_penetrating_points=0;
-
+    
     
     geom::computeTrianglePlaneDistance(tri,n2,t2,&distance,&num_penetrating_points);
     
@@ -423,15 +435,15 @@ namespace geom
     
     if(num_penetrating_points > 2 ){
       hppDout(error,"triangle in the wrong side of the plane"); // shouldn't happen
-      return;
+      return res;
     }
     if(num_penetrating_points == 2 )
       distance = - distance ; // like this we always work with the same case for later computation (one point of the triangle inside the plan)
-
+    
     
     
     // distance have one and only one negative distance, we want to separate them
-    double dneg;
+    double dneg=0;
     fcl::Vec3f pneg;
     fcl::Vec3f ppos[2];
     double dpos[2];
@@ -454,14 +466,73 @@ namespace geom
     double s2 = dneg / (dneg - dpos[1]);
     fcl::Vec3f i2 = pneg + (ppos[1] - pneg)*s2; 
     if(geom::insideTriangle(tri2[0],tri2[1],tri2[2],i1)){
+      res.push_back(Eigen::Vector3d(i1[0],i1[1],i1[2]));
       hppDout(notice,"first intersection : "<<"["<<i1[0]<<","<<i1[1]<<","<<i1[2]<<"]");
-      *ss<<"["<<i1[0]<<","<<i1[1]<<","<<i1[2]<<"],";                    
-      
+      if(ss)
+        *ss<<"["<<i1[0]<<","<<i1[1]<<","<<i1[2]<<"],";                        
     }
-    if(geom::insideTriangle(tri2[0],tri2[1],tri2[2],i2)){       
+    if(geom::insideTriangle(tri2[0],tri2[1],tri2[2],i2)){ 
+      res.push_back(Eigen::Vector3d(i2[0],i2[1],i2[2]));      
       hppDout(notice,"second intersection : "<<"["<<i2[0]<<","<<i2[1]<<","<<i2[2]<<"]");
-      *ss<<"["<<i2[0]<<","<<i2[1]<<","<<i2[2]<<"],";                    
+      if(ss)
+        *ss<<"["<<i2[0]<<","<<i2[1]<<","<<i2[2]<<"],";                    
     }
+    return res;
+  }
+  
+  T_Point intersectPolygonePlane(BVHModelOBConst_Ptr_t polygone,BVHModelOBConst_Ptr_t model2, fcl::Vec3f n , double t, fcl::CollisionResult result){
+    T_Point res,triRes,sortedRes;
+    std::ostringstream ss;
+    ss<<"[";
+    
+    hppDout(notice,"here");
+    
+    for(size_t c = 0 ; c < result.numContacts() ; ++c){
+      hppDout(notice,"normal = "<<result.getContact(c).normal);
+      if(result.getContact(c).normal.equal(-n,EPSILON)){ // only compute intersection for contact with the plane
+        // need the -n because .normal are oriented from o1 to o2
+        int i = result.getContact(c).b1;  // triangle index
+        int j = result.getContact(c).b2;
+        
+        hppDout(notice,"for");
+        
+        fcl::Vec3f tri[3] = {polygone->vertices[polygone->tri_indices[i][0]],polygone->vertices[polygone->tri_indices[i][1]],polygone->vertices[polygone->tri_indices[i][2]]};
+        fcl::Vec3f tri2[3] = {model2->vertices[model2->tri_indices[j][0]],model2->vertices[model2->tri_indices[j][1]],model2->vertices[model2->tri_indices[j][2]]}; 
+        hppDout(notice,"tri");
+        fcl::Vec3f n2=0;
+        fcl::FCL_REAL t2=0;
+        fcl::Intersect::buildTrianglePlane(tri2[0],tri2[1],tri2[2], &n2, &t2);
+        hppDout(notice,"n = "<<n2);
+        hppDout(notice,"t = "<<t2);
+        hppDout(notice,"plan");        
+        if(n2.equal(n,EPSILON) && (t2 + EPSILON >= t ) && (t2-EPSILON <= t )){
+          hppDout(notice,"if");
+          triRes = intersectTriangles(tri,tri2);
+          res.insert(res.end(),triRes.begin(),triRes.end());
+          triRes = intersectTriangles(tri2,tri);
+          res.insert(res.end(),triRes.begin(),triRes.end());
+          hppDout(notice,"inter");
+
+          
+        }
+      }
+      
+    } // for each contact point
+    hppDout(notice,"end for");
+    if(res.empty()){
+      hppDout(notice,"~ Intersection between polygon and plane is empty");
+      return res;
+    }
+    sortedRes = convexHull(res.begin(),res.end());
+    hppDout(notice,"clipped point : ");        
+    for(size_t i = 0; i < sortedRes.size() ; ++i){
+      ss<<"["<<sortedRes[i][0]<<","<<sortedRes[i][1]<<","<<sortedRes[i][2]<<"]";
+      if(i< (sortedRes.size() -1))
+        ss<<",";
+    }
+    ss<<"]";
+    std::cout<<ss.str()<<std::endl;
+    return sortedRes;
   }
   
 } //namespace geom
