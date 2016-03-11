@@ -18,7 +18,7 @@
 #include <hpp/fcl/collision.h>
 #include <hpp/fcl/BVH/BVH_model.h>
 #include <hpp/rbprm/rbprm-validation-report.hh>
-
+#include "utils/algorithms.h"
 
 namespace hpp {
   using namespace core;
@@ -59,8 +59,21 @@ namespace hpp {
       }else{
         validationReport = romReport;
       }
+
+      // test min area of contact
+     /* if(collision){
+         geom::BVHModelOBConst_Ptr_t model1 =  geom::GetModel(colReport->object1->fcl());
+         geom::BVHModelOBConst_Ptr_t model2 =  geom::GetModel(colReport->object2->fcl());
+         geom::T_Point intersection = geom::intersectPolygonePlane(model1,model2,filter_.normal_,0,colReport->result,false,filter_.range_);
+         double a = geom::area(intersection.begin(),intersection.end());
+         if(a <= 0.1)
+           collision = false;
+       }*/
+
+
       return collision;
     }
+
 
   }// namespace rbprm
 }// namespace hpp

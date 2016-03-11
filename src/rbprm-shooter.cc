@@ -23,7 +23,6 @@
 #include <hpp/core/collision-validation.hh>
 #include <Eigen/Geometry>
 
-
 namespace hpp {
 using namespace core;
 using namespace fcl;

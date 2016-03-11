@@ -41,7 +41,6 @@
 #include <hpp/fcl/collision_data.h>
 #include <hpp/fcl/intersect.h>
 #include "utils/algorithms.h"
-#include "utils/conversions.h"
 
 namespace hpp {
   namespace rbprm {
@@ -760,8 +759,10 @@ namespace hpp {
         ////////// end 2D code ///////////
         
         // direct call to fcl (doesn't work)
+        hppStartBenchmark (COMPUTE_INTERSECTION);
         geom::intersectPolygonePlane(model1,model2,fcl::Vec3f(0,0,1),geom::ZJUMP,result);
-
+        hppStopBenchmark (COMPUTE_INTERSECTION);
+        hppDisplayBenchmark (COMPUTE_INTERSECTION);
         
 
         
