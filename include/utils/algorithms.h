@@ -100,6 +100,16 @@ namespace geom
   /// \param pointsBegin, pointsEnd iterators to first and last points of a set
   CIT_Point leftMost(CIT_Point pointsBegin, CIT_Point pointsEnd);
   
+  
+  /**
+   * @brief area compute the area of a 2D polygon
+   * @param pointsBegin
+   * @param pointsEnd
+   * @return 
+   */
+  double area(CIT_Point pointsBegin, CIT_Point pointsEnd);
+  
+  
   /**
    * @brief distanceToPlane Distance point plan
    * @param n plan's normal
@@ -184,6 +194,30 @@ namespace geom
       ++current;
     }
     return res;
+  }
+  
+  double area(CIT_Point pointsBegin, CIT_Point pointsEnd){
+    double a = 0;
+    
+    /*for( size_t i = 1; i <= N; ++i )
+      area += x[i]*( y[i+1] - y[i-1] );
+    area /= 2;
+     with 
+    x[N] = x[0];
+    x[N+1] = x[1];
+    y[N] = y[0];
+    y[N+1] = y[1];
+    */
+    
+    
+    for( CIT_Point it = pointsBegin + 1 ; it != pointsEnd - 1 ; ++it){
+      a += (*it)[0]*( (*(it+1))[1] - (*(it-1))[1] );
+      hppDout(notice,"for");
+    }
+    a += (*(pointsEnd-1))[0]*( (*(pointsBegin+1))[1] - (*(pointsEnd-2))[1] );
+    hppDout(notice,"for");    
+    a /= 2;
+    return fabs(a);
   }
   
   void projectZ(IT_Point pointsBegin, IT_Point pointsEnd){
@@ -525,6 +559,7 @@ namespace geom
     }
     ss<<"]";
     std::cout<<ss.str()<<std::endl;
+    hppDout(notice,"area = "<<area(sortedRes.begin(),sortedRes.end()));
     return sortedRes;
   }
   
