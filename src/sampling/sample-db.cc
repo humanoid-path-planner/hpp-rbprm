@@ -192,7 +192,7 @@ SampleDB& hpp::rbprm::sampling::addValue(SampleDB& database, const std::string& 
         T_Double values; values.reserve(database.samples_.size());
         for(T_Sample::iterator it = database.samples_.begin(); it != database.samples_.end(); ++it)
         {
-            double val = eval(*it);
+            double val = eval(database, *it);
             values.push_back(val);
             if(isStaticValue)
                 it->staticValue_ = val;

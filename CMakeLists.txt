@@ -72,6 +72,7 @@ SET(${PROJECT_NAME}_HEADERS
     include/hpp/rbprm/sampling/sample.hh
     include/hpp/rbprm/sampling/sample-db.hh
     include/hpp/rbprm/sampling/heuristic.hh
+    include/hpp/rbprm/sampling/analysis.hh
     include/hpp/rbprm/stability/stability.hh
     include/hpp/rbprm/stability/support.hh
     include/hpp/rbprm/tools.hh

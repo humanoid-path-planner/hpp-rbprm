@@ -66,10 +66,10 @@ namespace hpp {
 
 
     /// Defines an evaluation function for a sample.
+    /// \param SampleDB used database with already computed values
     /// \param sample sample candidate
-    /// \param direction overall direction of motion
     /// \param normal contact surface normal relatively to the candidate
-    typedef double (*evaluate) (const sampling::Sample& sample);
+    typedef double (*evaluate) (const SampleDB& sampleDB, const sampling::Sample& sample);
     typedef std::map<std::string, evaluate> T_evaluate;
     //first sample index, number of samples
     typedef std::pair<std::size_t, std::size_t> VoxelSampleId;
