@@ -68,6 +68,21 @@ Sample::Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, c
     // NOTHING
 }
 
+Sample::Sample(const std::size_t id, const std::size_t length, const std::size_t startRank, const double staticValue,
+               const fcl::Vec3f& effectorPosition, const model::ConfigurationIn_t configuration, const Eigen::MatrixXd& jacobian,
+               const Eigen::Matrix <model::value_type, 6, 6>& jacobianProduct)
+    : startRank_(startRank)
+    , length_ (length)
+    , configuration_ (configuration)
+    , effectorPosition_(effectorPosition)
+    , jacobian_(jacobian)
+    , jacobianProduct_(jacobianProduct)
+    , id_(id)
+    , staticValue_(staticValue)
+{
+    // NOTHING
+}
+
 Sample::Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, model::ConfigurationIn_t configuration,  const fcl::Vec3f& offset, std::size_t id)
     : startRank_(limb->rankInConfiguration())
     , length_ (ComputeLength(limb, effector))

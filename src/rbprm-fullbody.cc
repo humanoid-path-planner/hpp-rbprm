@@ -75,64 +75,82 @@ namespace hpp {
         return factory_.AddHeuristic(name, func);
     }
 
+
+    void RbPrmFullBody::AddLimbPrivate(rbprm::RbPrmLimbPtr_t limb, const std::string& id, const std::string& name,
+                        const model::ObjectVector_t &collisionObjects)
+    {
+        core::CollisionValidationPtr_t limbcollisionValidation_ = core::CollisionValidation::create(this->device_);
+        // adding collision validation
+        for(model::ObjectVector_t::const_iterator cit = collisionObjects.begin();
+            cit != collisionObjects.end(); ++cit)
+        {
+            if(limbs_.empty())
+            {
+                collisionValidation_->addObstacle(*cit);
+            }
+            limbcollisionValidation_->addObstacle(*cit);
+            //remove effector collision
+            model::JointPtr_t collisionFree = limb->effector_;
+            while(collisionFree)
+            {
+                collisionValidation_->removeObstacleFromJoint(collisionFree, *cit);
+                limbcollisionValidation_->removeObstacleFromJoint(collisionFree,*cit);
+                collisionFree = collisionFree->numberChildJoints()>0 ? collisionFree->childJoint(0) : 0;
+            }
+        }
+        limbs_.insert(std::make_pair(id, limb));
+        RemoveNonLimbCollisionRec(device_->rootJoint(),name,collisionObjects,limbcollisionValidation_);
+        limbcollisionValidations_.insert(std::make_pair(id, limbcollisionValidation_));
+        // insert limb to root group
+        T_LimbGroup::iterator cit = limbGroups_.find(name);
+        if(cit != limbGroups_.end())
+        {
+            cit->second.push_back(id);
+        }
+        else
+        {
+            std::vector<std::string> group;
+            group.push_back(id);
+            limbGroups_.insert(std::make_pair(name, group));
+        }
+    }
+
+    std::map<std::string, const sampling::heuristic>::const_iterator checkLimbData(const std::string& id, const rbprm::T_Limb& limbs, const rbprm::sampling::HeuristicFactory& factory, const std::string& heuristicName)
+    {
+        rbprm::T_Limb::const_iterator cit = limbs.find(id);
+        std::map<std::string, const sampling::heuristic>::const_iterator hit = factory.heuristics_.find(heuristicName);
+        if(cit != limbs.end())
+            throw std::runtime_error ("Impossible to add limb for joint "
+                                      + id + " to robot; limb already exists");
+        else if(hit == factory.heuristics_.end())
+            throw std::runtime_error ("Impossible to add limb for joint "
+                                      + id + " to robot; heuristic not found " + heuristicName +".");
+        return hit;
+    }
+
     void RbPrmFullBody::AddLimb(const std::string& id, const std::string& name, const std::string &effectorName,
                                 const fcl::Vec3f &offset,const fcl::Vec3f &normal, const double x,
                                 const double y,
                                 const model::ObjectVector_t &collisionObjects, const std::size_t nbSamples, const std::string &heuristicName, const double resolution,
                                 ContactType contactType)
     {
-        rbprm::T_Limb::const_iterator cit = limbs_.find(id);
-        std::map<std::string, const sampling::heuristic>::const_iterator hit = factory_.heuristics_.find(heuristicName);
-        if(cit != limbs_.end())
-        {
-            throw std::runtime_error ("Impossible to add limb for joint "
-                                      + id + " to robot; limb already exists");
-        }
-        else if(hit == factory_.heuristics_.end())
-        {
-            throw std::runtime_error ("Impossible to add limb for joint "
-                                      + id + " to robot; heuristic not found " + heuristicName +".");
-        }
-        else
-        {
-            model::JointPtr_t joint = device_->getJointByName(name);
-            rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(joint, effectorName, offset,normal,x,y, nbSamples, hit->second, resolution,contactType);
-            core::CollisionValidationPtr_t limbcollisionValidation_ = core::CollisionValidation::create(this->device_);
-            // adding collision validation
-            for(model::ObjectVector_t::const_iterator cit = collisionObjects.begin();
-                cit != collisionObjects.end(); ++cit)
-            {
-                if(limbs_.empty())
-                {
-                    collisionValidation_->addObstacle(*cit);
-                }
-                limbcollisionValidation_->addObstacle(*cit);
-                //remove effector collision
-                model::JointPtr_t collisionFree = limb->effector_;
-                while(collisionFree)
-                {
-                    collisionValidation_->removeObstacleFromJoint(collisionFree, *cit);
-                    limbcollisionValidation_->removeObstacleFromJoint(collisionFree,*cit);
-                    collisionFree = collisionFree->numberChildJoints()>0 ? collisionFree->childJoint(0) : 0;
-                }
-            }
-            limbs_.insert(std::make_pair(id, limb));
-            RemoveNonLimbCollisionRec(device_->rootJoint(),name,collisionObjects,limbcollisionValidation_);
-            limbcollisionValidations_.insert(std::make_pair(id, limbcollisionValidation_));
-            // insert limb to root group
-            T_LimbGroup::iterator cit = limbGroups_.find(name);
-            if(cit != limbGroups_.end())
-            {
-                cit->second.push_back(id);
-            }
-            else
-            {
-                std::vector<std::string> group;
-                group.push_back(id);
-                limbGroups_.insert(std::make_pair(name, group));
-            }
+        std::map<std::string, const sampling::heuristic>::const_iterator hit = checkLimbData(id, limbs_,factory_,heuristicName);
+        model::JointPtr_t joint = device_->getJointByName(name);
+        rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(joint, effectorName, offset,normal,x,y, nbSamples, hit->second, resolution,contactType);
+        AddLimbPrivate(limb, id, name,collisionObjects);
+    }
 
-        }
+    void RbPrmFullBody::AddLimb(const std::string& database, const std::string& id,
+                                const model::ObjectVector_t &collisionObjects,
+                                const std::string& heuristicName)
+    {
+        std::map<std::string, const sampling::heuristic>::const_iterator hit = checkLimbData(id, limbs_,factory_,heuristicName);;
+        std::ifstream myfile (database.c_str());
+        if (!myfile.good())
+            throw std::runtime_error ("Impossible to open database");
+        rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(device_, myfile, hit->second);
+        myfile.close();
+        AddLimbPrivate(limb, id, limb->limb_->name(),collisionObjects);
     }
 
     void RbPrmFullBody::init(const RbPrmFullBodyWkPtr_t& weakPtr)

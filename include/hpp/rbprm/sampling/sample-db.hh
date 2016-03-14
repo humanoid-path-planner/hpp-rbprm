@@ -82,6 +82,7 @@ namespace hpp {
     class HPP_RBPRM_DLLAPI SampleDB
     {
     public:
+         SampleDB(std::ifstream& databaseStream);
          SampleDB(const model::JointPtr_t limb, const std::string& effector, const std::size_t nbSamples,
                   const fcl::Vec3f& offset= fcl::Vec3f(0,0,0), const double resolution = 0.1, const T_evaluate& data = T_evaluate(), const std::string& staticValue ="");
         ~SampleDB();
@@ -91,23 +92,23 @@ namespace hpp {
          const SampleDB& operator=(const SampleDB&);
 
     public:
-        const double resolution_;
+        double resolution_;
         T_Sample samples_;
-        const boost::shared_ptr<const octomap::OcTree> octomapTree_;
+        boost::shared_ptr<const octomap::OcTree> octomapTree_;
         fcl::OcTree* octree_; // deleted with geometry_
-        const boost::shared_ptr<fcl::CollisionGeometry> geometry_;
+        boost::shared_ptr<fcl::CollisionGeometry> geometry_;
         T_Values values_;
         T_VoxelSampleId samplesInVoxels_;
         /// fcl collision object used for collisions with environment
-        const fcl::CollisionObject treeObject_;
+        fcl::CollisionObject treeObject_;
         /// Bounding boxes of areas of interest of the octree
-        const std::map<std::size_t, fcl::CollisionObject*> boxes_;
+        std::map<std::size_t, fcl::CollisionObject*> boxes_;
+
 
     }; // class SampleDB
 
     HPP_RBPRM_DLLAPI SampleDB& addValue(SampleDB& database, const std::string& valueName, const evaluate eval, bool isStaticValue=true, bool sortSamples=true);
-    HPP_RBPRM_DLLAPI SampleDB loadLimbDatabase(const std::string& limbId, const std::string& dbFileName);
-    HPP_RBPRM_DLLAPI bool saveLimbDatabase(const SampleDB& database, const std::string& dbFileName);
+    HPP_RBPRM_DLLAPI bool saveLimbDatabase(const SampleDB& database, std::ofstream& dbFile);
 
     /// Given the current position of a robot, returns a set
     /// of candidate sample configurations for contact generation.

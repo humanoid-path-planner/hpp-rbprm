@@ -28,7 +28,26 @@ namespace hpp {
   /// Uses Rodriguez formula to find transformation between two vectors.
   Eigen::Matrix3d GetRotationMatrix(const Eigen::Vector3d& from, const Eigen::Vector3d& to);
   fcl::Matrix3f GetRotationMatrix(const fcl::Vec3f& from, const fcl::Vec3f& to);
-  } // namespace rbprm
+
+  ///Some io tools for serialization
+  namespace io
+  {
+      double StrToD (const std::string &str);
+      int StrToI (const std::string &str);
+      double StrToD (std::ifstream& input);
+      int    StrToI (std::ifstream& input);
+      std::vector<std::string> splitString(const std::string& s, const char sep);
+      void writeMatrix      (const Eigen::MatrixXd& mat, std::ostream& output);
+      void writeVecFCL      (const fcl::Vec3f& vec     , std::ostream& output);
+      void writeRotMatrixFCL(const fcl::Matrix3f& mat  , std::ostream& output);
+      Eigen::MatrixXd readMatrix      (std::ifstream& myfile);
+      fcl::Matrix3f   readRotMatrixFCL(std::ifstream& myfile);
+      fcl::Vec3f      readVecFCL      (std::ifstream& myfile);
+      Eigen::MatrixXd readMatrix      (std::ifstream& myfile, std::string& line);
+      fcl::Matrix3f   readRotMatrixFCL(std::ifstream& myfile, std::string& line);
+      fcl::Vec3f      readVecFCL      (std::ifstream& myfile, std::string& line);
+  } // namespace io
+  } // namespace tools
 } // namespace hpp
 
 #endif // HPP_RBPRM_TOOLS_HH

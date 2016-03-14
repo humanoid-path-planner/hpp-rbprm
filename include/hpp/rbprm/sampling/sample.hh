@@ -46,6 +46,11 @@ namespace hpp {
         /// \param id optional identifier for the sample
         Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, const fcl::Vec3f& offset = fcl::Vec3f(0,0,0),  const std::size_t id =0);
 
+
+        Sample(const std::size_t id, const std::size_t length, const std::size_t startRank, const double staticValue,
+               const fcl::Vec3f& effectorPosition, const model::ConfigurationIn_t configuration, const Eigen::MatrixXd& jacobian,
+               const Eigen::Matrix <model::value_type, 6, 6>& jacobianProduct);
+
         /// Creates sample configuration for a limb, extracted from a complete robot configuration, passed as a parameter
         /// \param limb root of the considered limb
         /// \param the configuration from which the limb sample will be extracted

@@ -6,6 +6,12 @@
 #include <hpp/fcl/collision.h>
 #include <hpp/fcl/BVH/BVH_model.h>
 
+#include <hpp/rbprm/tools.hh>
+
+#include <iostream>
+#include <fstream>
+#include <string>
+
 using namespace hpp;
 using namespace hpp::model;
 using namespace hpp::rbprm;
@@ -80,6 +86,7 @@ namespace
                 sit != sampleIds.end(); ++sit   )
             {
                 reorderedSamples.push_back(db.samples_[*sit]);
+                reorderedSamples.back().id_ = currentNewIndex;
                 realignOrderIds.push_back(*sit);
                 ++currentNewIndex;
             }
@@ -153,7 +160,6 @@ SampleDB::SampleDB(const model::JointPtr_t limb, const std::string& effector,
     sortDB(*this);
 }
 
-
 SampleDB::~SampleDB()
 {
    for (std::map<std::size_t, fcl::CollisionObject*>::const_iterator it = boxes_.begin();
@@ -197,16 +203,6 @@ SampleDB& hpp::rbprm::sampling::addValue(SampleDB& database, const std::string& 
     }
     return database;
 }
-
-/*SampleDB hpp::rbprm::sampling::loadLimbDatabase(const std::string& limbId, const std::string& dbFileName)
-{
-
-}
-
-bool hpp::rbprm::sampling::saveLimbDatabase(const SampleDB& database, const std::string& dbFileName)
-{
-
-}*/
 
 // TODO Samples should be Vec3f
 bool rbprm::sampling::GetCandidates(const SampleDB& sc, const fcl::Transform3f& treeTrf,
@@ -266,3 +262,114 @@ rbprm::sampling::T_OctreeReport rbprm::sampling::GetCandidates(const SampleDB& s
     return report;
 }
 
+using std::ostringstream;
+using namespace tools::io;
+
+void writeSample(const Sample& sample, std::ostream& output)
+{
+    output << "sample" << std::endl;
+    output << sample.id_<< std::endl;
+    output << sample.length_ << std::endl;
+    output << sample.startRank_ << std::endl;
+    output << sample.staticValue_ << std::endl;
+    writeVecFCL(sample.effectorPosition_,output);
+    output << std::endl;
+    writeMatrix(sample.configuration_,output);
+    output << std::endl;
+    writeMatrix(sample.jacobian_,output);
+    output << std::endl;
+    writeMatrix(sample.jacobianProduct_,output);
+    output << std::endl;
+}
+
+void writeSamples(const SampleDB& database, std::ostream& output)
+{
+    for(T_Sample::const_iterator cit = database.samples_.begin(); cit != database.samples_.end(); ++cit)
+    {
+        writeSample(*cit, output);
+    }
+}
+
+void writeValues(const SampleDB& database, std::ostream& output)
+{
+    for(T_Values::const_iterator cit = database.values_.begin(); cit != database.values_.end(); ++cit)
+        {
+        output << "value" << std::endl << cit->first << std::endl;
+        for(T_Double::const_iterator dit = cit->second.begin(); dit != cit->second.end(); ++dit)
+        {
+            output << *dit << std::endl;
+        }
+        output <<  std::endl;
+    }
+}
+
+Sample readSample(std::ifstream& myfile, std::string& line)
+{
+    std::size_t id, length, startRank;
+    double staticValue;
+    fcl::Vec3f effpos;
+    Eigen::VectorXd conf;
+    Eigen::MatrixXd jav, ajcprod;
+    id = StrToI(myfile);
+    length = StrToI(myfile);
+    startRank = StrToI(myfile);
+    staticValue = StrToD(myfile);
+    effpos = readVecFCL(myfile, line);
+    conf = readMatrix(myfile,line);
+    jav = readMatrix(myfile,line);
+    ajcprod = readMatrix(myfile,line);
+    return Sample(id, length, startRank, staticValue, effpos, conf,jav,ajcprod);
+}
+
+void readValue(T_Values& values, const std::size_t& size, std::ifstream& myfile, std::string& line)
+{
+    getline(myfile, line); //name
+    std::string valueName = line;
+    T_Double vals; vals.reserve(size);
+    for(std::size_t i =0; i<size;++i)
+    {
+        getline(myfile, line);
+        vals.push_back(StrToD(line));
+    }
+    values.insert(std::make_pair(valueName,vals));
+}
+
+
+bool hpp::rbprm::sampling::saveLimbDatabase(const SampleDB& database, std::ofstream& fp)
+{
+    fp << database.samples_.size() << std::endl;
+    fp << database.resolution_ << std::endl;
+    writeSamples(database,fp);
+    writeValues(database,fp);
+    return true;
+}
+
+SampleDB::SampleDB(std::ifstream& myfile)
+    : treeObject_(boost::shared_ptr<CollisionGeometry> (new fcl::Box (1, 1, 1)))
+{
+    if (!myfile.good())
+        throw std::runtime_error ("Impossible to open database");
+    if (myfile.is_open())
+    {
+        std::string line;
+        getline(myfile, line);
+        std::size_t size = StrToI(line);
+        samples_.reserve(size);
+        getline(myfile, line);
+        resolution_ = StrToD(line);
+        while (myfile.good())
+        {
+            getline(myfile, line);
+            if(line.find("sample") != std::string::npos)
+                samples_.push_back(readSample(myfile, line));
+            else if(line.find("value") != std::string::npos)
+                readValue(values_,size,myfile,line);
+        }
+    }
+    octomapTree_ = boost::shared_ptr<const octomap::OcTree>(generateOctree(samples_, resolution_));
+    octree_ = new fcl::OcTree(octomapTree_);
+    geometry_ = boost::shared_ptr<fcl::CollisionGeometry>(octree_);
+    treeObject_ = fcl::CollisionObject(geometry_);
+    boxes_ = generateBoxesFromOctomap(octomapTree_, octree_);
+    alignSampleOrderWithOctree(*this);
+}

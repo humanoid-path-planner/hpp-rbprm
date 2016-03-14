@@ -74,6 +74,20 @@ namespace hpp {
                      const std::size_t nbSamples, const std::string& heuristic = "static", const double resolution = 0.03,
                      ContactType contactType = _6_DOF);
 
+        /// Creates a Limb for the robot,
+        /// identified by its name. Stores a sample
+        /// container, used for requests
+        ///
+        /// \param database: path to the sample database used for the limbs
+        /// \param id: user defined id for the limb. Must be unique.
+        /// The id is used if several contact points are defined for the same limb (ex: the knee and the foot)
+        /// \param collisionObjects objects to be considered for collisions with the limb. TODO remove
+        /// structure to perform efficient proximity requests. The resulution of the octree, in meters, specifies the size
+        /// of the unit voxel of the octree. The larger they are, the more samples will be considered as candidates for contact.
+        /// This can be problematic in terms of performance. The default value is 3 cm.
+        void AddLimb(const std::string& database, const std::string& id, const model::ObjectVector_t &collisionObjects,
+                      const std::string& heuristicName);
+
         /// Add a new heuristic for biasing sample candidate selection
         ///
         /// \param name: name used to identify the heuristic
@@ -96,6 +110,9 @@ namespace hpp {
         T_LimbGroup limbGroups_;
         sampling::HeuristicFactory factory_;
 
+    private:
+        void AddLimbPrivate(rbprm::RbPrmLimbPtr_t limb, const std::string& id, const std::string& name,
+                            const model::ObjectVector_t &collisionObjects);
 
     protected:
       RbPrmFullBody (const model::DevicePtr_t &device);
