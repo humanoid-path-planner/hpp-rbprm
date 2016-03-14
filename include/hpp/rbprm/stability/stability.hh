@@ -22,7 +22,6 @@
 #include <hpp/model/device.hh>
 #include <hpp/rbprm/rbprm-state.hh>
 #include <hpp/rbprm/rbprm-fullbody.hh>
-#include "polytope/stability_margin.h"
 
 #include <map>
 #include <memory>
@@ -32,8 +31,6 @@ namespace hpp {
   namespace rbprm {
   namespace stability{
 
-    const polytope::ProjectedCone* computeCone(const RbPrmFullBodyPtr_t fullbody, const State& state);
-
     /// Using the polytope computation of the gravito inertial wrench cone, performs
     /// a static equilibrium test on the robot.
     ///
@@ -41,16 +38,6 @@ namespace hpp {
     /// \param state The current State of the robots, in terms of contact creation
     /// \return Whether the configuration is statically balanced
     double IsStable(const RbPrmFullBodyPtr_t fullbody, State& state);
-
-    /// Using the convex hull of the contact points, performs a static equilibrium test on the robot.
-    /// This test is much faster than the polytope projection, but only accurate of contacts are coplanar,
-    /// or sufficient (not necessary) if the friction cones of the contact include the gravity.
-    ///
-    /// \param fullbody The considered robot for static equilibrium
-    /// \param state The current State of the robots, in terms of contact creation
-    /// \return Whether the configuration is statically balanced
-    double IsStablePoly(const RbPrmFullBodyPtr_t fullbody, State& state);
-
   } // namespace stability
 } // namespace rbprm
 } // namespace hpp
