@@ -22,7 +22,6 @@
 #include <hpp/model/joint.hh>
 #include <hpp/rbprm/tools.hh>
 
-#include "polytope/stability_margin.h"
 #include <robust-equilibrium-lib/static_equilibrium.hh>
 
 #include <Eigen/Dense>
@@ -44,8 +43,6 @@ using namespace robust_equilibrium;
 namespace hpp {
 namespace rbprm {
 namespace stability{
-
-    const polytope::vector3_t gravity(0,0,-9.81);
 
     void computeRectangleContact(const RbPrmLimbPtr_t limb, Ref_matrix43 p)
     {
@@ -118,116 +115,6 @@ namespace stability{
             return -std::numeric_limits<double>::max();
         }
         return res ;
-    }
-
-    //old polytope dd method
-   /* bool IsStable(const RbPrmFullBodyPtr_t fullbody, State& state)
-    {
-        if(!init)
-        {
-            polytope::init_library();
-            init = true;
-        }
-        std::vector<std::string> contacts;
-        for(std::map<std::string,bool>::const_iterator cit = state.contacts_.begin();
-            cit!=state.contacts_.end(); ++ cit)
-        {
-            if(cit->second) contacts.push_back(cit->first);
-        }
-        const std::size_t nbContacts = contacts.size();
-        hpp::model::ConfigurationIn_t save = fullbody->device_->currentConfiguration();
-        fullbody->device_->currentConfiguration(state.configuration_);
-        fullbody->device_->computeForwardKinematics();
-        polytope::T_rotation_t rotations(nbContacts*3, 3);
-        polytope::vector_t positions(nbContacts*3);
-        polytope::vector_t frictions(nbContacts);
-        polytope::vector_t xs(nbContacts);
-        polytope::vector_t ys(nbContacts);
-        for(std::size_t c = 0; c< nbContacts; ++c)
-        {
-            const RbPrmLimbPtr_t limb =fullbody->GetLimbs().at(contacts[c]);
-            const fcl::Transform3f& transform = limb->effector_->currentTransformation();
-            //fcl::Matrix3f rotationInWorldCoordinates = limb->effectorDefaultRotation_;
-            //rotationInWorldCoordinates.transpose();
-            //fcl::Matrix3f tg = rotationInWorldCoordinates * transform.getRotation();
-            //rotationInWorldCoordinates = transform.getRotation() * rotationInWorldCoordinates;
-            fcl::Vec3f z(0,0,1);
-            const fcl::Matrix3f alignRotation = tools::GetRotationMatrix(z,state.contactNormals_.at(contacts[c]));
-            for(int i = 0; i<3; ++i)
-            {
-                for(int j =0; j<3; ++j)
-                {
-                    rotations(i+3*c,j) = alignRotation(i,j);
-                }
-                positions(i+3*c) = transform.getTranslation()[i];
-            }
-            frictions(c) = 0.5; // TODO parametrize
-            xs(c) = limb->x_;
-            ys(c) = limb->y_;
-        }
-
-        const polytope::ProjectedCone* cone = polytope::U_stance(rotations,positions,frictions,xs,ys); //,true,2);
-        if(cone)
-        {
-            polytope::vector3_t com;
-            const fcl::Vec3f comfcl = fullbody->device_->positionCenterOfMass();
-            state.com_ = comfcl;
-            for(int i=0; i< 3; ++i) com(i)=comfcl[i];
-            bool res = cone->IsValid(com,gravity,fullbody->device_->mass()) && cone->A.rows() >1;
-            delete cone;
-            fullbody->device_->currentConfiguration(save);
-            return res;
-        }
-        else
-        {
-            std::cout << "no cone" << std::endl;
-            return true;
-        }
-        fullbody->device_->currentConfiguration(save);
-        return false;
-    }*/
-
-    double IsStablePoly(const RbPrmFullBodyPtr_t fullbody, State& state)
-    {
-        std::vector<std::string> contacts;
-        for(std::map<std::string,bool>::const_iterator cit = state.contacts_.begin();
-            cit!=state.contacts_.end(); ++ cit)
-        {
-            if(cit->second) contacts.push_back(cit->first);
-        }
-        const std::size_t nbContacts = contacts.size();
-        hpp::model::ConfigurationIn_t save = fullbody->device_->currentConfiguration();
-        fullbody->device_->currentConfiguration(state.configuration_);
-        model::Device::Computation_t flag = fullbody->device_->computationFlag ();
-        model::Device::Computation_t newflag = static_cast <model::Device::Computation_t> (model::Device::JOINT_POSITION | model::Device::COM);
-        fullbody->device_->controlComputation (newflag);
-        fullbody->device_->computeForwardKinematics ();
-        polytope::T_rotation_t rotations(nbContacts*3, 3);
-        polytope::vector_t positions(nbContacts*3);
-        polytope::vector_t xs(nbContacts);
-        polytope::vector_t ys(nbContacts);
-        for(std::size_t c = 0; c< nbContacts; ++c)
-        {
-            const RbPrmLimbPtr_t limb =fullbody->GetLimbs().at(contacts[c]);
-            const fcl::Transform3f& transform = limb->effector_->currentTransformation();
-rotations.block<3,3>(3*c,0) = Eigen::Matrix3d::Identity();
-            for(int i = 0; i<3; ++i)
-            {
-                /*for(int j =0; j<3; ++j)
-                {
-                    rotations(i+3*c,j) = transform.getRotation()(i,j);
-                }*/
-                positions(i+3*c) = transform.getTranslation()[i];
-            }
-            xs(c) = limb->x_;
-            ys(c) = limb->y_;
-        }
-        polytope::vector3_t com;
-        const fcl::Vec3f comfcl = fullbody->device_->positionCenterOfMass();
-        for(int i=0; i< 3; ++i) com(i)=comfcl[i];
-        fullbody->device_->currentConfiguration(save);
-        fullbody->device_->controlComputation (flag);
-        return Contains(positions,com,xs,ys) ? 1 : -1;
     }
 }
 }
