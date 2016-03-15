@@ -21,6 +21,7 @@
 
 #include <hpp/rbprm/sampling/sample.hh>
 #include <hpp/rbprm/sampling/sample-db.hh>
+#include <hpp/rbprm/rbprm-fullbody.hh>
 
 #include <map>
 
@@ -30,15 +31,15 @@ namespace hpp {
   namespace rbprm {
   namespace sampling{
 
-  struct AnalysisFactory
+  struct HPP_RBPRM_DLLAPI AnalysisFactory
   {
-       AnalysisFactory();
+       AnalysisFactory(hpp::rbprm::RbPrmFullBodyPtr_t device);
       ~AnalysisFactory();
 
        bool AddAnalysis(const std::string& name, const evaluate func);
        T_evaluate evaluate_;
+       rbprm::RbPrmFullBodyPtr_t device_;
   };
-
   } // namespace sampling
 } // namespace rbprm
 } // namespace hpp

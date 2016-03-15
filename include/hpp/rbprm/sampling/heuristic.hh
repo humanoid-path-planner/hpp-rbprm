@@ -42,7 +42,7 @@ namespace hpp {
   /// Defines a set of existing heuristics for biasing the sample candidate selection
   ///
   /// This class defines two heuristics by default. "EFORT" and "manipulability".
-  struct HeuristicFactory
+  struct HPP_RBPRM_DLLAPI HeuristicFactory
   {
        HeuristicFactory();
       ~HeuristicFactory();

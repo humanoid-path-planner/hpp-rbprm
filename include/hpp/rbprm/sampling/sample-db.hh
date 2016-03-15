@@ -69,13 +69,13 @@ namespace hpp {
     /// \param SampleDB used database with already computed values
     /// \param sample sample candidate
     /// \param normal contact surface normal relatively to the candidate
-    typedef double (*evaluate) (const SampleDB& sampleDB, const sampling::Sample& sample);
+    //typedef double (*evaluate) (const SampleDB& sampleDB, const sampling::Sample& sample);
+    typedef boost::function <double (const SampleDB& sampleDB, const sampling::Sample& sample) > evaluate;
     typedef std::map<std::string, evaluate> T_evaluate;
     //first sample index, number of samples
     typedef std::pair<std::size_t, std::size_t> VoxelSampleId;
     typedef std::map<long int, VoxelSampleId> T_VoxelSampleId;
 
-    struct SampleDBPImpl;
     /// Sample configuration for a robot limb, stored
     /// in an octree and used for proximity requests for contact creation.
     /// assumes that joints are compact, ie they all are consecutive in configuration.
