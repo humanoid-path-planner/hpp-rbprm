@@ -189,7 +189,7 @@ SampleDB& hpp::rbprm::sampling::addValue(SampleDB& database, const std::string& 
     }
     else
     {
-        double maxValue = std::numeric_limits<double>::min() ;
+        double maxValue = -std::numeric_limits<double>::max() ;
         double minValue = std::numeric_limits<double>::max() ;
         T_Double values; values.reserve(database.samples_.size());
         for(T_Sample::iterator it = database.samples_.begin(); it != database.samples_.end(); ++it)

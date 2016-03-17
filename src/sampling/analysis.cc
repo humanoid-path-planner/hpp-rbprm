@@ -41,14 +41,27 @@ namespace
         const Eigen::VectorXd S = svdOfJ.singularValues();
         double min = std::numeric_limits<double>::max();
         double max = 0;
-        for(int i =0; i < 3;++i)
+        for(int i =0; i < S.rows();++i)
         {
             double v = S[i];
             if(v < min) min = v;
-            else if(v > max) max = v;
+            if(v > max) max = v;
         }
-        return  (max > 0) ? sqrt(min*min / max* max) : 0;
+        return  (max > 0) ? 1 - sqrt(1 - min*min / max* max) : 0;
     }    
+
+    double minSing(const SampleDB& /*sampleDB*/, const sampling::Sample& sample)
+    {
+        Eigen::JacobiSVD<Eigen::MatrixXd> svdOfJ(sample.jacobian_);
+        const Eigen::VectorXd S = svdOfJ.singularValues();
+        double min = std::numeric_limits<double>::max();
+        for(int i =0; i < S.rows();++i)
+        {
+            double v = S[i];
+            if(v < min) min = v;
+        }
+        return  min;
+    }
 
 
     struct FullBodyDB
@@ -111,15 +124,16 @@ namespace
         return (double)(totalNoCollisions) / (double)(totalSamples);
     }
 
-    void distanceRec(const sampling::Sample& sample, const std::string& lastJoint, model::JointPtr_t currentJoint, double& currentDistance)
+    void distanceRec(const ConfigurationIn_t conf, const std::string& lastJoint, model::JointPtr_t currentJoint, double& currentDistance)
     {
         model::size_type rk = currentJoint->rankInConfiguration();
         model::value_type lb = currentJoint->lowerBound(0), ub = currentJoint->upperBound(0);
-        model::value_type val = sample.configuration_[rk];
-        currentDistance *= (val - lb) * (ub - val) / ((ub - lb) * (ub - lb));
+        model::value_type val = conf[rk];
+        val= (val - lb) * (ub - val) / ((ub - lb) * (ub - lb));
+        currentDistance = std::min(currentDistance, val);
         if(lastJoint == currentJoint->name())
             return;
-        else return distanceRec(sample, lastJoint, currentJoint->childJoint(rk+1),currentDistance);
+        else return distanceRec(conf, lastJoint, currentJoint->childJoint(0),currentDistance);
     }
 
     double distanceToLimits(rbprm::RbPrmFullBodyPtr_t fullBody , const SampleDB& /*sampleDB*/, const sampling::Sample& sample)
@@ -136,15 +150,11 @@ namespace
             throw std::runtime_error ("Impossible to match sample with a limb");
         }
         model::DevicePtr_t device = fullBody->device_;
-        model::Configuration_t save(device->currentConfiguration()), conf = save;
-        double distance = -1;
+        model::Configuration_t conf(device->currentConfiguration());
+        double distance = 1; //std::numeric_limits<double>::max();
         sampling::Load(sample,conf);
-        device->currentConfiguration(conf);
-        device->computeForwardKinematics();
-        distanceRec(sample, cit->second->effector_->name(), cit->second->limb_, distance);
-        distance = 1 - exp(distance);
-        device->currentConfiguration(save);
-        device->computeForwardKinematics();
+        distanceRec(conf, cit->second->effector_->name(), cit->second->limb_, distance);
+        distance = 1 - exp(-5*distance);
         return distance;
     }
 }
@@ -155,6 +165,7 @@ AnalysisFactory::AnalysisFactory(hpp::rbprm::RbPrmFullBodyPtr_t device)
 {
     evaluate_.insert(std::make_pair("manipulability", &manipulability));
     evaluate_.insert(std::make_pair("isotropy", &isotropy));
+    evaluate_.insert(std::make_pair("minimumSingularValue", &minSing));
     evaluate_.insert(std::make_pair("selfCollisionProbability", boost::bind(&selfCollisionProbability, boost::ref(device_), _1, _2)));
     evaluate_.insert(std::make_pair("jointLimitsDistance", boost::bind(&distanceToLimits, boost::ref(device_), _1, _2)));
 }
