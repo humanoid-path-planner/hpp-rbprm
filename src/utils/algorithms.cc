@@ -81,8 +81,10 @@ namespace geom
       lastPoint = *pointsBegin;
       for(CIT_Point current = pointsBegin +1; current!= pointsEnd; ++current)
       {
-        if((lastPoint == pointOnHull) || (isLeft(pointOnHull, lastPoint,*current) > 0))
+        if((lastPoint == pointOnHull) || (isLeft(pointOnHull, lastPoint,*current) > 0)){
+          if( ( std::find(res.begin(),res.end(),*current) == res.end() ) || ((*current) == (*(res.begin()))))// only selected it if not on the list (or the first)
           lastPoint = *current;
+        }
       }
       res.insert(res.end(),pointOnHull);
       pointOnHull = lastPoint;
@@ -365,7 +367,7 @@ namespace geom
     
     
     for(size_t c = 0 ; c < result.numContacts() ; ++c){
-      hppDout(info,"normal = "<<result.getContact(c).normal);
+    //  hppDout(info,"normal = "<<result.getContact(c).normal);
       if(result.getContact(c).normal.equal(-n,epsilon)){ // only compute intersection for contact with the plane
         // need the -n because .normal are oriented from o1 to o2
         int i = result.getContact(c).b1;  // triangle index
@@ -377,8 +379,8 @@ namespace geom
         fcl::Vec3f n2=0;
         fcl::FCL_REAL t2=0;
         fcl::Intersect::buildTrianglePlane(tri2[0],tri2[1],tri2[2], &n2, &t2);
-        hppDout(info,"n = "<<n2);
-        hppDout(info,"t = "<<t2);
+      //  hppDout(info,"n = "<<n2);
+       // hppDout(info,"t = "<<t2);
         if(n2.equal(n,epsilon) && ((!useT) ||((t2 + EPSILON >= t ) && (t2-EPSILON <= t )))){
           triRes = intersectTriangles(tri,tri2);
           res.insert(res.end(),triRes.begin(),triRes.end());

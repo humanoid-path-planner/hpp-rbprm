@@ -202,7 +202,8 @@ namespace hpp {
       // Pick a random node
       hppDout(notice,"# random shoot begin");
       core::ConfigurationPtr_t q_rand = configurationShooter_->shoot ();
-      hppDout(notice,"# random shoot OK");
+      hppDout(notice,"# random shoot OK : ");
+      hppDout(notice,displayConfig(*q_rand));
       
       
       //
