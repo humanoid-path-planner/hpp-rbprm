@@ -83,13 +83,15 @@ namespace
         {
             core::BasicConfigurationShooterPtr_t shooter = core::BasicConfigurationShooter::create(device);
             model::Configuration_t save(device->currentConfiguration());
+            core::CollisionValidationPtr_t colVal = core::CollisionValidation::create(device);
             std::size_t i = nbSamples - fullBodyConfigs_.size();
             while(i>0)
             {
                 model::ConfigurationPtr_t conf = shooter->shoot();
                 device->currentConfiguration(*conf);
                 device->computeForwardKinematics();
-                if (!device->collisionTest())
+                core::CollisionValidationReport colRep;
+                if (colVal->validate(*conf,colRep))
                 {
                     fullBodyConfigs_.push_back(*conf);
                     --i;
@@ -108,6 +110,7 @@ namespace
         model::DevicePtr_t device = fullBody->device_;
         model::Configuration_t save(device->currentConfiguration());
         FullBodyDB& fullBodyDB = FullBodyDB::Instance(device);
+        core::CollisionValidationPtr_t colVal = core::CollisionValidation::create(device);
         std::size_t totalSamples = fullBodyDB.fullBodyConfigs_.size(), totalNoCollisions =  0;
         for(std::vector<model::Configuration_t>::const_iterator cit = fullBodyDB.fullBodyConfigs_.begin();
             cit != fullBodyDB.fullBodyConfigs_.end(); ++cit)
@@ -116,7 +119,8 @@ namespace
             sampling::Load(sample,conf);
             device->currentConfiguration(conf);
             device->computeForwardKinematics();
-            if (!device->collisionTest())
+            core::CollisionValidationReport colRep;
+            if (colVal->validate(conf,colRep))
                 ++totalNoCollisions;
         }
         device->currentConfiguration(save);
