@@ -86,7 +86,7 @@ namespace hpp {
         /// of the unit voxel of the octree. The larger they are, the more samples will be considered as candidates for contact.
         /// This can be problematic in terms of performance. The default value is 3 cm.
         void AddLimb(const std::string& database, const std::string& id, const model::ObjectVector_t &collisionObjects,
-                      const std::string& heuristicName);
+                      const std::string& heuristicName, const bool loadValues);
 
         /// Add a new heuristic for biasing sample candidate selection
         ///

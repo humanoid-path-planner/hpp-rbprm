@@ -354,7 +354,7 @@ bool hpp::rbprm::sampling::saveLimbDatabase(const SampleDB& database, std::ofstr
     return true;
 }
 
-SampleDB::SampleDB(std::ifstream& myfile)
+SampleDB::SampleDB(std::ifstream& myfile, bool loadValues)
     : treeObject_(boost::shared_ptr<CollisionGeometry> (new fcl::Box (1, 1, 1)))
 {
     if (!myfile.good())
@@ -372,7 +372,7 @@ SampleDB::SampleDB(std::ifstream& myfile)
             getline(myfile, line);
             if(line.find("sample") != std::string::npos)
                 samples_.push_back(readSample(myfile, line));
-            else if(line.find("value") != std::string::npos)
+            else if(line.find("value") != std::string::npos && loadValues)
                 readValue(values_,size,myfile,line);
         }
     }

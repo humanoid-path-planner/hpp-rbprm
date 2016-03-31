@@ -82,7 +82,7 @@ namespace hpp {
     class HPP_RBPRM_DLLAPI SampleDB
     {
     public:
-         SampleDB(std::ifstream& databaseStream);
+         SampleDB(std::ifstream& databaseStream, bool loadValues = true);
          SampleDB(const model::JointPtr_t limb, const std::string& effector, const std::size_t nbSamples,
                   const fcl::Vec3f& offset= fcl::Vec3f(0,0,0), const double resolution = 0.1, const T_evaluate& data = T_evaluate(), const std::string& staticValue ="");
         ~SampleDB();

@@ -90,7 +90,7 @@ namespace hpp {
                                       const std::size_t nbSamples, const sampling::heuristic evaluate = 0,
                                       const double resolution = 0.1, ContactType contactType = _6_DOF);
 
-        static RbPrmLimbPtr_t create (const model::DevicePtr_t device, std::ifstream& fileStream,
+        static RbPrmLimbPtr_t create (const model::DevicePtr_t device, std::ifstream& fileStream, const bool loadValues = true,
                                       const hpp::rbprm::sampling::heuristic evaluate = 0);
 
     public:
@@ -118,7 +118,7 @@ namespace hpp {
                  const std::size_t nbSamples, const sampling::heuristic evaluate,
                  const double resolution, ContactType contactType);
 
-      RbPrmLimb (const model::DevicePtr_t device, std::ifstream& fileStream,
+      RbPrmLimb (const model::DevicePtr_t device, std::ifstream& fileStream, const bool loadValues,
                  const hpp::rbprm::sampling::heuristic evaluate);
       ///
       /// \brief Initialization.

@@ -142,13 +142,14 @@ namespace hpp {
 
     void RbPrmFullBody::AddLimb(const std::string& database, const std::string& id,
                                 const model::ObjectVector_t &collisionObjects,
-                                const std::string& heuristicName)
+                                const std::string& heuristicName,
+                                const bool loadValues)
     {
         std::map<std::string, const sampling::heuristic>::const_iterator hit = checkLimbData(id, limbs_,factory_,heuristicName);;
         std::ifstream myfile (database.c_str());
         if (!myfile.good())
             throw std::runtime_error ("Impossible to open database");
-        rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(device_, myfile, hit->second);
+        rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(device_, myfile, loadValues, hit->second);
         myfile.close();
         AddLimbPrivate(limb, id, limb->limb_->name(),collisionObjects);
     }

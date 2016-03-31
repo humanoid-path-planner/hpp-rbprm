@@ -33,10 +33,10 @@ namespace hpp {
         return res;
     }
 
-    RbPrmLimbPtr_t RbPrmLimb::create (const model::DevicePtr_t device, std::ifstream& fileStream,
+    RbPrmLimbPtr_t RbPrmLimb::create (const model::DevicePtr_t device, std::ifstream& fileStream, const bool loadValues,
                                       const hpp::rbprm::sampling::heuristic evaluate)
     {
-        RbPrmLimb* rbprmDevice = new RbPrmLimb(device, fileStream, evaluate);
+        RbPrmLimb* rbprmDevice = new RbPrmLimb(device, fileStream, loadValues, evaluate);
         RbPrmLimbPtr_t res (rbprmDevice);
         res->init (res);
         return res;
@@ -134,7 +134,7 @@ namespace hpp {
     using namespace hpp::tools::io;
 
     hpp::rbprm::RbPrmLimb::RbPrmLimb (const model::DevicePtr_t device, std::ifstream& fileStream,
-                        const hpp::rbprm::sampling::heuristic evaluate)
+                        const bool loadValues, const hpp::rbprm::sampling::heuristic evaluate)
       : limb_(extractJoint(device,fileStream))
       , effector_(extractJoint(device,fileStream))
       , effectorDefaultRotation_(tools::io::readRotMatrixFCL(fileStream))
@@ -144,7 +144,7 @@ namespace hpp {
       , y_(StrToD(fileStream))
       , contactType_(static_cast<hpp::rbprm::ContactType>(StrToI(fileStream)))
       , evaluate_(evaluate)
-      , sampleContainer_(fileStream)
+      , sampleContainer_(fileStream, loadValues)
     {
       // NOTHING
     }
