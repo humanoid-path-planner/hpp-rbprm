@@ -21,6 +21,7 @@
 #include <time.h>
 
 #include <Eigen/Eigen>
+#include <Eigen/SVD>
 
 using namespace hpp;
 using namespace hpp::model;
@@ -29,15 +30,54 @@ using namespace hpp::rbprm::sampling;
 
 namespace
 {
-    double manipulability(const SampleDB& /*sampleDB*/, const sampling::Sample& sample)
+    enum JacobianMode
     {
-        double det = sample.jacobianProduct_.determinant();
+      ALL           = 0,  // Jacobian is entirely considered
+      TRANSLATION   = 1,  // Only translational jacobian is considered
+      ROTATION      = 2   // Only rotational jacobian is considered
+    };
+
+    Eigen::JacobiSVD<Eigen::MatrixXd> svd(const sampling::Sample& sample, JacobianMode mode)
+    {
+        switch (mode) {
+        case ALL:
+            return Eigen::JacobiSVD<Eigen::MatrixXd>(sample.jacobian_);
+        case TRANSLATION:
+            return Eigen::JacobiSVD<Eigen::MatrixXd>(sample.jacobian_.block(0,0,3,sample.jacobian_.cols()));
+        case ROTATION:
+            return Eigen::JacobiSVD<Eigen::MatrixXd>(sample.jacobian_.block(3,0,3,sample.jacobian_.cols()));
+        default:
+            throw std::runtime_error ("Can not perform SVD on subjacobian, unknown JacobianMode");
+            break;
+        }
+    }
+
+    double manipulability(const JacobianMode mode, const SampleDB& /*sampleDB*/, const sampling::Sample& sample)
+    {
+        double det;
+        Eigen::MatrixXd sub;
+        switch (mode) {
+        case ALL:
+            det = sample.jacobianProduct_.determinant();
+            break;
+        case TRANSLATION:
+            sub = sample.jacobian_.block(0,0,3,sample.jacobian_.cols());
+            det = (sub*sub.transpose()).determinant();
+            break;
+        case ROTATION:
+            sub = sample.jacobian_.block(3,0,3,sample.jacobian_.cols());
+            det = (sub*sub.transpose()).determinant();
+            break;
+        default:
+            throw std::runtime_error ("Can not compute subjacobian, unknown JacobianMode");
+            break;
+        }
         return det > 0 ? sqrt(det) : 0;
     }
 
-    double isotropy(const SampleDB& /*sampleDB*/, const sampling::Sample& sample)
+    double isotropy(const JacobianMode mode, const SampleDB& /*sampleDB*/, const sampling::Sample& sample)
     {
-        Eigen::JacobiSVD<Eigen::MatrixXd> svdOfJ(sample.jacobian_);
+        Eigen::JacobiSVD<Eigen::MatrixXd> svdOfJ(svd(sample, mode));
         const Eigen::VectorXd S = svdOfJ.singularValues();
         double min = std::numeric_limits<double>::max();
         double max = 0;
@@ -50,9 +90,9 @@ namespace
         return  (max > 0) ? 1 - sqrt(1 - min*min / max* max) : 0;
     }    
 
-    double minSing(const SampleDB& /*sampleDB*/, const sampling::Sample& sample)
+    double minSing(const JacobianMode mode, const SampleDB& /*sampleDB*/, const sampling::Sample& sample)
     {
-        Eigen::JacobiSVD<Eigen::MatrixXd> svdOfJ(sample.jacobian_);
+        Eigen::JacobiSVD<Eigen::MatrixXd> svdOfJ(svd(sample, mode));
         const Eigen::VectorXd S = svdOfJ.singularValues();
         double min = std::numeric_limits<double>::max();
         for(int i =0; i < S.rows();++i)
@@ -61,6 +101,19 @@ namespace
             if(v < min) min = v;
         }
         return  min;
+    }
+
+    double maxSing(const JacobianMode mode, const SampleDB& /*sampleDB*/, const sampling::Sample& sample)
+    {
+        Eigen::JacobiSVD<Eigen::MatrixXd> svdOfJ(svd(sample, mode));
+        const Eigen::VectorXd S = svdOfJ.singularValues();
+        double max = -std::numeric_limits<double>::max();
+        for(int i =0; i < S.rows();++i)
+        {
+            double v = S[i];
+            if(v > max) max = v;
+        }
+        return  max;
     }
 
 
@@ -167,9 +220,22 @@ namespace
 AnalysisFactory::AnalysisFactory(hpp::rbprm::RbPrmFullBodyPtr_t device)
     : device_(device)
 {
-    evaluate_.insert(std::make_pair("manipulability", &manipulability));
-    evaluate_.insert(std::make_pair("isotropy", &isotropy));
-    evaluate_.insert(std::make_pair("minimumSingularValue", &minSing));
+    JacobianMode all = ALL, rot = ROTATION, trans = TRANSLATION;
+    evaluate_.insert(std::make_pair("manipulability", boost::bind(&manipulability, boost::ref(all), _1, _2)));
+    evaluate_.insert(std::make_pair("isotropy", boost::bind(&isotropy, boost::ref(all), _1, _2)));
+    evaluate_.insert(std::make_pair("minimumSingularValue", boost::bind(&minSing, boost::ref(all), _1, _2)));
+    evaluate_.insert(std::make_pair("maximumSingularValue", boost::bind(&maxSing, boost::ref(all), _1, _2)));
+
+    evaluate_.insert(std::make_pair("manipulabilityRot", boost::bind(&manipulability, boost::ref(rot), _1, _2)));
+    evaluate_.insert(std::make_pair("isotropyRot", boost::bind(&isotropy, boost::ref(rot), _1, _2)));
+    evaluate_.insert(std::make_pair("minimumSingularValueRot", boost::bind(&minSing, boost::ref(rot), _1, _2)));
+    evaluate_.insert(std::make_pair("maximumSingularValueRot", boost::bind(&maxSing, boost::ref(rot), _1, _2)));
+
+    evaluate_.insert(std::make_pair("manipulabilityTr", boost::bind(&manipulability, boost::ref(trans), _1, _2)));
+    evaluate_.insert(std::make_pair("isotropyTr", boost::bind(&isotropy, boost::ref(trans), _1, _2)));
+    evaluate_.insert(std::make_pair("minimumSingularValueTr", boost::bind(&minSing, boost::ref(trans), _1, _2)));
+    evaluate_.insert(std::make_pair("maximumSingularValueTr", boost::bind(&maxSing, boost::ref(trans), _1, _2)));
+
     evaluate_.insert(std::make_pair("selfCollisionProbability", boost::bind(&selfCollisionProbability, boost::ref(device_), _1, _2)));
     evaluate_.insert(std::make_pair("jointLimitsDistance", boost::bind(&distanceToLimits, boost::ref(device_), _1, _2)));
 }
