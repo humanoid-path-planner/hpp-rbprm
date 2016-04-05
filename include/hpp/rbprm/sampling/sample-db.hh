@@ -19,7 +19,7 @@
 #ifndef HPP_RBPRM_SAMPLEDB_HH
 # define HPP_RBPRM_SAMPLEDB_HH
 
-#include <hpp/rbprm/config.h>
+#include <hpp/rbprm/config.hh>
 #include <hpp/rbprm/sampling/sample.hh>
 #include <hpp/rbprm/sampling/heuristic.hh>
 #include <hpp/fcl/octree.h>
