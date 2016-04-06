@@ -33,11 +33,11 @@ namespace
     enum JacobianMode
     {
       ALL           = 0,  // Jacobian is entirely considered
-      TRANSLATION   = 1,  // Only translational jacobian is considered
-      ROTATION      = 2   // Only rotational jacobian is considered
+      ROTATION      = 1,  // Only rotational jacobian is considered
+      TRANSLATION   = 2   // Only translational jacobian is considered
     };
 
-    Eigen::JacobiSVD<Eigen::MatrixXd> svd(const sampling::Sample& sample, JacobianMode mode)
+    Eigen::JacobiSVD<Eigen::MatrixXd> svd(const sampling::Sample& sample, const JacobianMode mode)
     {
         switch (mode) {
         case ALL:
@@ -220,21 +220,20 @@ namespace
 AnalysisFactory::AnalysisFactory(hpp::rbprm::RbPrmFullBodyPtr_t device)
     : device_(device)
 {
-    JacobianMode all = ALL, rot = ROTATION, trans = TRANSLATION;
-    evaluate_.insert(std::make_pair("manipulability", boost::bind(&manipulability, boost::ref(all), _1, _2)));
-    evaluate_.insert(std::make_pair("isotropy", boost::bind(&isotropy, boost::ref(all), _1, _2)));
-    evaluate_.insert(std::make_pair("minimumSingularValue", boost::bind(&minSing, boost::ref(all), _1, _2)));
-    evaluate_.insert(std::make_pair("maximumSingularValue", boost::bind(&maxSing, boost::ref(all), _1, _2)));
+    evaluate_.insert(std::make_pair("manipulability", boost::bind(&manipulability, JacobianMode(0), _1, _2)));
+    evaluate_.insert(std::make_pair("isotropy", boost::bind(&isotropy, JacobianMode(0), _1, _2)));
+    evaluate_.insert(std::make_pair("minimumSingularValue", boost::bind(&minSing, JacobianMode(0), _1, _2)));
+    evaluate_.insert(std::make_pair("maximumSingularValue", boost::bind(&maxSing, JacobianMode(0), _1, _2)));
 
-    evaluate_.insert(std::make_pair("manipulabilityRot", boost::bind(&manipulability, boost::ref(rot), _1, _2)));
-    evaluate_.insert(std::make_pair("isotropyRot", boost::bind(&isotropy, boost::ref(rot), _1, _2)));
-    evaluate_.insert(std::make_pair("minimumSingularValueRot", boost::bind(&minSing, boost::ref(rot), _1, _2)));
-    evaluate_.insert(std::make_pair("maximumSingularValueRot", boost::bind(&maxSing, boost::ref(rot), _1, _2)));
+    evaluate_.insert(std::make_pair("manipulabilityRot", boost::bind(&manipulability, JacobianMode(1), _1, _2)));
+    evaluate_.insert(std::make_pair("isotropyRot", boost::bind(&isotropy, JacobianMode(1), _1, _2)));
+    evaluate_.insert(std::make_pair("minimumSingularValueRot", boost::bind(&minSing, JacobianMode(1), _1, _2)));
+    evaluate_.insert(std::make_pair("maximumSingularValueRot", boost::bind(&maxSing, JacobianMode(1), _1, _2)));
 
-    evaluate_.insert(std::make_pair("manipulabilityTr", boost::bind(&manipulability, boost::ref(trans), _1, _2)));
-    evaluate_.insert(std::make_pair("isotropyTr", boost::bind(&isotropy, boost::ref(trans), _1, _2)));
-    evaluate_.insert(std::make_pair("minimumSingularValueTr", boost::bind(&minSing, boost::ref(trans), _1, _2)));
-    evaluate_.insert(std::make_pair("maximumSingularValueTr", boost::bind(&maxSing, boost::ref(trans), _1, _2)));
+    evaluate_.insert(std::make_pair("manipulabilityTr", boost::bind(&manipulability, JacobianMode(2), _1, _2)));
+    evaluate_.insert(std::make_pair("isotropyTr", boost::bind(&isotropy, JacobianMode(2), _1, _2)));
+    evaluate_.insert(std::make_pair("minimumSingularValueTr", boost::bind(&minSing, JacobianMode(2), _1, _2)));
+    evaluate_.insert(std::make_pair("maximumSingularValueTr", boost::bind(&maxSing, JacobianMode(2), _1, _2)));
 
     evaluate_.insert(std::make_pair("selfCollisionProbability", boost::bind(&selfCollisionProbability, boost::ref(device_), _1, _2)));
     evaluate_.insert(std::make_pair("jointLimitsDistance", boost::bind(&distanceToLimits, boost::ref(device_), _1, _2)));

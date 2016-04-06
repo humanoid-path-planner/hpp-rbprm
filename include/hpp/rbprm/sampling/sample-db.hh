@@ -75,6 +75,8 @@ namespace hpp {
     //first sample index, number of samples
     typedef std::pair<std::size_t, std::size_t> VoxelSampleId;
     typedef std::map<long int, VoxelSampleId> T_VoxelSampleId;
+    typedef std::pair<double, double> ValueBound;
+    typedef std::map<std::string, ValueBound> T_ValueBound;
 
     /// Sample configuration for a robot limb, stored
     /// in an octree and used for proximity requests for contact creation.
@@ -98,6 +100,7 @@ namespace hpp {
         fcl::OcTree* octree_; // deleted with geometry_
         boost::shared_ptr<fcl::CollisionGeometry> geometry_;
         T_Values values_;
+        T_ValueBound valueBounds_;
         T_VoxelSampleId samplesInVoxels_;
         /// fcl collision object used for collisions with environment
         fcl::CollisionObject treeObject_;
