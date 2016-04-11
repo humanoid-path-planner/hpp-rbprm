@@ -114,6 +114,23 @@ namespace geom
   
   
   /**
+   * @brief center compute the center of the polygon (planar)
+   * @param pointsBegin
+   * @param PointsEnd
+   * @param n normal of the plan which contain the polygon
+   * @param t 
+   * @return 
+   */
+  Point centerPlanar (T_Point points, const fcl::Vec3f &n, double t);
+  
+  /**
+   * @brief center compute the center using average method
+   * @param points list of points of the polygon
+   * @return the center of the polygon
+   */
+  Point center(CIT_Point pointsBegin, CIT_Point pointsEnd);
+  
+  /**
    * @brief distanceToPlane Distance point plan
    * @param n plan's normal
    * @param t plan's offset

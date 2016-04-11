@@ -41,6 +41,8 @@
 #include <hpp/fcl/collision_data.h>
 #include <hpp/fcl/intersect.h>
 #include "utils/algorithms.h"
+#include <polytope/stability_margin.h>
+
 
 namespace hpp {
   namespace rbprm {
@@ -111,6 +113,8 @@ namespace hpp {
         roadmap()->addGoalNode (*itGoal);
       }
       hppDout(notice,"startSolve OK");
+      
+      polytope::init_library();
     }
     
     core::PathPtr_t DynamicPlanner::extend (const core::NodePtr_t& near,
@@ -645,8 +649,14 @@ namespace hpp {
         hppDout(warning,"~~ ComputeGIWC : roms filter not respected"); // shouldn't happen
       }
       
+      //TODO
+      polytope::T_rotation_t rotContact(3*rbReport->ROMReports.size(),3);
+      polytope::vector_t posContact(3*rbReport->ROMReports.size());
+      
+      
       // get the 2 object in contact for each ROM :
       hppDout(info,"~~ Number of roms in collision : "<<rbReport->ROMReports.size());
+      size_t indexRom = 0 ;
       for(std::map<std::string,core::CollisionValidationReportPtr_t>::const_iterator it = rbReport->ROMReports.begin() ; it != rbReport->ROMReports.end() ; ++it)
       {
         hppDout(info,"~~ for rom : "<<it->first);
@@ -707,68 +717,40 @@ namespace hpp {
         
         
         
-        ////////// 2D code ///////////
+      
         
-        // re order the vertices : 
-        
-        /*
-        hppDout(notice,"ordered obj2 : ");
-        geom::projectZ(vertices2.begin(),vertices2.end());
-        geom::T_Point vert2Ordered = geom::convexHull(vertices2.begin(),vertices2.end());
-        std::ostringstream ss4;
-        ss4<<"[";
-        for(size_t i = 0; i < vert2Ordered.size() ; ++i){
-          ss4<<"["<<vert2Ordered[i][0]<<","<<vert2Ordered[i][1]<<","<<vert2Ordered[i][2]<<"]";
-          if(i< (vert2Ordered.size() -1))
-            ss4<<",";
-        }
-        ss4<<"]";
-        std::cout<<ss4.str()<<std::endl;
-        
-        
-        hppDout(notice,"ordered obj1 : ");
-        geom::projectZ(vertices1.begin(),vertices1.end());          
-        geom::T_Point vert1Ordered = geom::convexHull(vertices1.begin(),vertices1.end());
-        std::ostringstream ss3;
-        ss3<<"[";
-        for(size_t i = 0; i < vert1Ordered.size() ; ++i){
-          ss3<<"["<<vert1Ordered[i][0]<<","<<vert1Ordered[i][1]<<","<<vert1Ordered[i][2]<<"]";
-          if(i< (vert1Ordered.size() -1))
-            ss3<<",";
-        }
-        ss3<<"]";
-        std::cout<<ss3.str()<<std::endl;
-        
-        // compute intersection
-        
-        
-        
-        geom::T_Point inter = geom::computeIntersection(vert1Ordered,vert2Ordered);
-        
-        hppDout(notice,"~~ 2D intersection size : "<<inter.size());
-        std::ostringstream ss5;
-        ss5<<"[";
-        // debug display :
-        for(geom::T_Point::const_iterator it = inter.begin() ; it != inter.end() ; ++it){
-          ss5<<"["<<(*it)[0]<<","<<(*it)[1]<<","<<(*it)[2]<<"]";
-          if(it != (inter.end() - 1))
-            ss5<<",";
-        }
-        ss5<<"]";
-        std::cout<<ss5.str()<<std::endl;
-        */
-        ////////// end 2D code ///////////
-        
-        // direct call to fcl (doesn't work)
         hppStartBenchmark (COMPUTE_INTERSECTION);
-        geom::intersectPolygonePlane(model1,model2,fcl::Vec3f(0,0,1),geom::ZJUMP,result);
+        geom::T_Point hull = geom::intersectPolygonePlane(model1,model2,fcl::Vec3f(0,0,1),geom::ZJUMP,result);
         hppStopBenchmark (COMPUTE_INTERSECTION);
         hppDisplayBenchmark (COMPUTE_INTERSECTION);
         
-
         
-      
+        // todo : compute center point of the hull
+        polytope::vector3_t normal,tangent0,tangent1;
+        geom::Point center = geom::center(hull.begin(),hull.end());
+        posContact.segment<3>(indexRom*3) = center;
+        std::cout<<center<<std::endl<<std::endl;
+        polytope::rotation_t rot; 
+        normal = -result.getContact(0).normal;
+        hppDout(notice," !!! normal for GIWC : "<<normal);
+        // compute tangent vector : 
+        tangent0 = normal.cross(polytope::vector3_t(1,0,0));
+        if(tangent0.dot(tangent0)<0.001)
+          tangent0 = normal.cross(polytope::vector3_t(0,1,0)); 
+        tangent1 = normal.cross(tangent0);
+        rot(0,0) = tangent0(0) ; rot(0,1) = tangent1(0) ; rot(0,2) = normal(0);
+        rot(1,0) = tangent0(1) ; rot(1,1) = tangent1(1) ; rot(1,2) = normal(1);
+        rot(2,0) = tangent0(2) ; rot(2,1) = tangent1(2) ; rot(2,2) = normal(2);
+        
+        rotContact.block<3,3>(indexRom*3,0) = rot;
+        std::cout<<rot<<std::endl<<std::endl;
+        
+        indexRom++;
       } // for each ROMS
+      
+      // save giwc in node structure
+      //x_cast->giwc(polytope::U_stance());
+      
       
     }// computeGIWC
     

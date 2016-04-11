@@ -64,6 +64,43 @@ namespace geom
     return fabs(a);
   }
   
+  Point center(CIT_Point pointsBegin, CIT_Point pointsEnd){
+    double cx=0;
+    double cy=0;
+    double cz=0;
+    size_t i = 0;
+    for( CIT_Point it = pointsBegin ; it != pointsEnd - 1 ; ++it){
+      cx += (*it)[0];
+      cy += (*it)[1];
+      cz += (*it)[2];
+      i++;
+    }
+    cx = cx /(double)i;
+    cy = cy /(double)i;
+    cz = cz /(double)i;
+    
+    return Point(cx,cy,cz);
+  }
+  
+  
+  Point centerPlanar (T_Point points,const fcl::Vec3f& n, double t ){
+    
+    double cx =0;
+    double cy = 0;
+    double a = area(points.begin(),points.end());
+    for(size_t i = 0 ; i < (points.size() - 1) ; ++i)
+    {
+      cx += (points[i][0] + points[i+1][0])*((points[i][0] * points[i+1][1]) - (points[i+1][0] * points[i][1])); 
+      cy += (points[i][1] + points[i+1][1])*((points[i][0] * points[i+1][1]) - (points[i+1][0] * points[i][1])); 
+    }
+    
+    cx = cx / (6*a);
+    cy = cy / (6*a);
+    double cz = -(n[0]*cx + n[1]*cy + t) / n[3] ; // deduce z from x,y and the plan equation
+    return Point(cx,cy,cz);
+  }
+  
+  
   void projectZ(IT_Point pointsBegin, IT_Point pointsEnd){
     for(IT_Point current = pointsBegin ; current != pointsEnd; ++current){
       (*current)[2]=0;
