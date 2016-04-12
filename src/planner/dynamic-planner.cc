@@ -615,16 +615,16 @@ namespace hpp {
     
     
     
-    void DynamicPlanner::computeGIWC(const core::NodePtr_t x, core::ValidationReportPtr_t report){
+    void DynamicPlanner::computeGIWC(const core::NodePtr_t node, core::ValidationReportPtr_t report){
       hppDout(notice,"## compute GIWC");
-      core::ConfigurationPtr_t q = x->configuration();
-      core::RbprmNodePtr_t x_cast = static_cast<core::RbprmNodePtr_t>(x);
+      core::ConfigurationPtr_t q = node->configuration();
+      core::RbprmNodePtr_t node_cast = static_cast<core::RbprmNodePtr_t>(node);
       // fil normal information in node
-      if(x_cast){
+      if(node_cast){
         size_t cSize = problem().robot()->configSize();
         hppDout(info,"~~ NODE cast correctly");
-        x_cast->normal((*q)[cSize-3],(*q)[cSize-2],(*q)[cSize-1]);
-        hppDout(info,"~~ normal = "<<x_cast->getNormal());
+        node_cast->normal((*q)[cSize-3],(*q)[cSize-2],(*q)[cSize-1]);
+        hppDout(info,"~~ normal = "<<node_cast->getNormal());
         
       }else{
         hppDout(error,"~~ NODE cannot be cast");
@@ -748,8 +748,16 @@ namespace hpp {
         indexRom++;
       } // for each ROMS
       
+      polytope::vector_t x(rbReport->ROMReports.size());
+      polytope::vector_t y(rbReport->ROMReports.size());
+      polytope::vector_t nu(rbReport->ROMReports.size());
+      for(size_t k = 0 ; k<rbReport->ROMReports.size() ; ++k){
+        x(k) = 0.25; // approx size of foot
+        y(k) = 0.15; 
+        nu(k) = 0.5;
+      }
       // save giwc in node structure
-      //x_cast->giwc(polytope::U_stance());
+      node_cast->giwc(polytope::U_stance(rotContact,posContact,nu,x,y));
       
       
     }// computeGIWC

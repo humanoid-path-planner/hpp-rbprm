@@ -51,14 +51,14 @@ namespace hpp {
         collisionReport_ = report;
       }
       
-      void giwc(polytope::ProjectedCone* giwc){giwc_ = giwc;}
+      void giwc(const polytope::ProjectedCone* giwc){giwc_ = giwc;}
       
-      polytope::ProjectedCone* giwc(){return giwc_;}
+      const polytope::ProjectedCone* giwc(){return giwc_;}
 
     private:
       fcl::Vec3f normal_;
       RbprmValidationReportPtr_t collisionReport_;
-      polytope::ProjectedCone* giwc_;
+      const polytope::ProjectedCone* giwc_;
 
     }; // class
 
