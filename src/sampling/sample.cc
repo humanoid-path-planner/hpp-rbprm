@@ -40,7 +40,7 @@ fcl::Vec3f ComputeEffectorPosition(const model::JointPtr_t limb, const model::Jo
     const fcl::Transform3f& transform = effector->currentTransformation();
     //return transform.getTranslation() + transform.getRotation() * offset ;
     fcl::Transform3f parentT = fcl::inverse(limb->parentJoint()->currentTransformation());
-    return (parentT * fcl::Transform3f(transform.getTranslation() + offset)).getTranslation();
+    return (parentT * fcl::Transform3f((fcl::Vec3f) (transform.getTranslation() + offset))).getTranslation();
 }
 
 Eigen::MatrixXd Jacobian(const model::JointPtr_t limb, const model::JointPtr_t effector)
