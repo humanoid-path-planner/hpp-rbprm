@@ -18,7 +18,7 @@
 
 
 #include "test-tools.hh"
-#include "hpp/rbprm/rbprm-path-interpolation.hh"
+#include "hpp/rbprm/interpolation/rbprm-path-interpolation.hh"
 #include "hpp/rbprm/rbprm-fullbody.hh"
 #include "hpp/core/straight-path.hh"
 
@@ -30,6 +30,7 @@
 using namespace hpp;
 using namespace hpp::model;
 using namespace hpp::rbprm;
+using namespace hpp::rbprm::interpolation;
 
 
 /*hpp::rbprm::RbPrmInterpolationPtr_t initInterpolation(const ObjectVector_t& collisionObjects)

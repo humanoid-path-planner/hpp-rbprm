@@ -14,7 +14,7 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-rbprm. If not, see <http://www.gnu.org/licenses/>.
 
-#include <hpp/rbprm/rbprm-path-interpolation.hh>
+#include <hpp/rbprm/interpolation/rbprm-path-interpolation.hh>
 
 #ifdef PROFILE
     #include "hpp/rbprm/rbprm-profiler.hh"
@@ -22,6 +22,7 @@
 
 namespace hpp {
   namespace rbprm {
+    namespace interpolation {
 
     RbPrmInterpolationPtr_t RbPrmInterpolation::create (const hpp::rbprm::RbPrmFullBodyPtr_t robot,
                                                         const hpp::rbprm::State &start, const hpp::rbprm::State &end,
@@ -152,5 +153,6 @@ if (nbFailures > 1)
     {
         // TODO
     }
-  } // model
+    } // interpolation
+  } // rbprm
 } //hpp

@@ -64,7 +64,7 @@ SET(${PROJECT_NAME}_HEADERS
     include/hpp/rbprm/rbprm-device.hh
     include/hpp/rbprm/rbprm-fullbody.hh
     include/hpp/rbprm/rbprm-limb.hh
-    include/hpp/rbprm/rbprm-path-interpolation.hh
+    include/hpp/rbprm/interpolation/rbprm-path-interpolation.hh
     include/hpp/rbprm/rbprm-shooter.hh
     include/hpp/rbprm/rbprm-state.hh
     include/hpp/rbprm/rbprm-validation.hh
