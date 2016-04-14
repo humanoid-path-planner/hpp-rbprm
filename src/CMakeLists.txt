@@ -26,7 +26,10 @@ SET(${LIBRARY_NAME}_SOURCES
 	rbprm-device.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-device.hh
 	rbprm-limb.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-limb.hh
         interpolation/rbprm-path-interpolation.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/rbprm-path-interpolation.hh
-	rbprm-fullbody.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-fullbody.hh
+        interpolation/limb-rrt-shooter.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/limb-rrt-shooter.hh
+        interpolation/limb-rrt-helper.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/limb-rrt-helper.hh
+        interpolation/limb-rrt-path-validation.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/limb-rrt-path-validation.hh
+        rbprm-fullbody.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-fullbody.hh
 	${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-state.hh
         sampling/sample.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/sampling/sample.hh
         sampling/analysis.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/sampling/analysis.hh
