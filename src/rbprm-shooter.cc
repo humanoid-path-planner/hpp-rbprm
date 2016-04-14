@@ -236,8 +236,7 @@ namespace
                 double weight = TriangleArea(tri);
                 sum += weight;
                 weights_.push_back(weight);
-                // TODO COMPUTE NORMALS
-                fcl::Vec3f normal = (tri.p3 - tri.p1).cross(tri.p2 - tri.p1);
+                fcl::Vec3f normal = (tri.p2 - tri.p1).cross(tri.p3 - tri.p1);
                 normal.normalize();
                 triangles_.push_back(std::make_pair(normal,tri));
             }
@@ -332,7 +331,7 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
                 // v0 move away from normal
                 //get normal from collision tri
                 lastDirection = triangles_[report.result.getContact(0).b2].first;
-                Translate(robot_,config, -lastDirection *
+                Translate(robot_,config, lastDirection *
                           (std::abs(report.result.getContact(0).penetration_depth) +0.03));
                  limitDis--;
             }
