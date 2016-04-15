@@ -237,7 +237,7 @@ namespace
                 sum += weight;
                 weights_.push_back(weight);
                 // TODO COMPUTE NORMALS
-                fcl::Vec3f normal = (tri.p3 - tri.p1).cross(tri.p2 - tri.p1);
+                fcl::Vec3f normal = (tri.p2 - tri.p1).cross(tri.p3 - tri.p1);
                 normal.normalize();
                 triangles_.push_back(std::make_pair(normal,tri));
             }
