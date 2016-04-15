@@ -340,6 +340,9 @@ namespace hpp {
       hppDout (info, "x_theta_imp: " << x_theta_imp);
       hppDout (info, "X_theta: " << X_theta);
       hppDout (info, "phi: " << phi);
+      hppDout (info, "index: " << index);
+      hppDout (info, "ecs size: " << device_.lock ()->extraConfigSpace ().dimension ());
+      
       
       /* 5th constraint: first cone */
       value_type delta1;

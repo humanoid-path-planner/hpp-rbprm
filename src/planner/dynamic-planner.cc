@@ -66,7 +66,7 @@ namespace hpp {
       configurationShooter_ (problem.configurationShooter()),
       qProj_ (problem.robot ()->configSize ()),
       smParabola_(rbprm::SteeringMethodParabola::create((core::ProblemPtr_t(&problem)))),
-      roadmap_(core::RbprmRoadmap::create (problem.distance (),problem.robot()))
+      rbRoadmap_(core::RbprmRoadmap::create (problem.distance (),problem.robot())), roadmap_(boost::dynamic_pointer_cast<core::Roadmap>(rbRoadmap_))
     {
     }
     
@@ -76,7 +76,7 @@ namespace hpp {
       configurationShooter_ (problem.configurationShooter()),
       qProj_ (problem.robot ()->configSize ()),
       smParabola_(rbprm::SteeringMethodParabola::create((core::ProblemPtr_t(&problem)))),
-      roadmap_(core::RbprmRoadmap::create (problem.distance (),problem.robot()))
+      rbRoadmap_(core::RbprmRoadmap::create (problem.distance (),problem.robot())), roadmap_(boost::dynamic_pointer_cast<core::Roadmap>(rbRoadmap_))
     {
     }
     
@@ -106,6 +106,7 @@ namespace hpp {
       problem().checkProblem ();
       // Tag init and goal configurations in the roadmap
       roadmap()->resetGoalNodes ();
+      
       roadmap()->initNode (problem().initConfig ());
       const core::Configurations_t goals (problem().goalConfigs ());
       for (core::Configurations_t::const_iterator itGoal = goals.begin ();
@@ -483,7 +484,7 @@ namespace hpp {
             roadmap ()->addEdge (*itn, initNode, path->reverse());
           }else if(validPath->timeRange ().second != path->timeRange ().first){
             core::ConfigurationPtr_t q_new(new core::Configuration_t(validPath->end()));
-            core::NodePtr_t x_new = roadmap()->addNodeAndEdges(initNode,q_new,validPath);
+            core::NodePtr_t x_new = rbprmRoadmap()->addNodeAndEdges(initNode,q_new,validPath);
             computeGIWC(x_new);
             hppDout(notice,"### Straight path not fully valid, try parabola path between qnew and qGoal");
             hppStartBenchmark(EXTENDPARA);
@@ -497,10 +498,10 @@ namespace hpp {
               if (paraPathValid) { // only add if the full path is valid, otherwise it's the same as the straight line (because we can't extract a subpath of a parabola path)
                 hppDout(notice, "#### parabola path valid !");
                 core::ConfigurationPtr_t q_last (new core::Configuration_t(validPath->end ()));
-                core::NodePtr_t x_last = roadmap()->addNode(q_last);
+                core::NodePtr_t x_last = rbprmRoadmap()->addNode(q_last);
                 computeGIWC(x_last);
-                roadmap()->addEdge(x_new,x_last,validPath);
-                roadmap()->addEdge(x_last,x_new,validPath->reverse());
+                rbprmRoadmap()->addEdge(x_new,x_last,validPath);
+                rbprmRoadmap()->addEdge(x_last,x_new,validPath->reverse());
               }else {
                 hppDout(notice, "#### parabola path not valid !");
               }
@@ -561,7 +562,7 @@ namespace hpp {
             roadmap ()->addEdge (*itn, initNode, path->reverse());
           }else if(validPath->timeRange ().second != path->timeRange ().first){
             core::ConfigurationPtr_t q_new(new core::Configuration_t(validPath->end()));
-            core::NodePtr_t x_new = roadmap()->addNodeAndEdges(initNode,q_new,validPath);
+            core::NodePtr_t x_new = rbprmRoadmap()->addNodeAndEdges(initNode,q_new,validPath);
             pathVector = core::PathVector::create (validPath->outputSize (), validPath->outputDerivativeSize ());
             pathVector->appendPath (validPath);
             hppDout(notice,"### Straight path not fully valid, try parabola path between qnew and qGoal");
@@ -576,8 +577,8 @@ namespace hpp {
               if (paraPathValid) { // only add if the full path is valid, otherwise it's the same as the straight line (because we can't extract a subpath of a parabola path)
                 hppDout(notice, "#### parabola path valid !");
                 core::ConfigurationPtr_t q_last (new core::Configuration_t(validPath->end ()));
-                core::NodePtr_t x_last = roadmap()->addNode(q_last);
-                roadmap()->addEdge(x_new,x_last,validPath);
+                core::NodePtr_t x_last = rbprmRoadmap()->addNode(q_last);
+                rbprmRoadmap()->addEdge(x_new,x_last,validPath);
                 pathVector->appendPath (validPath);
               }else {
                 hppDout(notice, "#### parabola path not valid !");
