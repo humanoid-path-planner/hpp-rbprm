@@ -62,6 +62,7 @@ namespace hpp {
         /// \return a pointer to an instance of RbPrmShooter
         static HPP_RBPRM_DLLAPI RbPrmShooterPtr_t create (const model::RbPrmDevicePtr_t& robot,
                                          const core::ObjectVector_t &geometries,
+																				 const std::map<std::string, std::vector<model::CollisionObjectPtr_t> > affordances,
                                          const std::vector<std::string>& filter = std::vector<std::string>(),
                                          const std::map<std::string, rbprm::NormalFilter>& normalFilters = std::map<std::string, rbprm::NormalFilter>(),
                                          const std::size_t shootLimit = 10000,
@@ -90,6 +91,7 @@ namespace hpp {
     /// Note that translation joints have to be bounded.
     RbPrmShooter (const model::RbPrmDevicePtr_t& robot,
                   const core::ObjectVector_t &geometries,
+									const std::map<std::string, std::vector<model::CollisionObjectPtr_t> > affordances,
                   const std::vector<std::string>& filter,
                   const std::map<std::string, rbprm::NormalFilter>& normalFilters,
                   const std::size_t shootLimit = 10000,
@@ -98,13 +100,14 @@ namespace hpp {
     void init (const RbPrmShooterPtr_t& self);
 
     private:
-        void InitWeightedTriangles(const model::ObjectVector_t &geometries);
-        const T_TriangleNormal& RandomPointIntriangle() const;
-        const T_TriangleNormal& WeightedTriangle() const;
+        void InitWeightedTriangles
+					(const std::map<std::string, std::vector<model::CollisionObjectPtr_t> > &affordances);
+        const T_TriangleNormal& RandomPointIntriangle(const std::string &affordance) const;
+        const T_TriangleNormal& WeightedTriangle(const std::string &affordance) const;
 
     private:
-        std::vector<double> weights_;
-        std::vector<T_TriangleNormal> triangles_;
+        std::map<std::string, std::vector<double> > affWeights_;
+        std::map<std::string, std::vector<T_TriangleNormal> >affTris_;
         const model::RbPrmDevicePtr_t robot_;
         rbprm::RbPrmValidationPtr_t validator_;
         RbPrmShooterWkPtr_t weak_;
