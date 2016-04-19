@@ -219,6 +219,9 @@ namespace
             cit != geometries.end(); ++cit)
         {
             validator_->addObstacle(*cit);
+						core::CollisionPairs_t tests1 = validator_->trunkValidation_->getColPairs ();
+						std::cout << "filter has " << tests1.size() << " colObjects." << std::endl;
+
         }
 				// Add obstacles corresponding to affordances of given rom
 				std::map<std::string, std::vector<std::string> >::const_iterator filterIt;
@@ -234,14 +237,16 @@ namespace
 							for (unsigned int affIdx = 0; affIdx < affIt->second.size (); affIdx++) {
 								validator_->addRomObstacle(filterIt->first.c_str (), affIt->second[affIdx]);
 							}
-							// jump out of for loop after first match (because it is the only one
-							// for a given affordance!)
-							break;
 						}
 					}
 				}
-        this->InitWeightedTriangles(affordances);
-    }
+				for (T_RomValidation::const_iterator testIt = validator_->romValidations_.begin ();
+				testIt !=  validator_->romValidations_.end (); testIt++) {
+					core::CollisionPairs_t tests = testIt->second->getColPairs ();
+					std::cout << "filter for " << testIt->first << "has " << tests.size() << " colObjects." << std::endl;
+        }
+				this->InitWeightedTriangles(affordances);
+		}
 
     void RbPrmShooter::InitWeightedTriangles
 			(const std::map<std::string, std::vector<model::CollisionObjectPtr_t> >& affordances)
