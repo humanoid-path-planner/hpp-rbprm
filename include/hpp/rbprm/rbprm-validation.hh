@@ -44,7 +44,7 @@ namespace hpp {
     public:
       static RbPrmValidationPtr_t create (const model::RbPrmDevicePtr_t& robot,
                                           const std::vector<std::string>& filter = std::vector<std::string>(),
-                                          const std::map<std::string, rbprm::NormalFilter>& normalFilters = std::map<std::string, rbprm::NormalFilter>());
+                                          const std::map<std::string, std::vector<std::string> >& affFilters = std::map<std::string, std::vector<std::string> >());
 
       /// Compute whether the configuration is valid
       ///
@@ -82,12 +82,20 @@ namespace hpp {
                  const std::vector<std::string>& filter,
                  bool throwIfInValid = false);
 
-      /// Add an obstacle
+      /// Add an obstacle to Trunk validation
       /// \param object obstacle added
       /// Store obstacle and build a collision pair with each body of the robot.
-      /// \notice This is applied for both trunk and rom shapes. This can be done for a single
-      /// shape through trunkValidation_ and romValidation_ attributes.
+      /// \notice This is applied only for trunk shapes. This can be done for a single
+      /// shape through the attribute "trunkValidation_".
       virtual void addObstacle (const core::CollisionObjectPtr_t& object);
+
+			/// Add obstacle to Rom validation
+			/// \param object obstacle added
+			/// \param romName rom to which obstacle will be added
+			/// Store obstacle and build a collision pair with each body of the robot.
+      /// \notice This is applied only for rom shapes. This can be done for a single
+      /// shape through the attribute "romValidation_".
+			virtual void addRomObstacle (const char* romName, const core::CollisionObjectPtr_t& object);
 
       /// Remove a collision pair between a joint and an obstacle
       /// \param the joint that holds the inner objects,
@@ -124,7 +132,7 @@ namespace hpp {
     protected:
       RbPrmValidation (const model::RbPrmDevicePtr_t& robot,
                        const std::vector<std::string>& filter,
-                       const std::map<std::string, rbprm::NormalFilter>& normalFilters);
+                       const std::map<std::string, std::vector<std::string> >& affFilters);
     }; // class RbPrmValidation
     /// \}
   } // namespace rbprm

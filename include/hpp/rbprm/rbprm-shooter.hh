@@ -64,7 +64,7 @@ namespace hpp {
                                          const core::ObjectVector_t &geometries,
 																				 const std::map<std::string, std::vector<model::CollisionObjectPtr_t> > affordances,
                                          const std::vector<std::string>& filter = std::vector<std::string>(),
-                                         const std::map<std::string, rbprm::NormalFilter>& normalFilters = std::map<std::string, rbprm::NormalFilter>(),
+                                         const std::map<std::string, std::vector<std::string> >& affFilters = std::map<std::string, std::vector<std::string> >(),
                                          const std::size_t shootLimit = 10000,
                                          const std::size_t displacementLimit = 100);
     virtual core::ConfigurationPtr_t shoot () const;
@@ -91,9 +91,9 @@ namespace hpp {
     /// Note that translation joints have to be bounded.
     RbPrmShooter (const model::RbPrmDevicePtr_t& robot,
                   const core::ObjectVector_t &geometries,
-									const std::map<std::string, std::vector<model::CollisionObjectPtr_t> > affordances,
+									const std::map<std::string, std::vector<model::CollisionObjectPtr_t> > &affordances,
                   const std::vector<std::string>& filter,
-                  const std::map<std::string, rbprm::NormalFilter>& normalFilters,
+                  const std::map<std::string, std::vector<std::string> >& affFilters,
                   const std::size_t shootLimit = 10000,
                   const std::size_t displacementLimit = 100);
 

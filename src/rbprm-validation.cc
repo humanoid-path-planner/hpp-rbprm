@@ -28,14 +28,14 @@ namespace
     }
 
     hpp::rbprm::T_RomValidation createRomValidations(const hpp::model::RbPrmDevicePtr_t& robot,
-                                                     const std::map<std::string, hpp::rbprm::NormalFilter>& normalFilters)
+                                                     const std::map<std::string, std::vector<std::string> >& affFilters)
     {
         hpp::rbprm::T_RomValidation result;
         for(hpp::model::T_Rom::const_iterator cit = robot->robotRoms_.begin();
             cit != robot->robotRoms_.end(); ++cit)
         {
-            std::map<std::string, hpp::rbprm::NormalFilter>::const_iterator cfit = normalFilters.find(cit->first);
-            if(cfit != normalFilters.end())
+            std::map<std::string, std::vector<std::string> >::const_iterator cfit = affFilters.find(cit->first);
+            if(cfit != affFilters.end())
             {
                 result.insert(std::make_pair(cit->first, hpp::rbprm::RbPrmRomValidation::create(cit->second, cfit->second)));
             }
@@ -53,16 +53,16 @@ namespace hpp {
   namespace rbprm {
 
     RbPrmValidationPtr_t RbPrmValidation::create
-    (const model::RbPrmDevicePtr_t& robot, const std::vector<std::string>& filter, const std::map<std::string, rbprm::NormalFilter>& normalFilters)
+    (const model::RbPrmDevicePtr_t& robot, const std::vector<std::string>& filter, const std::map<std::string, std::vector<std::string> >& affFilters)
     {
-      RbPrmValidation* ptr = new RbPrmValidation (robot, filter, normalFilters);
+      RbPrmValidation* ptr = new RbPrmValidation (robot, filter, affFilters);
       return RbPrmValidationPtr_t (ptr);
     }
 
     RbPrmValidation::RbPrmValidation (const model::RbPrmDevicePtr_t& robot
-                                      , const std::vector<std::string>& filter, const std::map<std::string, rbprm::NormalFilter>& normalFilters)
+                                      , const std::vector<std::string>& filter, const std::map<std::string, std::vector<std::string> >& affFilters)
         : trunkValidation_(tuneFclValidation(robot))
-        , romValidations_(createRomValidations(robot, normalFilters))
+        , romValidations_(createRomValidations(robot, affFilters))
         , defaultFilter_(filter)
     {
         for(std::vector<std::string>::const_iterator cit = defaultFilter_.begin();
@@ -133,11 +133,20 @@ namespace hpp {
     void RbPrmValidation::addObstacle (const CollisionObjectPtr_t& object)
     {
         trunkValidation_->addObstacle(object);
-        for(T_RomValidation::const_iterator cit = romValidations_.begin();
-            cit != romValidations_.end(); ++cit)
-        {
-            cit->second->addObstacle(object);
-        }
+		}
+
+		void RbPrmValidation::addRomObstacle (const char* romName, const CollisionObjectPtr_t& object)
+		{
+				std::string romStr = std::string (romName);
+				T_RomValidation::const_iterator romIt =
+					romValidations_.find (romStr);
+				if (romIt == romValidations_.end ()) {
+					// TODO: Throw error?
+					std::cout << "No validation for rom named " << romStr 
+						<< " was found. Object not added."<< std::endl;
+				} else {
+        	romIt->second->addObstacle(object);
+				}
     }
 
     void RbPrmValidation::removeObstacleFromJoint

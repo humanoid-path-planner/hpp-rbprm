@@ -175,12 +175,12 @@ namespace
 																						const std::map<std::string, 
 																							std::vector<model::CollisionObjectPtr_t> > affordances,
                                             const std::vector<std::string>& filter,
-                                            const std::map<std::string, rbprm::NormalFilter>& normalFilters,
+                                            const std::map<std::string, std::vector<std::string> >& affFilters,
                                             const std::size_t shootLimit, const std::size_t displacementLimit)
     {
         srand ((unsigned int)(time(NULL)));
         RbPrmShooter* ptr = new RbPrmShooter (robot, geometries, affordances,
-					filter, normalFilters, shootLimit, displacementLimit);
+					filter, affFilters, shootLimit, displacementLimit);
         RbPrmShooterPtr_t shPtr (ptr);
         ptr->init (shPtr);
         return shPtr;
@@ -203,16 +203,16 @@ namespace
     RbPrmShooter::RbPrmShooter (const model::RbPrmDevicePtr_t& robot,
                               const ObjectVector_t& geometries,
 															const std::map<std::string, 
-																std::vector<model::CollisionObjectPtr_t> > affordances,
+																std::vector<model::CollisionObjectPtr_t> >& affordances,
                               const std::vector<std::string>& filter,
-                              const std::map<std::string, rbprm::NormalFilter>& normalFilters,
+                              const std::map<std::string, std::vector<std::string> >& affFilters,
                               const std::size_t shootLimit,
                               const std::size_t displacementLimit)
     : shootLimit_(shootLimit)
     , displacementLimit_(displacementLimit)
     , filter_(filter)
     , robot_ (robot)
-    , validator_(rbprm::RbPrmValidation::create(robot_, filter, normalFilters))
+    , validator_(rbprm::RbPrmValidation::create(robot_, filter, affFilters))
     , eulerSo3_(initSo3())
     {
         for(hpp::core::ObjectVector_t::const_iterator cit = geometries.begin();
@@ -220,6 +220,26 @@ namespace
         {
             validator_->addObstacle(*cit);
         }
+				// Add obstacles corresponding to affordances of given rom
+				std::map<std::string, std::vector<std::string> >::const_iterator filterIt;
+				for (filterIt = affFilters.begin (); filterIt != affFilters.end();
+					filterIt++) {
+					for (unsigned int fIdx = 0; fIdx < filterIt->second.size (); fIdx++) {
+						std::map<std::string, std::vector<model::CollisionObjectPtr_t> >::const_iterator affIt =
+							affordances.find (filterIt->second[fIdx]);
+						if (affIt == affordances.end ()) {
+						std::cout << "No affordance named " << filterIt->second[fIdx] 
+							<< "found. Ignoring filter setting." << std::endl;
+						} else {
+							for (unsigned int affIdx = 0; affIdx < affIt->second.size (); affIdx++) {
+								validator_->addRomObstacle(filterIt->first.c_str (), affIt->second[affIdx]);
+							}
+							// jump out of for loop after first match (because it is the only one
+							// for a given affordance!)
+							break;
+						}
+					}
+				}
         this->InitWeightedTriangles(affordances);
     }
 
@@ -331,6 +351,8 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
         Vec3f lastDirection(1,0,0);
         while(!found && limitDis >0)
         {
+						bool test1 = validator_->trunkValidation_->validate(*config, report);
+						bool test2 = validator_->validateRoms(*config, filter_);
             if(validator_->trunkValidation_->validate(*config, report)
             && validator_->validateRoms(*config, filter_))
             {

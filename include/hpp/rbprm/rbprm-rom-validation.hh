@@ -26,17 +26,6 @@
 namespace hpp {
   namespace rbprm {
 
-    struct NormalFilter
-    {
-        NormalFilter()
-            : unConstrained_(true), normal_(0,0,1.), range_(0.){}
-        NormalFilter(const fcl::Vec3f& normal, const double range)
-            : unConstrained_(false), normal_(normal), range_(range){}
-        bool unConstrained_;
-        fcl::Vec3f normal_;
-        double range_;
-    };
-
     class RbPrmRomValidation;
     typedef boost::shared_ptr <RbPrmRomValidation> RbPrmRomValidationPtr_t;
 
@@ -52,7 +41,8 @@ namespace hpp {
     {
     public:
       static RbPrmRomValidationPtr_t create (const model::DevicePtr_t& robot,
-                                             const NormalFilter& normalFilter = NormalFilter());
+                                             const std::vector<std::string>& affFilters 
+																						 	= std::vector<std::string>());
 
       /// Compute whether the configuration is valid
       ///
@@ -74,11 +64,11 @@ namespace hpp {
                  bool throwIfInValid = false);
 
     public:
-      const NormalFilter filter_;
+      const std::vector<std::string> filter_;
 
     protected:
       RbPrmRomValidation (const model::DevicePtr_t &robot,
-                       const NormalFilter &normalFilter);
+                       const std::vector<std::string>& affFilters);
     }; // class RbPrmValidation
     /// \}
   } // namespace rbprm
