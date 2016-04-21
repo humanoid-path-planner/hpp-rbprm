@@ -63,7 +63,7 @@ namespace hpp {
                                       , const std::vector<std::string>& filter, const std::map<std::string, std::vector<std::string> >& affFilters)
         : trunkValidation_(tuneFclValidation(robot))
         , romValidations_(createRomValidations(robot, affFilters))
-        , defaultFilter_(filter)
+        , defaultFilter_(filter), addToRomValidations_(true)
     {
         for(std::vector<std::string>::const_iterator cit = defaultFilter_.begin();
             cit != defaultFilter_.end(); ++cit)
@@ -82,7 +82,7 @@ namespace hpp {
         unsigned int filterMatch(0);
         for(T_RomValidation::const_iterator cit = romValidations_.begin();
             cit != romValidations_.end() && (filterMatch < 1 || filterMatch < filter.size()); ++cit)
-        {
+        { 
             if((filter.empty() || std::find(filter.begin(), filter.end(), cit->first) != filter.end())
                     && cit->second->validate(config, throwIfInValid))
             {
@@ -119,7 +119,7 @@ namespace hpp {
                ValidationReportPtr_t& validationReport)
     {
         return trunkValidation_->validate(config, validationReport)
-                && validateRoms(config, defaultFilter_);
+               && validateRoms(config, defaultFilter_);
     }
 
     bool RbPrmValidation::validate (const Configuration_t& config,
@@ -133,6 +133,12 @@ namespace hpp {
     void RbPrmValidation::addObstacle (const CollisionObjectPtr_t& object)
     {
         trunkValidation_->addObstacle(object);
+				if (addToRomValidations_) {
+         for(T_RomValidation::const_iterator cit = romValidations_.begin();
+          cit != romValidations_.end(); ++cit) {
+          cit->second->addObstacle(object);
+  			}
+			}
 		}
 
 		void RbPrmValidation::addRomObstacle (const char* romName, const CollisionObjectPtr_t& object)

@@ -215,13 +215,11 @@ namespace
     , validator_(rbprm::RbPrmValidation::create(robot_, filter, affFilters))
     , eulerSo3_(initSo3())
     {
+				validator_->setAddToRomsValidation (false);
         for(hpp::core::ObjectVector_t::const_iterator cit = geometries.begin();
             cit != geometries.end(); ++cit)
         {
             validator_->addObstacle(*cit);
-						core::CollisionPairs_t tests1 = validator_->trunkValidation_->getColPairs ();
-						std::cout << "filter has " << tests1.size() << " colObjects." << std::endl;
-
         }
 				// Add obstacles corresponding to affordances of given rom
 				std::map<std::string, std::vector<std::string> >::const_iterator filterIt;
@@ -243,7 +241,6 @@ namespace
 				for (T_RomValidation::const_iterator testIt = validator_->romValidations_.begin ();
 				testIt !=  validator_->romValidations_.end (); testIt++) {
 					core::CollisionPairs_t tests = testIt->second->getColPairs ();
-					std::cout << "filter for " << testIt->first << "has " << tests.size() << " colObjects." << std::endl;
         }
 				this->InitWeightedTriangles(affordances);
 		}
@@ -356,8 +353,6 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
         Vec3f lastDirection(1,0,0);
         while(!found && limitDis >0)
         {
-						bool test1 = validator_->trunkValidation_->validate(*config, report);
-						bool test2 = validator_->validateRoms(*config, filter_);
             if(validator_->trunkValidation_->validate(*config, report)
             && validator_->validateRoms(*config, filter_))
             {

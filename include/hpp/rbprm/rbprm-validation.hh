@@ -122,6 +122,11 @@ namespace hpp {
       bool validateRoms(const core::Configuration_t& config,
                         bool throwIfInValid = false);
 
+			void setAddToRomsValidation (const bool &add)
+			{
+				addToRomValidations_ = add;
+			}
+
     public:
       /// CollisionValidation for the trunk
       const core::CollisionValidationPtr_t trunkValidation_;
@@ -133,6 +138,11 @@ namespace hpp {
       RbPrmValidation (const model::RbPrmDevicePtr_t& robot,
                        const std::vector<std::string>& filter,
                        const std::map<std::string, std::vector<std::string> >& affFilters);
+
+		private:
+			// dirty fix: flag that determines the behaviour of the iherited 
+			// function addObstacle
+			bool addToRomValidations_;
     }; // class RbPrmValidation
     /// \}
   } // namespace rbprm
