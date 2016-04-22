@@ -44,7 +44,12 @@ namespace hpp {
     public:
       static RbPrmValidationPtr_t create (const model::RbPrmDevicePtr_t& robot,
                                           const std::vector<std::string>& filter = std::vector<std::string>(),
-                                          const std::map<std::string, std::vector<std::string> >& affFilters = std::map<std::string, std::vector<std::string> >());
+                                          const std::map<std::string, std::vector<std::string> >& affFilters =
+																						std::map<std::string, std::vector<std::string> >(),
+																					const std::map<std::string, std::vector<model::CollisionObjectPtr_t> >& affordances = 
+																						std::map<std::string, std::vector<model::CollisionObjectPtr_t> >(),
+																					const core::ObjectVector_t& geometries =
+																						core::ObjectVector_t());
 
       /// Compute whether the configuration is valid
       ///
@@ -82,20 +87,12 @@ namespace hpp {
                  const std::vector<std::string>& filter,
                  bool throwIfInValid = false);
 
-      /// Add an obstacle to Trunk validation
+      /// Add an obstacle to validation
       /// \param object obstacle added
       /// Store obstacle and build a collision pair with each body of the robot.
-      /// \notice This is applied only for trunk shapes. This can be done for a single
-      /// shape through the attribute "trunkValidation_".
-      virtual void addObstacle (const core::CollisionObjectPtr_t& object);
-
-			/// Add obstacle to Rom validation
-			/// \param object obstacle added
-			/// \param romName rom to which obstacle will be added
-			/// Store obstacle and build a collision pair with each body of the robot.
-      /// \notice This is applied only for rom shapes. This can be done for a single
-      /// shape through the attribute "romValidation_".
-			virtual void addRomObstacle (const char* romName, const core::CollisionObjectPtr_t& object);
+      /// \notice this function has to be called for trunk validation and rom 
+			/// validation separately unless they use same obstacles (not usually the case)
+			virtual void addObstacle (const core::CollisionObjectPtr_t& object);
 
       /// Remove a collision pair between a joint and an obstacle
       /// \param the joint that holds the inner objects,
@@ -122,11 +119,6 @@ namespace hpp {
       bool validateRoms(const core::Configuration_t& config,
                         bool throwIfInValid = false);
 
-			void setAddToRomsValidation (const bool &add)
-			{
-				addToRomValidations_ = add;
-			}
-
     public:
       /// CollisionValidation for the trunk
       const core::CollisionValidationPtr_t trunkValidation_;
@@ -137,12 +129,12 @@ namespace hpp {
     protected:
       RbPrmValidation (const model::RbPrmDevicePtr_t& robot,
                        const std::vector<std::string>& filter,
-                       const std::map<std::string, std::vector<std::string> >& affFilters);
+                       const std::map<std::string,
+											 	std::vector<std::string> >& affFilters,
+											 const std::map<std::string, 
+												std::vector<model::CollisionObjectPtr_t> >& affordances,
+											 const core::ObjectVector_t& geometries);
 
-		private:
-			// dirty fix: flag that determines the behaviour of the iherited 
-			// function addObstacle
-			bool addToRomValidations_;
     }; // class RbPrmValidation
     /// \}
   } // namespace rbprm

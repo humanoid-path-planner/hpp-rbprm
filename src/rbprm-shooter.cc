@@ -212,33 +212,10 @@ namespace
     , displacementLimit_(displacementLimit)
     , filter_(filter)
     , robot_ (robot)
-    , validator_(rbprm::RbPrmValidation::create(robot_, filter, affFilters))
+    , validator_(rbprm::RbPrmValidation::create(robot_, filter, affFilters,
+																								affordances, geometries))
     , eulerSo3_(initSo3())
     {
-				validator_->setAddToRomsValidation (false);
-        for(hpp::core::ObjectVector_t::const_iterator cit = geometries.begin();
-            cit != geometries.end(); ++cit)
-        {
-            validator_->addObstacle(*cit);
-        }
-				// Add obstacles corresponding to affordances of given rom
-				std::map<std::string, std::vector<std::string> >::const_iterator filterIt;
-				for (filterIt = affFilters.begin (); filterIt != affFilters.end();
-					filterIt++) {
-					for (unsigned int fIdx = 0; fIdx < filterIt->second.size (); fIdx++) {
-						std::map<std::string, std::vector<model::CollisionObjectPtr_t> >::const_iterator affIt =
-							affordances.find (filterIt->second[fIdx]);
-						if (affIt == affordances.end ()) {
-						std::cout << "No affordance named " << filterIt->second[fIdx] 
-							<< "found. Ignoring filter setting." << std::endl;
-						} else {
-							for (unsigned int affIdx = 0; affIdx < affIt->second.size (); affIdx++) {
-								validator_->addRomObstacle(filterIt->first.c_str (), affIt->second[affIdx]);
-							}
-						}
-					}
-				}
-        }
 				this->InitWeightedTriangles(affordances);
 		}
 

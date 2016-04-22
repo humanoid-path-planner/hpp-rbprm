@@ -53,17 +53,26 @@ namespace hpp {
   namespace rbprm {
 
     RbPrmValidationPtr_t RbPrmValidation::create
-    (const model::RbPrmDevicePtr_t& robot, const std::vector<std::string>& filter, const std::map<std::string, std::vector<std::string> >& affFilters)
+    (const model::RbPrmDevicePtr_t& robot, const std::vector<std::string>& filter,
+			const std::map<std::string, std::vector<std::string> >& affFilters,
+			const std::map<std::string, std::vector<model::CollisionObjectPtr_t> >& affordances,
+			const core::ObjectVector_t& geometries)
     {
-      RbPrmValidation* ptr = new RbPrmValidation (robot, filter, affFilters);
+      RbPrmValidation* ptr = new RbPrmValidation (robot, filter, affFilters,
+																									affordances, geometries);
       return RbPrmValidationPtr_t (ptr);
     }
 
     RbPrmValidation::RbPrmValidation (const model::RbPrmDevicePtr_t& robot
-                                      , const std::vector<std::string>& filter, const std::map<std::string, std::vector<std::string> >& affFilters)
+                                      , const std::vector<std::string>& filter,
+																				const std::map<std::string,
+																					std::vector<std::string> >& affFilters,
+																				const std::map<std::string, 
+																					std::vector<model::CollisionObjectPtr_t> >& affordances,
+																				const core::ObjectVector_t& geometries)
         : trunkValidation_(tuneFclValidation(robot))
         , romValidations_(createRomValidations(robot, affFilters))
-        , defaultFilter_(filter), addToRomValidations_(true)
+        , defaultFilter_(filter)
     {
         for(std::vector<std::string>::const_iterator cit = defaultFilter_.begin();
             cit != defaultFilter_.end(); ++cit)
@@ -73,6 +82,37 @@ namespace hpp {
                 std::cout << "warning: default filter impossible to match in rbprmshooter" << std::endl;
             }
         }
+
+        for(hpp::core::ObjectVector_t::const_iterator cit = geometries.begin();
+            cit != geometries.end(); ++cit)
+        {
+            addObstacle(*cit);
+        }
+				// Add obstacles corresponding to affordances of given rom
+				std::map<std::string, std::vector<std::string> >::const_iterator filterIt;
+				for (filterIt = affFilters.begin (); filterIt != affFilters.end();
+					filterIt++) {
+					for (unsigned int fIdx = 0; fIdx < filterIt->second.size (); fIdx++) {
+						std::map<std::string, std::vector<model::CollisionObjectPtr_t> >::const_iterator affIt =
+							affordances.find (filterIt->second[fIdx]);
+						if (affIt == affordances.end ()) {
+						std::cout << "No affordance named " << filterIt->second[fIdx] 
+							<< "found. Ignoring filter setting." << std::endl;
+						} else {
+							for (unsigned int affIdx = 0; affIdx < affIt->second.size (); affIdx++) {
+								T_RomValidation::const_iterator romIt =
+								romValidations_.find (filterIt->first);
+								if (romIt == romValidations_.end ()) {
+									// TODO: Throw error?
+									std::cout << "No validation for rom named " << filterIt->first
+										<< " was found. Object not added."<< std::endl;
+						 		} else {
+        					romIt->second->addObstacle(affIt->second[affIdx]);
+								}
+							}
+						}
+					}
+				}
     }
 
     bool RbPrmValidation::validateRoms(const core::Configuration_t& config,
@@ -133,27 +173,7 @@ namespace hpp {
     void RbPrmValidation::addObstacle (const CollisionObjectPtr_t& object)
     {
         trunkValidation_->addObstacle(object);
-				if (addToRomValidations_) {
-         for(T_RomValidation::const_iterator cit = romValidations_.begin();
-          cit != romValidations_.end(); ++cit) {
-          cit->second->addObstacle(object);
-  			}
-			}
 		}
-
-		void RbPrmValidation::addRomObstacle (const char* romName, const CollisionObjectPtr_t& object)
-		{
-				std::string romStr = std::string (romName);
-				T_RomValidation::const_iterator romIt =
-					romValidations_.find (romStr);
-				if (romIt == romValidations_.end ()) {
-					// TODO: Throw error?
-					std::cout << "No validation for rom named " << romStr 
-						<< " was found. Object not added."<< std::endl;
-				} else {
-        	romIt->second->addObstacle(object);
-				}
-    }
 
     void RbPrmValidation::removeObstacleFromJoint
     (const JointPtr_t& joint, const CollisionObjectPtr_t& obstacle)
