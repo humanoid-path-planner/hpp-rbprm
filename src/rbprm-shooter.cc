@@ -238,9 +238,6 @@ namespace
 						}
 					}
 				}
-				for (T_RomValidation::const_iterator testIt = validator_->romValidations_.begin ();
-				testIt !=  validator_->romValidations_.end (); testIt++) {
-					core::CollisionPairs_t tests = testIt->second->getColPairs ();
         }
 				this->InitWeightedTriangles(affordances);
 		}
