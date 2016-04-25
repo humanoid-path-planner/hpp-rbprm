@@ -97,7 +97,7 @@ namespace hpp {
 							affordances.find (filterIt->second[fIdx]);
 						if (affIt == affordances.end ()) {
 						std::cout << "No affordance named " << filterIt->second[fIdx] 
-							<< "found. Ignoring filter setting." << std::endl;
+							<< " found. Ignoring filter setting." << std::endl;
 						} else {
 							for (unsigned int affIdx = 0; affIdx < affIt->second.size (); affIdx++) {
 								T_RomValidation::const_iterator romIt =
