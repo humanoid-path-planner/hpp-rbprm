@@ -38,14 +38,19 @@ std::size_t ComputeLength(const model::JointPtr_t limb, const model::JointPtr_t 
 fcl::Vec3f ComputeEffectorPosition(const model::JointPtr_t limb, const model::JointPtr_t effector, const fcl::Vec3f& offset)
 {
     const fcl::Transform3f& transform = effector->currentTransformation();
+//std::cout << "transform effector " << transform << std::endl;
     //return transform.getTranslation() + transform.getRotation() * offset ;
     fcl::Transform3f parentT = fcl::inverse(limb->parentJoint()->currentTransformation());
+/*std::cout << "transform parentT " << parentT << std::endl;
+std::cout << "effector offset " << offset << std::endl;
+std::cout << "translation +  offset " << transform.getTranslation() + offset << std::endl;
+std::cout << "res  " << (parentT * fcl::Transform3f(transform.getTranslation() + offset)).getTranslation() << std::endl;*/
     return (parentT * fcl::Transform3f(transform.getTranslation() + offset)).getTranslation();
 }
 
 Eigen::MatrixXd Jacobian(const model::JointPtr_t limb, const model::JointPtr_t effector)
 {
-    return effector->jacobian().block(0,limb->rankInVelocity(),6, effector->rankInVelocity() - limb->rankInVelocity() + 1);
+    return effector->jacobian().block(0,limb->rankInVelocity(),6, effector->rankInVelocity() - limb->rankInVelocity() + effector->numberDof());
 }
 
 
@@ -119,7 +124,7 @@ std::vector<Sample> hpp::rbprm::sampling::GenerateSamples(const model::JointPtr_
                                                          , const std::size_t nbSamples, const fcl::Vec3f& offset)
 {
     std::vector<Sample> result; result.reserve(nbSamples);
-    model::DevicePtr_t device(model->robot()->clone());
+    model::DevicePtr_t device (model->robot()->clone());
     Configuration_t config = device->currentConfiguration();
     JointPtr_t clone = device->getJointByName(model->name());
     JointPtr_t effectorClone = device->getJointByName(effector);

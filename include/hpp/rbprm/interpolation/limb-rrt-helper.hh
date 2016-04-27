@@ -24,6 +24,7 @@
 # include <hpp/rbprm/rbprm-state.hh>
 # include <hpp/rbprm/rbprm-device.hh>
 # include <hpp/core/path.hh>
+# include <hpp/core/problem.hh>
 
 # include <vector>
 # include <map>
@@ -33,19 +34,35 @@ namespace hpp {
     namespace rbprm {
     namespace interpolation {
 
-    typedef std::map<std::string, core::DevicePtr_t> T_LimbDevice;
+    //typedef std::map<std::string, core::DevicePtr_t> T_LimbDevice;
 
     struct HPP_CORE_DLLAPI LimbRRTHelper
     {
-         LimbRRTHelper(model::RbPrmDevicePtr_t rootDevice, RbPrmFullBodyPtr_t fullbody);
-        ~LimbRRTHelper();
+         LimbRRTHelper(RbPrmFullBodyPtr_t fullbody,
+                       core::ProblemPtr_t referenceProblem);
+        ~LimbRRTHelper(){}
 
-         model::RbPrmDevicePtr_t rootDevice_;
-         T_LimbDevice prototypes_;
+         RbPrmFullBodyPtr_t fullbody_;
+         core::DevicePtr_t fullBodyDevice_;
+         //std::vector<core::DevicePtr_t> limbDevices_;
+         core::Problem rootProblem_;
+         core::PathPlannerPtr_t planner_;
+         //std::vector<core::Problem> problems_;
     };
 
-    core::PathPtr_t interpolateStates(const LimbRRTHelper& helper, const State& from, const State& to);
-    core::PathPtr_t interpolateStates(const LimbRRTHelper& helper, const std::vector<State>& states);
+    struct HPP_CORE_DLLAPI LimbRRTSolver
+    {
+         LimbRRTSolver(core::PathPtr_t rootPath, core::DevicePtr_t limbDevice,
+                       const core::Problem& problem);
+        ~LimbRRTSolver(){}
+
+         core::DevicePtr_t limbDevice_;
+         core::PathPtr_t rootPath_;
+         core::Problem problem_;
+    };
+
+    core::PathVectorPtr_t HPP_RBPRM_DLLAPI interpolateStates(LimbRRTHelper& helper, const State& from, const State& to);
+    //core::PathPtr_t interpolateStates(const LimbRRTHelper& helper, const std::vector<State>& states);
 
     } // namespace interpolation
     } // namespace rbprm

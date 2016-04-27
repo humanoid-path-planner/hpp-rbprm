@@ -39,7 +39,7 @@ namespace hpp {
 /// \addtogroup configuration_sampling
 /// \{
 /// Samples configuration which respect the reachability condition
-    class HPP_RBPRM_DLLAPI LimbRRTShooter : public core::BasicConfigurationShooter{
+    class HPP_RBPRM_DLLAPI LimbRRTShooter : public core::ConfigurationShooter{
     ///
     public:
         /// Creates an instance of LimbRRTShooter for interpolating a limb motion along a root path.
@@ -48,30 +48,25 @@ namespace hpp {
         /// the root joint is necessarily a free flyer
         /// \param path A constrained path for the root of the limb
         /// \return a pointer to an instance of LimbRRTShooter
-        static HPP_RBPRM_DLLAPI LimbRRTShooterPtr_t create (hpp::model::DevicePtr_t limb,
+        static HPP_RBPRM_DLLAPI LimbRRTShooterPtr_t create (const hpp::rbprm::RbPrmLimbPtr_t limb,
                                                             const hpp::core::PathPtr_t path,
-                                                            const std::size_t pathDofRank,
-                                                            const std::size_t pathRootRank,
-                                                            const std::size_t pathRootLength);
+                                                            const std::size_t pathDofRank);
 
         virtual core::ConfigurationPtr_t shoot () const;
 
     public:
+        const hpp::rbprm::RbPrmLimbPtr_t limb_;
         const hpp::core::PathPtr_t path_;
         const std::size_t pathDofRank_;
-        const std::size_t pathRootRank_;
-        const std::size_t pathRootLength_;
 
     private:
         LimbRRTShooterWkPtr_t weak_;
 
 
     protected:
-        LimbRRTShooter (hpp::model::DevicePtr_t limb,
+        LimbRRTShooter (const hpp::rbprm::RbPrmLimbPtr_t limb,
                         const hpp::core::PathPtr_t path,
-                        const std::size_t pathDofRank,
-                        const std::size_t pathRootRank,
-                        const std::size_t pathRootLength);
+                        const std::size_t pathDofRank);
 
         void init (const LimbRRTShooterPtr_t& self);
     }; // class LimbRRTShooter

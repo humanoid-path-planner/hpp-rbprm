@@ -15,19 +15,19 @@
 // hpp-rbprm. If not, see <http://www.gnu.org/licenses/>.
 
 #include <hpp/rbprm/interpolation/limb-rrt-shooter.hh>
+#include <hpp/rbprm/rbprm-limb.hh>
+#include <hpp/rbprm/sampling/sample.hh>
 
 namespace hpp {
 using namespace core;
   namespace rbprm {
   namespace interpolation {
 
-    LimbRRTShooterPtr_t LimbRRTShooter::create (hpp::model::DevicePtr_t limb,
+    LimbRRTShooterPtr_t LimbRRTShooter::create (hpp::rbprm::RbPrmLimbPtr_t limb,
                                                 const hpp::core::PathPtr_t path,
-                                                const std::size_t pathDofRank,
-                                                const std::size_t pathRootRank,
-                                                const std::size_t pathRootLength)
+                                                const std::size_t pathDofRank)
     {
-        LimbRRTShooter* ptr = new LimbRRTShooter (limb, path, pathDofRank, pathRootRank, pathRootLength);
+        LimbRRTShooter* ptr = new LimbRRTShooter (limb, path, pathDofRank);
         LimbRRTShooterPtr_t shPtr (ptr);
         ptr->init (shPtr);
         return shPtr;
@@ -39,28 +39,29 @@ using namespace core;
         weak_ = self;
     }
 
-    LimbRRTShooter::LimbRRTShooter (hpp::model::DevicePtr_t limb,
+    LimbRRTShooter::LimbRRTShooter (const hpp::rbprm::RbPrmLimbPtr_t limb,
                                     const hpp::core::PathPtr_t path,
-                                    const std::size_t pathDofRank,
-                                    const std::size_t pathRootRank,
-                                    const std::size_t pathRootLength)
-    : core::BasicConfigurationShooter(limb)
+                                    const std::size_t pathDofRank)
+    : core::ConfigurationShooter()
+    , limb_(limb)
     , path_(path)
     , pathDofRank_(pathDofRank)
-    , pathRootRank_(pathRootRank)
-    , pathRootLength_(pathRootLength)
     {
         // NOTHING
     }
 
     hpp::core::ConfigurationPtr_t LimbRRTShooter::shoot () const
     {
-        ConfigurationPtr_t config = BasicConfigurationShooter::shoot();
         // edit path sampling dof
         value_type a = path_->timeRange().first; value_type b = path_->timeRange().second;
         value_type pathDofVal = (b-a)* rand() / value_type(RAND_MAX) + a;
+        ConfigurationPtr_t config (new Configuration_t((*path_)(pathDofVal)));
         (*config) [pathDofRank_] = pathDofVal;
-        config->segment(0,pathRootLength_) = ((*path_)(pathDofVal)).segment(pathRootRank_, pathRootLength_);
+        // choose random limb configuration
+        RbPrmLimbPtr_t limb_;
+        const sampling::Sample& sample = *(limb_->sampleContainer_.samples_.begin() + (rand() % (int) (limb_->sampleContainer_.samples_.size() -1)));
+        sampling::Load(sample,*config);
+        //config->segment(0,pathRootLength_) = ((*path_)(pathDofVal)).segment(pathRootRank_, pathRootLength_);
         return config;
     }
   }// namespace interpolation
