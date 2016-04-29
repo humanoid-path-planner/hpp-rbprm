@@ -62,7 +62,9 @@ namespace hpp {
     };
 
     core::PathVectorPtr_t HPP_RBPRM_DLLAPI interpolateStates(LimbRRTHelper& helper, const State& from, const State& to);
-    //core::PathPtr_t interpolateStates(const LimbRRTHelper& helper, const std::vector<State>& states);
+    core::PathVectorPtr_t HPP_RBPRM_DLLAPI interpolateStates(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
+                                                             const CIT_State& startState,
+                                                             const CIT_State& endState);
 
     } // namespace interpolation
     } // namespace rbprm

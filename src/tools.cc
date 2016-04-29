@@ -18,6 +18,7 @@
 #include <Eigen/Geometry>
 #include <iostream>
 #include <fstream>
+#include <hpp/model/joint.hh>
 
 namespace hpp {
   namespace tools {

@@ -38,6 +38,7 @@
 namespace hpp {
   namespace rbprm {
 
+    const double epsilon = 10e-3;
 
     RbPrmFullBodyPtr_t RbPrmFullBody::create (const model::DevicePtr_t &device)
     {
@@ -51,24 +52,6 @@ namespace hpp {
     {
         // NOTHING
     }
-
-
-    void RemoveNonLimbCollisionRec(const model::JointPtr_t joint, const std::string& limbname,
-                                   const model::ObjectVector_t &collisionObjects,
-                                   core::CollisionValidationPtr_t& collisionValidation)
-    {
-        if(joint->name() == limbname) return;
-        for(model::ObjectVector_t::const_iterator cit = collisionObjects.begin();
-            cit != collisionObjects.end(); ++cit)
-        {
-            collisionValidation->removeObstacleFromJoint(joint, *cit);
-        }
-        for(std::size_t i=0; i<joint->numberChildJoints(); ++i)
-        {
-            RemoveNonLimbCollisionRec(joint->childJoint(i), limbname, collisionObjects, collisionValidation);
-        }
-    }
-
 
     bool RbPrmFullBody::AddHeuristic(const std::string& name, const sampling::heuristic func)
     {
@@ -87,19 +70,23 @@ namespace hpp {
             if(limbs_.empty())
             {
                 collisionValidation_->addObstacle(*cit);
+                //hpp::tools::RemoveEffectorCollision<core::CollisionValidation>((*collisionValidation_.get()), limb->effector_, *cit);
             }
             limbcollisionValidation_->addObstacle(*cit);
             //remove effector collision
-            model::JointPtr_t collisionFree = limb->effector_;
+            hpp::tools::RemoveEffectorCollision<core::CollisionValidation>((*collisionValidation_.get()), limb->effector_, *cit);
+            hpp::tools::RemoveEffectorCollision<core::CollisionValidation>((*limbcollisionValidation_.get()), limb->effector_, *cit);
+            //TRYING TO REENABLE EFFECTOR COLLISION
+            /*model::JointPtr_t collisionFree = limb->effector_;
             while(collisionFree)
             {
                 collisionValidation_->removeObstacleFromJoint(collisionFree, *cit);
                 limbcollisionValidation_->removeObstacleFromJoint(collisionFree,*cit);
                 collisionFree = collisionFree->numberChildJoints()>0 ? collisionFree->childJoint(0) : 0;
-            }
+            }*/
         }
         limbs_.insert(std::make_pair(id, limb));
-        RemoveNonLimbCollisionRec(device_->rootJoint(),name,collisionObjects,limbcollisionValidation_);
+        tools::RemoveNonLimbCollisionRec<core::CollisionValidation>(device_->rootJoint(),name,collisionObjects,*limbcollisionValidation_.get());
         limbcollisionValidations_.insert(std::make_pair(id, limbcollisionValidation_));
         // insert limb to root group
         T_LimbGroup::iterator cit = limbGroups_.find(name);
@@ -389,10 +376,12 @@ namespace hpp {
               core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 20);
               // get current normal orientation
               LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
+              fcl::Vec3f posOffset = position - rotation * limb->offset_;
+              posOffset = posOffset + normal * epsilon;
               proj->add(core::NumericalConstraint::create (constraints::Position::create(body->device_,
                                                                                          limb->effector_,
                                                                                          fcl::Vec3f(0,0,0),
-                                                                                         position - rotation * limb->offset_, //)));
+                                                                                         posOffset, //)));
                                                                                          model::matrix3_t::getIdentity(),
                                                                                          setTranslationConstraints(normal))));//
 

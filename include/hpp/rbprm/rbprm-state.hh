@@ -28,6 +28,9 @@
 
 namespace hpp {
   namespace rbprm {
+  struct State;
+  typedef std::vector<State> T_State;
+  typedef T_State::const_iterator CIT_State;
   struct HPP_RBPRM_DLLAPI State{
       State():nbContacts(0), stable(false){}
       State(const State& other)
@@ -127,8 +130,6 @@ namespace hpp {
                 bool newContact(true);
                 if(previous.contactPositions_.find(name) != previous.contactPositions_.end())
                 {
-                    std::cout << "positions " << previous.contactPositions_.at(name) << "\n"
-                                 << cit->second << std::endl;
                     newContact = (previous.contactPositions_.at(name) - cit->second).norm() > 10e-3;
                 }
                 if(newContact && std::find(outList.begin(),outList.end(),name) == outList.end())

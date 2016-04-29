@@ -58,7 +58,6 @@ using namespace core;
         ConfigurationPtr_t config (new Configuration_t((*path_)(pathDofVal)));
         (*config) [pathDofRank_] = pathDofVal;
         // choose random limb configuration
-        RbPrmLimbPtr_t limb_;
         const sampling::Sample& sample = *(limb_->sampleContainer_.samples_.begin() + (rand() % (int) (limb_->sampleContainer_.samples_.size() -1)));
         sampling::Load(sample,*config);
         //config->segment(0,pathRootLength_) = ((*path_)(pathDofVal)).segment(pathRootRank_, pathRootLength_);

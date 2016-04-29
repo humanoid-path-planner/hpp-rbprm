@@ -18,6 +18,7 @@
 
 #include <hpp/model/device.hh>
 #include <hpp/core/collision-path-validation-report.hh>
+#include <hpp/core/joint-bound-validation.hh>
 #include <hpp/core/collision-validation.hh>
 #include <hpp/core/config-validations.hh>
 #include <hpp/core/path.hh>
@@ -43,8 +44,8 @@ namespace hpp {
                                           bool reverse, PathPtr_t& validPart,
                                           PathValidationReportPtr_t& validationReport)
     {
-        return DiscretizedPathValidation::validate(path,reverse,validPart,validationReport)
-              && path->initial()[pathDofRank_] < path->end()[pathDofRank_];
+        return DiscretizedPathValidation::validate(path,reverse,validPart,validationReport);
+             //&& path->initial()[pathDofRank_] < path->end()[pathDofRank_];
     }
 
     LimbRRTPathValidation::LimbRRTPathValidation(const DevicePtr_t& robot,
@@ -53,7 +54,8 @@ namespace hpp {
         : DiscretizedPathValidation(robot,stepSize)
         , pathDofRank_(pathDofRank)
     {
-        // NOTHING
+        add (CollisionValidation::create (robot));
+        add (JointBoundValidation::create (robot));
     }
   } // namespace interpolation
   } // namespace rbprm

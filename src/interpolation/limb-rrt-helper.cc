@@ -20,7 +20,10 @@
 #include <hpp/core/steering-method-straight.hh>
 #include <hpp/core/problem-target/goal-configurations.hh>
 #include <hpp/core/bi-rrt-planner.hh>
+#include <hpp/core/random-shortcut.hh>
+#include <hpp/core/path-vector.hh>
 #include <hpp/model/joint.hh>
+#include <hpp/rbprm/tools.hh>
 
 namespace hpp {
 using namespace core;
@@ -67,17 +70,15 @@ using namespace model;
         fullBodyDevice_->setDimensionExtraConfigSpace(fullBodyDevice_->extraConfigSpace().dimension()+1);
         rootProblem_.collisionObstacles(referenceProblem->collisionObstacles());
         // remove end effector collision
-        for(ObjectVector_t::const_iterator cit = rootProblem_.collisionObstacles().begin();
-            cit != rootProblem_.collisionObstacles().end(); ++cit)
+
+        /*for(T_Limb::const_iterator lit = fullbody->GetLimbs().begin(); lit !=
+            fullbody->GetLimbs().end(); ++lit)
         {
-            for(T_Limb::const_iterator lit = fullbody->GetLimbs().begin(); lit !=
-                fullbody->GetLimbs().end(); ++lit)
-            {
-                rootProblem_.removeObstacleFromJoint(
-                            fullBodyDevice_->getJointByName(lit->second->effector_->name()), *cit);
-            }
-        }
-        rootProblem_.pathValidation(LimbRRTPathValidation::create(fullBodyDevice_, 0.05,fullBodyDevice_->configSize()-1));
+            hpp::tools::RemoveEffectorCollision<hpp::core::Problem>(rootProblem_,
+                                                                    fullBodyDevice_->getJointByName(lit->second->effector_->name()),
+                                                                    rootProblem_.collisionObstacles());
+        }*/
+        //rootProblem_.pathValidation(LimbRRTPathValidation::create(fullBodyDevice_, 10e-5,fullBodyDevice_->configSize()-1));
         /*for(hpp::rbprm::T_Limb::const_iterator cit = fullbody->GetLimbs().begin();
             cit != fullbody->GetLimbs().end(); ++cit)
         {
@@ -125,6 +126,12 @@ using namespace model;
             ConfigurationShooterPtr_t limbRRTShooter = LimbRRTShooter::create(limbs.at(*cit),
                                                                                 rootPath,
                                                                                 helper.fullBodyDevice_->configSize()-1);
+            LimbRRTPathValidationPtr_t pathVal = LimbRRTPathValidation::create(
+                        helper.fullBodyDevice_, 0.05,helper.fullBodyDevice_->configSize()-1);
+            helper.rootProblem_.pathValidation(pathVal);
+            tools::RemoveNonLimbCollisionRec<LimbRRTPathValidation>(helper.fullBodyDevice_->rootJoint(),
+                                                                    limbs.at(*cit)->limb_->name(),
+                                                                    helper.rootProblem_.collisionObstacles(),*pathVal.get());
             helper.rootProblem_.configurationShooter(limbRRTShooter);
             Configuration_t start(helper.fullBodyDevice_->currentConfiguration());
             start.head(from.configuration_.rows()) = from.configuration_;
@@ -142,6 +149,56 @@ using namespace model;
             break;
         }
         return res;
+    }
+
+    PathVectorPtr_t interpolateStates(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
+                                      const CIT_State &startState, const CIT_State &endState)
+    {
+        PathVectorPtr_t res[100];
+        bool valid[100];
+        std::size_t distance = std::distance(startState,endState);
+        assert(distance < 100);
+        #pragma omp parallel for
+        for(std::size_t i = 0; i < distance; ++i)
+        {
+            LimbRRTHelper helper(fullbody, referenceProblem);
+            PathVectorPtr_t partialPath = interpolateStates(helper, *(startState+i), *(startState+i+1));
+            if(partialPath)
+            {
+                core::RandomShortcutPtr_t rs = core::RandomShortcut::create(helper.rootProblem_);
+                /*for(int j=0; j<9;++j)
+                {
+                    partialPath = rs->optimize(partialPath);
+                }*/
+                res[i] = rs->optimize(partialPath);
+                valid[i]=true;
+            }
+            else
+            {
+                valid[i] = false;
+            }
+        }
+        std::size_t numValid(distance);
+        for(std::size_t i = 0; i < distance; ++i)
+        {
+           if (!valid[i])
+           {
+                numValid= i;
+                break;
+           }
+        }
+        if (numValid==0)
+            throw std::runtime_error("No path found at state ");
+        else if(numValid != distance)
+        {
+            std::cout << "No path found at state " << numValid << std::endl;
+        }
+        PathVectorPtr_t completePath = res[0];
+        for(std::size_t i = 1; i < numValid; ++i)
+        {
+            completePath->concatenate(*res[i]);
+        }
+        return completePath;
     }
   }// namespace interpolation
   }// namespace rbprm
