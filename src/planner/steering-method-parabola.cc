@@ -524,6 +524,8 @@ namespace hpp {
       ParabolaPathPtr_t pp = ParabolaPath::create (device_.lock (), q1, q2,
                                                    computeLength (q1, q2,coefs),
                                                    coefs);
+      
+     // pp->setAlpha(alpha,alpha_inf_bound,alpha_sup_bound);
       hppDout (notice, "path: " << *pp);
       return pp;
     }

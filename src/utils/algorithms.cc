@@ -44,17 +44,9 @@ namespace geom
   
   double area(CIT_Point pointsBegin, CIT_Point pointsEnd){
     double a = 0;
-    
-    /*for( size_t i = 1; i <= N; ++i )
-      area += x[i]*( y[i+1] - y[i-1] );
-    area /= 2;
-     with 
-    x[N] = x[0];
-    x[N+1] = x[1];
-    y[N] = y[0];
-    y[N+1] = y[1];
-    */
-    
+
+    if((pointsBegin == pointsEnd) || ((pointsBegin+1) == pointsEnd))
+      return 0;
     
     for( CIT_Point it = pointsBegin + 1 ; it != pointsEnd - 1 ; ++it){
       a += (*it)[0]*( (*(it+1))[1] - (*(it-1))[1] );

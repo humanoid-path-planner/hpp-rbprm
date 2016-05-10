@@ -180,6 +180,8 @@ namespace hpp {
      core::vector_t coefficients () const {
 	return coefficients_;
       }
+     
+     
 
     protected:
       /// Print path in a stream
@@ -223,6 +225,8 @@ namespace hpp {
       /// config(1) = coefs(0)*x(param)^2 + coefs(1)*x(param) + coefs(2)
       virtual bool impl_compute (core::ConfigurationOut_t result,
                                  core::value_type param) const;
+      
+
 
     private:
       core::DevicePtr_t device_;
@@ -232,6 +236,8 @@ namespace hpp {
       mutable core::vector_t coefficients_; // 3 parabola coefficients
       mutable core::value_type length_;
       mutable bool workspaceDim_; // true for 3D, false for 2D
+      
+      
     }; // class ParabolaPath
   } //   namespace rbprm
 } // namespace hpp
