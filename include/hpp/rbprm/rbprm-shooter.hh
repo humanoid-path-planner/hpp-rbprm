@@ -100,14 +100,13 @@ namespace hpp {
     void init (const RbPrmShooterPtr_t& self);
 
     private:
-        void InitWeightedTriangles
-					(const std::map<std::string, std::vector<model::CollisionObjectPtr_t> > &affordances);
-        const T_TriangleNormal& RandomPointIntriangle(const std::string &affordance) const;
-        const T_TriangleNormal& WeightedTriangle(const std::string &affordance) const;
+        void InitWeightedTriangles (const model::ObjectVector_t &geometries);
+        const T_TriangleNormal& RandomPointIntriangle () const;
+        const T_TriangleNormal& WeightedTriangle () const;
 
     private:
-        std::map<std::string, std::vector<double> > affWeights_;
-        std::map<std::string, std::vector<T_TriangleNormal> >affTris_;
+        std::vector<double> weights_;
+        std::vector<T_TriangleNormal> triangles_;
         const model::RbPrmDevicePtr_t robot_;
         rbprm::RbPrmValidationPtr_t validator_;
         RbPrmShooterWkPtr_t weak_;

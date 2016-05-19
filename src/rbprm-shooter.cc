@@ -216,80 +216,63 @@ namespace
 																								affordances, geometries))
     , eulerSo3_(initSo3())
     {
-				this->InitWeightedTriangles(affordances);
+        for(hpp::core::ObjectVector_t::const_iterator cit = geometries.begin();
+            cit != geometries.end(); ++cit)
+        {
+            validator_->addObstacle(*cit);
+        }
+        this->InitWeightedTriangles(geometries);
 		}
 
-    void RbPrmShooter::InitWeightedTriangles
-			(const std::map<std::string, std::vector<model::CollisionObjectPtr_t> >& affordances)
+    void RbPrmShooter::InitWeightedTriangles(const model::ObjectVector_t& geometries)
     {
-      double sum = 0;
-			std::map<std::string, std::vector<model::CollisionObjectPtr_t> >::const_iterator affIt;
-			for (affIt = affordances.begin (); affIt != affordances.end ();
-				affIt++)
-			{
-				std::vector<T_TriangleNormal> triangles;
-				std::vector<double> weights;
-				std::vector<model::CollisionObjectPtr_t> affObjs = affIt->second;
-     	  for(std::vector<model::CollisionObjectPtr_t>::const_iterator objit = affObjs.begin();
-     	    objit != affObjs.end(); ++objit)
-     	  {
-     	    const  fcl::CollisionObjectPtr_t& colObj = (*objit)->fcl();
-     	    BVHModelOBConst_Ptr_t model =  GetModel(colObj); // TODO NOT TRIANGLES
-     	    for(int i =0; i < model->num_tris; ++i)
-     	    {
-     	      TrianglePoints tri;
-     	      Triangle fcltri = model->tri_indices[i];
-     	      tri.p1 = colObj->getRotation() * model->vertices[fcltri[0]] + colObj->getTranslation();
-     	      tri.p2 = colObj->getRotation() * model->vertices[fcltri[1]] + colObj->getTranslation();
-     	      tri.p3 = colObj->getRotation() * model->vertices[fcltri[2]] + colObj->getTranslation();
-     	      double weight = TriangleArea(tri);
-     	      sum += weight;
-     	      weights.push_back(weight);
-     	      // TODO COMPUTE NORMALS
-     	      fcl::Vec3f normal = (tri.p2 - tri.p1).cross(tri.p3 - tri.p1);
-     	      normal.normalize();
-     	      triangles.push_back(std::make_pair(normal,tri));
-     	    }
-     	    double previousWeight = 0;
-     	    for(std::vector<double>::iterator wit = weights.begin();
-     	        wit != weights.end(); ++wit)
-     	    {
-     	        previousWeight += (*wit) / sum;
-     	        (*wit) = previousWeight;
-     	    }
-     	  }
-				affTris_.insert (std::make_pair (affIt->first, triangles));
-				affWeights_.insert (std::make_pair (affIt->first, weights));
-		  }
+        double sum = 0;
+        for(model::ObjectVector_t::const_iterator objit = geometries.begin();
+          objit != geometries.end(); ++objit)
+        {
+            const  fcl::CollisionObjectPtr_t& colObj = (*objit)->fcl();
+            BVHModelOBConst_Ptr_t model =  GetModel(colObj); // TODO NOT TRIANGLES
+            for(int i =0; i < model->num_tris; ++i)
+            {
+                TrianglePoints tri;
+                Triangle fcltri = model->tri_indices[i];
+                tri.p1 = colObj->getRotation() * model->vertices[fcltri[0]] + colObj->getTranslation();
+                tri.p2 = colObj->getRotation() * model->vertices[fcltri[1]] + colObj->getTranslation();
+                tri.p3 = colObj->getRotation() * model->vertices[fcltri[2]] + colObj->getTranslation();;
+                double weight = TriangleArea(tri);
+                sum += weight;
+                weights_.push_back(weight);
+                fcl::Vec3f normal = (tri.p2 - tri.p1).cross(tri.p3 - tri.p1);
+                normal.normalize();
+                triangles_.push_back(std::make_pair(normal,tri));
+            }
+            double previousWeight = 0;
+            for(std::vector<double>::iterator wit = weights_.begin();
+                wit != weights_.end(); ++wit)
+            {
+                previousWeight += (*wit) / sum;
+                (*wit) = previousWeight;
+            }
+        }
     }
 
-
-  const RbPrmShooter::T_TriangleNormal &RbPrmShooter::RandomPointIntriangle(const std::string &affordance) const
+  const RbPrmShooter::T_TriangleNormal &RbPrmShooter::RandomPointIntriangle() const
   {
-			std::vector<T_TriangleNormal> triangles = affTris_.find (affordance)->second;
-			if (triangles.size () > 0) {
-      	return triangles[rand() % triangles.size()];
-			}
-			// ERROR HANDLING -> empty vector
+      return triangles_[rand() % triangles_.size()];
   }
 
-  const RbPrmShooter::T_TriangleNormal& RbPrmShooter::WeightedTriangle(const std::string &affordance) const
+  const RbPrmShooter::T_TriangleNormal& RbPrmShooter::WeightedTriangle() const
   {
-			std::vector<T_TriangleNormal> triangles = affTris_.find (affordance)->second;
-			std::vector<double> weights = affWeights_.find (affordance)->second;
-			if (triangles.size () > 0 && weights.size () > 0) {
-     	  double r = ((double) rand() / (RAND_MAX));
-     	  std::vector<T_TriangleNormal>::const_iterator trit = triangles.begin();
-     	  for(std::vector<double>::const_iterator wit = weights.begin();
-     	      wit != weights.end();
-     	      ++wit, ++trit)
-     	  {
-     	      if(*wit >= r) return *trit;
-     	  }
-     	  return triangles[triangles.size ()-1]; // not supposed to happen
+      double r = ((double) rand() / (RAND_MAX));
+      std::vector<T_TriangleNormal>::const_iterator trit = triangles_.begin();
+      for(std::vector<double>::const_iterator wit = weights_.begin();
+          wit != weights_.end();
+          ++wit, ++trit)
+      {
+          if(*wit >= r) return *trit;
       }
-			//ERROR HANDLING -> empty vector
-	}
+      return triangles_[triangles_.size()-1]; // not supposed to happen
+  }
 
 hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
 {
@@ -299,17 +282,14 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
     bool found(false);
     while(limit >0 && !found)
     {
-				// TODO: FIX THIS! Aff type from filter
-				std::string affordance = "Support";
-				std::vector<T_TriangleNormal> triangles = affTris_.find (affordance)->second;
         // pick one triangle randomly
         const T_TriangleNormal* sampled(0);
         double r = ((double) rand() / (RAND_MAX));
         if(r > 0.3)
-            sampled = &RandomPointIntriangle(affordance);
+            sampled = &RandomPointIntriangle();
         else
-            sampled = &WeightedTriangle(affordance);
-        const TrianglePoints& tri = sampled->second;
+            sampled = &WeightedTriangle();
+				const TrianglePoints& tri = sampled->second;
         //http://stackoverflow.com/questions/4778147/sample-random-point-in-triangle
         double r1, r2;
         r1 = ((double) rand() / (RAND_MAX)); r2 = ((double) rand() / (RAND_MAX));
@@ -355,7 +335,7 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
                 // mouve out by penetration depth
                 // v0 move away from normal
                 //get normal from collision tri
-                lastDirection = triangles[report.result.getContact(0).b2].first;
+                lastDirection = triangles_[report.result.getContact(0).b2].first;
                 Translate(robot_,config, lastDirection *
                           (std::abs(report.result.getContact(0).penetration_depth) +0.03));
                  limitDis--;
