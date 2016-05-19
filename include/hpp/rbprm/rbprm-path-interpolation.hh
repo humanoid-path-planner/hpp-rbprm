@@ -57,7 +57,6 @@ namespace hpp {
         ///
         /// \param collisionObjects the objects to consider for contact and collision avoidance
         /// \param timeStep the discretization step of the path.
-        /// \param timeStep the discretization step of the path.
         /// \param robustnessTreshold minimum value of the static equilibrium robustness criterion required to accept the configuration (0 by default).
         /// \return a pointer to the created RbPrmInterpolation instance
         std::vector<State> Interpolate(const model::ObjectVector_t &collisionObjects,
@@ -67,7 +66,7 @@ namespace hpp {
         /// a discrete sequence of balanced contact configurations.
         ///
         /// \param collisionObjects the objects to consider for contact and collision avoidance
-        /// \param timeStep the discretization step of the path.
+        /// \param configs
         /// \param robustnessTreshold minimum value of the static equilibrium robustness criterion required to accept the configuration (0 by default).
         /// \return a pointer to the created RbPrmInterpolation instance
         std::vector<State> Interpolate(const model::ObjectVector_t &collisionObjects,
