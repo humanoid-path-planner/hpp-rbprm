@@ -89,23 +89,30 @@ namespace hpp {
             addObstacle(*cit);
         }
 				// Add obstacles corresponding to affordances of given rom
-				std::map<std::string, std::vector<std::string> >::const_iterator filterIt;
-				for (filterIt = affFilters.begin (); filterIt != affFilters.end();
+				std::vector<std::string>::const_iterator filterIt;
+				for (filterIt = defaultFilter_.begin (); filterIt != defaultFilter_.end();
 					filterIt++) {
-					for (unsigned int fIdx = 0; fIdx < filterIt->second.size (); fIdx++) {
+						std::map<std::string, std::vector<std::string> >::const_iterator affFilterIt =
+							affFilters.find(*filterIt);
+						// Check if all rom filters have been given an affordance filter.
+						// If not, an error is thrown.
+						if (affFilterIt == affFilters.end ()) {
+							throw std::runtime_error ("Filter "
+              	+ *filterIt + " has no affordance filter settings! Please add them to continue.");
+						}
+					for (unsigned int fIdx = 0; fIdx < affFilterIt->second.size (); fIdx++) {
 						std::map<std::string, std::vector<model::CollisionObjectPtr_t> >::const_iterator affIt =
-							affordances.find (filterIt->second[fIdx]);
+							affordances.find (affFilterIt->second[fIdx]);
 						if (affIt == affordances.end ()) {
-						std::cout << "No affordance named " << filterIt->second[fIdx] 
-							<< " found. Ignoring filter setting." << std::endl;
+						std::cout << "Filter " << affFilterIt->first << " has invalid affordance filter setting "
+						<< affFilterIt->second[fIdx] << ". Ignoring such filter setting." << std::endl;
 						} else {
 							for (unsigned int affIdx = 0; affIdx < affIt->second.size (); affIdx++) {
 								T_RomValidation::const_iterator romIt =
-								romValidations_.find (filterIt->first);
+								romValidations_.find (affFilterIt->first);
 								if (romIt == romValidations_.end ()) {
 									// TODO: Throw error?
-									std::cout << "No validation for rom named " << filterIt->first
-										<< " was found. Object not added."<< std::endl;
+									std::runtime_error ("No romValidator object found for filter " + affFilterIt->first + "!");
 						 		} else {
         					romIt->second->addObstacle(affIt->second[affIdx]);
 								}
