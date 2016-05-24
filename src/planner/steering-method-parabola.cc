@@ -79,6 +79,33 @@ namespace hpp {
       return pp;
     }
     
+    core::PathPtr_t SteeringMethodParabola::impl_compute (core::ConfigurationIn_t q1,
+                                                          core::ConfigurationIn_t q2,double alpha0Min, double alpha0Max) const{
+      hppDout(notice,"begin impl_compute with bounds");
+      hppDout(info, "extra conf size : "<<device_.lock()->extraConfigSpace().dimension());
+      hppDout (notice, "q_init: " << displayConfig (q1));
+      hppDout (notice, "q_goal: " << displayConfig (q2));
+      hppDout (info, "g_: " << g_ << " , mu_: " << mu_ << " , V0max: " <<
+               V0max_ << " , Vimpmax: " << Vimpmax_);
+      
+      /* Define dimension: 2D or 3D */
+      std::string name = device_.lock ()->getJointVector () [0]->name ();
+      if (name == "base_joint_xyz") // 3D (2D by default)
+        workspaceDim_ = true;
+      
+      core::PathPtr_t pp;
+      if (!workspaceDim_)
+        pp = compute_2D_path (q1, q2);
+      else
+        pp = compute_3D_path (q1, q2);
+      
+      /*if(!pp)
+        pp = compute_random_3D_path(q1,q2);*/
+      alpha0Min = alpha_0_min_;
+      alpha0Max = alpha_0_max_;
+      return pp;
+    }
+    
     
     core::PathPtr_t SteeringMethodParabola::compute_2D_path (core::ConfigurationIn_t q1,
                                                              core::ConfigurationIn_t q2)
@@ -235,10 +262,10 @@ namespace hpp {
       const value_type theta = atan2 (Y, X);
       const value_type x_theta_0 = cos(theta) * x_0 +  sin(theta) * y_0;
       
-      if(alpha_0_min_ < 0 )
-        alpha_0_min_ = 0; //otherwise we go in the wrong direction
-      value_type interval = (alpha_0_max_-alpha_0_min_)/2.;  // according to friction cone computed in compute_3d_path
-      value_type alpha = (((value_type) rand()/RAND_MAX) * interval) + alpha_0_min_;
+      if(alpha_1_minus_ < 0 )
+        alpha_1_minus_ = 0; //otherwise we go in the wrong direction
+      value_type interval = (alpha_1_plus_-alpha_1_minus_)/2.;  // according to friction cone computed in compute_3d_path
+      value_type alpha = (((value_type) rand()/RAND_MAX) * interval) + alpha_1_minus_;
       value_type v = (((value_type) rand()/RAND_MAX) * V0max_);
       *alpha0 = alpha;
       *v0 = v;
@@ -383,8 +410,8 @@ namespace hpp {
       
       const value_type alpha_0_min = n1_angle - delta1;
       const value_type alpha_0_max = n1_angle + delta1;
-      alpha_0_max_=alpha_0_max;
-      alpha_0_min_=alpha_0_min;
+      alpha_1_plus_=alpha_0_max;
+      alpha_1_minus_=alpha_0_min;
       hppDout (notice, "alpha_0_min: " << alpha_0_min);
       hppDout (notice, "alpha_0_max: " << alpha_0_max);
       
@@ -487,6 +514,9 @@ namespace hpp {
       //value_type alpha = alpha_inf_bound; //debug
       value_type alpha = 0.5*(alpha_inf_bound + alpha_sup_bound); // better
       hppDout (notice, "alpha: " << alpha);
+      alpha_0_max_=alpha_sup_bound;
+      alpha_0_min_=alpha_inf_bound;
+      
       
       // TODO (Pierre) : Here, choose all couple alpha / V which satisfy constraints
       

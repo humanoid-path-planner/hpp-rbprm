@@ -28,16 +28,16 @@ namespace hpp {
   namespace rbprm {
     /// \addtogroup steering_method
     /// \{
-
+    
     using core::value_type;
     using core::vector_t;
-
+    
     // forward declaration of class
     HPP_PREDEF_CLASS (SteeringMethodParabola);
     // Planner objects are manipulated only via shared pointers
     typedef boost::shared_ptr <SteeringMethodParabola> SteeringMethodParabolaPtr_t;
-
-
+    
+    
     /// Steering method that creates StraightPath instances
     ///
     class SteeringMethodParabola : public core::SteeringMethod
@@ -48,129 +48,143 @@ namespace hpp {
       {
         SteeringMethodParabola* ptr = new SteeringMethodParabola (problem);
         SteeringMethodParabolaPtr_t shPtr (ptr);
-	ptr->init (shPtr);
-	return shPtr;
+        ptr->init (shPtr);
+        return shPtr;
       }
       /// Create instance and return shared pointer
       static SteeringMethodParabolaPtr_t create
-        (const core::ProblemPtr_t& problem, const core::WeighedDistancePtr_t& distance)
+      (const core::ProblemPtr_t& problem, const core::WeighedDistancePtr_t& distance)
       {
         SteeringMethodParabola* ptr = new SteeringMethodParabola (problem,
-								  distance);
-	SteeringMethodParabolaPtr_t shPtr (ptr);
-	ptr->init (shPtr);
-	return shPtr;
+                                                                  distance);
+        SteeringMethodParabolaPtr_t shPtr (ptr);
+        ptr->init (shPtr);
+        return shPtr;
       }
       /// Copy instance and return shared pointer
       static SteeringMethodParabolaPtr_t createCopy
-        (const SteeringMethodParabolaPtr_t& other)
+      (const SteeringMethodParabolaPtr_t& other)
       {
-	SteeringMethodParabola* ptr = new SteeringMethodParabola (*other);
-	SteeringMethodParabolaPtr_t shPtr (ptr);
-	ptr->init (shPtr);
-	return shPtr;
+        SteeringMethodParabola* ptr = new SteeringMethodParabola (*other);
+        SteeringMethodParabolaPtr_t shPtr (ptr);
+        ptr->init (shPtr);
+        return shPtr;
       }
       /// Copy instance and return shared pointer
       virtual core::SteeringMethodPtr_t copy () const
       {
-	return createCopy (weak_.lock ());
+        return createCopy (weak_.lock ());
       }
-
+      
+      core::PathPtr_t operator() (core::ConfigurationIn_t q1,
+                            core::ConfigurationIn_t q2) const
+      {
+        return impl_compute (q1, q2);
+      }
+      
       /// create a path between two configurations
       virtual core::PathPtr_t impl_compute (core::ConfigurationIn_t q1,
-                                      core::ConfigurationIn_t q2) const;
-
+                                            core::ConfigurationIn_t q2) const;
+      
+      core::PathPtr_t operator() (const core::ConfigurationIn_t q1,
+                                  const core::ConfigurationIn_t q2, double alpha0Min, double alpha0Max) const{
+        return impl_compute(q1,q2,alpha0Min,alpha0Max);
+      }
+      
+      core::PathPtr_t impl_compute (core::ConfigurationIn_t q1,
+                                    core::ConfigurationIn_t q2,double alpha0Min, double alpha0Max) const;
+      
       core::PathPtr_t compute_random_3D_path (core::ConfigurationIn_t q1,
-                                 core::ConfigurationIn_t q2, value_type* alpha0, value_type* v0) const;
-
-
+                                              core::ConfigurationIn_t q2, value_type* alpha0, value_type* v0) const;
+      
+      
       /// Compute fiveth constraint: compute intersection between coneS
       /// and plane_theta. If not empty, compute the two lines and the angle
       /// between them = 2*delta.
       /// Equations have been obtained using Matlab.
       bool fiveth_constraint (const core::ConfigurationIn_t q,
-            const value_type theta,
-            const int number,
-            value_type *delta) const;
-
+                              const value_type theta,
+                              const int number,
+                              value_type *delta) const;
+      
       /// Compute third constraint : landing in the friction cone
       /// return false if constraint can never be respected.
       /// fill alpha_imp_sup/inf angles limiting initial angle
       /// to respect the constraint.
       bool third_constraint (bool fail, const value_type& X,
-           const value_type& Y,
-           const value_type alpha_imp_min,
-           const value_type alpha_imp_max,
-           value_type *alpha_imp_sup,
-           value_type *alpha_imp_inf,
-           const value_type n2_angle) const;
-
-
-
+                             const value_type& Y,
+                             const value_type alpha_imp_min,
+                             const value_type alpha_imp_max,
+                             value_type *alpha_imp_sup,
+                             value_type *alpha_imp_inf,
+                             const value_type n2_angle) const;
+      
+      
+      
       /// Compute sixth constraint: V_imp <= V_imp_max
       /// return false if constraint can never be respected.
       /// fill alpha_imp_plus/minus angles limiting initial angle
       /// to respect the constraint.
       bool sixth_constraint (const value_type& X, const value_type& Y,
-           value_type *alpha_imp_plus,
-           value_type *alpha_imp_minus) const;
-
+                             value_type *alpha_imp_plus,
+                             value_type *alpha_imp_minus) const;
+      
       value_type getVImpMax(){ return Vimpmax_;}
-
+      
     protected:
       /// Constructor with robot
       /// Weighed distance is created from robot
       SteeringMethodParabola (const core::ProblemPtr_t& problem);
-
+      
       /// Constructor with weighed distance
       SteeringMethodParabola (const core::ProblemPtr_t& problem,
                               const core::WeighedDistancePtr_t& distance);
-
+      
       /// Copy constructor
       SteeringMethodParabola (const SteeringMethodParabola& other) :
-	SteeringMethod (other), device_ (other.device_),
-	distance_ (other.distance_), weak_ (), g_(other.g_),
-	V0max_ (other.V0max_), Vimpmax_ (other.Vimpmax_),mu_ (other.mu_),
-	Dalpha_ (other.Dalpha_), workspaceDim_ (other.workspaceDim_)
-	{
-	}
-
+        SteeringMethod (other), device_ (other.device_),
+        distance_ (other.distance_), weak_ (), g_(other.g_),
+        V0max_ (other.V0max_), Vimpmax_ (other.Vimpmax_),mu_ (other.mu_),
+        Dalpha_ (other.Dalpha_), workspaceDim_ (other.workspaceDim_)
+      {
+      }
+      
       /// Store weak pointer to itself
       void init (SteeringMethodParabolaWkPtr_t weak)
       {
-	SteeringMethod::init (weak);
-	weak_ = weak;
+        SteeringMethod::init (weak);
+        weak_ = weak;
       }
     private:
       /// 2D impl_compute
       core::PathPtr_t compute_2D_path (core::ConfigurationIn_t q1,
-                                 core::ConfigurationIn_t q2) const;
-
+                                       core::ConfigurationIn_t q2) const;
+      
       /// 3D impl_compute
       core::PathPtr_t compute_3D_path (core::ConfigurationIn_t q1,
-                                 core::ConfigurationIn_t q2) const;
-
-
-
+                                       core::ConfigurationIn_t q2) const;
+      
+      
+      
       /// Compute second constraint: V0 <= V0max
       /// return false if constraint can never be respected.
       /// fill alpha_lim_plus/minus angles limiting initial angle
       /// to respect the constraint.
       bool second_constraint (const value_type& X, const value_type& Y,
-			      value_type *alpha_lim_plus,
-			      value_type *alpha_lim_minus) const;
-
-
+                              value_type *alpha_lim_plus,
+                              value_type *alpha_lim_minus) const;
+      
+      
       /// Get the length of the path by numerical integration (Simpson method)
       /// Length is computed only when the path is created
       virtual value_type computeLength (const core::ConfigurationIn_t q1,
                                         const core::ConfigurationIn_t q2,
                                         const vector_t coefs) const;
-
+      
       /// Function equivalent to sqrt( 1 + f'(x)^2 ) in 2D
       /// Function equivalent to sqrt( 1 + y0_dot/x0_dot + fz'(x)^2 ) in 3D
       value_type lengthFunction (const value_type x,const vector_t coefs) const;
-
+      
       core::DeviceWkPtr_t device_;
       core::WeighedDistancePtr_t distance_;
       SteeringMethodParabolaWkPtr_t weak_;
@@ -181,9 +195,11 @@ namespace hpp {
       value_type Dalpha_; // alpha increment
       mutable bool workspaceDim_; // true for 3D, false for 2D
       mutable bool initialConstraint_; // true if the constraint at the initial point are respected (5° for first cone, 1° and 2° constraints)
+      mutable value_type alpha_1_plus_;
+      mutable value_type alpha_1_minus_;
       mutable value_type alpha_0_max_;
       mutable value_type alpha_0_min_;
-
+      
     }; // SteeringMethodParabola
     /// \}
   } // namespace core
