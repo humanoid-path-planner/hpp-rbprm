@@ -78,9 +78,9 @@ namespace hpp {
         pp = compute_random_3D_path(q1,q2);*/
       return pp;
     }
-    
+    /*
     core::PathPtr_t SteeringMethodParabola::impl_compute (core::ConfigurationIn_t q1,
-                                                          core::ConfigurationIn_t q2,double alpha0Min, double alpha0Max) const{
+                                                          core::ConfigurationIn_t q2, value_type& alpha0Min, value_type& alpha0Max) const{
       hppDout(notice,"begin impl_compute with bounds");
       hppDout(info, "extra conf size : "<<device_.lock()->extraConfigSpace().dimension());
       hppDout (notice, "q_init: " << displayConfig (q1));
@@ -88,7 +88,7 @@ namespace hpp {
       hppDout (info, "g_: " << g_ << " , mu_: " << mu_ << " , V0max: " <<
                V0max_ << " , Vimpmax: " << Vimpmax_);
       
-      /* Define dimension: 2D or 3D */
+      // Define dimension: 2D or 3D 
       std::string name = device_.lock ()->getJointVector () [0]->name ();
       if (name == "base_joint_xyz") // 3D (2D by default)
         workspaceDim_ = true;
@@ -99,14 +99,42 @@ namespace hpp {
       else
         pp = compute_3D_path (q1, q2);
       
-      /*if(!pp)
-        pp = compute_random_3D_path(q1,q2);*/
+      //if(!pp)
+      //  pp = compute_random_3D_path(q1,q2);
       alpha0Min = alpha_0_min_;
       alpha0Max = alpha_0_max_;
       return pp;
     }
     
-    
+    core::PathPtr_t SteeringMethodParabola::impl_compute (core::ConfigurationIn_t q1,
+                                                          core::ConfigurationIn_t q2, value_type& alpha0Min, value_type& alpha0Max, value_type& Z, value_type& X_theta) const{
+      hppDout(notice,"begin impl_compute with bounds");
+      hppDout(info, "extra conf size : "<<device_.lock()->extraConfigSpace().dimension());
+      hppDout (notice, "q_init: " << displayConfig (q1));
+      hppDout (notice, "q_goal: " << displayConfig (q2));
+      hppDout (info, "g_: " << g_ << " , mu_: " << mu_ << " , V0max: " <<
+               V0max_ << " , Vimpmax: " << Vimpmax_);
+      
+      // Define dimension: 2D or 3D 
+      std::string name = device_.lock ()->getJointVector () [0]->name ();
+      if (name == "base_joint_xyz") // 3D (2D by default)
+        workspaceDim_ = true;
+      
+      core::PathPtr_t pp;
+      if (!workspaceDim_)
+        pp = compute_2D_path (q1, q2);
+      else
+        pp = compute_3D_path (q1, q2);
+      
+      //if(!pp)
+      //  pp = compute_random_3D_path(q1,q2);
+      alpha0Min = alpha_0_min_;
+      alpha0Max = alpha_0_max_;
+      Z = Z_;
+      X_theta= X_theta_;
+      return pp;
+    }
+    */
     core::PathPtr_t SteeringMethodParabola::compute_2D_path (core::ConfigurationIn_t q1,
                                                              core::ConfigurationIn_t q2)
     const {
@@ -514,8 +542,8 @@ namespace hpp {
       //value_type alpha = alpha_inf_bound; //debug
       value_type alpha = 0.5*(alpha_inf_bound + alpha_sup_bound); // better
       hppDout (notice, "alpha: " << alpha);
-      alpha_0_max_=alpha_sup_bound;
-      alpha_0_min_=alpha_inf_bound;
+      alpha_sup_bound;
+      alpha_inf_bound;
       
       
       // TODO (Pierre) : Here, choose all couple alpha / V which satisfy constraints
@@ -554,7 +582,11 @@ namespace hpp {
       ParabolaPathPtr_t pp = ParabolaPath::create (device_.lock (), q1, q2,
                                                    computeLength (q1, q2,coefs),
                                                    coefs);
-      
+      pp->alphaMax_=alpha_sup_bound;
+      pp->alphaMin_ = alpha_inf_bound;
+      pp->Z_=Z;
+      pp->Xtheta_ = X_theta;
+      pp->alpha_ = alpha;
      // pp->setAlpha(alpha,alpha_inf_bound,alpha_sup_bound);
       hppDout (notice, "path: " << *pp);
       return pp;

@@ -86,14 +86,22 @@ namespace hpp {
       virtual core::PathPtr_t impl_compute (core::ConfigurationIn_t q1,
                                             core::ConfigurationIn_t q2) const;
       
-      core::PathPtr_t operator() (const core::ConfigurationIn_t q1,
-                                  const core::ConfigurationIn_t q2, double alpha0Min, double alpha0Max) const{
+    /*  core::PathPtr_t operator() (const core::ConfigurationIn_t q1,
+                                  const core::ConfigurationIn_t q2, value_type& alpha0Min, value_type& alpha0Max) const{
         return impl_compute(q1,q2,alpha0Min,alpha0Max);
       }
       
       core::PathPtr_t impl_compute (core::ConfigurationIn_t q1,
-                                    core::ConfigurationIn_t q2,double alpha0Min, double alpha0Max) const;
+                                    core::ConfigurationIn_t q2, value_type &alpha0Min, value_type &alpha0Max) const;
       
+      core::PathPtr_t operator() (const core::ConfigurationIn_t q1,
+                                  const core::ConfigurationIn_t q2, value_type& alpha0Min, value_type& alpha0Max, value_type& Z, value_type& X_theta) const{
+        return impl_compute(q1,q2,alpha0Min,alpha0Max,Z,X_theta);
+      }
+      
+      core::PathPtr_t impl_compute (core::ConfigurationIn_t q1,
+                                    core::ConfigurationIn_t q2, value_type &alpha0Min, value_type &alpha0Max,value_type& Z, value_type& X_theta) const;
+      */
       core::PathPtr_t compute_random_3D_path (core::ConfigurationIn_t q1,
                                               core::ConfigurationIn_t q2, value_type* alpha0, value_type* v0) const;
       
@@ -197,8 +205,10 @@ namespace hpp {
       mutable bool initialConstraint_; // true if the constraint at the initial point are respected (5° for first cone, 1° and 2° constraints)
       mutable value_type alpha_1_plus_;
       mutable value_type alpha_1_minus_;
-      mutable value_type alpha_0_max_;
+     /* mutable value_type alpha_0_max_;
       mutable value_type alpha_0_min_;
+      mutable value_type X_theta_;
+      mutable value_type Z_;*/
       
     }; // SteeringMethodParabola
     /// \}

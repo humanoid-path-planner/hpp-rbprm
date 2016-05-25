@@ -182,7 +182,12 @@ namespace hpp {
       }
      
      
-
+     double alpha_;    
+     double alphaMin_;
+     double alphaMax_; 
+     double Xtheta_;   
+     double Z_;        
+     
     protected:
       /// Print path in a stream
       virtual std::ostream& print (std::ostream &os) const
@@ -236,6 +241,8 @@ namespace hpp {
       mutable core::vector_t coefficients_; // 3 parabola coefficients
       mutable core::value_type length_;
       mutable bool workspaceDim_; // true for 3D, false for 2D
+      
+
       
       
     }; // class ParabolaPath

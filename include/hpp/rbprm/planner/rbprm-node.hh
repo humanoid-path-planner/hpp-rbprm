@@ -71,7 +71,7 @@ namespace hpp {
         return sqrt((9.81*Xtheta_*Xtheta_)/(2*Xtheta_*tan(alpha0) - Z_));
       }
       
-      void setAlpha(double alpha, double alphaMin, double alphaMax){
+      void setAlphas(double alpha, double alphaMin, double alphaMax){
         alpha_=alpha;
         alphaMin_=alphaMin;
         alphaMax_=alphaMax;
@@ -81,11 +81,11 @@ namespace hpp {
       fcl::Vec3f normal_;
       RbprmValidationReportPtr_t collisionReport_;
       const polytope::ProjectedCone* giwc_;
-      double alpha_;
-      double alphaMin_;
-      double alphaMax_;
-      double Xtheta_;
-      double Z_;
+      double alpha_;    // for parent node ! not for this node
+      double alphaMin_; // for parent node ! not for this node
+      double alphaMax_; // for parent node ! not for this node
+      double Xtheta_;   // for parent node ! not for this node
+      double Z_;        // for parent node ! not for this node
       
 
     }; // class
