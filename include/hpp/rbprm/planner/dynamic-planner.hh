@@ -104,13 +104,13 @@ namespace hpp {
        * @param x the node
        * @param report the RBPRM report corresponding to the node's configuration
        */
-      void computeGIWC(const core::NodePtr_t x, core::ValidationReportPtr_t report);
+      void computeGIWC(const core::RbprmNodePtr_t x, core::ValidationReportPtr_t report);
 
       /**
        * @brief computeGIWC compute the GIWC for the node configuration and fill the node attribut, get validation report and call the second method
        * @param x the node
        */
-      void computeGIWC(const core::NodePtr_t x);
+      void computeGIWC(const core::RbprmNodePtr_t x);
 
 
       core::ConfigurationShooterPtr_t configurationShooter_;

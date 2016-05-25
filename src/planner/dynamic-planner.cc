@@ -42,6 +42,7 @@
 #include <hpp/fcl/intersect.h>
 #include "utils/algorithms.h"
 #include <polytope/stability_margin.h>
+#include <hpp/rbprm/planner/parabola-path.hh>
 
 
 namespace hpp {
@@ -242,7 +243,7 @@ namespace hpp {
             if (!pathValid || !belongs (q_new, newNodes)) {
               hppDout(notice, "### add new node and edges: ");
               hppDout(notice, displayConfig(*q_new));
-              core::NodePtr_t x_new = roadmap ()->addNodeAndEdges(near, q_new, validPath);
+              core::RbprmNodePtr_t x_new = rbprmRoadmap()->addNodeAndEdges(near, q_new, validPath);
               computeGIWC(x_new);
               
               newNodes.push_back (x_new);
@@ -304,8 +305,12 @@ namespace hpp {
         const core::NodePtr_t& near = itEdge-> get <0> ();
         const core::ConfigurationPtr_t& q_new = itEdge-> get <1> ();
         const core::PathPtr_t& validPath = itEdge-> get <2> ();
-        core::NodePtr_t newNode = roadmap ()->addNode (q_new);
+        core::RbprmNodePtr_t newNode = rbprmRoadmap()->addNode (q_new);
         computeGIWC(newNode);
+        ParabolaPathPtr_t parabolaPath = boost::dynamic_pointer_cast<ParabolaPath>(validPath);
+        if(parabolaPath){
+          
+        }
         roadmap ()->addEdge (near, newNode, validPath);
         roadmap ()->addEdge (newNode, near, validPath->reverse());
       }
@@ -484,7 +489,7 @@ namespace hpp {
             roadmap ()->addEdge (*itn, initNode, path->reverse());
           }else if(validPath->timeRange ().second != path->timeRange ().first){
             core::ConfigurationPtr_t q_new(new core::Configuration_t(validPath->end()));
-            core::NodePtr_t x_new = rbprmRoadmap()->addNodeAndEdges(initNode,q_new,validPath);
+            core::RbprmNodePtr_t x_new = rbprmRoadmap()->addNodeAndEdges(initNode,q_new,validPath);
             computeGIWC(x_new);
             hppDout(notice,"### Straight path not fully valid, try parabola path between qnew and qGoal");
             hppStartBenchmark(EXTENDPARA);
@@ -498,7 +503,7 @@ namespace hpp {
               if (paraPathValid) { // only add if the full path is valid, otherwise it's the same as the straight line (because we can't extract a subpath of a parabola path)
                 hppDout(notice, "#### parabola path valid !");
                 core::ConfigurationPtr_t q_last (new core::Configuration_t(validPath->end ()));
-                core::NodePtr_t x_last = rbprmRoadmap()->addNode(q_last);
+                core::RbprmNodePtr_t x_last = rbprmRoadmap()->addNode(q_last);
                 computeGIWC(x_last);
                 rbprmRoadmap()->addEdge(x_new,x_last,validPath);
                 rbprmRoadmap()->addEdge(x_last,x_new,validPath->reverse());
@@ -515,7 +520,7 @@ namespace hpp {
                 const core::NodePtr_t& near = itEdge-> get <0> ();
                 const core::ConfigurationPtr_t& q_new = itEdge-> get <1> ();
                 const core::PathPtr_t& validPath = itEdge-> get <2> ();
-                core::NodePtr_t newNode = roadmap ()->addNode (q_new);
+                core::RbprmNodePtr_t newNode = rbprmRoadmap ()->addNode (q_new);
                 computeGIWC(newNode);
                 roadmap ()->addEdge (near, newNode, validPath);
                 roadmap ()->addEdge (newNode, near, validPath->reverse());
@@ -606,7 +611,7 @@ namespace hpp {
       return pathVector;
     }*/
     
-    void DynamicPlanner::computeGIWC(const core::NodePtr_t x){
+    void DynamicPlanner::computeGIWC(const core::RbprmNodePtr_t x){
       core::ValidationReportPtr_t report;
       problem().configValidations()->validate(*(x->configuration()),report);
       computeGIWC(x,report);
@@ -616,16 +621,15 @@ namespace hpp {
     
     
     
-    void DynamicPlanner::computeGIWC(const core::NodePtr_t node, core::ValidationReportPtr_t report){
+    void DynamicPlanner::computeGIWC(const core::RbprmNodePtr_t node, core::ValidationReportPtr_t report){
       hppDout(notice,"## compute GIWC");
       core::ConfigurationPtr_t q = node->configuration();
-      core::RbprmNodePtr_t node_cast = static_cast<core::RbprmNodePtr_t>(node);
       // fil normal information in node
-      if(node_cast){
+      if(node){
         size_t cSize = problem().robot()->configSize();
         hppDout(info,"~~ NODE cast correctly");
-        node_cast->normal((*q)[cSize-3],(*q)[cSize-2],(*q)[cSize-1]);
-        hppDout(info,"~~ normal = "<<node_cast->getNormal());
+        node->normal((*q)[cSize-3],(*q)[cSize-2],(*q)[cSize-1]);
+        hppDout(info,"~~ normal = "<<node->getNormal());
         
       }else{
         hppDout(error,"~~ NODE cannot be cast");
@@ -758,7 +762,7 @@ namespace hpp {
         nu(k) = 0.5;
       }
       // save giwc in node structure
-      node_cast->giwc(polytope::U_stance(rotContact,posContact,nu,x,y));
+      node->giwc(polytope::U_stance(rotContact,posContact,nu,x,y));
       
       
     }// computeGIWC
