@@ -372,20 +372,20 @@ namespace hpp {
               // get current normal orientation
               LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
               proj->add(core::NumericalConstraint::create (constraints::Position::create(body->device_,
-                                                                                         limb->effector_,
-                                                                                         fcl::Vec3f(0,0,0),
-                                                                                         position - rotation * limb->offset_, //)));
-                                                                                         model::matrix3_t::getIdentity(),
-                                                                                         setTranslationConstraints(normal))));//
+                                                           limb->effector_,
+                                                           fcl::Vec3f(0,0,0),
+                                                           position - rotation * limb->offset_, //)));
+                                                           model::matrix3_t::getIdentity(),
+                                                           setTranslationConstraints(normal))));//
 
 
 
               if(limb->contactType_ == hpp::rbprm::_6_DOF)
               {
                   proj->add(core::NumericalConstraint::create (constraints::Orientation::create(body->device_,
-                                                                                                limb->effector_,
-                                                                                                rotation,
-                                                                                                setRotationConstraints(z))));
+                                                               limb->effector_,
+                                                               rotation,
+                                                               setRotationConstraints(z))));
               }
 #ifdef PROFILE
     RbPrmProfiler& watch = getRbPrmProfiler();
@@ -566,9 +566,10 @@ else
             if(!ContactExistsWithinGroup(lit->second, body->limbGroups_ ,result))
             {
                 fcl::Vec3f normal, position;
-                ComputeStableContact(body,result, body->limbcollisionValidations_.at(lit->first), lit->first, lit->second,
-                                     configuration, configuration,
-                                     result.configuration_, collisionObjects, direction, position, normal, robustnessTreshold, true, false);
+                ComputeStableContact(body,result, 
+									body->limbcollisionValidations_.at(lit->first), lit->first,
+									lit->second, configuration, configuration, result.configuration_,
+									collisionObjects, direction, position, normal, robustnessTreshold, true, false);
             }
             result.nbContacts = result.contactNormals_.size();
         }
@@ -577,10 +578,15 @@ else
         return result;
     }
 
-    hpp::rbprm::State ComputeContacts(const hpp::rbprm::State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration,
-                                      model::ConfigurationIn_t nextconfiguration, const model::ObjectVector_t& collisionObjects,
-                                      const fcl::Vec3f& direction, bool& contactMaintained, bool& multipleBreaks,
-                                      const bool allowFailure, const double robustnessTreshold)
+
+
+    hpp::rbprm::State ComputeContacts(const hpp::rbprm::State& previous,
+			const hpp::rbprm::RbPrmFullBodyPtr_t& body,
+			model::ConfigurationIn_t configuration,
+			model::ConfigurationIn_t nextconfiguration,
+			const model::ObjectVector_t& collisionObjects,
+      const fcl::Vec3f& direction, bool& contactMaintained, bool& multipleBreaks,
+      const bool allowFailure, const double robustnessTreshold)
     {
 //static int id = 0;
     const T_Limb& limbs = body->GetLimbs();
@@ -593,7 +599,9 @@ else
     body->device_->currentConfiguration(configuration);
     body->device_->computeForwardKinematics ();
     // try to maintain previous contacts
-    State result = MaintainPreviousContacts(previous,body, body->limbcollisionValidations_, configuration, contactMaintained, multipleBreaks, robustnessTreshold);
+    State result = MaintainPreviousContacts(previous,body,
+			body->limbcollisionValidations_, configuration, contactMaintained,
+			multipleBreaks, robustnessTreshold);
     // If more than one are broken, go back to previous state
     // and reposition
     if(multipleBreaks && !allowFailure)
@@ -607,9 +615,12 @@ else
         body->device_->computeForwardKinematics();
         // if no stable replacement contact found
         // modify contact order to try to replace another contact at the next step
-        if(ComputeStableContact(body,result,body->limbcollisionValidations_.at(replaceContact),replaceContact,body->limbs_.at(replaceContact),
-                             configuration,nextconfiguration, config,collisionObjects,direction,position, normal, robustnessTreshold, true, false, body->factory_.heuristics_["random"])
-                != STABLE_CONTACT)
+        if(ComputeStableContact(body,result,
+					body->limbcollisionValidations_.at(replaceContact),
+					replaceContact,body->limbs_.at(replaceContact),
+          configuration,nextconfiguration, config,collisionObjects,direction,
+					position, normal, robustnessTreshold, true, false,
+					body->factory_.heuristics_["random"]) != STABLE_CONTACT)
         {
             result = previous;
             result.contactOrder_.pop();
@@ -634,8 +645,11 @@ else
         {
             // if the contactMaintained flag remains true,
             // the contacts have not changed, and the state can be merged with the previous one eventually
-            contactCreated = ComputeStableContact(body, result, body->limbcollisionValidations_.at(lit->first), lit->first, lit->second, configuration, nextconfiguration,
-                                                  config, collisionObjects, direction, position, normal, robustnessTreshold) != NO_CONTACT || contactCreated;
+            contactCreated = ComputeStableContact(body, result,
+							body->limbcollisionValidations_.at(lit->first), lit->first,
+							lit->second, configuration, nextconfiguration,
+              config, collisionObjects, direction, position, normal,
+							robustnessTreshold) != NO_CONTACT || contactCreated;
         }
     }
     contactMaintained = !contactCreated && contactMaintained;
@@ -649,7 +663,8 @@ else
         {
             contactMaintained = false;
             // could not reposition any contact. Planner has failed
-            if (!RepositionContacts(result, body, body->collisionValidation_, config, collisionObjects, direction, robustnessTreshold))
+            if (!RepositionContacts(result, body, body->collisionValidation_,
+							config, collisionObjects, direction, robustnessTreshold))
             {
                 std::cout << "planner is stuck; failure " <<  std::endl;
             }
@@ -669,10 +684,11 @@ else
                 body->device_->computeForwardKinematics();
                 // if a contact has already been created this iteration, or new contact is not stable
                 // raise failure and switch contact order.
-                if(contactCreated || ComputeStableContact(body,result,body->limbcollisionValidations_.at(replaceContact),replaceContact,
-                                     body->limbs_.at(replaceContact),
-                                     configuration, nextconfiguration, config,
-                                     collisionObjects,direction,position, normal,robustnessTreshold) != STABLE_CONTACT)
+                if(contactCreated || ComputeStableContact(body,result,
+									body->limbcollisionValidations_.at(replaceContact),replaceContact,
+                  body->limbs_.at(replaceContact), configuration, 
+									nextconfiguration, config, collisionObjects,direction,position,
+									normal,robustnessTreshold) != STABLE_CONTACT)
                 {
                     multipleBreaks = true;
                     result = previous;
