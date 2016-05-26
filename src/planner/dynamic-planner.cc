@@ -309,7 +309,9 @@ namespace hpp {
         computeGIWC(newNode);
         ParabolaPathPtr_t parabolaPath = boost::dynamic_pointer_cast<ParabolaPath>(validPath);
         if(parabolaPath){
-          
+          newNode->setAlphas(parabolaPath->alpha_,parabolaPath->alphaMin_,parabolaPath->alphaMax_);
+          newNode->Z(parabolaPath->Z_);
+          newNode->xTheta(parabolaPath->Xtheta_);
         }
         roadmap ()->addEdge (near, newNode, validPath);
         roadmap ()->addEdge (newNode, near, validPath->reverse());
@@ -522,6 +524,12 @@ namespace hpp {
                 const core::PathPtr_t& validPath = itEdge-> get <2> ();
                 core::RbprmNodePtr_t newNode = rbprmRoadmap ()->addNode (q_new);
                 computeGIWC(newNode);
+                ParabolaPathPtr_t parabolaPath = boost::dynamic_pointer_cast<ParabolaPath>(validPath);
+                if(parabolaPath){
+                  newNode->setAlphas(parabolaPath->alpha_,parabolaPath->alphaMin_,parabolaPath->alphaMax_);
+                  newNode->Z(parabolaPath->Z_);
+                  newNode->xTheta(parabolaPath->Xtheta_);
+                }
                 roadmap ()->addEdge (near, newNode, validPath);
                 roadmap ()->addEdge (newNode, near, validPath->reverse());
               }

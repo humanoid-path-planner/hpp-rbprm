@@ -787,8 +787,10 @@ namespace hpp {
         hppDout (info, "cos(2*delta): " << cos2delta);
         *delta = 0.5*acos (cos2delta);
         hppDout (info, "delta: " << *delta);
-        assert (*delta <= phi + 1e-5);
-        return true;
+        if (*delta <= phi + 1e-5)
+          return true;
+        else
+          return false;
       }
       else { // theta = +-pi/2
         value_type discr =  -U*U+(V*V + W*W)*(mu_*mu_);
@@ -816,8 +818,10 @@ namespace hpp {
         hppDout (info, "cos(2*delta): " << cos2delta);
         *delta = 0.5*acos (cos2delta);
         hppDout (info, "delta: " << *delta);
-        assert (*delta <= phi + 1e-5);
-        return true;
+        if (*delta <= phi + 1e-5)
+          return true;
+        else
+          return false;
       }
     }
     

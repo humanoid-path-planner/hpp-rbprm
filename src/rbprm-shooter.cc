@@ -98,7 +98,7 @@ namespace
             SampleRotationRec(config,jv,current);
     }
 
-    void SampleRotation(model::DevicePtr_t so3, ConfigurationPtr_t config, JointVector_t& jv)
+    void SampleRotation(model::DevicePtr_t so3, ConfigurationPtr_t config, JointVector_t& /*jv*/)
     {
       size_t id = 0;
       if(so3->rootJoint())
@@ -117,7 +117,7 @@ namespace
               if(i<2)
                 joint = joint->childJoint(0);
           }
-          std::cout<<confso3<<std::endl;
+          //std::cout<<confso3<<std::endl;
           Eigen::Quaterniond qt = Eigen::AngleAxisd(confso3(0), Eigen::Vector3d::UnitZ())
             * Eigen::AngleAxisd(confso3(1), Eigen::Vector3d::UnitY())
             * Eigen::AngleAxisd(confso3(2), Eigen::Vector3d::UnitX());
