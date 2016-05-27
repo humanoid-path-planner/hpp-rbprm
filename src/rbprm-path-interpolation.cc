@@ -51,7 +51,8 @@ namespace hpp {
     }
     }
 
-    std::vector<State> RbPrmInterpolation::Interpolate(const model::ObjectVector_t &collisionObjects, const double timeStep, const double robustnessTreshold)
+    std::vector<State> RbPrmInterpolation::Interpolate(const affMap_t& affordances,
+			const model::ObjectVector_t &collisionObjects, const double timeStep, const double robustnessTreshold)
     {
         if(!path_) throw std::runtime_error ("Can not interpolate; not path given to interpolator ");
         std::vector<model::Configuration_t> configs;
@@ -61,11 +62,13 @@ namespace hpp {
         {
             configs.push_back(configPosition(configs.back(),path_,i));
         }
-        return Interpolate(collisionObjects, configs, robustnessTreshold);
+        return Interpolate(affordances, collisionObjects, configs, robustnessTreshold);
     }
 
-    std::vector<State> RbPrmInterpolation::Interpolate(const model::ObjectVector_t &collisionObjects,
-                                                       const std::vector<model::Configuration_t>& configs, const double robustnessTreshold)
+    std::vector<State> RbPrmInterpolation::Interpolate(const affMap_t& affordances,
+			const model::ObjectVector_t &collisionObjects,
+			const std::vector<model::Configuration_t>& configs,
+			const double robustnessTreshold)
     {
         int nbFailures = 0;
 //std::cout << "interpolation " << std::endl;
@@ -92,8 +95,8 @@ namespace hpp {
             bool sameAsPrevious(true);
             bool multipleBreaks(false);
             State newState = ComputeContacts(previous, robot_,configuration,
-							nextconfiguration,collisionObjects,direction,sameAsPrevious,
-							multipleBreaks,allowFailure,robustnessTreshold);
+							nextconfiguration, affordances, collisionObjects,direction,
+							sameAsPrevious, multipleBreaks,allowFailure,robustnessTreshold);
             if(allowFailure && multipleBreaks)
             {
                 ++ nbFailures;
@@ -147,7 +150,9 @@ if (nbFailures > 1)
         weakPtr_ = weakPtr;
     }
 
-    RbPrmInterpolation::RbPrmInterpolation (const core::PathVectorConstPtr_t path, const hpp::rbprm::RbPrmFullBodyPtr_t robot, const hpp::rbprm::State &start, const hpp::rbprm::State &end)
+    RbPrmInterpolation::RbPrmInterpolation (const core::PathVectorConstPtr_t path,
+			const hpp::rbprm::RbPrmFullBodyPtr_t robot, const hpp::rbprm::State &start,
+			const hpp::rbprm::State &end)
         : path_(path)
         , start_(start)
         , end_(end)

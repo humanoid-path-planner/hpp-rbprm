@@ -323,7 +323,7 @@ namespace hpp {
                               const std::string& limbId,
                               const hpp::rbprm::RbPrmLimbPtr_t& limb,
                               model::ConfigurationIn_t rbconfiguration, model::ConfigurationIn_t nextrbconfiguration,
-                              model::ConfigurationOut_t configuration,
+                              model::ConfigurationOut_t configuration, const affMap_t& affordances,
                               const model::ObjectVector_t &collisionObjects, const fcl::Vec3f& direction,
                               fcl::Vec3f& position, fcl::Vec3f& normal, const double robustnessTreshold,
                               bool contactIfFails = true, bool stableForOneContact = true,
@@ -502,7 +502,7 @@ else
 
     bool RepositionContacts(State& result, const hpp::rbprm::RbPrmFullBodyPtr_t& body,
 			core::CollisionValidationPtr_t validation,
-      model::ConfigurationOut_t config,
+      model::ConfigurationOut_t config, const affMap_t& affordances,
       const model::ObjectVector_t &collisionObjects, const fcl::Vec3f& direction,
 			const double robustnessTreshold)
     {
@@ -527,8 +527,8 @@ else
                 notFound && cit != group.end(); ++cit)
             {
                 if(ComputeStableContact(body, result, validation, *cit, body->GetLimbs().at(*cit),save,save, config,
-                                        collisionObjects, direction, position, normal, robustnessTreshold, false)
-                        == STABLE_CONTACT)
+                	affordances, collisionObjects, direction, position, normal, robustnessTreshold, false)
+                  == STABLE_CONTACT)
                 {
                     nContactName = *cit;
                     notFound = false;
@@ -566,7 +566,7 @@ else
     }
 
     hpp::rbprm::State ComputeContacts(const hpp::rbprm::RbPrmFullBodyPtr_t& body,
-			model::ConfigurationIn_t configuration,
+			model::ConfigurationIn_t configuration, const affMap_t& affordances,
       const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction,
 			const double robustnessTreshold)
     {
@@ -584,7 +584,7 @@ else
                 fcl::Vec3f normal, position;
                 ComputeStableContact(body,result, 
 									body->limbcollisionValidations_.at(lit->first), lit->first,
-									lit->second, configuration, configuration, result.configuration_,
+									lit->second, configuration, configuration, result.configuration_, affordances,
 									collisionObjects, direction, position, normal, robustnessTreshold, true, false);
             }
             result.nbContacts = result.contactNormals_.size();
@@ -599,7 +599,7 @@ else
     hpp::rbprm::State ComputeContacts(const hpp::rbprm::State& previous,
 			const hpp::rbprm::RbPrmFullBodyPtr_t& body,
 			model::ConfigurationIn_t configuration,
-			model::ConfigurationIn_t nextconfiguration,
+			model::ConfigurationIn_t nextconfiguration, const affMap_t& affordances,
 			const model::ObjectVector_t& collisionObjects,
       const fcl::Vec3f& direction, bool& contactMaintained, bool& multipleBreaks,
       const bool allowFailure, const double robustnessTreshold)
@@ -634,7 +634,7 @@ else
         if(ComputeStableContact(body,result,
 					body->limbcollisionValidations_.at(replaceContact),
 					replaceContact,body->limbs_.at(replaceContact),
-          configuration,nextconfiguration, config,collisionObjects,direction,
+          configuration,nextconfiguration, config,affordances,collisionObjects,direction,
 					position, normal, robustnessTreshold, true, false,
 					body->factory_.heuristics_["random"]) != STABLE_CONTACT)
         {
@@ -664,7 +664,7 @@ else
             contactCreated = ComputeStableContact(body, result,
 							body->limbcollisionValidations_.at(lit->first), lit->first,
 							lit->second, configuration, nextconfiguration,
-              config, collisionObjects, direction, position, normal,
+              config, affordances, collisionObjects, direction, position, normal,
 							robustnessTreshold) != NO_CONTACT || contactCreated;
         }
     }
@@ -680,7 +680,7 @@ else
             contactMaintained = false;
             // could not reposition any contact. Planner has failed
             if (!RepositionContacts(result, body, body->collisionValidation_,
-							config, collisionObjects, direction, robustnessTreshold))
+							config, affordances, collisionObjects, direction, robustnessTreshold))
             {
                 std::cout << "planner is stuck; failure " <<  std::endl;
             }
@@ -703,7 +703,7 @@ else
                 if(contactCreated || ComputeStableContact(body,result,
 									body->limbcollisionValidations_.at(replaceContact),replaceContact,
                   body->limbs_.at(replaceContact), configuration, 
-									nextconfiguration, config, collisionObjects,direction,position,
+									nextconfiguration, config, affordances, collisionObjects,direction,position,
 									normal,robustnessTreshold) != STABLE_CONTACT)
                 {
                     multipleBreaks = true;
