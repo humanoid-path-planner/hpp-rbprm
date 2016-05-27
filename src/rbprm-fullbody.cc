@@ -65,7 +65,8 @@ namespace hpp {
         }
         for(std::size_t i=0; i<joint->numberChildJoints(); ++i)
         {
-            RemoveNonLimbCollisionRec(joint->childJoint(i), limbname, collisionObjects, collisionValidation);
+            RemoveNonLimbCollisionRec(joint->childJoint(i), limbname, collisionObjects,
+							collisionValidation);
         }
     }
 
@@ -75,14 +76,16 @@ namespace hpp {
         return factory_.AddHeuristic(name, func);
     }
 
-    void RbPrmFullBody::AddLimb(const std::string& id, const std::string& name, const std::string &effectorName,
-                                const fcl::Vec3f &offset,const fcl::Vec3f &normal, const double x,
-                                const double y,
-                                const model::ObjectVector_t &collisionObjects, const std::size_t nbSamples, const std::string &heuristicName, const double resolution,
-                                ContactType contactType)
+    void RbPrmFullBody::AddLimb(const std::string& id, const std::string& name,
+			const std::string &effectorName, const fcl::Vec3f &offset,
+			const fcl::Vec3f &normal, const double x, const double y,
+      const model::ObjectVector_t &collisionObjects, const std::size_t nbSamples,
+			const std::string &heuristicName, const double resolution,
+      ContactType contactType)
     {
         rbprm::T_Limb::const_iterator cit = limbs_.find(id);
-        std::map<std::string, const sampling::heuristic>::const_iterator hit = factory_.heuristics_.find(heuristicName);
+        std::map<std::string, const sampling::heuristic>::const_iterator hit =
+					factory_.heuristics_.find(heuristicName);
         if(cit != limbs_.end())
         {
             throw std::runtime_error ("Impossible to add limb for joint "
@@ -96,8 +99,10 @@ namespace hpp {
         else
         {
             model::JointPtr_t joint = device_->getJointByName(name);
-            rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(joint, effectorName, offset,normal,x,y, nbSamples, hit->second, resolution,contactType);
-            core::CollisionValidationPtr_t limbcollisionValidation_ = core::CollisionValidation::create(this->device_);
+            rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(joint, effectorName,
+							offset,normal,x,y, nbSamples, hit->second, resolution,contactType);
+            core::CollisionValidationPtr_t limbcollisionValidation_ = 
+							core::CollisionValidation::create(this->device_);
             // adding collision validation
             for(model::ObjectVector_t::const_iterator cit = collisionObjects.begin();
                 cit != collisionObjects.end(); ++cit)
@@ -203,7 +208,8 @@ namespace hpp {
             cit != limb->sampleContainer_.samples_.end(); ++cit)
         {
             sampling::Load(*cit, configuration);
-            if(validation->validate(configuration) && (!stability || stability::IsStable(body,current) >=robustnessTreshold))
+            if(validation->validate(configuration) && (!stability || 
+							stability::IsStable(body,current) >=robustnessTreshold))
             {
                 current.configuration_ = configuration;
                 return true;
@@ -215,7 +221,8 @@ namespace hpp {
     // first step
     State MaintainPreviousContacts(const State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body,
                                    std::map<std::string,core::CollisionValidationPtr_t>& limbValidations,
-                                   model::ConfigurationIn_t configuration, bool& contactMaintained, bool& multipleBreaks, const double robustnessTreshold)
+                                   model::ConfigurationIn_t configuration, bool& contactMaintained, 
+																	 bool& multipleBreaks, const double robustnessTreshold)
     {
         contactMaintained = true;
         std::vector<std::string> brokenContacts;
@@ -237,7 +244,8 @@ namespace hpp {
             LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
             const fcl::Vec3f z = limb->effector_->currentTransformation().getRotation() * limb->normal_;
             const fcl::Matrix3f& rotation = previous.contactRotation_.at(name);
-            proj->add(core::NumericalConstraint::create (constraints::Position::create(body->device_, limb->effector_,fcl::Vec3f(0,0,0), ppos)));
+            proj->add(core::NumericalConstraint::create (
+							constraints::Position::create(body->device_, limb->effector_,fcl::Vec3f(0,0,0), ppos)));
             if(limb->contactType_ == hpp::rbprm::_6_DOF)
             {
                 proj->add(core::NumericalConstraint::create (constraints::Orientation::create(body->device_,
@@ -260,14 +268,18 @@ namespace hpp {
                 else
                 {
                     contactMaintained = false;
-                    ComputeCollisionFreeConfiguration(body,current,limbValidations.at(name),limb,current.configuration_,robustnessTreshold,false);
+                    ComputeCollisionFreeConfiguration(body,current,
+											limbValidations.at(name),limb,current.configuration_,
+											robustnessTreshold,false);
                     brokenContacts.push_back(name);
                 }
             }
             else
             {
                 contactMaintained = false;
-                ComputeCollisionFreeConfiguration(body,current,limbValidations.at(name),limb,current.configuration_,robustnessTreshold,false);
+                ComputeCollisionFreeConfiguration(body,current,
+									limbValidations.at(name),limb,current.configuration_,
+									robustnessTreshold,false);
                 brokenContacts.push_back(name);
             }
         }
@@ -488,9 +500,11 @@ else
       return status;
     }
 
-    bool RepositionContacts(State& result, const hpp::rbprm::RbPrmFullBodyPtr_t& body,core::CollisionValidationPtr_t validation,
-                            model::ConfigurationOut_t config,
-                            const model::ObjectVector_t &collisionObjects, const fcl::Vec3f& direction, const double robustnessTreshold)
+    bool RepositionContacts(State& result, const hpp::rbprm::RbPrmFullBodyPtr_t& body,
+			core::CollisionValidationPtr_t validation,
+      model::ConfigurationOut_t config,
+      const model::ObjectVector_t &collisionObjects, const fcl::Vec3f& direction,
+			const double robustnessTreshold)
     {
         // replace existing contacts
         // start with older contact created
@@ -551,8 +565,10 @@ else
         return result.stable;
     }
 
-    hpp::rbprm::State ComputeContacts(const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration,
-                                      const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction, const double robustnessTreshold)
+    hpp::rbprm::State ComputeContacts(const hpp::rbprm::RbPrmFullBodyPtr_t& body,
+			model::ConfigurationIn_t configuration,
+      const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction,
+			const double robustnessTreshold)
     {
         const T_Limb& limbs = body->GetLimbs();
         State result;
