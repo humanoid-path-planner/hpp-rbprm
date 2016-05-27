@@ -345,13 +345,19 @@ namespace hpp {
       limb->limb_->robot()->computeForwardKinematics ();
       fcl::Transform3f transform = limb->octreeRoot(); // get root transform from configuration
 
-      std::vector<sampling::T_OctreeReport> reports(collisionObjects.size());
       std::size_t i (0);
       //#pragma omp parallel for
       // request samples which collide with each of the collision objects
-      sampling::heuristic eval = evaluate; if(!eval) eval =  limb->sampleContainer_.evaluate_;
-      for(model::ObjectVector_t::const_iterator oit = collisionObjects.begin();
-          oit != collisionObjects.end(); ++oit, ++i)
+      // TODO: go through all aff objects specific for each limb (aff filters)
+			// NOW ONLY TESTING SUPPORT
+			sampling::heuristic eval = evaluate; if(!eval) eval =  limb->sampleContainer_.evaluate_;
+			affMap_t::const_iterator supportAffs = affordances.find ("Support");
+			if (supportAffs == affordances.end ()) {
+				throw std::runtime_error ("No aff objects found!!!");
+			}
+			std::vector<sampling::T_OctreeReport> reports(supportAffs->second.size());
+      for(std::vector<model::CollisionObjectPtr_t >::const_iterator oit = supportAffs->second.begin();
+          oit != supportAffs->second.end(); ++oit, ++i)
       {
           sampling::GetCandidates(limb->sampleContainer_, transform,transformNext, *oit, direction, reports[i], eval);
       }
