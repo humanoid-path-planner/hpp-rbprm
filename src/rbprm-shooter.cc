@@ -30,7 +30,7 @@ namespace
 {
     typedef fcl::BVHModel<OBBRSS> BVHModelOB;
     typedef boost::shared_ptr<const BVHModelOB> BVHModelOBConst_Ptr_t;
-
+		
     BVHModelOBConst_Ptr_t GetModel(const fcl::CollisionObjectConstPtr_t object)
     {
         assert(object->collisionGeometry()->getNodeType() == BV_OBBRSS);
@@ -172,8 +172,7 @@ namespace
 
     RbPrmShooterPtr_t RbPrmShooter::create (const model::RbPrmDevicePtr_t& robot,
                                             const ObjectVector_t& geometries,
-																						const std::map<std::string, 
-																							std::vector<model::CollisionObjectPtr_t> > affordances,
+																						const affMap_t& affordances,
                                             const std::vector<std::string>& filter,
                                             const std::map<std::string, std::vector<std::string> >& affFilters,
                                             const std::size_t shootLimit, const std::size_t displacementLimit)
@@ -202,8 +201,7 @@ namespace
 
     RbPrmShooter::RbPrmShooter (const model::RbPrmDevicePtr_t& robot,
                               const ObjectVector_t& geometries,
-															const std::map<std::string, 
-																std::vector<model::CollisionObjectPtr_t> >& affordances,
+															const affMap_t& affordances,
                               const std::vector<std::string>& filter,
                               const std::map<std::string, std::vector<std::string> >& affFilters,
                               const std::size_t shootLimit,

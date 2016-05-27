@@ -36,6 +36,7 @@ namespace hpp {
     HPP_PREDEF_CLASS (RbPrmShooter);
     typedef boost::shared_ptr <RbPrmShooter>
     RbPrmShooterPtr_t;
+		typedef std::map<std::string, std::vector<model::CollisionObjectPtr_t> > affMap_t;
 
 /// \addtogroup configuration_sampling
 /// \{
@@ -62,7 +63,7 @@ namespace hpp {
         /// \return a pointer to an instance of RbPrmShooter
         static HPP_RBPRM_DLLAPI RbPrmShooterPtr_t create (const model::RbPrmDevicePtr_t& robot,
                                          const core::ObjectVector_t &geometries,
-																				 const std::map<std::string, std::vector<model::CollisionObjectPtr_t> > affordances,
+																				 const affMap_t& affordances,
                                          const std::vector<std::string>& filter = std::vector<std::string>(),
                                          const std::map<std::string, std::vector<std::string> >& affFilters = std::map<std::string, std::vector<std::string> >(),
                                          const std::size_t shootLimit = 10000,
@@ -91,7 +92,7 @@ namespace hpp {
     /// Note that translation joints have to be bounded.
     RbPrmShooter (const model::RbPrmDevicePtr_t& robot,
                   const core::ObjectVector_t &geometries,
-									const std::map<std::string, std::vector<model::CollisionObjectPtr_t> > &affordances,
+									const affMap_t &affordances,
                   const std::vector<std::string>& filter,
                   const std::map<std::string, std::vector<std::string> >& affFilters,
                   const std::size_t shootLimit = 10000,
