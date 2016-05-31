@@ -59,7 +59,7 @@ namespace hpp {
         /// \param timeStep the discretization step of the path.
         /// \param robustnessTreshold minimum value of the static equilibrium robustness criterion required to accept the configuration (0 by default).
         /// \return a pointer to the created RbPrmInterpolation instance
-        std::vector<State> Interpolate(const affMap_t& affordances, const model::ObjectVector_t &collisionObjects, 
+        std::vector<State> Interpolate(const affMap_t& affordances, 
                                        const double timeStep = 0.01, const double robustnessTreshold=0.);
 
         /// Transforms a discrete sequence of configurations into
@@ -69,7 +69,7 @@ namespace hpp {
         /// \param configs
         /// \param robustnessTreshold minimum value of the static equilibrium robustness criterion required to accept the configuration (0 by default).
         /// \return a pointer to the created RbPrmInterpolation instance
-        std::vector<State> Interpolate(const affMap_t& affordances, const model::ObjectVector_t &collisionObjects,
+        std::vector<State> Interpolate(const affMap_t& affordances,
                                        const std::vector<model::Configuration_t>& configs, const double robustnessTreshold=0.);
 
     public:

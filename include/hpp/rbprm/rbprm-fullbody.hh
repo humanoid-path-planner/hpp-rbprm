@@ -112,14 +112,14 @@ namespace hpp {
       friend hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(
 				const hpp::rbprm::RbPrmFullBodyPtr_t& body,
 				model::ConfigurationIn_t configuration, const affMap_t& affordances, 
-        const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction,
+        const fcl::Vec3f& direction,
 				const double robustnessTreshold);
 
       friend hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(
 				const hpp::rbprm::State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body,
 				model::ConfigurationIn_t configuration,
 				model::ConfigurationIn_t nextconfiguration, const affMap_t& affordances,
-        const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction,
+        const fcl::Vec3f& direction,
 				bool& contactMaintained, bool& multipleBreaks, const bool allowFailure,
 				const double robustnessTreshold);
     }; // class RbPrmDevice
@@ -137,7 +137,7 @@ namespace hpp {
     hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(
 			const hpp::rbprm::RbPrmFullBodyPtr_t& body,
 			model::ConfigurationIn_t configuration, const affMap_t& affordances,
-			const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction,
+			const fcl::Vec3f& direction,
       const double robustnessTreshold = 0);
 
     /// Generates a balanced contact configuration, considering the
@@ -159,7 +159,7 @@ namespace hpp {
 			const hpp::rbprm::State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body,
 			model::ConfigurationIn_t configuration,
 			model::ConfigurationIn_t nextconfiguration, const affMap_t& affordances,
-			const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction,
+			const fcl::Vec3f& direction,
 			bool& contactMaintained, bool& multipleBreaks, const bool allowFailure,
       const double robustnessTreshold = 0);
   } // namespace rbprm

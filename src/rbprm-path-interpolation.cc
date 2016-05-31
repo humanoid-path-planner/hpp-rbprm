@@ -52,9 +52,9 @@ namespace hpp {
     }
 
     std::vector<State> RbPrmInterpolation::Interpolate(const affMap_t& affordances,
-			const model::ObjectVector_t &collisionObjects, const double timeStep, const double robustnessTreshold)
+			const double timeStep, const double robustnessTreshold)
     {
-        if(!path_) throw std::runtime_error ("Can not interpolate; not path given to interpolator ");
+        if(!path_) throw std::runtime_error ("Cannot interpolate; no path given to interpolator ");
         std::vector<model::Configuration_t> configs;
         const core::interval_t& range = path_->timeRange();
         configs.push_back(start_.configuration_);
@@ -62,11 +62,10 @@ namespace hpp {
         {
             configs.push_back(configPosition(configs.back(),path_,i));
         }
-        return Interpolate(affordances, collisionObjects, configs, robustnessTreshold);
+        return Interpolate(affordances, configs, robustnessTreshold);
     }
 
     std::vector<State> RbPrmInterpolation::Interpolate(const affMap_t& affordances,
-			const model::ObjectVector_t &collisionObjects,
 			const std::vector<model::Configuration_t>& configs,
 			const double robustnessTreshold)
     {
@@ -95,7 +94,7 @@ namespace hpp {
             bool sameAsPrevious(true);
             bool multipleBreaks(false);
             State newState = ComputeContacts(previous, robot_,configuration,
-							nextconfiguration, affordances, collisionObjects,direction,
+							nextconfiguration, affordances,direction,
 							sameAsPrevious, multipleBreaks,allowFailure,robustnessTreshold);
             if(allowFailure && multipleBreaks)
             {
