@@ -70,11 +70,11 @@ namespace hpp {
   template<typename T>
   void RemoveEffectorCollision(T& validation, model::JointPtr_t effectorJoint, const hpp::model::ObjectVector_t &obstacles)
   {
-      /*for(hpp::model::ObjectVector_t::const_iterator cit = obstacles.begin();
+      for(hpp::model::ObjectVector_t::const_iterator cit = obstacles.begin();
           cit != obstacles.end(); ++cit)
       {
           RemoveEffectorCollision<T>(validation,effectorJoint,*cit);
-      }*/
+      }
   }
 
   template<typename T>
