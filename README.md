@@ -33,10 +33,10 @@ To install HPP-RBPRM:
 
  
   3. Use CMake to install the library. For instance:
-
+	
 				mkdir $HPP_RBPRM_DIR/build
 				cd $HPP_RBPRM_DIR/build
-				cd cmake ..
+				cmake -DCMAKE_INSTALL_PREFIX=${DEVEL_DIR}/install ..
 				make install
 
   4. Optionally, install the python bindings for python, and example scripts (HPP-RBPRM-CORBA)
