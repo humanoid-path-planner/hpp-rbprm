@@ -195,7 +195,6 @@ namespace hpp {
             sampling::Load(*cit, configuration);
             hpp::core::ValidationReportPtr_t valRep (new hpp::core::CollisionValidationReport);
             if(validation->validate(configuration, valRep) && (!stability || stability::IsStable(body,current) >=robustnessTreshold))
-//if(true)
             {
                 current.configuration_ = configuration;
                 return true;
@@ -241,7 +240,6 @@ namespace hpp {
             {
                 hpp::core::ValidationReportPtr_t valRep (new hpp::core::CollisionValidationReport);
                 if(limbValidations.at(name)->validate(config, valRep))
-//if(true)
                 {
                     // stable?
                     current.contacts_[name] = true;
@@ -405,8 +403,7 @@ rotation = alignRotation * limb->effector_->currentTransformation().getRotation(
 #ifdef PROFILE
     RbPrmProfiler& watch = getRbPrmProfiler();
     watch.start("collision");
-#endif
-                hpp::core::ValidationReportPtr_t valRep (new hpp::core::CollisionValidationReport);
+#endif                hpp::core::ValidationReportPtr_t valRep (new hpp::core::CollisionValidationReport);
 //std::cout << "collision test" << configuration.transpose() << std::endl;
                 if(validation->validate(configuration, valRep))
 //if(true)

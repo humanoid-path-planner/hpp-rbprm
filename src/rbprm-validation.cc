@@ -210,6 +210,7 @@ namespace hpp {
     {
         return trunkValidation_->validate(config, validationReport)
                 && validateRoms(config, defaultFilter_,validationReport);
+
     }
 
 

@@ -144,6 +144,7 @@ namespace
                 device->currentConfiguration(*conf);
                 device->computeForwardKinematics();
                 core::ValidationReportPtr_t colRep(new core::CollisionValidationReport);
+
                 if (colVal->validate(*conf,colRep))
                 {
                     fullBodyConfigs_.push_back(*conf);
@@ -173,6 +174,7 @@ namespace
             device->currentConfiguration(conf);
             device->computeForwardKinematics();
             core::ValidationReportPtr_t colRep(new core::CollisionValidationReport);
+
             if (colVal->validate(conf,colRep))
                 ++totalNoCollisions;
         }
