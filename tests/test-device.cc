@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE (dualCreationReachabilityConditionWithFilters) {
     CollisionObjectPtr_t colObject = CollisionObject::create(colGeom, fcl::Transform3f (), "obstacle");
     colObject->move(fcl::Vec3f(1.3,0,0));
     validator->addObstacle(colObject);
-    hpp::core::CollisionValidationReport validationReport;
+    hpp::core::ValidationReportPtr_t validationReport(new hpp::core::CollisionValidationReport);
     std::vector<std::string> filter;
     BOOST_CHECK_MESSAGE (validator->validate(robot->Device::currentConfiguration(),validationReport, filter), "Reachability condition should be verified");
 

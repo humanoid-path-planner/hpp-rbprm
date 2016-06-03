@@ -143,7 +143,7 @@ namespace
                 model::ConfigurationPtr_t conf = shooter->shoot();
                 device->currentConfiguration(*conf);
                 device->computeForwardKinematics();
-                core::CollisionValidationReport colRep;
+                core::ValidationReportPtr_t colRep(new core::CollisionValidationReport);
                 if (colVal->validate(*conf,colRep))
                 {
                     fullBodyConfigs_.push_back(*conf);
@@ -172,7 +172,7 @@ namespace
             sampling::Load(sample,conf);
             device->currentConfiguration(conf);
             device->computeForwardKinematics();
-            core::CollisionValidationReport colRep;
+            core::ValidationReportPtr_t colRep(new core::CollisionValidationReport);
             if (colVal->validate(conf,colRep))
                 ++totalNoCollisions;
         }

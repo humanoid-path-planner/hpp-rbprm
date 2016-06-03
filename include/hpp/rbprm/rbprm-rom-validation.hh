@@ -56,22 +56,18 @@ namespace hpp {
 
       /// Compute whether the configuration is valid
       ///
-      /// \param config the config to check for validity,
-      /// \param throwIfInValid if true throw an exception if config is invalid.
+      /// \param config the config to check for validity
       /// \return whether the whole config is valid.
-      virtual bool validate (const core::Configuration_t& config,
-                 bool throwIfInValid = false);
+      virtual bool validate (const core::Configuration_t& config);
 
       /// Compute whether the configuration is valid
       ///
       /// \param config the config to check for validity,
       /// \retval validationReport report on validation (used only for rom shape). This parameter will
       ///         dynamically cast into CollisionValidationReport type,
-      /// \param throwIfInValid if true throw an exception if config is invalid,
       /// \return whether the whole config is valid.
       virtual bool validate (const core::Configuration_t& config,
-                 core::ValidationReport& validationReport,
-                 bool throwIfInValid = false);
+                 core::ValidationReportPtr_t& validationReport);
 
     public:
       const NormalFilter filter_;
@@ -79,6 +75,8 @@ namespace hpp {
     protected:
       RbPrmRomValidation (const model::DevicePtr_t &robot,
                        const NormalFilter &normalFilter);
+    private:
+      core::ValidationReportPtr_t unusedReport_;
     }; // class RbPrmValidation
     /// \}
   } // namespace rbprm

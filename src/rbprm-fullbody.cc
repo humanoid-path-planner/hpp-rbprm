@@ -24,8 +24,7 @@
 #include <hpp/core/config-projector.hh>
 #include <hpp/core/locked-joint.hh>
 #include <hpp/model/device.hh>
-#include <hpp/constraints/position.hh>
-#include <hpp/constraints/orientation.hh>
+#include <hpp/constraints/generic-transformation.hh>
 
 #include <hpp/fcl/BVH/BVH_model.h>
 
@@ -243,10 +242,10 @@ namespace hpp {
             LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
             const fcl::Vec3f z = limb->effector_->currentTransformation().getRotation() * limb->normal_;
             const fcl::Matrix3f& rotation = previous.contactRotation_.at(name);
-            proj->add(core::NumericalConstraint::create (constraints::Position::create(body->device_, limb->effector_,fcl::Vec3f(0,0,0), ppos)));
+            proj->add(core::NumericalConstraint::create (constraints::Position::create("",body->device_, limb->effector_,fcl::Vec3f(0,0,0), ppos)));
             if(limb->contactType_ == hpp::rbprm::_6_DOF)
             {
-                proj->add(core::NumericalConstraint::create (constraints::Orientation::create(body->device_,
+                proj->add(core::NumericalConstraint::create (constraints::Orientation::create("", body->device_,
                                                                                   limb->effector_,
                                                                                   rotation,
                                                                                   setMaintainRotationConstraints(z))));
@@ -378,20 +377,21 @@ namespace hpp {
               LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
               fcl::Vec3f posOffset = position - rotation * limb->offset_;
               posOffset = posOffset + normal * epsilon;
-              proj->add(core::NumericalConstraint::create (constraints::Position::create(body->device_,
+              fcl::Transform3f localFrame, globalFrame;
+              localFrame.setTranslation(posOffset);
+              proj->add(core::NumericalConstraint::create (constraints::Position::create("",body->device_,
                                                                                          limb->effector_,
-                                                                                         fcl::Vec3f(0,0,0),
-                                                                                         posOffset, //)));
-                                                                                         model::matrix3_t::getIdentity(),
+                                                                                         globalFrame,
+                                                                                         localFrame,
                                                                                          setTranslationConstraints(normal))));//
 
 
 
               if(limb->contactType_ == hpp::rbprm::_6_DOF)
               {
-                  proj->add(core::NumericalConstraint::create (constraints::Orientation::create(body->device_,
+                  proj->add(core::NumericalConstraint::create (constraints::Orientation::create("",body->device_,
                                                                                                 limb->effector_,
-                                                                                                rotation,
+                                                                                                fcl::Transform3f(rotation),
                                                                                                 setRotationConstraints(z))));
               }
 #ifdef PROFILE

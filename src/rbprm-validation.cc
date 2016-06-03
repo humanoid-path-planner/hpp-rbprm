@@ -64,6 +64,7 @@ namespace hpp {
         : trunkValidation_(tuneFclValidation(robot))
         , romValidations_(createRomValidations(robot, normalFilters))
         , defaultFilter_(filter)
+        , unusedReport_(new CollisionValidationReport)
     {
         for(std::vector<std::string>::const_iterator cit = defaultFilter_.begin();
             cit != defaultFilter_.end(); ++cit)
@@ -76,15 +77,14 @@ namespace hpp {
     }
 
     bool RbPrmValidation::validateRoms(const core::Configuration_t& config,
-                      const std::vector<std::string>& filter,
-                      bool throwIfInValid)
+                      const std::vector<std::string>& filter)
     {
         unsigned int filterMatch(0);
         for(T_RomValidation::const_iterator cit = romValidations_.begin();
             cit != romValidations_.end() && (filterMatch < 1 || filterMatch < filter.size()); ++cit)
         {
             if((filter.empty() || std::find(filter.begin(), filter.end(), cit->first) != filter.end())
-                    && cit->second->validate(config, throwIfInValid))
+                    && cit->second->validate(config))
             {
                 ++filterMatch;
             }
@@ -94,25 +94,15 @@ namespace hpp {
         return filterMatch >= filter.size();
     }
 
-    bool RbPrmValidation::validateRoms(const core::Configuration_t& config,
-                      bool throwIfInValid)
+    bool RbPrmValidation::validateRoms(const core::Configuration_t& config)
     {
-        return validateRoms(config,defaultFilter_,throwIfInValid);
+        return validateRoms(config,defaultFilter_);
     }
 
-    bool RbPrmValidation::validate (const Configuration_t& config,
-                    bool throwIfInValid)
+    bool RbPrmValidation::validate (const Configuration_t& config)
     {
-        return trunkValidation_->validate(config, throwIfInValid)
-             && validateRoms(config, defaultFilter_, throwIfInValid);
-    }
-
-    bool RbPrmValidation::validate (const Configuration_t& config,
-                    ValidationReport& validationReport,
-                    bool throwIfInValid)
-    {
-        return trunkValidation_->validate(config, validationReport, throwIfInValid)
-                && validateRoms(config, defaultFilter_, throwIfInValid);
+        return trunkValidation_->validate(config,unusedReport_)
+             && validateRoms(config, defaultFilter_);
     }
 
     bool RbPrmValidation::validate (const Configuration_t& config,
@@ -123,11 +113,18 @@ namespace hpp {
     }
 
     bool RbPrmValidation::validate (const Configuration_t& config,
-                    ValidationReport& validationReport,
-                    const std::vector<std::string>& filter, bool throwIfInValid)
+               const std::vector<std::string> &filter)
     {
-        return trunkValidation_->validate(config, validationReport, throwIfInValid)
-                && validateRoms(config, filter, throwIfInValid);
+        return trunkValidation_->validate(config, unusedReport_)
+                && validateRoms(config, filter);
+    }
+
+    bool RbPrmValidation::validate (const Configuration_t& config,
+                    hpp::core::ValidationReportPtr_t &validationReport,
+                    const std::vector<std::string>& filter)
+    {
+        return trunkValidation_->validate(config, validationReport)
+                && validateRoms(config, filter);
     }
 
     void RbPrmValidation::addObstacle (const CollisionObjectPtr_t& object)

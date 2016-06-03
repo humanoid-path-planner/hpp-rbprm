@@ -296,30 +296,27 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
         SampleRotation(eulerSo3_, config, jv);
         // rotate and translate randomly until valid configuration found or
         // no obstacle is reachable
-        CollisionValidationReport report;
-        CollisionValidationReport unusedreport;
+        ValidationReportPtr_t reportShPtr(new CollisionValidationReport);
         std::size_t limitDis = displacementLimit_;
         Vec3f lastDirection(1,0,0);
         while(!found && limitDis >0)
         {
-            if(validator_->trunkValidation_->validate(*config, report)
-            && validator_->validateRoms(*config, filter_))
-            {
-                found = true;
-            }
-            else if(!report.result.isCollision())
+            bool valid = validator_->trunkValidation_->validate(*config, reportShPtr);
+            CollisionValidationReport* report = static_cast<CollisionValidationReport*>(reportShPtr.get());
+            found = valid && validator_->validateRoms(*config, filter_);
+            if(valid &!found)
             {
                 // try to rotate to reach rom
                 for(; limitDis>0 && !found; --limitDis)
                 {
                     SampleRotation(eulerSo3_, config, jv);
-                    found = validator_->validate(*config, unusedreport, filter_);
+                    found = validator_->validate(*config, filter_);
                     if(!found)
                     {
                         Translate(robot_, config, -lastDirection *
                                   1 * ((double) rand() / (RAND_MAX)));
                     }
-                    found = validator_->validate(*config, unusedreport, filter_);
+                    found = validator_->validate(*config, filter_);
                 }
                 if(!found) break;
             }
@@ -330,9 +327,9 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
                 // mouve out by penetration depth
                 // v0 move away from normal
                 //get normal from collision tri
-                lastDirection = triangles_[report.result.getContact(0).b2].first;
+                lastDirection = triangles_[report->result.getContact(0).b2].first;
                 Translate(robot_,config, lastDirection *
-                          (std::abs(report.result.getContact(0).penetration_depth) +0.03));
+                          (std::abs(report->result.getContact(0).penetration_depth) +0.03));
                  limitDis--;
             }
         }
