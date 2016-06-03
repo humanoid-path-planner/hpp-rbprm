@@ -26,6 +26,7 @@
 #include <hpp/model/device.hh>
 #include <hpp/constraints/generic-transformation.hh>
 
+
 #include <hpp/fcl/BVH/BVH_model.h>
 
 #include <stack>
@@ -228,10 +229,10 @@ namespace hpp {
             hpp::tools::LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
             const fcl::Vec3f z = limb->effector_->currentTransformation().getRotation() * limb->normal_;
             const fcl::Matrix3f& rotation = previous.contactRotation_.at(name);
-            proj->add(core::NumericalConstraint::create (constraints::Position::create("",body->device_, limb->effector_,fcl::Vec3f(0,0,0), ppos)));
+            proj->add(core::NumericalConstraint::create (constraints::Position::create("pos_maintain_contact",body->device_, limb->effector_,fcl::Vec3f(0,0,0), ppos)));
             if(limb->contactType_ == hpp::rbprm::_6_DOF)
             {
-                proj->add(core::NumericalConstraint::create (constraints::Orientation::create("", body->device_,
+                proj->add(core::NumericalConstraint::create (constraints::Orientation::create("rot_maintain_contact",body->device_,
                                                                                   limb->effector_,
                                                                                   rotation,
                                                                                   setMaintainRotationConstraints(z))));
@@ -375,7 +376,7 @@ rotation = alignRotation * limb->effector_->currentTransformation().getRotation(
               globalFrame.setTranslation(posOffset);
 //std::cout << "target " << globalFrame << std::endl;
 
-              proj->add(core::NumericalConstraint::create (constraints::Position::create("",body->device_,
+              proj->add(core::NumericalConstraint::create (constraints::Position::create("pos_stable_contact",body->device_,
                                                                                          limb->effector_,
                                                                                          localFrame,
                                                                                          globalFrame,
@@ -385,7 +386,7 @@ rotation = alignRotation * limb->effector_->currentTransformation().getRotation(
 
               if(limb->contactType_ == hpp::rbprm::_6_DOF)
               {
-                  proj->add(core::NumericalConstraint::create (constraints::Orientation::create("",body->device_,
+                  proj->add(core::NumericalConstraint::create (constraints::Orientation::create("rot_stable_contact",body->device_,
                                                                                                 limb->effector_,
                                                                                                 fcl::Transform3f(rotation),
                                                                                                 //localFrame.getRotation(),
