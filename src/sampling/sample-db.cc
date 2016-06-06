@@ -254,7 +254,7 @@ bool rbprm::sampling::GetCandidates(const SampleDB& sc, const fcl::Transform3f& 
                 normal = (v2 - v1).cross(v3 - v1);
                 normal.normalize();
                 Eigen::Vector3d eNormal(normal[0], normal[1], normal[2]);
-                OctreeReport report(&(*sit), contact,(*evaluate)(*sit, eDir, eNormal), normal);
+                OctreeReport report(&(*sit), contact, evaluate ? ((*evaluate)(*sit, eDir, eNormal)) :0, normal);
                 ++okay;
                 reports.insert(report);
             }

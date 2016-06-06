@@ -69,7 +69,6 @@ namespace hpp {
                                                        const std::vector<model::Configuration_t>& configs, const double robustnessTreshold)
     {
         int nbFailures = 0;
-//std::cout << "interpolation " << std::endl;
         std::vector<State> states;
         states.push_back(this->start_);
         std::size_t nbRecontacts = 0;

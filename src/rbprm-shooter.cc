@@ -320,7 +320,7 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
                 }
                 if(!found) break;
             }
-            else // move out of collision
+            else if (!valid)// move out of collision
             {
                 // retrieve Contact information
                 //lastDirection = -report.result.getContact(0).normal;

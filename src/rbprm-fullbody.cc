@@ -37,7 +37,7 @@
 namespace hpp {
   namespace rbprm {
 
-    const double epsilon = 10e-4;
+    const double epsilon = 10e-3;
 
     RbPrmFullBodyPtr_t RbPrmFullBody::create (const model::DevicePtr_t &device)
     {
