@@ -68,11 +68,13 @@ namespace hpp {
         /// structure to perform efficient proximity requests. The resulution of the octree, in meters, specifies the size
         /// of the unit voxel of the octree. The larger they are, the more samples will be considered as candidates for contact.
         /// This can be problematic in terms of performance. The default value is 3 cm.
+        /// \param resolution, resolution of the octree voxels. The samples generated are stored in an octree data
+        /// \param disableEffectorCollision, whether collision detection should be disabled for end effector bones
         void AddLimb(const std::string& id, const std::string& name, const std::string& effectorName, const fcl::Vec3f &offset,
                      const fcl::Vec3f &normal,const double x, const double y,
                      const model::ObjectVector_t &collisionObjects,
                      const std::size_t nbSamples, const std::string& heuristic = "static", const double resolution = 0.03,
-                     ContactType contactType = _6_DOF);
+                     ContactType contactType = _6_DOF, const bool disableEffectorCollision = false);
 
         /// Creates a Limb for the robot,
         /// identified by its name. Stores a sample
@@ -85,8 +87,9 @@ namespace hpp {
         /// structure to perform efficient proximity requests. The resulution of the octree, in meters, specifies the size
         /// of the unit voxel of the octree. The larger they are, the more samples will be considered as candidates for contact.
         /// This can be problematic in terms of performance. The default value is 3 cm.
+        /// \param disableEffectorCollision, whether collision detection should be disabled for end effector bones
         void AddLimb(const std::string& database, const std::string& id, const model::ObjectVector_t &collisionObjects,
-                      const std::string& heuristicName, const bool loadValues);
+                      const std::string& heuristicName, const bool loadValues, const bool disableEffectorCollision = false);
 
         /// Add a new heuristic for biasing sample candidate selection
         ///
@@ -112,7 +115,7 @@ namespace hpp {
 
     private:
         void AddLimbPrivate(rbprm::RbPrmLimbPtr_t limb, const std::string& id, const std::string& name,
-                            const model::ObjectVector_t &collisionObjects);
+                            const model::ObjectVector_t &collisionObjects, const bool disableEffectorCollision);
 
     protected:
       RbPrmFullBody (const model::DevicePtr_t &device);

@@ -81,12 +81,12 @@ namespace hpp {
   void RemoveEffectorCollision(T& validation, model::JointPtr_t effectorJoint, const model::CollisionObjectPtr_t obstacle)
   {
       //remove actual effector or not ?
-      //validation.removeObstacleFromJoint(effectorJoint,obstacle);
+      validation.removeObstacleFromJoint(effectorJoint,obstacle);
       //then sons
-      /*for(std::size_t i =0; i < effectorJoint->numberChildJoints(); ++i)
+      for(std::size_t i =0; i < effectorJoint->numberChildJoints(); ++i)
       {
           RemoveEffectorCollisionRec<T>(validation, effectorJoint->childJoint(i), obstacle);
-      }*/
+      }
   }
 
 

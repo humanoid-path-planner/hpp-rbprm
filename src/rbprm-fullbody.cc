@@ -59,7 +59,7 @@ namespace hpp {
 
 
     void RbPrmFullBody::AddLimbPrivate(rbprm::RbPrmLimbPtr_t limb, const std::string& id, const std::string& name,
-                        const model::ObjectVector_t &collisionObjects)
+                        const model::ObjectVector_t &collisionObjects, const bool disableEffectorCollision)
     {
         core::CollisionValidationPtr_t limbcollisionValidation_ = core::CollisionValidation::create(this->device_);
         // adding collision validation
@@ -69,20 +69,14 @@ namespace hpp {
             if(limbs_.empty())
             {
                 collisionValidation_->addObstacle(*cit);
-                //hpp::tools::RemoveEffectorCollision<core::CollisionValidation>((*collisionValidation_.get()), limb->effector_, *cit);
             }
             limbcollisionValidation_->addObstacle(*cit);
             //remove effector collision
-            hpp::tools::RemoveEffectorCollision<core::CollisionValidation>((*collisionValidation_.get()), limb->effector_, *cit);
-            hpp::tools::RemoveEffectorCollision<core::CollisionValidation>((*limbcollisionValidation_.get()), limb->effector_, *cit);
-            //TRYING TO REENABLE EFFECTOR COLLISION
-            /*model::JointPtr_t collisionFree = limb->effector_;
-            while(collisionFree)
+            if(disableEffectorCollision)
             {
-                collisionValidation_->removeObstacleFromJoint(collisionFree, *cit);
-                limbcollisionValidation_->removeObstacleFromJoint(collisionFree,*cit);
-                collisionFree = collisionFree->numberChildJoints()>0 ? collisionFree->childJoint(0) : 0;
-            }*/
+                hpp::tools::RemoveEffectorCollision<core::CollisionValidation>((*collisionValidation_.get()), limb->effector_, *cit);
+                hpp::tools::RemoveEffectorCollision<core::CollisionValidation>((*limbcollisionValidation_.get()), limb->effector_, *cit);
+            }
         }
         limbs_.insert(std::make_pair(id, limb));
         tools::RemoveNonLimbCollisionRec<core::CollisionValidation>(device_->rootJoint(),name,collisionObjects,*limbcollisionValidation_.get());
@@ -118,18 +112,18 @@ namespace hpp {
                                 const fcl::Vec3f &offset,const fcl::Vec3f &normal, const double x,
                                 const double y,
                                 const model::ObjectVector_t &collisionObjects, const std::size_t nbSamples, const std::string &heuristicName, const double resolution,
-                                ContactType contactType)
+                                ContactType contactType, const bool disableEffectorCollision)
     {
         std::map<std::string, const sampling::heuristic>::const_iterator hit = checkLimbData(id, limbs_,factory_,heuristicName);
         model::JointPtr_t joint = device_->getJointByName(name);
         rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(joint, effectorName, offset,normal,x,y, nbSamples, hit->second, resolution,contactType);
-        AddLimbPrivate(limb, id, name,collisionObjects);
+        AddLimbPrivate(limb, id, name,collisionObjects, disableEffectorCollision);
     }
 
     void RbPrmFullBody::AddLimb(const std::string& database, const std::string& id,
                                 const model::ObjectVector_t &collisionObjects,
                                 const std::string& heuristicName,
-                                const bool loadValues)
+                                const bool loadValues, const bool disableEffectorCollision)
     {
         std::map<std::string, const sampling::heuristic>::const_iterator hit = checkLimbData(id, limbs_,factory_,heuristicName);;
         std::ifstream myfile (database.c_str());
@@ -137,7 +131,7 @@ namespace hpp {
             throw std::runtime_error ("Impossible to open database");
         rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(device_, myfile, loadValues, hit->second);
         myfile.close();
-        AddLimbPrivate(limb, id, limb->limb_->name(),collisionObjects);
+        AddLimbPrivate(limb, id, limb->limb_->name(),collisionObjects, disableEffectorCollision);
     }
 
     void RbPrmFullBody::init(const RbPrmFullBodyWkPtr_t& weakPtr)
