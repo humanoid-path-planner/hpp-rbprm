@@ -628,7 +628,7 @@ namespace hpp {
         return fail;
       else {
         if (X > 0) {
-          if (n2_angle > 0) {
+          if (n2_angle >= 0) {
             if (alpha_imp_max > -M_PI/2) {
               *alpha_imp_sup = atan(-tan(alpha_imp_min)+2*Y/X);
               *alpha_imp_inf = atan(-tan(alpha_imp_max)+2*Y/X);
