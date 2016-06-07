@@ -202,7 +202,8 @@ namespace hpp {
             cit != limb->sampleContainer_.samples_.end(); ++cit)
         {
             sampling::Load(*cit, configuration);
-            if(validation->validate(configuration) && (!stability || stability::IsStable(body,current) >=robustnessTreshold))
+            hpp::core::ValidationReportPtr_t valRep (new hpp::core::CollisionValidationReport);
+            if(validation->validate(configuration, valRep) && (!stability || stability::IsStable(body,current) >=robustnessTreshold))
             {
                 current.configuration_ = configuration;
                 return true;
@@ -246,7 +247,8 @@ namespace hpp {
             }
             if(proj->apply(config))
             {
-                if(limbValidations.at(name)->validate(config))
+                hpp::core::ValidationReportPtr_t valRep (new hpp::core::CollisionValidationReport);
+                if(limbValidations.at(name)->validate(config, valRep))
                 {
                     // stable?
                     current.contacts_[name] = true;
@@ -401,7 +403,8 @@ namespace hpp {
     RbPrmProfiler& watch = getRbPrmProfiler();
     watch.start("collision");
 #endif
-                if(validation->validate(configuration))
+                hpp::core::ValidationReportPtr_t valRep (new hpp::core::CollisionValidationReport);
+                if(validation->validate(configuration, valRep))
                 {
 #ifdef PROFILE
     watch.stop("collision");
