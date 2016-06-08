@@ -34,19 +34,17 @@ namespace hpp {
                                            ,const std::vector<std::string>& affFilters)
         : hpp::core::CollisionValidation(robot)
         , filter_(affFilters) {}
+        , unusedReport_(new CollisionValidationReport)
 
-    bool RbPrmRomValidation::validate (const Configuration_t& config,
-                    bool throwIfInValid)
+    bool RbPrmRomValidation::validate (const Configuration_t& config)
     {
-        CollisionValidationReport validationReport;
-        return validate(config,validationReport,throwIfInValid);
+        return validate(config, unusedReport_);
     }
 
     bool RbPrmRomValidation::validate (const Configuration_t& config,
-                    ValidationReport& validationReport,
-                    bool throwIfInValid)
+                    ValidationReportPtr_t& validationReport)
     {       
-				return !hpp::core::CollisionValidation::validate(config, validationReport, throwIfInValid);
+				return !hpp::core::CollisionValidation::validate(config, validationReport);
 		}
   }// namespace rbprm
 }// namespace hpp

@@ -17,7 +17,7 @@
 // along with hpp-core.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "test-tools.hh"
-#include <hpp/rbprm/sampling/sample-container.hh>
+#include <hpp/rbprm/sampling/sample-db.hh>
 #include <hpp/fcl/octree.h>
 #include <hpp/fcl/distance.h>
 #include <hpp/fcl/collision.h>
@@ -38,8 +38,8 @@ BOOST_AUTO_TEST_SUITE(test_generation_samples)
 BOOST_AUTO_TEST_CASE (sampleGeneration) {
     DevicePtr_t robot = initDevice();
     JointPtr_t joint = robot->getJointByName("arm");
-    std::deque<Sample> res = GenerateSamples(joint, "elbow", 10);
-    for(std::deque<Sample>::const_iterator cit = res.begin();
+    std::vector<Sample> res = GenerateSamples(joint, "elbow", 10);
+    for(std::vector<Sample>::const_iterator cit = res.begin();
         cit != res.end(); ++cit)
     {
         const Sample& s = *cit;
@@ -51,8 +51,8 @@ BOOST_AUTO_TEST_CASE (sampleGeneration) {
 BOOST_AUTO_TEST_CASE (sampleContainerGeneration) {
     DevicePtr_t robot = initDevice();
     JointPtr_t joint = robot->getJointByName("arm");
-    SampleContainer sc(joint, "elbow", 10,0.1);
-    for(std::deque<Sample>::const_iterator cit = sc.samples_.begin();
+    SampleDB sc(joint, "elbow", 10,0.1);
+    for(std::vector<Sample>::const_iterator cit = sc.samples_.begin();
         cit != sc.samples_.end(); ++cit)
     {
         const Sample& s = *cit;
@@ -66,8 +66,8 @@ BOOST_AUTO_TEST_CASE (octreeRequest) {
     CollisionObjectPtr_t obstacle =  MeshObstacleBox();
     DevicePtr_t robot = initDevice();
     JointPtr_t joint = robot->getJointByName("arm");
-    SampleContainer sc(joint,"elbow",100,0.1);
-    rbprm::sampling::T_OctreeReport reports = rbprm::sampling::GetCandidates(sc, fcl::Transform3f(),fcl::Transform3f(),obstacle,fcl::Vec3f(1,0,0));
+    SampleDB sc(joint,"elbow",100,0.1);
+    rbprm::sampling::T_OctreeReport reports = rbprm::sampling::GetCandidates(sc, fcl::Transform3f(),obstacle,fcl::Vec3f(1,0,0));
     double manipulability = std::numeric_limits<double>::max();
     BOOST_CHECK_MESSAGE (!reports.empty(), "No matching found, this should not be the case");
     for(rbprm::sampling::T_OctreeReport::const_iterator cit = reports.begin(); cit != reports.end(); ++cit)
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE (octreeRequest) {
     }
     fcl::Transform3f toofarLocation;
     toofarLocation.setTranslation(fcl::Vec3f(-10,-10,-10));
-    reports = rbprm::sampling::GetCandidates(sc, toofarLocation,toofarLocation, obstacle,fcl::Vec3f(1,0,0));
+    reports = rbprm::sampling::GetCandidates(sc, toofarLocation, obstacle,fcl::Vec3f(1,0,0));
     BOOST_CHECK_MESSAGE (reports.empty(), "samples found by request");
 }
 }

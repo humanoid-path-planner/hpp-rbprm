@@ -14,7 +14,7 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-rbprm. If not, see <http://www.gnu.org/licenses/>.
 
-#include <hpp/rbprm/rbprm-path-interpolation.hh>
+#include <hpp/rbprm/interpolation/rbprm-path-interpolation.hh>
 
 #ifdef PROFILE
     #include "hpp/rbprm/rbprm-profiler.hh"
@@ -22,6 +22,7 @@
 
 namespace hpp {
   namespace rbprm {
+    namespace interpolation {
 
     RbPrmInterpolationPtr_t RbPrmInterpolation::create (const hpp::rbprm::RbPrmFullBodyPtr_t robot,
                                                         const hpp::rbprm::State &start, const hpp::rbprm::State &end,
@@ -72,7 +73,6 @@ namespace hpp {
 			const double robustnessTreshold)
     {
         int nbFailures = 0;
-//std::cout << "interpolation " << std::endl;
         std::vector<State> states;
         states.push_back(this->start_);
         std::size_t nbRecontacts = 0;
@@ -86,7 +86,6 @@ namespace hpp {
         {
             const State& previous = states.back();
             core::Configuration_t configuration = *cit;
-            core::Configuration_t nextconfiguration = (cit+1!=configs.end()) ? *(cit+1) : *cit;
             Eigen::Vector3d dir = configuration.head<3>() - previous.configuration_.head<3>();
             fcl::Vec3f direction(dir[0], dir[1], dir[2]);
             bool nonZero(false);
@@ -96,7 +95,7 @@ namespace hpp {
             bool sameAsPrevious(true);
             bool multipleBreaks(false);
             State newState = ComputeContacts(previous, robot_,configuration,
-							nextconfiguration, affordances,affFilters,direction,
+						affordances,affFilters,direction,
 							sameAsPrevious, multipleBreaks,allowFailure,robustnessTreshold);
             if(allowFailure && multipleBreaks)
             {
@@ -151,9 +150,7 @@ if (nbFailures > 1)
         weakPtr_ = weakPtr;
     }
 
-    RbPrmInterpolation::RbPrmInterpolation (const core::PathVectorConstPtr_t path,
-			const hpp::rbprm::RbPrmFullBodyPtr_t robot, const hpp::rbprm::State &start,
-			const hpp::rbprm::State &end)
+    RbPrmInterpolation::RbPrmInterpolation (const core::PathVectorConstPtr_t path, const hpp::rbprm::RbPrmFullBodyPtr_t robot, const hpp::rbprm::State &start, const hpp::rbprm::State &end)
         : path_(path)
         , start_(start)
         , end_(end)
@@ -161,5 +158,6 @@ if (nbFailures > 1)
     {
         // TODO
     }
-  } // model
+    } // interpolation
+  } // rbprm
 } //hpp

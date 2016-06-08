@@ -22,9 +22,15 @@
 # include <hpp/rbprm/config.hh>
 # include <hpp/model/device.hh>
 # include <hpp/rbprm/rbprm-limb.hh>
+
 # include <queue>
+# include <algorithm>
+
 namespace hpp {
   namespace rbprm {
+  struct State;
+  typedef std::vector<State> T_State;
+  typedef T_State::const_iterator CIT_State;
   struct HPP_RBPRM_DLLAPI State{
       State():nbContacts(0), stable(false){}
       State(const State& other)
@@ -113,6 +119,37 @@ namespace hpp {
             stable = false;
             --nbContacts;
             return contactId;
+        }
+
+        void contactCreations(const State& previous, std::vector<std::string>& outList) const
+        {
+            for(std::map<std::string, fcl::Vec3f>::const_iterator cit = contactPositions_.begin();
+                cit != contactPositions_.end(); ++cit)
+            {
+                const std::string& name = cit->first;
+                bool newContact(true);
+                if(previous.contactPositions_.find(name) != previous.contactPositions_.end())
+                {
+                    newContact = (previous.contactPositions_.at(name) - cit->second).norm() > 10e-3;
+                }
+                if(newContact && std::find(outList.begin(),outList.end(),name) == outList.end())
+                {
+                    outList.push_back(name);
+                }
+            }
+        }
+
+        void contactBreaks(const State& previous, std::vector<std::string>& outList) const
+        {
+            previous.contactCreations(*this, outList);
+        }
+
+        std::vector<std::string> variations(const State& previous) const
+        {
+            std::vector<std::string> res;
+            contactCreations(previous, res);
+            contactBreaks(previous, res);
+            return res;
         }
 
         void print() const

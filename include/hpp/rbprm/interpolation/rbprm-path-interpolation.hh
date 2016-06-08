@@ -28,6 +28,7 @@
 
 namespace hpp {
   namespace rbprm {
+    namespace interpolation {
     HPP_PREDEF_CLASS(RbPrmInterpolation);
 
     /// Interpolation class for transforming a path computed by RB-PRM into
@@ -94,6 +95,7 @@ namespace hpp {
     private:
       RbPrmInterpolationWkPtr_t weakPtr_;
     }; // class RbPrmLimb
+    } // namespace interpolation
   } // namespace rbprm
 } // namespace hpp
 
