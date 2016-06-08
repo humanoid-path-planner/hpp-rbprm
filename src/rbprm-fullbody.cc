@@ -517,13 +517,13 @@ else
 				affFilters.begin (); fIt != affFilters.end (); ++fIt) {
 				std::size_t found = fIt->first.find(limb);
  			  if (found != std::string::npos) {
-				std::cout << "found filter setting " << fIt->first << " for limb " << limb << std::endl;
 				affTypes = fIt->second;
 				settingFound = true;
 				break;
 				}
 			}
 			if (!settingFound) {
+        // TODO: Keep warning or delete it?
 				std::cout << "No affordance filter setting found for limb " << limb
 					<< ". Has such filter been set?" << std::endl;
 				// Use all AFF OBJECTS as default if no filter setting exists
