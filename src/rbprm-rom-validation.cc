@@ -33,8 +33,8 @@ namespace hpp {
     RbPrmRomValidation::RbPrmRomValidation (const model::DevicePtr_t& robot
                                            ,const std::vector<std::string>& affFilters)
         : hpp::core::CollisionValidation(robot)
-        , filter_(affFilters) {}
-        , unusedReport_(new CollisionValidationReport)
+        , filter_(affFilters)
+        , unusedReport_(new CollisionValidationReport) {}
 
     bool RbPrmRomValidation::validate (const Configuration_t& config)
     {

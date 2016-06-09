@@ -335,7 +335,7 @@ namespace hpp {
       // request samples which collide with each of the collision objects
       
 		
-			sampling::heuristic eval = evaluate; if(!eval) eval =  limb->sampleContainer_.evaluate_;
+			sampling::heuristic eval = evaluate; if(!eval) eval =  limb->evaluate_;
       std::size_t i (0);
 		  if (affordances.empty ()) {
 		  	throw std::runtime_error ("No aff objects found!!!");

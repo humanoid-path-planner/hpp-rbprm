@@ -128,8 +128,11 @@ namespace hpp {
 
     private:
       RbPrmFullBodyWkPtr_t weakPtr_;
-      friend hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration,
-                                        const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction, const double robustnessTreshold);
+      friend hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(
+        const hpp::rbprm::RbPrmFullBodyPtr_t& body,
+        model::ConfigurationIn_t configuration, const affMap_t& affordances,
+        const std::map<std::string, std::vector<std::string> >& affFilters,
+        const fcl::Vec3f& direction, const double robustnessTreshold);
 
       friend hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(
 				const hpp::rbprm::State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body,
@@ -150,9 +153,11 @@ namespace hpp {
     /// \param direction An estimation of the direction of motion of the character.
     /// \param robustnessTreshold minimum value of the static equilibrium robustness criterion required to accept the configuration (0 by default).
     /// \return a State describing the computed contact configuration, with relevant contact information and balance information.
-    hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration,
-                                      const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction,
-                                                       const double robustnessTreshold = 0);
+    hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(
+      const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration,
+      const affMap_t& affordances,
+      const std::map<std::string, std::vector<std::string> >& affFilters, const fcl::Vec3f& direction,
+      const double robustnessTreshold = 0);
 
     /// Generates a balanced contact configuration, considering the
     /// given current configuration of the robot, and a previous, balanced configuration.
