@@ -70,7 +70,6 @@ namespace hpp {
            collision = false;
        }*/
 
-
       return collision;
     }
 
