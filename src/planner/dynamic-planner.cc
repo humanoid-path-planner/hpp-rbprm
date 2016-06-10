@@ -736,7 +736,11 @@ namespace hpp {
         geom::T_Point hull = geom::intersectPolygonePlane(model1,model2,fcl::Vec3f(0,0,1),geom::ZJUMP,result);
         hppStopBenchmark (COMPUTE_INTERSECTION);
         hppDisplayBenchmark (COMPUTE_INTERSECTION);
-        
+        if(hull.size() == 0){
+          hppDout(error,"No intersection between rom and environnement");
+          node->giwc(0);
+          return;
+        }
         
         // todo : compute center point of the hull
         polytope::vector3_t normal,tangent0,tangent1;
