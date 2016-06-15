@@ -56,7 +56,9 @@ namespace hpp {
         /// Transforms the path computed by RB-PRM into
         /// a discrete sequence of balanced contact configurations.
         ///
-        /// \param collisionObjects the objects to consider for contact and collision avoidance
+        /// \param affordances the set of 3D objects to consider for contact creation.
+        /// \param affFilters a vector of strings determining which affordance
+        ///  types are to be used in generating contacts for each limb.
         /// \param timeStep the discretization step of the path.
         /// \param robustnessTreshold minimum value of the static equilibrium robustness criterion required to accept the configuration (0 by default).
         /// \return a pointer to the created RbPrmInterpolation instance
@@ -67,7 +69,9 @@ namespace hpp {
         /// Transforms a discrete sequence of configurations into
         /// a discrete sequence of balanced contact configurations.
         ///
-        /// \param collisionObjects the objects to consider for contact and collision avoidance
+        /// \param affordances the set of 3D objects to consider for contact creation.
+        /// \param affFilters a vector of strings determining which affordance
+        ///  types are to be used in generating contacts for each limb.
         /// \param configs
         /// \param robustnessTreshold minimum value of the static equilibrium robustness criterion required to accept the configuration (0 by default).
         /// \return a pointer to the created RbPrmInterpolation instance

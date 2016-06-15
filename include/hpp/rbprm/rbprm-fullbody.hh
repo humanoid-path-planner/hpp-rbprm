@@ -149,7 +149,9 @@ namespace hpp {
     ///
     /// \param body The considered FullBody robot for which to generate contacts
     /// \param configuration Current full body configuration.
-    /// \param collisionObjects the set of 3D objects to consider for collision and contact creation.
+    /// \param affordances the set of 3D objects to consider for contact creation.
+    /// \param affFilters a vector of strings determining which affordance
+    ///  types are to be used in generating contacts for each limb.
     /// \param direction An estimation of the direction of motion of the character.
     /// \param robustnessTreshold minimum value of the static equilibrium robustness criterion required to accept the configuration (0 by default).
     /// \return a State describing the computed contact configuration, with relevant contact information and balance information.
@@ -167,7 +169,9 @@ namespace hpp {
     /// \param previous The previously computed State of the robot
     /// \param body The considered FullBody robot for which to generate contacts
     /// \param configuration Current full body configuration.
-    /// \param collisionObjects the set of 3D objects to consider for collision and contact creation.
+    /// \param affordances the set of 3D objects to consider for contact creation.
+    /// \param affFilters a vector of strings determining which affordance
+    ///  types are to be used in generating contacts for each limb.
     /// \param direction An estimation of the direction of motion of the character.
     /// \param contactMaintained parameter set to true if all the contacts were maintained, regarding the previous state
     /// \param multipleBreaks If the contact generation failed at this stage because multiple contacts were broken, is set to true.
