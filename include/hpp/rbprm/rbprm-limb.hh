@@ -85,13 +85,16 @@ namespace hpp {
         /// of the unit voxel of the octree. The larger they are, the more samples will be considered as candidates for contact.
         /// This can be problematic in terms of performance. The default value is 3 cm.
         /// \param contactType Whether the contact is a surface contact (orientation matters) or a punctual contact
+        /// \param disableEndEffectorCollision Whether the end effector bodies should be counted for collision detection
         static RbPrmLimbPtr_t create (const model::JointPtr_t limb, const std::string& effectorName, const fcl::Vec3f &offset,
                                       const fcl::Vec3f &normal,const double x, const double y,
                                       const std::size_t nbSamples, const sampling::heuristic evaluate = 0,
-                                      const double resolution = 0.1, ContactType contactType = _6_DOF);
+                                      const double resolution = 0.1, ContactType contactType = _6_DOF,
+                                      bool disableEndEffectorCollision = false);
 
         static RbPrmLimbPtr_t create (const model::DevicePtr_t device, std::ifstream& fileStream, const bool loadValues = true,
-                                      const hpp::rbprm::sampling::heuristic evaluate = 0);
+                                      const hpp::rbprm::sampling::heuristic evaluate = 0,
+                                      bool disableEndEffectorCollision = false);
 
     public:
         ~RbPrmLimb();
@@ -110,16 +113,19 @@ namespace hpp {
         const ContactType contactType_;
         sampling::heuristic evaluate_;
         const sampling::SampleDB sampleContainer_;
+        const bool disableEndEffectorCollision_;
 
     protected:
 
       RbPrmLimb (const model::JointPtr_t& limb, const std::string& effectorName,  const fcl::Vec3f &offset,
                  const fcl::Vec3f &normal,const double x, const double y,
                  const std::size_t nbSamples, const sampling::heuristic evaluate,
-                 const double resolution, ContactType contactType);
+                 const double resolution, ContactType contactType,
+                 bool disableEndEffectorCollision = false);
 
       RbPrmLimb (const model::DevicePtr_t device, std::ifstream& fileStream, const bool loadValues,
-                 const hpp::rbprm::sampling::heuristic evaluate);
+                 const hpp::rbprm::sampling::heuristic evaluate,
+                 bool disableEndEffectorCollision = false);
       ///
       /// \brief Initialization.
       ///

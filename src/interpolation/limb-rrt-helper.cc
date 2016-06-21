@@ -46,18 +46,6 @@ using namespace model;
         limbDevice->setDimensionExtraConfigSpace(1);
         return limbDevice;
     }
-    /*T_LimbDevice DevicesFromLimbs(RbPrmFullBodyPtr_t fullbody)
-    {
-        T_LimbDevice devices;
-        for(T_Limb::const_iterator cit = fullbody->GetLimbs().begin();
-            cit != fullbody->GetLimbs().end(); ++cit)
-        {
-            devices.insert(std::make_pair(cit->first,
-                                          DeviceFromLimb(cit->first, cit->second)));
-        }
-        //first create path between position
-        return devices;
-    }*/
     }
 
     //find contact creation
@@ -69,38 +57,6 @@ using namespace model;
     {
         fullBodyDevice_->setDimensionExtraConfigSpace(fullBodyDevice_->extraConfigSpace().dimension()+1);
         rootProblem_.collisionObstacles(referenceProblem->collisionObstacles());
-        // remove end effector collision
-
-        /*for(T_Limb::const_iterator lit = fullbody->GetLimbs().begin(); lit !=
-            fullbody->GetLimbs().end(); ++lit)
-        {
-            hpp::tools::RemoveEffectorCollision<hpp::core::Problem>(rootProblem_,
-                                                                    fullBodyDevice_->getJointByName(lit->second->effector_->name()),
-                                                                    rootProblem_.collisionObstacles());
-        }*/
-        //rootProblem_.pathValidation(LimbRRTPathValidation::create(fullBodyDevice_, 10e-5,fullBodyDevice_->configSize()-1));
-        /*for(hpp::rbprm::T_Limb::const_iterator cit = fullbody->GetLimbs().begin();
-            cit != fullbody->GetLimbs().end(); ++cit)
-        {
-            //create limb device
-            core::DevicePtr_t limbDevice = DeviceFromLimb(cit->first, cit->second);
-            limbDevices_.push_back(limbDevice);
-            //create associated problem solver
-            problems_.push_back(Problem(limbDevice));
-            Problem& problem = problems_.back();
-            problem.collisionObstacles(referenceProblem->collisionObstacles());
-
-        }*/
-        //problem_.configurationShooter(LimbRRTShooter::create(fullbody,path,));
-    }
-
-    LimbRRTSolver::LimbRRTSolver(core::PathPtr_t rootPath, core::DevicePtr_t limbDevice,
-                  const core::Problem& problem)
-        : limbDevice_(limbDevice->clone())
-        , rootPath_(rootPath->copy ())
-        , problem_(problem)
-    {
-        // NOTHING
     }
 
     namespace
@@ -111,6 +67,20 @@ using namespace model;
         Configuration_t endRootConf(to.configuration_);
         return (*(helper.rootProblem_.steeringMethod()))(startRootConf, endRootConf);
     }
+    }
+
+    void DisableUnNecessaryCollisions(core::Problem& problem, rbprm::RbPrmLimbPtr_t limb)
+    {
+        tools::RemoveNonLimbCollisionRec<core::Problem>(problem.robot()->rootJoint(),
+                                                        limb->limb_->name(),
+                                                        problem.collisionObstacles(),problem);
+
+        if(limb->disableEndEffectorCollision_)
+        {
+            hpp::tools::RemoveEffectorCollision<core::Problem>(problem,
+                                                               problem.robot()->getJointByName(limb->effector_->name()),
+                                                               problem.collisionObstacles());
+        }
     }
 
     PathVectorPtr_t interpolateStates(LimbRRTHelper& helper, const State& from, const State& to)
@@ -129,9 +99,12 @@ using namespace model;
             LimbRRTPathValidationPtr_t pathVal = LimbRRTPathValidation::create(
                         helper.fullBodyDevice_, 0.05,helper.fullBodyDevice_->configSize()-1);
             helper.rootProblem_.pathValidation(pathVal);
-            tools::RemoveNonLimbCollisionRec<LimbRRTPathValidation>(helper.fullBodyDevice_->rootJoint(),
+
+            DisableUnNecessaryCollisions(helper.rootProblem_, limbs.at(*cit));
+            /*tools::RemoveNonLimbCollisionRec<LimbRRTPathValidation>(helper.rootProblem_.robot(),
                                                                     limbs.at(*cit)->limb_->name(),
                                                                     helper.rootProblem_.collisionObstacles(),*pathVal.get());
+            DisableEffectorCollisions(helper.rootProblem_.robot(),variations, limbs, pathVal,helper.rootProblem_.collisionObstacles());*/
             helper.rootProblem_.configurationShooter(limbRRTShooter);
             Configuration_t start(helper.fullBodyDevice_->currentConfiguration());
             start.head(from.configuration_.rows()) = from.configuration_;
@@ -166,10 +139,10 @@ using namespace model;
             if(partialPath)
             {
                 core::RandomShortcutPtr_t rs = core::RandomShortcut::create(helper.rootProblem_);
-                /*for(int j=0; j<9;++j)
+                for(int j=0; j<9;++j)
                 {
                     partialPath = rs->optimize(partialPath);
-                }*/
+                }
                 res[i] = rs->optimize(partialPath);
                 valid[i]=true;
             }
