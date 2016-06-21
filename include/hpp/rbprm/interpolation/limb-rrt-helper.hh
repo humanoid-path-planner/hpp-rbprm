@@ -33,9 +33,6 @@
 namespace hpp {
     namespace rbprm {
     namespace interpolation {
-
-    //typedef std::map<std::string, core::DevicePtr_t> T_LimbDevice;
-
     struct HPP_CORE_DLLAPI LimbRRTHelper
     {
          LimbRRTHelper(RbPrmFullBodyPtr_t fullbody,
@@ -44,10 +41,8 @@ namespace hpp {
 
          RbPrmFullBodyPtr_t fullbody_;
          core::DevicePtr_t fullBodyDevice_;
-         //std::vector<core::DevicePtr_t> limbDevices_;
          core::Problem rootProblem_;
          core::PathPlannerPtr_t planner_;
-         //std::vector<core::Problem> problems_;
     };
 
     core::PathVectorPtr_t HPP_RBPRM_DLLAPI interpolateStates(LimbRRTHelper& helper, const State& from, const State& to);

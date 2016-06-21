@@ -55,6 +55,7 @@ using namespace model;
         , fullBodyDevice_(fullbody->device_->clone())
         , rootProblem_(fullBodyDevice_)
     {
+        // adding extra DOF for including time in sampling
         fullBodyDevice_->setDimensionExtraConfigSpace(fullBodyDevice_->extraConfigSpace().dimension()+1);
         rootProblem_.collisionObstacles(referenceProblem->collisionObstacles());
     }
@@ -67,10 +68,10 @@ using namespace model;
         Configuration_t endRootConf(to.configuration_);
         return (*(helper.rootProblem_.steeringMethod()))(startRootConf, endRootConf);
     }
-    }
 
     void DisableUnNecessaryCollisions(core::Problem& problem, rbprm::RbPrmLimbPtr_t limb)
     {
+        // TODO should we really disable collisions for other bodies ?
         tools::RemoveNonLimbCollisionRec<core::Problem>(problem.robot()->rootJoint(),
                                                         limb->limb_->name(),
                                                         problem.collisionObstacles(),problem);
@@ -83,6 +84,29 @@ using namespace model;
         }
     }
 
+    ConfigurationPtr_t limbRRTConfigFromDevice(const LimbRRTHelper& helper, const State& state, const double time)
+    {
+        Configuration_t config(helper.fullBodyDevice_->currentConfiguration());
+        config.head(state.configuration_.rows()) = state.configuration_;
+        config[config.rows()-1] = time;
+        return ConfigurationPtr_t(new Configuration_t(config));
+    }
+
+    void SetConfigShooter(LimbRRTHelper& helper, RbPrmLimbPtr_t limb, core::PathPtr_t& rootPath)
+    {
+        ConfigurationShooterPtr_t limbRRTShooter = LimbRRTShooter::create(limb, rootPath,
+                                                                          helper.fullBodyDevice_->configSize()-1);
+        helper.rootProblem_.configurationShooter(limbRRTShooter);
+    }
+
+    void SetPathValidation(LimbRRTHelper& helper)
+    {
+        LimbRRTPathValidationPtr_t pathVal = LimbRRTPathValidation::create(
+                    helper.fullBodyDevice_, 0.05,helper.fullBodyDevice_->configSize()-1);
+        helper.rootProblem_.pathValidation(pathVal);
+    }
+    }
+
     PathVectorPtr_t interpolateStates(LimbRRTHelper& helper, const State& from, const State& to)
     {
         PathVectorPtr_t res;
@@ -93,35 +117,67 @@ using namespace model;
         for(std::vector<std::string>::const_iterator cit = variations.begin();
             cit != variations.end(); ++cit)
         {
-            ConfigurationShooterPtr_t limbRRTShooter = LimbRRTShooter::create(limbs.at(*cit),
-                                                                                rootPath,
-                                                                                helper.fullBodyDevice_->configSize()-1);
-            LimbRRTPathValidationPtr_t pathVal = LimbRRTPathValidation::create(
-                        helper.fullBodyDevice_, 0.05,helper.fullBodyDevice_->configSize()-1);
-            helper.rootProblem_.pathValidation(pathVal);
-
+            SetPathValidation(helper);
             DisableUnNecessaryCollisions(helper.rootProblem_, limbs.at(*cit));
-            /*tools::RemoveNonLimbCollisionRec<LimbRRTPathValidation>(helper.rootProblem_.robot(),
-                                                                    limbs.at(*cit)->limb_->name(),
-                                                                    helper.rootProblem_.collisionObstacles(),*pathVal.get());
-            DisableEffectorCollisions(helper.rootProblem_.robot(),variations, limbs, pathVal,helper.rootProblem_.collisionObstacles());*/
-            helper.rootProblem_.configurationShooter(limbRRTShooter);
-            Configuration_t start(helper.fullBodyDevice_->currentConfiguration());
-            start.head(from.configuration_.rows()) = from.configuration_;
-            start[start.rows()-1] = rootPath->timeRange().first;
-            Configuration_t end  (start);
-            end.head(from.configuration_.rows()) = to.configuration_;
-            end[start.rows()-1] = rootPath->timeRange().second;
-            helper.rootProblem_.initConfig(ConfigurationPtr_t(new Configuration_t(start)));
+            SetConfigShooter(helper,limbs.at(*cit),rootPath);
+
+            ConfigurationPtr_t start = limbRRTConfigFromDevice(helper, from, rootPath->timeRange().first);
+            ConfigurationPtr_t end   = limbRRTConfigFromDevice(helper, to  , rootPath->timeRange().second);
+            helper.rootProblem_.initConfig(start);
             BiRRTPlannerPtr_t planner = BiRRTPlanner::create(helper.rootProblem_);
             ProblemTargetPtr_t target = problemTarget::GoalConfigurations::create (planner);
             helper.rootProblem_.target (target);
-            helper.rootProblem_.addGoalConfig(ConfigurationPtr_t(new Configuration_t(end)));
+            helper.rootProblem_.addGoalConfig(end);
+
             res = planner->solve();
             helper.rootProblem_.resetGoalConfigs();
+            //TODO error there should not be more than one variation
             break;
         }
         return res;
+    }
+
+    namespace
+    {
+        PathVectorPtr_t optimize(LimbRRTHelper& helper, PathVectorPtr_t partialPath)
+        {
+            core::RandomShortcutPtr_t rs = core::RandomShortcut::create(helper.rootProblem_);
+            for(int j=0; j<9;++j)
+            {
+                partialPath = rs->optimize(partialPath);
+            }
+            return partialPath;
+        }
+
+        std::size_t checkPath(const std::size_t& distance, bool valid[])
+        {
+            std::size_t numValid(distance);
+            for(std::size_t i = 0; i < distance; ++i)
+            {
+               if (!valid[i])
+               {
+                    numValid= i;
+                    break;
+               }
+            }
+            if (numValid==0)
+                throw std::runtime_error("No path found at state 0");
+            else if(numValid != distance)
+            {
+                std::cout << "No path found at state " << numValid << std::endl;
+            }
+            return numValid;
+        }
+
+        PathVectorPtr_t ConcatenatePath(PathVectorPtr_t res[], std::size_t numValid)
+        {
+            PathVectorPtr_t completePath = res[0];
+            for(std::size_t i = 1; i < numValid; ++i)
+            {
+                completePath->concatenate(*res[i]);
+            }
+            return completePath;
+        }
     }
 
     PathVectorPtr_t interpolateStates(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
@@ -131,6 +187,8 @@ using namespace model;
         bool valid[100];
         std::size_t distance = std::distance(startState,endState);
         assert(distance < 100);
+        // treat each interpolation between two states separatly
+        // in a different thread
         #pragma omp parallel for
         for(std::size_t i = 0; i < distance; ++i)
         {
@@ -138,12 +196,7 @@ using namespace model;
             PathVectorPtr_t partialPath = interpolateStates(helper, *(startState+i), *(startState+i+1));
             if(partialPath)
             {
-                core::RandomShortcutPtr_t rs = core::RandomShortcut::create(helper.rootProblem_);
-                for(int j=0; j<9;++j)
-                {
-                    partialPath = rs->optimize(partialPath);
-                }
-                res[i] = rs->optimize(partialPath);
+                res[i] = optimize(helper,partialPath);
                 valid[i]=true;
             }
             else
@@ -151,27 +204,8 @@ using namespace model;
                 valid[i] = false;
             }
         }
-        std::size_t numValid(distance);
-        for(std::size_t i = 0; i < distance; ++i)
-        {
-           if (!valid[i])
-           {
-                numValid= i;
-                break;
-           }
-        }
-        if (numValid==0)
-            throw std::runtime_error("No path found at state ");
-        else if(numValid != distance)
-        {
-            std::cout << "No path found at state " << numValid << std::endl;
-        }
-        PathVectorPtr_t completePath = res[0];
-        for(std::size_t i = 1; i < numValid; ++i)
-        {
-            completePath->concatenate(*res[i]);
-        }
-        return completePath;
+        std::size_t numValid = checkPath(distance, valid);
+        return ConcatenatePath(res, numValid);
     }
   }// namespace interpolation
   }// namespace rbprm
