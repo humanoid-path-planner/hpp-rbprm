@@ -116,7 +116,7 @@ namespace hpp {
     {
         std::map<std::string, const sampling::heuristic>::const_iterator hit = checkLimbData(id, limbs_,factory_,heuristicName);
         model::JointPtr_t joint = device_->getJointByName(name);
-        rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(joint, effectorName, offset,normal,x,y, nbSamples, hit->second, resolution,contactType);
+        rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(joint, effectorName, offset,normal,x,y, nbSamples, hit->second, resolution,contactType, disableEffectorCollision);
         AddLimbPrivate(limb, id, name,collisionObjects, disableEffectorCollision);
     }
 
@@ -129,7 +129,7 @@ namespace hpp {
         std::ifstream myfile (database.c_str());
         if (!myfile.good())
             throw std::runtime_error ("Impossible to open database");
-        rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(device_, myfile, loadValues, hit->second);
+        rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(device_, myfile, loadValues, hit->second, disableEffectorCollision);
         myfile.close();
         AddLimbPrivate(limb, id, limb->limb_->name(),collisionObjects, disableEffectorCollision);
     }
@@ -656,6 +656,10 @@ else
             if (!RepositionContacts(result, body, body->collisionValidation_, config, collisionObjects, direction, robustnessTreshold))
             {
                 std::cout << "planner is stuck; failure " <<  std::endl;
+                body->device_->currentConfiguration(save);
+                body->device_->controlComputation (flag);
+                result.nbContacts = 0;
+                return result;
             }
         }
         // One contact break already happened, the state is invalid

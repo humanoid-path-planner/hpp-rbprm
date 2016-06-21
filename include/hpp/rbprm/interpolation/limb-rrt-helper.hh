@@ -50,17 +50,6 @@ namespace hpp {
          //std::vector<core::Problem> problems_;
     };
 
-    struct HPP_CORE_DLLAPI LimbRRTSolver
-    {
-         LimbRRTSolver(core::PathPtr_t rootPath, core::DevicePtr_t limbDevice,
-                       const core::Problem& problem);
-        ~LimbRRTSolver(){}
-
-         core::DevicePtr_t limbDevice_;
-         core::PathPtr_t rootPath_;
-         core::Problem problem_;
-    };
-
     core::PathVectorPtr_t HPP_RBPRM_DLLAPI interpolateStates(LimbRRTHelper& helper, const State& from, const State& to);
     core::PathVectorPtr_t HPP_RBPRM_DLLAPI interpolateStates(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
                                                              const CIT_State& startState,
