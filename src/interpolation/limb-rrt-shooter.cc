@@ -60,7 +60,6 @@ using namespace core;
         // choose random limb configuration
         const sampling::Sample& sample = *(limb_->sampleContainer_.samples_.begin() + (rand() % (int) (limb_->sampleContainer_.samples_.size() -1)));
         sampling::Load(sample,*config);
-        //config->segment(0,pathRootLength_) = ((*path_)(pathDofVal)).segment(pathRootRank_, pathRootLength_);
         return config;
     }
   }// namespace interpolation
