@@ -26,15 +26,12 @@ namespace hpp {
   namespace interpolation {
     HPP_PREDEF_CLASS(LimbRRTPathValidation);
 
-    /// Interpolation class for transforming a path computed by RB-PRM into
-    /// a discrete sequence of balanced contact configurations.
-    ///
     class LimbRRTPathValidation;
     typedef boost::shared_ptr <LimbRRTPathValidation> LimbRRTPathValidationPtr_t;
     /// \addtogroup validation
     /// \{
 
-    /// Discretized validation of a path
+    /// Discretized validation of a path for the LimbRRT algorithm
     ///
     /// Apply some configuration validation algorithms at discretized values
     /// of the path parameter.
@@ -45,6 +42,10 @@ namespace hpp {
     create (const model::DevicePtr_t& robot, const model::value_type& stepSize, const std::size_t pathDofRank);
 
       /// Compute the largest valid interval starting from the path beginning
+      /// In the context of the LimbRRT algoritm, a path is only valid if the extra DOF
+      /// value of the first configuration of the path is lower than
+      /// the one of the last configuration. See the documentation
+      /// of interpolateStates for details
       ///
       /// \param path the path to check for validity,
       /// \param reverse if true check from the end,
