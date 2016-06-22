@@ -66,7 +66,11 @@ namespace hpp {
         /// Sets the current configuration of the Device, and propagates it
         /// to the ROMs of the Device.
         virtual bool currentConfiguration (ConfigurationIn_t configuration);
-        //virtual bool setCurrentConfiguration(ConfigurationIn_t configuration);
+        /// Set the trunk kinematic chain for the Device
+        /// will throw an error if the configsize of the chain is not
+        /// the same as for the roms of the RbprmDevice
+        virtual void rootJoint (JointPtr_t joint);
+
 
     public:
       /// Range Of Motion of the robot

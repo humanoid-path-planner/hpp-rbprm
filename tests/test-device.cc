@@ -29,14 +29,17 @@ BOOST_AUTO_TEST_CASE (dualCreation) {
     initRbPrmDeviceTest();
 }
 
-/*BOOST_AUTO_TEST_CASE (dualCreationDifferentDofsInRobotFail) {
-    DevicePtr_t trunk = Device::create("trunk");
+namespace
+{
+bool validate( std::runtime_error const& ex ) { return true; }
+}
+
+BOOST_AUTO_TEST_CASE (dualCreationDifferentDofsInRobotFail) {
     DevicePtr_t rom = Device::create("rom");
+    RbPrmDevicePtr_t trunk = RbPrmDevice::create("trunk", rom);
     JointSO3* jointSO3 = new JointSO3 (fcl::Transform3f());
-    rom->rootJoint(jointSO3);
-    BOOST_CHECK_THROW(RbPrmDevice::create(trunk, rom), std::exception);
-    delete jointSO3;
-}*/
+    BOOST_CHECK_EXCEPTION(trunk->rootJoint(jointSO3), std::runtime_error, validate);
+}
 
 BOOST_AUTO_TEST_CASE (dualCreationReachabilityCondition) {
     RbPrmDevicePtr_t robot = initRbPrmDeviceTest();

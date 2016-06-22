@@ -51,7 +51,7 @@ namespace
 
     std::vector<double> getTranslationBounds(const model::RbPrmDevicePtr_t robot)
     {
-        const JointPtr_t root = robot->rootJoint();
+        const JointPtr_t root = robot->Device::rootJoint();
         std::vector<double> res;
         for(std::size_t i =0; i<3; ++i)
         {
