@@ -17,6 +17,7 @@
 #include <hpp/rbprm/interpolation/limb-rrt-helper.hh>
 #include <hpp/rbprm/interpolation/limb-rrt-shooter.hh>
 #include <hpp/rbprm/interpolation/limb-rrt-path-validation.hh>
+#include <hpp/rbprm/interpolation/limb-rrt-steering.hh>
 #include <hpp/core/steering-method-straight.hh>
 #include <hpp/core/problem-target/goal-configurations.hh>
 #include <hpp/core/bi-rrt-planner.hh>
@@ -50,23 +51,25 @@ using namespace model;
 
     //find contact creation
 
-    LimbRRTHelper::LimbRRTHelper(RbPrmFullBodyPtr_t fullbody, hpp::core::ProblemPtr_t referenceProblem)
+    LimbRRTHelper::LimbRRTHelper(RbPrmFullBodyPtr_t fullbody, hpp::core::ProblemPtr_t referenceProblem, hpp::core::PathPtr_t rootPath)
         : fullbody_(fullbody)
         , fullBodyDevice_(fullbody->device_->clone())
         , rootProblem_(fullBodyDevice_)
+        , rootPath_(rootPath)
     {
         // adding extra DOF for including time in sampling
         fullBodyDevice_->setDimensionExtraConfigSpace(fullBodyDevice_->extraConfigSpace().dimension()+1);
         rootProblem_.collisionObstacles(referenceProblem->collisionObstacles());
+        rootProblem_.steeringMethod(LimbRRTSteering::create(&rootProblem_,fullBodyDevice_->configSize()-1));
     }
 
     namespace
     {
-    core::PathPtr_t generateRootPath(const LimbRRTHelper& helper, const State& from, const State& to)
+    core::PathPtr_t generateRootPath(const Problem& problem, const State& from, const State& to)
     {
         Configuration_t startRootConf(from.configuration_);
         Configuration_t endRootConf(to.configuration_);
-        return (*(helper.rootProblem_.steeringMethod()))(startRootConf, endRootConf);
+        return (*(problem.steeringMethod()))(startRootConf, endRootConf);
     }
 
     void DisableUnNecessaryCollisions(core::Problem& problem, rbprm::RbPrmLimbPtr_t limb)
@@ -110,7 +113,7 @@ using namespace model;
     PathVectorPtr_t interpolateStates(LimbRRTHelper& helper, const State& from, const State& to)
     {
         PathVectorPtr_t res;
-        core::PathPtr_t rootPath = generateRootPath(helper,from,to);
+        core::PathPtr_t rootPath = helper.rootPath_;
         // get limbs that moved
         std::vector<std::string> variations = to.variations(from);
         const rbprm::T_Limb& limbs = helper.fullbody_->GetLimbs();
@@ -121,8 +124,8 @@ using namespace model;
             DisableUnNecessaryCollisions(helper.rootProblem_, limbs.at(*cit));
             SetConfigShooter(helper,limbs.at(*cit),rootPath);
 
-            ConfigurationPtr_t start = limbRRTConfigFromDevice(helper, from, rootPath->timeRange().first);
-            ConfigurationPtr_t end   = limbRRTConfigFromDevice(helper, to  , rootPath->timeRange().second);
+            ConfigurationPtr_t start = limbRRTConfigFromDevice(helper, from, 0.);
+            ConfigurationPtr_t end   = limbRRTConfigFromDevice(helper, to  , 1.);
             helper.rootProblem_.initConfig(start);
             BiRRTPlannerPtr_t planner = BiRRTPlanner::create(helper.rootProblem_);
             ProblemTargetPtr_t target = problemTarget::GoalConfigurations::create (planner);
@@ -142,7 +145,7 @@ using namespace model;
         PathVectorPtr_t optimize(LimbRRTHelper& helper, PathVectorPtr_t partialPath)
         {
             core::RandomShortcutPtr_t rs = core::RandomShortcut::create(helper.rootProblem_);
-            for(int j=0; j<9;++j)
+            for(int j=0; j<10;++j)
             {
                 partialPath = rs->optimize(partialPath);
             }
@@ -180,6 +183,38 @@ using namespace model;
         }
     }
 
+    PathVectorPtr_t interpolateStates(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t rootPath,
+                                      const CIT_StateFrame &startState, const CIT_StateFrame &endState)
+    {
+        PathVectorPtr_t res[100];
+        bool valid[100];
+        std::size_t distance = std::distance(startState,endState);
+        assert(distance < 100);
+        // treat each interpolation between two states separatly
+        // in a different thread
+        #pragma omp parallel for
+        for(std::size_t i = 0; i < distance; ++i)
+        {
+            CIT_StateFrame a, b;
+            a = (startState+i);
+            b = (startState+i+1);
+            LimbRRTHelper helper(fullbody, referenceProblem,
+                                 rootPath->extract(core::interval_t(a->first, b->first)));
+            PathVectorPtr_t partialPath = interpolateStates(helper, a->second, b->second);
+            if(partialPath)
+            {
+                res[i] = optimize(helper,partialPath);
+                valid[i]=true;
+            }
+            else
+            {
+                valid[i] = false;
+            }
+        }
+        std::size_t numValid = checkPath(distance, valid);
+        return ConcatenatePath(res, numValid);
+    }
+
     PathVectorPtr_t interpolateStates(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
                                       const CIT_State &startState, const CIT_State &endState)
     {
@@ -192,8 +227,17 @@ using namespace model;
         #pragma omp parallel for
         for(std::size_t i = 0; i < distance; ++i)
         {
-            LimbRRTHelper helper(fullbody, referenceProblem);
-            PathVectorPtr_t partialPath = interpolateStates(helper, *(startState+i), *(startState+i+1));
+            CIT_State a, b;
+            a = (startState+i);
+            b = (startState+i+1);
+
+            // TODO Temp solution. This method will disappear in the end
+            model::DevicePtr_t cloneDevice(fullbody->device_->clone());
+            cloneDevice->setDimensionExtraConfigSpace(cloneDevice->extraConfigSpace().dimension()+1);
+            Problem problemClone(cloneDevice);
+
+            LimbRRTHelper helper(fullbody, referenceProblem, generateRootPath(problemClone, *a, *b));
+            PathVectorPtr_t partialPath = interpolateStates(helper, *a, *b);
             if(partialPath)
             {
                 res[i] = optimize(helper,partialPath);

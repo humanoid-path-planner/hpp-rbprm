@@ -75,18 +75,5 @@ namespace hpp {
     {
         // NOTHING
     }
-
-    void RbPrmDevice::rootJoint (JointPtr_t joint)
-    {
-        Device::rootJoint(joint);
-        for(T_Rom::const_iterator cit = robotRoms_.begin(); cit != robotRoms_.end(); ++cit)
-        {
-            if(this->configSize() != cit->second->configSize())
-            {
-                throw std::runtime_error(
-                        "In RbPrmDevice initialization; trunk and rom must have the same dimensionality.");
-            }
-        }
-    }
   } // model
 } //hpp

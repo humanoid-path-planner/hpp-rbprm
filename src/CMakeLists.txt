@@ -29,6 +29,8 @@ SET(${LIBRARY_NAME}_SOURCES
         interpolation/limb-rrt-shooter.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/limb-rrt-shooter.hh
         interpolation/limb-rrt-helper.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/limb-rrt-helper.hh
         interpolation/limb-rrt-path-validation.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/limb-rrt-path-validation.hh
+        ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/limb-rrt-steering.hh
+        interpolation/limb-rrt-path.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/limb-rrt-path.hh
         rbprm-fullbody.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-fullbody.hh
 	${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-state.hh
         sampling/sample.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/sampling/sample.hh
