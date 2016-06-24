@@ -44,9 +44,12 @@ namespace hpp {
                                           bool reverse, PathPtr_t& validPart,
                                           PathValidationReportPtr_t& validationReport)
     {
-        return DiscretizedPathValidation::validate(path,reverse,validPart,validationReport)
-             && ((!reverse && path->initial()[pathDofRank_] < path->end()[pathDofRank_])
-                 ||(reverse && path->initial()[pathDofRank_] > path->end()[pathDofRank_]));
+        if(path->initial()[pathDofRank_] > path->end()[pathDofRank_])
+        {
+            validPart = path->extract(interval_t(path->timeRange().first, path->timeRange().first));
+            return false;
+        }
+        return DiscretizedPathValidation::validate(path,reverse,validPart,validationReport);
     }
 
     LimbRRTPathValidation::LimbRRTPathValidation(const DevicePtr_t& robot,

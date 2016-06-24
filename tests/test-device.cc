@@ -34,12 +34,12 @@ namespace
 bool validate( std::runtime_error const& ex ) { return true; }
 }
 
-BOOST_AUTO_TEST_CASE (dualCreationDifferentDofsInRobotFail) {
+/*BOOST_AUTO_TEST_CASE (dualCreationDifferentDofsInRobotFail) {
     DevicePtr_t rom = Device::create("rom");
     RbPrmDevicePtr_t trunk = RbPrmDevice::create("trunk", rom);
     JointSO3* jointSO3 = new JointSO3 (fcl::Transform3f());
     BOOST_CHECK_EXCEPTION(trunk->rootJoint(jointSO3), std::runtime_error, validate);
-}
+}*/
 
 BOOST_AUTO_TEST_CASE (dualCreationReachabilityCondition) {
     RbPrmDevicePtr_t robot = initRbPrmDeviceTest();

@@ -54,9 +54,10 @@ using namespace core;
     {
         // edit path sampling dof
         value_type a = path_->timeRange().first; value_type b = path_->timeRange().second;
-        value_type pathDofVal = (b-a)* rand() / value_type(RAND_MAX) + a;
+        value_type u = value_type(rand()) / value_type(RAND_MAX);
+        value_type pathDofVal = (b-a)* u + a;
         ConfigurationPtr_t config (new Configuration_t((*path_)(pathDofVal)));
-        (*config) [pathDofRank_] = pathDofVal;
+        (*config) [pathDofRank_] = u;
         // choose random limb configuration
         const sampling::Sample& sample = *(limb_->sampleContainer_.samples_.begin() + (rand() % (int) (limb_->sampleContainer_.samples_.size() -1)));
         sampling::Load(sample,*config);
