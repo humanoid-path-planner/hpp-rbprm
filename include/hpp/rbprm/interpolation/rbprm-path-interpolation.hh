@@ -62,8 +62,7 @@ namespace hpp {
         /// \param timeStep the discretization step of the path.
         /// \param robustnessTreshold minimum value of the static equilibrium robustness criterion required to accept the configuration (0 by default).
         /// \return a pointer to the created RbPrmInterpolation instance
-        std::vector<State> Interpolate(const affMap_t& affordances,
-																	  	 const std::map<std::string, std::vector<std::string> >& affFilters,
+        rbprm::T_StateFrame Interpolate(const affMap_t& affordances, const std::map<std::string, std::vector<std::string> >& affFilters,
                                        const double timeStep = 0.01, const double robustnessTreshold=0.);
 
         /// Transforms a discrete sequence of configurations into
@@ -73,11 +72,13 @@ namespace hpp {
         /// \param affFilters a vector of strings determining which affordance
         ///  types are to be used in generating contacts for each limb.
         /// \param configs
+		/// \param timeStep the discretization step of the path.
+		/// \param initValue initial time value associated to the first configuration        
         /// \param robustnessTreshold minimum value of the static equilibrium robustness criterion required to accept the configuration (0 by default).
-        /// \return a pointer to the created RbPrmInterpolation instance
-        std::vector<State> Interpolate(const affMap_t& affordances,
-																			 const std::map<std::string, std::vector<std::string> >& affFilters,
-                                       const std::vector<model::Configuration_t>& configs, const double robustnessTreshold=0.);
+       /// \return The time parametrized list of states according to the reference path
+        rbprm::T_StateFrame Interpolate(const affMap_t& affordances, const std::map<std::string, std::vector<std::string> >& affFilters,
+                                        const std::vector<model::Configuration_t>& configs, const double robustnessTreshold=0.,
+                                        const model::value_type timeStep = 1., const model::value_type initValue = 0.);
 
     public:
         const core::PathVectorConstPtr_t path_;
@@ -88,8 +89,7 @@ namespace hpp {
         RbPrmFullBodyPtr_t robot_;
 
     protected:
-      RbPrmInterpolation (const core::PathVectorConstPtr_t path,
-				const RbPrmFullBodyPtr_t robot,const State& start, const State& end);
+      RbPrmInterpolation (const core::PathVectorConstPtr_t path, const RbPrmFullBodyPtr_t robot,const State& start, const State& end);
 
       ///
       /// \brief Initialization.

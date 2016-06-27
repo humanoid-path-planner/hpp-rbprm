@@ -52,9 +52,8 @@ namespace hpp {
     }
     }
 
-    std::vector<State> RbPrmInterpolation::Interpolate(const affMap_t& affordances,
-			const std::map<std::string, std::vector<std::string> >& affFilters,
-			const double timeStep, const double robustnessTreshold)
+    rbprm::T_StateFrame RbPrmInterpolation::Interpolate(const affMap_t& affordances,
+			const std::map<std::string, std::vector<std::string> >& affFilters, const double timeStep, const double robustnessTreshold)
     {
         if(!path_) throw std::runtime_error ("Cannot interpolate; no path given to interpolator ");
         std::vector<model::Configuration_t> configs;
@@ -64,17 +63,18 @@ namespace hpp {
         {
             configs.push_back(configPosition(configs.back(),path_,i));
         }
-        return Interpolate(affordances, affFilters, configs, robustnessTreshold);
+        return Interpolate(affordances, affFilters, configs, robustnessTreshold, timeStep, range.first);
     }
 
-    std::vector<State> RbPrmInterpolation::Interpolate(const affMap_t& affordances,
-			const std::map<std::string, std::vector<std::string> >& affFilters,
-			const std::vector<model::Configuration_t>& configs,
-			const double robustnessTreshold)
+    rbprm::T_StateFrame RbPrmInterpolation::Interpolate(const affMap_t& affordances,
+														const std::map<std::string, std::vector<std::string> >& affFilters,
+                                                        const std::vector<model::Configuration_t>& configs, const double robustnessTreshold,
+                                                        const model::value_type timeStep, const model::value_type initValue)
     {
         int nbFailures = 0;
-        std::vector<State> states;
-        states.push_back(this->start_);
+        model::value_type currentVal(initValue);
+        rbprm::T_StateFrame states;
+        states.push_back(std::make_pair(currentVal, this->start_));
         std::size_t nbRecontacts = 0;
         bool allowFailure = true;
 #ifdef PROFILE
@@ -82,9 +82,9 @@ namespace hpp {
     watch.reset_all();
     watch.start("complete generation");
 #endif
-        for(std::vector<model::Configuration_t>::const_iterator cit = configs.begin()+1; cit != configs.end(); ++cit)
+        for(std::vector<model::Configuration_t>::const_iterator cit = configs.begin()+1; cit != configs.end(); ++cit, currentVal+= timeStep)
         {
-            const State& previous = states.back();
+            const State& previous = states.back().second;
             core::Configuration_t configuration = *cit;
             Eigen::Vector3d dir = configuration.head<3>() - previous.configuration_.head<3>();
             fcl::Vec3f direction(dir[0], dir[1], dir[2]);
@@ -94,13 +94,13 @@ namespace hpp {
             // TODO Direction 6d
             bool sameAsPrevious(true);
             bool multipleBreaks(false);
-            State newState = ComputeContacts(previous, robot_,configuration,
-						affordances,affFilters,direction,
-							sameAsPrevious, multipleBreaks,allowFailure,robustnessTreshold);
+            State newState = ComputeContacts(previous, robot_,configuration, affordances,affFilters,direction,
+                                             sameAsPrevious, multipleBreaks,allowFailure,robustnessTreshold);
             if(allowFailure && multipleBreaks)
             {
                 ++ nbFailures;
                 ++cit;
+                currentVal+= timeStep;
 if (nbFailures > 1)
 {
 #ifdef PROFILE
@@ -119,6 +119,7 @@ if (nbFailures > 1)
             {
                 ++nbRecontacts;
                 cit--;
+                currentVal-= timeStep;
             }
             else
             {
@@ -129,10 +130,10 @@ if (nbFailures > 1)
                 states.pop_back();
             }
             newState.nbContacts = newState.contactNormals_.size();
-            states.push_back(newState);
+            states.push_back(std::make_pair(currentVal, newState));
             allowFailure = nbRecontacts > robot_->GetLimbs().size() + 6;
         }
-        states.push_back(this->end_);
+        states.push_back(std::make_pair(this->path_->timeRange().second, this->end_));
 #ifdef PROFILE
         watch.add_to_count("planner succeeded", 1);
         watch.stop("complete generation");
