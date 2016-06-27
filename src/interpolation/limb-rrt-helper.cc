@@ -230,13 +230,7 @@ using namespace model;
             CIT_State a, b;
             a = (startState+i);
             b = (startState+i+1);
-
-            // TODO Temp solution. This method will disappear in the end
-            model::DevicePtr_t cloneDevice(fullbody->device_->clone());
-            cloneDevice->setDimensionExtraConfigSpace(cloneDevice->extraConfigSpace().dimension()+1);
-            Problem problemClone(cloneDevice);
-
-            LimbRRTHelper helper(fullbody, referenceProblem, generateRootPath(problemClone, *a, *b));
+            LimbRRTHelper helper(fullbody, referenceProblem, generateRootPath(*referenceProblem, *a, *b));
             PathVectorPtr_t partialPath = interpolateStates(helper, *a, *b);
             if(partialPath)
             {
