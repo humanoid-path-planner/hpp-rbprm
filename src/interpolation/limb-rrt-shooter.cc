@@ -46,6 +46,7 @@ using namespace core;
     , limb_(limb)
     , path_(path)
     , pathDofRank_(pathDofRank)
+    , configSize_(pathDofRank+1)
     {
         // NOTHING
     }
@@ -56,7 +57,8 @@ using namespace core;
         value_type a = path_->timeRange().first; value_type b = path_->timeRange().second;
         value_type u = value_type(rand()) / value_type(RAND_MAX);
         value_type pathDofVal = (b-a)* u + a;
-        ConfigurationPtr_t config (new Configuration_t((*path_)(pathDofVal)));
+        ConfigurationPtr_t config (new Configuration_t(configSize_));
+        config->head(configSize_-1) =  (*path_)(pathDofVal);
         (*config) [pathDofRank_] = u;
         // choose random limb configuration
         const sampling::Sample& sample = *(limb_->sampleContainer_.samples_.begin() + (rand() % (int) (limb_->sampleContainer_.samples_.size() -1)));

@@ -60,6 +60,7 @@ namespace hpp {
         const hpp::rbprm::RbPrmLimbPtr_t limb_;
         const hpp::core::PathPtr_t path_;
         const std::size_t pathDofRank_;
+        const std::size_t configSize_;
 
     private:
         LimbRRTShooterWkPtr_t weak_;
