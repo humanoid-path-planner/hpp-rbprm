@@ -106,10 +106,12 @@ namespace hpp {
     /// with the assumption that the path is valid.
     /// \param iterator to the initial State
     /// \param to iterator to the final State
+    /// \param numOptimizations Number of iterations of the shortcut algorithm to apply between each states
     /// \return the resulting path vector, concatenation of all the interpolation paths between the State
     core::PathVectorPtr_t HPP_RBPRM_DLLAPI interpolateStates(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
                                                              const CIT_State& startState,
-                                                             const CIT_State& endState);
+                                                             const CIT_State& endState,
+                                                             const std::size_t numOptimizations = 10);
     /// Runs the LimbRRT to create a kinematic, continuous,
     /// collision free path between an ordered State contrainer (Between each consecutive state, only one effector
     /// position differs between the states). Equilibrium is not
@@ -133,12 +135,14 @@ namespace hpp {
     /// \param path reference path for the root
     /// \param iterator to the initial State with its associated keyFrame in the path
     /// \param to iterator to the final State with its associated keyFrame in the path
+    /// \param numOptimizations Number of iterations of the shortcut algorithm to apply between each states
     /// \return the resulting path vector, concatenation of all the interpolation paths between the State
     core::PathVectorPtr_t HPP_RBPRM_DLLAPI interpolateStates(RbPrmFullBodyPtr_t fullbody,
                                                              core::ProblemPtr_t referenceProblem,
                                                              const core::PathPtr_t rootPath,
                                                              const CIT_StateFrame& startState,
-                                                             const CIT_StateFrame& endState);
+                                                             const CIT_StateFrame& endState,
+                                                             const std::size_t numOptimizations = 10);
 
     } // namespace interpolation
     } // namespace rbprm

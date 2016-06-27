@@ -142,10 +142,10 @@ using namespace model;
 
     namespace
     {
-        PathVectorPtr_t optimize(LimbRRTHelper& helper, PathVectorPtr_t partialPath)
+        PathVectorPtr_t optimize(LimbRRTHelper& helper, PathVectorPtr_t partialPath, const std::size_t numOptimizations)
         {
             core::RandomShortcutPtr_t rs = core::RandomShortcut::create(helper.rootProblem_);
-            for(int j=0; j<10;++j)
+            for(std::size_t j=0; j<numOptimizations;++j)
             {
                 partialPath = rs->optimize(partialPath);
             }
@@ -184,7 +184,7 @@ using namespace model;
     }
 
     PathVectorPtr_t interpolateStates(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t rootPath,
-                                      const CIT_StateFrame &startState, const CIT_StateFrame &endState)
+                                      const CIT_StateFrame &startState, const CIT_StateFrame &endState, const  std::size_t numOptimizations)
     {
         PathVectorPtr_t res[100];
         bool valid[100];
@@ -203,7 +203,7 @@ using namespace model;
             PathVectorPtr_t partialPath = interpolateStates(helper, a->second, b->second);
             if(partialPath)
             {
-                res[i] = optimize(helper,partialPath);
+                res[i] = optimize(helper,partialPath, numOptimizations);
                 valid[i]=true;
             }
             else
@@ -216,7 +216,7 @@ using namespace model;
     }
 
     PathVectorPtr_t interpolateStates(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
-                                      const CIT_State &startState, const CIT_State &endState)
+                                      const CIT_State &startState, const CIT_State &endState, const std::size_t numOptimizations)
     {
         PathVectorPtr_t res[100];
         bool valid[100];
@@ -234,7 +234,7 @@ using namespace model;
             PathVectorPtr_t partialPath = interpolateStates(helper, *a, *b);
             if(partialPath)
             {
-                res[i] = optimize(helper,partialPath);
+                res[i] = optimize(helper,partialPath, numOptimizations);
                 valid[i]=true;
             }
             else
