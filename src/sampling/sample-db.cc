@@ -23,7 +23,7 @@ namespace
    octomap::OcTree* generateOctree(const T_Sample& samples, const double resolution)
    {
        octomap::OcTree* octTree = new octomap::OcTree(resolution);
-       for(std::vector<Sample>::const_iterator cit = samples.begin();
+       for(SampleVector_t::const_iterator cit = samples.begin();
            cit != samples.end(); ++cit)
        {
            const fcl::Vec3f& position = cit->effectorPosition_;
@@ -35,11 +35,11 @@ namespace
    }
 
    typedef std::map<long int, std::vector<std::size_t> > T_VoxelSample;
-   T_VoxelSample getSamplesPerVoxel(const boost::shared_ptr<const octomap::OcTree>& octTree, const std::vector<Sample>& samples)
+   T_VoxelSample getSamplesPerVoxel(const boost::shared_ptr<const octomap::OcTree>& octTree, const SampleVector_t& samples)
    {
        T_VoxelSample res;
        std::size_t sid = 0;
-       for(std::vector<Sample>::const_iterator cit=samples.begin(); cit!=samples.end();++cit, ++sid)
+       for(SampleVector_t::const_iterator cit=samples.begin(); cit!=samples.end();++cit, ++sid)
        {
            const fcl::Vec3f& position = cit->effectorPosition_;
            long int id = octTree->search(position[0],position[1],position[2]) - octTree->getRoot();

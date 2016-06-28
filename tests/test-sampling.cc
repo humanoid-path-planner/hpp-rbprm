@@ -38,8 +38,8 @@ BOOST_AUTO_TEST_SUITE(test_generation_samples)
 BOOST_AUTO_TEST_CASE (sampleGeneration) {
     DevicePtr_t robot = initDevice();
     JointPtr_t joint = robot->getJointByName("arm");
-    std::vector<Sample> res = GenerateSamples(joint, "elbow", 10);
-    for(std::vector<Sample>::const_iterator cit = res.begin();
+    SampleVector_t res = GenerateSamples(joint, "elbow", 10);
+    for(SampleVector_t::const_iterator cit = res.begin();
         cit != res.end(); ++cit)
     {
         const Sample& s = *cit;
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE (sampleContainerGeneration) {
     DevicePtr_t robot = initDevice();
     JointPtr_t joint = robot->getJointByName("arm");
     SampleDB sc(joint, "elbow", 10,0.1);
-    for(std::vector<Sample>::const_iterator cit = sc.samples_.begin();
+    for(SampleVector_t::const_iterator cit = sc.samples_.begin();
         cit != sc.samples_.end(); ++cit)
     {
         const Sample& s = *cit;

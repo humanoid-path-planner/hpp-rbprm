@@ -121,10 +121,10 @@ void hpp::rbprm::sampling::Load(const Sample& sample, ConfigurationOut_t configu
     configuration.segment(sample.startRank_, sample.length_) = sample.configuration_;
 }
 
-std::vector<Sample> hpp::rbprm::sampling::GenerateSamples(const model::JointPtr_t model, const std::string& effector
+hpp::rbprm::sampling::SampleVector_t hpp::rbprm::sampling::GenerateSamples(const model::JointPtr_t model, const std::string& effector
                                                          , const std::size_t nbSamples, const fcl::Vec3f& offset)
 {
-    std::vector<Sample> result; result.reserve(nbSamples);
+    SampleVector_t result; result.reserve(nbSamples);
     model::DevicePtr_t device (model->robot()->clone());
     Configuration_t config = device->currentConfiguration();
     JointPtr_t clone = device->getJointByName(model->name());
