@@ -19,6 +19,8 @@
 #ifndef HPP_RBPRM_SAMPLE_HH
 # define HPP_RBPRM_SAMPLE_HH
 
+#include <Eigen/StdVector>
+
 #include <hpp/rbprm/config.hh>
 #include <hpp/model/device.hh>
 
@@ -38,6 +40,10 @@ namespace hpp {
     class HPP_RBPRM_DLLAPI Sample
     {
     public:
+      /// \cond
+      EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+      /// \endcond
+
         /// Creates a sample configuration, given the current configuration of a limb.
         /// the current Configuration_t of the limb will be used to compute the sample.
         /// \param limb root of the considered limb
@@ -82,13 +88,14 @@ namespace hpp {
         }
     };
 
+    typedef std::vector<Sample, Eigen::aligned_allocator<Sample> > SampleVector_t;
 /// Automatically generates a deque of sample configuration for a given limb of a robot
     /// \param limb root of the considered limb
     /// \param effector tag identifying the end effector of the limb
     /// \param nbSamples number of samples to be generated
     /// \param offset location of the contact point of the effector relatively to the effector joint origin
     /// \return a deque of sample configurations respecting joint limits.
-std::vector<Sample> GenerateSamples(const model::JointPtr_t limb,  const std::string& effector,  const std::size_t nbSamples,const fcl::Vec3f& offset = fcl::Vec3f(0,0,0));
+SampleVector_t GenerateSamples(const model::JointPtr_t limb,  const std::string& effector,  const std::size_t nbSamples,const fcl::Vec3f& offset = fcl::Vec3f(0,0,0));
 
 /// Assigns the limb configuration associated with a sample to a robot configuration
 /// \param sample The limb configuration to load

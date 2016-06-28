@@ -62,7 +62,7 @@ namespace hpp {
 
     typedef std::vector<double> T_Double;
     typedef std::map<std::string, T_Double> T_Values;
-    typedef std::vector<sampling::Sample> T_Sample;
+    typedef sampling::SampleVector_t T_Sample;
 
 
     /// Defines an evaluation function for a sample.
