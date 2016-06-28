@@ -198,7 +198,7 @@ namespace hpp {
                               const hpp::rbprm::RbPrmLimbPtr_t& limb, model::ConfigurationOut_t configuration,
                               const double robustnessTreshold, bool stability = true)
     {
-        for(std::vector<sampling::Sample>::const_iterator cit = limb->sampleContainer_.samples_.begin();
+        for(sampling::SampleVector_t::const_iterator cit = limb->sampleContainer_.samples_.begin();
             cit != limb->sampleContainer_.samples_.end(); ++cit)
         {
             sampling::Load(*cit, configuration);
