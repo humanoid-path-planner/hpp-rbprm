@@ -19,6 +19,9 @@
 #include <iostream>
 #include <fstream>
 #include <hpp/model/joint.hh>
+#include <hpp/model/device.hh>
+#include <hpp/core/config-projector.hh>
+#include <hpp/core/locked-joint.hh>
 
 namespace hpp {
   namespace tools {
@@ -87,6 +90,30 @@ namespace hpp {
             }
         }
         return result;
+    }
+
+    void LockJointRec(const std::string& spared, const model::JointPtr_t joint, core::ConfigProjectorPtr_t& projector)
+    {
+        if(joint->name() == spared) return;
+        const core::Configuration_t& c = joint->robot()->currentConfiguration();
+        core::size_type rankInConfiguration (joint->rankInConfiguration ());
+        projector->add(core::LockedJoint::create(joint,c.segment(rankInConfiguration, joint->configSize())));
+        for(std::size_t i=0; i< joint->numberChildJoints(); ++i)
+        {
+            LockJointRec(spared,joint->childJoint(i), projector);
+        }
+    }
+
+    void LockJointRec(const std::vector<std::string> &spared, const model::JointPtr_t joint, core::ConfigProjectorPtr_t& projector)
+    {
+        if(std::find(spared.begin(), spared.end(), joint->name()) != spared.end()) return;
+        const core::Configuration_t& c = joint->robot()->currentConfiguration();
+        core::size_type rankInConfiguration (joint->rankInConfiguration ());
+        projector->add(core::LockedJoint::create(joint,c.segment(rankInConfiguration, joint->configSize())));
+        for(std::size_t i=0; i< joint->numberChildJoints(); ++i)
+        {
+            LockJointRec(spared,joint->childJoint(i), projector);
+        }
     }
 
     namespace io

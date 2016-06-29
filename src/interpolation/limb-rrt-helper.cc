@@ -22,6 +22,12 @@
 #include <hpp/core/problem-target/goal-configurations.hh>
 #include <hpp/core/bi-rrt-planner.hh>
 #include <hpp/core/random-shortcut.hh>
+#include <hpp/core/constraint-set.hh>>
+#include <hpp/constraints/generic-transformation.hh>
+#include <hpp/constraints/position.hh>
+#include <hpp/constraints/orientation.hh>
+#include <hpp/core/config-projector.hh>
+#include <hpp/core/locked-joint.hh>
 #include <hpp/core/path-vector.hh>
 #include <hpp/model/joint.hh>
 #include <hpp/rbprm/tools.hh>
@@ -102,6 +108,62 @@ using namespace model;
         helper.rootProblem_.configurationShooter(limbRRTShooter);
     }
 
+    std::vector<bool> setMaintainRotationConstraints() // direction)
+    {
+        std::vector<bool> res;
+        for(std::size_t i =0; i <3; ++i)
+        {
+            res.push_back(true);
+        }
+        return res;
+    }
+
+    void LockRootAndNonContributingJoints(model::DevicePtr_t device, core::ConfigProjectorPtr_t& projector,
+                                          const std::vector<std::string>& fixedContacts,
+                                          const State& from, const State& to)
+    {
+        std::vector<std::string> spared = fixedContacts;
+        to.contactCreations(from, spared);
+        to.contactBreaks(from, spared);
+        for(std::vector<std::string>::const_iterator cit = spared.begin(); cit != spared.end(); ++cit)
+        {
+            std::cout << "spared " << *cit << std::endl;
+        }
+        tools::LockJointRec(spared, device->rootJoint(), projector);
+    }
+
+    void AddContactConstraints(LimbRRTHelper& helper, const State& from, const State& to)
+    {
+        std::vector<bool> cosntraintsR = setMaintainRotationConstraints();
+        std::vector<std::string> fixed = to.fixedContacts(from);
+        core::Problem& problem = helper.rootProblem_;
+        model::DevicePtr_t device = problem.robot();
+        core::ConstraintSetPtr_t cSet = core::ConstraintSet::create(device,"");
+        core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(device,"proj", 1e-2, 30);
+        for(std::vector<std::string>::const_iterator cit = fixed.begin();
+            cit != fixed.end(); ++cit)
+        {
+            std::cout << "constraint " << *cit << std::endl;
+            RbPrmLimbPtr_t limb = helper.fullbody_->GetLimbs().at(*cit);
+            const fcl::Vec3f& ppos  = from.contactPositions_.at(*cit);
+            const fcl::Matrix3f& rotation = from.contactRotation_.at(*cit);
+            JointPtr_t effectorJoint = device->getJointByName(limb->effector_->name());
+            proj->add(core::NumericalConstraint::create (
+                                    constraints::deprecated::Position::create("",device,
+                                                                  effectorJoint,fcl::Vec3f(0,0,0), ppos)));
+            if(limb->contactType_ == hpp::rbprm::_6_DOF)
+            {
+                proj->add(core::NumericalConstraint::create (constraints::deprecated::Orientation::create("", device,
+                                                                                  effectorJoint,
+                                                                                  rotation,
+                                                                                  cosntraintsR)));
+            }
+        }
+        //LockRootAndNonContributingJoints(device, proj, fixed, from, to );
+        cSet->addConstraint(proj);
+        problem.constraints(cSet);
+    }
+
     void SetPathValidation(LimbRRTHelper& helper)
     {
         LimbRRTPathValidationPtr_t pathVal = LimbRRTPathValidation::create(
@@ -131,6 +193,7 @@ using namespace model;
             ProblemTargetPtr_t target = problemTarget::GoalConfigurations::create (planner);
             helper.rootProblem_.target (target);
             helper.rootProblem_.addGoalConfig(end);
+            AddContactConstraints(helper, from, to);
 
             res = planner->solve();
             helper.rootProblem_.resetGoalConfigs();

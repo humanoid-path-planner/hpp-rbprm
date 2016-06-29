@@ -155,6 +155,20 @@ namespace hpp {
             return res;
         }
 
+        std::vector<std::string> fixedContacts(const State& previous) const
+        {
+            std::vector<std::string> res;
+            std::vector<std::string> variations = this->variations(previous);
+            for(std::map<std::string, fcl::Vec3f>::const_iterator cit = contactPositions_.begin();
+                cit != contactPositions_.end(); ++cit)
+            {
+                const std::string& name = cit->first;
+                if(std::find(variations.begin(), variations.end(), name) == variations.end())
+                    res.push_back(name);
+            }
+            return res;
+        }
+
         void print() const
         {
             std::cout << " State " << std::endl;

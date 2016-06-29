@@ -147,19 +147,6 @@ namespace hpp {
         // NOTHING
     }
 
-    void LockJointRec(const std::string& limb, const model::JointPtr_t joint, core::ConfigProjectorPtr_t& projector )
-    {
-        if(joint->name() == limb) return;
-        const core::Configuration_t& c = joint->robot()->currentConfiguration();
-        core::size_type rankInConfiguration (joint->rankInConfiguration ());
-        projector->add(core::LockedJoint::create(joint,c.segment(rankInConfiguration, joint->configSize())));
-        for(std::size_t i=0; i< joint->numberChildJoints(); ++i)
-        {
-            LockJointRec(limb,joint->childJoint(i), projector);
-        }
-    }
-
-
     // assumes unit direction
     std::vector<bool> setMaintainRotationConstraints(const fcl::Vec3f&) // direction)
     {
@@ -233,8 +220,8 @@ namespace hpp {
             const RbPrmLimbPtr_t limb = body->GetLimbs().at(name);
             // try to maintain contact
             const fcl::Vec3f& ppos  =previous.contactPositions_.at(name);
-            core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-2, 30);
-            LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
+            core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 30);
+            hpp::tools::LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
             const fcl::Vec3f z = limb->effector_->currentTransformation().getRotation() * limb->normal_;
             const fcl::Matrix3f& rotation = previous.contactRotation_.at(name);
             proj->add(core::NumericalConstraint::create (constraints::Position::create("",body->device_, limb->effector_,fcl::Vec3f(0,0,0), ppos)));
@@ -370,7 +357,7 @@ namespace hpp {
               // Add constraints to resolve Ik
               core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 20);
               // get current normal orientation
-              LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
+              hpp::tools::LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
               fcl::Vec3f posOffset = position - rotation * limb->offset_;
               posOffset = posOffset + normal * epsilon;
               fcl::Transform3f localFrame, globalFrame;
