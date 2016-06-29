@@ -29,6 +29,7 @@
 #include <hpp/core/config-projector.hh>
 #include <hpp/core/locked-joint.hh>
 #include <hpp/core/path-vector.hh>
+#include <hpp/core/subchain-path.hh>
 #include <hpp/model/joint.hh>
 #include <hpp/rbprm/tools.hh>
 
@@ -235,18 +236,23 @@ using namespace model;
             return numValid;
         }
 
-        PathVectorPtr_t ConcatenatePath(PathVectorPtr_t res[], std::size_t numValid)
+        PathPtr_t ConcatenateAndResizePath(PathVectorPtr_t res[], std::size_t numValid)
         {
             PathVectorPtr_t completePath = res[0];
             for(std::size_t i = 1; i < numValid; ++i)
             {
                 completePath->concatenate(*res[i]);
             }
-            return completePath;
+            // reducing path
+            core::SizeInterval_t interval(0, completePath->initial().rows()-1);
+            core::SizeIntervals_t intervals;
+            intervals.push_back(interval);
+            PathPtr_t reducedPath = core::SubchainPath::create(completePath,intervals);
+            return reducedPath;
         }
     }
 
-    PathVectorPtr_t interpolateStates(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t rootPath,
+    PathPtr_t interpolateStates(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t rootPath,
                                       const CIT_StateFrame &startState, const CIT_StateFrame &endState, const  std::size_t numOptimizations)
     {
         PathVectorPtr_t res[100];
@@ -275,10 +281,10 @@ using namespace model;
             }
         }
         std::size_t numValid = checkPath(distance, valid);
-        return ConcatenatePath(res, numValid);
+        return ConcatenateAndResizePath(res, numValid);
     }
 
-    PathVectorPtr_t interpolateStates(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
+    PathPtr_t interpolateStates(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
                                       const CIT_State &startState, const CIT_State &endState, const std::size_t numOptimizations)
     {
         PathVectorPtr_t res[100];
@@ -306,7 +312,7 @@ using namespace model;
             }
         }
         std::size_t numValid = checkPath(distance, valid);
-        return ConcatenatePath(res, numValid);
+        return ConcatenateAndResizePath(res, numValid);
     }
   }// namespace interpolation
   }// namespace rbprm
