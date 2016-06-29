@@ -37,6 +37,18 @@ namespace hpp {
   void RemoveEffectorCollision(T& validation, model::JointPtr_t effectorJoint, const model::CollisionObjectPtr_t obstacle);
   template<typename T>
   void RemoveEffectorCollisionRec(T& validation, model::JointPtr_t joint, const model::CollisionObjectPtr_t obstacle);
+
+  ///Lock all joints in a kinematic chain, except for one joint and its subchain
+  /// \param spared Name of the root of the unlocked kinematic chain
+  /// \param joint Root of the considered kinematic chain to block
+  /// \param projector Projector on which to block the joints
+  void LockJointRec(const std::string& spared, const model::JointPtr_t joint, core::ConfigProjectorPtr_t& projector);
+
+  ///Lock all joints in a kinematic chain, except for a list of subchains
+  /// \param spared names of the root of the unlocked kinematic chains
+  /// \param joint Root of the considered kinematic chain to block
+  /// \param projector Projector on which to block the joints
+  void LockJointRec(const std::vector<std::string>& spared, const model::JointPtr_t joint, core::ConfigProjectorPtr_t& projector);
   ///Some io tools for serialization
   namespace io
   {
