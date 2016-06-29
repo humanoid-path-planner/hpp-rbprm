@@ -108,7 +108,7 @@ namespace hpp {
     /// \param to iterator to the final State
     /// \param numOptimizations Number of iterations of the shortcut algorithm to apply between each states
     /// \return the resulting path vector, concatenation of all the interpolation paths between the State
-    core::PathVectorPtr_t HPP_RBPRM_DLLAPI interpolateStates(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
+    core::PathPtr_t HPP_RBPRM_DLLAPI interpolateStates(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
                                                              const CIT_State& startState,
                                                              const CIT_State& endState,
                                                              const std::size_t numOptimizations = 10);
@@ -137,7 +137,7 @@ namespace hpp {
     /// \param to iterator to the final State with its associated keyFrame in the path
     /// \param numOptimizations Number of iterations of the shortcut algorithm to apply between each states
     /// \return the resulting path vector, concatenation of all the interpolation paths between the State
-    core::PathVectorPtr_t HPP_RBPRM_DLLAPI interpolateStates(RbPrmFullBodyPtr_t fullbody,
+    core::PathPtr_t HPP_RBPRM_DLLAPI interpolateStates(RbPrmFullBodyPtr_t fullbody,
                                                              core::ProblemPtr_t referenceProblem,
                                                              const core::PathPtr_t rootPath,
                                                              const CIT_StateFrame& startState,
