@@ -171,15 +171,26 @@ using namespace model;
                     helper.fullBodyDevice_, 0.05,helper.fullBodyDevice_->configSize()-1);
         helper.rootProblem_.pathValidation(pathVal);
     }
+
+    std::vector<std::string> extractEffectorsName(const rbprm::T_Limb& limbs)
+    {
+        std::vector<std::string> res;
+        for(rbprm::T_Limb::const_iterator cit = limbs.begin(); cit != limbs.end(); ++cit)
+        {
+            res.push_back(cit->first);
+        }
+        return res;
+    }
+
     }
 
     PathVectorPtr_t interpolateStates(LimbRRTHelper& helper, const State& from, const State& to)
     {
         PathVectorPtr_t res;
         core::PathPtr_t rootPath = helper.rootPath_;
-        // get limbs that moved
-        std::vector<std::string> variations = to.variations(from);
         const rbprm::T_Limb& limbs = helper.fullbody_->GetLimbs();
+        // get limbs that moved
+        std::vector<std::string> variations = to.allVariations(from, extractEffectorsName(limbs));
         for(std::vector<std::string>::const_iterator cit = variations.begin();
             cit != variations.end(); ++cit)
         {
@@ -198,8 +209,6 @@ using namespace model;
 
             res = planner->solve();
             helper.rootProblem_.resetGoalConfigs();
-            //TODO error there should not be more than one variation
-            break;
         }
         return res;
     }
