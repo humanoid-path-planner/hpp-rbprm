@@ -153,7 +153,8 @@ namespace hpp {
             for(std::vector<std::string>::const_iterator cit = allEffectors.begin();
                 cit != allEffectors.end(); ++cit)
             {
-                if(std::find(contactVariations.begin(), contactVariations.end(), *cit) == contactVariations.end())
+                if(std::find(contactVariations.begin(), contactVariations.end(), *cit) == contactVariations.end()
+                    && !contacts_.at(*cit))
                 {
                     res.push_back(*cit);
                 }
