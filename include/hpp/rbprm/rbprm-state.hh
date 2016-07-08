@@ -147,12 +147,32 @@ namespace hpp {
             previous.contactCreations(*this, outList);
         }
 
+        std::vector<std::string> freeLimbMotions(const std::vector<std::string>& allEffectors, const std::vector<std::string>& contactVariations) const
+        {
+            std::vector<std::string> res;
+            for(std::vector<std::string>::const_iterator cit = allEffectors.begin();
+                cit != allEffectors.end(); ++cit)
+            {
+                if(std::find(contactVariations.begin(), contactVariations.end(), *cit) == contactVariations.end())
+                {
+                    res.push_back(*cit);
+                }
+            }
+            return res;
+        }
+
         std::vector<std::string> variations(const State& previous) const
         {
             std::vector<std::string> res;
             contactCreations(previous, res);
             contactBreaks(previous, res);
             return res;
+        }
+
+        std::vector<std::string> allVariations(const State& previous, const std::vector<std::string>& allEffectors) const
+        {
+            std::vector<std::string> contactVariations = variations(previous);
+            return freeLimbMotions(allEffectors, contactVariations);
         }
 
         std::vector<std::string> fixedContacts(const State& previous) const
