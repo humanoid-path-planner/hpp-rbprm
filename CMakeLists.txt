@@ -67,7 +67,10 @@ SET(${PROJECT_NAME}_HEADERS
     include/hpp/rbprm/interpolation/rbprm-path-interpolation.hh
     include/hpp/rbprm/interpolation/limb-rrt-shooter.hh
     include/hpp/rbprm/interpolation/limb-rrt-helper.hh
+    include/hpp/rbprm/interpolation/limb-rrt-helper.inl
     include/hpp/rbprm/interpolation/limb-rrt-path-validation.hh
+    include/hpp/rbprm/interpolation/limb-rrt-steering.hh
+    include/hpp/rbprm/interpolation/limb-rrt-path.hh
     include/hpp/rbprm/rbprm-shooter.hh
     include/hpp/rbprm/rbprm-state.hh
     include/hpp/rbprm/rbprm-validation.hh

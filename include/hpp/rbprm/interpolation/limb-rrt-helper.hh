@@ -23,6 +23,7 @@
 # include <hpp/rbprm/rbprm-fullbody.hh>
 # include <hpp/rbprm/rbprm-state.hh>
 # include <hpp/rbprm/rbprm-device.hh>
+# include <hpp/rbprm/interpolation/limb-rrt-steering.hh>
 # include <hpp/core/path.hh>
 # include <hpp/core/problem.hh>
 
@@ -37,6 +38,7 @@ namespace hpp {
     /// to a RbPrmFullbody object, and creates a new instance
     /// of a problem for a clone of the associated Device.
     ///
+    template<class Path_T>
     struct HPP_CORE_DLLAPI LimbRRTHelper
     {
         /// \param fullbody robot considered for applying LimbRRT. The associated
@@ -46,7 +48,18 @@ namespace hpp {
         /// using this parameter as a reference, for retrieving collision obstacles
          LimbRRTHelper(RbPrmFullBodyPtr_t fullbody,
                        core::ProblemPtr_t referenceProblem,
-                       core::PathPtr_t rootPath);
+                       core::PathPtr_t rootPath)
+             : fullbody_(fullbody)
+             , fullBodyDevice_(fullbody->device_->clone())
+             , rootProblem_(fullBodyDevice_)
+             , rootPath_(rootPath)
+         {
+             // adding extra DOF for including time in sampling
+             fullBodyDevice_->setDimensionExtraConfigSpace(fullBodyDevice_->extraConfigSpace().dimension()+1);
+             rootProblem_.collisionObstacles(referenceProblem->collisionObstacles());
+             rootProblem_.steeringMethod(LimbRRTSteering<LimbRRTPath>::create(&rootProblem_,fullBodyDevice_->configSize()-1));
+         }
+
         ~LimbRRTHelper(){}
 
          RbPrmFullBodyPtr_t fullbody_;
@@ -79,7 +92,8 @@ namespace hpp {
     /// \param from initial state
     /// \param to final state
     /// \return the resulting path vector
-    core::PathVectorPtr_t HPP_RBPRM_DLLAPI interpolateStates(LimbRRTHelper& helper, const State& from, const State& to);
+    template<class Path_T>
+    core::PathVectorPtr_t HPP_RBPRM_DLLAPI interpolateStates(LimbRRTHelper<Path_T>& helper, const State& from, const State& to);
 
     /// Runs the LimbRRT to create a kinematic, continuous,
     /// collision free path between an ordered State contrainer (Between each consecutive state, only one effector
@@ -108,6 +122,7 @@ namespace hpp {
     /// \param to iterator to the final State
     /// \param numOptimizations Number of iterations of the shortcut algorithm to apply between each states
     /// \return the resulting path vector, concatenation of all the interpolation paths between the State
+    template<class Path_T>
     core::PathPtr_t HPP_RBPRM_DLLAPI interpolateStates(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
                                                              const CIT_State& startState,
                                                              const CIT_State& endState,
@@ -137,6 +152,7 @@ namespace hpp {
     /// \param to iterator to the final State with its associated keyFrame in the path
     /// \param numOptimizations Number of iterations of the shortcut algorithm to apply between each states
     /// \return the resulting path vector, concatenation of all the interpolation paths between the State
+    template<class Path_T>
     core::PathPtr_t HPP_RBPRM_DLLAPI interpolateStates(RbPrmFullBodyPtr_t fullbody,
                                                              core::ProblemPtr_t referenceProblem,
                                                              const core::PathPtr_t rootPath,
@@ -148,4 +164,6 @@ namespace hpp {
     } // namespace rbprm
   } // namespace hpp
 
+
+#include <hpp/rbprm/interpolation/limb-rrt-helper.inl>
 #endif // HPP_RBPRM_LIMB_RRT_HELPER_HH

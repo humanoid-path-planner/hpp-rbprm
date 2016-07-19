@@ -27,20 +27,18 @@
 namespace hpp {
   namespace rbprm {
   namespace interpolation {
-    HPP_PREDEF_CLASS(LimbRRTSteering);
-
-    class LimbRRTSteering;
-    typedef boost::shared_ptr <LimbRRTSteering> LimbRRTSteeringPtr_t;
     /// \addtogroup validation
     /// \{
-
-
     /// Discretized validation of a path for the LimbRRT algorithm
     ///
     /// Apply some configuration validation algorithms at discretized values
     /// of the path parameter.
-    class HPP_CORE_DLLAPI LimbRRTSteering : public hpp::core::SteeringMethod
+    template<class Path_T>
+    class LimbRRTSteering: public hpp::core::SteeringMethod
     {
+    typedef Path_T path_t;
+    typedef boost::shared_ptr <LimbRRTSteering> LimbRRTSteeringPtr_t;
+    typedef boost::weak_ptr   <LimbRRTSteering> LimbRRTSteeringWkPtr_t;
     public:
       /// Create instance and return shared pointer
       static LimbRRTSteeringPtr_t create (const core::ProblemPtr_t& problem,
@@ -90,7 +88,7 @@ namespace hpp {
         } else {
           c = constraints ();
         }
-        core::PathPtr_t path = LimbRRTPath::create
+        core::PathPtr_t path = path_t::create
           (problem_->robot(), q1, q2, length, c, pathDofRank_);
             return path;
       }
