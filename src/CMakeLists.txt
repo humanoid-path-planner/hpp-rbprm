@@ -32,7 +32,7 @@ SET(${LIBRARY_NAME}_SOURCES
         ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/limb-rrt-steering.hh
         interpolation/limb-rrt-path.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/limb-rrt-path.hh
         rbprm-fullbody.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-fullbody.hh
-	${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-state.hh
+        rbprm-state.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-state.hh
         sampling/sample.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/sampling/sample.hh
         sampling/analysis.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/sampling/analysis.hh
         sampling/heuristic.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/sampling/heuristic.hh
