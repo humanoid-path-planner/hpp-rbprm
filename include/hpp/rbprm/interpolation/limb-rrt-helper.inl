@@ -1,4 +1,5 @@
-// Copyright (c) 2014, LAAS-CNRS
+//
+// Copyright (c) 2014 CNRS
 // Authors: Steve Tonneau (steve.tonneau@laas.fr)
 //
 // This file is part of hpp-rbprm.
@@ -12,12 +13,14 @@
 // of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // General Lesser Public License for more details.  You should have
 // received a copy of the GNU Lesser General Public License along with
-// hpp-rbprm. If not, see <http://www.gnu.org/licenses/>.
+// hpp-core  If not, see
+// <http://www.gnu.org/licenses/>.
 
-#include <hpp/rbprm/interpolation/limb-rrt-helper.hh>
+#ifndef HPP_RBPRM_LIMB_RRT_HELPER_UTILS_HH
+# define HPP_RBPRM_LIMB_RRT_HELPER_UTILS_HH
+
 #include <hpp/rbprm/interpolation/limb-rrt-shooter.hh>
 #include <hpp/rbprm/interpolation/limb-rrt-path-validation.hh>
-#include <hpp/rbprm/interpolation/limb-rrt-steering.hh>
 #include <hpp/core/steering-method-straight.hh>
 #include <hpp/core/problem-target/goal-configurations.hh>
 #include <hpp/core/bi-rrt-planner.hh>
@@ -36,11 +39,11 @@
 namespace hpp {
 using namespace core;
 using namespace model;
-    namespace rbprm {
-    namespace interpolation {
+namespace rbprm {
+namespace interpolation {
 
     namespace{
-    core::DevicePtr_t DeviceFromLimb(const std::string& name, RbPrmLimbPtr_t limb)
+    inline core::DevicePtr_t DeviceFromLimb(const std::string& name, RbPrmLimbPtr_t limb)
     {
         DevicePtr_t limbDevice = Device::create(name);
         limbDevice->rootJoint(limb->limb_->clone());
@@ -54,32 +57,14 @@ using namespace model;
         limbDevice->setDimensionExtraConfigSpace(1);
         return limbDevice;
     }
-    }
-
-    //find contact creation
-
-    LimbRRTHelper::LimbRRTHelper(RbPrmFullBodyPtr_t fullbody, hpp::core::ProblemPtr_t referenceProblem, hpp::core::PathPtr_t rootPath)
-        : fullbody_(fullbody)
-        , fullBodyDevice_(fullbody->device_->clone())
-        , rootProblem_(fullBodyDevice_)
-        , rootPath_(rootPath)
-    {
-        // adding extra DOF for including time in sampling
-        fullBodyDevice_->setDimensionExtraConfigSpace(fullBodyDevice_->extraConfigSpace().dimension()+1);
-        rootProblem_.collisionObstacles(referenceProblem->collisionObstacles());
-        rootProblem_.steeringMethod(LimbRRTSteering::create(&rootProblem_,fullBodyDevice_->configSize()-1));
-    }
-
-    namespace
-    {
-    core::PathPtr_t generateRootPath(const Problem& problem, const State& from, const State& to)
+    inline core::PathPtr_t generateRootPath(const Problem& problem, const State& from, const State& to)
     {
         Configuration_t startRootConf(from.configuration_);
         Configuration_t endRootConf(to.configuration_);
         return (*(problem.steeringMethod()))(startRootConf, endRootConf);
     }
 
-    void DisableUnNecessaryCollisions(core::Problem& problem, rbprm::RbPrmLimbPtr_t limb)
+    inline void DisableUnNecessaryCollisions(core::Problem& problem, rbprm::RbPrmLimbPtr_t limb)
     {
         // TODO should we really disable collisions for other bodies ?
         tools::RemoveNonLimbCollisionRec<core::Problem>(problem.robot()->rootJoint(),
@@ -94,7 +79,8 @@ using namespace model;
         }
     }
 
-    ConfigurationPtr_t limbRRTConfigFromDevice(const LimbRRTHelper& helper, const State& state, const double time)
+    template<class Path_T>
+    ConfigurationPtr_t limbRRTConfigFromDevice(const LimbRRTHelper<Path_T>& helper, const State& state, const double time)
     {
         Configuration_t config(helper.fullBodyDevice_->currentConfiguration());
         config.head(state.configuration_.rows()) = state.configuration_;
@@ -102,38 +88,34 @@ using namespace model;
         return ConfigurationPtr_t(new Configuration_t(config));
     }
 
-    void SetConfigShooter(LimbRRTHelper& helper, RbPrmLimbPtr_t limb, core::PathPtr_t& rootPath)
+    template<class Path_T>
+    void SetConfigShooter(LimbRRTHelper<Path_T>& helper, RbPrmLimbPtr_t limb, core::PathPtr_t& rootPath)
     {
         ConfigurationShooterPtr_t limbRRTShooter = LimbRRTShooter::create(limb, rootPath,
                                                                           helper.fullBodyDevice_->configSize()-1);
         helper.rootProblem_.configurationShooter(limbRRTShooter);
     }
 
-    std::vector<bool> setMaintainRotationConstraints() // direction)
+    inline std::vector<bool> setMaintainRotationConstraints() // direction)
     {
         std::vector<bool> res;
         for(std::size_t i =0; i <3; ++i)
-        {
             res.push_back(true);
-        }
         return res;
     }
 
-    void LockRootAndNonContributingJoints(model::DevicePtr_t device, core::ConfigProjectorPtr_t& projector,
+    inline void LockRootAndNonContributingJoints(model::DevicePtr_t device, core::ConfigProjectorPtr_t& projector,
                                           const std::vector<std::string>& fixedContacts,
                                           const State& from, const State& to)
     {
         std::vector<std::string> spared = fixedContacts;
         to.contactCreations(from, spared);
         to.contactBreaks(from, spared);
-        for(std::vector<std::string>::const_iterator cit = spared.begin(); cit != spared.end(); ++cit)
-        {
-            std::cout << "spared " << *cit << std::endl;
-        }
         tools::LockJointRec(spared, device->rootJoint(), projector);
     }
 
-    void AddContactConstraints(LimbRRTHelper& helper, const State& from, const State& to)
+    template<class Path_T>
+    void AddContactConstraints(LimbRRTHelper<Path_T>& helper, const State& from, const State& to)
     {
         std::vector<bool> cosntraintsR = setMaintainRotationConstraints();
         std::vector<std::string> fixed = to.fixedContacts(from);
@@ -144,7 +126,6 @@ using namespace model;
         for(std::vector<std::string>::const_iterator cit = fixed.begin();
             cit != fixed.end(); ++cit)
         {
-            std::cout << "constraint " << *cit << std::endl;
             RbPrmLimbPtr_t limb = helper.fullbody_->GetLimbs().at(*cit);
             const fcl::Vec3f& ppos  = from.contactPositions_.at(*cit);
             const fcl::Matrix3f& rotation = from.contactRotation_.at(*cit);
@@ -165,14 +146,15 @@ using namespace model;
         problem.constraints(cSet);
     }
 
-    void SetPathValidation(LimbRRTHelper& helper)
+    template<class Path_T>
+    void SetPathValidation(LimbRRTHelper<Path_T>& helper)
     {
         LimbRRTPathValidationPtr_t pathVal = LimbRRTPathValidation::create(
                     helper.fullBodyDevice_, 0.05,helper.fullBodyDevice_->configSize()-1);
         helper.rootProblem_.pathValidation(pathVal);
     }
 
-    std::vector<std::string> extractEffectorsName(const rbprm::T_Limb& limbs)
+    inline std::vector<std::string> extractEffectorsName(const rbprm::T_Limb& limbs)
     {
         std::vector<std::string> res;
         for(rbprm::T_Limb::const_iterator cit = limbs.begin(); cit != limbs.end(); ++cit)
@@ -181,10 +163,10 @@ using namespace model;
         }
         return res;
     }
-
     }
 
-    PathVectorPtr_t interpolateStates(LimbRRTHelper& helper, const State& from, const State& to)
+    template<class Path_T>
+    PathVectorPtr_t interpolateStates(LimbRRTHelper<Path_T> &helper, const State& from, const State& to)
     {
         PathVectorPtr_t res;
         core::PathPtr_t rootPath = helper.rootPath_;
@@ -215,7 +197,8 @@ using namespace model;
 
     namespace
     {
-        PathVectorPtr_t optimize(LimbRRTHelper& helper, PathVectorPtr_t partialPath, const std::size_t numOptimizations)
+        template<class Path_T>
+        PathVectorPtr_t optimize(LimbRRTHelper<Path_T>& helper, PathVectorPtr_t partialPath, const std::size_t numOptimizations)
         {
             core::RandomShortcutPtr_t rs = core::RandomShortcut::create(helper.rootProblem_);
             for(std::size_t j=0; j<numOptimizations;++j)
@@ -225,7 +208,7 @@ using namespace model;
             return partialPath;
         }
 
-        std::size_t checkPath(const std::size_t& distance, bool valid[])
+        inline std::size_t checkPath(const std::size_t& distance, bool valid[])
         {
             std::size_t numValid(distance);
             for(std::size_t i = 0; i < distance; ++i)
@@ -245,7 +228,7 @@ using namespace model;
             return numValid;
         }
 
-        PathPtr_t ConcatenateAndResizePath(PathVectorPtr_t res[], std::size_t numValid)
+        inline PathPtr_t ConcatenateAndResizePath(PathVectorPtr_t res[], std::size_t numValid)
         {
             PathVectorPtr_t completePath = res[0];
             for(std::size_t i = 1; i < numValid; ++i)
@@ -261,6 +244,7 @@ using namespace model;
         }
     }
 
+    template<class Path_T>
     PathPtr_t interpolateStates(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t rootPath,
                                       const CIT_StateFrame &startState, const CIT_StateFrame &endState, const  std::size_t numOptimizations)
     {
@@ -276,7 +260,7 @@ using namespace model;
             CIT_StateFrame a, b;
             a = (startState+i);
             b = (startState+i+1);
-            LimbRRTHelper helper(fullbody, referenceProblem,
+            LimbRRTHelper<Path_T> helper(fullbody, referenceProblem,
                                  rootPath->extract(core::interval_t(a->first, b->first)));
             PathVectorPtr_t partialPath = interpolateStates(helper, a->second, b->second);
             if(partialPath)
@@ -293,6 +277,7 @@ using namespace model;
         return ConcatenateAndResizePath(res, numValid);
     }
 
+    template<class Path_T>
     PathPtr_t interpolateStates(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
                                       const CIT_State &startState, const CIT_State &endState, const std::size_t numOptimizations)
     {
@@ -308,7 +293,7 @@ using namespace model;
             CIT_State a, b;
             a = (startState+i);
             b = (startState+i+1);
-            LimbRRTHelper helper(fullbody, referenceProblem, generateRootPath(*referenceProblem, *a, *b));
+            LimbRRTHelper<Path_T> helper(fullbody, referenceProblem, generateRootPath(*referenceProblem, *a, *b));
             PathVectorPtr_t partialPath = interpolateStates(helper, *a, *b);
             if(partialPath)
             {
@@ -323,6 +308,9 @@ using namespace model;
         std::size_t numValid = checkPath(distance, valid);
         return ConcatenateAndResizePath(res, numValid);
     }
+
   }// namespace interpolation
   }// namespace rbprm
 }// namespace hpp
+
+#endif // HPP_RBPRM_LIMB_RRT_HELPER_UTILS_HH
