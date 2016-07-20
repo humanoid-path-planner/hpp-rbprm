@@ -26,52 +26,59 @@ using namespace hpp::rbprm::sampling;
 
 namespace
 {
-double EFORTHeuristic(const sampling::Sample* sample,
+double EFORTHeuristic(const sampling::Sample& sample,
                       const Eigen::Vector3d& direction, const Eigen::Vector3d& normal)
 {
-    double EFORT = -direction.transpose() * sample->jacobianProduct_.block<3,3>(0,0) * (-direction);
+    double EFORT = -direction.transpose() * sample.jacobianProduct_.block<3,3>(0,0) * (-direction);
     return EFORT * Eigen::Vector3d::UnitZ().dot(normal);
 }
 
-double EFORTNormalHeuristic(const sampling::Sample* sample,
+double EFORTNormalHeuristic(const sampling::Sample& sample,
                       const Eigen::Vector3d& direction, const Eigen::Vector3d& normal)
 {
-    double EFORT = -direction.transpose() * sample->jacobianProduct_.block<3,3>(0,0) * (-direction);
+    double EFORT = -direction.transpose() * sample.jacobianProduct_.block<3,3>(0,0) * (-direction);
     return EFORT * direction.dot(normal);
 }
 
-double ManipulabilityHeuristic(const sampling::Sample* sample,
+double ManipulabilityHeuristic(const sampling::Sample& sample,
                                const Eigen::Vector3d& /*direction*/, const Eigen::Vector3d& normal)
 {
     if(Eigen::Vector3d::UnitZ().dot(normal) < 0.7) return -1;
-    return sample->manipulability_ * 10000 * Eigen::Vector3d::UnitZ().dot(normal) * 100000  +  ((double)rand()) / ((double)(RAND_MAX));
+    return sample.staticValue_ * 10000 * Eigen::Vector3d::UnitZ().dot(normal) * 100000  +  ((double)rand()) / ((double)(RAND_MAX));
 }
 
-double RandomHeuristic(const sampling::Sample* /*sample*/,
+double RandomHeuristic(const sampling::Sample& /*sample*/,
                        const Eigen::Vector3d& /*direction*/, const Eigen::Vector3d& /*normal*/)
 {
     return ((double)rand()) / ((double)(RAND_MAX));
 }
 
 
-double ForwardHeuristic(const sampling::Sample* sample,
+double ForwardHeuristic(const sampling::Sample& sample,
                       const Eigen::Vector3d& direction, const Eigen::Vector3d& normal)
 {
-    return sample->manipulability_ * 10000 * Eigen::Vector3d::UnitZ().dot(normal) * 100  + sample->effectorPosition_.dot(fcl::Vec3f(direction(0),direction(1),direction(2))) + ((double)rand()) / ((double)(RAND_MAX));
+    return sample.staticValue_ * 10000 * Eigen::Vector3d::UnitZ().dot(normal) * 100  + sample.effectorPosition_.dot(fcl::Vec3f(direction(0),direction(1),direction(2))) + ((double)rand()) / ((double)(RAND_MAX));
 }
 
 
 
-double BackwardHeuristic(const sampling::Sample* sample,
+double BackwardHeuristic(const sampling::Sample& sample,
                       const Eigen::Vector3d& direction, const Eigen::Vector3d& normal)
 {
-    return sample->manipulability_ * 10000 * Eigen::Vector3d::UnitZ().dot(normal) * 100  - sample->effectorPosition_.dot(fcl::Vec3f(direction(0),direction(1),direction(2))) + ((double)rand()) / ((double)(RAND_MAX));
+    return sample.staticValue_ * 10000 * Eigen::Vector3d::UnitZ().dot(normal) * 100  - sample.effectorPosition_.dot(fcl::Vec3f(direction(0),direction(1),direction(2))) + ((double)rand()) / ((double)(RAND_MAX));
+}
+
+double StaticHeuristic(const sampling::Sample& sample,
+                      const Eigen::Vector3d& /*direction*/, const Eigen::Vector3d& /*normal*/)
+{
+    return sample.staticValue_;
 }
 }
 
 HeuristicFactory::HeuristicFactory()
 {
     srand ( (unsigned int) (time(NULL)) );
+    heuristics_.insert(std::make_pair("static", &StaticHeuristic));
     heuristics_.insert(std::make_pair("EFORT", &EFORTHeuristic));
     heuristics_.insert(std::make_pair("EFORT_Normal", &EFORTNormalHeuristic));
     heuristics_.insert(std::make_pair("manipulability", &ManipulabilityHeuristic));

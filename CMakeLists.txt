@@ -30,7 +30,7 @@ SET(PROJECT_DESCRIPTION
 
 
 # Set to 1 for profiling
-#~ add_definitions(-DPROFILE)
+ # add_definitions(-DPROFILE)
 
 # Where to compile shared objects
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
@@ -64,14 +64,21 @@ SET(${PROJECT_NAME}_HEADERS
     include/hpp/rbprm/rbprm-device.hh
     include/hpp/rbprm/rbprm-fullbody.hh
     include/hpp/rbprm/rbprm-limb.hh
-    include/hpp/rbprm/rbprm-path-interpolation.hh
+    include/hpp/rbprm/interpolation/rbprm-path-interpolation.hh
+    include/hpp/rbprm/interpolation/limb-rrt-shooter.hh
+    include/hpp/rbprm/interpolation/limb-rrt-helper.hh
+    include/hpp/rbprm/interpolation/limb-rrt-helper.inl
+    include/hpp/rbprm/interpolation/limb-rrt-path-validation.hh
+    include/hpp/rbprm/interpolation/limb-rrt-steering.hh
+    include/hpp/rbprm/interpolation/limb-rrt-path.hh
     include/hpp/rbprm/rbprm-shooter.hh
     include/hpp/rbprm/rbprm-state.hh
     include/hpp/rbprm/rbprm-validation.hh
     include/hpp/rbprm/rbprm-rom-validation.hh
     include/hpp/rbprm/sampling/sample.hh
-    include/hpp/rbprm/sampling/sample-container.hh
+    include/hpp/rbprm/sampling/sample-db.hh
     include/hpp/rbprm/sampling/heuristic.hh
+    include/hpp/rbprm/sampling/analysis.hh
     include/hpp/rbprm/stability/stability.hh
     include/hpp/rbprm/stability/support.hh
     include/hpp/rbprm/tools.hh
@@ -90,6 +97,8 @@ ENDIF()
 ADD_SUBDIRECTORY(src)
 #ADD_SUBDIRECTORY(tools)
 ADD_SUBDIRECTORY(tests)
+
+PKG_CONFIG_APPEND_LIBS(${PROJECT_NAME})
 
 SETUP_PROJECT_FINALIZE()
 SETUP_PROJECT_CPACK()

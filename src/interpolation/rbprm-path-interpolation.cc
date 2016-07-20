@@ -14,7 +14,7 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-rbprm. If not, see <http://www.gnu.org/licenses/>.
 
-#include <hpp/rbprm/rbprm-path-interpolation.hh>
+#include <hpp/rbprm/interpolation/rbprm-path-interpolation.hh>
 
 #ifdef PROFILE
     #include "hpp/rbprm/rbprm-profiler.hh"
@@ -22,6 +22,7 @@
 
 namespace hpp {
   namespace rbprm {
+    namespace interpolation {
 
     RbPrmInterpolationPtr_t RbPrmInterpolation::create (const hpp::rbprm::RbPrmFullBodyPtr_t robot,
                                                         const hpp::rbprm::State &start, const hpp::rbprm::State &end,
@@ -51,7 +52,7 @@ namespace hpp {
     }
     }
 
-    std::vector<State> RbPrmInterpolation::Interpolate(const model::ObjectVector_t &collisionObjects, const double timeStep, const double robustnessTreshold)
+    rbprm::T_StateFrame RbPrmInterpolation::Interpolate(const model::ObjectVector_t &collisionObjects, const double timeStep, const double robustnessTreshold)
     {
         if(!path_) throw std::runtime_error ("Can not interpolate; not path given to interpolator ");
         std::vector<model::Configuration_t> configs;
@@ -61,16 +62,17 @@ namespace hpp {
         {
             configs.push_back(configPosition(configs.back(),path_,i));
         }
-        return Interpolate(collisionObjects, configs, robustnessTreshold);
+        return Interpolate(collisionObjects, configs, robustnessTreshold, timeStep, range.first);
     }
 
-    std::vector<State> RbPrmInterpolation::Interpolate(const model::ObjectVector_t &collisionObjects,
-                                                       const std::vector<model::Configuration_t>& configs, const double robustnessTreshold)
+    rbprm::T_StateFrame RbPrmInterpolation::Interpolate(const model::ObjectVector_t &collisionObjects,
+                                                        const std::vector<model::Configuration_t>& configs, const double robustnessTreshold,
+                                                        const model::value_type timeStep, const model::value_type initValue)
     {
         int nbFailures = 0;
-//std::cout << "interpolation " << std::endl;
-        std::vector<State> states;
-        states.push_back(this->start_);
+        model::value_type currentVal(initValue);
+        rbprm::T_StateFrame states;
+        states.push_back(std::make_pair(currentVal, this->start_));
         std::size_t nbRecontacts = 0;
         bool allowFailure = true;
 #ifdef PROFILE
@@ -78,11 +80,10 @@ namespace hpp {
     watch.reset_all();
     watch.start("complete generation");
 #endif
-        for(std::vector<model::Configuration_t>::const_iterator cit = configs.begin()+1; cit != configs.end(); ++cit)
+        for(std::vector<model::Configuration_t>::const_iterator cit = configs.begin()+1; cit != configs.end(); ++cit, currentVal+= timeStep)
         {
-            const State& previous = states.back();
+            const State& previous = states.back().second;
             core::Configuration_t configuration = *cit;
-            core::Configuration_t nextconfiguration = (cit+1!=configs.end()) ? *(cit+1) : *cit;
             Eigen::Vector3d dir = configuration.head<3>() - previous.configuration_.head<3>();
             fcl::Vec3f direction(dir[0], dir[1], dir[2]);
             bool nonZero(false);
@@ -91,11 +92,12 @@ namespace hpp {
             // TODO Direction 6d
             bool sameAsPrevious(true);
             bool multipleBreaks(false);
-            State newState = ComputeContacts(previous, robot_,configuration,nextconfiguration,collisionObjects,direction,sameAsPrevious,multipleBreaks,allowFailure,robustnessTreshold);
+            State newState = ComputeContacts(previous, robot_,configuration,collisionObjects,direction,sameAsPrevious,multipleBreaks,allowFailure,robustnessTreshold);
             if(allowFailure && multipleBreaks)
             {
                 ++ nbFailures;
                 ++cit;
+                currentVal+= timeStep;
 if (nbFailures > 1)
 {
 #ifdef PROFILE
@@ -114,6 +116,7 @@ if (nbFailures > 1)
             {
                 ++nbRecontacts;
                 cit--;
+                currentVal-= timeStep;
             }
             else
             {
@@ -124,10 +127,10 @@ if (nbFailures > 1)
                 states.pop_back();
             }
             newState.nbContacts = newState.contactNormals_.size();
-            states.push_back(newState);
+            states.push_back(std::make_pair(currentVal, newState));
             allowFailure = nbRecontacts > robot_->GetLimbs().size() + 6;
         }
-        states.push_back(this->end_);
+        states.push_back(std::make_pair(this->path_->timeRange().second, this->end_));
 #ifdef PROFILE
         watch.add_to_count("planner succeeded", 1);
         watch.stop("complete generation");
@@ -153,5 +156,6 @@ if (nbFailures > 1)
     {
         // TODO
     }
-  } // model
+    } // interpolation
+  } // rbprm
 } //hpp

@@ -24,8 +24,7 @@
 #include <hpp/core/config-projector.hh>
 #include <hpp/core/locked-joint.hh>
 #include <hpp/model/device.hh>
-#include <hpp/constraints/position.hh>
-#include <hpp/constraints/orientation.hh>
+#include <hpp/constraints/generic-transformation.hh>
 
 #include <hpp/fcl/BVH/BVH_model.h>
 
@@ -38,6 +37,7 @@
 namespace hpp {
   namespace rbprm {
 
+    const double epsilon = 10e-3;
 
     RbPrmFullBodyPtr_t RbPrmFullBody::create (const model::DevicePtr_t &device)
     {
@@ -52,87 +52,86 @@ namespace hpp {
         // NOTHING
     }
 
-
-    void RemoveNonLimbCollisionRec(const model::JointPtr_t joint, const std::string& limbname,
-                                   const model::ObjectVector_t &collisionObjects,
-                                   core::CollisionValidationPtr_t& collisionValidation)
-    {
-        if(joint->name() == limbname) return;
-        for(model::ObjectVector_t::const_iterator cit = collisionObjects.begin();
-            cit != collisionObjects.end(); ++cit)
-        {
-            collisionValidation->removeObstacleFromJoint(joint, *cit);
-        }
-        for(std::size_t i=0; i<joint->numberChildJoints(); ++i)
-        {
-            RemoveNonLimbCollisionRec(joint->childJoint(i), limbname, collisionObjects, collisionValidation);
-        }
-    }
-
-
     bool RbPrmFullBody::AddHeuristic(const std::string& name, const sampling::heuristic func)
     {
         return factory_.AddHeuristic(name, func);
+    }
+
+
+    void RbPrmFullBody::AddLimbPrivate(rbprm::RbPrmLimbPtr_t limb, const std::string& id, const std::string& name,
+                        const model::ObjectVector_t &collisionObjects, const bool disableEffectorCollision)
+    {
+        core::CollisionValidationPtr_t limbcollisionValidation_ = core::CollisionValidation::create(this->device_);
+        // adding collision validation
+        for(model::ObjectVector_t::const_iterator cit = collisionObjects.begin();
+            cit != collisionObjects.end(); ++cit)
+        {
+            if(limbs_.empty())
+            {
+                collisionValidation_->addObstacle(*cit);
+            }
+            limbcollisionValidation_->addObstacle(*cit);
+            //remove effector collision
+            if(disableEffectorCollision)
+            {
+                hpp::tools::RemoveEffectorCollision<core::CollisionValidation>((*collisionValidation_.get()), limb->effector_, *cit);
+                hpp::tools::RemoveEffectorCollision<core::CollisionValidation>((*limbcollisionValidation_.get()), limb->effector_, *cit);
+            }
+        }
+        limbs_.insert(std::make_pair(id, limb));
+        tools::RemoveNonLimbCollisionRec<core::CollisionValidation>(device_->rootJoint(),name,collisionObjects,*limbcollisionValidation_.get());
+        limbcollisionValidations_.insert(std::make_pair(id, limbcollisionValidation_));
+        // insert limb to root group
+        T_LimbGroup::iterator cit = limbGroups_.find(name);
+        if(cit != limbGroups_.end())
+        {
+            cit->second.push_back(id);
+        }
+        else
+        {
+            std::vector<std::string> group;
+            group.push_back(id);
+            limbGroups_.insert(std::make_pair(name, group));
+        }
+    }
+
+    std::map<std::string, const sampling::heuristic>::const_iterator checkLimbData(const std::string& id, const rbprm::T_Limb& limbs, const rbprm::sampling::HeuristicFactory& factory, const std::string& heuristicName)
+    {
+        rbprm::T_Limb::const_iterator cit = limbs.find(id);
+        std::map<std::string, const sampling::heuristic>::const_iterator hit = factory.heuristics_.find(heuristicName);
+        if(cit != limbs.end())
+            throw std::runtime_error ("Impossible to add limb for joint "
+                                      + id + " to robot; limb already exists");
+        else if(hit == factory.heuristics_.end())
+            throw std::runtime_error ("Impossible to add limb for joint "
+                                      + id + " to robot; heuristic not found " + heuristicName +".");
+        return hit;
     }
 
     void RbPrmFullBody::AddLimb(const std::string& id, const std::string& name, const std::string &effectorName,
                                 const fcl::Vec3f &offset,const fcl::Vec3f &normal, const double x,
                                 const double y,
                                 const model::ObjectVector_t &collisionObjects, const std::size_t nbSamples, const std::string &heuristicName, const double resolution,
-                                ContactType contactType)
+                                ContactType contactType, const bool disableEffectorCollision)
     {
-        rbprm::T_Limb::const_iterator cit = limbs_.find(id);
-        std::map<std::string, const sampling::heuristic>::const_iterator hit = factory_.heuristics_.find(heuristicName);
-        if(cit != limbs_.end())
-        {
-            throw std::runtime_error ("Impossible to add limb for joint "
-                                      + id + " to robot; limb already exists");
-        }
-        else if(hit == factory_.heuristics_.end())
-        {
-            throw std::runtime_error ("Impossible to add limb for joint "
-                                      + id + " to robot; heuristic not found " + heuristicName +".");
-        }
-        else
-        {
-            model::JointPtr_t joint = device_->getJointByName(name);
-            rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(joint, effectorName, offset,normal,x,y, nbSamples, hit->second, resolution,contactType);
-            core::CollisionValidationPtr_t limbcollisionValidation_ = core::CollisionValidation::create(this->device_);
-            // adding collision validation
-            for(model::ObjectVector_t::const_iterator cit = collisionObjects.begin();
-                cit != collisionObjects.end(); ++cit)
-            {
-                if(limbs_.empty())
-                {
-                    collisionValidation_->addObstacle(*cit);
-                }
-                limbcollisionValidation_->addObstacle(*cit);
-                //remove effector collision
-                model::JointPtr_t collisionFree = limb->effector_;
-                while(collisionFree)
-                {
-                    collisionValidation_->removeObstacleFromJoint(collisionFree, *cit);
-                    limbcollisionValidation_->removeObstacleFromJoint(collisionFree,*cit);
-                    collisionFree = collisionFree->numberChildJoints()>0 ? collisionFree->childJoint(0) : 0;
-                }
-            }
-            limbs_.insert(std::make_pair(id, limb));
-            RemoveNonLimbCollisionRec(device_->rootJoint(),name,collisionObjects,limbcollisionValidation_);
-            limbcollisionValidations_.insert(std::make_pair(id, limbcollisionValidation_));
-            // insert limb to root group
-            T_LimbGroup::iterator cit = limbGroups_.find(name);
-            if(cit != limbGroups_.end())
-            {
-                cit->second.push_back(id);
-            }
-            else
-            {
-                std::vector<std::string> group;
-                group.push_back(id);
-                limbGroups_.insert(std::make_pair(name, group));
-            }
+        std::map<std::string, const sampling::heuristic>::const_iterator hit = checkLimbData(id, limbs_,factory_,heuristicName);
+        model::JointPtr_t joint = device_->getJointByName(name);
+        rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(joint, effectorName, offset,normal,x,y, nbSamples, hit->second, resolution,contactType, disableEffectorCollision);
+        AddLimbPrivate(limb, id, name,collisionObjects, disableEffectorCollision);
+    }
 
-        }
+    void RbPrmFullBody::AddLimb(const std::string& database, const std::string& id,
+                                const model::ObjectVector_t &collisionObjects,
+                                const std::string& heuristicName,
+                                const bool loadValues, const bool disableEffectorCollision)
+    {
+        std::map<std::string, const sampling::heuristic>::const_iterator hit = checkLimbData(id, limbs_,factory_,heuristicName);;
+        std::ifstream myfile (database.c_str());
+        if (!myfile.good())
+            throw std::runtime_error ("Impossible to open database");
+        rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(device_, myfile, loadValues, hit->second, disableEffectorCollision);
+        myfile.close();
+        AddLimbPrivate(limb, id, limb->limb_->name(),collisionObjects, disableEffectorCollision);
     }
 
     void RbPrmFullBody::init(const RbPrmFullBodyWkPtr_t& weakPtr)
@@ -147,19 +146,6 @@ namespace hpp {
     {
         // NOTHING
     }
-
-    void LockJointRec(const std::string& limb, const model::JointPtr_t joint, core::ConfigProjectorPtr_t& projector )
-    {
-        if(joint->name() == limb) return;
-        const core::Configuration_t& c = joint->robot()->currentConfiguration();
-        core::size_type rankInConfiguration (joint->rankInConfiguration ());
-        projector->add(core::LockedJoint::create(joint,c.segment(rankInConfiguration, joint->configSize())));
-        for(std::size_t i=0; i< joint->numberChildJoints(); ++i)
-        {
-            LockJointRec(limb,joint->childJoint(i), projector);
-        }
-    }
-
 
     // assumes unit direction
     std::vector<bool> setMaintainRotationConstraints(const fcl::Vec3f&) // direction)
@@ -199,11 +185,12 @@ namespace hpp {
                               const hpp::rbprm::RbPrmLimbPtr_t& limb, model::ConfigurationOut_t configuration,
                               const double robustnessTreshold, bool stability = true)
     {
-        for(std::deque<sampling::Sample>::const_iterator cit = limb->sampleContainer_.samples_.begin();
+        for(sampling::SampleVector_t::const_iterator cit = limb->sampleContainer_.samples_.begin();
             cit != limb->sampleContainer_.samples_.end(); ++cit)
         {
             sampling::Load(*cit, configuration);
-            if(validation->validate(configuration) && (!stability || stability::IsStable(body,current) >=robustnessTreshold))
+            hpp::core::ValidationReportPtr_t valRep (new hpp::core::CollisionValidationReport);
+            if(validation->validate(configuration, valRep) && (!stability || stability::IsStable(body,current) >=robustnessTreshold))
             {
                 current.configuration_ = configuration;
                 return true;
@@ -233,21 +220,22 @@ namespace hpp {
             const RbPrmLimbPtr_t limb = body->GetLimbs().at(name);
             // try to maintain contact
             const fcl::Vec3f& ppos  =previous.contactPositions_.at(name);
-            core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-2, 30);
-            LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
+            core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 30);
+            hpp::tools::LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
             const fcl::Vec3f z = limb->effector_->currentTransformation().getRotation() * limb->normal_;
             const fcl::Matrix3f& rotation = previous.contactRotation_.at(name);
-            proj->add(core::NumericalConstraint::create (constraints::Position::create(body->device_, limb->effector_,fcl::Vec3f(0,0,0), ppos)));
+            proj->add(core::NumericalConstraint::create (constraints::Position::create("",body->device_, limb->effector_,fcl::Vec3f(0,0,0), ppos)));
             if(limb->contactType_ == hpp::rbprm::_6_DOF)
             {
-                proj->add(core::NumericalConstraint::create (constraints::Orientation::create(body->device_,
+                proj->add(core::NumericalConstraint::create (constraints::Orientation::create("", body->device_,
                                                                                   limb->effector_,
                                                                                   rotation,
                                                                                   setMaintainRotationConstraints(z))));
             }
             if(proj->apply(config))
             {
-                if(limbValidations.at(name)->validate(config))
+                hpp::core::ValidationReportPtr_t valRep (new hpp::core::CollisionValidationReport);
+                if(limbValidations.at(name)->validate(config, valRep))
                 {
                     // stable?
                     current.contacts_[name] = true;
@@ -310,7 +298,7 @@ namespace hpp {
                               core::CollisionValidationPtr_t validation,
                               const std::string& limbId,
                               const hpp::rbprm::RbPrmLimbPtr_t& limb,
-                              model::ConfigurationIn_t rbconfiguration, model::ConfigurationIn_t nextrbconfiguration,
+                              model::ConfigurationIn_t rbconfiguration,
                               model::ConfigurationOut_t configuration,
                               const model::ObjectVector_t &collisionObjects, const fcl::Vec3f& direction,
                               fcl::Vec3f& position, fcl::Vec3f& normal, const double robustnessTreshold,
@@ -325,10 +313,6 @@ namespace hpp {
       fcl::Matrix3f rotation;
       sampling::T_OctreeReport finalSet;
 
-      limb->limb_->robot()->currentConfiguration(nextrbconfiguration);
-      limb->limb_->robot()->computeForwardKinematics ();
-      fcl::Transform3f transformNext = limb->octreeRoot(); // get root transform from configuration
-
       limb->limb_->robot()->currentConfiguration(rbconfiguration);
       limb->limb_->robot()->computeForwardKinematics ();
       fcl::Transform3f transform = limb->octreeRoot(); // get root transform from configuration
@@ -337,11 +321,14 @@ namespace hpp {
       std::size_t i (0);
       //#pragma omp parallel for
       // request samples which collide with each of the collision objects
-      sampling::heuristic eval = evaluate; if(!eval) eval =  limb->sampleContainer_.evaluate_;
+      sampling::heuristic eval = evaluate; if (!eval) eval =limb->evaluate_;
       for(model::ObjectVector_t::const_iterator oit = collisionObjects.begin();
           oit != collisionObjects.end(); ++oit, ++i)
       {
-          sampling::GetCandidates(limb->sampleContainer_, transform,transformNext, *oit, direction, reports[i], eval);
+          if(eval)
+            sampling::GetCandidates(limb->sampleContainer_, transform, *oit, direction, reports[i], eval);
+          else
+            sampling::GetCandidates(limb->sampleContainer_, transform, *oit, direction, reports[i]);
       }
       // order samples according to EFORT
       for(std::vector<sampling::T_OctreeReport>::const_iterator cit = reports.begin();
@@ -370,21 +357,24 @@ namespace hpp {
               // Add constraints to resolve Ik
               core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 20);
               // get current normal orientation
-              LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
-              proj->add(core::NumericalConstraint::create (constraints::Position::create(body->device_,
+              hpp::tools::LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
+              fcl::Vec3f posOffset = position - rotation * limb->offset_;
+              posOffset = posOffset + normal * epsilon;
+              fcl::Transform3f localFrame, globalFrame;
+              localFrame.setTranslation(posOffset);
+              proj->add(core::NumericalConstraint::create (constraints::Position::create("",body->device_,
                                                                                          limb->effector_,
-                                                                                         fcl::Vec3f(0,0,0),
-                                                                                         position - rotation * limb->offset_, //)));
-                                                                                         model::matrix3_t::getIdentity(),
+                                                                                         globalFrame,
+                                                                                         localFrame,
                                                                                          setTranslationConstraints(normal))));//
 
 
 
               if(limb->contactType_ == hpp::rbprm::_6_DOF)
               {
-                  proj->add(core::NumericalConstraint::create (constraints::Orientation::create(body->device_,
+                  proj->add(core::NumericalConstraint::create (constraints::Orientation::create("",body->device_,
                                                                                                 limb->effector_,
-                                                                                                rotation,
+                                                                                                fcl::Transform3f(rotation),
                                                                                                 setRotationConstraints(z))));
               }
 #ifdef PROFILE
@@ -400,7 +390,8 @@ namespace hpp {
     RbPrmProfiler& watch = getRbPrmProfiler();
     watch.start("collision");
 #endif
-                if(validation->validate(configuration))
+                hpp::core::ValidationReportPtr_t valRep (new hpp::core::CollisionValidationReport);
+                if(validation->validate(configuration, valRep))
                 {
 #ifdef PROFILE
     watch.stop("collision");
@@ -512,7 +503,7 @@ else
             for(std::vector<std::string>::const_iterator cit = group.begin();
                 notFound && cit != group.end(); ++cit)
             {
-                if(ComputeStableContact(body, result, validation, *cit, body->GetLimbs().at(*cit),save,save, config,
+                if(ComputeStableContact(body, result, validation, *cit, body->GetLimbs().at(*cit),save, config,
                                         collisionObjects, direction, position, normal, robustnessTreshold, false)
                         == STABLE_CONTACT)
                 {
@@ -567,7 +558,7 @@ else
             {
                 fcl::Vec3f normal, position;
                 ComputeStableContact(body,result, body->limbcollisionValidations_.at(lit->first), lit->first, lit->second,
-                                     configuration, configuration,
+                                     configuration,
                                      result.configuration_, collisionObjects, direction, position, normal, robustnessTreshold, true, false);
             }
             result.nbContacts = result.contactNormals_.size();
@@ -578,7 +569,7 @@ else
     }
 
     hpp::rbprm::State ComputeContacts(const hpp::rbprm::State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration,
-                                      model::ConfigurationIn_t nextconfiguration, const model::ObjectVector_t& collisionObjects,
+                                      const model::ObjectVector_t& collisionObjects,
                                       const fcl::Vec3f& direction, bool& contactMaintained, bool& multipleBreaks,
                                       const bool allowFailure, const double robustnessTreshold)
     {
@@ -608,7 +599,7 @@ else
         // if no stable replacement contact found
         // modify contact order to try to replace another contact at the next step
         if(ComputeStableContact(body,result,body->limbcollisionValidations_.at(replaceContact),replaceContact,body->limbs_.at(replaceContact),
-                             configuration,nextconfiguration, config,collisionObjects,direction,position, normal, robustnessTreshold, true, false, body->factory_.heuristics_["random"])
+                             configuration, config,collisionObjects,direction,position, normal, robustnessTreshold, true, false, body->factory_.heuristics_["random"])
                 != STABLE_CONTACT)
         {
             result = previous;
@@ -634,7 +625,7 @@ else
         {
             // if the contactMaintained flag remains true,
             // the contacts have not changed, and the state can be merged with the previous one eventually
-            contactCreated = ComputeStableContact(body, result, body->limbcollisionValidations_.at(lit->first), lit->first, lit->second, configuration, nextconfiguration,
+            contactCreated = ComputeStableContact(body, result, body->limbcollisionValidations_.at(lit->first), lit->first, lit->second, configuration,
                                                   config, collisionObjects, direction, position, normal, robustnessTreshold) != NO_CONTACT || contactCreated;
         }
     }
@@ -652,6 +643,10 @@ else
             if (!RepositionContacts(result, body, body->collisionValidation_, config, collisionObjects, direction, robustnessTreshold))
             {
                 std::cout << "planner is stuck; failure " <<  std::endl;
+                body->device_->currentConfiguration(save);
+                body->device_->controlComputation (flag);
+                result.nbContacts = 0;
+                return result;
             }
         }
         // One contact break already happened, the state is invalid
@@ -671,7 +666,7 @@ else
                 // raise failure and switch contact order.
                 if(contactCreated || ComputeStableContact(body,result,body->limbcollisionValidations_.at(replaceContact),replaceContact,
                                      body->limbs_.at(replaceContact),
-                                     configuration, nextconfiguration, config,
+                                     configuration, config,
                                      collisionObjects,direction,position, normal,robustnessTreshold) != STABLE_CONTACT)
                 {
                     multipleBreaks = true;

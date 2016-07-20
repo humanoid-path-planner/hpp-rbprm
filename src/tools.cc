@@ -16,6 +16,12 @@
 
 #include <hpp/rbprm/tools.hh>
 #include <Eigen/Geometry>
+#include <iostream>
+#include <fstream>
+#include <hpp/model/joint.hh>
+#include <hpp/model/device.hh>
+#include <hpp/core/config-projector.hh>
+#include <hpp/core/locked-joint.hh>
 
 namespace hpp {
   namespace tools {
@@ -85,5 +91,181 @@ namespace hpp {
         }
         return result;
     }
-  } // model
+
+    void LockJointRec(const std::string& spared, const model::JointPtr_t joint, core::ConfigProjectorPtr_t& projector)
+    {
+        if(joint->name() == spared) return;
+        const core::Configuration_t& c = joint->robot()->currentConfiguration();
+        core::size_type rankInConfiguration (joint->rankInConfiguration ());
+        projector->add(core::LockedJoint::create(joint,c.segment(rankInConfiguration, joint->configSize())));
+        for(std::size_t i=0; i< joint->numberChildJoints(); ++i)
+        {
+            LockJointRec(spared,joint->childJoint(i), projector);
+        }
+    }
+
+    void LockJointRec(const std::vector<std::string> &spared, const model::JointPtr_t joint, core::ConfigProjectorPtr_t& projector)
+    {
+        if(std::find(spared.begin(), spared.end(), joint->name()) != spared.end()) return;
+        const core::Configuration_t& c = joint->robot()->currentConfiguration();
+        core::size_type rankInConfiguration (joint->rankInConfiguration ());
+        projector->add(core::LockedJoint::create(joint,c.segment(rankInConfiguration, joint->configSize())));
+        for(std::size_t i=0; i< joint->numberChildJoints(); ++i)
+        {
+            LockJointRec(spared,joint->childJoint(i), projector);
+        }
+    }
+
+    namespace io
+    {
+    double StrToD (const std::string &str)
+    {
+        std::istringstream ss(str);
+        double result;
+        return ss >> result ? result : 0;
+    }
+
+    int StrToI (const std::string &str)
+    {
+        std::istringstream ss(str);
+        double result;
+        return ss >> result ? (int)result : 0;
+    }
+
+    double StrToD (std::ifstream& input)
+    {
+        std::string line;
+        getline(input, line);
+        return StrToD(line);
+    }
+
+    int StrToI (std::ifstream& input)
+    {
+        std::string line;
+        getline(input, line);
+        return StrToI(line);
+    }
+
+    std::vector<std::string> splitString(const std::string& s, const char sep)
+    {
+       //Eclate une chane au niveau de ses ;.
+       std::vector<std::string> ret;
+       std::string s1="";
+       for(unsigned int i=0;i<s.size();i++)
+       {
+           if(s[i]==sep||i==s.size()-1)
+           {
+               if(i==s.size()-1)
+                   s1+=s[i];
+               if(s1!="") ret.push_back(s1);
+               s1="";
+           }
+           else
+               s1+=s[i];
+       }
+       return ret;
+    }
+
+    void writeMatrix(const Eigen::MatrixXd& mat, std::ostream& output)
+    {
+        output << mat.rows()<<";"<<mat.cols()<<std::endl;
+        for(int i =0; i< mat.rows(); ++i)
+        {
+            for(int j =0; j< mat.cols(); ++j)
+            {
+                output << mat(i,j)<<";";
+            }
+        }
+    }
+
+    Eigen::MatrixXd readMatrix(std::ifstream& myfile)
+    {
+        std::string line;
+        return readMatrix(myfile,line);
+    }
+
+    Eigen::MatrixXd readMatrix(std::ifstream& myfile, std::string& line)
+    {
+        getline(myfile, line); //id
+        std::vector<std::string> dim = splitString(line,';');
+        int rows=StrToI(dim[0]);
+        int cols=StrToI(dim[1]);
+        Eigen::MatrixXd res(rows, cols);
+        getline(myfile, line); //id
+        std::vector<std::string> data = splitString(line,';');
+        std::vector<std::string>::const_iterator current = data.begin();
+        for(int i =0; i< rows; ++i)
+        {
+            for(int j =0; j< cols; ++j)
+            {
+                res(i,j) = StrToD(*current);
+                ++current;
+            }
+        }
+        return res;
+    }
+
+
+    void writeVecFCL(const fcl::Vec3f& vec, std::ostream& output)
+    {
+        for(int i =0; i< 3; ++i)
+        {
+            output << vec[i]<<";";
+        }
+    }
+
+    fcl::Vec3f readVecFCL(std::ifstream& myfile)
+    {
+        std::string line;
+        return readVecFCL(myfile,line);
+    }
+
+    fcl::Vec3f readVecFCL(std::ifstream& myfile, std::string& line)
+    {
+        fcl::Vec3f res;
+        getline(myfile, line); //id
+        std::vector<std::string> dim = splitString(line,';');
+        for(int i =0; i< 3; ++i)
+        {
+            res[i] = StrToD(dim[i]);
+        }
+        return res;
+    }
+
+    void writeRotMatrixFCL(const fcl::Matrix3f& mat, std::ostream& output)
+    {
+        for(int i =0; i< 3; ++i)
+        {
+            for(int j =0; j< 3; ++j)
+            {
+                output << mat(i,j)<<";";
+            }
+        }
+    }
+
+    fcl::Matrix3f readRotMatrixFCL(std::ifstream& myfile)
+    {
+        std::string line;
+        return readRotMatrixFCL(myfile,line);
+    }
+
+    fcl::Matrix3f readRotMatrixFCL(std::ifstream& myfile, std::string& line)
+    {
+        fcl::Matrix3f res;
+        getline(myfile, line); //id
+        std::vector<std::string> data = splitString(line,';');
+        std::vector<std::string>::const_iterator current = data.begin();
+        for(int i =0; i< 3; ++i)
+        {
+            for(int j =0; j< 3; ++j)
+            {
+                res(i,j) = StrToD(*current);
+                ++current;
+            }
+        }
+        return res;
+    }
+
+    } // io
+  } // tools
 } //hpp

@@ -34,6 +34,7 @@ namespace hpp {
                                            ,const NormalFilter& normalFilter)
         : hpp::core::CollisionValidation(robot)
         , filter_(normalFilter)
+        , unusedReport_(new CollisionValidationReport)
     {
         if(!normalFilter.unConstrained_)
         {
@@ -43,27 +44,24 @@ namespace hpp {
     }
 
 
-    bool RbPrmRomValidation::validate (const Configuration_t& config,
-                    bool throwIfInValid)
+    bool RbPrmRomValidation::validate (const Configuration_t& config)
     {
-        CollisionValidationReport validationReport;
-        return validate(config,validationReport,throwIfInValid);
+        return validate(config, unusedReport_);
     }
 
     bool RbPrmRomValidation::validate (const Configuration_t& config,
-                    ValidationReport& validationReport,
-                    bool throwIfInValid)
+                    ValidationReportPtr_t& validationReport)
     {        
-        bool collision = !hpp::core::CollisionValidation::validate(config, validationReport, throwIfInValid);
+        bool collision = !hpp::core::CollisionValidation::validate(config, validationReport);
         if(collision && !filter_.unConstrained_)
         {
             collision = false;
-            CollisionValidationReport& report =
-                    static_cast <CollisionValidationReport&> (validationReport);
-            for(std::size_t i = 0; i< report.result.numContacts() && !collision; ++i)
+            CollisionValidationReport* report =
+                    static_cast <CollisionValidationReport*> (validationReport.get());
+            for(std::size_t i = 0; i< report->result.numContacts() && !collision; ++i)
             {
                 // retrieve triangle
-                const fcl::Contact& contact =  report.result.getContact(i);
+                const fcl::Contact& contact =  report->result.getContact(i);
                 assert(contact.o2->getObjectType() == fcl::OT_BVH); // only works with meshes
                 const fcl::BVHModel<fcl::OBBRSS>* surface = static_cast<const fcl::BVHModel<fcl::OBBRSS>*> (contact.o2);
                 const fcl::Triangle& tr = surface->tri_indices[contact.b2];

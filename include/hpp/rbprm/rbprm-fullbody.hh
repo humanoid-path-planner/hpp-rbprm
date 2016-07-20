@@ -68,11 +68,28 @@ namespace hpp {
         /// structure to perform efficient proximity requests. The resulution of the octree, in meters, specifies the size
         /// of the unit voxel of the octree. The larger they are, the more samples will be considered as candidates for contact.
         /// This can be problematic in terms of performance. The default value is 3 cm.
+        /// \param resolution, resolution of the octree voxels. The samples generated are stored in an octree data
+        /// \param disableEffectorCollision, whether collision detection should be disabled for end effector bones
         void AddLimb(const std::string& id, const std::string& name, const std::string& effectorName, const fcl::Vec3f &offset,
                      const fcl::Vec3f &normal,const double x, const double y,
                      const model::ObjectVector_t &collisionObjects,
-                     const std::size_t nbSamples, const std::string& heuristic = "EFORT", const double resolution = 0.03,
-                     ContactType contactType = _6_DOF);
+                     const std::size_t nbSamples, const std::string& heuristic = "static", const double resolution = 0.03,
+                     ContactType contactType = _6_DOF, const bool disableEffectorCollision = false);
+
+        /// Creates a Limb for the robot,
+        /// identified by its name. Stores a sample
+        /// container, used for requests
+        ///
+        /// \param database: path to the sample database used for the limbs
+        /// \param id: user defined id for the limb. Must be unique.
+        /// The id is used if several contact points are defined for the same limb (ex: the knee and the foot)
+        /// \param collisionObjects objects to be considered for collisions with the limb. TODO remove
+        /// structure to perform efficient proximity requests. The resulution of the octree, in meters, specifies the size
+        /// of the unit voxel of the octree. The larger they are, the more samples will be considered as candidates for contact.
+        /// This can be problematic in terms of performance. The default value is 3 cm.
+        /// \param disableEffectorCollision, whether collision detection should be disabled for end effector bones
+        void AddLimb(const std::string& database, const std::string& id, const model::ObjectVector_t &collisionObjects,
+                      const std::string& heuristicName, const bool loadValues, const bool disableEffectorCollision = false);
 
         /// Add a new heuristic for biasing sample candidate selection
         ///
@@ -96,6 +113,9 @@ namespace hpp {
         T_LimbGroup limbGroups_;
         sampling::HeuristicFactory factory_;
 
+    private:
+        void AddLimbPrivate(rbprm::RbPrmLimbPtr_t limb, const std::string& id, const std::string& name,
+                            const model::ObjectVector_t &collisionObjects, const bool disableEffectorCollision);
 
     protected:
       RbPrmFullBody (const model::DevicePtr_t &device);
@@ -110,7 +130,7 @@ namespace hpp {
       friend hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration,
                                         const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction, const double robustnessTreshold);
 
-      friend hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(const hpp::rbprm::State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration, model::ConfigurationIn_t nextconfiguration,
+      friend hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(const hpp::rbprm::State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration,
                                         const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction, bool& contactMaintained, bool& multipleBreaks, const bool allowFailure, const double robustnessTreshold);
     }; // class RbPrmDevice
 
@@ -143,7 +163,7 @@ namespace hpp {
     /// \param allowFailure allow multiple breaks in the contact computation.
     /// \param robustnessTreshold minimum value of the static equilibrium robustness criterion required to accept the configuration (0 by default).
     /// \return a State describing the computed contact configuration, with relevant contact information and balance information.
-    hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(const hpp::rbprm::State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration, model::ConfigurationIn_t nextconfiguration,
+    hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(const hpp::rbprm::State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration,
                                             const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction, bool& contactMaintained, bool& multipleBreaks, const bool allowFailure,
                                             const double robustnessTreshold = 0);
   } // namespace rbprm

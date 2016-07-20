@@ -20,7 +20,7 @@
 # define HPP_RBPRM_LIMB_HH
 
 # include <hpp/rbprm/config.hh>
-# include <hpp/rbprm/sampling/sample-container.hh>
+# include <hpp/rbprm/sampling/sample-db.hh>
 # include <hpp/rbprm/sampling/heuristic.hh>
 # include <hpp/model/device.hh>
 
@@ -38,7 +38,7 @@ namespace hpp {
     HPP_PREDEF_CLASS(RbPrmLimb);
 
     /// Representation of a robot limb.
-    /// Contains a SampleContainer used for computing contact candidates
+    /// Contains a SampleDB used for computing contact candidates
     ///
     class RbPrmLimb;
     typedef boost::shared_ptr <RbPrmLimb> RbPrmLimbPtr_t;
@@ -64,10 +64,10 @@ namespace hpp {
         /// of the unit voxel of the octree. The larger they are, the more samples will be considered as candidates for contact.
         /// This can be problematic in terms of performance. The default value is 3 cm.
         /// \param contactType Whether the contact is a surface contact (orientation matters) or a punctual contact
-        static RbPrmLimbPtr_t create (const model::JointPtr_t limb, const fcl::Vec3f &offset,
+        /*static RbPrmLimbPtr_t create (const model::JointPtr_t limb, const fcl::Vec3f &offset,
                                       const fcl::Vec3f &normal,const double x, const double y,
-                                      const std::size_t nbSamples, const sampling::heuristic evaluate,
-                                      const double resolution, ContactType contactType = _6_DOF);
+                                      const std::size_t nbSamples, const sampling::heuristic evaluate = 0,
+                                      const double resolution = 0.1, ContactType contactType = _6_DOF);*/
 
 
         /// Creates a Limb a Fullbody instance  Stores a sample
@@ -85,10 +85,16 @@ namespace hpp {
         /// of the unit voxel of the octree. The larger they are, the more samples will be considered as candidates for contact.
         /// This can be problematic in terms of performance. The default value is 3 cm.
         /// \param contactType Whether the contact is a surface contact (orientation matters) or a punctual contact
+        /// \param disableEndEffectorCollision Whether the end effector bodies should be counted for collision detection
         static RbPrmLimbPtr_t create (const model::JointPtr_t limb, const std::string& effectorName, const fcl::Vec3f &offset,
                                       const fcl::Vec3f &normal,const double x, const double y,
-                                      const std::size_t nbSamples, const sampling::heuristic evaluate,
-                                      const double resolution, ContactType contactType = _6_DOF);
+                                      const std::size_t nbSamples, const sampling::heuristic evaluate = 0,
+                                      const double resolution = 0.1, ContactType contactType = _6_DOF,
+                                      bool disableEndEffectorCollision = false);
+
+        static RbPrmLimbPtr_t create (const model::DevicePtr_t device, std::ifstream& fileStream, const bool loadValues = true,
+                                      const hpp::rbprm::sampling::heuristic evaluate = 0,
+                                      bool disableEndEffectorCollision = false);
 
     public:
         ~RbPrmLimb();
@@ -100,24 +106,26 @@ namespace hpp {
         const model::JointPtr_t limb_;
         const model::JointPtr_t effector_;
         const fcl::Matrix3f effectorDefaultRotation_; // effector transform in rest pose
-        const sampling::SampleContainer sampleContainer_;
         const fcl::Vec3f offset_; // effector location
         const fcl::Vec3f normal_; // effector normal for surface
         const double x_; // half width
         const double y_; // half length of contact surface
         const ContactType contactType_;
+        sampling::heuristic evaluate_;
+        const sampling::SampleDB sampleContainer_;
+        const bool disableEndEffectorCollision_;
 
     protected:
-      RbPrmLimb (const model::JointPtr_t& limb,  const fcl::Vec3f &offset,
-                 const fcl::Vec3f &normal,const double x, const double y,
-                 const std::size_t nbSamples, const sampling::heuristic evaluate,
-                 const double resolution, ContactType contactType);
 
       RbPrmLimb (const model::JointPtr_t& limb, const std::string& effectorName,  const fcl::Vec3f &offset,
                  const fcl::Vec3f &normal,const double x, const double y,
                  const std::size_t nbSamples, const sampling::heuristic evaluate,
-                 const double resolution, ContactType contactType);
+                 const double resolution, ContactType contactType,
+                 bool disableEndEffectorCollision = false);
 
+      RbPrmLimb (const model::DevicePtr_t device, std::ifstream& fileStream, const bool loadValues,
+                 const hpp::rbprm::sampling::heuristic evaluate,
+                 bool disableEndEffectorCollision = false);
       ///
       /// \brief Initialization.
       ///
@@ -126,6 +134,10 @@ namespace hpp {
     private:
       RbPrmLimbWkPtr_t weakPtr_;
     }; // class RbPrmLimb
+
+
+    HPP_RBPRM_DLLAPI bool saveLimbInfoAndDatabase(const RbPrmLimbPtr_t limb, std::ofstream& dbFile);
+
   } // namespace rbprm
 } // namespace hpp
 

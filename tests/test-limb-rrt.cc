@@ -1,0 +1,54 @@
+// Copyright (C) 2014 LAAS-CNRS
+// Author: Steve Tonneau
+//
+// This file is part of the hpp-rbprm.
+//
+// hpp-core is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// test-hpp is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with hpp-core.  If not, see <http://www.gnu.org/licenses/>.
+
+#include "test-tools.hh"
+#include <hpp/rbprm/rbprm-shooter.hh>
+
+#include <Eigen/Geometry>
+
+#define BOOST_TEST_MODULE test-limb-rrt
+#include <boost/test/included/unit_test.hpp>
+
+using namespace hpp;
+using namespace rbprm;
+
+BOOST_AUTO_TEST_SUITE( test_limb_rrt )
+
+
+BOOST_AUTO_TEST_CASE (limbRRTCreation) {
+    RbPrmDevicePtr_t robot = initRbPrmDeviceTest();
+    RbPrmValidationPtr_t validator(RbPrmValidation::create(robot));
+
+    CollisionObjectPtr_t colObject = MeshObstacleBox();
+    colObject->move(fcl::Vec3f(11.3,0,0));
+    validator->addObstacle(colObject);
+
+    model::ObjectVector_t collisionObjects;
+    collisionObjects.push_back(colObject);
+    RbPrmShooterPtr_t shooter = RbPrmShooter::create(robot, collisionObjects);
+    for(int i =0; i< 100; ++i)
+    {
+        BOOST_CHECK_MESSAGE (validator->validate(*(shooter->shoot())),
+                                                  "Reachability condition should be verified by shooter");
+    }
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+
+

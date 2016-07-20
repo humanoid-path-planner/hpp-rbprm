@@ -19,6 +19,8 @@
 #ifndef HPP_RBPRM_TOOLS_HH
 # define HPP_RBPRM_TOOLS_HH
 
+# include <hpp/core/config-validation.hh>
+# include <hpp/model/joint.hh>
 # include <hpp/rbprm/config.hh>
 # include <hpp/model/collision-object.hh>
 # include <Eigen/Core>
@@ -28,7 +30,97 @@ namespace hpp {
   /// Uses Rodriguez formula to find transformation between two vectors.
   Eigen::Matrix3d GetRotationMatrix(const Eigen::Vector3d& from, const Eigen::Vector3d& to);
   fcl::Matrix3f GetRotationMatrix(const fcl::Vec3f& from, const fcl::Vec3f& to);
-  } // namespace rbprm
+
+  template<typename T>
+  void RemoveEffectorCollision(T& validation, model::JointPtr_t effectorJoint, const model::ObjectVector_t& obstacles);
+  template<typename T>
+  void RemoveEffectorCollision(T& validation, model::JointPtr_t effectorJoint, const model::CollisionObjectPtr_t obstacle);
+  template<typename T>
+  void RemoveEffectorCollisionRec(T& validation, model::JointPtr_t joint, const model::CollisionObjectPtr_t obstacle);
+
+  ///Lock all joints in a kinematic chain, except for one joint and its subchain
+  /// \param spared Name of the root of the unlocked kinematic chain
+  /// \param joint Root of the considered kinematic chain to block
+  /// \param projector Projector on which to block the joints
+  void LockJointRec(const std::string& spared, const model::JointPtr_t joint, core::ConfigProjectorPtr_t& projector);
+
+  ///Lock all joints in a kinematic chain, except for a list of subchains
+  /// \param spared names of the root of the unlocked kinematic chains
+  /// \param joint Root of the considered kinematic chain to block
+  /// \param projector Projector on which to block the joints
+  void LockJointRec(const std::vector<std::string>& spared, const model::JointPtr_t joint, core::ConfigProjectorPtr_t& projector);
+  ///Some io tools for serialization
+  namespace io
+  {
+      double StrToD (const std::string &str);
+      int StrToI (const std::string &str);
+      double StrToD (std::ifstream& input);
+      int    StrToI (std::ifstream& input);
+      std::vector<std::string> splitString(const std::string& s, const char sep);
+      void writeMatrix      (const Eigen::MatrixXd& mat, std::ostream& output);
+      void writeVecFCL      (const fcl::Vec3f& vec     , std::ostream& output);
+      void writeRotMatrixFCL(const fcl::Matrix3f& mat  , std::ostream& output);
+      Eigen::MatrixXd readMatrix      (std::ifstream& myfile);
+      fcl::Matrix3f   readRotMatrixFCL(std::ifstream& myfile);
+      fcl::Vec3f      readVecFCL      (std::ifstream& myfile);
+      Eigen::MatrixXd readMatrix      (std::ifstream& myfile, std::string& line);
+      fcl::Matrix3f   readRotMatrixFCL(std::ifstream& myfile, std::string& line);
+      fcl::Vec3f      readVecFCL      (std::ifstream& myfile, std::string& line);
+  } // namespace io
+
+  template<typename T>
+  void RemoveEffectorCollisionRec(T& validation, model::JointPtr_t joint, const model::CollisionObjectPtr_t obstacle)
+  {
+      validation.removeObstacleFromJoint(joint,obstacle);
+      //then sons
+      for(std::size_t i =0; i < joint->numberChildJoints(); ++i)
+      {
+          RemoveEffectorCollisionRec<T>(validation, joint->childJoint(i), obstacle);
+      }
+  }
+
+  template<typename T>
+  void RemoveEffectorCollision(T& validation, model::JointPtr_t effectorJoint, const hpp::model::ObjectVector_t &obstacles)
+  {
+      for(hpp::model::ObjectVector_t::const_iterator cit = obstacles.begin();
+          cit != obstacles.end(); ++cit)
+      {
+          RemoveEffectorCollision<T>(validation,effectorJoint,*cit);
+      }
+  }
+
+  template<typename T>
+  void RemoveEffectorCollision(T& validation, model::JointPtr_t effectorJoint, const model::CollisionObjectPtr_t obstacle)
+  {
+      //remove actual effector or not ?
+      validation.removeObstacleFromJoint(effectorJoint,obstacle);
+      //then sons
+      for(std::size_t i =0; i < effectorJoint->numberChildJoints(); ++i)
+      {
+          RemoveEffectorCollisionRec<T>(validation, effectorJoint->childJoint(i), obstacle);
+      }
+  }
+
+
+  template<typename T>
+  void RemoveNonLimbCollisionRec(const model::JointPtr_t joint, const std::string& limbname,
+                                 const model::ObjectVector_t &collisionObjects,
+                                 T& collisionValidation)
+  {
+      if(joint->name() == limbname) return;
+      for(model::ObjectVector_t::const_iterator cit = collisionObjects.begin();
+          cit != collisionObjects.end(); ++cit)
+      {
+          collisionValidation.removeObstacleFromJoint(joint, *cit);
+      }
+      for(std::size_t i=0; i<joint->numberChildJoints(); ++i)
+      {
+          RemoveNonLimbCollisionRec(joint->childJoint(i), limbname, collisionObjects, collisionValidation);
+      }
+  }
+
+
+  } // namespace tools
 } // namespace hpp
 
 #endif // HPP_RBPRM_TOOLS_HH
