@@ -122,10 +122,10 @@ namespace hpp {
     /// \param to iterator to the final State
     /// \param numOptimizations Number of iterations of the shortcut algorithm to apply between each states
     /// \return the resulting path vector, concatenation of all the interpolation paths between the State
-    template<class Path_T>
+    template<class Path_T, typename StateConstIterator>
     core::PathPtr_t HPP_RBPRM_DLLAPI interpolateStates(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
-                                                             const CIT_State& startState,
-                                                             const CIT_State& endState,
+                                                             const StateConstIterator& startState,
+                                                             const StateConstIterator& endState,
                                                              const std::size_t numOptimizations = 10);
     /// Runs the LimbRRT to create a kinematic, continuous,
     /// collision free path between an ordered State contrainer (Between each consecutive state, only one effector

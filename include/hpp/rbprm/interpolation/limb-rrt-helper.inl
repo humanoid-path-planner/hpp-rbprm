@@ -277,9 +277,9 @@ namespace interpolation {
         return ConcatenateAndResizePath(res, numValid);
     }
 
-    template<class Path_T>
+    template<class Path_T, typename StateConstIterator>
     PathPtr_t interpolateStates(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
-                                      const CIT_State &startState, const CIT_State &endState, const std::size_t numOptimizations)
+                                      const StateConstIterator &startState, const StateConstIterator &endState, const std::size_t numOptimizations)
     {
         PathVectorPtr_t res[100];
         bool valid[100];
@@ -290,7 +290,7 @@ namespace interpolation {
         #pragma omp parallel for
         for(std::size_t i = 0; i < distance; ++i)
         {
-            CIT_State a, b;
+            StateConstIterator a, b;
             a = (startState+i);
             b = (startState+i+1);
             LimbRRTHelper<Path_T> helper(fullbody, referenceProblem, generateRootPath(*referenceProblem, *a, *b));
