@@ -120,13 +120,11 @@ namespace hpp {
         // sin(alpha*theta)/sin(theta) in 0 should be computed differently.
         if (fabs (theta) > 1e-6)
         {
-            std::cout << " angle positive " << theta << std::endl;
             const model::value_type sintheta_inv = 1 / sin (theta);
             return (sin ((1-u)*theta) * sintheta_inv)  * q1 + invertor * (sin (u*theta) * sintheta_inv) * q2;
         }
         else
         {
-            std::cout << " angle negative " << theta << std::endl;
             return (1-u) * q1 + invertor * u * q2;
         }
     }

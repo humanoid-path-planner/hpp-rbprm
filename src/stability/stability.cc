@@ -65,7 +65,13 @@ namespace stability{
         p.row(3) = pos + (R*p.row(3).transpose());
     }
 
-    double IsStable(const RbPrmFullBodyPtr_t fullbody, State& state)
+    StaticEquilibrium initLibrary(const RbPrmFullBodyPtr_t fullbody)
+    {
+        StaticEquilibrium staticEquilibrium(fullbody->device_->name(), fullbody->device_->mass(),4,SOLVER_LP_QPOASES);
+        return staticEquilibrium;
+    }
+
+    robust_equilibrium::Vector3 setupLibrary(const RbPrmFullBodyPtr_t fullbody, State& state, StaticEquilibrium& sEq, StaticEquilibriumAlgorithm alg)
     {
         hpp::model::ConfigurationIn_t save = fullbody->device_->currentConfiguration();
         std::vector<std::string> contacts;
@@ -96,12 +102,51 @@ namespace stability{
         state.com_ = comfcl;
         for(int i=0; i< 3; ++i) com(i)=comfcl[i];
         fullbody->device_->currentConfiguration(save);
+        sEq.setNewContacts(positions,normals,frictions,alg);
+        return com;
+    }
+
+    std::pair<MatrixXX, VectorX> ComputeCentroidalCone(const RbPrmFullBodyPtr_t fullbody, State& state)
+    {
+        std::pair<MatrixXX, VectorX> res;
+        MatrixXX& H = res.first;
+        VectorX& h = res.second;
+#ifdef PROFILE
+        RbPrmProfiler& watch = getRbPrmProfiler();
+        watch.start("test balance");
+#endif
+        StaticEquilibrium staticEquilibrium(initLibrary(fullbody));
+        robust_equilibrium::Vector3 com = setupLibrary(fullbody,state,staticEquilibrium,STATIC_EQUILIBRIUM_ALGORITHM_PP);
+#ifdef PROFILE
+    watch.stop("test balance");
+#endif
+        LP_status status = LP_STATUS_OPTIMAL;
+        if(status != LP_STATUS_OPTIMAL)
+        {
+            std::cout << "error " << std::endl;
+        }
+        else
+        {
+            status = staticEquilibrium.getPolytopeInequalities(H,h);
+            std::cout << "result  " <<  H << std::endl;
+            if(status != LP_STATUS_OPTIMAL)
+            {
+                std::cout << "error " << std::endl;
+            }
+        }
+        return res;
+    }
+
+
+    double IsStable(const RbPrmFullBodyPtr_t fullbody, State& state)
+    {
+
 #ifdef PROFILE
     RbPrmProfiler& watch = getRbPrmProfiler();
     watch.start("test balance");
 #endif
-        StaticEquilibrium staticEquilibrium(fullbody->device_->name(), fullbody->device_->mass(),4,SOLVER_LP_QPOASES);
-        staticEquilibrium.setNewContacts(positions,normals,frictions,STATIC_EQUILIBRIUM_ALGORITHM_DLP);
+        StaticEquilibrium staticEquilibrium(initLibrary(fullbody));
+        robust_equilibrium::Vector3 com = setupLibrary(fullbody,state,staticEquilibrium,STATIC_EQUILIBRIUM_ALGORITHM_DLP);
         double res;
 
         LP_status status = staticEquilibrium.computeEquilibriumRobustness(com,res);

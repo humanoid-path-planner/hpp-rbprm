@@ -31,6 +31,10 @@ namespace hpp {
   namespace rbprm {
   namespace stability{
 
+
+    typedef Eigen::Matrix <model::value_type, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> MatrixXX;
+    typedef Eigen::Matrix <model::value_type, Eigen::Dynamic, 1>                               VectorX;
+
     /// Using the polytope computation of the gravito inertial wrench cone, performs
     /// a static equilibrium test on the robot.
     ///
@@ -38,6 +42,14 @@ namespace hpp {
     /// \param state The current State of the robots, in terms of contact creation
     /// \return Whether the configuration is statically balanced
     double IsStable(const RbPrmFullBodyPtr_t fullbody, State& state);
+
+
+    /// Using the polytope computation of the gravito inertial wrench cone,
+    /// returns the CWC of the robot at a given state
+    ///
+    /// \param fullbody The considered robot for static equilibrium
+    /// \param state The current State of the robots, in terms of contact creation
+    std::pair<MatrixXX, VectorX> ComputeCentroidalCone(const RbPrmFullBodyPtr_t fullbody, State& state);
   } // namespace stability
 } // namespace rbprm
 } // namespace hpp
