@@ -19,6 +19,7 @@
 #include <iostream>
 #include <fstream>
 #include <hpp/model/joint.hh>
+#include <hpp/model/joint-configuration.hh>
 #include <hpp/model/device.hh>
 #include <hpp/core/config-projector.hh>
 #include <hpp/core/locked-joint.hh>
@@ -90,6 +91,51 @@ namespace hpp {
             }
         }
         return result;
+    }
+
+    model::value_type angleBetweenQuaternions (model::ConfigurationIn_t  q1, model::ConfigurationIn_t  q2,
+                                               bool& cosIsNegative)
+    {
+        if (q1 == q2)
+        {
+            cosIsNegative = false;
+            return 0;
+        }
+        model::value_type innerprod = q1.dot(q2);
+        assert (fabs (innerprod) < 1.0001);
+        if (innerprod < -1) innerprod = -1;
+        if (innerprod >  1) innerprod =  1;
+        cosIsNegative = (innerprod < 0);
+        model::value_type theta = acos (innerprod);
+        return theta;
+    }
+
+    model::Configuration_t interpolate(model::ConfigurationIn_t  q1, model::ConfigurationIn_t  q2, const model::value_type& u)
+    {
+        bool cosIsNegative;
+        model::value_type angle = angleBetweenQuaternions(q1, q2, cosIsNegative);
+        const int invertor = (cosIsNegative) ? -1 : 1;
+        const model::value_type theta = (cosIsNegative) ? (M_PI - angle) : angle;
+        // theta is between 0 and M_PI/2.
+        // sin(alpha*theta)/sin(theta) in 0 should be computed differently.
+        if (fabs (theta) > 1e-6)
+        {
+            std::cout << " angle positive " << theta << std::endl;
+            const model::value_type sintheta_inv = 1 / sin (theta);
+            return (sin ((1-u)*theta) * sintheta_inv)  * q1 + invertor * (sin (u*theta) * sintheta_inv) * q2;
+        }
+        else
+        {
+            std::cout << " angle negative " << theta << std::endl;
+            return (1-u) * q1 + invertor * u * q2;
+        }
+    }
+
+    model::value_type distance (model::ConfigurationIn_t  q1, model::ConfigurationIn_t  q2)
+    {
+        bool cosIsNegative;
+        model::value_type theta = angleBetweenQuaternions (q1, q2, cosIsNegative);
+        return 2 * (cosIsNegative ? M_PI - theta : theta);
     }
 
     void LockJointRec(const std::string& spared, const model::JointPtr_t joint, core::ConfigProjectorPtr_t& projector)

@@ -30,6 +30,8 @@ namespace hpp {
   /// Uses Rodriguez formula to find transformation between two vectors.
   Eigen::Matrix3d GetRotationMatrix(const Eigen::Vector3d& from, const Eigen::Vector3d& to);
   fcl::Matrix3f GetRotationMatrix(const fcl::Vec3f& from, const fcl::Vec3f& to);
+  model::Configuration_t interpolate(model::ConfigurationIn_t q1, model::ConfigurationIn_t q2, const model::value_type& u);
+  model::value_type distance (model::ConfigurationIn_t q1, model::ConfigurationIn_t q2);
 
   template<typename T>
   void RemoveEffectorCollision(T& validation, model::JointPtr_t effectorJoint, const model::ObjectVector_t& obstacles);
