@@ -27,7 +27,9 @@
 # include <vector>
 
 namespace hpp {
-  namespace rbprm {
+  namespace rbprm {  
+    typedef std::vector<model::vector_t,Eigen::aligned_allocator<model::vector_t> > T_Configuration;
+    typedef T_Configuration::const_iterator CIT_Configuration;
     namespace interpolation {
     HPP_PREDEF_CLASS(RbPrmInterpolation);
 
@@ -77,7 +79,7 @@ namespace hpp {
         /// \param robustnessTreshold minimum value of the static equilibrium robustness criterion required to accept the configuration (0 by default).
        /// \return The time parametrized list of states according to the reference path
         rbprm::T_StateFrame Interpolate(const affMap_t& affordances, const std::map<std::string, std::vector<std::string> >& affFilters,
-                                        const std::vector<model::Configuration_t>& configs, const double robustnessTreshold=0.,
+                                        const T_Configuration& configs, const double robustnessTreshold=0.,
                                         const model::value_type timeStep = 1., const model::value_type initValue = 0.);
 
     public:

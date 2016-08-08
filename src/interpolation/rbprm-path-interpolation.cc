@@ -56,7 +56,7 @@ namespace hpp {
 			const std::map<std::string, std::vector<std::string> >& affFilters, const double timeStep, const double robustnessTreshold)
     {
         if(!path_) throw std::runtime_error ("Cannot interpolate; no path given to interpolator ");
-        std::vector<model::Configuration_t> configs;
+        T_Configuration configs;
         const core::interval_t& range = path_->timeRange();
         configs.push_back(start_.configuration_);
         for(double i = range.first + timeStep; i< range.second; i+= timeStep)
@@ -67,8 +67,8 @@ namespace hpp {
     }
 
     rbprm::T_StateFrame RbPrmInterpolation::Interpolate(const affMap_t& affordances,
-														const std::map<std::string, std::vector<std::string> >& affFilters,
-                                                        const std::vector<model::Configuration_t>& configs, const double robustnessTreshold,
+                                                        const std::map<std::string, std::vector<std::string> >& affFilters,
+                                                        const hpp::rbprm::T_Configuration &configs, const double robustnessTreshold,
                                                         const model::value_type timeStep, const model::value_type initValue)
     {
         int nbFailures = 0;
@@ -82,7 +82,7 @@ namespace hpp {
     watch.reset_all();
     watch.start("complete generation");
 #endif
-        for(std::vector<model::Configuration_t>::const_iterator cit = configs.begin()+1; cit != configs.end(); ++cit, currentVal+= timeStep)
+        for(CIT_Configuration cit = configs.begin()+1; cit != configs.end(); ++cit, currentVal+= timeStep)
         {
             const State& previous = states.back().second;
             core::Configuration_t configuration = *cit;
