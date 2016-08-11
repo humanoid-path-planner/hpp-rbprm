@@ -44,6 +44,8 @@ namespace hpp {
 namespace rbprm {
 namespace stability{
 
+    const double frictions = 0.5;
+
     void computeRectangleContact(const RbPrmLimbPtr_t limb, Ref_matrix43 p)
     {
         const double& lx = limb->x_, ly = limb->y_;
@@ -67,8 +69,7 @@ namespace stability{
 
     StaticEquilibrium initLibrary(const RbPrmFullBodyPtr_t fullbody)
     {
-        StaticEquilibrium staticEquilibrium(fullbody->device_->name(), fullbody->device_->mass(),4,SOLVER_LP_QPOASES);
-        return staticEquilibrium;
+        return StaticEquilibrium(fullbody->device_->name(), fullbody->device_->mass(),4,SOLVER_LP_QPOASES,true,10,true);
     }
 
     robust_equilibrium::Vector3 setupLibrary(const RbPrmFullBodyPtr_t fullbody, State& state, StaticEquilibrium& sEq, StaticEquilibriumAlgorithm alg)
@@ -85,7 +86,6 @@ namespace stability{
         fullbody->device_->computeForwardKinematics();
         robust_equilibrium::MatrixX3 normals  (nbContacts*4,3);
         robust_equilibrium::MatrixX3 positions(nbContacts*4,3);
-        double frictions = 1;
         for(std::size_t c = 0; c< nbContacts; ++c)
         {
             const RbPrmLimbPtr_t limb =fullbody->GetLimbs().at(contacts[c]);
@@ -116,7 +116,7 @@ namespace stability{
         watch.start("test balance");
 #endif
         StaticEquilibrium staticEquilibrium(initLibrary(fullbody));
-        robust_equilibrium::Vector3 com = setupLibrary(fullbody,state,staticEquilibrium,STATIC_EQUILIBRIUM_ALGORITHM_PP);
+        setupLibrary(fullbody,state,staticEquilibrium,STATIC_EQUILIBRIUM_ALGORITHM_PP);
 #ifdef PROFILE
     watch.stop("test balance");
 #endif
@@ -128,7 +128,6 @@ namespace stability{
         else
         {
             status = staticEquilibrium.getPolytopeInequalities(H,h);
-            std::cout << "result  " <<  H << std::endl;
             if(status != LP_STATUS_OPTIMAL)
             {
                 std::cout << "error " << std::endl;

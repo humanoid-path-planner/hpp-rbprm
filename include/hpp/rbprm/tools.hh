@@ -51,6 +51,12 @@ namespace hpp {
   /// \param joint Root of the considered kinematic chain to block
   /// \param projector Projector on which to block the joints
   void LockJointRec(const std::vector<std::string>& spared, const model::JointPtr_t joint, core::ConfigProjectorPtr_t& projector);
+
+  ///Lock a single joint
+  /// \param joint of the considered kinematic chain to block
+  /// \param projector Projector on which to block the joints
+  /// \param constant if false, joint lock constraint can be updated with rightHandSide method
+  void LockJoint(const model::JointPtr_t joint, core::ConfigProjectorPtr_t& projector, const bool constant=true);
   ///Some io tools for serialization
   namespace io
   {

@@ -23,6 +23,7 @@
 #include <hpp/model/device.hh>
 #include <hpp/core/config-projector.hh>
 #include <hpp/core/locked-joint.hh>
+#include <hpp/core/equation.hh>
 
 namespace hpp {
   namespace tools {
@@ -134,6 +135,19 @@ namespace hpp {
         bool cosIsNegative;
         model::value_type theta = angleBetweenQuaternions (q1, q2, cosIsNegative);
         return 2 * (cosIsNegative ? M_PI - theta : theta);
+    }
+
+    void LockJoint(const model::JointPtr_t joint, core::ConfigProjectorPtr_t& projector, const bool constant)
+    {
+        const core::Configuration_t& c = joint->robot()->currentConfiguration();
+        core::size_type rankInConfiguration (joint->rankInConfiguration ());
+        core::LockedJointPtr_t lockedJoint = core::LockedJoint::create(joint,c.segment(rankInConfiguration, joint->configSize()));
+        if(!constant)
+        {
+            lockedJoint->comparisonType(core::Equality::create());
+            std::cout << "constant ok" << std::endl;
+        }
+        projector->add(lockedJoint);
     }
 
     void LockJointRec(const std::string& spared, const model::JointPtr_t joint, core::ConfigProjectorPtr_t& projector)

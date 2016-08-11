@@ -22,7 +22,7 @@
 # include <hpp/core/fwd.hh>
 # include <hpp/core/config.hh>
 # include <hpp/core/path.hh>
-# include <hpp/rbprm/interpolation/limb-rrt-path.hh>
+# include <hpp/rbprm/interpolation/time-dependant.hh>
 
 namespace hpp {
 namespace rbprm {
@@ -54,9 +54,10 @@ namespace interpolation {
                                       core::ConfigurationIn_t init,
                                       core::ConfigurationIn_t end,
                                       core::value_type length,
-                                      const std::size_t pathDofRank)
+                                      const std::size_t pathDofRank,
+                                      const T_TimeDependant& tds)
       {
-    LimbRRTPath* ptr = new LimbRRTPath (device, init, end, length, pathDofRank);
+    LimbRRTPath* ptr = new LimbRRTPath (device, init, end, length, pathDofRank,tds);
     LimbRRTPathPtr_t shPtr (ptr);
     ptr->init (shPtr);
         ptr->checkPath ();
@@ -73,10 +74,11 @@ namespace interpolation {
                                       core::ConfigurationIn_t end,
                                       core::value_type length,
                                       core::ConstraintSetPtr_t constraints,
-                                      const std::size_t pathDofRank)
+                                      const std::size_t pathDofRank,
+                                      const T_TimeDependant& tds)
       {
     LimbRRTPath* ptr = new LimbRRTPath (device, init, end,
-                          length, constraints, pathDofRank);
+                          length, constraints, pathDofRank,tds);
     LimbRRTPathPtr_t shPtr (ptr);
     ptr->init (shPtr);
         ptr->checkPath ();
@@ -172,6 +174,7 @@ namespace interpolation {
         return end_;
       }
 
+      virtual void checkPath () const;
     protected:
       /// Print path in a stream
       virtual std::ostream& print (std::ostream &os) const
@@ -186,12 +189,14 @@ namespace interpolation {
       /// Constructor
       LimbRRTPath (const core::DevicePtr_t& robot, core::ConfigurationIn_t init,
             core::ConfigurationIn_t end, core::value_type length,
-                   const std::size_t pathDofRank);
+                   const std::size_t pathDofRank,
+                   const T_TimeDependant& tds);
 
       /// Constructor with constraints
       LimbRRTPath (const core::DevicePtr_t& robot, core::ConfigurationIn_t init,
             core::ConfigurationIn_t end, core::value_type length,
-            core::ConstraintSetPtr_t constraints, const std::size_t pathDofRank);
+            core::ConstraintSetPtr_t constraints, const std::size_t pathDofRank,
+                   const T_TimeDependant& tds);
 
       /// Copy constructor
       LimbRRTPath (const LimbRRTPath& path);
@@ -217,12 +222,16 @@ namespace interpolation {
                  core::value_type param) const;
 
     private:
+      void updateConstraints(core::ConfigurationOut_t configuration) const;
+
+    private:
       core::DevicePtr_t device_;
       core::Configuration_t initial_;
       core::Configuration_t end_;
 
     public:
       const std::size_t pathDofRank_;
+      const T_TimeDependant tds_;
 
     private:
       LimbRRTPathWkPtr_t weak_;

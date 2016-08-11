@@ -19,6 +19,8 @@
 #include <hpp/rbprm/interpolation/limb-rrt-path.hh>
 #include <hpp/model/device.hh>
 #include <hpp/model/configuration.hh>
+#include <hpp/core/config-projector.hh>
+#include <hpp/core/locked-joint.hh>
 
 using namespace hpp::core;
 
@@ -29,11 +31,13 @@ namespace hpp {
                               ConfigurationIn_t init,
                               ConfigurationIn_t end,
                               value_type length,
-                              const std::size_t pathDofRank) :
+                              const std::size_t pathDofRank,
+                              const T_TimeDependant& tds) :
         parent_t (interval_t (0, length), device->configSize (),
                   device->numberDof ()),
         device_ (device), initial_ (init), end_ (end),
-        pathDofRank_(pathDofRank)
+        pathDofRank_(pathDofRank),
+        tds_(tds)
       {
         assert (device);
         assert (length >= 0);
@@ -45,11 +49,12 @@ namespace hpp {
                 ConfigurationIn_t end,
                 value_type length,
                 ConstraintSetPtr_t constraints,
-                const std::size_t pathDofRank) :
+                const std::size_t pathDofRank,
+                const T_TimeDependant& tds) :
         parent_t (interval_t (0, length), device->configSize (),
                   device->numberDof (), constraints),
         device_ (device), initial_ (init), end_ (end),
-        pathDofRank_(pathDofRank)
+        pathDofRank_(pathDofRank), tds_(tds)
     {
         assert (device);
         assert (length >= 0);
@@ -57,14 +62,14 @@ namespace hpp {
 
     LimbRRTPath::LimbRRTPath (const LimbRRTPath& path) :
         parent_t (path), device_ (path.device_), initial_ (path.initial_),
-        end_ (path.end_), pathDofRank_(path.pathDofRank_)
+        end_ (path.end_), pathDofRank_(path.pathDofRank_), tds_(path.tds_)
     {
     }
 
     LimbRRTPath::LimbRRTPath (const LimbRRTPath& path,
                 const ConstraintSetPtr_t& constraints) :
         parent_t (path, constraints), device_ (path.device_),
-        initial_ (path.initial_), end_ (path.end_), pathDofRank_(path.pathDofRank_)
+        initial_ (path.initial_), end_ (path.end_), pathDofRank_(path.pathDofRank_), tds_(path.tds_)
     {
         // NOTHING
     }
@@ -77,6 +82,24 @@ namespace hpp {
         double a = init[dofRank];
         double b = end[dofRank];
         return (b-a)* normalizedValue + a;
+    }
+
+    void LimbRRTPath::updateConstraints(core::ConfigurationOut_t configuration) const
+    {
+        const value_type y = configuration[pathDofRank_];
+        for (CIT_TimeDependant cit = tds_.begin ();
+            cit != tds_.end (); ++cit)
+          (*cit)(y, configuration);
+        if (constraints() && constraints()->configProjector ())
+            constraints()->configProjector ()->updateRightHandSide ();
+        /*if (constraints() && constraints()->configProjector ()) {
+            //constraints()->configProjector()->rightHandSideFromConfig(configuration);
+            for(core::LockedJoints_t::const_iterator cit = constraints()->configProjector()->lockedJointsnonconst().begin();
+                cit != constraints()->configProjector()->lockedJointsnonconst().end(); ++cit)
+            {
+                (*cit)->rightHandSideFromConfig (configuration);
+            }
+        }*/
     }
 
     bool LimbRRTPath::impl_compute (ConfigurationOut_t result,
@@ -92,11 +115,21 @@ namespace hpp {
             result = end_;
             return true;
         }
-        value_type u = param/timeRange ().second;
+        value_type u;
         if (timeRange ().second == 0)
             u = 0;
+        else
+            u = (param - timeRange ().first) / (timeRange ().second - timeRange().first);
         model::interpolate (device_, initial_, end_, u, result);
-        result[pathDofRank_] = ComputeExtraDofValue(pathDofRank_,initial_, end_, u);
+        model::value_type dof = ComputeExtraDofValue(pathDofRank_,initial_, end_, u);
+        result[pathDofRank_] = dof;
+        /*model::value_type t1 = model_->timeRange().first;
+        model::value_type t2 = model_->timeRange().second;        
+        Configuration_t tmp(model_->initial());
+        model_->operator()(tmp,(t2 - t1) * dof + t1);
+        //result.head(7) = tmp.head(7);
+        tmp = result; */
+        updateConstraints(result);
         return true;
     }
 
@@ -116,13 +149,35 @@ namespace hpp {
                 ("Failed to apply constraints in StraightPath::extract");
         q2[pathDofRank_] = ComputeExtraDofValue(pathDofRank_,initial_, end_, (subInterval.second - timeRange().first)  / (timeRange().second - timeRange().first));
         PathPtr_t result = LimbRRTPath::create (device_, q1, q2, l,
-                           constraints (), pathDofRank_);
+                           constraints (), pathDofRank_, tds_);
         return result;
     }
 
     DevicePtr_t LimbRRTPath::device () const
     {
       return device_;
+    }
+
+    void LimbRRTPath::checkPath () const
+    {
+      Configuration_t initc = initial();
+      Configuration_t endc = end();
+      updateConstraints(initc);
+      if (constraints()) {
+        if (!constraints()->isSatisfied (initial())) {
+          hppDout (error, *constraints());
+          hppDout (error, initial().transpose ());
+          throw projection_error ("Initial configuration of path does not satisfy "
+              "the constraints");
+        }
+        updateConstraints(endc);
+        if (constraints() && !constraints()->isSatisfied (end())) {
+          hppDout (error, *constraints());
+          hppDout (error, end().transpose ());
+          throw projection_error ("End configuration of path does not satisfy "
+              "the constraints");
+        }
+      }
     }
   } //   namespace interpolation
   } //   namespace rbprm

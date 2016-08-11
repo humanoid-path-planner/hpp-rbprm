@@ -26,6 +26,7 @@
 # include <hpp/rbprm/interpolation/limb-rrt-steering.hh>
 # include <hpp/core/path.hh>
 # include <hpp/core/problem.hh>
+# include <hpp/core/config-projector.hh>
 
 # include <vector>
 # include <map>
@@ -55,9 +56,11 @@ namespace hpp {
              , rootPath_(rootPath)
          {
              // adding extra DOF for including time in sampling
-             fullBodyDevice_->setDimensionExtraConfigSpace(fullBodyDevice_->extraConfigSpace().dimension()+1);
+             fullBodyDevice_->setDimensionExtraConfigSpace(fullBodyDevice_->extraConfigSpace().dimension()+1);             
+             proj_ = core::ConfigProjector::create(rootProblem_.robot(),"proj", 1e-2, 30);
              rootProblem_.collisionObstacles(referenceProblem->collisionObstacles());
-             rootProblem_.steeringMethod(LimbRRTSteering<LimbRRTPath>::create(&rootProblem_,fullBodyDevice_->configSize()-1));
+             steeringMethod_ = LimbRRTSteering<LimbRRTPath>::create(&rootProblem_,fullBodyDevice_->configSize()-1);
+             rootProblem_.steeringMethod(steeringMethod_);
          }
 
         ~LimbRRTHelper(){}
@@ -67,6 +70,8 @@ namespace hpp {
          core::Problem rootProblem_;
          core::PathPlannerPtr_t planner_;
          core::PathPtr_t rootPath_;
+         core::ConfigProjectorPtr_t proj_;
+         boost::shared_ptr<LimbRRTSteering<LimbRRTPath> > steeringMethod_;
     };
 
     /// Runs the LimbRRT to create a kinematic, continuous,
@@ -156,6 +161,39 @@ namespace hpp {
     core::PathPtr_t HPP_RBPRM_DLLAPI interpolateStates(RbPrmFullBodyPtr_t fullbody,
                                                              core::ProblemPtr_t referenceProblem,
                                                              const core::PathPtr_t rootPath,
+                                                             const CIT_StateFrame& startState,
+                                                             const CIT_StateFrame& endState,
+                                                             const std::size_t numOptimizations = 10);
+
+    /// Runs the LimbRRT to create a kinematic, continuous,
+    /// collision free path between an ordered State contrainer (Between each consecutive state, only one effector
+    /// position differs between the states). Equilibrium is not
+    /// verified along the path.
+    /// To achieve this, an oriented RRT is run for the transitioning limb. The com trajectory
+    /// between the two State is given by the problem steering method defined in the helper parameter.
+    /// An extra DOF is used to sample a root position along the normalized path as well
+    /// as the limb configuration. To avoid going back and forth, two configurations can thus
+    /// only be connected if the first configuration has a DOF value lower than the second one.
+    /// The LimbRRT algorithm is a modification of the original algorithm introduced in Qiu et al.
+    /// "A Hierarchical Framework for Realizing Dynamically-stable
+    /// Motions of Humanoid Robot in Obstacle-cluttered Environments"
+    /// If OpenMP is activated, the interpolation between the states is run in parallel
+    /// WARNING: At the moment, no more than 100 states can be interpolated simultaneously
+    /// TODO: include parametrization of shortcut algorithm
+    ///
+    /// \param helper holds the problem parameters and the considered device
+    /// An extra DOF is added to the cloned device, as required by the algorithm.
+    /// The method assumes that the steering method associated with the helper's rootProblem_
+    /// produces a collision free path all parts of the Device different that the transitioning limb.
+    /// \param comPath reference path for the COM
+    /// \param iterator to the initial State with its associated keyFrame in the path
+    /// \param to iterator to the final State with its associated keyFrame in the path
+    /// \param numOptimizations Number of iterations of the shortcut algorithm to apply between each states
+    /// \return the resulting path vector, concatenation of all the interpolation paths between the State
+    template<class Path_T>
+    core::PathPtr_t HPP_RBPRM_DLLAPI interpolateStatesTrackCOM(RbPrmFullBodyPtr_t fullbody,
+                                                             core::ProblemPtr_t referenceProblem,
+                                                             const core::PathPtr_t comPath,
                                                              const CIT_StateFrame& startState,
                                                              const CIT_StateFrame& endState,
                                                              const std::size_t numOptimizations = 10);

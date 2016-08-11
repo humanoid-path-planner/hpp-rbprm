@@ -23,6 +23,7 @@
 # include <hpp/core/steering-method-straight.hh>
 # include <hpp/core/straight-path.hh>
 # include <hpp/rbprm/interpolation/limb-rrt-path.hh>
+# include <hpp/rbprm/interpolation/time-dependant.hh>
 
 namespace hpp {
   namespace rbprm {
@@ -89,7 +90,7 @@ namespace hpp {
           c = constraints ();
         }
         core::PathPtr_t path = path_t::create
-          (problem_->robot(), q1, q2, length, c, pathDofRank_);
+          (problem_->robot(), q1, q2, length, c, pathDofRank_, tds_);
             return path;
       }
     protected:
@@ -121,7 +122,11 @@ namespace hpp {
     weak_ = weak;
       }
 
+    public:
+      T_TimeDependant tds_;
+
     private:      
+      const core::PathPtr_t model_;
       const std::size_t pathDofRank_;
       LimbRRTSteeringWkPtr_t weak_;
     }; // SteeringMethodStraight

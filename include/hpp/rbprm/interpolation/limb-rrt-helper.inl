@@ -21,11 +21,12 @@
 
 #include <hpp/rbprm/interpolation/limb-rrt-shooter.hh>
 #include <hpp/rbprm/interpolation/limb-rrt-path-validation.hh>
+#include <hpp/rbprm/interpolation/time-dependant.hh>
 #include <hpp/core/steering-method-straight.hh>
 #include <hpp/core/problem-target/goal-configurations.hh>
 #include <hpp/core/bi-rrt-planner.hh>
 #include <hpp/core/random-shortcut.hh>
-#include <hpp/core/constraint-set.hh>>
+#include <hpp/core/constraint-set.hh>
 #include <hpp/constraints/generic-transformation.hh>
 #include <hpp/constraints/position.hh>
 #include <hpp/constraints/orientation.hh>
@@ -34,13 +35,31 @@
 #include <hpp/core/path-vector.hh>
 #include <hpp/core/subchain-path.hh>
 #include <hpp/model/joint.hh>
+#include <hpp/model/object-factory.hh>
 #include <hpp/rbprm/tools.hh>
+#include <hpp/constraints/relative-com.hh>
+#include <hpp/constraints/symbolic-calculus.hh>
+#include <hpp/constraints/symbolic-function.hh>
 
 namespace hpp {
 using namespace core;
 using namespace model;
 namespace rbprm {
 namespace interpolation {
+
+    struct ComRightSide : public RightHandSideFunctor
+    {
+        ComRightSide (const core::PathPtr_t comPath, model::JointPtr_t j) : comPath_(comPath), dummyJoint_(j) {}
+       ~ComRightSide(){delete dummyJoint_;}
+        virtual void operator() (constraints::vectorOut_t output, const constraints::value_type& normalized_input, model::ConfigurationOut_t conf) const
+        {
+            const interval_t& tR (comPath_->timeRange());
+            constraints::value_type unNormalized = (tR.second-tR.first)* normalized_input + tR.first;
+            output = comPath_->operator ()(unNormalized).head(3);
+        }
+        const core::PathPtr_t comPath_;
+        const model::JointPtr_t dummyJoint_;
+    };
 
     namespace{
     inline core::DevicePtr_t DeviceFromLimb(const std::string& name, RbPrmLimbPtr_t limb)
@@ -114,6 +133,63 @@ namespace interpolation {
         tools::LockJointRec(spared, device->rootJoint(), projector);
     }
 
+
+    typedef constraints::PointCom PointCom;
+    typedef constraints::SymbolicFunction<PointCom> PointComFunction;
+    typedef constraints::SymbolicFunction<PointCom>::Ptr_t PointComFunctionPtr_t;
+
+    template<class Path_T>
+    inline void CreateComConstraint(LimbRRTHelper<Path_T>& helper)
+    {
+        model::DevicePtr_t device = helper.rootProblem_.robot();
+        core::ConfigProjectorPtr_t& proj = helper.proj_;
+        //create identity joint
+        model::ObjectFactory ofac;
+        const model::Transform3f tr;
+        model::JointPtr_t j (ofac.createJointAnchor(tr));
+        //constraints::RelativeComPtr_t cons = constraints::RelativeCom::create(device,j,fcl::Vec3f(0,0,0));
+        fcl::Transform3f localFrame, globalFrame;
+        constraints::PositionPtr_t cons (constraints::Position::create("",device,
+                                                                       device->rootJoint(),
+                                                                       globalFrame,
+                                                                       localFrame));
+        core::NumericalConstraintPtr_t nm(core::NumericalConstraint::create (cons,core::Equality::create()));
+
+
+        /************/
+        core::ComparisonTypePtr_t equals = core::Equality::create ();
+
+        // Create the time varying equation for COM
+        model::CenterOfMassComputationPtr_t comComp = model::CenterOfMassComputation::
+          create (device);
+        //comComp->add (robot_->waist()->parentJoint ());
+        comComp->computeMass ();
+        PointComFunctionPtr_t comFunc = PointComFunction::create ("COM-walkgen",
+            device, PointCom::create (comComp));
+        NumericalConstraintPtr_t comEq = NumericalConstraint::create (comFunc, equals);
+        //TimeDependant comEqTD (comEq, boost::shared_ptr<ComRightSide>(new ComRightSide(helper.rootPath_,j)));
+        proj->add(nm);
+        helper.steeringMethod_->tds_.push_back(TimeDependant(comEq, boost::shared_ptr<ComRightSide>(new ComRightSide(helper.rootPath_,j))));
+        /***************/
+        //proj->add(nm);
+        //helper.steeringMethod_->tds_.push_back(TimeDependant(nm,boost::shared_ptr<ComRightSide>(new ComRightSide(helper.rootPath_,j))));
+    }
+
+    template<class Path_T>
+    inline void CreateRootConstraint(LimbRRTHelper<Path_T>& helper)
+    {
+        // TODO
+    }
+
+    template<class Path_T>
+    inline void initializeConstraints(LimbRRTHelper<Path_T>& helper)
+    {
+        core::Problem& problem = helper.rootProblem_;
+        core::ConstraintSetPtr_t cSet = core::ConstraintSet::create(problem.robot(),"");
+        cSet->addConstraint(helper.proj_);
+        problem.constraints(cSet);
+    }
+
     template<class Path_T>
     void AddContactConstraints(LimbRRTHelper<Path_T>& helper, const State& from, const State& to)
     {
@@ -121,8 +197,7 @@ namespace interpolation {
         std::vector<std::string> fixed = to.fixedContacts(from);
         core::Problem& problem = helper.rootProblem_;
         model::DevicePtr_t device = problem.robot();
-        core::ConstraintSetPtr_t cSet = core::ConstraintSet::create(device,"");
-        core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(device,"proj", 1e-2, 30);
+        core::ConfigProjectorPtr_t& proj = helper.proj_;
         for(std::vector<std::string>::const_iterator cit = fixed.begin();
             cit != fixed.end(); ++cit)
         {
@@ -141,9 +216,10 @@ namespace interpolation {
                                                                                   cosntraintsR)));
             }
         }
+        // constrain root to follow position
+        //tools::LockJoint(device->rootJoint(), proj, false);
         //LockRootAndNonContributingJoints(device, proj, fixed, from, to );
-        cSet->addConstraint(proj);
-        problem.constraints(cSet);
+        // create com constraint
     }
 
     template<class Path_T>
@@ -188,6 +264,7 @@ namespace interpolation {
             helper.rootProblem_.target (target);
             helper.rootProblem_.addGoalConfig(end);
             AddContactConstraints(helper, from, to);
+            initializeConstraints(helper);
 
             res = planner->solve();
             helper.rootProblem_.resetGoalConfigs();
@@ -260,8 +337,42 @@ namespace interpolation {
             CIT_StateFrame a, b;
             a = (startState+i);
             b = (startState+i+1);
-            LimbRRTHelper<Path_T> helper(fullbody, referenceProblem,
-                                 rootPath->extract(core::interval_t(a->first, b->first)));
+            LimbRRTHelper<Path_T> helper(fullbody, referenceProblem,rootPath);
+                                 //rootPath->extract(core::interval_t(a->first, b->first)));
+            PathVectorPtr_t partialPath = interpolateStates(helper, a->second, b->second);
+            if(partialPath)
+            {
+                res[i] = optimize(helper,partialPath, numOptimizations);
+                valid[i]=true;
+            }
+            else
+            {
+                valid[i] = false;
+            }
+        }
+        std::size_t numValid = checkPath(distance, valid);
+        return ConcatenateAndResizePath(res, numValid);
+    }
+
+    template<class Path_T>
+    PathPtr_t interpolateStatesTrackCOM(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t rootPath,
+                                      const CIT_StateFrame &startState, const CIT_StateFrame &endState, const  std::size_t numOptimizations)
+    {
+        PathVectorPtr_t res[100];
+        bool valid[100];
+        std::size_t distance = std::distance(startState,endState);
+        assert(distance < 100);
+        // treat each interpolation between two states separatly
+        // in a different thread
+        #pragma omp parallel for
+        for(std::size_t i = 0; i < distance; ++i)
+        {
+            CIT_StateFrame a, b;
+            a = (startState+i);
+            b = (startState+i+1);
+            LimbRRTHelper<Path_T> helper(fullbody, referenceProblem,rootPath);
+                                 //rootPath->extract(core::interval_t(a->first, b->first)));
+            //CreateComConstraint<Path_T>(helper);
             PathVectorPtr_t partialPath = interpolateStates(helper, a->second, b->second);
             if(partialPath)
             {
