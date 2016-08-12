@@ -16,8 +16,8 @@
 // hpp-core  If not, see
 // <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_RBPRM_LIMB_RRT_HH
-# define HPP_RBPRM_LIMB_RRT_HH
+#ifndef HPP_RBPRM_COM_RRT_HH
+# define HPP_RBPRM_COM_RRT_HH
 
 # include <hpp/rbprm/config.hh>
 # include <hpp/rbprm/rbprm-fullbody.hh>
@@ -25,6 +25,8 @@
 # include <hpp/rbprm/rbprm-device.hh>
 # include <hpp/rbprm/interpolation/time-constraint-steering.hh>
 # include <hpp/rbprm/interpolation/time-constraint-helper.hh>
+# include <hpp/rbprm/interpolation/time-constraint-path.hh>
+# include <hpp/rbprm/interpolation/com-rrt-shooter.hh>
 # include <hpp/core/path.hh>
 # include <hpp/core/problem.hh>
 # include <hpp/core/config-projector.hh>
@@ -37,23 +39,23 @@ namespace hpp {
     namespace rbprm {
     namespace interpolation {
 
-    typedef TimeConstraintHelper<TimeConstraintPath,LimbRRTShooter> limb_parent_t;
-    class LimbRRTHelper : public limb_parent_t
+    typedef TimeConstraintHelper<TimeConstraintPath, ComRRTShooter> com_parent_t;
+    class ComRRTHelper : public com_parent_t
     {
     public:
-        LimbRRTHelper(RbPrmFullBodyPtr_t fullbody,
+        ComRRTHelper(RbPrmFullBodyPtr_t fullbody,
                       core::ProblemPtr_t referenceProblem,
                       core::PathPtr_t refPath):
-            limb_parent_t(fullbody,referenceProblem,refPath) {}
-        ~LimbRRTHelper(){}
+            com_parent_t(fullbody,referenceProblem,refPath) {}
+        ~ComRRTHelper(){}
         virtual void SetConstraints(const State& from, const State& to);
     };
 
-    interpolate_states           const limbRRT = &interpolateStates<LimbRRTHelper, rbprm::CIT_State>;
-    interpolate_states_from_path const limbRRTFromPath = &interpolateStatesFromPath<LimbRRTHelper>;
+    //interpolate_states           const comRRT         = &interpolateStates<ComRRTHelper, rbprm::CIT_State>;
+    interpolate_states_from_path const comRRT = &interpolateStatesFromPath<ComRRTHelper>;
     }
     }
 }
 
 
-#endif // HPP_RBPRM_LIMB_RRT_HH
+#endif // HPP_RBPRM_COM_RRT_HH

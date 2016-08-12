@@ -26,7 +26,7 @@
 # include <hpp/rbprm/rbprm-device.hh>
 # include <hpp/rbprm/interpolation/time-constraint-steering.hh>
 # include <hpp/rbprm/interpolation/time-constraint-helper.hh>
-# include <hpp/rbprm/interpolation/limb-rrt-path-validation.hh>
+# include <hpp/rbprm/interpolation/time-constraint-path-validation.hh>
 # include <hpp/core/problem.hh>
 
 # include <vector>
@@ -40,7 +40,7 @@ namespace hpp {
     template<class Helper_T>
     void SetPathValidation(Helper_T& helper)
     {
-        LimbRRTPathValidationPtr_t pathVal = LimbRRTPathValidation::create(
+        TimeConstraintPathValidationPtr_t pathVal = TimeConstraintPathValidation::create(
                     helper.fullBodyDevice_, 0.05,helper.fullBodyDevice_->configSize()-1);
         helper.rootProblem_.pathValidation(pathVal);
     }

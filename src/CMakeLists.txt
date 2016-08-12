@@ -31,13 +31,16 @@ SET(${LIBRARY_NAME}_SOURCES
         ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/time-constraint-utils.hh
         interpolation/rbprm-path-interpolation.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/rbprm-path-interpolation.hh
         interpolation/limb-rrt-shooter.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/limb-rrt-shooter.hh
+        interpolation/com-rrt-shooter.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/com-rrt-shooter.hh
         ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/limb-rrt-helper.hh
         ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/limb-rrt-helper.inl
         ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/limb-rrt.hh
         interpolation/limb-rrt.cc
-        interpolation/limb-rrt-path-validation.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/limb-rrt-path-validation.hh
+        ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/com-rrt.hh
+        interpolation/com-rrt.cc
+        interpolation/time-constraint-path-validation.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/time-constraint-path-validation.hh
         ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/time-constraint-steering.hh
-        interpolation/limb-rrt-path.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/limb-rrt-path.hh
+        interpolation/time-constraint-path.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/time-constraint-path.hh
         rbprm-fullbody.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-fullbody.hh
         rbprm-state.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-state.hh
         sampling/sample.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/sampling/sample.hh

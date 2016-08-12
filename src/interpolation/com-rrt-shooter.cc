@@ -14,56 +14,62 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-rbprm. If not, see <http://www.gnu.org/licenses/>.
 
-#include <hpp/rbprm/interpolation/limb-rrt-shooter.hh>
+#include <hpp/rbprm/interpolation/com-rrt-shooter.hh>
 #include <hpp/rbprm/rbprm-limb.hh>
 #include <hpp/rbprm/sampling/sample.hh>
+#include <hpp/model/joint.hh>
+#include <hpp/model/joint-configuration.hh>
 
 namespace hpp {
 using namespace core;
   namespace rbprm {
   namespace interpolation {
 
-    LimbRRTShooterPtr_t LimbRRTShooter::create (const core::DevicePtr_t  /*device*/,
+    ComRRTShooterPtr_t ComRRTShooter::create (const core::DevicePtr_t  device,
                                                 const hpp::core::PathPtr_t path,
                                                 const std::size_t pathDofRank,
-                                                const hpp::rbprm::RbPrmLimbPtr_t limb)
+                                                const hpp::rbprm::RbPrmLimbPtr_t /*limb*/)
     {
-        LimbRRTShooter* ptr = new LimbRRTShooter (limb, path, pathDofRank);
-        LimbRRTShooterPtr_t shPtr (ptr);
+        ComRRTShooter* ptr = new ComRRTShooter (device, path, pathDofRank);
+        ComRRTShooterPtr_t shPtr (ptr);
         ptr->init (shPtr);
         return shPtr;
     }
 
-    void LimbRRTShooter::init (const LimbRRTShooterPtr_t& self)
+    void ComRRTShooter::init (const ComRRTShooterPtr_t& self)
     {
-        ConfigurationShooter::init (self);
+        core::ConfigurationShooter::init (self);
         weak_ = self;
     }
 
-    LimbRRTShooter::LimbRRTShooter (const hpp::rbprm::RbPrmLimbPtr_t limb,
-                                    const hpp::core::PathPtr_t path,
-                                    const std::size_t pathDofRank)
+    ComRRTShooter::ComRRTShooter (const core::DevicePtr_t  device,
+                                  const hpp::core::PathPtr_t path,
+                                  const std::size_t pathDofRank)
     : core::ConfigurationShooter()
-    , limb_(limb)
     , path_(path)
     , pathDofRank_(pathDofRank)
     , configSize_(pathDofRank+1)
+    , device_(device)
     {
         // NOTHING
     }
 
-    hpp::core::ConfigurationPtr_t LimbRRTShooter::shoot () const
+    hpp::core::ConfigurationPtr_t ComRRTShooter::shoot () const
     {
+        JointVector_t jv = device_->getJointVector ();
+        ConfigurationPtr_t config (new Configuration_t (configSize_));
+        for (JointVector_t::const_iterator itJoint = jv.begin ();
+             itJoint != jv.end (); itJoint++) {
+          std::size_t rank = (*itJoint)->rankInConfiguration ();
+          (*itJoint)->configuration ()->uniformlySample (rank, *config);
+        }
         // edit path sampling dof
-        value_type a = path_->timeRange().first; value_type b = path_->timeRange().second;
         value_type u = value_type(rand()) / value_type(RAND_MAX);
-        value_type pathDofVal = (b-a)* u + a;
-        ConfigurationPtr_t config (new Configuration_t(configSize_));
-        config->head(configSize_-1) =  (*path_)(pathDofVal);
         (*config) [pathDofRank_] = u;
-        // choose random limb configuration
-        const sampling::Sample& sample = *(limb_->sampleContainer_.samples_.begin() + (rand() % (int) (limb_->sampleContainer_.samples_.size() -1)));
-        sampling::Load(sample,*config);
+        value_type a = path_->timeRange().first; value_type b = path_->timeRange().second;
+        value_type pathDofVal = (b-a)* u + a;
+        config->head(2) =  (*path_)(pathDofVal).head(2); // put it close to com
+        config->segment<4>(3) =  (*path_)(pathDofVal).segment<4>(3); // put it close to com
         return config;
     }
   }// namespace interpolation

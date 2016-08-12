@@ -20,7 +20,7 @@
 # define HPP_RBPRM_TIME_CONSTRAINT_HELPER_UTILS_HH
 
 #include <hpp/rbprm/interpolation/limb-rrt-shooter.hh>
-#include <hpp/rbprm/interpolation/limb-rrt-path-validation.hh>
+#include <hpp/rbprm/interpolation/time-constraint-path-validation.hh>
 #include <hpp/rbprm/interpolation/time-dependant.hh>
 #include <hpp/rbprm/interpolation/time-constraint-utils.hh>
 #include <hpp/core/steering-method-straight.hh>
@@ -59,16 +59,22 @@ namespace interpolation {
     }
     }
 
-    template<class Path_T>
-    void TimeConstraintHelper<Path_T>::InitConstraints()
+    template<class Path_T, class Shooter_T>
+    void TimeConstraintHelper<Path_T, Shooter_T>::InitConstraints()
     {
         core::ConstraintSetPtr_t cSet = core::ConstraintSet::create(rootProblem_.robot(),"");
         cSet->addConstraint(proj_);
         rootProblem_.constraints(cSet);
     }
 
-    template<class Path_T>
-    void TimeConstraintHelper<Path_T>::SetContactConstraints(const State& from, const State& to)
+    template<class Path_T, class Shooter_T>
+    void TimeConstraintHelper<Path_T, Shooter_T>::SetConfigShooter(const rbprm::RbPrmLimbPtr_t movingLimb)
+    {
+        rootProblem_.configurationShooter(Shooter_T::create(fullBodyDevice_, refPath_, fullBodyDevice_->configSize()-1, movingLimb));
+    }
+
+    template<class Path_T, class Shooter_T>
+    void TimeConstraintHelper<Path_T, Shooter_T>::SetContactConstraints(const State& from, const State& to)
     {
         std::vector<bool> cosntraintsR = setMaintainRotationConstraints();
         std::vector<std::string> fixed = to.fixedContacts(from);
@@ -92,6 +98,35 @@ namespace interpolation {
                                                                                   cosntraintsR)));
             }
         }
+    }
+
+    template<class Path_T, class Shooter_T>
+    PathVectorPtr_t TimeConstraintHelper<Path_T, Shooter_T>::Run(const State &from, const State &to)
+    {
+        PathVectorPtr_t res;
+        const rbprm::T_Limb& limbs = fullbody_->GetLimbs();
+        // get limbs that moved
+        std::vector<std::string> variations = to.allVariations(from, extractEffectorsName(limbs));
+        for(std::vector<std::string>::const_iterator cit = variations.begin();
+            cit != variations.end(); ++cit)
+        {
+            SetPathValidation(*this);
+            DisableUnNecessaryCollisions(rootProblem_, limbs.at(*cit));
+            SetConfigShooter(limbs.at(*cit));
+
+            ConfigurationPtr_t start = TimeConfigFromDevice(*this, from, 0.);
+            ConfigurationPtr_t end   = TimeConfigFromDevice(*this, to  , 1.);
+            rootProblem_.initConfig(start);
+            BiRRTPlannerPtr_t planner = BiRRTPlanner::create(rootProblem_);
+            ProblemTargetPtr_t target = problemTarget::GoalConfigurations::create (planner);
+            rootProblem_.target (target);
+            rootProblem_.addGoalConfig(end);
+            InitConstraints();
+
+            res = planner->solve();
+            rootProblem_.resetGoalConfigs();
+        }
+        return res;
     }
 
 
@@ -161,7 +196,7 @@ namespace interpolation {
             a = (startState+i);
             b = (startState+i+1);
             Helper_T helper(fullbody, referenceProblem,refPath);
-                                 //rootPath->extract(core::interval_t(a->first, b->first)));
+                            //refPath->extract(core::interval_t(a->first, b->first)));
             helper.SetConstraints(a->second, b->second);
             PathVectorPtr_t partialPath = helper.Run(a->second, b->second);
             if(partialPath)

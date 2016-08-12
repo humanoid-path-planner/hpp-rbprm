@@ -40,7 +40,7 @@ namespace hpp {
     /// to a RbPrmFullbody object, and creates a new instance
     /// of a problem for a clone of the associated Device.
     ///
-    template<class Path_T>
+    template<class Path_T, class Shooter_T>
     class HPP_CORE_DLLAPI TimeConstraintHelper
     {
     public:
@@ -59,7 +59,7 @@ namespace hpp {
          {
              // adding extra DOF for including time in sampling
              fullBodyDevice_->setDimensionExtraConfigSpace(fullBodyDevice_->extraConfigSpace().dimension()+1);             
-             proj_ = core::ConfigProjector::create(rootProblem_.robot(),"proj", 1, 100);
+             proj_ = core::ConfigProjector::create(rootProblem_.robot(),"proj", 1, 1000);
              rootProblem_.collisionObstacles(referenceProblem->collisionObstacles());
              steeringMethod_ = TimeConstraintSteering<Path_T>::create(&rootProblem_,fullBodyDevice_->configSize()-1);
              rootProblem_.steeringMethod(steeringMethod_);
@@ -68,9 +68,10 @@ namespace hpp {
         ~TimeConstraintHelper(){}
 
          virtual void SetConstraints(const State& from, const State& to) = 0;
-         virtual core::PathVectorPtr_t Run(const State& from, const State& to)=0;
+         void SetConfigShooter(const rbprm::RbPrmLimbPtr_t movingLimb);
          void InitConstraints();
          void SetContactConstraints(const State& from, const State& to);
+         core::PathVectorPtr_t Run(const State& from, const State& to);
 
     public:
          RbPrmFullBodyPtr_t fullbody_;
@@ -147,6 +148,11 @@ namespace hpp {
                                                              const CIT_StateFrame& endState,
                                                              const std::size_t numOptimizations = 10);
 
+    typedef core::PathPtr_t (*interpolate_states)(rbprm::RbPrmFullBodyPtr_t, core::ProblemPtr_t,const rbprm::CIT_State&,
+                                                       const rbprm::CIT_State&,const std::size_t);
+
+    typedef core::PathPtr_t (*interpolate_states_from_path)(rbprm::RbPrmFullBodyPtr_t, core::ProblemPtr_t, const core::PathPtr_t,
+                                                       const rbprm::CIT_StateFrame&,const rbprm::CIT_StateFrame&,const std::size_t);
     } // namespace interpolation
     } // namespace rbprm
   } // namespace hpp

@@ -16,7 +16,7 @@
 // hpp-core  If not, see
 // <http://www.gnu.org/licenses/>.
 
-#include <hpp/rbprm/interpolation/limb-rrt-path.hh>
+#include <hpp/rbprm/interpolation/time-constraint-path.hh>
 #include <hpp/model/device.hh>
 #include <hpp/model/configuration.hh>
 #include <hpp/core/config-projector.hh>
@@ -27,7 +27,7 @@ using namespace hpp::core;
 namespace hpp {
   namespace rbprm {
   namespace interpolation{
-    LimbRRTPath::LimbRRTPath (const DevicePtr_t& device,
+    TimeConstraintPath::TimeConstraintPath (const DevicePtr_t& device,
                               ConfigurationIn_t init,
                               ConfigurationIn_t end,
                               value_type length,
@@ -44,7 +44,7 @@ namespace hpp {
         assert (!constraints ());
       }
 
-    LimbRRTPath::LimbRRTPath (const DevicePtr_t& device,
+    TimeConstraintPath::TimeConstraintPath (const DevicePtr_t& device,
 				ConfigurationIn_t init,
                 ConfigurationIn_t end,
                 value_type length,
@@ -60,13 +60,13 @@ namespace hpp {
         assert (length >= 0);
     }
 
-    LimbRRTPath::LimbRRTPath (const LimbRRTPath& path) :
+    TimeConstraintPath::TimeConstraintPath (const TimeConstraintPath& path) :
         parent_t (path), device_ (path.device_), initial_ (path.initial_),
         end_ (path.end_), pathDofRank_(path.pathDofRank_), tds_(path.tds_)
     {
     }
 
-    LimbRRTPath::LimbRRTPath (const LimbRRTPath& path,
+    TimeConstraintPath::TimeConstraintPath (const TimeConstraintPath& path,
                 const ConstraintSetPtr_t& constraints) :
         parent_t (path, constraints), device_ (path.device_),
         initial_ (path.initial_), end_ (path.end_), pathDofRank_(path.pathDofRank_), tds_(path.tds_)
@@ -84,7 +84,7 @@ namespace hpp {
         return (b-a)* normalizedValue + a;
     }
 
-    void LimbRRTPath::updateConstraints(core::ConfigurationOut_t configuration) const
+    void TimeConstraintPath::updateConstraints(core::ConfigurationOut_t configuration) const
     {
         const value_type y = configuration[pathDofRank_];
         for (CIT_TimeDependant cit = tds_.begin ();
@@ -102,7 +102,7 @@ namespace hpp {
         }*/
     }
 
-    bool LimbRRTPath::impl_compute (ConfigurationOut_t result,
+    bool TimeConstraintPath::impl_compute (ConfigurationOut_t result,
 				     value_type param) const
     {
         if (param == timeRange ().first || timeRange ().second == 0)
@@ -133,7 +133,7 @@ namespace hpp {
         return true;
     }
 
-    PathPtr_t LimbRRTPath::extract (const interval_t& subInterval) const
+    PathPtr_t TimeConstraintPath::extract (const interval_t& subInterval) const
       throw (projection_error)
     {
         // Length is assumed to be proportional to interval range
@@ -148,17 +148,17 @@ namespace hpp {
         if (!success) throw projection_error
                 ("Failed to apply constraints in StraightPath::extract");
         q2[pathDofRank_] = ComputeExtraDofValue(pathDofRank_,initial_, end_, (subInterval.second - timeRange().first)  / (timeRange().second - timeRange().first));
-        PathPtr_t result = LimbRRTPath::create (device_, q1, q2, l,
+        PathPtr_t result = TimeConstraintPath::create (device_, q1, q2, l,
                            constraints (), pathDofRank_, tds_);
         return result;
     }
 
-    DevicePtr_t LimbRRTPath::device () const
+    DevicePtr_t TimeConstraintPath::device () const
     {
       return device_;
     }
 
-    void LimbRRTPath::checkPath () const
+    void TimeConstraintPath::checkPath () const
     {
       Configuration_t initc = initial();
       Configuration_t endc = end();

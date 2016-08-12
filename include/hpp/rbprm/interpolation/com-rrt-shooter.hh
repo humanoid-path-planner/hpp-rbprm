@@ -16,12 +16,11 @@
 // hpp-core  If not, see
 // <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_RBPRM_LIMB_RRT_SHOOTER_HH
-# define HPP_RBPRM_LIMB_RRT_SHOOTER_HH
+#ifndef HPP_RBPRM_COM_RRT_SHOOTER_HH
+# define HPP_RBPRM_COM_RRT_SHOOTER_HH
 
 # include <hpp/rbprm/config.hh>
 # include <hpp/core/configuration-shooter.hh>
-# include <hpp/core/basic-configuration-shooter.hh>
 # include <hpp/rbprm/rbprm-fullbody.hh>
 # include <hpp/core/path.hh>
 # include <hpp/model/device.hh>
@@ -32,16 +31,16 @@
 namespace hpp {
     namespace rbprm {
     namespace interpolation {
-    HPP_PREDEF_CLASS (LimbRRTShooter);
-    typedef boost::shared_ptr <LimbRRTShooter>
-    LimbRRTShooterPtr_t;
+    HPP_PREDEF_CLASS (ComRRTShooter);
+    typedef boost::shared_ptr <ComRRTShooter>
+    ComRRTShooterPtr_t;
 
 /// \addtogroup configuration_sampling
 /// \{
 /// Configuration shooter for the limb RRT.
 /// will generate a configuration for a given limb, and sample
 /// a root position extracted from a normalized path
-    class HPP_RBPRM_DLLAPI LimbRRTShooter : public core::ConfigurationShooter{
+    class HPP_RBPRM_DLLAPI ComRRTShooter : public core::ConfigurationShooter{
     ///
     public:
         /// Creates an instance of LimbRRTShooter for interpolating a limb motion along a root path.
@@ -50,33 +49,33 @@ namespace hpp {
         /// the root joint is necessarily a free flyer
         /// \param path A constrained path for the root of the limb
         /// \return a pointer to an instance of LimbRRTShooter
-        static HPP_RBPRM_DLLAPI LimbRRTShooterPtr_t create (const core::DevicePtr_t  device,
-                                                            const hpp::core::PathPtr_t path,
+        static HPP_RBPRM_DLLAPI ComRRTShooterPtr_t create ( const core::DevicePtr_t  device,
+                                                            const hpp::core::PathPtr_t comPath,
                                                             const std::size_t pathDofRank,
                                                             const hpp::rbprm::RbPrmLimbPtr_t limb);
 
         virtual core::ConfigurationPtr_t shoot () const;
 
     public:
-        const hpp::rbprm::RbPrmLimbPtr_t limb_;
         const hpp::core::PathPtr_t path_;
         const std::size_t pathDofRank_;
         const std::size_t configSize_;
+        const core::DevicePtr_t device_;
 
     private:
-        LimbRRTShooterWkPtr_t weak_;
+        ComRRTShooterWkPtr_t weak_;
 
 
     protected:
-        LimbRRTShooter (const hpp::rbprm::RbPrmLimbPtr_t limb,
-                        const hpp::core::PathPtr_t path,
+        ComRRTShooter ( const core::DevicePtr_t  device,
+                        const hpp::core::PathPtr_t comPath,
                         const std::size_t pathDofRank);
 
-        void init (const LimbRRTShooterPtr_t& self);
-    }; // class LimbRRTShooter
+        void init (const ComRRTShooterPtr_t& self);
+    }; // class ComRRTShooter
 /// \}
     } // namespace interpolation
     } // namespace rbprm
 } // namespace hpp
 
-#endif // HPP_RBPRM_LIMB_RRT_SHOOTER_HH
+#endif // HPP_RBPRM_COM_RRT_SHOOTER_HH

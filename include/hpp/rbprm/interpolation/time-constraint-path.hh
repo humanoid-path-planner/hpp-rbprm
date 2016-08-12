@@ -16,8 +16,8 @@
 // hpp-core  If not, see
 // <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_RBPRM_LIMBRRT_PATH_HH
-# define HPP_RBPRM_LIMBRRT_PATH_HH
+#ifndef HPP_RBPRM_TIMECONSTRAINT_PATH_HH
+# define HPP_RBPRM_TIMECONSTRAINT_PATH_HH
 
 # include <hpp/core/fwd.hh>
 # include <hpp/core/config.hh>
@@ -27,9 +27,9 @@
 namespace hpp {
 namespace rbprm {
 namespace interpolation {
-    HPP_PREDEF_CLASS (LimbRRTPath);
-    typedef boost::shared_ptr <LimbRRTPath>
-    LimbRRTPathPtr_t;
+    HPP_PREDEF_CLASS (TimeConstraintPath);
+    typedef boost::shared_ptr <TimeConstraintPath>
+    TimeConstraintPathPtr_t;
     /// Linear interpolation between two configurations
     ///
     /// Degrees of freedom are interpolated depending on the type of
@@ -39,26 +39,26 @@ namespace interpolation {
     ///       joints, and translation part of freeflyer joints,
     ///   \li angular interpolation for unbounded rotation joints,
     ///   \li constant angular velocity for SO(3) part of freeflyer joints.
-    class HPP_CORE_DLLAPI LimbRRTPath : public core::Path
+    class HPP_CORE_DLLAPI TimeConstraintPath : public core::Path
     {
     public:
       typedef Path parent_t;
       /// Destructor
-      virtual ~LimbRRTPath () throw () {}
+      virtual ~TimeConstraintPath () throw () {}
 
       /// Create instance and return shared pointer
       /// \param device Robot corresponding to configurations
       /// \param init, end Start and end configurations of the path
       /// \param length Distance between the configurations.
-      static LimbRRTPathPtr_t create (const core::DevicePtr_t& device,
+      static TimeConstraintPathPtr_t create (const core::DevicePtr_t& device,
                                       core::ConfigurationIn_t init,
                                       core::ConfigurationIn_t end,
                                       core::value_type length,
                                       const std::size_t pathDofRank,
                                       const T_TimeDependant& tds)
       {
-    LimbRRTPath* ptr = new LimbRRTPath (device, init, end, length, pathDofRank,tds);
-    LimbRRTPathPtr_t shPtr (ptr);
+    TimeConstraintPath* ptr = new TimeConstraintPath (device, init, end, length, pathDofRank,tds);
+    TimeConstraintPathPtr_t shPtr (ptr);
     ptr->init (shPtr);
         ptr->checkPath ();
     return shPtr;
@@ -69,7 +69,7 @@ namespace interpolation {
       /// \param init, end Start and end configurations of the path
       /// \param length Distance between the configurations.
       /// \param constraints the path is subject to
-      static LimbRRTPathPtr_t create (const core::DevicePtr_t& device,
+      static TimeConstraintPathPtr_t create (const core::DevicePtr_t& device,
                                       core::ConfigurationIn_t init,
                                       core::ConfigurationIn_t end,
                                       core::value_type length,
@@ -77,9 +77,9 @@ namespace interpolation {
                                       const std::size_t pathDofRank,
                                       const T_TimeDependant& tds)
       {
-    LimbRRTPath* ptr = new LimbRRTPath (device, init, end,
+    TimeConstraintPath* ptr = new TimeConstraintPath (device, init, end,
                           length, constraints, pathDofRank,tds);
-    LimbRRTPathPtr_t shPtr (ptr);
+    TimeConstraintPathPtr_t shPtr (ptr);
     ptr->init (shPtr);
         ptr->checkPath ();
     return shPtr;
@@ -87,10 +87,10 @@ namespace interpolation {
 
       /// Create copy and return shared pointer
       /// \param path path to copy
-      static LimbRRTPathPtr_t createCopy (const LimbRRTPathPtr_t& path)
+      static TimeConstraintPathPtr_t createCopy (const TimeConstraintPathPtr_t& path)
       {
-    LimbRRTPath* ptr = new LimbRRTPath (*path);
-    LimbRRTPathPtr_t shPtr (ptr);
+    TimeConstraintPath* ptr = new TimeConstraintPath (*path);
+    TimeConstraintPathPtr_t shPtr (ptr);
     ptr->initCopy (shPtr);
         ptr->checkPath ();
     return shPtr;
@@ -99,11 +99,11 @@ namespace interpolation {
       /// Create copy and return shared pointer
       /// \param path path to copy
       /// \param constraints the path is subject to
-      static LimbRRTPathPtr_t createCopy
-    (const LimbRRTPathPtr_t& path, const core::ConstraintSetPtr_t& constraints)
+      static TimeConstraintPathPtr_t createCopy
+    (const TimeConstraintPathPtr_t& path, const core::ConstraintSetPtr_t& constraints)
       {
-    LimbRRTPath* ptr = new LimbRRTPath (*path, constraints);
-    LimbRRTPathPtr_t shPtr (ptr);
+    TimeConstraintPath* ptr = new TimeConstraintPath (*path, constraints);
+    TimeConstraintPathPtr_t shPtr (ptr);
     ptr->initCopy (shPtr);
         ptr->checkPath ();
     return shPtr;
@@ -111,7 +111,7 @@ namespace interpolation {
 
       /// Return a shared pointer to this
       ///
-      /// As LimbRRTPathP are immutable, and refered to by shared pointers,
+      /// As TimeConstraintPathP are immutable, and refered to by shared pointers,
       /// they do not need to be copied.
       virtual core::PathPtr_t copy () const
       {
@@ -179,7 +179,7 @@ namespace interpolation {
       /// Print path in a stream
       virtual std::ostream& print (std::ostream &os) const
       {
-    os << "LimbRRTPath:" << std::endl;
+    os << "TimeConstraintPath:" << std::endl;
     os << "interval: [ " << timeRange ().first << ", "
        << timeRange ().second << " ]" << std::endl;
     os << "initial configuration: " << initial_.transpose () << std::endl;
@@ -187,32 +187,32 @@ namespace interpolation {
     return os;
       }
       /// Constructor
-      LimbRRTPath (const core::DevicePtr_t& robot, core::ConfigurationIn_t init,
+      TimeConstraintPath (const core::DevicePtr_t& robot, core::ConfigurationIn_t init,
             core::ConfigurationIn_t end, core::value_type length,
                    const std::size_t pathDofRank,
                    const T_TimeDependant& tds);
 
       /// Constructor with constraints
-      LimbRRTPath (const core::DevicePtr_t& robot, core::ConfigurationIn_t init,
+      TimeConstraintPath (const core::DevicePtr_t& robot, core::ConfigurationIn_t init,
             core::ConfigurationIn_t end, core::value_type length,
             core::ConstraintSetPtr_t constraints, const std::size_t pathDofRank,
                    const T_TimeDependant& tds);
 
       /// Copy constructor
-      LimbRRTPath (const LimbRRTPath& path);
+      TimeConstraintPath (const TimeConstraintPath& path);
 
       /// Copy constructor with constraints
-      LimbRRTPath (const LimbRRTPath& path,
+      TimeConstraintPath (const TimeConstraintPath& path,
             const core::ConstraintSetPtr_t& constraints);
 
-      void init (LimbRRTPathPtr_t self)
+      void init (TimeConstraintPathPtr_t self)
       {
     parent_t::init (self);
     weak_ = self;
         checkPath ();
       }
 
-      void initCopy (LimbRRTPathPtr_t self)
+      void initCopy (TimeConstraintPathPtr_t self)
       {
     parent_t::initCopy (self);
     weak_ = self;
@@ -234,9 +234,9 @@ namespace interpolation {
       const T_TimeDependant tds_;
 
     private:
-      LimbRRTPathWkPtr_t weak_;
-    }; // class LimbRRTPath
+      TimeConstraintPathWkPtr_t weak_;
+    }; // class TimeConstraintPath
 } // namespace interpolation
 } // namespace rbprm
 } // namespace hpp
-#endif // HPP_RBPRM_LIMBRRT_PATH_HH
+#endif // HPP_RBPRM_TIMECONSTRAINT_PATH_HH

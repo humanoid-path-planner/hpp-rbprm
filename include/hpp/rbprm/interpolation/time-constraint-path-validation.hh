@@ -16,18 +16,18 @@
 // hpp-core  If not, see
 // <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_RBPRM_LIMB_RRT_PATH_VALIDATION_HH
-# define HPP_RBPRM_LIMB_RRT_PATH_VALIDATION_HH
+#ifndef HPP_RBPRM_TIME_CONSTRAINT_PATH_VALIDATION_HH
+# define HPP_RBPRM_TIME_CONSTRAINT_PATH_VALIDATION_HH
 
 # include <hpp/core/discretized-path-validation.hh>
 
 namespace hpp {
   namespace rbprm {
   namespace interpolation {
-    HPP_PREDEF_CLASS(LimbRRTPathValidation);
+    HPP_PREDEF_CLASS(TimeConstraintPathValidation);
 
-    class LimbRRTPathValidation;
-    typedef boost::shared_ptr <LimbRRTPathValidation> LimbRRTPathValidationPtr_t;
+    class TimeConstraintPathValidation;
+    typedef boost::shared_ptr <TimeConstraintPathValidation> TimeConstraintPathValidationPtr_t;
     /// \addtogroup validation
     /// \{
 
@@ -35,10 +35,10 @@ namespace hpp {
     ///
     /// Apply some configuration validation algorithms at discretized values
     /// of the path parameter.
-    class HPP_CORE_DLLAPI LimbRRTPathValidation : public core::DiscretizedPathValidation
+    class HPP_CORE_DLLAPI TimeConstraintPathValidation : public core::DiscretizedPathValidation
     {
     public:
-      static LimbRRTPathValidationPtr_t
+      static TimeConstraintPathValidationPtr_t
     create (const model::DevicePtr_t& robot, const model::value_type& stepSize, const std::size_t pathDofRank);
 
       /// Compute the largest valid interval starting from the path beginning
@@ -62,7 +62,7 @@ namespace hpp {
       const std::size_t pathDofRank_;
 
     protected:
-      LimbRRTPathValidation
+      TimeConstraintPathValidation
       (const model::DevicePtr_t& robot, const model::value_type& stepSize, const std::size_t pathDofRank);
     }; // class DiscretizedPathValidation
     /// \}
@@ -70,4 +70,4 @@ namespace hpp {
   } // namespace rbprm
 } // namespace hpp
 
-#endif // HPP_RBPRM_LIMB_RRT_PATH_VALIDATION_HH
+#endif // HPP_RBPRM_TIME_CONSTRAINT_PATH_VALIDATION_HH

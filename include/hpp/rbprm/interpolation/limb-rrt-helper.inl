@@ -20,7 +20,7 @@
 # define HPP_RBPRM_LIMB_RRT_HELPER_UTILS_HH
 
 #include <hpp/rbprm/interpolation/limb-rrt-shooter.hh>
-#include <hpp/rbprm/interpolation/limb-rrt-path-validation.hh>
+#include <hpp/rbprm/interpolation/time-constraint-path-validation.hh>
 #include <hpp/rbprm/interpolation/time-dependant.hh>
 #include <hpp/core/steering-method-straight.hh>
 #include <hpp/core/problem-target/goal-configurations.hh>
@@ -229,7 +229,7 @@ namespace interpolation {
     template<class Path_T>
     void SetPathValidation(TimeConstraintHelper<Path_T>& helper)
     {
-        LimbRRTPathValidationPtr_t pathVal = LimbRRTPathValidation::create(
+        TimeConstraintPathValidationPtr_t pathVal = TimeConstraintPathValidation::create(
                     helper.fullBodyDevice_, 0.05,helper.fullBodyDevice_->configSize()-1);
         helper.rootProblem_.pathValidation(pathVal);
     }
