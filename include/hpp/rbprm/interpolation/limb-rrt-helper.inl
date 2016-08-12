@@ -55,7 +55,7 @@ namespace interpolation {
         {
             const interval_t& tR (comPath_->timeRange());
             constraints::value_type unNormalized = (tR.second-tR.first)* normalized_input + tR.first;
-            output = comPath_->operator ()(unNormalized).head(3);
+            output = comPath_->operator ()(normalized_input).head(3);
         }
         const core::PathPtr_t comPath_;
         const model::JointPtr_t dummyJoint_;
@@ -87,7 +87,8 @@ namespace interpolation {
     {
         // TODO should we really disable collisions for other bodies ?
         tools::RemoveNonLimbCollisionRec<core::Problem>(problem.robot()->rootJoint(),
-                                                        limb->limb_->name(),
+                                                        "all",
+                                                        //limb->limb_->name(),
                                                         problem.collisionObstacles(),problem);
 
         if(limb->disableEndEffectorCollision_)
@@ -99,7 +100,7 @@ namespace interpolation {
     }
 
     template<class Path_T>
-    ConfigurationPtr_t limbRRTConfigFromDevice(const LimbRRTHelper<Path_T>& helper, const State& state, const double time)
+    ConfigurationPtr_t TimeConfigFromDevice(const TimeConstraintHelper<Path_T>& helper, const State& state, const double time)
     {
         Configuration_t config(helper.fullBodyDevice_->currentConfiguration());
         config.head(state.configuration_.rows()) = state.configuration_;
@@ -108,7 +109,7 @@ namespace interpolation {
     }
 
     template<class Path_T>
-    void SetConfigShooter(LimbRRTHelper<Path_T>& helper, RbPrmLimbPtr_t limb, core::PathPtr_t& rootPath)
+    void SetConfigShooter(TimeConstraintHelper<Path_T>& helper, RbPrmLimbPtr_t limb, core::PathPtr_t& rootPath)
     {
         ConfigurationShooterPtr_t limbRRTShooter = LimbRRTShooter::create(limb, rootPath,
                                                                           helper.fullBodyDevice_->configSize()-1);
@@ -139,7 +140,7 @@ namespace interpolation {
     typedef constraints::SymbolicFunction<PointCom>::Ptr_t PointComFunctionPtr_t;
 
     template<class Path_T>
-    inline void CreateComConstraint(LimbRRTHelper<Path_T>& helper)
+    inline void CreateComConstraint(TimeConstraintHelper<Path_T>& helper)
     {
         model::DevicePtr_t device = helper.rootProblem_.robot();
         core::ConfigProjectorPtr_t& proj = helper.proj_;
@@ -162,27 +163,27 @@ namespace interpolation {
         // Create the time varying equation for COM
         model::CenterOfMassComputationPtr_t comComp = model::CenterOfMassComputation::
           create (device);
-        //comComp->add (robot_->waist()->parentJoint ());
+        comComp->add (device->rootJoint());
         comComp->computeMass ();
         PointComFunctionPtr_t comFunc = PointComFunction::create ("COM-walkgen",
             device, PointCom::create (comComp));
         NumericalConstraintPtr_t comEq = NumericalConstraint::create (comFunc, equals);
-        //TimeDependant comEqTD (comEq, boost::shared_ptr<ComRightSide>(new ComRightSide(helper.rootPath_,j)));
-        proj->add(nm);
-        helper.steeringMethod_->tds_.push_back(TimeDependant(comEq, boost::shared_ptr<ComRightSide>(new ComRightSide(helper.rootPath_,j))));
-        /***************/
+        //TimeDependant comEqTD (comEq, boost::shared_ptr<ComRightSide>(new ComRightSide(helper.refPath_,j)));
+        proj->add(comEq);
+        helper.steeringMethod_->tds_.push_back(TimeDependant(comEq, boost::shared_ptr<ComRightSide>(new ComRightSide(helper.refPath_,j))));
+       /***************/
         //proj->add(nm);
-        //helper.steeringMethod_->tds_.push_back(TimeDependant(nm,boost::shared_ptr<ComRightSide>(new ComRightSide(helper.rootPath_,j))));
+        //helper.steeringMethod_->tds_.push_back(TimeDependant(nm,boost::shared_ptr<ComRightSide>(new ComRightSide(helper.refPath_,j))));
     }
 
     template<class Path_T>
-    inline void CreateRootConstraint(LimbRRTHelper<Path_T>& helper)
+    inline void CreateRootConstraint(TimeConstraintHelper<Path_T>& helper)
     {
         // TODO
     }
 
     template<class Path_T>
-    inline void initializeConstraints(LimbRRTHelper<Path_T>& helper)
+    inline void initializeConstraints(TimeConstraintHelper<Path_T>& helper)
     {
         core::Problem& problem = helper.rootProblem_;
         core::ConstraintSetPtr_t cSet = core::ConstraintSet::create(problem.robot(),"");
@@ -191,13 +192,15 @@ namespace interpolation {
     }
 
     template<class Path_T>
-    void AddContactConstraints(LimbRRTHelper<Path_T>& helper, const State& from, const State& to)
+    void AddContactConstraints(TimeConstraintHelper<Path_T>& helper, const State& from, const State& to)
     {
         std::vector<bool> cosntraintsR = setMaintainRotationConstraints();
         std::vector<std::string> fixed = to.fixedContacts(from);
         core::Problem& problem = helper.rootProblem_;
         model::DevicePtr_t device = problem.robot();
         core::ConfigProjectorPtr_t& proj = helper.proj_;
+
+        std::cout << "wtf !!!!!!!!!!!!!!!!!! " << std::endl;
         for(std::vector<std::string>::const_iterator cit = fixed.begin();
             cit != fixed.end(); ++cit)
         {
@@ -205,6 +208,7 @@ namespace interpolation {
             const fcl::Vec3f& ppos  = from.contactPositions_.at(*cit);
             const fcl::Matrix3f& rotation = from.contactRotation_.at(*cit);
             JointPtr_t effectorJoint = device->getJointByName(limb->effector_->name());
+            std::cout << "wtf " << std::endl;
             proj->add(core::NumericalConstraint::create (
                                     constraints::deprecated::Position::create("",device,
                                                                   effectorJoint,fcl::Vec3f(0,0,0), ppos)));
@@ -223,7 +227,7 @@ namespace interpolation {
     }
 
     template<class Path_T>
-    void SetPathValidation(LimbRRTHelper<Path_T>& helper)
+    void SetPathValidation(TimeConstraintHelper<Path_T>& helper)
     {
         LimbRRTPathValidationPtr_t pathVal = LimbRRTPathValidation::create(
                     helper.fullBodyDevice_, 0.05,helper.fullBodyDevice_->configSize()-1);
@@ -242,10 +246,10 @@ namespace interpolation {
     }
 
     template<class Path_T>
-    PathVectorPtr_t interpolateStates(LimbRRTHelper<Path_T> &helper, const State& from, const State& to)
+    PathVectorPtr_t interpolateStates(TimeConstraintHelper<Path_T> &helper, const State& from, const State& to)
     {
         PathVectorPtr_t res;
-        core::PathPtr_t rootPath = helper.rootPath_;
+        core::PathPtr_t rootPath = helper.refPath_;
         const rbprm::T_Limb& limbs = helper.fullbody_->GetLimbs();
         // get limbs that moved
         std::vector<std::string> variations = to.allVariations(from, extractEffectorsName(limbs));
@@ -256,8 +260,39 @@ namespace interpolation {
             DisableUnNecessaryCollisions(helper.rootProblem_, limbs.at(*cit));
             SetConfigShooter(helper,limbs.at(*cit),rootPath);
 
-            ConfigurationPtr_t start = limbRRTConfigFromDevice(helper, from, 0.);
-            ConfigurationPtr_t end   = limbRRTConfigFromDevice(helper, to  , 1.);
+            ConfigurationPtr_t start = TimeConfigFromDevice(helper, from, 0.);
+            ConfigurationPtr_t end   = TimeConfigFromDevice(helper, to  , 1.);
+            helper.rootProblem_.initConfig(start);
+            BiRRTPlannerPtr_t planner = BiRRTPlanner::create(helper.rootProblem_);
+            ProblemTargetPtr_t target = problemTarget::GoalConfigurations::create (planner);
+            helper.rootProblem_.target (target);
+            helper.rootProblem_.addGoalConfig(end);
+            AddContactConstraints(helper, from, to);
+            initializeConstraints(helper);
+
+            res = planner->solve();
+            helper.rootProblem_.resetGoalConfigs();
+        }
+        return res;
+    }
+
+    template<class Path_T>
+    PathVectorPtr_t interpolateStatesCom(TimeConstraintHelper<Path_T> &helper, const State& from, const State& to)
+    {
+        PathVectorPtr_t res;
+        core::PathPtr_t rootPath = helper.refPath_;
+        const rbprm::T_Limb& limbs = helper.fullbody_->GetLimbs();
+        // get limbs that moved
+        std::vector<std::string> variations = to.allVariations(from, extractEffectorsName(limbs));
+        for(std::vector<std::string>::const_iterator cit = variations.begin();
+            cit != variations.end(); ++cit)
+        {
+            SetPathValidation(helper);
+            DisableUnNecessaryCollisions(helper.rootProblem_, limbs.at(*cit));
+            SetConfigShooter(helper,limbs.at(*cit),rootPath);
+
+            ConfigurationPtr_t start = TimeConfigFromDevice(helper, from, 0.);
+            ConfigurationPtr_t end   = TimeConfigFromDevice(helper, to  , 1.);
             helper.rootProblem_.initConfig(start);
             BiRRTPlannerPtr_t planner = BiRRTPlanner::create(helper.rootProblem_);
             ProblemTargetPtr_t target = problemTarget::GoalConfigurations::create (planner);
@@ -275,7 +310,7 @@ namespace interpolation {
     namespace
     {
         template<class Path_T>
-        PathVectorPtr_t optimize(LimbRRTHelper<Path_T>& helper, PathVectorPtr_t partialPath, const std::size_t numOptimizations)
+        PathVectorPtr_t optimize(TimeConstraintHelper<Path_T>& helper, PathVectorPtr_t partialPath, const std::size_t numOptimizations)
         {
             core::RandomShortcutPtr_t rs = core::RandomShortcut::create(helper.rootProblem_);
             for(std::size_t j=0; j<numOptimizations;++j)
@@ -337,7 +372,7 @@ namespace interpolation {
             CIT_StateFrame a, b;
             a = (startState+i);
             b = (startState+i+1);
-            LimbRRTHelper<Path_T> helper(fullbody, referenceProblem,rootPath);
+            TimeConstraintHelper<Path_T> helper(fullbody, referenceProblem,rootPath);
                                  //rootPath->extract(core::interval_t(a->first, b->first)));
             PathVectorPtr_t partialPath = interpolateStates(helper, a->second, b->second);
             if(partialPath)
@@ -370,9 +405,9 @@ namespace interpolation {
             CIT_StateFrame a, b;
             a = (startState+i);
             b = (startState+i+1);
-            LimbRRTHelper<Path_T> helper(fullbody, referenceProblem,rootPath);
+            TimeConstraintHelper<Path_T> helper(fullbody, referenceProblem,rootPath);
                                  //rootPath->extract(core::interval_t(a->first, b->first)));
-            //CreateComConstraint<Path_T>(helper);
+            CreateComConstraint<Path_T>(helper);
             PathVectorPtr_t partialPath = interpolateStates(helper, a->second, b->second);
             if(partialPath)
             {
@@ -404,7 +439,7 @@ namespace interpolation {
             StateConstIterator a, b;
             a = (startState+i);
             b = (startState+i+1);
-            LimbRRTHelper<Path_T> helper(fullbody, referenceProblem, generateRootPath(*referenceProblem, *a, *b));
+            TimeConstraintHelper<Path_T> helper(fullbody, referenceProblem, generateRootPath(*referenceProblem, *a, *b));
             PathVectorPtr_t partialPath = interpolateStates(helper, *a, *b);
             if(partialPath)
             {
