@@ -68,8 +68,6 @@ SET(${PROJECT_NAME}_HEADERS
     include/hpp/rbprm/interpolation/time-constraint-helper.hh
     include/hpp/rbprm/interpolation/time-constraint-helper.inl
     include/hpp/rbprm/interpolation/time-constraint-steering.hh
-    include/hpp/rbprm/interpolation/limb-rrt-helper.hh
-    include/hpp/rbprm/interpolation/limb-rrt-helper.inl
     include/hpp/rbprm/interpolation/limb-rrt.hh
     include/hpp/rbprm/interpolation/com-rrt.hh
     include/hpp/rbprm/interpolation/com-rrt-shooter.hh

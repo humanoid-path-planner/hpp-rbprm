@@ -32,8 +32,6 @@ SET(${LIBRARY_NAME}_SOURCES
         interpolation/rbprm-path-interpolation.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/rbprm-path-interpolation.hh
         interpolation/limb-rrt-shooter.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/limb-rrt-shooter.hh
         interpolation/com-rrt-shooter.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/com-rrt-shooter.hh
-        ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/limb-rrt-helper.hh
-        ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/limb-rrt-helper.inl
         ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/limb-rrt.hh
         interpolation/limb-rrt.cc
         ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/com-rrt.hh
