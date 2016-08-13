@@ -39,16 +39,12 @@ namespace hpp {
     namespace rbprm {
     namespace interpolation {
 
-    typedef TimeConstraintHelper<TimeConstraintPath, ComRRTShooter> com_parent_t;
-    class ComRRTHelper : public com_parent_t
+    struct SetComRRTConstraints;
+
+    typedef TimeConstraintHelper<TimeConstraintPath,ComRRTShooter, SetComRRTConstraints> ComRRTHelper;
+    struct SetComRRTConstraints
     {
-    public:
-        ComRRTHelper(RbPrmFullBodyPtr_t fullbody,
-                      core::ProblemPtr_t referenceProblem,
-                      core::PathPtr_t refPath):
-            com_parent_t(fullbody,referenceProblem,refPath) {}
-        ~ComRRTHelper(){}
-        virtual void SetConstraints(const State& from, const State& to);
+        void operator ()(ComRRTHelper& helper, const State& from, const State& to);
     };
 
     //interpolate_states           const comRRT         = &interpolateStates<ComRRTHelper, rbprm::CIT_State>;

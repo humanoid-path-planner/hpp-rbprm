@@ -59,22 +59,22 @@ namespace interpolation {
     }
     }
 
-    template<class Path_T, class Shooter_T>
-    void TimeConstraintHelper<Path_T, Shooter_T>::InitConstraints()
+    template<class Path_T, class Shooter_T, typename SetConstraints_T>
+    void TimeConstraintHelper<Path_T, Shooter_T, SetConstraints_T>::InitConstraints()
     {
         core::ConstraintSetPtr_t cSet = core::ConstraintSet::create(rootProblem_.robot(),"");
         cSet->addConstraint(proj_);
         rootProblem_.constraints(cSet);
     }
 
-    template<class Path_T, class Shooter_T>
-    void TimeConstraintHelper<Path_T, Shooter_T>::SetConfigShooter(const rbprm::RbPrmLimbPtr_t movingLimb)
+    template<class Path_T, class Shooter_T, typename SetConstraints_T>
+    void TimeConstraintHelper<Path_T, Shooter_T, SetConstraints_T>::SetConfigShooter(const rbprm::RbPrmLimbPtr_t movingLimb)
     {
         rootProblem_.configurationShooter(Shooter_T::create(fullBodyDevice_, refPath_, fullBodyDevice_->configSize()-1, movingLimb));
     }
 
-    template<class Path_T, class Shooter_T>
-    void TimeConstraintHelper<Path_T, Shooter_T>::SetContactConstraints(const State& from, const State& to)
+    template<class Path_T, class Shooter_T, typename SetConstraints_T>
+    void TimeConstraintHelper<Path_T, Shooter_T, SetConstraints_T>::SetContactConstraints(const State& from, const State& to)
     {
         std::vector<bool> cosntraintsR = setMaintainRotationConstraints();
         std::vector<std::string> fixed = to.fixedContacts(from);
@@ -100,8 +100,8 @@ namespace interpolation {
         }
     }
 
-    template<class Path_T, class Shooter_T>
-    PathVectorPtr_t TimeConstraintHelper<Path_T, Shooter_T>::Run(const State &from, const State &to)
+    template<class Path_T, class Shooter_T, typename SetConstraints_T>
+    PathVectorPtr_t TimeConstraintHelper<Path_T, Shooter_T, SetConstraints_T>::Run(const State &from, const State &to)
     {
         PathVectorPtr_t res;
         const rbprm::T_Limb& limbs = fullbody_->GetLimbs();

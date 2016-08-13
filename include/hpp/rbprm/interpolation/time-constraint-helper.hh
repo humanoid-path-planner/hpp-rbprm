@@ -40,7 +40,7 @@ namespace hpp {
     /// to a RbPrmFullbody object, and creates a new instance
     /// of a problem for a clone of the associated Device.
     ///
-    template<class Path_T, class Shooter_T>
+    template<class Path_T, class Shooter_T, typename SetConstraints_T>
     class HPP_CORE_DLLAPI TimeConstraintHelper
     {
     public:
@@ -56,10 +56,11 @@ namespace hpp {
              , fullBodyDevice_(fullbody->device_->clone())
              , rootProblem_(fullBodyDevice_)
              , refPath_(refPath)
+             , setConstraintsFunction_()
          {
              // adding extra DOF for including time in sampling
              fullBodyDevice_->setDimensionExtraConfigSpace(fullBodyDevice_->extraConfigSpace().dimension()+1);             
-             proj_ = core::ConfigProjector::create(rootProblem_.robot(),"proj", 1, 1000);
+             proj_ = core::ConfigProjector::create(rootProblem_.robot(),"proj", 1e-1, 1000);
              rootProblem_.collisionObstacles(referenceProblem->collisionObstacles());
              steeringMethod_ = TimeConstraintSteering<Path_T>::create(&rootProblem_,fullBodyDevice_->configSize()-1);
              rootProblem_.steeringMethod(steeringMethod_);
@@ -67,7 +68,7 @@ namespace hpp {
 
         ~TimeConstraintHelper(){}
 
-         virtual void SetConstraints(const State& from, const State& to) = 0;
+         void SetConstraints(const State& from, const State& to){setConstraintsFunction_(*this, from, to);}
          void SetConfigShooter(const rbprm::RbPrmLimbPtr_t movingLimb);
          void InitConstraints();
          void SetContactConstraints(const State& from, const State& to);
@@ -81,6 +82,7 @@ namespace hpp {
          core::PathPtr_t refPath_;
          core::ConfigProjectorPtr_t proj_;
          boost::shared_ptr<TimeConstraintSteering<Path_T> > steeringMethod_;
+         SetConstraints_T setConstraintsFunction_;
     };
 
     /// Runs the LimbRRT to create a kinematic, continuous,

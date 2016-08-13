@@ -79,10 +79,10 @@ using namespace core;
         //helper.steeringMethod_->tds_.push_back(TimeDependant(nm,boost::shared_ptr<ComRightSide>(new ComRightSide(helper.refPath_,j))));
     }
 
-    void ComRRTHelper::SetConstraints(const State& from, const State& to)
+    void SetComRRTConstraints::operator ()(ComRRTHelper& helper, const State& from, const State& to)
     {
-        CreateComConstraint(*this);
-        SetContactConstraints(from,to);
+        CreateComConstraint(helper);
+        helper.SetContactConstraints(from, to);
     }
   }// namespace interpolation
   }// namespace rbprm

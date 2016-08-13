@@ -22,9 +22,9 @@ namespace hpp {
 using namespace core;
   namespace rbprm {
   namespace interpolation {
-    void LimbRRTHelper::SetConstraints(const State& from, const State& to)
+    void SetLimbRRTConstraints::operator ()(LimbRRTHelper& helper, const State& from, const State& to)
     {
-        SetContactConstraints(from, to);
+        helper.SetContactConstraints(from, to);
     }
   }// namespace interpolation
   }// namespace rbprm

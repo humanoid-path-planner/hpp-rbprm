@@ -37,16 +37,13 @@ namespace hpp {
     namespace rbprm {
     namespace interpolation {
 
-    typedef TimeConstraintHelper<TimeConstraintPath,LimbRRTShooter> limb_parent_t;
-    class LimbRRTHelper : public limb_parent_t
+
+    struct SetLimbRRTConstraints;
+
+    typedef TimeConstraintHelper<TimeConstraintPath,LimbRRTShooter, SetLimbRRTConstraints> LimbRRTHelper;
+    struct SetLimbRRTConstraints
     {
-    public:
-        LimbRRTHelper(RbPrmFullBodyPtr_t fullbody,
-                      core::ProblemPtr_t referenceProblem,
-                      core::PathPtr_t refPath):
-            limb_parent_t(fullbody,referenceProblem,refPath) {}
-        ~LimbRRTHelper(){}
-        virtual void SetConstraints(const State& from, const State& to);
+        void operator ()(LimbRRTHelper& helper, const State& from, const State& to);
     };
 
     interpolate_states           const limbRRT = &interpolateStates<LimbRRTHelper, rbprm::CIT_State>;
