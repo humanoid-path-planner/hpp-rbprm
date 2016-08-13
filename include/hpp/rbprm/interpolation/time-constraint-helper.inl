@@ -179,9 +179,41 @@ namespace interpolation {
         }
     }
 
-    template<class Helper_T>
-    PathPtr_t interpolateStatesFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t refPath,
-                                      const CIT_StateFrame &startState, const CIT_StateFrame &endState, const  std::size_t numOptimizations)
+    struct GenPath
+    {
+        GenPath(const core::Problem& problem) : problem_(problem) {}
+       ~GenPath() {}
+        PathPtr_t operator ()(const CIT_State& from, const CIT_State& to) const
+        {
+            return generateRootPath(problem_, *from, *to);
+        }
+        const core::Problem& problem_;
+    };
+
+    struct ExtractPath
+    {
+         ExtractPath(PathPtr_t refPath) : refPath_(refPath) {}
+        ~ExtractPath() {}
+        PathPtr_t operator ()(const CIT_StateFrame& from, CIT_StateFrame& to) const
+        {
+            return refPath_->extract(core::interval_t(from->first, to->first));
+        }
+        PathPtr_t refPath_;
+    };
+
+    inline const State& get(const CIT_StateFrame& from)
+    {
+        return from->second;
+    }
+
+    inline const State& get(const CIT_State& from)
+    {
+        return *from;
+    }
+
+    template<class Helper_T, class StateIterator_T, class PathGetter_T>
+    PathPtr_t interpolateStatesFromPathGetter(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathGetter_T& pathGetter,
+                                        const StateIterator_T &startState, const StateIterator_T &endState, const  std::size_t numOptimizations)
     {
         PathVectorPtr_t res[100];
         bool valid[100];
@@ -192,13 +224,12 @@ namespace interpolation {
         #pragma omp parallel for
         for(std::size_t i = 0; i < distance; ++i)
         {
-            CIT_StateFrame a, b;
+            StateIterator_T a, b;
             a = (startState+i);
             b = (startState+i+1);
-            Helper_T helper(fullbody, referenceProblem,refPath);
-                            //refPath->extract(core::interval_t(a->first, b->first)));
-            helper.SetConstraints(a->second, b->second);
-            PathVectorPtr_t partialPath = helper.Run(a->second, b->second);
+            Helper_T helper(fullbody, referenceProblem,pathGetter(a,b));
+            helper.SetConstraints(get(a), get(b));
+            PathVectorPtr_t partialPath = helper.Run(get(a), get(b));
             if(partialPath)
             {
                 res[i] = optimize(helper,partialPath, numOptimizations);
@@ -213,38 +244,23 @@ namespace interpolation {
         return ConcatenateAndResizePath(res, numValid);
     }
 
+    template<class Helper_T>
+    PathPtr_t interpolateStatesFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t refPath,
+                                      const CIT_StateFrame &startState, const CIT_StateFrame &endState, const  std::size_t numOptimizations)
+    {
+        ExtractPath extractPath(refPath);
+        return interpolateStatesFromPathGetter<Helper_T, CIT_StateFrame, ExtractPath>
+                (fullbody,referenceProblem,extractPath,startState,endState,numOptimizations);
+    }
+
 
     template<class Helper_T, typename StateConstIterator>
     PathPtr_t interpolateStates(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
                                       const StateConstIterator &startState, const StateConstIterator &endState, const std::size_t numOptimizations)
-    {
-        PathVectorPtr_t res[100];
-        bool valid[100];
-        std::size_t distance = std::distance(startState,endState);
-        assert(distance < 100);
-        // treat each interpolation between two states separatly
-        // in a different thread
-        #pragma omp parallel for
-        for(std::size_t i = 0; i < distance; ++i)
-        {
-            StateConstIterator a, b;
-            a = (startState+i);
-            b = (startState+i+1);
-            Helper_T helper(fullbody, referenceProblem, generateRootPath(*referenceProblem, *a, *b));
-            helper.SetConstraints(*a, *b);
-            PathVectorPtr_t partialPath = helper.Run(*a, *b);
-            if(partialPath)
-            {
-                res[i] = optimize(helper,partialPath, numOptimizations);
-                valid[i]=true;
-            }
-            else
-            {
-                valid[i] = false;
-            }
-        }
-        std::size_t numValid = checkPath(distance, valid);
-        return ConcatenateAndResizePath(res, numValid);
+    {        
+        GenPath genPath(*referenceProblem);
+        return interpolateStatesFromPathGetter<Helper_T, StateConstIterator, GenPath>
+                (fullbody,referenceProblem,genPath,startState,endState,numOptimizations);
     }
 
   }// namespace interpolation
