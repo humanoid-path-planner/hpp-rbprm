@@ -117,6 +117,20 @@ void State::contactBreaks(const State& previous, std::vector<std::string>& outLi
   previous.contactCreations(*this, outList);
 }
 
+std::vector<std::string> State::contactBreaks(const State& previous) const
+{
+    std::vector<std::string> res;
+    contactBreaks(previous, res);
+    return res;
+}
+
+std::vector<std::string> State::contactCreations(const State& previous) const
+{
+    std::vector<std::string> res;
+    contactCreations(previous, res);
+    return res;
+}
+
 namespace
 {
 // Given known contact variations, computes all effector that were not in contacts

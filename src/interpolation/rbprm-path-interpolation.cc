@@ -112,7 +112,7 @@ if (nbFailures > 1)
     watch.report_count(*fp);
     fout.close();
 #endif
-    return states;
+    return FilterStates(states);
 }
             }
             if(multipleBreaks && !allowFailure)
@@ -143,7 +143,7 @@ if (nbFailures > 1)
         watch.report_all_and_count(2,*fp);
         fout.close();
 #endif
-        return states;
+        return FilterStates(states);
     }
 
     void RbPrmInterpolation::init(const RbPrmInterpolationWkPtr_t& weakPtr)
@@ -158,6 +158,93 @@ if (nbFailures > 1)
         , robot_(robot)
     {
         // TODO
+    }
+
+    bool EqStringVec(const std::vector<std::string>& v1, const std::vector<std::string>& v2)
+    {
+        return (v1.size() == v2.size()) && std::equal ( v1.begin(), v1.end(), v2.begin() );
+    }
+
+    void FilterRepositioning(const CIT_StateFrame& from, const CIT_StateFrame to, T_StateFrame& res)
+    {
+        if(from == to) return;
+        const State& current    = (from)->second;
+        const State& current_m1 = (from-1)->second;
+        const State& current_p1 = (from+1)->second;
+        if(EqStringVec(current.contactBreaks(current_m1),
+                       current_p1.contactBreaks(current_m1)) &&
+           EqStringVec(current.contactCreations(current_m1),
+                       current_p1.contactCreations(current)))
+        {
+            if(from+1 == to) return;
+            res.push_back(std::make_pair((from+1)->first, (from+1)->second));
+            FilterRepositioning(from+2, to, res);
+        }
+        else
+        {
+            res.push_back(std::make_pair(from->first, from->second));
+            FilterRepositioning(from+1, to, res);
+        }
+    }
+
+    void FilterBreakCreate(const CIT_StateFrame& from, const CIT_StateFrame to, T_StateFrame& res)
+    {
+        if(from == to) return;
+        const State& current    = (from)->second;
+        const State& current_m1 = (from-1)->second;
+        const State& current_p1 = (from+1)->second;
+        if(current.contactCreations(current_m1).empty()  &&
+           current_p1.contactBreaks(current).empty() &&
+           EqStringVec(current_p1.contactCreations(current),
+                       current.contactBreaks(current_m1)))
+        {
+            if(from+1 == to) return;
+            res.push_back(std::make_pair((from+1)->first, (from+1)->second));
+            FilterBreakCreate(from+2, to, res);
+        }
+        else
+        {
+            res.push_back(std::make_pair(from->first, from->second));
+            FilterBreakCreate(from+1, to, res);
+        }
+    }
+
+    T_StateFrame FilterRepositioning(const T_StateFrame& originStates)
+    {
+        if(originStates.size() < 3) return originStates;
+        T_StateFrame res;
+        res.push_back(originStates.front());
+        FilterRepositioning(originStates.begin()+1, originStates.end()-1, res);
+        res.push_back(originStates.back());
+        return res;
+    }
+
+    T_StateFrame FilterBreakCreate(const T_StateFrame& originStates)
+    {
+        if(originStates.size() < 3) return originStates;
+        T_StateFrame res;
+        res.push_back(originStates.front());
+        FilterBreakCreate(originStates.begin()+1, originStates.end()-1, res);
+        res.push_back(originStates.back());
+        return res;
+    }
+
+    T_StateFrame FilterStatesRec(const T_StateFrame& originStates)
+    {
+        return FilterBreakCreate(FilterRepositioning(originStates));
+    }
+
+    T_StateFrame FilterStates(const T_StateFrame& originStates)
+    {
+        T_StateFrame res = originStates;
+        std::size_t previousSize;
+        do
+        {
+            previousSize = res.size();
+            res = FilterStatesRec(res);
+        }
+        while(res.size() != previousSize);
+        return res;
     }
     } // interpolation
   } // rbprm

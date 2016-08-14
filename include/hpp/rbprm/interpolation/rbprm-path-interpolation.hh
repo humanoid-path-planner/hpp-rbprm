@@ -101,6 +101,15 @@ namespace hpp {
     private:
       RbPrmInterpolationWkPtr_t weakPtr_;
     }; // class RbPrmLimb
+
+    /// Remove redundant State in terms of contacts, defined as follows:
+    /// - The same effector is repositioned two or more times in a row, while
+    /// and the root trajectory is approximatively linear all along
+    /// - An effector is broken, and the same effector is replaced in the following state
+    /// \param originStates original state list
+    /// \return A list of key states filtered
+    T_StateFrame FilterStates(const T_StateFrame& originStates);
+
     } // namespace interpolation
   } // namespace rbprm
 } // namespace hpp
