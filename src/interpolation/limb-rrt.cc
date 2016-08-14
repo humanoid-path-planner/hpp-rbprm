@@ -26,6 +26,23 @@ using namespace core;
     {
         helper.SetContactConstraints(from, to);
     }
+
+    core::PathPtr_t limbRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
+                 const rbprm::CIT_State &startState, const rbprm::CIT_State &endState, const std::size_t numOptimizations)
+    {
+        LimbRRTShooterFactory factory;
+        return interpolateStates<LimbRRTHelper, LimbRRTShooterFactory, CIT_State >
+                (fullbody, referenceProblem, factory, startState, endState, numOptimizations);
+    }
+
+    core::PathPtr_t limbRRTFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t refPath,
+                         const CIT_StateFrame &startState, const CIT_StateFrame &endState, const  std::size_t numOptimizations)
+    {
+        LimbRRTShooterFactory factory;
+        return interpolateStatesFromPath<LimbRRTHelper, LimbRRTShooterFactory>
+                (fullbody, referenceProblem, factory, refPath, startState, endState, numOptimizations);
+    }
+
   }// namespace interpolation
   }// namespace rbprm
 }// namespace hpp

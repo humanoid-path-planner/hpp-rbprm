@@ -20,9 +20,9 @@
 # define HPP_RBPRM_TIME_CONSTRAINT_HELPER_UTILS_HH
 
 #include <hpp/rbprm/interpolation/limb-rrt-shooter.hh>
+#include <hpp/rbprm/interpolation/time-constraint-utils.hh>
 #include <hpp/rbprm/interpolation/time-constraint-path-validation.hh>
 #include <hpp/rbprm/interpolation/time-dependant.hh>
-#include <hpp/rbprm/interpolation/time-constraint-utils.hh>
 #include <hpp/core/steering-method-straight.hh>
 #include <hpp/core/problem-target/goal-configurations.hh>
 #include <hpp/core/bi-rrt-planner.hh>
@@ -59,22 +59,22 @@ namespace interpolation {
     }
     }
 
-    template<class Path_T, class Shooter_T, typename SetConstraints_T>
-    void TimeConstraintHelper<Path_T, Shooter_T, SetConstraints_T>::InitConstraints()
+    template<class Path_T, class ShooterFactory_T, typename SetConstraints_T>
+    void TimeConstraintHelper<Path_T, ShooterFactory_T, SetConstraints_T>::InitConstraints()
     {
         core::ConstraintSetPtr_t cSet = core::ConstraintSet::create(rootProblem_.robot(),"");
         cSet->addConstraint(proj_);
         rootProblem_.constraints(cSet);
     }
 
-    template<class Path_T, class Shooter_T, typename SetConstraints_T>
-    void TimeConstraintHelper<Path_T, Shooter_T, SetConstraints_T>::SetConfigShooter(const rbprm::RbPrmLimbPtr_t movingLimb)
+    template<class Path_T, class ShooterFactory_T, typename SetConstraints_T>
+    void TimeConstraintHelper<Path_T, ShooterFactory_T, SetConstraints_T>::SetConfigShooter(const hpp::rbprm::State &from, const hpp::rbprm::State &to)
     {
-        rootProblem_.configurationShooter(Shooter_T::create(fullBodyDevice_, refPath_, fullBodyDevice_->configSize()-1, movingLimb));
+        rootProblem_.configurationShooter(shooterFactory_(fullbody_, refPath_, fullBodyDevice_->configSize()-1, from, to));
     }
 
-    template<class Path_T, class Shooter_T, typename SetConstraints_T>
-    void TimeConstraintHelper<Path_T, Shooter_T, SetConstraints_T>::SetContactConstraints(const State& from, const State& to)
+    template<class Path_T, class ShooterFactory_T, typename SetConstraints_T>
+    void TimeConstraintHelper<Path_T, ShooterFactory_T, SetConstraints_T>::SetContactConstraints(const State& from, const State& to)
     {
         std::vector<bool> cosntraintsR = setMaintainRotationConstraints();
         std::vector<std::string> fixed = to.fixedContacts(from);
@@ -100,6 +100,42 @@ namespace interpolation {
         }
     }
 
+namespace
+{
+    inline std::vector<std::string> extractEffectorsName(const rbprm::T_Limb& limbs)
+    {
+        std::vector<std::string> res;
+        for(rbprm::T_Limb::const_iterator cit = limbs.begin(); cit != limbs.end(); ++cit)
+        {
+            res.push_back(cit->first);
+        }
+        return res;
+    }
+
+    inline void DisableUnNecessaryCollisions(core::Problem& problem, rbprm::RbPrmLimbPtr_t limb)
+    {
+        // TODO should we really disable collisions for other bodies ?
+        tools::RemoveNonLimbCollisionRec<core::Problem>(problem.robot()->rootJoint(),
+                                                        "all",
+                                                        //limb->limb_->name(),
+                                                        problem.collisionObstacles(),problem);
+
+        if(limb->disableEndEffectorCollision_)
+        {
+            hpp::tools::RemoveEffectorCollision<core::Problem>(problem,
+                                                               problem.robot()->getJointByName(limb->effector_->name()),
+                                                               problem.collisionObstacles());
+        }
+    }
+
+    inline core::PathPtr_t generateRootPath(const core::Problem& problem, const State& from, const State& to)
+    {
+        core::Configuration_t startRootConf(from.configuration_);
+        core::Configuration_t endRootConf(to.configuration_);
+        return (*(problem.steeringMethod()))(startRootConf, endRootConf);
+    }
+}
+
     template<class Path_T, class Shooter_T, typename SetConstraints_T>
     PathVectorPtr_t TimeConstraintHelper<Path_T, Shooter_T, SetConstraints_T>::Run(const State &from, const State &to)
     {
@@ -112,7 +148,7 @@ namespace interpolation {
         {
             SetPathValidation(*this);
             DisableUnNecessaryCollisions(rootProblem_, limbs.at(*cit));
-            SetConfigShooter(limbs.at(*cit));
+            SetConfigShooter(from, to);
 
             ConfigurationPtr_t start = TimeConfigFromDevice(*this, from, 0.);
             ConfigurationPtr_t end   = TimeConfigFromDevice(*this, to  , 1.);
@@ -185,7 +221,7 @@ namespace interpolation {
        ~GenPath() {}
         PathPtr_t operator ()(const CIT_State& from, const CIT_State& to) const
         {
-            return generateRootPath(problem_, *from, *to);
+            return interpolation::generateRootPath(problem_, *from, *to);
         }
         const core::Problem& problem_;
     };
@@ -211,9 +247,11 @@ namespace interpolation {
         return *from;
     }
 
-    template<class Helper_T, class StateIterator_T, class PathGetter_T>
-    PathPtr_t interpolateStatesFromPathGetter(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathGetter_T& pathGetter,
-                                        const StateIterator_T &startState, const StateIterator_T &endState, const  std::size_t numOptimizations)
+    template<class Helper_T, class StateIterator_T,class ShooterFactory_T, class PathGetter_T>
+    PathPtr_t interpolateStatesFromPathGetter(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
+                                              const ShooterFactory_T& shooterFactory, const PathGetter_T& pathGetter,
+                                              const StateIterator_T &startState, const StateIterator_T &endState,
+                                              const  std::size_t numOptimizations)
     {
         PathVectorPtr_t res[100];
         bool valid[100];
@@ -227,7 +265,7 @@ namespace interpolation {
             StateIterator_T a, b;
             a = (startState+i);
             b = (startState+i+1);
-            Helper_T helper(fullbody, referenceProblem,pathGetter(a,b));
+            Helper_T helper(fullbody, shooterFactory, referenceProblem, pathGetter(a,b));
             helper.SetConstraints(get(a), get(b));
             PathVectorPtr_t partialPath = helper.Run(get(a), get(b));
             if(partialPath)
@@ -244,23 +282,26 @@ namespace interpolation {
         return ConcatenateAndResizePath(res, numValid);
     }
 
-    template<class Helper_T>
-    PathPtr_t interpolateStatesFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t refPath,
-                                      const CIT_StateFrame &startState, const CIT_StateFrame &endState, const  std::size_t numOptimizations)
+    template<class Helper_T, class ShooterFactory_T>
+    PathPtr_t interpolateStatesFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
+                                        const ShooterFactory_T& shooterFactory, const PathPtr_t refPath,
+                                        const CIT_StateFrame &startState, const CIT_StateFrame &endState,
+                                        const std::size_t numOptimizations)
     {
         ExtractPath extractPath(refPath);
-        return interpolateStatesFromPathGetter<Helper_T, CIT_StateFrame, ExtractPath>
-                (fullbody,referenceProblem,extractPath,startState,endState,numOptimizations);
+        return interpolateStatesFromPathGetter<Helper_T, CIT_StateFrame, ShooterFactory_T, ExtractPath>
+                (fullbody,referenceProblem, shooterFactory, extractPath,startState,endState,numOptimizations);
     }
 
 
-    template<class Helper_T, typename StateConstIterator>
-    PathPtr_t interpolateStates(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
-                                      const StateConstIterator &startState, const StateConstIterator &endState, const std::size_t numOptimizations)
+    template<class Helper_T, class ShooterFactory_T, typename StateConstIterator>
+    PathPtr_t interpolateStates(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,                                
+                                const ShooterFactory_T& shooterFactory, const StateConstIterator &startState,
+                                const StateConstIterator &endState, const std::size_t numOptimizations)
     {        
         GenPath genPath(*referenceProblem);
-        return interpolateStatesFromPathGetter<Helper_T, StateConstIterator, GenPath>
-                (fullbody,referenceProblem,genPath,startState,endState,numOptimizations);
+        return interpolateStatesFromPathGetter<Helper_T, StateConstIterator, ShooterFactory_T, GenPath>
+                (fullbody,referenceProblem, shooterFactory, genPath,startState,endState,numOptimizations);
     }
 
   }// namespace interpolation

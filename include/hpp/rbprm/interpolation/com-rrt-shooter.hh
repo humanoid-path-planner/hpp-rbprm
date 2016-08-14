@@ -51,16 +51,19 @@ namespace hpp {
         /// \return a pointer to an instance of LimbRRTShooter
         static HPP_RBPRM_DLLAPI ComRRTShooterPtr_t create ( const core::DevicePtr_t  device,
                                                             const hpp::core::PathPtr_t comPath,
+                                                            const hpp::core::PathPtr_t rootPath,
                                                             const std::size_t pathDofRank,
-                                                            const hpp::rbprm::RbPrmLimbPtr_t limb);
+                                                            const rbprm::T_Limb freeLimbs);
 
         virtual core::ConfigurationPtr_t shoot () const;
 
     public:
-        const hpp::core::PathPtr_t path_;
+        const hpp::core::PathPtr_t comPath_;
+        const hpp::core::PathPtr_t rootPath_;
         const std::size_t pathDofRank_;
         const std::size_t configSize_;
         const core::DevicePtr_t device_;
+        const rbprm::T_Limb freeLimbs_;
 
     private:
         ComRRTShooterWkPtr_t weak_;
@@ -69,10 +72,21 @@ namespace hpp {
     protected:
         ComRRTShooter ( const core::DevicePtr_t  device,
                         const hpp::core::PathPtr_t comPath,
-                        const std::size_t pathDofRank);
+                        const hpp::core::PathPtr_t rootPath,
+                        const std::size_t pathDofRank,
+                        const rbprm::T_Limb freeLimbs);
 
         void init (const ComRRTShooterPtr_t& self);
     }; // class ComRRTShooter
+
+    struct ComRRTShooterFactory
+    {
+         ComRRTShooterFactory(core::PathPtr_t guidePath) : guidePath_(guidePath){}
+        ~ComRRTShooterFactory(){}
+        ComRRTShooterPtr_t operator()(const RbPrmFullBodyPtr_t fullBody, const hpp::core::PathPtr_t comPath,
+                        const std::size_t pathDofRank, const hpp::rbprm::State &from, const hpp::rbprm::State &to) const;
+        core::PathPtr_t guidePath_;
+    };
 /// \}
     } // namespace interpolation
     } // namespace rbprm

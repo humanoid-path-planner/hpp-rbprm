@@ -15,6 +15,7 @@
 // hpp-rbprm. If not, see <http://www.gnu.org/licenses/>.
 
 #include <hpp/rbprm/interpolation/com-rrt.hh>
+#include <hpp/rbprm/interpolation/limb-rrt.hh>
 #include <hpp/rbprm/interpolation/time-constraint-utils.hh>
 #include <hpp/rbprm/tools.hh>
 #include <hpp/core/bi-rrt-planner.hh>
@@ -83,6 +84,29 @@ using namespace core;
     {
         CreateComConstraint(helper);
         helper.SetContactConstraints(from, to);
+    }
+
+    core::PathPtr_t comRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
+                           const  State &startState, const State &nextState,
+                           const  std::size_t numOptimizations)
+    {
+        T_State states; states.push_back(startState); states.push_back(nextState);
+        T_StateFrame stateFrames;
+        stateFrames.push_back(std::make_pair(comPath->timeRange().first, startState));
+        stateFrames.push_back(std::make_pair(comPath->timeRange().second, nextState));
+        core::PathPtr_t guidePath = limbRRT(fullbody,referenceProblem,states.begin(),states.begin()+1,numOptimizations);
+        ComRRTShooterFactory factory(guidePath);
+        return interpolateStatesFromPath<ComRRTHelper, ComRRTShooterFactory>
+                (fullbody, referenceProblem, factory, comPath, stateFrames.begin(), stateFrames.begin()+1, numOptimizations);
+    }
+
+    core::PathPtr_t comRRTFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
+                           const PathPtr_t guidePath, const CIT_StateFrame &startState, const CIT_StateFrame &endState,
+                           const  std::size_t numOptimizations)
+    {
+        ComRRTShooterFactory factory(guidePath);
+        return interpolateStatesFromPath<ComRRTHelper, ComRRTShooterFactory>
+                (fullbody, referenceProblem, factory, comPath, startState, endState, numOptimizations);
     }
   }// namespace interpolation
   }// namespace rbprm

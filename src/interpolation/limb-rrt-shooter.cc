@@ -15,6 +15,7 @@
 // hpp-rbprm. If not, see <http://www.gnu.org/licenses/>.
 
 #include <hpp/rbprm/interpolation/limb-rrt-shooter.hh>
+#include <hpp/rbprm/interpolation/time-constraint-utils.hh>
 #include <hpp/rbprm/rbprm-limb.hh>
 #include <hpp/rbprm/sampling/sample.hh>
 
@@ -65,6 +66,14 @@ using namespace core;
         const sampling::Sample& sample = *(limb_->sampleContainer_.samples_.begin() + (rand() % (int) (limb_->sampleContainer_.samples_.size() -1)));
         sampling::Load(sample,*config);
         return config;
+    }
+
+    LimbRRTShooterPtr_t LimbRRTShooterFactory::operator()(const RbPrmFullBodyPtr_t fullBody, const hpp::core::PathPtr_t path,
+                    const std::size_t pathDofRank, const hpp::rbprm::State &from, const hpp::rbprm::State &to) const
+    {
+        const rbprm::T_Limb& limbs = fullBody->GetLimbs();
+        std::vector<std::string> variations = to.allVariations(from, extractEffectorsName(limbs));
+        return LimbRRTShooter::create(fullBody->device_,path,pathDofRank,limbs.at(*(variations.begin())));
     }
   }// namespace interpolation
   }// namespace rbprm

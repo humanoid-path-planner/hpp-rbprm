@@ -25,6 +25,7 @@
 # include <hpp/rbprm/rbprm-device.hh>
 # include <hpp/rbprm/interpolation/time-constraint-steering.hh>
 # include <hpp/rbprm/interpolation/time-constraint-helper.hh>
+# include <hpp/rbprm/interpolation/limb-rrt-shooter.hh>
 # include <hpp/core/path.hh>
 # include <hpp/core/problem.hh>
 # include <hpp/core/config-projector.hh>
@@ -37,17 +38,19 @@ namespace hpp {
     namespace rbprm {
     namespace interpolation {
 
-
     struct SetLimbRRTConstraints;
 
-    typedef TimeConstraintHelper<TimeConstraintPath,LimbRRTShooter, SetLimbRRTConstraints> LimbRRTHelper;
+    typedef TimeConstraintHelper<TimeConstraintPath,LimbRRTShooterFactory, SetLimbRRTConstraints> LimbRRTHelper;
     struct SetLimbRRTConstraints
     {
         void operator ()(LimbRRTHelper& helper, const State& from, const State& to);
     };
 
-    interpolate_states           const limbRRT = &interpolateStates<LimbRRTHelper, rbprm::CIT_State>;
-    interpolate_states_from_path const limbRRTFromPath = &interpolateStatesFromPath<LimbRRTHelper>;
+    core::PathPtr_t limbRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
+                 const rbprm::CIT_State &startState, const rbprm::CIT_State &endState, const std::size_t numOptimizations);
+
+    core::PathPtr_t limbRRTFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t refPath,
+                         const CIT_StateFrame &startState, const CIT_StateFrame &endState, const  std::size_t numOptimizations);
     }
     }
 }

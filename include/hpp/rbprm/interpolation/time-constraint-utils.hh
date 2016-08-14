@@ -30,6 +30,7 @@
 # include <hpp/core/problem.hh>
 
 # include <vector>
+# include <string>
 # include <map>
 
 
@@ -54,38 +55,7 @@ namespace hpp {
         return core::ConfigurationPtr_t(new core::Configuration_t(config));
     }
 
-    inline std::vector<std::string> extractEffectorsName(const rbprm::T_Limb& limbs)
-    {
-        std::vector<std::string> res;
-        for(rbprm::T_Limb::const_iterator cit = limbs.begin(); cit != limbs.end(); ++cit)
-        {
-            res.push_back(cit->first);
-        }
-        return res;
-    }
 
-    inline void DisableUnNecessaryCollisions(core::Problem& problem, rbprm::RbPrmLimbPtr_t limb)
-    {
-        // TODO should we really disable collisions for other bodies ?
-        tools::RemoveNonLimbCollisionRec<core::Problem>(problem.robot()->rootJoint(),
-                                                        //"all",
-                                                        limb->limb_->name(),
-                                                        problem.collisionObstacles(),problem);
-
-        if(limb->disableEndEffectorCollision_)
-        {
-            hpp::tools::RemoveEffectorCollision<core::Problem>(problem,
-                                                               problem.robot()->getJointByName(limb->effector_->name()),
-                                                               problem.collisionObstacles());
-        }
-    }
-
-    inline core::PathPtr_t generateRootPath(const core::Problem& problem, const State& from, const State& to)
-    {
-        core::Configuration_t startRootConf(from.configuration_);
-        core::Configuration_t endRootConf(to.configuration_);
-        return (*(problem.steeringMethod()))(startRootConf, endRootConf);
-    }
 
     }
     }

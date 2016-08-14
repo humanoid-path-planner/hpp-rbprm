@@ -41,14 +41,19 @@ namespace hpp {
 
     struct SetComRRTConstraints;
 
-    typedef TimeConstraintHelper<TimeConstraintPath,ComRRTShooter, SetComRRTConstraints> ComRRTHelper;
+    typedef TimeConstraintHelper<TimeConstraintPath,ComRRTShooterFactory, SetComRRTConstraints> ComRRTHelper;
     struct SetComRRTConstraints
     {
         void operator ()(ComRRTHelper& helper, const State& from, const State& to);
     };
 
-    //interpolate_states           const comRRT         = &interpolateStates<ComRRTHelper, rbprm::CIT_State>;
-    interpolate_states_from_path const comRRT = &interpolateStatesFromPath<ComRRTHelper>;
+    core::PathPtr_t comRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
+                           const State &startState, const State &nextState,
+                           const  std::size_t numOptimizations);
+
+    core::PathPtr_t comRRTFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
+                const PathPtr_t guidePath, const CIT_StateFrame &startState, const CIT_StateFrame &endState,
+                const  std::size_t numOptimizations);
     }
     }
 }

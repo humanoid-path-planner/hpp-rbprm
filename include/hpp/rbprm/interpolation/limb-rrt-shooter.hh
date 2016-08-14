@@ -74,6 +74,13 @@ namespace hpp {
 
         void init (const LimbRRTShooterPtr_t& self);
     }; // class LimbRRTShooter
+
+    struct LimbRRTShooterFactory
+    {
+        LimbRRTShooterPtr_t operator()(const RbPrmFullBodyPtr_t fullBody, const hpp::core::PathPtr_t path,
+                        const std::size_t pathDofRank, const hpp::rbprm::State &from, const hpp::rbprm::State &to) const;
+    };
+
 /// \}
     } // namespace interpolation
     } // namespace rbprm
