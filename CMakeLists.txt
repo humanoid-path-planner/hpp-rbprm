@@ -71,6 +71,7 @@ SET(${PROJECT_NAME}_HEADERS
     include/hpp/rbprm/interpolation/limb-rrt.hh
     include/hpp/rbprm/interpolation/com-rrt.hh
     include/hpp/rbprm/interpolation/com-rrt-shooter.hh
+    include/hpp/rbprm/interpolation/time-constraint-shooter.hh
     include/hpp/rbprm/interpolation/limb-rrt-shooter.hh
     include/hpp/rbprm/interpolation/time-constraint-utils.hh
     include/hpp/rbprm/interpolation/time-constraint-path-validation.hh

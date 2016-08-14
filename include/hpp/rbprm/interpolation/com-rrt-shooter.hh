@@ -20,7 +20,7 @@
 # define HPP_RBPRM_COM_RRT_SHOOTER_HH
 
 # include <hpp/rbprm/config.hh>
-# include <hpp/core/configuration-shooter.hh>
+# include <hpp/rbprm/interpolation/time-constraint-shooter.hh>
 # include <hpp/rbprm/rbprm-fullbody.hh>
 # include <hpp/core/path.hh>
 # include <hpp/model/device.hh>
@@ -31,59 +31,12 @@
 namespace hpp {
     namespace rbprm {
     namespace interpolation {
-    HPP_PREDEF_CLASS (ComRRTShooter);
-    typedef boost::shared_ptr <ComRRTShooter>
-    ComRRTShooterPtr_t;
-
-/// \addtogroup configuration_sampling
-/// \{
-/// Configuration shooter for the limb RRT.
-/// will generate a configuration for a given limb, and sample
-/// a root position extracted from a normalized path
-    class HPP_RBPRM_DLLAPI ComRRTShooter : public core::ConfigurationShooter{
-    ///
-    public:
-        /// Creates an instance of LimbRRTShooter for interpolating a limb motion along a root path.
-        ///
-        /// \param limb A device for which the root joint path is constrained
-        /// the root joint is necessarily a free flyer
-        /// \param path A constrained path for the root of the limb
-        /// \return a pointer to an instance of LimbRRTShooter
-        static HPP_RBPRM_DLLAPI ComRRTShooterPtr_t create ( const core::DevicePtr_t  device,
-                                                            const hpp::core::PathPtr_t comPath,
-                                                            const hpp::core::PathPtr_t rootPath,
-                                                            const std::size_t pathDofRank,
-                                                            const rbprm::T_Limb freeLimbs);
-
-        virtual core::ConfigurationPtr_t shoot () const;
-
-    public:
-        const hpp::core::PathPtr_t comPath_;
-        const hpp::core::PathPtr_t rootPath_;
-        const std::size_t pathDofRank_;
-        const std::size_t configSize_;
-        const core::DevicePtr_t device_;
-        const rbprm::T_Limb freeLimbs_;
-
-    private:
-        ComRRTShooterWkPtr_t weak_;
-
-
-    protected:
-        ComRRTShooter ( const core::DevicePtr_t  device,
-                        const hpp::core::PathPtr_t comPath,
-                        const hpp::core::PathPtr_t rootPath,
-                        const std::size_t pathDofRank,
-                        const rbprm::T_Limb freeLimbs);
-
-        void init (const ComRRTShooterPtr_t& self);
-    }; // class ComRRTShooter
 
     struct ComRRTShooterFactory
     {
          ComRRTShooterFactory(core::PathPtr_t guidePath) : guidePath_(guidePath){}
         ~ComRRTShooterFactory(){}
-        ComRRTShooterPtr_t operator()(const RbPrmFullBodyPtr_t fullBody, const hpp::core::PathPtr_t comPath,
+        TimeConstraintShooterPtr_t operator()(const RbPrmFullBodyPtr_t fullBody, const hpp::core::PathPtr_t comPath,
                         const std::size_t pathDofRank, const hpp::rbprm::State &from, const hpp::rbprm::State &to) const;
         core::PathPtr_t guidePath_;
     };
