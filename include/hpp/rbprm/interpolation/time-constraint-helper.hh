@@ -62,7 +62,7 @@ namespace hpp {
          {
              // adding extra DOF for including time in sampling
              fullBodyDevice_->setDimensionExtraConfigSpace(fullBodyDevice_->extraConfigSpace().dimension()+1);             
-             proj_ = core::ConfigProjector::create(rootProblem_.robot(),"proj", 10, 1000);
+             proj_ = core::ConfigProjector::create(rootProblem_.robot(),"proj", 5, 1000);
              rootProblem_.collisionObstacles(referenceProblem->collisionObstacles());
              steeringMethod_ = TimeConstraintSteering<Path_T>::create(&rootProblem_,fullBodyDevice_->configSize()-1);
              rootProblem_.steeringMethod(steeringMethod_);

@@ -116,8 +116,8 @@ namespace
     {
         // TODO should we really disable collisions for other bodies ?
         tools::RemoveNonLimbCollisionRec<core::Problem>(problem.robot()->rootJoint(),
-                                                        "all",
-                                                        //limb->limb_->name(),
+                                                        //"all",
+                                                        limb->limb_->name(),
                                                         problem.collisionObstacles(),problem);
 
         if(limb->disableEndEffectorCollision_)
