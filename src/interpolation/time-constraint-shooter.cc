@@ -29,9 +29,11 @@ using namespace core;
     TimeConstraintShooterPtr_t TimeConstraintShooter::create (const core::DevicePtr_t  device,
                                               const hpp::core::PathPtr_t rootPath,
                                               const std::size_t pathDofRank,
+                                              const T_TimeDependant& tds,
+                                              core::ConfigProjectorPtr_t projector,
                                               const rbprm::T_Limb freeLimbs)
     {
-        TimeConstraintShooter* ptr = new TimeConstraintShooter (device, rootPath, pathDofRank, freeLimbs);
+        TimeConstraintShooter* ptr = new TimeConstraintShooter (device, rootPath, pathDofRank, tds, projector, freeLimbs);
         TimeConstraintShooterPtr_t shPtr (ptr);
         ptr->init (shPtr);
         return shPtr;
@@ -45,13 +47,18 @@ using namespace core;
 
     TimeConstraintShooter::TimeConstraintShooter (const core::DevicePtr_t  device,
                                   const hpp::core::PathPtr_t rootPath,
-                                  const std::size_t pathDofRank, const hpp::rbprm::T_Limb freeLimbs)
+                                  const std::size_t pathDofRank,
+                                  const T_TimeDependant& tds,
+                                  core::ConfigProjectorPtr_t projector,
+                                  const hpp::rbprm::T_Limb freeLimbs)
     : core::ConfigurationShooter()
     , rootPath_(rootPath)
     , pathDofRank_(pathDofRank)
     , configSize_(pathDofRank+1)
     , device_(device)
     , freeLimbs_(freeLimbs)
+    , tds_(tds)
+    , projector_(projector)
     {
         // NOTHING
     }
@@ -72,6 +79,7 @@ using namespace core;
             const sampling::Sample& sample = *(limb->sampleContainer_.samples_.begin() + (rand() % (int) (limb->sampleContainer_.samples_.size() -1)));
             sampling::Load(sample,*config);
         }
+        UpdateConstraints(*config, projector_, tds_, pathDofRank_);
         return config;
     }
   }// namespace interpolation

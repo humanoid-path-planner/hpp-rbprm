@@ -20,8 +20,10 @@
 # define HPP_RBPRM_TIME_CONSTRAINT_SHOOTER_HH
 
 # include <hpp/rbprm/config.hh>
-# include <hpp/core/configuration-shooter.hh>
 # include <hpp/rbprm/rbprm-fullbody.hh>
+# include <hpp/rbprm/interpolation/time-dependant.hh>
+# include <hpp/core/config-projector.hh>
+# include <hpp/core/configuration-shooter.hh>
 # include <hpp/core/path.hh>
 # include <hpp/model/device.hh>
 
@@ -52,6 +54,8 @@ namespace hpp {
         static HPP_RBPRM_DLLAPI TimeConstraintShooterPtr_t create ( const core::DevicePtr_t  device,
                                                             const hpp::core::PathPtr_t rootPath,
                                                             const std::size_t pathDofRank,
+                                                            const T_TimeDependant& tds,
+                                                            core::ConfigProjectorPtr_t projector,
                                                             const rbprm::T_Limb freeLimbs);
 
         virtual core::ConfigurationPtr_t shoot () const;
@@ -66,11 +70,17 @@ namespace hpp {
     private:
         TimeConstraintShooterWkPtr_t weak_;
 
+    public:
+      T_TimeDependant tds_;
+      core::ConfigProjectorPtr_t projector_;
+
 
     protected:
         TimeConstraintShooter ( const core::DevicePtr_t  device,
                         const hpp::core::PathPtr_t rootPath,
                         const std::size_t pathDofRank,
+                        const T_TimeDependant& tds,
+                        core::ConfigProjectorPtr_t projector,
                         const rbprm::T_Limb freeLimbs);
 
         void init (const TimeConstraintShooterPtr_t& self);

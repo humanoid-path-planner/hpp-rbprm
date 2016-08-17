@@ -34,7 +34,8 @@ namespace hpp {
     struct LimbRRTShooterFactory
     {
         TimeConstraintShooterPtr_t operator()(const RbPrmFullBodyPtr_t fullBody, const hpp::core::PathPtr_t path,
-                        const std::size_t pathDofRank, const hpp::rbprm::State &from, const hpp::rbprm::State &to) const;
+                        const std::size_t pathDofRank, const hpp::rbprm::State &from, const hpp::rbprm::State &to,
+                                              const T_TimeDependant& tds, core::ConfigProjectorPtr_t projector) const;
     };
 
 /// \}

@@ -36,9 +36,10 @@ using namespace core;
   }
 
     TimeConstraintShooterPtr_t LimbRRTShooterFactory::operator()(const RbPrmFullBodyPtr_t fullBody, const hpp::core::PathPtr_t path,
-                    const std::size_t pathDofRank, const hpp::rbprm::State &from, const hpp::rbprm::State &to) const
+                    const std::size_t pathDofRank, const hpp::rbprm::State &from, const hpp::rbprm::State &to,
+                    const T_TimeDependant& tds, core::ConfigProjectorPtr_t projector) const
     {
-        return TimeConstraintShooter::create(fullBody->device_,path,pathDofRank,GetVaryingLimb(fullBody, from, to));
+        return TimeConstraintShooter::create(fullBody->device_,path,pathDofRank,tds, projector, GetVaryingLimb(fullBody, from, to));
     }
   }// namespace interpolation
   }// namespace rbprm

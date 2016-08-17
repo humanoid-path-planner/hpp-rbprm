@@ -209,7 +209,6 @@ namespace interpolation {
       {
     parent_t::init (self);
     weak_ = self;
-        checkPath ();
       }
 
       void initCopy (TimeConstraintPathPtr_t self)

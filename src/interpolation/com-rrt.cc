@@ -41,14 +41,14 @@ using namespace core;
         virtual void operator() (constraints::vectorOut_t output,
                                const constraints::value_type& normalized_input, model::ConfigurationOut_t /*conf*/) const
         {
-          //const interval_t& tR (comPath_->timeRange());
-          //constraints::value_type unNormalized = (tR.second-tR.first)* normalized_input + tR.first;
-          output = comPath_->operator ()(normalized_input).head(3);
+          const interval_t& tR (comPath_->timeRange());
+          constraints::value_type unNormalized = (tR.second-tR.first)* normalized_input + tR.first;
+          output = comPath_->operator ()(unNormalized).head(3);
         }
         const core::PathPtr_t comPath_;
     };
 
-    void CreateComConstraint(ComRRTHelper& helper)
+    void CreateComConstraint(ComRRTHelper& helper, const fcl::Vec3f& initTarget=fcl::Vec3f())
     {
         model::DevicePtr_t device = helper.rootProblem_.robot();
         core::ComparisonTypePtr_t equals = core::Equality::create ();
@@ -62,7 +62,9 @@ using namespace core;
         PointComFunctionPtr_t comFunc = PointComFunction::create ("COM-walkgen",
             device, PointCom::create (comComp));
         NumericalConstraintPtr_t comEq = NumericalConstraint::create (comFunc, equals);
+        comEq->nonConstRightHandSide() = initTarget;
         proj->add(comEq);
+        proj->updateRightHandSide();
         helper.steeringMethod_->tds_.push_back(TimeDependant(comEq, boost::shared_ptr<ComRightSide>(new ComRightSide(helper.refPath_))));
        /***************/
         //create identity joint
@@ -82,8 +84,8 @@ using namespace core;
 
     void SetComRRTConstraints::operator ()(ComRRTHelper& helper, const State& from, const State& to)
     {
-        CreateComConstraint(helper);
         helper.SetContactConstraints(from, to);
+        CreateComConstraint(helper);
     }
 
     core::PathPtr_t comRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
@@ -107,6 +109,26 @@ using namespace core;
         ComRRTShooterFactory factory(guidePath);
         return interpolateStatesFromPath<ComRRTHelper, ComRRTShooterFactory>
                 (fullbody, referenceProblem, factory, comPath, startState, endState, numOptimizations);
+    }
+
+    core::Configuration_t projectOnCom(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const State& model, const fcl::Vec3f& targetCom)
+    {
+        core::PathPtr_t unusedPath(StraightPath::create(fullbody->device_,model.configuration_, model.configuration_,0));
+        ComRRTShooterFactory unusedFactory(unusedPath);
+        ComRRTHelper helper(fullbody, unusedFactory, referenceProblem,unusedPath );
+        helper.SetContactConstraints(model,model);
+        CreateComConstraint(helper,targetCom);
+        helper.proj_->errorThreshold(0.05);
+        Configuration_t res(helper.fullBodyDevice_->configSize());
+        res.head(model.configuration_.rows()) = model.configuration_;
+        if(helper.proj_->apply(res))
+        {
+            return res.head(res.rows()-1);
+        }
+        else
+        {
+            throw std::runtime_error("could not project state on COM constraint");
+        }
     }
   }// namespace interpolation
   }// namespace rbprm

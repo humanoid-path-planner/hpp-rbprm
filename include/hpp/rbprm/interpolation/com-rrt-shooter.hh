@@ -37,7 +37,8 @@ namespace hpp {
          ComRRTShooterFactory(core::PathPtr_t guidePath) : guidePath_(guidePath){}
         ~ComRRTShooterFactory(){}
         TimeConstraintShooterPtr_t operator()(const RbPrmFullBodyPtr_t fullBody, const hpp::core::PathPtr_t comPath,
-                        const std::size_t pathDofRank, const hpp::rbprm::State &from, const hpp::rbprm::State &to) const;
+                        const std::size_t pathDofRank, const hpp::rbprm::State &from, const hpp::rbprm::State &to,
+                                              const T_TimeDependant& tds, core::ConfigProjectorPtr_t projector) const;
         core::PathPtr_t guidePath_;
     };
 /// \}

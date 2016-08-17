@@ -70,7 +70,8 @@ namespace interpolation {
     template<class Path_T, class ShooterFactory_T, typename SetConstraints_T>
     void TimeConstraintHelper<Path_T, ShooterFactory_T, SetConstraints_T>::SetConfigShooter(const hpp::rbprm::State &from, const hpp::rbprm::State &to)
     {
-        rootProblem_.configurationShooter(shooterFactory_(fullbody_, refPath_, fullBodyDevice_->configSize()-1, from, to));
+        rootProblem_.configurationShooter(shooterFactory_(fullbody_, refPath_, fullBodyDevice_->configSize()-1, from, to,
+                                                          steeringMethod_->tds_, proj_));
     }
 
     template<class Path_T, class ShooterFactory_T, typename SetConstraints_T>

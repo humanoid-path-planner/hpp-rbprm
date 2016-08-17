@@ -54,6 +54,8 @@ namespace hpp {
     core::PathPtr_t comRRTFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
                 const PathPtr_t guidePath, const CIT_StateFrame &startState, const CIT_StateFrame &endState,
                 const  std::size_t numOptimizations);
+
+    core::Configuration_t projectOnCom(RbPrmFullBodyPtr_t fullbody,core::ProblemPtr_t referenceProblem, const State& model, const fcl::Vec3f& targetCom);
     }
     }
 }

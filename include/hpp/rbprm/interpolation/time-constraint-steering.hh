@@ -98,9 +98,8 @@ namespace hpp {
       /// Weighed distance is created from robot
       TimeConstraintSteering (const core::ProblemPtr_t& problem,
                        const std::size_t pathDofRank) :
-    SteeringMethod (problem), pathDofRank_(pathDofRank), weak_ ()
-      {
-      }
+    SteeringMethod (problem), pathDofRank_(pathDofRank), weak_ () {}
+
       /// Constructor with weighed distance
       TimeConstraintSteering (const core::DevicePtr_t& device,
                   const core::WeighedDistancePtr_t& distance,
@@ -111,9 +110,7 @@ namespace hpp {
       }
       /// Copy constructor
       TimeConstraintSteering (const TimeConstraintSteering& other) :
-    SteeringMethod (other), pathDofRank_(other.pathDofRank_), weak_ ()
-      {
-      }
+    SteeringMethod (other), pathDofRank_(other.pathDofRank_), weak_ (), tds_(other.tds_) {}
 
       /// Store weak pointer to itself
       void init (TimeConstraintSteeringWkPtr_t weak)
@@ -122,13 +119,14 @@ namespace hpp {
     weak_ = weak;
       }
 
-    public:
-      T_TimeDependant tds_;
 
     private:      
       const core::PathPtr_t model_;
       const std::size_t pathDofRank_;
       TimeConstraintSteeringWkPtr_t weak_;
+
+    public:
+      T_TimeDependant tds_;
     }; // SteeringMethodStraight
     /// \}
   } // namespace interpolation

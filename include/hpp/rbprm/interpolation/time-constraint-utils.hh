@@ -24,10 +24,12 @@
 # include <hpp/rbprm/rbprm-fullbody.hh>
 # include <hpp/rbprm/rbprm-state.hh>
 # include <hpp/rbprm/rbprm-device.hh>
+# include <hpp/rbprm/interpolation/time-dependant.hh>
 # include <hpp/rbprm/interpolation/time-constraint-steering.hh>
 # include <hpp/rbprm/interpolation/time-constraint-helper.hh>
 # include <hpp/rbprm/interpolation/time-constraint-path-validation.hh>
 # include <hpp/core/problem.hh>
+# include <hpp/core/config-projector.hh>
 
 # include <vector>
 # include <string>
@@ -55,8 +57,17 @@ namespace hpp {
         return core::ConfigurationPtr_t(new core::Configuration_t(config));
     }
 
-
-
+    inline void UpdateConstraints(core::ConfigurationOut_t configuration, core::ConfigProjectorPtr_t projector,
+                                  const T_TimeDependant& tds, const std::size_t pathDofRank)
+    {
+        const core::value_type y = configuration[pathDofRank];
+        for (CIT_TimeDependant cit = tds.begin ();
+            cit != tds.end (); ++cit)
+        {
+            (*cit)(y, configuration);
+        }
+        projector->updateRightHandSide ();
+    }
     }
     }
 }

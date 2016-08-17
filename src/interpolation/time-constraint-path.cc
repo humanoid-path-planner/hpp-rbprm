@@ -17,6 +17,7 @@
 // <http://www.gnu.org/licenses/>.
 
 #include <hpp/rbprm/interpolation/time-constraint-path.hh>
+#include <hpp/rbprm/interpolation/time-constraint-utils.hh>
 #include <hpp/model/device.hh>
 #include <hpp/model/configuration.hh>
 #include <hpp/core/config-projector.hh>
@@ -62,17 +63,12 @@ namespace hpp {
 
     TimeConstraintPath::TimeConstraintPath (const TimeConstraintPath& path) :
         parent_t (path), device_ (path.device_), initial_ (path.initial_),
-        end_ (path.end_), pathDofRank_(path.pathDofRank_), tds_(path.tds_)
-    {
-    }
+        end_ (path.end_)    , pathDofRank_(path.pathDofRank_), tds_(path.tds_) {}
 
     TimeConstraintPath::TimeConstraintPath (const TimeConstraintPath& path,
                 const ConstraintSetPtr_t& constraints) :
         parent_t (path, constraints), device_ (path.device_),
-        initial_ (path.initial_), end_ (path.end_), pathDofRank_(path.pathDofRank_), tds_(path.tds_)
-    {
-        // NOTHING
-    }
+        initial_ (path.initial_), end_ (path.end_), pathDofRank_(path.pathDofRank_), tds_(path.tds_) {}
 
     model::value_type ComputeExtraDofValue(const std::size_t dofRank,
                               const Configuration_t init,
@@ -86,20 +82,10 @@ namespace hpp {
 
     void TimeConstraintPath::updateConstraints(core::ConfigurationOut_t configuration) const
     {
-        const value_type y = configuration[pathDofRank_];
-        for (CIT_TimeDependant cit = tds_.begin ();
-            cit != tds_.end (); ++cit)
-          (*cit)(y, configuration);
         if (constraints() && constraints()->configProjector ())
-            constraints()->configProjector ()->updateRightHandSide ();
-        /*if (constraints() && constraints()->configProjector ()) {
-            //constraints()->configProjector()->rightHandSideFromConfig(configuration);
-            for(core::LockedJoints_t::const_iterator cit = constraints()->configProjector()->lockedJointsnonconst().begin();
-                cit != constraints()->configProjector()->lockedJointsnonconst().end(); ++cit)
-            {
-                (*cit)->rightHandSideFromConfig (configuration);
-            }
-        }*/
+        {
+            UpdateConstraints(configuration, constraints()->configProjector (), tds_, pathDofRank_);
+        }
     }
 
     bool TimeConstraintPath::impl_compute (ConfigurationOut_t result,
@@ -107,28 +93,23 @@ namespace hpp {
     {
         if (param == timeRange ().first || timeRange ().second == 0)
         {
-            result = initial_;
-            return true;
+            result = initial();
         }
-        if (param == timeRange ().second)
+        else if (param == timeRange ().second)
         {
-            result = end_;
-            return true;
+            result = end();
         }
-        value_type u;
-        if (timeRange ().second == 0)
-            u = 0;
         else
-            u = (param - timeRange ().first) / (timeRange ().second - timeRange().first);
-        model::interpolate (device_, initial_, end_, u, result);
-        model::value_type dof = ComputeExtraDofValue(pathDofRank_,initial_, end_, u);
-        result[pathDofRank_] = dof;
-        /*model::value_type t1 = model_->timeRange().first;
-        model::value_type t2 = model_->timeRange().second;        
-        Configuration_t tmp(model_->initial());
-        model_->operator()(tmp,(t2 - t1) * dof + t1);
-        //result.head(7) = tmp.head(7);
-        tmp = result; */
+        {
+            value_type u;
+            if (timeRange ().second == 0)
+                u = 0;
+            else
+                u = (param - timeRange ().first) / (timeRange ().second - timeRange().first);
+            model::interpolate (device_, initial_, end_, u, result);
+            model::value_type dof = ComputeExtraDofValue(pathDofRank_,initial_, end_, u);
+            result[pathDofRank_] = dof;
+        }
         updateConstraints(result);
         return true;
     }
@@ -165,14 +146,12 @@ namespace hpp {
       updateConstraints(initc);
       if (constraints()) {
         if (!constraints()->isSatisfied (initial())) {
-          hppDout (error, *constraints());
           hppDout (error, initial().transpose ());
           throw projection_error ("Initial configuration of path does not satisfy "
               "the constraints");
         }
         updateConstraints(endc);
         if (constraints() && !constraints()->isSatisfied (end())) {
-          hppDout (error, *constraints());
           hppDout (error, end().transpose ());
           throw projection_error ("End configuration of path does not satisfy "
               "the constraints");
