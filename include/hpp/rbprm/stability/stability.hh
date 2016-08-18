@@ -49,7 +49,7 @@ namespace hpp {
     ///
     /// \param fullbody The considered robot for static equilibrium
     /// \param state The current State of the robots, in terms of contact creation
-    std::pair<MatrixXX, VectorX> ComputeCentroidalCone(const RbPrmFullBodyPtr_t fullbody, State& state);
+    std::pair<MatrixXX, VectorX> ComputeCentroidalCone(const RbPrmFullBodyPtr_t fullbody, State& state, const core::value_type friction = 0.5);
   } // namespace stability
 } // namespace rbprm
 } // namespace hpp

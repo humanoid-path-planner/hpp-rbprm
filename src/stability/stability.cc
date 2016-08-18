@@ -44,8 +44,6 @@ namespace hpp {
 namespace rbprm {
 namespace stability{
 
-    const double frictions = 0.5;
-
     void computeRectangleContact(const RbPrmLimbPtr_t limb, Ref_matrix43 p)
     {
         const double& lx = limb->x_, ly = limb->y_;
@@ -72,7 +70,8 @@ namespace stability{
         return StaticEquilibrium(fullbody->device_->name(), fullbody->device_->mass(),4,SOLVER_LP_QPOASES,true,10,true);
     }
 
-    robust_equilibrium::Vector3 setupLibrary(const RbPrmFullBodyPtr_t fullbody, State& state, StaticEquilibrium& sEq, StaticEquilibriumAlgorithm alg)
+    robust_equilibrium::Vector3 setupLibrary(const RbPrmFullBodyPtr_t fullbody, State& state, StaticEquilibrium& sEq, StaticEquilibriumAlgorithm alg,
+                                             const core::value_type friction = 0.5)
     {
         hpp::model::ConfigurationIn_t save = fullbody->device_->currentConfiguration();
         std::vector<std::string> contacts;
@@ -102,11 +101,11 @@ namespace stability{
         state.com_ = comfcl;
         for(int i=0; i< 3; ++i) com(i)=comfcl[i];
         fullbody->device_->currentConfiguration(save);
-        sEq.setNewContacts(positions,normals,frictions,alg);
+        sEq.setNewContacts(positions,normals,friction,alg);
         return com;
     }
 
-    std::pair<MatrixXX, VectorX> ComputeCentroidalCone(const RbPrmFullBodyPtr_t fullbody, State& state)
+    std::pair<MatrixXX, VectorX> ComputeCentroidalCone(const RbPrmFullBodyPtr_t fullbody, State& state, const hpp::core::value_type friction)
     {
         std::pair<MatrixXX, VectorX> res;
         MatrixXX& H = res.first;
@@ -116,7 +115,7 @@ namespace stability{
         watch.start("test balance");
 #endif
         StaticEquilibrium staticEquilibrium(initLibrary(fullbody));
-        setupLibrary(fullbody,state,staticEquilibrium,STATIC_EQUILIBRIUM_ALGORITHM_PP);
+        setupLibrary(fullbody,state,staticEquilibrium,STATIC_EQUILIBRIUM_ALGORITHM_PP, friction);
 #ifdef PROFILE
     watch.stop("test balance");
 #endif
