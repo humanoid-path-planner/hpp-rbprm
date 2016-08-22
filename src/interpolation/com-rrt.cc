@@ -118,7 +118,6 @@ using namespace core;
         ComRRTHelper helper(fullbody, unusedFactory, referenceProblem,unusedPath );
         helper.SetContactConstraints(model,model);
         CreateComConstraint(helper,targetCom);
-        helper.proj_->errorThreshold(0.05);
         Configuration_t res(helper.fullBodyDevice_->configSize());
         res.head(model.configuration_.rows()) = model.configuration_;
         if(helper.proj_->apply(res))
