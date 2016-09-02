@@ -359,7 +359,7 @@ namespace hpp {
               // the normal is given by the normal of the contacted object
               const fcl::Vec3f z = limb->effector_->currentTransformation().getRotation() * limb->normal_;
               const fcl::Matrix3f alignRotation = tools::GetRotationMatrix(z,normal);
-              rotation = alignRotation * limb->effector_->neutralConfiguration().getRotation();
+              rotation = alignRotation * limb->effector_->currentTransformation().getRotation();
               // Add constraints to resolve Ik
               core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 20);
               // get current normal orientation
