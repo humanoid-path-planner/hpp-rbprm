@@ -94,6 +94,36 @@ namespace hpp {
         return result;
     }
 
+    fcl::Matrix3f GetZRotMatrix(const core::value_type theta)
+    {
+        core::value_type c = cos(theta), s= sin(theta);
+        fcl::Matrix3f r;
+        r(0,0)= c; r(0,1)= -s;
+        r(1,0)= s; r(1,1)= c;
+        r(2,2)= 1;
+        return r;
+    }
+
+    fcl::Matrix3f GetYRotMatrix(const core::value_type theta)
+    {
+        core::value_type c = cos(theta), s= sin(theta);
+        fcl::Matrix3f r;
+        r(0,0)=  c; r(0,2)= s;
+        r(1,1)= 1;
+        r(2,0)= -s; r(2,2)= c;
+        return r;
+    }
+
+    fcl::Matrix3f GetXRotMatrix(const core::value_type theta)
+    {
+        core::value_type c = cos(theta), s= sin(theta);
+        fcl::Matrix3f r;
+        r(0,0)= 1;
+        r(1,1)= c; r(1,2)= -s;
+        r(2,0)= s; r(2,2)=  c;
+        return r;
+    }
+
     model::value_type angleBetweenQuaternions (model::ConfigurationIn_t  q1, model::ConfigurationIn_t  q2,
                                                bool& cosIsNegative)
     {
