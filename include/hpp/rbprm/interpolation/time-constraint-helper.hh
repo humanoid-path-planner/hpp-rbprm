@@ -120,7 +120,8 @@ namespace hpp {
                                                              const ShooterFactory_T& shooterFactory,
                                                              const StateConstIterator& startState,
                                                              const StateConstIterator& endState,
-                                                             const std::size_t numOptimizations = 10);
+                                                             const std::size_t numOptimizations = 10,
+                                                             const bool keepExtraDof = false);
     /// Runs the LimbRRT to create a kinematic, continuous,
     /// collision free path between an ordered State contrainer (Between each consecutive state, only one effector
     /// position differs between the states). Equilibrium is not
@@ -153,7 +154,8 @@ namespace hpp {
                                                              const core::PathPtr_t refPath,
                                                              const CIT_StateFrame& startState,
                                                              const CIT_StateFrame& endState,
-                                                             const std::size_t numOptimizations = 10);
+                                                             const std::size_t numOptimizations = 10,
+                                                             const bool keepExtraDof = false);
 
     /*typedef core::PathPtr_t (*interpolate_states)(rbprm::RbPrmFullBodyPtr_t, core::ProblemPtr_t,const rbprm::CIT_State&,
                                                        const rbprm::CIT_State&,const std::size_t);

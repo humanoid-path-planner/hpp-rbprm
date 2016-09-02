@@ -44,16 +44,32 @@ namespace hpp {
 namespace rbprm {
 namespace stability{
 
-    void computeRectangleContact(const RbPrmLimbPtr_t limb, Ref_matrix43 p)
+    void computeRectangleContact(const std::string& name, const RbPrmLimbPtr_t limb, const State& state, Ref_matrix43 p)
     {
         const double& lx = limb->x_, ly = limb->y_;
         const fcl::Transform3f& transform = limb->effector_->currentTransformation();
-        const fcl::Matrix3f& fclRotation = transform.getRotation();
+        //const fcl::Matrix3f& fclRotation = transform.getRotation();
         const fcl::Vec3f& po = transform.getTranslation();
-        Rotation R;
-        for(int i =0; i< 3; ++i)
-            for(int j =0; j<3;++j)
-                R(i,j) = fclRotation(i,j);
+        //create rotation matrix from normal
+        fcl::Vec3f z_fcl = state.contactNormals_.at(name);
+        Eigen::Vector3d z,x,y;
+        for(int i =0; i<3; ++i) z[i] = z_fcl[i];
+        x = z.cross(Eigen::Vector3d(0,-1,0));
+        if(x.norm() < 10e-6)
+        {
+            y = z.cross(fcl::Vec3f(1,0,0));
+            y.normalize();
+            x = y.cross(z);
+        }
+        else
+        {
+            x.normalize();
+            y = z.cross(x);
+        }
+        Eigen::Matrix3d R;
+        R.block<3,1>(0,0) = x;
+        R.block<3,1>(0,1) = y;
+        R.block<3,1>(0,2) = z;
         Eigen::Vector3d pos(po[0],po[1],po[2]);
         p << lx,  ly, 0,
              lx, -ly, 0,
@@ -71,7 +87,7 @@ namespace stability{
     }
 
     robust_equilibrium::Vector3 setupLibrary(const RbPrmFullBodyPtr_t fullbody, State& state, StaticEquilibrium& sEq, StaticEquilibriumAlgorithm alg,
-                                             const core::value_type friction = 0.5)
+                                             const core::value_type friction = 0.4)
     {
         hpp::model::ConfigurationIn_t save = fullbody->device_->currentConfiguration();
         std::vector<std::string> contacts;
@@ -90,7 +106,7 @@ namespace stability{
             const RbPrmLimbPtr_t limb =fullbody->GetLimbs().at(contacts[c]);
             const fcl::Vec3f& n = state.contactNormals_.at(contacts[c]);
             Vector3 normal(n[0],n[1],n[2]);
-            computeRectangleContact(limb,positions.middleRows<4>(c*4));
+            computeRectangleContact(contacts[c], limb,state,positions.middleRows<4>(c*4));
             for(int i =0; i < 4; ++i)
             {
                 normals.middleRows<1>(4*c+i) = normal;
@@ -130,6 +146,8 @@ namespace stability{
             if(status != LP_STATUS_OPTIMAL)
             {
                 std::cout << "error " << std::endl;
+                H = Eigen::MatrixXd::Zero(6,6);
+                h = Eigen::MatrixXd::Zero(6,1);
             }
         }
         return res;

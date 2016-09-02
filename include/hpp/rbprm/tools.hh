@@ -79,7 +79,15 @@ namespace hpp {
   template<typename T>
   void RemoveEffectorCollisionRec(T& validation, model::JointPtr_t joint, const model::CollisionObjectPtr_t obstacle)
   {
-      validation.removeObstacleFromJoint(joint,obstacle);
+      try
+      {
+        validation.removeObstacleFromJoint(joint,obstacle);
+      }
+      catch(const std::runtime_error& e)
+      {
+          std::cout << "WARNING: " << e.what() << std::endl;
+          return;
+      }
       //then sons
       for(std::size_t i =0; i < joint->numberChildJoints(); ++i)
       {
@@ -100,8 +108,16 @@ namespace hpp {
   template<typename T>
   void RemoveEffectorCollision(T& validation, model::JointPtr_t effectorJoint, const model::CollisionObjectPtr_t obstacle)
   {
-      //remove actual effector or not ?
-      validation.removeObstacleFromJoint(effectorJoint,obstacle);
+      try
+      {
+          //remove actual effector or not ?
+          validation.removeObstacleFromJoint(effectorJoint,obstacle);
+      }
+      catch(const std::runtime_error& e)
+      {
+          std::cout << "WARNING: " << e.what() << std::endl;
+          return;
+      }
       //then sons
       for(std::size_t i =0; i < effectorJoint->numberChildJoints(); ++i)
       {
@@ -119,7 +135,15 @@ namespace hpp {
       for(model::ObjectVector_t::const_iterator cit = collisionObjects.begin();
           cit != collisionObjects.end(); ++cit)
       {
-          collisionValidation.removeObstacleFromJoint(joint, *cit);
+          try
+          {
+              collisionValidation.removeObstacleFromJoint(joint, *cit);
+          }
+          catch(const std::runtime_error& e)
+          {
+              std::cout << "WARNING: "<< e.what() << std::endl;
+              return;
+          }
       }
       for(std::size_t i=0; i<joint->numberChildJoints(); ++i)
       {

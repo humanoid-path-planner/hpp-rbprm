@@ -72,12 +72,24 @@ using namespace core;
         ConfigurationPtr_t config (new Configuration_t(configSize_));
         config->head(configSize_-1) =  (*rootPath_)(pathDofVal);
         (*config) [pathDofRank_] = u;
-        // choose random limb configuration
-        for(rbprm::CIT_Limb cit = freeLimbs_.begin(); cit != freeLimbs_.end(); ++cit)
+        if(freeLimbs_.empty())
         {
-            const rbprm::RbPrmLimbPtr_t limb = cit->second;
-            const sampling::Sample& sample = *(limb->sampleContainer_.samples_.begin() + (rand() % (int) (limb->sampleContainer_.samples_.size() -1)));
-            sampling::Load(sample,*config);
+            JointVector_t jv = device_->getJointVector ();
+            for (JointVector_t::const_iterator itJoint = jv.begin ();
+                 itJoint != jv.end (); itJoint++) {
+              std::size_t rank = (*itJoint)->rankInConfiguration ();
+              (*itJoint)->configuration ()->uniformlySample (rank, *config);
+            }
+        }
+        else
+        {
+            // choose random limb configuration
+            for(rbprm::CIT_Limb cit = freeLimbs_.begin(); cit != freeLimbs_.end(); ++cit)
+            {
+                const rbprm::RbPrmLimbPtr_t limb = cit->second;
+                const sampling::Sample& sample = *(limb->sampleContainer_.samples_.begin() + (rand() % (int) (limb->sampleContainer_.samples_.size() -1)));
+                sampling::Load(sample,*config);
+            }
         }
         UpdateConstraints(*config, projector_, tds_, pathDofRank_);
         return config;

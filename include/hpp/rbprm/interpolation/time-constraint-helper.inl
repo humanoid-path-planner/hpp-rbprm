@@ -200,19 +200,26 @@ namespace
             return numValid;
         }
 
-        inline PathPtr_t ConcatenateAndResizePath(PathVectorPtr_t res[], std::size_t numValid)
+        inline PathPtr_t ConcatenateAndResizePath(PathVectorPtr_t res[], std::size_t numValid, const bool keepExtraDof)
         {
             PathVectorPtr_t completePath = res[0];
             for(std::size_t i = 1; i < numValid; ++i)
             {
                 completePath->concatenate(*res[i]);
             }
-            // reducing path
-            core::SizeInterval_t interval(0, completePath->initial().rows()-1);
-            core::SizeIntervals_t intervals;
-            intervals.push_back(interval);
-            PathPtr_t reducedPath = core::SubchainPath::create(completePath,intervals);
-            return reducedPath;
+            if(keepExtraDof)
+            {
+                return completePath;
+            }
+            else
+            {
+                // reducing path
+                core::SizeInterval_t interval(0, completePath->initial().rows()-1);
+                core::SizeIntervals_t intervals;
+                intervals.push_back(interval);
+                PathPtr_t reducedPath = core::SubchainPath::create(completePath,intervals);
+                return reducedPath;
+            }
         }
     }
 
@@ -252,7 +259,7 @@ namespace
     PathPtr_t interpolateStatesFromPathGetter(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
                                               const ShooterFactory_T& shooterFactory, const PathGetter_T& pathGetter,
                                               const StateIterator_T &startState, const StateIterator_T &endState,
-                                              const  std::size_t numOptimizations)
+                                              const  std::size_t numOptimizations, const bool keepExtraDof=false)
     {
         PathVectorPtr_t res[100];
         bool valid[100];
@@ -280,29 +287,30 @@ namespace
             }
         }
         std::size_t numValid = checkPath(distance, valid);
-        return ConcatenateAndResizePath(res, numValid);
+        return ConcatenateAndResizePath(res, numValid, keepExtraDof);
     }
 
     template<class Helper_T, class ShooterFactory_T>
     PathPtr_t interpolateStatesFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
                                         const ShooterFactory_T& shooterFactory, const PathPtr_t refPath,
                                         const CIT_StateFrame &startState, const CIT_StateFrame &endState,
-                                        const std::size_t numOptimizations)
+                                        const std::size_t numOptimizations,
+                                        const bool keepExtraDof)
     {
         ExtractPath extractPath(refPath);
         return interpolateStatesFromPathGetter<Helper_T, CIT_StateFrame, ShooterFactory_T, ExtractPath>
-                (fullbody,referenceProblem, shooterFactory, extractPath,startState,endState,numOptimizations);
+                (fullbody,referenceProblem, shooterFactory, extractPath,startState,endState,numOptimizations,keepExtraDof);
     }
 
 
     template<class Helper_T, class ShooterFactory_T, typename StateConstIterator>
-    PathPtr_t interpolateStates(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,                                
+    PathPtr_t interpolateStates(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
                                 const ShooterFactory_T& shooterFactory, const StateConstIterator &startState,
-                                const StateConstIterator &endState, const std::size_t numOptimizations)
+                                const StateConstIterator &endState, const std::size_t numOptimizations, const bool keepExtraDof)
     {        
         GenPath genPath(*referenceProblem);
         return interpolateStatesFromPathGetter<Helper_T, StateConstIterator, ShooterFactory_T, GenPath>
-                (fullbody,referenceProblem, shooterFactory, genPath,startState,endState,numOptimizations);
+                (fullbody,referenceProblem, shooterFactory, genPath,startState,endState,numOptimizations,keepExtraDof);
     }
 
   }// namespace interpolation
