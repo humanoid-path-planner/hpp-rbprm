@@ -47,29 +47,57 @@ namespace stability{
     void computeRectangleContact(const std::string& name, const RbPrmLimbPtr_t limb, const State& state, Ref_matrix43 p)
     {
         const double& lx = limb->x_, ly = limb->y_;
-        const fcl::Transform3f& transform = limb->effector_->currentTransformation();
-        //const fcl::Matrix3f& fclRotation = transform.getRotation();
-        const fcl::Vec3f& po = transform.getTranslation();
+        const fcl::Vec3f& pos = state.contactPositions_.at(name);
         //create rotation matrix from normal
-        fcl::Vec3f z_fcl = state.contactNormals_.at(name);
-        Eigen::Vector3d z,x,y;
-        for(int i =0; i<3; ++i) z[i] = z_fcl[i];
-        x = z.cross(Eigen::Vector3d(0,-1,0));
-        if(x.norm() < 10e-6)
+        Eigen::Matrix3d R;
+        if(limb->contactType_ == _3_DOF)
         {
-            y = z.cross(fcl::Vec3f(1,0,0));
-            y.normalize();
-            x = y.cross(z);
+            fcl::Vec3f z_fcl = state.contactNormals_.at(name);
+            Eigen::Vector3d z,x,y;
+            for(int i =0; i<3; ++i) z[i] = z_fcl[i];
+            x = z.cross(Eigen::Vector3d(0,-1,0));
+            if(x.norm() < 10e-6)
+            {
+                y = z.cross(fcl::Vec3f(1,0,0));
+                y.normalize();
+                x = y.cross(z);
+            }
+            else
+            {
+                x.normalize();
+                y = z.cross(x);
+            }
+            R.block<3,1>(0,0) = x;
+            R.block<3,1>(0,1) = y;
+            R.block<3,1>(0,2) = z;
         }
         else
         {
-            x.normalize();
-            y = z.cross(x);
+            const fcl::Matrix3f& fclRotation = state.contactRotation_.at(name);
+            for(int i =0; i< 3; ++i)
+                for(int j =0; j<3;++j)
+                    R(i,j) = fclRotation(i,j);
         }
-        Eigen::Matrix3d R;
-        R.block<3,1>(0,0) = x;
-        R.block<3,1>(0,1) = y;
-        R.block<3,1>(0,2) = z;
+        p << lx,  ly, 0,
+             lx, -ly, 0,
+            -lx, -ly, 0,
+            -lx,  ly, 0;
+        p.row(0) = pos + (R*p.row(0).transpose());
+        p.row(1) = pos + (R*p.row(1).transpose());
+        p.row(2) = pos + (R*p.row(2).transpose());
+        p.row(3) = pos + (R*p.row(3).transpose());
+    }
+
+    void computeRectangleContact(const RbPrmLimbPtr_t limb, Ref_matrix43 p)
+    {
+        const double& lx = limb->x_, ly = limb->y_;
+        const fcl::Transform3f& transform = limb->effector_->currentTransformation();
+        const fcl::Matrix3f& fclRotation = transform.getRotation();
+        const fcl::Vec3f& po = transform.getTranslation();
+        Rotation R;
+        for(int i =0; i< 3; ++i)
+            for(int j =0; j<3;++j)
+                R(i,j) = fclRotation(i,j);
         Eigen::Vector3d pos(po[0],po[1],po[2]);
         p << lx,  ly, 0,
              lx, -ly, 0,
