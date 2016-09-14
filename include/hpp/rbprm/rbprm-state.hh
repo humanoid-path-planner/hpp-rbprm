@@ -117,6 +117,9 @@ typedef T_StateFrame::const_iterator CIT_StateFrame;
         bool stable;
         double robustness;
     }; // struct State
+    /// Given two State, compute the contact effectors distance travelled
+    /// between two states
+    HPP_RBPRM_DLLAPI model::value_type effectorDistance(const State& from, const State& to);
   } // namespace rbprm
 } // namespace hpp
 
