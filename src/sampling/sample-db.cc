@@ -170,11 +170,13 @@ SampleDB::~SampleDB()
 }
 
 
-OctreeReport::OctreeReport(const Sample* s, const fcl::Contact c, const double v, const fcl::Vec3f& normal)
+OctreeReport::OctreeReport(const Sample* s, const fcl::Contact c, const double v, const fcl::Vec3f& normal,
+        const fcl::CollisionObjectPtr_t& colObj)
    : sample_(s)
    , contact_(c)
    , value_(v)
    , normal_(normal)
+   , colObj_(colObj)
 {
    // NOTHING
 }
@@ -254,7 +256,8 @@ bool rbprm::sampling::GetCandidates(const SampleDB& sc, const fcl::Transform3f& 
                 normal = (v2 - v1).cross(v3 - v1);
                 normal.normalize();
                 Eigen::Vector3d eNormal(normal[0], normal[1], normal[2]);
-                OctreeReport report(&(*sit), contact, evaluate ? ((*evaluate)(*sit, eDir, eNormal)) :0, normal);
+                OctreeReport report(&(*sit), contact, evaluate ? ((*evaluate)(*sit, eDir, eNormal)) :0, normal,
+                        obj);
                 ++okay;
                 reports.insert(report);
             }

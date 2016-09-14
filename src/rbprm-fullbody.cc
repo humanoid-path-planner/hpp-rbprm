@@ -191,6 +191,7 @@ namespace hpp {
             sampling::Load(*cit, configuration);
             hpp::core::ValidationReportPtr_t valRep (new hpp::core::CollisionValidationReport);
             if(validation->validate(configuration, valRep) && (!stability || stability::IsStable(body,current) >=robustnessTreshold))
+
             {
                 current.configuration_ = configuration;
                 return true;
@@ -242,6 +243,7 @@ namespace hpp {
                     current.contactPositions_[name] = previous.contactPositions_.at(name);
                     current.contactNormals_[name] = previous.contactNormals_.at(name);
                     current.contactRotation_[name] = previous.contactRotation_.at(name);
+                    current.contactSurfaces_[name] = previous.contactSurfaces_.at(name);
                     current.contactOrder_.push(name);
                     current.configuration_ = config;
                 }
@@ -348,6 +350,7 @@ namespace hpp {
       core::Configuration_t moreRobust;
       double maxRob = -std::numeric_limits<double>::max();
       sampling::T_OctreeReport::const_iterator it = finalSet.begin();
+      fcl::CollisionObjectPtr_t selectedObj;
       for(;!found_sample && it!=finalSet.end(); ++it)
       {
           const sampling::OctreeReport& bestReport = *it;
@@ -418,7 +421,9 @@ namespace hpp {
                         maxRob = std::max(robustness, maxRob);
                         position = limb->effector_->currentTransformation().getTranslation();
                         rotation = limb->effector_->currentTransformation().getRotation();
+                        selectedObj = bestReport.colObj_;
                         found_sample = true;
+
                     }
                     // if no stable candidate is found, select best contact
                     // anyway
@@ -479,6 +484,10 @@ else
           current.contactNormals_[limbId] = normal;
           current.contactPositions_[limbId] = position;
           current.contactRotation_[limbId] = rotation;
+          if (selectedObj != NULL) {
+
+            current.contactSurfaces_[limbId] = selectedObj; 
+          }
           current.configuration_ = configuration;
           current.contactOrder_.push(limbId);
       }

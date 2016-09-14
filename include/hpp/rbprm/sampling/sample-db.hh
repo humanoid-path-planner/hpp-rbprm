@@ -35,7 +35,8 @@ namespace hpp {
     /// colliding with the environment.
     struct OctreeReport
     {
-      OctreeReport(const Sample*, const fcl::Contact, const double, const fcl::Vec3f& normal);
+      OctreeReport(const Sample*, const fcl::Contact, const double, const fcl::Vec3f& normal,
+              const fcl::CollisionObjectPtr_t& colObj);
       /// Sample considered for contact generation
       const Sample* sample_;
       /// Contact information returned from fcl
@@ -44,6 +45,8 @@ namespace hpp {
       double value_;
       /// normal vector of the surface in contact
       fcl::Vec3f normal_;
+      /// Collision object with which the octree node is in collision
+      fcl::CollisionObjectPtr_t colObj_;
     };
 
 

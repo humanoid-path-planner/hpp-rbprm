@@ -102,6 +102,7 @@ typedef T_StateFrame::const_iterator CIT_StateFrame;
         std::map<std::string, fcl::Vec3f> contactNormals_;
         std::map<std::string, fcl::Vec3f> contactPositions_;
         std::map<std::string, fcl::Matrix3f> contactRotation_;
+        std::map<std::string, fcl::CollisionObjectPtr_t> contactSurfaces_;
         std::queue<std::string> contactOrder_;
         std::size_t nbContacts;
         bool stable;
