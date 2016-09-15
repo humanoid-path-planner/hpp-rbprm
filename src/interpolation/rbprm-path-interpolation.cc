@@ -143,8 +143,8 @@ if (nbFailures > 1)
         watch.report_all_and_count(2,*fp);
         fout.close();
 #endif
-        //return FilterStates(states);
-        return states;
+        return FilterStates(states);
+        //return states;
     }
 
     void RbPrmInterpolation::init(const RbPrmInterpolationWkPtr_t& weakPtr)

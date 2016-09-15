@@ -43,7 +43,7 @@ namespace hpp {
     typedef TimeConstraintHelper<TimeConstraintPath,LimbRRTShooterFactory, SetLimbRRTConstraints> LimbRRTHelper;
     struct SetLimbRRTConstraints
     {
-        void operator ()(LimbRRTHelper& helper, const State& from, const State& to);
+        void operator ()(LimbRRTHelper& helper, const State& from, const State& to) const;
     };
 
     core::PathPtr_t limbRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,

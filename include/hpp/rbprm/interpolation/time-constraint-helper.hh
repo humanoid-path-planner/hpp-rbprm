@@ -35,12 +35,13 @@
 namespace hpp {
     namespace rbprm {
     namespace interpolation {
+
     /// Helper struct for applying creating planning problems with
     /// time dependant constraints in rbprm. Maintains a pointer
     /// to a RbPrmFullbody object, and creates a new instance
     /// of a problem for a clone of the associated Device.
     ///
-    template<class Path_T, class ShooterFactory_T, typename SetConstraints_T>
+    template<class Path_T, class ShooterFactory_T, typename ConstraintFactory_T>
     class HPP_CORE_DLLAPI TimeConstraintHelper
     {
     public:
@@ -51,14 +52,15 @@ namespace hpp {
         /// using this parameter as a reference, for retrieving collision obstacles
          TimeConstraintHelper(RbPrmFullBodyPtr_t fullbody,
                               const ShooterFactory_T& shooterFactory,
+                              const ConstraintFactory_T& constraintFactory,
                               core::ProblemPtr_t referenceProblem,
                               core::PathPtr_t refPath)
              : fullbody_(fullbody)
              , fullBodyDevice_(fullbody->device_->clone())
-             , shooterFactory_(shooterFactory)
              , rootProblem_(fullBodyDevice_)
              , refPath_(refPath)
-             , setConstraintsFunction_()
+             , shooterFactory_(shooterFactory)
+             , constraintFactory_(constraintFactory)
          {
              // adding extra DOF for including time in sampling
              fullBodyDevice_->setDimensionExtraConfigSpace(fullBodyDevice_->extraConfigSpace().dimension()+1);             
@@ -70,7 +72,7 @@ namespace hpp {
 
         ~TimeConstraintHelper(){}
 
-         void SetConstraints(const State& from, const State& to){setConstraintsFunction_(*this, from, to);}
+         void SetConstraints(const State& from, const State& to){constraintFactory_(*this, from, to);}
          void SetConfigShooter(const State& from, const State& to);
          void InitConstraints();
          void SetContactConstraints(const State& from, const State& to);
@@ -84,8 +86,8 @@ namespace hpp {
          core::PathPtr_t refPath_;
          core::ConfigProjectorPtr_t proj_;
          boost::shared_ptr<TimeConstraintSteering<Path_T> > steeringMethod_;
-         SetConstraints_T setConstraintsFunction_;
          const ShooterFactory_T& shooterFactory_;
+         const ConstraintFactory_T& constraintFactory_;
     };
 
     /// Runs the LimbRRT to create a kinematic, continuous,
@@ -115,9 +117,10 @@ namespace hpp {
     /// \param to iterator to the final State
     /// \param numOptimizations Number of iterations of the shortcut algorithm to apply between each states
     /// \return the resulting path vector, concatenation of all the interpolation paths between the State
-    template<class Helper_T, class ShooterFactory_T, typename StateConstIterator>
+    template<class Helper_T, class ShooterFactory_T, typename ConstraintFactory_T,  typename StateConstIterator>
     core::PathPtr_t HPP_RBPRM_DLLAPI interpolateStates(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
                                                              const ShooterFactory_T& shooterFactory,
+                                                             const ConstraintFactory_T& constraintFactory,
                                                              const StateConstIterator& startState,
                                                              const StateConstIterator& endState,
                                                              const std::size_t numOptimizations = 10,
@@ -147,10 +150,11 @@ namespace hpp {
     /// \param to iterator to the final State with its associated keyFrame in the path
     /// \param numOptimizations Number of iterations of the shortcut algorithm to apply between each states
     /// \return the resulting path vector, concatenation of all the interpolation paths between the State
-    template<class Helper_T, class ShooterFactory_T>
+    template<class Helper_T, class ShooterFactory_T, typename ConstraintFactory_T>
     core::PathPtr_t HPP_RBPRM_DLLAPI interpolateStatesFromPath(RbPrmFullBodyPtr_t fullbody,
                                                              core::ProblemPtr_t referenceProblem,
                                                              const ShooterFactory_T& shooterFactory,
+                                                             const ConstraintFactory_T& constraintFactory,
                                                              const core::PathPtr_t refPath,
                                                              const CIT_StateFrame& startState,
                                                              const CIT_StateFrame& endState,

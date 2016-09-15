@@ -26,9 +26,11 @@ SET(${LIBRARY_NAME}_SOURCES
 	rbprm-device.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-device.hh
 	rbprm-limb.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-limb.hh
         ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/time-dependant.hh
+        ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/interpolation-constraints.hh
         ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/time-constraint-helper.hh
         ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/time-constraint-helper.inl
         ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/time-constraint-utils.hh
+        interpolation/effector-rrt.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/spline/effector-rrt.hh
         interpolation/rbprm-path-interpolation.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/rbprm-path-interpolation.hh
         interpolation/time-constraint-shooter.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/time-constraint-shooter.hh
         interpolation/limb-rrt-shooter.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/limb-rrt-shooter.hh
@@ -47,12 +49,16 @@ SET(${LIBRARY_NAME}_SOURCES
         sampling/heuristic.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/sampling/heuristic.hh
         sampling/sample-db.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/sampling/sample-db.hh
         tools.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/tools.hh
-	stability/stability.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/stability/stability.hh
-	stability/support.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/stability/support.hh
+		stability/stability.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/stability/stability.hh
+		stability/support.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/stability/support.hh
         ik-solver.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/ik-solver.hh
         utils/stop-watch.cc ${PROJECT_SOURCE_DIR}/include/utils/stop-watch.hh
         rbprm-profiler.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-profiler.hh
-        ${PROJECT_SOURCE_DIR}/include/utils/Stdafx.hh
+        ${PROJECT_SOURCE_DIR}/include/spline/curve_abc.h
+        ${PROJECT_SOURCE_DIR}/include/spline/bezier_curve.h
+        ${PROJECT_SOURCE_DIR}/include/spline/exact_cubic.h
+        ${PROJECT_SOURCE_DIR}/include/spline/cubic_function.h
+        ${PROJECT_SOURCE_DIR}/include/spline/MathDefs.h
   )
 
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/src)

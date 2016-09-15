@@ -59,46 +59,19 @@ namespace interpolation {
     }
     }
 
-    template<class Path_T, class ShooterFactory_T, typename SetConstraints_T>
-    void TimeConstraintHelper<Path_T, ShooterFactory_T, SetConstraints_T>::InitConstraints()
+    template<class Path_T, class ShooterFactory_T, typename ConstraintFactory_T>
+    void TimeConstraintHelper<Path_T, ShooterFactory_T, ConstraintFactory_T>::InitConstraints()
     {
         core::ConstraintSetPtr_t cSet = core::ConstraintSet::create(rootProblem_.robot(),"");
         cSet->addConstraint(proj_);
         rootProblem_.constraints(cSet);
     }
 
-    template<class Path_T, class ShooterFactory_T, typename SetConstraints_T>
-    void TimeConstraintHelper<Path_T, ShooterFactory_T, SetConstraints_T>::SetConfigShooter(const hpp::rbprm::State &from, const hpp::rbprm::State &to)
+    template<class Path_T, class ShooterFactory_T, typename ConstraintFactory_T>
+    void TimeConstraintHelper<Path_T, ShooterFactory_T, ConstraintFactory_T>::SetConfigShooter(const hpp::rbprm::State &from, const hpp::rbprm::State &to)
     {
         rootProblem_.configurationShooter(shooterFactory_(fullbody_, refPath_, fullBodyDevice_->configSize()-1, from, to,
                                                           steeringMethod_->tds_, proj_));
-    }
-
-    template<class Path_T, class ShooterFactory_T, typename SetConstraints_T>
-    void TimeConstraintHelper<Path_T, ShooterFactory_T, SetConstraints_T>::SetContactConstraints(const State& from, const State& to)
-    {
-        std::vector<bool> cosntraintsR = setMaintainRotationConstraints();
-        std::vector<std::string> fixed = to.fixedContacts(from);
-        model::DevicePtr_t device = rootProblem_.robot();
-
-        for(std::vector<std::string>::const_iterator cit = fixed.begin();
-            cit != fixed.end(); ++cit)
-        {
-            RbPrmLimbPtr_t limb = fullbody_->GetLimbs().at(*cit);
-            const fcl::Vec3f& ppos  = from.contactPositions_.at(*cit);
-            const fcl::Matrix3f& rotation = from.contactRotation_.at(*cit);
-            JointPtr_t effectorJoint = device->getJointByName(limb->effector_->name());
-            proj_->add(core::NumericalConstraint::create (
-                                    constraints::deprecated::Position::create("",device,
-                                                                  effectorJoint,fcl::Vec3f(0,0,0), ppos)));
-            if(limb->contactType_ == hpp::rbprm::_6_DOF)
-            {
-                proj_->add(core::NumericalConstraint::create (constraints::deprecated::Orientation::create("", device,
-                                                                                  effectorJoint,
-                                                                                  rotation,
-                                                                                  cosntraintsR)));
-            }
-        }
     }
 
 namespace
@@ -137,8 +110,8 @@ namespace
     }
 }
 
-    template<class Path_T, class Shooter_T, typename SetConstraints_T>
-    PathVectorPtr_t TimeConstraintHelper<Path_T, Shooter_T, SetConstraints_T>::Run(const State &from, const State &to)
+    template<class Path_T, class Shooter_T, typename ConstraintFactory_T>
+    PathVectorPtr_t TimeConstraintHelper<Path_T, Shooter_T, ConstraintFactory_T>::Run(const State &from, const State &to)
     {
         PathVectorPtr_t res;
         const rbprm::T_Limb& limbs = fullbody_->GetLimbs();
@@ -255,9 +228,10 @@ namespace
         return *from;
     }
 
-    template<class Helper_T, class StateIterator_T,class ShooterFactory_T, class PathGetter_T>
+    template<class Helper_T, class StateIterator_T,class ShooterFactory_T, typename ConstraintFactory_T, class PathGetter_T>
     PathPtr_t interpolateStatesFromPathGetter(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
-                                              const ShooterFactory_T& shooterFactory, const PathGetter_T& pathGetter,
+                                              const ShooterFactory_T& shooterFactory, const ConstraintFactory_T& constraintFactory,
+                                              const PathGetter_T& pathGetter,
                                               const StateIterator_T &startState, const StateIterator_T &endState,
                                               const  std::size_t numOptimizations, const bool keepExtraDof=false)
     {
@@ -273,7 +247,7 @@ namespace
             StateIterator_T a, b;
             a = (startState+i);
             b = (startState+i+1);
-            Helper_T helper(fullbody, shooterFactory, referenceProblem, pathGetter(a,b));
+            Helper_T helper(fullbody, shooterFactory, constraintFactory, referenceProblem, pathGetter(a,b));
             helper.SetConstraints(get(a), get(b));
             PathVectorPtr_t partialPath = helper.Run(get(a), get(b));
             if(partialPath)
@@ -290,27 +264,29 @@ namespace
         return ConcatenateAndResizePath(res, numValid, keepExtraDof);
     }
 
-    template<class Helper_T, class ShooterFactory_T>
+    template<class Helper_T, class ShooterFactory_T, typename ConstraintFactory_T>
     PathPtr_t interpolateStatesFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
-                                        const ShooterFactory_T& shooterFactory, const PathPtr_t refPath,
+                                        const ShooterFactory_T& shooterFactory, const ConstraintFactory_T& constraintFactory,
+                                        const PathPtr_t refPath,
                                         const CIT_StateFrame &startState, const CIT_StateFrame &endState,
                                         const std::size_t numOptimizations,
                                         const bool keepExtraDof)
     {
         ExtractPath extractPath(refPath);
-        return interpolateStatesFromPathGetter<Helper_T, CIT_StateFrame, ShooterFactory_T, ExtractPath>
-                (fullbody,referenceProblem, shooterFactory, extractPath,startState,endState,numOptimizations,keepExtraDof);
+        return interpolateStatesFromPathGetter<Helper_T, CIT_StateFrame, ShooterFactory_T, ConstraintFactory_T, ExtractPath>
+                (fullbody,referenceProblem, shooterFactory, constraintFactory, extractPath,startState,endState,numOptimizations,keepExtraDof);
     }
 
 
-    template<class Helper_T, class ShooterFactory_T, typename StateConstIterator>
+    template<class Helper_T, class ShooterFactory_T, typename ConstraintFactory_T, typename StateConstIterator>
     PathPtr_t interpolateStates(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
-                                const ShooterFactory_T& shooterFactory, const StateConstIterator &startState,
-                                const StateConstIterator &endState, const std::size_t numOptimizations, const bool keepExtraDof)
+                                const ShooterFactory_T& shooterFactory, const ConstraintFactory_T& constraintFactory,
+                                const StateConstIterator &startState, const StateConstIterator &endState,
+                                const std::size_t numOptimizations, const bool keepExtraDof)
     {        
         GenPath genPath(*referenceProblem);
-        return interpolateStatesFromPathGetter<Helper_T, StateConstIterator, ShooterFactory_T, GenPath>
-                (fullbody,referenceProblem, shooterFactory, genPath,startState,endState,numOptimizations,keepExtraDof);
+        return interpolateStatesFromPathGetter<Helper_T, StateConstIterator, ShooterFactory_T, ConstraintFactory_T, GenPath>
+                (fullbody,referenceProblem, shooterFactory, constraintFactory, genPath,startState,endState,numOptimizations,keepExtraDof);
     }
 
   }// namespace interpolation

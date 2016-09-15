@@ -44,7 +44,7 @@ namespace hpp {
     typedef TimeConstraintHelper<TimeConstraintPath,ComRRTShooterFactory, SetComRRTConstraints> ComRRTHelper;
     struct SetComRRTConstraints
     {
-        void operator ()(ComRRTHelper& helper, const State& from, const State& to);
+        void operator ()(ComRRTHelper& helper, const State& from, const State& to) const;
     };
 
     core::PathPtr_t comRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
