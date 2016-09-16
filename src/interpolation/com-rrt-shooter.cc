@@ -47,6 +47,14 @@ using namespace core;
     {
         return TimeConstraintShooter::create(fullBody->device_,guidePath_,pathDofRank,tds, projector, GetFreeLimbs(fullBody, from, to));
     }
+
+    TimeConstraintShooterPtr_t EffectorRRTShooterFactory::operator()(const RbPrmFullBodyPtr_t fullBody, const hpp::core::PathPtr_t /*comPath*/,
+                    const std::size_t pathDofRank, const hpp::rbprm::State &from, const hpp::rbprm::State &to,
+                    const T_TimeDependant& tds, core::ConfigProjectorPtr_t projector) const
+    {
+        rbprm::T_Limb res;
+        return TimeConstraintShooter::create(fullBody->device_,guidePath_,pathDofRank,tds, projector, res);
+    }
   }// namespace interpolation
   }// namespace rbprm
 }// namespace hpp

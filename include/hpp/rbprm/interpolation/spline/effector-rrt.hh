@@ -31,6 +31,8 @@
 # include <hpp/core/path.hh>
 # include <hpp/core/problem.hh>
 # include <hpp/core/config-projector.hh>
+# include <spline/exact_cubic.h>
+# include <spline/bezier_curve.h>
 
 # include <vector>
 # include <map>
@@ -41,25 +43,32 @@ namespace rbprm {
 namespace interpolation {
     struct SetEffectorRRTConstraints;
 
-    typedef TimeConstraintHelper<TimeConstraintPath,ComRRTShooterFactory, SetEffectorRRTConstraints> EffectorRRTHelper;
+    typedef TimeConstraintHelper<TimeConstraintPath,EffectorRRTShooterFactory, SetEffectorRRTConstraints> EffectorRRTHelper;
 
     // assumes extra dof is still present
-    core::PathPtr_t effectorRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t currentPath,
-                           const State &startState, const State &nextState);
+    core::PathPtr_t effectorRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
+                                const  State &startState, const State &nextState,
+                                const  std::size_t numOptimizations,
+                                const bool keepExtraDof);
+
+
+    typedef spline::bezier_curve<double, double, 1, true, Eigen::Matrix<value_type, 1, 1> > exact_cubic_t;
+    typedef boost::shared_ptr<exact_cubic_t> exact_cubic_Ptr;
 
     struct SetEffectorRRTConstraints
     {
-        SetEffectorRRTConstraints(core::PathPtr_t refCom, core::PathPtr_t refEff):
-            refCom_(refCom), refEff_ (refEff){}
+        SetEffectorRRTConstraints(const core::PathPtr_t refCom, const exact_cubic_Ptr refEff, const model::JointPtr_t  effector):
+            refCom_(refCom), refEff_ (refEff), effector_(effector){}
 
         void operator ()(EffectorRRTHelper& helper, const State& from, const State& to) const
         {
             CreateContactConstraints<EffectorRRTHelper>(helper, from, to);
-            CreateComConstraint<EffectorRRTHelper,core::PathPtr_t >(helper, refCom_);
-            //CreateEffectorConstraint<EffectorRRTHelper,core::PathPtr_t >(helper, refEff_);
+            //CreateComConstraint<EffectorRRTHelper,core::PathPtr_t >(helper, refCom_);
+            CreateEffectorConstraint<EffectorRRTHelper, const exact_cubic_Ptr >(helper, refEff_, effector_);
         }
-        core::PathPtr_t  refCom_;
-        core::PathPtr_t  refEff_;
+        const core::PathPtr_t   refCom_;
+        const exact_cubic_Ptr   refEff_;
+        const model::JointPtr_t effector_;
     };
 
 

@@ -46,18 +46,19 @@ namespace interpolation {
     // Implementation
 
     template<class Reference>
-    struct Vec3RightSide : public RightHandSideFunctor
+    struct VecRightSide : public RightHandSideFunctor
     {
-         Vec3RightSide (const Reference ref) : ref_(ref){}
-        ~Vec3RightSide(){}
+         VecRightSide (const Reference ref, const int dim = 3) : ref_(ref), dim_(dim){}
+        ~VecRightSide(){}
         virtual void operator() (constraints::vectorOut_t output,
                                const constraints::value_type& normalized_input, model::ConfigurationOut_t /*conf*/) const
         {
           const std::pair<core::value_type, core::value_type>& tR (ref_->timeRange());
           constraints::value_type unNormalized = (tR.second-tR.first)* normalized_input + tR.first;
-          output = ref_->operator ()(unNormalized).head(3);
+          output = ref_->operator ()(unNormalized).head(dim_);
         }
         const Reference ref_;
+        const int dim_;
     };
 
     typedef constraints::PointCom PointCom;
@@ -80,7 +81,14 @@ namespace interpolation {
         comEq->nonConstRightHandSide() = initTarget;
         proj->add(comEq);
         proj->updateRightHandSide();
-        helper.steeringMethod_->tds_.push_back(TimeDependant(comEq, boost::shared_ptr<Vec3RightSide<Reference> >(new Vec3RightSide<Reference> (ref))));
+        helper.steeringMethod_->tds_.push_back(TimeDependant(comEq, boost::shared_ptr<VecRightSide<Reference> >(new VecRightSide<Reference> (ref, 3))));
+    }
+
+    inline constraints::deprecated::PositionPtr_t createPositionMethod(model::DevicePtr_t device, const fcl::Vec3f& initTarget, JointPtr_t effector)
+    {
+        std::vector<bool> mask; mask.push_back(false); mask.push_back(false); mask.push_back(true);
+        return constraints::deprecated::Position::create("",device,
+                                      effector,fcl::Vec3f(0,0,0), initTarget,matrix3_t::getIdentity (),mask);
     }
 
 
@@ -90,15 +98,14 @@ namespace interpolation {
         model::DevicePtr_t device = helper.rootProblem_.robot();
         core::ComparisonTypePtr_t equals = core::Equality::create ();
         core::ConfigProjectorPtr_t& proj = helper.proj_;
-
+        JointPtr_t effector = device->getJointByName(effectorJoint->name());
         NumericalConstraintPtr_t effEq = core::NumericalConstraint::create (
-                                    constraints::deprecated::Position::create("",device,
-                                                                  effectorJoint,fcl::Vec3f(0,0,0), initTarget), equals);
-        effEq->nonConstRightHandSide() = initTarget;
+                                    createPositionMethod(device,initTarget, effector), equals);
+        effEq->nonConstRightHandSide()[0] = initTarget[2];
         proj->add(effEq);
         proj->updateRightHandSide();
         helper.steeringMethod_->tds_.push_back(
-                    TimeDependant(effEq, boost::shared_ptr<Vec3RightSide<core::PathPtr_t> >(new Vec3RightSide<core::PathPtr_t>(ref))));
+                    TimeDependant(effEq, boost::shared_ptr<VecRightSide<Reference> >(new VecRightSide<Reference>(ref, 1))));
     }
 
 
