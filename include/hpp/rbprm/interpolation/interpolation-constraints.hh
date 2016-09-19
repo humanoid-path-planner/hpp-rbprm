@@ -84,11 +84,17 @@ namespace interpolation {
         helper.steeringMethod_->tds_.push_back(TimeDependant(comEq, boost::shared_ptr<VecRightSide<Reference> >(new VecRightSide<Reference> (ref, 3))));
     }
 
-    inline constraints::deprecated::PositionPtr_t createPositionMethod(model::DevicePtr_t device, const fcl::Vec3f& initTarget, JointPtr_t effector)
+    inline constraints::PositionPtr_t createPositionMethod(model::DevicePtr_t device, const fcl::Vec3f& initTarget, JointPtr_t effector)
     {
-        std::vector<bool> mask; mask.push_back(false); mask.push_back(false); mask.push_back(true);
-        return constraints::deprecated::Position::create("",device,
-                                      effector,fcl::Vec3f(0,0,0), initTarget,matrix3_t::getIdentity (),mask);
+        //std::vector<bool> mask; mask.push_back(false); mask.push_back(false); mask.push_back(true);
+        std::vector<bool> mask; mask.push_back(true); mask.push_back(true); mask.push_back(true);
+        fcl::Transform3f localFrame, globalFrame;
+        globalFrame.setTranslation(initTarget);
+        return constraints::Position::create("",device,
+                                             effector,
+                                             localFrame,
+                                             globalFrame,
+                                             mask);
     }
 
 

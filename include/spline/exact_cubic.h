@@ -54,8 +54,8 @@ struct exact_cubic : public curve_abc<Time, Numeric, Dim, Safe, Point>
 	///\param wayPointsEns   : an iterator pointing to the end           of a waypoint container
 	template<typename In>
 	exact_cubic(In wayPointsBegin, In wayPointsEnd)
-	{
-		std::size_t const size(std::distance(wayPointsBegin, wayPointsEnd));
+    {
+        std::size_t const size(std::distance(wayPointsBegin, wayPointsEnd));
 		if(Safe && size < 1)
 		{
 			throw; // TODO
@@ -76,11 +76,10 @@ struct exact_cubic : public curve_abc<Time, Numeric, Dim, Safe, Point>
 		MatrixX x =  MatrixX::Zero(size, Dim);
 
 	
-		In it(wayPointsBegin), next(wayPointsBegin);
-		++next;
-		Numeric t_previous((*it).first);
+        In it(wayPointsBegin), next(wayPointsBegin);
+        ++next;
 
-		for(std::size_t i(0); next != wayPointsEnd; ++next, ++it, ++i)
+        for(std::size_t i(0); next != wayPointsEnd; ++next, ++it, ++i)
 		{
 			num_t const dTi((*next).first  - (*it).first);
 			num_t const dTi_sqr(dTi * dTi);
@@ -94,11 +93,11 @@ struct exact_cubic : public curve_abc<Time, Numeric, Dim, Safe, Point>
 			h5(i,i+1) = -2 / dTi_cube;
 			h6(i,i)   =  1 / dTi_sqr;
 			h6(i,i+1) =  1 / dTi_sqr;
-			if( i+2 < size)
-			{
-				In it2(next); ++ it2;
-				num_t const dTi_1(1/((*it2).first - (*next).first));
-				num_t const dTi_1sqr(dTi_1 * dTi_1);
+            if( i+2 < size)
+            {
+                In it2(next); ++ it2;
+                num_t const dTi_1((*it2).first - (*next).first);
+                num_t const dTi_1sqr(dTi_1 * dTi_1);
 				// this can be optimized but let's focus on clarity as long as not needed
 				h1(i+1, i)   =  2 / dTi;
 				h1(i+1, i+1) =  4 / dTi + 4 / dTi_1;
@@ -111,8 +110,8 @@ struct exact_cubic : public curve_abc<Time, Numeric, Dim, Safe, Point>
 	      	}
 		// adding last x
 		x.row(size-1)= (*it).second.transpose();
-		a= x;
-		PseudoInverse(h1);
+        a= x;
+        PseudoInverse(h1);
 		b = h1 * h2 * x; //h1 * b = h2 * x => b = (h1)^-1 * h2 * x
 		c = h3 * x + h4 * b;
 		d = h5 * x + h6 * b;

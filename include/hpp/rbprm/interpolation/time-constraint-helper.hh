@@ -54,7 +54,8 @@ namespace hpp {
                               const ShooterFactory_T& shooterFactory,
                               const ConstraintFactory_T& constraintFactory,
                               core::ProblemPtr_t referenceProblem,
-                              core::PathPtr_t refPath)
+                              core::PathPtr_t refPath,
+                              const model::value_type error_treshold = 0.001)
              : fullbody_(fullbody)
              , fullBodyDevice_(fullbody->device_->clone())
              , rootProblem_(fullBodyDevice_)
@@ -64,7 +65,7 @@ namespace hpp {
          {
              // adding extra DOF for including time in sampling
              fullBodyDevice_->setDimensionExtraConfigSpace(fullBodyDevice_->extraConfigSpace().dimension()+1);             
-             proj_ = core::ConfigProjector::create(rootProblem_.robot(),"proj", 0.001, 1000);
+             proj_ = core::ConfigProjector::create(rootProblem_.robot(),"proj", error_treshold, 1000);
              rootProblem_.collisionObstacles(referenceProblem->collisionObstacles());
              steeringMethod_ = TimeConstraintSteering<Path_T>::create(&rootProblem_,fullBodyDevice_->configSize()-1);
              rootProblem_.steeringMethod(steeringMethod_);
@@ -124,7 +125,9 @@ namespace hpp {
                                                              const StateConstIterator& startState,
                                                              const StateConstIterator& endState,
                                                              const std::size_t numOptimizations = 10,
-                                                             const bool keepExtraDof = false);
+                                                             const bool keepExtraDof = false,
+                                                             const model::value_type error_treshold = 0.001);
+
     /// Runs the LimbRRT to create a kinematic, continuous,
     /// collision free path between an ordered State contrainer (Between each consecutive state, only one effector
     /// position differs between the states). Equilibrium is not
@@ -159,7 +162,8 @@ namespace hpp {
                                                              const CIT_StateFrame& startState,
                                                              const CIT_StateFrame& endState,
                                                              const std::size_t numOptimizations = 10,
-                                                             const bool keepExtraDof = false);
+                                                             const bool keepExtraDof = false,
+                                                             const model::value_type error_treshold = 0.001);
 
     /*typedef core::PathPtr_t (*interpolate_states)(rbprm::RbPrmFullBodyPtr_t, core::ProblemPtr_t,const rbprm::CIT_State&,
                                                        const rbprm::CIT_State&,const std::size_t);

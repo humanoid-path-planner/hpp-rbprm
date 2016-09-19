@@ -233,7 +233,8 @@ namespace
                                               const ShooterFactory_T& shooterFactory, const ConstraintFactory_T& constraintFactory,
                                               const PathGetter_T& pathGetter,
                                               const StateIterator_T &startState, const StateIterator_T &endState,
-                                              const  std::size_t numOptimizations, const bool keepExtraDof=false)
+                                              const std::size_t numOptimizations, const bool keepExtraDof=false,
+                                              const model::value_type error_treshold = 0.001)
     {
         PathVectorPtr_t res[100];
         bool valid[100];
@@ -247,7 +248,7 @@ namespace
             StateIterator_T a, b;
             a = (startState+i);
             b = (startState+i+1);
-            Helper_T helper(fullbody, shooterFactory, constraintFactory, referenceProblem, pathGetter(a,b));
+            Helper_T helper(fullbody, shooterFactory, constraintFactory, referenceProblem, pathGetter(a,b),error_treshold);
             helper.SetConstraints(get(a), get(b));
             PathVectorPtr_t partialPath = helper.Run(get(a), get(b));
             if(partialPath)
@@ -270,11 +271,12 @@ namespace
                                         const PathPtr_t refPath,
                                         const CIT_StateFrame &startState, const CIT_StateFrame &endState,
                                         const std::size_t numOptimizations,
-                                        const bool keepExtraDof)
+                                        const bool keepExtraDof,
+                                        const value_type error_treshold)
     {
         ExtractPath extractPath(refPath);
         return interpolateStatesFromPathGetter<Helper_T, CIT_StateFrame, ShooterFactory_T, ConstraintFactory_T, ExtractPath>
-                (fullbody,referenceProblem, shooterFactory, constraintFactory, extractPath,startState,endState,numOptimizations,keepExtraDof);
+                (fullbody,referenceProblem, shooterFactory, constraintFactory, extractPath,startState,endState,numOptimizations,keepExtraDof, error_treshold);
     }
 
 
@@ -282,11 +284,13 @@ namespace
     PathPtr_t interpolateStates(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
                                 const ShooterFactory_T& shooterFactory, const ConstraintFactory_T& constraintFactory,
                                 const StateConstIterator &startState, const StateConstIterator &endState,
-                                const std::size_t numOptimizations, const bool keepExtraDof)
+                                const std::size_t numOptimizations, const bool keepExtraDof,
+                                const value_type error_treshold )
     {        
         GenPath genPath(*referenceProblem);
         return interpolateStatesFromPathGetter<Helper_T, StateConstIterator, ShooterFactory_T, ConstraintFactory_T, GenPath>
-                (fullbody,referenceProblem, shooterFactory, constraintFactory, genPath,startState,endState,numOptimizations,keepExtraDof);
+                (fullbody,referenceProblem, shooterFactory, constraintFactory,
+                 genPath,startState,endState,numOptimizations,keepExtraDof, error_treshold);
     }
 
   }// namespace interpolation

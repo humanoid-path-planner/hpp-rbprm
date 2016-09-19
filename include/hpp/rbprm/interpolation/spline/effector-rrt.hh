@@ -52,7 +52,7 @@ namespace interpolation {
                                 const bool keepExtraDof);
 
 
-    typedef spline::bezier_curve<double, double, 1, true, Eigen::Matrix<value_type, 1, 1> > exact_cubic_t;
+    typedef spline::exact_cubic<double, double, 3, true, Eigen::Matrix<value_type, 3, 1> > exact_cubic_t;
     typedef boost::shared_ptr<exact_cubic_t> exact_cubic_Ptr;
 
     struct SetEffectorRRTConstraints
@@ -63,7 +63,7 @@ namespace interpolation {
         void operator ()(EffectorRRTHelper& helper, const State& from, const State& to) const
         {
             CreateContactConstraints<EffectorRRTHelper>(helper, from, to);
-            //CreateComConstraint<EffectorRRTHelper,core::PathPtr_t >(helper, refCom_);
+            CreateComConstraint<EffectorRRTHelper,core::PathPtr_t >(helper, refCom_);
             CreateEffectorConstraint<EffectorRRTHelper, const exact_cubic_Ptr >(helper, refEff_, effector_);
         }
         const core::PathPtr_t   refCom_;
