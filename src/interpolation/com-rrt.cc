@@ -23,6 +23,10 @@
 #include <hpp/core/basic-configuration-shooter.hh>
 #include <hpp/core/discretized-path-validation.hh>
 
+#ifdef PROFILE
+#include "hpp/rbprm/rbprm-profiler.hh"
+#endif
+
 namespace hpp {
 using namespace core;
   namespace rbprm {
@@ -99,8 +103,16 @@ using namespace core;
         }
         ComRRTShooterFactory shooterFactory(guidePath);
         SetComRRTConstraints constraintFactory;
-        return interpolateStatesFromPath<ComRRTHelper, ComRRTShooterFactory, SetComRRTConstraints>
-                (fullbody, referenceProblem, shooterFactory, constraintFactory, comPath, stateFrames.begin(), stateFrames.begin()+1, numOptimizations, keepExtraDof);
+#ifdef PROFILE
+    RbPrmProfiler& watch = getRbPrmProfiler();
+    watch.start("com_traj");
+#endif
+        core::PathPtr_t resPath = interpolateStatesFromPath<ComRRTHelper, ComRRTShooterFactory, SetComRRTConstraints>
+              (fullbody, referenceProblem, shooterFactory, constraintFactory, comPath, stateFrames.begin(), stateFrames.begin()+1, numOptimizations, keepExtraDof);
+#ifdef PROFILE
+    watch.stop("com_traj");
+#endif
+        return resPath;
     }
 
     core::PathPtr_t comRRTFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
