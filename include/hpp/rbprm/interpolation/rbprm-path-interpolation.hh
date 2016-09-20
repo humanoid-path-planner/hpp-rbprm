@@ -65,7 +65,8 @@ namespace hpp {
         /// \param robustnessTreshold minimum value of the static equilibrium robustness criterion required to accept the configuration (0 by default).
         /// \return a pointer to the created RbPrmInterpolation instance
         rbprm::T_StateFrame Interpolate(const affMap_t& affordances, const std::map<std::string, std::vector<std::string> >& affFilters,
-                                       const double timeStep = 0.01, const double robustnessTreshold=0.);
+                                        const double timeStep = 0.01, const double robustnessTreshold=0.,
+                                        const bool filterStates = false);
 
         /// Transforms a discrete sequence of configurations into
         /// a discrete sequence of balanced contact configurations.
@@ -80,7 +81,8 @@ namespace hpp {
        /// \return The time parametrized list of states according to the reference path
         rbprm::T_StateFrame Interpolate(const affMap_t& affordances, const std::map<std::string, std::vector<std::string> >& affFilters,
                                         const T_Configuration& configs, const double robustnessTreshold=0.,
-                                        const model::value_type timeStep = 1., const model::value_type initValue = 0.);
+                                        const model::value_type timeStep = 1., const model::value_type initValue = 0.,
+                                        const bool filterStates = false);
 
     public:
         const core::PathVectorConstPtr_t path_;

@@ -53,7 +53,7 @@ namespace hpp {
     }
 
     rbprm::T_StateFrame RbPrmInterpolation::Interpolate(const affMap_t& affordances,
-			const std::map<std::string, std::vector<std::string> >& affFilters, const double timeStep, const double robustnessTreshold)
+            const std::map<std::string, std::vector<std::string> >& affFilters, const double timeStep, const double robustnessTreshold, const bool filterStates)
     {
         if(!path_) throw std::runtime_error ("Cannot interpolate; no path given to interpolator ");
         T_Configuration configs;
@@ -63,13 +63,13 @@ namespace hpp {
         {
             configs.push_back(configPosition(configs.back(),path_,i));
         }
-        return Interpolate(affordances, affFilters, configs, robustnessTreshold, timeStep, range.first);
+        return Interpolate(affordances, affFilters, configs, robustnessTreshold, timeStep, range.first, filterStates);
     }
 
     rbprm::T_StateFrame RbPrmInterpolation::Interpolate(const affMap_t& affordances,
                                                         const std::map<std::string, std::vector<std::string> >& affFilters,
                                                         const hpp::rbprm::T_Configuration &configs, const double robustnessTreshold,
-                                                        const model::value_type timeStep, const model::value_type initValue)
+                                                        const model::value_type timeStep, const model::value_type initValue, const bool filterStates)
     {
         int nbFailures = 0;
         model::value_type currentVal(initValue);
@@ -112,7 +112,7 @@ if (nbFailures > 1)
     watch.report_count(*fp);
     fout.close();
 #endif
-    return FilterStates(states);
+    return filterStates ? FilterStates(states) : states;
 }
             }
             if(multipleBreaks && !allowFailure)
@@ -143,7 +143,7 @@ if (nbFailures > 1)
         watch.report_all_and_count(2,*fp);
         fout.close();
 #endif
-        return FilterStates(states);
+        return filterStates ? FilterStates(states) : states;
         //return states;
     }
 
