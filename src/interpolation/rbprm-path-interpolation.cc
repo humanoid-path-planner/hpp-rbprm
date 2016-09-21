@@ -137,11 +137,11 @@ if (nbFailures > 1)
 #ifdef PROFILE
         watch.add_to_count("planner succeeded", 1);
         watch.stop("complete generation");
-        std::ofstream fout;
+        /*std::ofstream fout;
         fout.open("log.txt", std::fstream::out | std::fstream::app);
         std::ostream* fp = &fout;
         watch.report_all_and_count(2,*fp);
-        fout.close();
+        fout.close();*/
 #endif
         return filterStates ? FilterStates(states) : states;
         //return states;
