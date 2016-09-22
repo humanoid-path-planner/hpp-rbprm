@@ -111,7 +111,7 @@ namespace interpolation {
         proj->add(effEq);
         proj->updateRightHandSide();
         helper.steeringMethod_->tds_.push_back(
-                    TimeDependant(effEq, boost::shared_ptr<VecRightSide<Reference> >(new VecRightSide<Reference>(ref, 1))));
+                    TimeDependant(effEq, boost::shared_ptr<VecRightSide<Reference> >(new VecRightSide<Reference>(ref, 3))));
     }
 
 

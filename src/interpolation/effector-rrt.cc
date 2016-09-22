@@ -96,9 +96,11 @@ using namespace core;
             res.push_back(std::make_pair(i,GetEffectorPositionAt(path,position, t)));
         }
         res.push_back(std::make_pair(nbWayPoints-1,GetEffectorPositionAt(path,position,path->timeRange().second)));
-        if(IsLine(res))
+        if(IsLine(res) && effectorDistance > 0.03 )
         {
-            value_type height = effectorDistance < 0.1 ? 0.01 : std::max(nbWayPoints* 0.015, 0.02) ;
+            //value_type height = effectorDistance < 0.1 ? 0.01 : std::max(nbWayPoints* 0.015, 0.02) ;
+std::cout << "is line " << std::endl;
+value_type height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max(nbWayPoints* 0.01, 0.02)) ;
             isLine = true;
             T_Waypoint res2;
             res2.push_back(res.front());
@@ -106,11 +108,13 @@ using namespace core;
             res2.push_back(std::make_pair(2, res.back().second));
             return res2;
         }
-        else if(Is2d(res))
+        else if(Is2d(res) && effectorDistance > 0.03 )
         {
+std::cout << "is 2d " << std::endl;
             isLine = true;
             std::size_t apex = nbWayPoints / 2;
-            value_type max_height = effectorDistance < 0.1 ? 0.01 : std::max(nbWayPoints* 0.015, 0.02);
+            //value_type max_height = effectorDistance < 0.1 ? 0.01 : std::max(nbWayPoints* 0.015, 0.02);
+value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max(nbWayPoints* 0.01, 0.02));
             value_type inc = max_height / apex;
             std::size_t current = 0;
             std::size_t inc_fac = 0;
@@ -157,22 +161,24 @@ using namespace core;
                            const bool keepExtraDof)
     {
         core::PathPtr_t fullBodyComPath = comRRT(fullbody, referenceProblem, comPath, startState, nextState, numOptimizations, true);
-        if(effectorDistance(startState, nextState) < std::numeric_limits<value_type>::epsilon())
-            return fullBodyComPath;
-        EffectorRRTShooterFactory shooterFactory(fullBodyComPath);
-        JointPtr_t effector =  getEffector(fullbody, startState, nextState);        
-        bool isLine(false);
-        exact_cubic_Ptr refEffector = splineFromEffectorTraj(fullbody, effector, fullBodyComPath, startState, nextState, isLine);
-        if(!isLine)
-        {
-            return fullBodyComPath;
-        }
 
         //removing extra dof
         core::SizeInterval_t interval(0, fullBodyComPath->initial().rows()-1);
         core::SizeIntervals_t intervals;
         intervals.push_back(interval);
-        fullBodyComPath = core::SubchainPath::create(fullBodyComPath,intervals);
+        core::PathPtr_t reducedComPath = core::SubchainPath::create(fullBodyComPath,intervals);
+
+        if(effectorDistance(startState, nextState) < std::numeric_limits<value_type>::epsilon())
+            return fullBodyComPath;
+        JointPtr_t effector =  getEffector(fullbody, startState, nextState);        
+        bool isLine(false);
+        exact_cubic_Ptr refEffector = splineFromEffectorTraj(fullbody, effector, reducedComPath, startState, nextState, isLine);
+        if(!isLine)
+        {
+            return fullBodyComPath;
+        }
+
+
 
 /*std::cout << "spline " << (*refEffector).min() << (*refEffector).max() << std::endl;
 std::cout <<"[";
@@ -183,6 +189,7 @@ for(double i = 0; i< refEffector->max(); i += refEffector->max() / 10.)
 }
 std::cout <<"]" << std::endl;*/
 
+        EffectorRRTShooterFactory shooterFactory(reducedComPath);
         SetEffectorRRTConstraints constraintFactory(comPath, refEffector, effector);
         T_StateFrame stateFrames;
         stateFrames.push_back(std::make_pair(comPath->timeRange().first, startState));
