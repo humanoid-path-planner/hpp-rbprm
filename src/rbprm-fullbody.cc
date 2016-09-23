@@ -368,11 +368,11 @@ rotation = alignRotation * limb->effector_->currentTransformation().getRotation(
               fcl::Vec3f posOffset = position - rotation * limb->offset_;
               posOffset = posOffset + normal * epsilon;
               fcl::Transform3f localFrame, globalFrame;
-              localFrame.setTranslation(posOffset);
+              globalFrame.setTranslation(posOffset);
               proj->add(core::NumericalConstraint::create (constraints::Position::create("",body->device_,
                                                                                          limb->effector_,
-                                                                                         globalFrame,
                                                                                          localFrame,
+                                                                                         globalFrame,
                                                                                          setTranslationConstraints(normal))));//
 
 
@@ -511,7 +511,7 @@ else
 					std::copy (affordanceIt->second.begin (), affordanceIt->second.end (),
 						std::back_inserter (affs));
 				}
-			} else {
+            } else {
 				for (std::vector<std::string>::const_iterator affTypeIt = affTypes.begin ();
 					affTypeIt != affTypes.end (); ++affTypeIt) {
 					affMap_t::const_iterator affIt = affordances.find(*affTypeIt);
