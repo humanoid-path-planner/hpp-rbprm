@@ -125,7 +125,7 @@ using namespace core;
                 (fullbody, referenceProblem, shooterFactory, constraintFactory, comPath, startState, endState, numOptimizations);
     }
 
-    core::Configuration_t projectOnCom(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const State& model, const fcl::Vec3f& targetCom)
+    core::Configuration_t projectOnCom(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const State& model, const fcl::Vec3f& targetCom, bool &success)
     {
         core::PathPtr_t unusedPath(StraightPath::create(fullbody->device_,model.configuration_, model.configuration_,0));
         ComRRTShooterFactory unusedFactory(unusedPath);
@@ -137,11 +137,12 @@ using namespace core;
         res.head(model.configuration_.rows()) = model.configuration_;
         if(helper.proj_->apply(res))
         {
+            success = true;
             return res.head(res.rows()-1);
         }
         else
         {
-            throw std::runtime_error("could not project state on COM constraint");
+            success = false;
         }
     }
   }// namespace interpolation
