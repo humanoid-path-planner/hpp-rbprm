@@ -53,6 +53,7 @@ using namespace core;
 
     bool IsLine(const T_Waypoint& wayPoints)
     {
+return true;
         const vector_t& init  = wayPoints.front().second;
         // compute line between first and last
         vector_t dir =  wayPoints.back().second- init;
@@ -158,13 +159,25 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         return ptr;
     }
 
-    core::PathPtr_t effectorRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
+    std::vector<model::JointPtr_t> getJointsByName(RbPrmFullBodyPtr_t fullbody, const std::vector<std::string>& names)
+    {
+        std::vector<model::JointPtr_t> res;
+        for(std::vector<std::string>::const_iterator cit = names.begin(); cit != names.end(); ++cit)
+        {
+            res.push_back(fullbody->device_->getJointByName(*cit));
+        }
+        return res;
+    }
+
+    core::PathPtr_t effectorRRTFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
+                           const PathPtr_t refPath,
                            const  State &startState, const State &nextState,
                            const  std::size_t numOptimizations,
-                           const bool keepExtraDof)
+                           const bool keepExtraDof, const std::vector<std::string>& constrainedJointPos, const std::vector<std::string>& constrainedLockedJoints)
     {
         core::PathPtr_t fullBodyComPath = comRRT(fullbody, referenceProblem, comPath, startState, nextState, numOptimizations, true);
 
+        std::cout << "cree des trucs" << std::endl;
         //removing extra dof
         core::SizeInterval_t interval(0, fullBodyComPath->initial().rows()-1);
         core::SizeIntervals_t intervals;
@@ -173,27 +186,17 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
 
         if(effectorDistance(startState, nextState) < 0.03)
             return fullBodyComPath;
-        JointPtr_t effector =  getEffector(fullbody, startState, nextState);        
+        JointPtr_t effector =  getEffector(fullbody, startState, nextState);
         bool isLine(false);
         exact_cubic_Ptr refEffector = splineFromEffectorTraj(fullbody, effector, reducedComPath, startState, nextState, isLine);
         if(!isLine)
         {
             return fullBodyComPath;
         }
-
-
-
-/*std::cout << "spline " << (*refEffector).min() << (*refEffector).max() << std::endl;
-std::cout <<"[";
-for(double i = 0; i< refEffector->max(); i += refEffector->max() / 10.)
-{
-    Eigen::Matrix<value_type, 3, 1> pt = (*refEffector)(i);
-    std::cout << "[" << pt[0] << ","<< pt[1] << "," << pt[2] <<"], " << std::endl;
-}
-std::cout <<"]" << std::endl;*/
-
         EffectorRRTShooterFactory shooterFactory(reducedComPath);
-        SetEffectorRRTConstraints constraintFactory(comPath, refEffector, effector);
+        std::vector<model::JointPtr_t> constrainedJoint = getJointsByName(fullbody, constrainedJointPos);
+        std::vector<model::JointPtr_t> constrainedLocked = getJointsByName(fullbody, constrainedLockedJoints);
+        SetEffectorRRTConstraints constraintFactory(comPath, refEffector, refPath, effector, constrainedJoint, constrainedLocked);
         T_StateFrame stateFrames;
         stateFrames.push_back(std::make_pair(comPath->timeRange().first, startState));
         stateFrames.push_back(std::make_pair(comPath->timeRange().second, nextState));
@@ -202,6 +205,31 @@ std::cout <<"]" << std::endl;*/
                 // stateFrames.begin(), stateFrames.begin()+1, numOptimizations % 10, keepExtraDof, 0.01);
                  stateFrames.begin(), stateFrames.begin()+1, numOptimizations, keepExtraDof, 0.01);
     }
+
+
+    core::PathPtr_t effectorRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
+                           const  State &startState, const State &nextState,
+                           const  std::size_t numOptimizations,
+                           const bool keepExtraDof, const std::vector<std::string>& constrainedJointPos, const std::vector<std::string>& constrainedLockedJoints)
+    {
+        return effectorRRTFromPath(fullbody, referenceProblem, comPath, core::PathPtr_t(), startState, nextState, numOptimizations, keepExtraDof, constrainedJointPos, constrainedLockedJoints);
+    }
+
+    void SetEffectorRRTConstraints::operator ()(EffectorRRTHelper& helper, const State& from, const State& to) const
+    {
+        CreateContactConstraints<EffectorRRTHelper>(helper, from, to);
+        CreateComConstraint<EffectorRRTHelper,core::PathPtr_t >(helper, refCom_);
+        CreateEffectorConstraint<EffectorRRTHelper, const exact_cubic_Ptr >(helper, refEff_, effector_);
+        if(refFullbody_)
+        {
+            for(std::vector<model::JointPtr_t>::const_iterator cit = constrainedJointPos_.begin();
+                cit != constrainedJointPos_.end(); ++cit)
+            {
+                Create6DEffectorConstraint<EffectorRRTHelper, core::PathPtr_t  >(helper, refFullbody_, *cit);
+            }
+        }
+    }
+
   }// namespace interpolation
   }// namespace rbprm
 }// namespace hpp

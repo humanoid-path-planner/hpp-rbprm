@@ -43,6 +43,9 @@ namespace interpolation {
     template<class Helper_T, typename Reference>
     void CreateEffectorConstraint(Helper_T& helper, const Reference& ref,  const JointPtr_t effectorJoint, const fcl::Vec3f& initTarget=fcl::Vec3f());
 
+    template<class Helper_T, typename Reference>
+    void Create6DEffectorConstraint(Helper_T& helper, const Reference& ref,  const JointPtr_t effectorJoint, const fcl::Transform3f& initTarget=fcl::Transform3f());
+
     // Implementation
 
     template<class Reference>
@@ -97,6 +100,17 @@ namespace interpolation {
                                              mask);
     }
 
+    inline constraints::OrientationPtr_t createOrientationMethod(model::DevicePtr_t device, const fcl::Transform3f& initTarget, JointPtr_t effector)
+    {
+        //std::vector<bool> mask; mask.push_back(false); mask.push_back(false); mask.push_back(true);
+        std::vector<bool> mask; mask.push_back(true); mask.push_back(true); mask.push_back(true);
+        const fcl::Matrix3f& rotation = initTarget.getRotation();
+        return constraints::Orientation::create("", device,
+                                                    effector,
+                                                    rotation,
+                                                    mask);
+    }
+
 
     template<class Helper_T, typename Reference>
     void CreateEffectorConstraint(Helper_T& helper, const Reference &ref,  const JointPtr_t effectorJoint, const fcl::Vec3f& initTarget)
@@ -112,6 +126,44 @@ namespace interpolation {
         proj->updateRightHandSide();
         helper.steeringMethod_->tds_.push_back(
                     TimeDependant(effEq, boost::shared_ptr<VecRightSide<Reference> >(new VecRightSide<Reference>(ref, 3))));
+    }
+
+    template<typename Reference, typename fun>
+    struct funEvaluator : public RightHandSideFunctor
+    {
+        funEvaluator(const Reference& ref, const fun& method) : ref_(ref), method_(method) {}
+        const std::pair<core::value_type, core::value_type> timeRange ()
+        {
+            return ref_->timeRange ();
+        }
+        void operator ()(constraints::vectorOut_t output,
+                         const constraints::value_type& normalized_input, model::ConfigurationOut_t /*conf*/) const
+        {
+            const std::pair<core::value_type, core::value_type>& tR (ref_->timeRange());
+            constraints::value_type unNormalized = (tR.second-tR.first)* normalized_input + tR.first;
+            method_->operator ()(output, ref_->operator ()(unNormalized));
+        }
+
+        const Reference ref_;
+        const fun method_;
+    };
+
+    template<class Helper_T, typename Reference>
+    void Create6DEffectorConstraint(Helper_T& helper, const Reference &ref,  const JointPtr_t effectorJoint, const fcl::Transform3f& initTarget)
+    {
+        CreateEffectorConstraint(helper, ref, effectorJoint, initTarget.getTranslation());
+        model::DevicePtr_t device = helper.rootProblem_.robot();
+        core::ComparisonTypePtr_t equals = core::Equality::create ();
+        core::ConfigProjectorPtr_t& proj = helper.proj_;
+        JointPtr_t effector = device->getJointByName(effectorJoint->name());
+        constraints::OrientationPtr_t orCons = createOrientationMethod(device,initTarget, effector);
+        NumericalConstraintPtr_t effEq = core::NumericalConstraint::create (orCons, equals);
+        proj->add(effEq);
+        proj->updateRightHandSide();
+        boost::shared_ptr<funEvaluator<Reference, constraints::OrientationPtr_t> > orEv
+                (new funEvaluator<Reference, constraints::OrientationPtr_t>(ref, orCons));
+        helper.steeringMethod_->tds_.push_back(
+                    TimeDependant(effEq, orEv));
     }
 
 
