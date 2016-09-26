@@ -230,9 +230,27 @@ if (nbFailures > 1)
         return res;
     }
 
+    T_StateFrame FilterObsolete(const T_StateFrame& originStates)
+    {
+        if(originStates.size() < 3) return originStates;
+        T_StateFrame res;
+        res.push_back(originStates.front());
+        CIT_StateFrame cit = originStates.begin();
+        for(CIT_StateFrame cit2 = originStates.begin()+1;
+            cit2 != originStates.end()-1; ++cit, ++cit2)
+        {
+            if((cit2->second.configuration_ - cit->second.configuration_).norm() > std::numeric_limits<double>::epsilon())
+            {
+                res.push_back(std::make_pair(cit2->first, cit2->second));
+            }
+        }
+        res.push_back(originStates.back());
+        return res;
+    }
+
     T_StateFrame FilterStatesRec(const T_StateFrame& originStates)
     {
-        return FilterBreakCreate(FilterRepositioning(originStates));
+        return FilterObsolete(FilterBreakCreate(FilterRepositioning(originStates)));
     }
 
     T_StateFrame FilterStates(const T_StateFrame& originStates)

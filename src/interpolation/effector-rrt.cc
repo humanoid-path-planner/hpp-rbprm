@@ -38,6 +38,19 @@ using namespace core;
 
     const value_type epsilon = std::numeric_limits<value_type>::epsilon();
 
+
+    bool Is2d(const T_Waypoint& wayPoints)
+    {
+        const std::size_t dim = wayPoints.front().second.rows() -1;
+        const core::value_type ref = wayPoints.front().second[dim];
+        value_type z_var = 0.;
+        for(CIT_Waypoint cit = wayPoints.begin()+1 ; cit != wayPoints.end(); ++cit)
+        {
+            z_var = std::max(z_var, fabs(cit->second[dim] - ref));
+        }
+        return z_var < 0.02;
+    }
+
     bool IsLine(const T_Waypoint& wayPoints)
     {
         const vector_t& init  = wayPoints.front().second;
@@ -52,22 +65,12 @@ using namespace core;
                 dir2.normalize();
             else
                 throw("todo waypoint distance nul in end efefctor interpolation");
+            //if(dir.dot(dir2) < 0.9999)
             if(dir.dot(dir2) < 1 - epsilon *4)
                 return false;
+                //return false || Is2d(wayPoints);
         }
         return true;
-    }
-
-    bool Is2d(const T_Waypoint& wayPoints)
-    {
-        const std::size_t dim = wayPoints.front().second.rows() -1;
-        const core::value_type ref = wayPoints.front().second[dim];
-        value_type z_var = 0.;
-        for(CIT_Waypoint cit = wayPoints.begin()+1 ; cit != wayPoints.end(); ++cit)
-        {
-            z_var = std::max(z_var, fabs(cit->second[dim] - ref));
-        }
-        return z_var < 0.02;
     }
 
     vector_t GetEffectorPositionAt(core::PathPtr_t path, constraints::PositionPtr_t position, const value_type time)
@@ -168,7 +171,7 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         intervals.push_back(interval);
         core::PathPtr_t reducedComPath = core::SubchainPath::create(fullBodyComPath,intervals);
 
-        if(effectorDistance(startState, nextState) < std::numeric_limits<value_type>::epsilon())
+        if(effectorDistance(startState, nextState) < 0.03)
             return fullBodyComPath;
         JointPtr_t effector =  getEffector(fullbody, startState, nextState);        
         bool isLine(false);
@@ -196,7 +199,8 @@ std::cout <<"]" << std::endl;*/
         stateFrames.push_back(std::make_pair(comPath->timeRange().second, nextState));
         return interpolateStatesFromPath<EffectorRRTHelper, EffectorRRTShooterFactory, SetEffectorRRTConstraints>
                 (fullbody, referenceProblem, shooterFactory, constraintFactory, comPath,
-                 stateFrames.begin(), stateFrames.begin()+1, numOptimizations % 10, keepExtraDof, 0.01);
+                // stateFrames.begin(), stateFrames.begin()+1, numOptimizations % 10, keepExtraDof, 0.01);
+                 stateFrames.begin(), stateFrames.begin()+1, numOptimizations, keepExtraDof, 0.01);
     }
   }// namespace interpolation
   }// namespace rbprm

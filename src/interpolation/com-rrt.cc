@@ -138,12 +138,12 @@ using namespace core;
         if(helper.proj_->apply(res))
         {
             success = true;
-            return res.head(res.rows()-1);
         }
         else
         {
             success = false;
         }
+        return res.head(res.rows()-1);
     }
   }// namespace interpolation
   }// namespace rbprm
