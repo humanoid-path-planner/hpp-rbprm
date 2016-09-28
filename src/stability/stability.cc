@@ -91,6 +91,7 @@ namespace stability{
     void computeRectangleContact(const RbPrmLimbPtr_t limb, Ref_matrix43 p)
     {
         const double& lx = limb->x_, ly = limb->y_;
+        const fcl::Vec3f& offset = limb->offset_;
         const fcl::Transform3f& transform = limb->effector_->currentTransformation();
         const fcl::Matrix3f& fclRotation = transform.getRotation();
         const fcl::Vec3f& po = transform.getTranslation();
@@ -103,10 +104,10 @@ namespace stability{
              lx, -ly, 0,
             -lx, -ly, 0,
             -lx,  ly, 0;
-        p.row(0) = pos + (R*p.row(0).transpose());
-        p.row(1) = pos + (R*p.row(1).transpose());
-        p.row(2) = pos + (R*p.row(2).transpose());
-        p.row(3) = pos + (R*p.row(3).transpose());
+        p.row(0) = pos + (R*(p.row(0).transpose() + offset));
+        p.row(1) = pos + (R*(p.row(1).transpose() + offset));
+        p.row(2) = pos + (R*(p.row(2).transpose() + offset));
+        p.row(3) = pos + (R*(p.row(3).transpose() + offset));
     }
 
     StaticEquilibrium initLibrary(const RbPrmFullBodyPtr_t fullbody)
