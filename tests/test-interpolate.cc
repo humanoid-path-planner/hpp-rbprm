@@ -113,8 +113,8 @@ BOOST_AUTO_TEST_CASE (FilteringStates) {
     addState(s0, states);
     addState(s3, states);
     addState(s4, states);
-    BOOST_CHECK_MESSAGE(FilterStates(states).size() == 2, "State list not filtered");
-    BOOST_CHECK_MESSAGE((FilterStates(states).back().first == 2),
+    BOOST_CHECK_MESSAGE(FilterStates(states, true).size() == 2, "State list not filtered");
+    BOOST_CHECK_MESSAGE((FilterStates(states, true).back().first == 2),
                          "middle state not filtered"); // middle state is removed
 
 
@@ -124,8 +124,8 @@ BOOST_AUTO_TEST_CASE (FilteringStates) {
     AddToState("2", y, nz, s4a);
 
     addState(s4a, states);
-    BOOST_CHECK(FilterStates(states).size() == 2);
-    BOOST_CHECK(FilterStates(states).back().first == 3); // middle state is removed
+    BOOST_CHECK(FilterStates(states, true).size() == 2);
+    BOOST_CHECK(FilterStates(states, true).back().first == 3); // middle state is removed
 
 
     // x then y => no shortcut
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE (FilteringStates) {
     addState(s0, states);
     addState(s5, states);
     addState(s6, states);
-    BOOST_CHECK(FilterStates(states).size() == 3);
+    BOOST_CHECK(FilterStates(states, true).size() == 3);
 
     // break, then recreate
     State s7, s8;
@@ -149,8 +149,8 @@ BOOST_AUTO_TEST_CASE (FilteringStates) {
     addState(s0, states);
     addState(s7, states);
     addState(s8, states);
-    BOOST_CHECK(FilterStates(states).size() == 2);
-    BOOST_CHECK(FilterStates(states).back().first == 2); // middle state is removed
+    BOOST_CHECK(FilterStates(states, true).size() == 2);
+    BOOST_CHECK(FilterStates(states, true).back().first == 2); // middle state is removed
 
 
     // break, then recreate with other
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE (FilteringStates) {
     addState(s0, states);
     addState(s9, states);
     addState(s10, states);
-    BOOST_CHECK(FilterStates(states).size() == 3);
+    BOOST_CHECK(FilterStates(states, true).size() == 3);
 
     // No contact variation
     states.clear();
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE (FilteringStates) {
     addState(s0, states);
     addState(s0, states);
     addState(s0, states);
-    BOOST_CHECK(FilterStates(states).size() == 2);
+    BOOST_CHECK(FilterStates(states, true).size() == 2);
 }
 BOOST_AUTO_TEST_SUITE_END()
 
