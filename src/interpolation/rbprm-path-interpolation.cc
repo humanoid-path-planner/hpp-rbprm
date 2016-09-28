@@ -112,7 +112,7 @@ if (nbFailures > 1)
     watch.report_count(*fp);
     fout.close();
 #endif
-    return filterStates ? FilterStates(states) : states;
+    return FilterStates(states, filterStates);
 }
             }
             if(multipleBreaks && !allowFailure)
@@ -143,7 +143,7 @@ if (nbFailures > 1)
         watch.report_all_and_count(2,*fp);
         fout.close();*/
 #endif
-        return filterStates ? FilterStates(states) : states;
+        return FilterStates(states, filterStates);
         //return states;
     }
 
@@ -253,17 +253,24 @@ if (nbFailures > 1)
         return FilterObsolete(FilterBreakCreate(FilterRepositioning(originStates)));
     }
 
-    T_StateFrame FilterStates(const T_StateFrame& originStates)
+    T_StateFrame FilterStates(const T_StateFrame& originStates, const bool deep)
     {
         T_StateFrame res = originStates;
-        std::size_t previousSize;
-        do
+        if(deep)
         {
-            previousSize = res.size();
-            res = FilterStatesRec(res);
+            std::size_t previousSize;
+            do
+            {
+                previousSize = res.size();
+                res = FilterStatesRec(res);
+            }
+            while(res.size() != previousSize);
+            return res;
         }
-        while(res.size() != previousSize);
-        return res;
+        else
+        {
+            return FilterObsolete(originStates);
+        }
     }
     } // interpolation
   } // rbprm

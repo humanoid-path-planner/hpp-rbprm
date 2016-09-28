@@ -109,8 +109,9 @@ namespace hpp {
     /// and the root trajectory is approximatively linear all along
     /// - An effector is broken, and the same effector is replaced in the following state
     /// \param originStates original state list
+    /// \param deep if false, only matching configurations in sequence are removed
     /// \return A list of key states filtered
-    T_StateFrame FilterStates(const T_StateFrame& originStates);
+    T_StateFrame FilterStates(const T_StateFrame& originStates, const bool deep);
 
     } // namespace interpolation
   } // namespace rbprm
