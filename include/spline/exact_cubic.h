@@ -53,7 +53,7 @@ struct exact_cubic : public curve_abc<Time, Numeric, Dim, Safe, Point>
 	///\param wayPointsBegin : an iterator pointing to the first element of a waypoint container
 	///\param wayPointsEns   : an iterator pointing to the end           of a waypoint container
 	template<typename In>
-	exact_cubic(In wayPointsBegin, In wayPointsEnd)
+    exact_cubic(In wayPointsBegin, In wayPointsEnd)
     {
         std::size_t const size(std::distance(wayPointsBegin, wayPointsEnd));
 		if(Safe && size < 1)
@@ -107,9 +107,9 @@ struct exact_cubic : public curve_abc<Time, Numeric, Dim, Safe, Point>
 				h2(i+1, i+2) =  6 / dTi_1sqr;
 			}
 			x.row(i)= (*it).second.transpose();
-	      	}
+            }
 		// adding last x
-		x.row(size-1)= (*it).second.transpose();
+        x.row(size-1)= (*it).second.transpose();
         a= x;
         PseudoInverse(h1);
 		b = h1 * h2 * x; //h1 * b = h2 * x => b = (h1)^-1 * h2 * x

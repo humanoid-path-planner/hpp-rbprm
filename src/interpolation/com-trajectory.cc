@@ -16,7 +16,7 @@
 // hpp-core  If not, see
 // <http://www.gnu.org/licenses/>.
 
-#include <hpp/rbprm/interpolation/time-constraint-path.hh>
+#include <hpp/rbprm/interpolation/com-trajectory.hh>
 #include <hpp/rbprm/interpolation/time-constraint-utils.hh>
 #include <hpp/model/device.hh>
 #include <hpp/model/configuration.hh>
@@ -28,7 +28,7 @@ using namespace hpp::core;
 namespace hpp {
   namespace rbprm {
   namespace interpolation{
-    TimeConstraintPath::TimeConstraintPath (const DevicePtr_t& device,
+    ComTrajectory::ComTrajectory (const DevicePtr_t& device,
                               ConfigurationIn_t init,
                               ConfigurationIn_t end,
                               value_type length,
@@ -45,7 +45,7 @@ namespace hpp {
         assert (!constraints ());
       }
 
-    TimeConstraintPath::TimeConstraintPath (const DevicePtr_t& device,
+    ComTrajectory::ComTrajectory (const DevicePtr_t& device,
 				ConfigurationIn_t init,
                 ConfigurationIn_t end,
                 value_type length,
@@ -61,11 +61,11 @@ namespace hpp {
         assert (length >= 0);
     }
 
-    TimeConstraintPath::TimeConstraintPath (const TimeConstraintPath& path) :
+    ComTrajectory::ComTrajectory (const ComTrajectory& path) :
         parent_t (path), device_ (path.device_), initial_ (path.initial_),
         end_ (path.end_)    , pathDofRank_(path.pathDofRank_), tds_(path.tds_) {}
 
-    TimeConstraintPath::TimeConstraintPath (const TimeConstraintPath& path,
+    ComTrajectory::ComTrajectory (const ComTrajectory& path,
                 const ConstraintSetPtr_t& constraints) :
         parent_t (path, constraints), device_ (path.device_),
         initial_ (path.initial_), end_ (path.end_), pathDofRank_(path.pathDofRank_), tds_(path.tds_) {}
@@ -80,7 +80,7 @@ namespace hpp {
         return (b-a)* normalizedValue + a;
     }
 
-    void TimeConstraintPath::updateConstraints(core::ConfigurationOut_t configuration) const
+    void ComTrajectory::updateConstraints(core::ConfigurationOut_t configuration) const
     {
         if (constraints() && constraints()->configProjector ())
         {
@@ -88,7 +88,7 @@ namespace hpp {
         }
     }
 
-    bool TimeConstraintPath::impl_compute (ConfigurationOut_t result,
+    bool ComTrajectory::impl_compute (ConfigurationOut_t result,
 				     value_type param) const
     {
         if (param == timeRange ().first || timeRange ().second == 0)
@@ -114,7 +114,7 @@ namespace hpp {
         return true;
     }
 
-    PathPtr_t TimeConstraintPath::extract (const interval_t& subInterval) const
+    PathPtr_t ComTrajectory::extract (const interval_t& subInterval) const
       throw (projection_error)
     {
         // Length is assumed to be proportional to interval range
@@ -129,25 +129,25 @@ namespace hpp {
         if (!success) throw projection_error
                 ("Failed to apply constraints in StraightPath::extract");
         q2[pathDofRank_] = ComputeExtraDofValue(pathDofRank_,initial_, end_, (subInterval.second - timeRange().first)  / (timeRange().second - timeRange().first));
-        PathPtr_t result = TimeConstraintPath::create (device_, q1, q2, l,
+        PathPtr_t result = ComTrajectory::create (device_, q1, q2, l,
                            constraints (), pathDofRank_, tds_);
         return result;
     }
 
-    DevicePtr_t TimeConstraintPath::device () const
+    DevicePtr_t ComTrajectory::device () const
     {
       return device_;
     }
 
-    void TimeConstraintPath::checkPath () const
+    void ComTrajectory::checkPath () const
     {
       Configuration_t initc = initial();
       Configuration_t endc = end();
       updateConstraints(initc);
       if (constraints()) {
         if (!constraints()->isSatisfied (initial())) {            
-std::cout << "init conf " <<  initc << std::endl;
-/*device_->currentConfiguration(initc);
+/*std::cout << "init conf " <<  initc << std::endl;
+device_->currentConfiguration(initc);
 device_->computeForwardKinematics();
 std::cout << "rf_foot_joint  " << std::endl;
 std::cout <<  device_->getJointByName("rf_foot_joint")->currentTransformation().getTranslation() << std::endl;
@@ -166,7 +166,6 @@ std::cout <<  device_->getJointByName("lh_foot_joint")->currentTransformation().
         }
         updateConstraints(endc);
         if (constraints() && !constraints()->isSatisfied (end())) {
-std::cout << "end conf " <<  initc << std::endl;
           hppDout (error, end().transpose ());
           throw projection_error ("End configuration of path does not satisfy "
               "the constraints");

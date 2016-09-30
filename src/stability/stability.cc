@@ -20,6 +20,7 @@
 #include <hpp/rbprm/stability/support.hh>
 #include <hpp/model/device.hh>
 #include <hpp/model/joint.hh>
+#include <hpp/model/center-of-mass-computation.hh>
 #include <hpp/rbprm/tools.hh>
 
 #include <robust-equilibrium-lib/static_equilibrium.hh>
@@ -142,6 +143,11 @@ namespace stability{
             }
         }
         robust_equilibrium::Vector3 com;
+/*model::CenterOfMassComputationPtr_t comcptr = model::CenterOfMassComputation::create(fullbody->device_);
+comcptr->add(fullbody->device_->getJointByName("romeo/base_joint_xyz"));
+comcptr->computeMass();
+comcptr->compute();
+const fcl::Vec3f comfcl = comcptr->com();*/
         const fcl::Vec3f comfcl = fullbody->device_->positionCenterOfMass();
         state.com_ = comfcl;
         for(int i=0; i< 3; ++i) com(i)=comfcl[i];
@@ -185,7 +191,6 @@ namespace stability{
 
     double IsStable(const RbPrmFullBodyPtr_t fullbody, State& state)
     {
-
 #ifdef PROFILE
     RbPrmProfiler& watch = getRbPrmProfiler();
     watch.start("test balance");

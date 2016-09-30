@@ -145,6 +145,36 @@ using namespace core;
         }
         return res.head(res.rows()-1);
     }
+
+    /*void generateOneComPath(const model::ConfigurationIn_t & from, const model::ConfigurationIn_t & to,
+                       const model::ConfigurationIn_t & initSpeed, const double& acceleration)
+    {
+
+    }
+
+    typedef std::vector<model::vector_t,Eigen::aligned_allocator<model::vector_t> > T_Configuration;
+    core::PathPtr_t generateComPath(model::DevicePtr_t device, const T_Configuration& configurations, const std::vector<double>& accelerations,
+                                    const model::value_type dt, const model::ConfigurationIn_t & initSpeed)
+    {
+        assert(configurations.size() == accelerations.size() +1);
+        core::PathVectorPtr_t res = core::PathVector::create(device->configSize(), device->numberDof());
+        model::value_type size_step = 1 /(model::value_type)(positions.size());
+        model::value_type u = 0.;
+        CIT_Configuration pit = positions.begin();
+        model::Configuration_t previous = addRotation(pit, 0., q1, q2, ref), current;
+        ++pit;
+        for(;pit != positions.end()-1; ++pit, u+=size_step)
+        {
+            current = addRotation(pit, u, q1, q2, ref);
+            res->appendPath(makePath(device,problem, previous, current));
+            previous = current;
+        }
+        // last configuration is exactly q2
+        current = addRotation(pit, 1., q1, q2, ref);
+        res->appendPath(makePath(device,problem, previous, current));
+        return res;
+
+    }*/
   }// namespace interpolation
   }// namespace rbprm
 }// namespace hpp

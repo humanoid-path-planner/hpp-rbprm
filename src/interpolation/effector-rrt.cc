@@ -177,7 +177,6 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
     {
         core::PathPtr_t fullBodyComPath = comRRT(fullbody, referenceProblem, comPath, startState, nextState, numOptimizations, true);
 
-        std::cout << "cree des trucs" << std::endl;
         //removing extra dof
         core::SizeInterval_t interval(0, fullBodyComPath->initial().rows()-1);
         core::SizeIntervals_t intervals;

@@ -77,6 +77,7 @@ namespace interpolation {
         model::CenterOfMassComputationPtr_t comComp = model::CenterOfMassComputation::
           create (device);
         comComp->add (device->rootJoint());
+//comComp->add (device->getJointByName("romeo/base_joint_xyz"));
         comComp->computeMass ();
         PointComFunctionPtr_t comFunc = PointComFunction::create ("COM-walkgen",
             device, PointCom::create (comComp));
@@ -131,7 +132,8 @@ namespace interpolation {
     template<typename Reference, typename fun>
     struct funEvaluator : public RightHandSideFunctor
     {
-        funEvaluator(const Reference& ref, const fun& method) : ref_(ref), method_(method) {}
+        funEvaluator(const Reference& ref, const fun& method) : ref_(ref), method_(method),
+        dim_(method_->inputSize ()){}
         const std::pair<core::value_type, core::value_type> timeRange ()
         {
             return ref_->timeRange ();
@@ -141,18 +143,25 @@ namespace interpolation {
         {
             const std::pair<core::value_type, core::value_type>& tR (ref_->timeRange());
             constraints::value_type unNormalized = (tR.second-tR.first)* normalized_input + tR.first;
-            method_->operator ()(output, ref_->operator ()(unNormalized));
+            method_->operator ()(output, (ref_->operator ()(unNormalized)));
         }
 
         const Reference ref_;
         const fun method_;
+        const std::size_t dim_;
     };
 
     template<class Helper_T, typename Reference>
     void Create6DEffectorConstraint(Helper_T& helper, const Reference &ref,  const JointPtr_t effectorJoint, const fcl::Transform3f& initTarget)
     {
-        CreateEffectorConstraint(helper, ref, effectorJoint, initTarget.getTranslation());
+        //CreateEffectorConstraint(helper, ref, effectorJoint, initTarget.getTranslation());
         model::DevicePtr_t device = helper.rootProblem_.robot();
+        // reduce dof if reference path is of lower dimension
+        if(ref->operator()(0).rows() < device->configSize())
+        {
+            device = device->clone();
+            device->setDimensionExtraConfigSpace(device->extraConfigSpace().dimension()-1);
+        }
         core::ComparisonTypePtr_t equals = core::Equality::create ();
         core::ConfigProjectorPtr_t& proj = helper.proj_;
         JointPtr_t effector = device->getJointByName(effectorJoint->name());

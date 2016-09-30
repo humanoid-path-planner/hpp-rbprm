@@ -80,6 +80,9 @@ namespace hpp {
         }
         limbs_.insert(std::make_pair(id, limb));
         tools::RemoveNonLimbCollisionRec<core::CollisionValidation>(device_->rootJoint(),name,collisionObjects,*limbcollisionValidation_.get());
+        hpp::core::RelativeMotion::matrix_type m = hpp::core::RelativeMotion::matrix(device_);
+        limbcollisionValidation_->filterCollisionPairs(m);
+        collisionValidation_->filterCollisionPairs(m);
         limbcollisionValidations_.insert(std::make_pair(id, limbcollisionValidation_));
         // insert limb to root group
         T_LimbGroup::iterator cit = limbGroups_.find(name);
@@ -161,10 +164,11 @@ namespace hpp {
     std::vector<bool> setRotationConstraints(const fcl::Vec3f&)// direction)
     {
         std::vector<bool> res;
-        for(std::size_t i =0; i <3; ++i)
+        for(std::size_t i =0; i <2; ++i)
         {
             res.push_back(true);
         }
+        res.push_back(false);
         return res;
     }
 
@@ -191,6 +195,7 @@ namespace hpp {
             sampling::Load(*cit, configuration);
             hpp::core::ValidationReportPtr_t valRep (new hpp::core::CollisionValidationReport);
             if(validation->validate(configuration, valRep) && (!stability || stability::IsStable(body,current) >=robustnessTreshold))
+//if(true)
             {
                 current.configuration_ = configuration;
                 return true;
@@ -236,6 +241,7 @@ namespace hpp {
             {
                 hpp::core::ValidationReportPtr_t valRep (new hpp::core::CollisionValidationReport);
                 if(limbValidations.at(name)->validate(config, valRep))
+//if(true)
                 {
                     // stable?
                     current.contacts_[name] = true;
@@ -369,6 +375,8 @@ rotation = alignRotation * limb->effector_->currentTransformation().getRotation(
               posOffset = posOffset + normal * epsilon;
               fcl::Transform3f localFrame, globalFrame;
               globalFrame.setTranslation(posOffset);
+//std::cout << "target " << globalFrame << std::endl;
+
               proj->add(core::NumericalConstraint::create (constraints::Position::create("",body->device_,
                                                                                          limb->effector_,
                                                                                          localFrame,
@@ -382,6 +390,7 @@ rotation = alignRotation * limb->effector_->currentTransformation().getRotation(
                   proj->add(core::NumericalConstraint::create (constraints::Orientation::create("",body->device_,
                                                                                                 limb->effector_,
                                                                                                 fcl::Transform3f(rotation),
+                                                                                                //localFrame.getRotation(),
                                                                                                 setRotationConstraints(z))));
               }
 #ifdef PROFILE
@@ -398,7 +407,9 @@ rotation = alignRotation * limb->effector_->currentTransformation().getRotation(
     watch.start("collision");
 #endif
                 hpp::core::ValidationReportPtr_t valRep (new hpp::core::CollisionValidationReport);
+//std::cout << "collision test" << configuration.transpose() << std::endl;
                 if(validation->validate(configuration, valRep))
+//if(true)
                 {
 #ifdef PROFILE
     watch.stop("collision");
@@ -431,7 +442,7 @@ rotation = alignRotation * limb->effector_->currentTransformation().getRotation(
                         rotation = limb->effector_->currentTransformation().getRotation();
                         unstableContact = true;
                     }
-                }                
+                }
 #ifdef PROFILE
 else
        watch.stop("collision");

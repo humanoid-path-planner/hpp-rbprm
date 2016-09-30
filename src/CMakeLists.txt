@@ -42,6 +42,7 @@ SET(${LIBRARY_NAME}_SOURCES
         interpolation/time-constraint-path-validation.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/time-constraint-path-validation.hh
         ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/time-constraint-steering.hh
         interpolation/time-constraint-path.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/time-constraint-path.hh
+				#interpolation/com-trajectory.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/com-trajectory.hh
         rbprm-fullbody.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-fullbody.hh
         rbprm-state.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-state.hh
         sampling/sample.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/sampling/sample.hh

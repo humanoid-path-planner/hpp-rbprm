@@ -57,6 +57,9 @@ namespace hpp {
                 const  std::size_t numOptimizations);
 
     core::Configuration_t projectOnCom(RbPrmFullBodyPtr_t fullbody,core::ProblemPtr_t referenceProblem, const State& model, const fcl::Vec3f& targetCom, bool& success);
+
+    /*typedef std::vector<model::vector_t,Eigen::aligned_allocator<model::vector_t> > T_Configuration;
+    core::PathPtr_t generateComPath(const T_Configuration& configurations, const model::value_type dt, const model::ConfigurationIn_t & initSpeed, const model::ConfigurationIn_t endSpeed);*/
     }
     }
 }

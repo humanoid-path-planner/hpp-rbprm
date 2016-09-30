@@ -174,7 +174,9 @@ std::vector<std::string> State::fixedContacts(const State& previous) const
     {
         const std::string& name = cit->first;
         if(std::find(variations.begin(), variations.end(), name) == variations.end())
+        {
             res.push_back(name);
+        }
     }
     return res;
 }
