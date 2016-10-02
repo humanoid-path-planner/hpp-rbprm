@@ -72,7 +72,7 @@ using namespace core;
         ConfigurationPtr_t config (new Configuration_t(configSize_));
         config->head(configSize_-1) =  (*rootPath_)(pathDofVal);
         (*config) [pathDofRank_] = u;
-        if(freeLimbs_.empty())
+        /*if(freeLimbs_.empty())
         {
             JointVector_t jv = device_->getJointVector ();
             for (JointVector_t::const_iterator itJoint = jv.begin ();
@@ -81,7 +81,7 @@ using namespace core;
               (*itJoint)->configuration ()->uniformlySample (rank, *config);
             }
         }
-        else
+        else*/
         {
             // choose random limb configuration
             for(rbprm::CIT_Limb cit = freeLimbs_.begin(); cit != freeLimbs_.end(); ++cit)

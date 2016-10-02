@@ -48,16 +48,21 @@ namespace interpolation {
     core::PathPtr_t effectorRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
                                 const  State &startState, const State &nextState,
                                 const  std::size_t numOptimizations,
+                                const bool keepExtraDof);
+
+    core::PathPtr_t effectorRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
+                                const  State &startState, const State &nextState,
+                                const  std::size_t numOptimizations,
                                 const bool keepExtraDof,
                                 const std::vector<std::string>& constrainedJointPos = std::vector<std::string>(),
                                 const std::vector<std::string>& constrainedLockedJoints = std::vector<std::string>());
 
 
     core::PathPtr_t effectorRRTFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
-                                        const PathPtr_t refFullBodyPath,
                                         const  State &startState, const State &nextState,
                                         const  std::size_t numOptimizations,
                                         const bool keepExtraDof,
+                                        const PathPtr_t refFullBodyPath,
                                         const std::vector<std::string>& constrainedJointPos = std::vector<std::string>(),
                                         const std::vector<std::string>& constrainedLockedJoints = std::vector<std::string>());
 

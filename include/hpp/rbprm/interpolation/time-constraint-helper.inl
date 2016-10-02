@@ -114,28 +114,40 @@ namespace
     PathVectorPtr_t TimeConstraintHelper<Path_T, Shooter_T, ConstraintFactory_T>::Run(const State &from, const State &to)
     {
         PathVectorPtr_t res;
+        SetPathValidation(*this);
         const rbprm::T_Limb& limbs = fullbody_->GetLimbs();
         // get limbs that moved
         std::vector<std::string> variations = to.allVariations(from, extractEffectorsName(limbs));
-        for(std::vector<std::string>::const_iterator cit = variations.begin();
-            cit != variations.end(); ++cit)
+        if(!variations.empty())
         {
-            SetPathValidation(*this);
-            DisableUnNecessaryCollisions(rootProblem_, limbs.at(*cit));
-            SetConfigShooter(from, to);
-
-            ConfigurationPtr_t start = TimeConfigFromDevice(*this, from, 0.);
-            ConfigurationPtr_t end   = TimeConfigFromDevice(*this, to  , 1.);
-            rootProblem_.initConfig(start);
-            BiRRTPlannerPtr_t planner = BiRRTPlanner::create(rootProblem_);
-            ProblemTargetPtr_t target = problemTarget::GoalConfigurations::create (planner);
-            rootProblem_.target (target);
-            rootProblem_.addGoalConfig(end);
-            InitConstraints();
-
-            res = planner->solve();
-            rootProblem_.resetGoalConfigs();
+            for(std::vector<std::string>::const_iterator cit = variations.begin();
+                        cit != variations.end(); ++cit)
+            {
+                DisableUnNecessaryCollisions(rootProblem_, limbs.at(*cit));
+            }
         }
+        for(rbprm::CIT_Limb lit = limbs.begin(); lit != limbs.end(); ++lit)
+        {
+            if(lit->second->disableEndEffectorCollision_ && std::find(variations.begin(), variations.end(),
+                                                                 lit->second->limb_->name()) == variations.end())
+            {
+                hpp::tools::RemoveEffectorCollision<core::Problem>(rootProblem_,
+                                                                   rootProblem_.robot()->getJointByName(lit->second->effector_->name()),
+                                                                   rootProblem_.collisionObstacles());
+            }
+        }
+        SetConfigShooter(from, to);
+
+        ConfigurationPtr_t start = TimeConfigFromDevice(*this, from, 0.);
+        ConfigurationPtr_t end   = TimeConfigFromDevice(*this, to  , 1.);
+        rootProblem_.initConfig(start);
+        BiRRTPlannerPtr_t planner = BiRRTPlanner::create(rootProblem_);
+        ProblemTargetPtr_t target = problemTarget::GoalConfigurations::create (planner);
+        rootProblem_.target (target);
+        rootProblem_.addGoalConfig(end);
+        InitConstraints();
+        res = planner->solve();
+        rootProblem_.resetGoalConfigs();
         return res;
     }
 

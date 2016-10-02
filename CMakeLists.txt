@@ -65,7 +65,7 @@ SET(${PROJECT_NAME}_HEADERS
     include/hpp/rbprm/rbprm-fullbody.hh
     include/hpp/rbprm/rbprm-limb.hh
     include/hpp/rbprm/interpolation/rbprm-path-interpolation.hh
-		include/hpp/rbprm/interpolation/time-constraint-helper.hh
+    include/hpp/rbprm/interpolation/time-constraint-helper.hh
     include/hpp/rbprm/interpolation/time-constraint-helper.inl
     include/hpp/rbprm/interpolation/time-constraint-steering.hh
     include/hpp/rbprm/interpolation/limb-rrt.hh
@@ -76,7 +76,7 @@ SET(${PROJECT_NAME}_HEADERS
     include/hpp/rbprm/interpolation/time-constraint-utils.hh
     include/hpp/rbprm/interpolation/time-constraint-path-validation.hh
     include/hpp/rbprm/interpolation/time-constraint-path.hh
-		#include/hpp/rbprm/interpolation/com-trajectory.hh
+    include/hpp/rbprm/interpolation/com-trajectory.hh
     include/hpp/rbprm/interpolation/time-dependant.hh
     include/hpp/rbprm/interpolation/interpolation-constraints.hh
     include/hpp/rbprm/interpolation/spline/effector-rrt.hh
