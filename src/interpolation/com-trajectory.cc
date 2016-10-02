@@ -28,65 +28,38 @@ using namespace hpp::core;
 namespace hpp {
   namespace rbprm {
   namespace interpolation{
-    ComTrajectory::ComTrajectory (const DevicePtr_t& device,
-                              ConfigurationIn_t init,
-                              ConfigurationIn_t end,
-                              value_type length,
-                              const std::size_t pathDofRank,
-                              const T_TimeDependant& tds) :
-        parent_t (interval_t (0, length), device->configSize (),
-                  device->numberDof ()),
-        device_ (device), initial_ (init), end_ (end),
-        pathDofRank_(pathDofRank),
-        tds_(tds)
+    ComTrajectory::ComTrajectory (model::vector3_t init,
+                                  model::vector3_t end,
+                                  model::vector3_t initSpeed,
+                                  model::vector3_t acceleration,
+                                  core::value_type length) :
+        parent_t (interval_t (0, length), 3,3),
+        initial_ (init), end_ (end),
+        initSpeed_(initSpeed),
+        half_acceleration_(acceleration / 2),
+        length_(length)
       {
-        assert (device);
         assert (length >= 0);
         assert (!constraints ());
       }
 
-    ComTrajectory::ComTrajectory (const DevicePtr_t& device,
-				ConfigurationIn_t init,
-                ConfigurationIn_t end,
-                value_type length,
-                ConstraintSetPtr_t constraints,
-                const std::size_t pathDofRank,
-                const T_TimeDependant& tds) :
-        parent_t (interval_t (0, length), device->configSize (),
-                  device->numberDof (), constraints),
-        device_ (device), initial_ (init), end_ (end),
-        pathDofRank_(pathDofRank), tds_(tds)
+
+    model::value_type normalize(const ComTrajectory& path, model::value_type param)
     {
-        assert (device);
-        assert (length >= 0);
+        value_type u;
+        if (path.timeRange ().second == 0)
+            u = 0;
+        else
+            u = (param - path.timeRange ().first) / (path.timeRange ().second - path.timeRange().first);
+        return u;
     }
 
     ComTrajectory::ComTrajectory (const ComTrajectory& path) :
-        parent_t (path), device_ (path.device_), initial_ (path.initial_),
-        end_ (path.end_)    , pathDofRank_(path.pathDofRank_), tds_(path.tds_) {}
-
-    ComTrajectory::ComTrajectory (const ComTrajectory& path,
-                const ConstraintSetPtr_t& constraints) :
-        parent_t (path, constraints), device_ (path.device_),
-        initial_ (path.initial_), end_ (path.end_), pathDofRank_(path.pathDofRank_), tds_(path.tds_) {}
-
-    model::value_type ComputeExtraDofValue(const std::size_t dofRank,
-                              const Configuration_t init,
-                              const Configuration_t end,
-                              const model::value_type normalizedValue)
-    {
-        double a = init[dofRank];
-        double b = end[dofRank];
-        return (b-a)* normalizedValue + a;
-    }
-
-    void ComTrajectory::updateConstraints(core::ConfigurationOut_t configuration) const
-    {
-        if (constraints() && constraints()->configProjector ())
-        {
-            UpdateConstraints(configuration, constraints()->configProjector (), tds_, pathDofRank_);
-        }
-    }
+        parent_t (interval_t (0, path.length_), 3,3),
+        initial_ (path.initial_), end_ (path.end_),
+        initSpeed_(path.initSpeed_),
+        half_acceleration_(path.half_acceleration_),
+        length_(path.length_){}
 
     bool ComTrajectory::impl_compute (ConfigurationOut_t result,
 				     value_type param) const
@@ -101,16 +74,9 @@ namespace hpp {
         }
         else
         {
-            value_type u;
-            if (timeRange ().second == 0)
-                u = 0;
-            else
-                u = (param - timeRange ().first) / (timeRange ().second - timeRange().first);
-            model::interpolate (device_, initial_, end_, u, result);
-            model::value_type dof = ComputeExtraDofValue(pathDofRank_,initial_, end_, u);
-            result[pathDofRank_] = dof;
+            value_type u = normalize(*this, param) * length_;
+            result = half_acceleration_ * u*u + initSpeed_ * u + initial_;
         }
-        updateConstraints(result);
         return true;
     }
 
@@ -122,55 +88,12 @@ namespace hpp {
 
         bool success;
         Configuration_t q1 ((*this) (subInterval.first, success));
-        if (!success) throw projection_error
-                ("Failed to apply constraints in StraightPath::extract");        
-        q1[pathDofRank_] = ComputeExtraDofValue(pathDofRank_,initial_, end_, (subInterval.first - timeRange().first)  / (timeRange().second - timeRange().first));
         Configuration_t q2 ((*this) (subInterval.second, success));
-        if (!success) throw projection_error
-                ("Failed to apply constraints in StraightPath::extract");
-        q2[pathDofRank_] = ComputeExtraDofValue(pathDofRank_,initial_, end_, (subInterval.second - timeRange().first)  / (timeRange().second - timeRange().first));
-        PathPtr_t result = ComTrajectory::create (device_, q1, q2, l,
-                           constraints (), pathDofRank_, tds_);
+        value_type u = normalize(*this, subInterval.first);
+        model::vector3_t acceleration = half_acceleration_ * 2;
+        model::vector3_t speedAtQ1 = acceleration * u + initSpeed_;
+        PathPtr_t result = ComTrajectory::create (q1, q2, speedAtQ1, acceleration, l);
         return result;
-    }
-
-    DevicePtr_t ComTrajectory::device () const
-    {
-      return device_;
-    }
-
-    void ComTrajectory::checkPath () const
-    {
-      Configuration_t initc = initial();
-      Configuration_t endc = end();
-      updateConstraints(initc);
-      if (constraints()) {
-        if (!constraints()->isSatisfied (initial())) {            
-/*std::cout << "init conf " <<  initc << std::endl;
-device_->currentConfiguration(initc);
-device_->computeForwardKinematics();
-std::cout << "rf_foot_joint  " << std::endl;
-std::cout <<  device_->getJointByName("rf_foot_joint")->currentTransformation().getTranslation() << std::endl;
-
-std::cout << "lf_foot_joint "  << std::endl;
-std::cout <<  device_->getJointByName("lf_foot_joint")->currentTransformation().getTranslation() << std::endl;
-
-std::cout << "rh_foot_joint  " << std::endl;
-std::cout <<  device_->getJointByName("rh_foot_joint")->currentTransformation().getTranslation() << std::endl;
-
-std::cout << "lh_foot_joint  " << std::endl;
-std::cout <<  device_->getJointByName("lh_foot_joint")->currentTransformation().getTranslation() << std::endl;*/
-          hppDout (error, initial().transpose ());
-          throw projection_error ("Initial configuration of path does not satisfy "
-              "the constraints");
-        }
-        updateConstraints(endc);
-        if (constraints() && !constraints()->isSatisfied (end())) {
-          hppDout (error, end().transpose ());
-          throw projection_error ("End configuration of path does not satisfy "
-              "the constraints");
-        }
-      }
     }
   } //   namespace interpolation
   } //   namespace rbprm

@@ -50,10 +50,10 @@ namespace interpolation {
       /// \param device Robot corresponding to configurations
       /// \param init, end Start and end configurations of the path
       /// \param length Distance between the configurations.
-      static ComTrajectoryPtr_t create (core::ConfigurationIn_t init,
-                                        core::ConfigurationIn_t end,
-                                        Eigen::Vector3d initSpeed,
-                                        Eigen::Vector3d acceleration,
+      static ComTrajectoryPtr_t create (model::vector3_t init,
+                                        model::vector3_t end,
+                                        model::vector3_t initSpeed,
+                                        model::vector3_t acceleration,
                                         core::value_type length)
       {
     ComTrajectory* ptr = new ComTrajectory (init, end, initSpeed, acceleration, length);
@@ -74,19 +74,6 @@ namespace interpolation {
     return shPtr;
       }
 
-      /// Create copy and return shared pointer
-      /// \param path path to copy
-      /// \param constraints the path is subject to
-      static ComTrajectoryPtr_t createCopy
-    (const ComTrajectoryPtr_t& path, const core::ConstraintSetPtr_t& constraints)
-      {
-    ComTrajectory* ptr = new ComTrajectory (*path);
-    ComTrajectoryPtr_t shPtr (ptr);
-    ptr->initCopy (shPtr);
-        ptr->checkPath ();
-    return shPtr;
-      }
-
       /// Return a shared pointer to this
       ///
       /// As ComTrajectoryP are immutable, and refered to by shared pointers,
@@ -96,46 +83,12 @@ namespace interpolation {
     return createCopy (weak_.lock ());
       }
 
-      /// Return a shared pointer to a copy of this and set constraints
-      ///
-      /// \param constraints constraints to apply to the copy
-      /// \precond *this should not have constraints.
-      virtual core::PathPtr_t copy (const core::ConstraintSetPtr_t& constraints) const
-      {
-    return createCopy (weak_.lock (), constraints);
-      }
-
-
       /// Extraction/Reversion of a sub-path
       /// \param subInterval interval of definition of the extract path
       /// If upper bound of subInterval is smaller than lower bound,
       /// result is reversed.
       virtual core::PathPtr_t extract (const core::interval_t& subInterval) const
         throw (core::projection_error);
-
-      /// Modify initial configuration
-      /// \param initial new initial configuration
-      /// \pre input configuration should be of the same size as current initial
-      /// configuration
-      void initialConfig (core::ConfigurationIn_t initial)
-      {
-    assert (initial.size () == initial_.size ());
-    model::value_type dof = initial_[pathDofRank_];
-    initial_ = initial;
-    initial_[pathDofRank_] = dof;
-      }
-
-      /// Modify end configuration
-      /// \param end new end configuration
-      /// \pre input configuration should be of the same size as current end
-      /// configuration
-      void endConfig (core::ConfigurationIn_t end)
-      {
-    assert (end.size () == end_.size ());
-    model::value_type dof = end_[pathDofRank_];
-    end_ = end;
-    end_[pathDofRank_] = dof;
-      }
 
       /// Get the initial configuration
       core::Configuration_t initial () const
@@ -149,7 +102,8 @@ namespace interpolation {
         return end_;
       }
 
-      virtual void checkPath () const;
+      virtual void checkPath () const {}
+
     protected:
       /// Print path in a stream
       virtual std::ostream& print (std::ostream &os) const
@@ -157,15 +111,17 @@ namespace interpolation {
     os << "ComTrajectory:" << std::endl;
     os << "interval: [ " << timeRange ().first << ", "
        << timeRange ().second << " ]" << std::endl;
-    os << "initial configuration: " << initial_.transpose () << std::endl;
-    os << "final configuration:   " << end_.transpose () << std::endl;
+    os << "initial configuration: " << initial_ << std::endl;
+    os << "final configuration:   " << end_ << std::endl;
+    os << "init speed:   " << initSpeed_ << std::endl;
+    os << "acceleration (constant):   " << (half_acceleration_*2) << std::endl;
     return os;
       }
       /// Constructor
-      ComTrajectory (ccore::ConfigurationIn_t init,
-                     core::ConfigurationIn_t end,
-                     Eigen::Vector3d initSpeed,
-                     Eigen::Vector3d acceleration,
+      ComTrajectory (model::vector3_t init,
+                     model::vector3_t end,
+                     model::vector3_t initSpeed,
+                     model::vector3_t acceleration,
                      core::value_type length);
 
       /// Copy constructor
@@ -186,14 +142,14 @@ namespace interpolation {
       virtual bool impl_compute (core::ConfigurationOut_t result,
                  core::value_type param) const;
 
-
-    private:
-      core::Configuration_t initial_;
-      core::Configuration_t end_;
+      virtual core::PathPtr_t copy(const core::ConstraintSetPtr_t&) const {throw;}
 
     public:
-      const std::size_t pathDofRank_;
-      const T_TimeDependant tds_;
+      const model::vector3_t initial_;
+      const model::vector3_t end_;
+      const model::vector3_t initSpeed_;
+      const model::vector3_t half_acceleration_;
+      const model::value_type length_;
 
     private:
       ComTrajectoryWkPtr_t weak_;

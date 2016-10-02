@@ -153,7 +153,7 @@ using namespace core;
     }
 
     typedef std::vector<model::vector_t,Eigen::aligned_allocator<model::vector_t> > T_Configuration;
-    core::PathPtr_t generateComPath(model::DevicePtr_t device, const T_Configuration& configurations, const std::vector<double>& accelerations,
+    core::PathPtr_t generateComTraj(model::DevicePtr_t device, const T_Configuration& configurations, const std::vector<double>& accelerations,
                                     const model::value_type dt, const model::ConfigurationIn_t & initSpeed)
     {
         assert(configurations.size() == accelerations.size() +1);
