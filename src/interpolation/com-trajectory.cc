@@ -89,7 +89,7 @@ namespace hpp {
         bool success;
         Configuration_t q1 ((*this) (subInterval.first, success));
         Configuration_t q2 ((*this) (subInterval.second, success));
-        value_type u = normalize(*this, subInterval.first);
+        value_type u = normalize(*this, subInterval.first) * length_;
         model::vector3_t acceleration = half_acceleration_ * 2;
         model::vector3_t speedAtQ1 = acceleration * u + initSpeed_;
         PathPtr_t result = ComTrajectory::create (q1, q2, speedAtQ1, acceleration, l);
