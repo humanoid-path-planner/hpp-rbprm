@@ -78,6 +78,8 @@ namespace hpp {
         /// expressed in gradients
         /// [z_inf, z_sup, y_inf, y_sup, x_inf, x_sup]
         void BoundSO3(const std::vector<double>& limitszyx);
+        /// validate given config. Returns true if robot trunk not in collision but ROMs collide.
+        bool validateConfiguration(const model::Configuration_t config);
 
     public:
         typedef std::pair<fcl::Vec3f, TrianglePoints> T_TriangleNormal;

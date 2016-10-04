@@ -360,7 +360,15 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
     if (!found) std::cout << "no config found" << std::endl;
     return config;
 }
-
+bool RbPrmShooter::validateConfiguration(const model::Configuration_t config)
+{
+    ValidationReportPtr_t reportShPtr(new CollisionValidationReport);
+    bool validTrunk = validator_->trunkValidation_->validate(config, reportShPtr);
+    CollisionValidationReport* report = static_cast<CollisionValidationReport*>(reportShPtr.get());
+    bool validRoms = validator_->validateRoms(config, filter_);
+    bool valid = validator_->validate(config, filter_);
+    return (validTrunk && validRoms);
+}
 
   }// namespace rbprm
 }// namespace hpp
