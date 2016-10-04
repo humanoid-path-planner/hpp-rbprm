@@ -50,38 +50,19 @@ using namespace core;
         T_StateFrame stateFrames;
         stateFrames.push_back(std::make_pair(comPath->timeRange().first, startState));
         stateFrames.push_back(std::make_pair(comPath->timeRange().second, nextState));
-        //if(variations.empty())
         if(variations.empty())
         {
-            std::vector<bool> cosntraintsR = setMaintainRotationConstraints();
             std::vector<std::string> fixed = nextState.fixedContacts(startState);
             model::DevicePtr_t device = fullbody->device_->clone();
             if(keepExtraDof)
             {
                 device->setDimensionExtraConfigSpace(device->extraConfigSpace().dimension()+1);
             }
-            core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(device,"proj", 1e-4, 1000);
+            core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(device,"proj", 0.001, 1000);
             core::Problem rootProblem(device);
             for(std::vector<std::string>::const_iterator cit = fixed.begin();
                 cit != fixed.end(); ++cit)
             {
-                /*RbPrmLimbPtr_t limb = fullbody->GetLimbs().at(*cit);
-                const fcl::Vec3f& ppos  = startState.contactPositions_.at(*cit);
-                const fcl::Matrix3f& rotation = startState.contactRotation_.at(*cit);
-                JointPtr_t effectorJoint = device->getJointByName(limb->effector_->name());
-                proj->add(core::NumericalConstraint::create (
-                                        constraints::deprecated::Position::create("",device,
-                                                                      effectorJoint,fcl::Vec3f(0,0,0), ppos)));
-                if(limb->contactType_ == hpp::rbprm::_6_DOF)
-                {
-                    proj->add(core::NumericalConstraint::create (constraints::deprecated::Orientation::create("", device,
-                                                                                      effectorJoint,
-                                                                                      rotation,
-                                                                                      cosntraintsR)));
-                }
-                tools::RemoveNonLimbCollisionRec<core::Problem>(device->rootJoint(),
-                                                                limb->limb_->name(),
-                                                                rootProblem.collisionObstacles(),rootProblem);*/
             }
             rootProblem.configurationShooter(core::BasicConfigurationShooter::create(device));
             rootProblem.pathValidation(DiscretizedPathValidation::create(device,0.05));
@@ -96,7 +77,7 @@ using namespace core;
             rootProblem.target (target);
             rootProblem.addGoalConfig(end);
             guidePath = planner->solve();
-            return guidePath;
+            //return guidePath;
         }
         else
         {
@@ -131,7 +112,7 @@ using namespace core;
         core::PathPtr_t unusedPath(StraightPath::create(fullbody->device_,model.configuration_, model.configuration_,0));
         ComRRTShooterFactory unusedFactory(unusedPath);
         SetComRRTConstraints constraintFactory;
-        ComRRTHelper helper(fullbody, unusedFactory, constraintFactory, referenceProblem,unusedPath );
+        ComRRTHelper helper(fullbody, unusedFactory, constraintFactory, referenceProblem,unusedPath, 0.001);
         CreateContactConstraints<ComRRTHelper>(helper,model,model);
         CreateComConstraint<ComRRTHelper,core::PathPtr_t>(helper, helper.refPath_,targetCom);
         Configuration_t res(helper.fullBodyDevice_->configSize());

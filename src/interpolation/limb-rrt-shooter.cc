@@ -29,9 +29,12 @@ using namespace core;
       rbprm::T_Limb res;
       const rbprm::T_Limb& limbs = fullBody->GetLimbs();
       std::vector<std::string> variations = to.allVariations(from, extractEffectorsName(limbs));
-      const std::string limbName = *(variations.begin());
-      rbprm::RbPrmLimbPtr_t limb = limbs.at(limbName);
-      res.insert(std::make_pair(limbName,limb));
+      if(!variations.empty())
+      {
+          const std::string limbName = *(variations.begin());
+          rbprm::RbPrmLimbPtr_t limb = limbs.at(limbName);
+          res.insert(std::make_pair(limbName,limb));
+      }
       return res;
   }
 

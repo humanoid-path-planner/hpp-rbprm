@@ -176,7 +176,7 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
                            const std::vector<std::string>& constrainedLockedJoints)
     {
         core::PathPtr_t fullBodyComPath = comRRT(fullbody, referenceProblem, comPath, startState, nextState, numOptimizations, true);
-
+std::cout << "computed COM PATH " << std::endl;
         //removing extra dof
         core::SizeInterval_t interval(0, fullBodyComPath->initial().rows()-1);
         core::SizeIntervals_t intervals;
@@ -201,8 +201,8 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         stateFrames.push_back(std::make_pair(comPath->timeRange().second, nextState));
         return interpolateStatesFromPath<EffectorRRTHelper, EffectorRRTShooterFactory, SetEffectorRRTConstraints>
                 (fullbody, referenceProblem, shooterFactory, constraintFactory, comPath,
-                // stateFrames.begin(), stateFrames.begin()+1, numOptimizations % 10, keepExtraDof, 0.01);
-                 stateFrames.begin(), stateFrames.begin()+1, numOptimizations, keepExtraDof, 0.01);
+                 stateFrames.begin(), stateFrames.begin()+1, numOptimizations % 10, keepExtraDof);
+                 //stateFrames.begin(), stateFrames.begin()+1, numOptimizations, keepExtraDof, 0.01);
     }
 
     core::PathPtr_t effectorRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,

@@ -114,7 +114,7 @@ namespace interpolation {
     os << "initial configuration: " << initial_ << std::endl;
     os << "final configuration:   " << end_ << std::endl;
     os << "init speed:   " << initSpeed_ << std::endl;
-    os << "acceleration (constant):   " << (half_acceleration_*2) << std::endl;
+    os << "acceleration (constant):   " << (acceleration_) << std::endl;
     return os;
       }
       /// Constructor
@@ -149,6 +149,7 @@ namespace interpolation {
       const model::vector3_t end_;
       const model::vector3_t initSpeed_;
       const model::vector3_t half_acceleration_;
+      const model::vector3_t acceleration_;
       const model::value_type length_;
 
     private:

@@ -133,7 +133,7 @@ namespace hpp {
             return 0;
         }
         model::value_type innerprod = q1.dot(q2);
-        assert (fabs (innerprod) < 1.0001);
+        assert (fabs (innerprod) < 1.001);
         if (innerprod < -1) innerprod = -1;
         if (innerprod >  1) innerprod =  1;
         cosIsNegative = (innerprod < 0);
@@ -175,7 +175,6 @@ namespace hpp {
         if(!constant)
         {
             lockedJoint->comparisonType(core::Equality::create());
-            std::cout << "constant ok" << std::endl;
         }
         projector->add(lockedJoint);
     }

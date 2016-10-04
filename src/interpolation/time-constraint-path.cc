@@ -146,7 +146,7 @@ namespace hpp {
       updateConstraints(initc);
       if (constraints()) {
         if (!constraints()->isSatisfied (initial())) {            
-std::cout << "init conf " <<  initc << std::endl;
+//std::cout << "init conf " <<  initc << std::endl;
 /*device_->currentConfiguration(initc);
 device_->computeForwardKinematics();
 std::cout << "rf_foot_joint  " << std::endl;
@@ -166,7 +166,7 @@ std::cout <<  device_->getJointByName("lh_foot_joint")->currentTransformation().
         }
         updateConstraints(endc);
         if (constraints() && !constraints()->isSatisfied (end())) {
-std::cout << "end conf " <<  initc << std::endl;
+//std::cout << "end conf " <<  initc << std::endl;
           hppDout (error, end().transpose ());
           throw projection_error ("End configuration of path does not satisfy "
               "the constraints");

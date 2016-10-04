@@ -37,6 +37,7 @@ namespace hpp {
         initial_ (init), end_ (end),
         initSpeed_(initSpeed),
         half_acceleration_(acceleration / 2),
+        acceleration_(acceleration),
         length_(length)
       {
         assert (length >= 0);
@@ -59,6 +60,7 @@ namespace hpp {
         initial_ (path.initial_), end_ (path.end_),
         initSpeed_(path.initSpeed_),
         half_acceleration_(path.half_acceleration_),
+        acceleration_(path.acceleration_),
         length_(path.length_){}
 
     bool ComTrajectory::impl_compute (ConfigurationOut_t result,
@@ -75,7 +77,7 @@ namespace hpp {
         else
         {
             value_type u = normalize(*this, param) * length_;
-            result = half_acceleration_ * u*u + initSpeed_ * u + initial_;
+            result = acceleration_ * u*u / 2. + initSpeed_ * u + initial_;
         }
         return true;
     }
@@ -84,15 +86,14 @@ namespace hpp {
       throw (projection_error)
     {
         // Length is assumed to be proportional to interval range
-        value_type l = fabs (subInterval.second - subInterval.first);
+        value_type l = std::min(fabs (subInterval.second - subInterval.first), length_);
 
         bool success;
         Configuration_t q1 ((*this) (subInterval.first, success));
         Configuration_t q2 ((*this) (subInterval.second, success));
         value_type u = normalize(*this, subInterval.first) * length_;
-        model::vector3_t acceleration = half_acceleration_ * 2;
-        model::vector3_t speedAtQ1 = acceleration * u + initSpeed_;
-        PathPtr_t result = ComTrajectory::create (q1, q2, speedAtQ1, acceleration, l);
+        model::vector3_t speedAtQ1 = acceleration_ * u + initSpeed_;
+        PathPtr_t result = ComTrajectory::create (q1, q2, speedAtQ1, acceleration_, l);
         return result;
     }
   } //   namespace interpolation

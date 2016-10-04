@@ -51,22 +51,32 @@ namespace interpolation {
     template<class Reference>
     struct VecRightSide : public RightHandSideFunctor
     {
-         VecRightSide (const Reference ref, const int dim = 3) : ref_(ref), dim_(dim){}
+         VecRightSide (const Reference ref, const int dim = 3, const bool times_ten = false) : ref_(ref), dim_(dim), times_ten_(times_ten)
+         {}
         ~VecRightSide(){}
         virtual void operator() (constraints::vectorOut_t output,
                                const constraints::value_type& normalized_input, model::ConfigurationOut_t /*conf*/) const
         {
           const std::pair<core::value_type, core::value_type>& tR (ref_->timeRange());
           constraints::value_type unNormalized = (tR.second-tR.first)* normalized_input + tR.first;
-          output = ref_->operator ()(unNormalized).head(dim_);
+          if(times_ten_)
+          {
+              output = ref_->operator ()(unNormalized).head(dim_) * (10000) ;
+          }
+          else
+          {
+            output = ref_->operator ()(unNormalized).head(dim_) ;
+          }
         }
         const Reference ref_;
         const int dim_;
+        const bool times_ten_;
     };
 
     typedef constraints::PointCom PointCom;
-    typedef constraints::SymbolicFunction<PointCom> PointComFunction;
-    typedef constraints::SymbolicFunction<PointCom>::Ptr_t PointComFunctionPtr_t;
+    typedef constraints::CalculusBaseAbstract<PointCom::ValueType_t, PointCom::JacobianType_t> s_t;
+    typedef constraints::SymbolicFunction<s_t> PointComFunction;
+    typedef constraints::SymbolicFunction<s_t>::Ptr_t PointComFunctionPtr_t;
 
     template<class Helper_T, typename Reference>
     void CreateComConstraint(Helper_T& helper, const Reference &ref, const fcl::Vec3f& initTarget=fcl::Vec3f())
@@ -80,12 +90,12 @@ namespace interpolation {
 //comComp->add (device->getJointByName("romeo/base_joint_xyz"));
         comComp->computeMass ();
         PointComFunctionPtr_t comFunc = PointComFunction::create ("COM-walkgen",
-            device, PointCom::create (comComp));
+            device, 10000 * PointCom::create (comComp));
         NumericalConstraintPtr_t comEq = NumericalConstraint::create (comFunc, equals);
-        comEq->nonConstRightHandSide() = initTarget;
+        comEq->nonConstRightHandSide() = initTarget * 10000;
         proj->add(comEq);
         proj->updateRightHandSide();
-        helper.steeringMethod_->tds_.push_back(TimeDependant(comEq, boost::shared_ptr<VecRightSide<Reference> >(new VecRightSide<Reference> (ref, 3))));
+        helper.steeringMethod_->tds_.push_back(TimeDependant(comEq, boost::shared_ptr<VecRightSide<Reference> >(new VecRightSide<Reference> (ref, 3, true))));
     }
 
     inline constraints::PositionPtr_t createPositionMethod(model::DevicePtr_t device, const fcl::Vec3f& initTarget, JointPtr_t effector)
