@@ -31,6 +31,7 @@ State::State(const State& other)
     contactNormals_ = (other.contactNormals_);
     contactPositions_ = (other.contactPositions_);
     contactRotation_ = (other.contactRotation_);
+    contactSurfaces_ = (other.contactSurfaces_);
 }
 
 
@@ -42,6 +43,7 @@ State& State::operator= (const State& other)
       contactNormals_ = other.contactNormals_;
       contactPositions_ = other.contactPositions_;
       contactRotation_ = other.contactRotation_;
+      contactSurfaces_ = other.contactSurfaces_;
       contactOrder_ = other.contactOrder_;
       nbContacts = other.nbContacts;
       com_ = other.com_;
@@ -60,6 +62,7 @@ bool State::RemoveContact(const std::string& contactId)
       contactPositions_.erase(contactId);
       contactRotation_.erase(contactId);
       contactNormals_.erase(contactId);
+      contactSurfaces_.erase(contactId);
       --nbContacts;
       stable = false;
       std::queue<std::string> newQueue;
@@ -89,6 +92,7 @@ std::string State::RemoveFirstContact()
   contactPositions_.erase(contactId);
   contactRotation_.erase(contactId);
   contactNormals_.erase(contactId);
+  contactSurfaces_.erase(contactId);
   stable = false;
   --nbContacts;
   return contactId;
