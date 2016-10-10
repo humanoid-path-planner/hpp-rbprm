@@ -157,7 +157,6 @@ namespace
         template<class Helper_T>
         PathVectorPtr_t optimize(Helper_T& helper, PathVectorPtr_t partialPath, const std::size_t numOptimizations)
         {
-            std::cout << "optimizing " << std::endl;
             core::RandomShortcutPtr_t rs = core::RandomShortcut::create(helper.rootProblem_);
             for(std::size_t j=0; j<numOptimizations;++j)
             {

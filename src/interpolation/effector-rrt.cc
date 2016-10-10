@@ -53,7 +53,7 @@ using namespace core;
 
     bool IsLine(const T_Waypoint& wayPoints)
     {
-//return true;
+return true;
         const vector_t& init  = wayPoints.front().second;
         // compute line between first and last
         vector_t dir =  wayPoints.back().second- init;
@@ -103,7 +103,7 @@ using namespace core;
         if(IsLine(res) && effectorDistance > 0.03 )
         {
             //value_type height = effectorDistance < 0.1 ? 0.01 : std::max(nbWayPoints* 0.015, 0.02) ;
-std::cout << "is line " << std::endl;
+//std::cout << "is line " << std::endl;
 value_type height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max(nbWayPoints* 0.01, 0.02)) ;
             isLine = true;
             T_Waypoint res2;
@@ -176,7 +176,6 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
                            const std::vector<std::string>& constrainedLockedJoints)
     {
         core::PathPtr_t fullBodyComPath = comRRT(fullbody, referenceProblem, comPath, startState, nextState, numOptimizations, true);
-std::cout << "computed COM PATH " << std::endl;
         //removing extra dof
         core::SizeInterval_t interval(0, fullBodyComPath->initial().rows()-1);
         core::SizeIntervals_t intervals;

@@ -54,10 +54,10 @@ using namespace core;
         {
             std::vector<std::string> fixed = nextState.fixedContacts(startState);
             model::DevicePtr_t device = fullbody->device_->clone();
-            if(keepExtraDof)
+            /*if(keepExtraDof)
             {
                 device->setDimensionExtraConfigSpace(device->extraConfigSpace().dimension()+1);
-            }
+            }*/
             core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(device,"proj", 0.001, 1000);
             core::Problem rootProblem(device);
             for(std::vector<std::string>::const_iterator cit = fixed.begin();
