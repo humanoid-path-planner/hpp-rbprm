@@ -88,16 +88,16 @@ namespace stability{
         }
         else
         {
-            const fcl::Matrix3f& fclRotation = state.contactRotation_.at(name);
-            for(int i =0; i< 3; ++i)
-                for(int j =0; j<3;++j)
-                    R(i,j) = fclRotation(i,j);
-
             fcl::Vec3f z_axis(0,0,1);
             fcl::Matrix3f rotationLocal = tools::GetRotationMatrix(z_axis, limb->normal_);
+            rotationLocal.inverse();
+            fcl::Transform3f roWorld;
+            roWorld.setRotation(state.contactRotation_.at(name));
+            roWorld.setTranslation(position);
             for(std::size_t i =0; i<4; ++i)
             {
-                p.row(i) = position + (R*(rotationLocal*(p.row(i).transpose() + limb->offset_)));
+                fcl::Vec3f pLocal = rotationLocal*(p.row(i).transpose()) + limb->offset_;
+                p.row(i) = (roWorld * pLocal).getTranslation();
             }
         }
     }
