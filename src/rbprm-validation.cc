@@ -136,9 +136,6 @@ namespace hpp {
 
         //hppDout(notice,"report in validateRoms = "<<rbprmReport);
 
-
-
-
         if(validationReport){// if the trunk is in collision, we copy the informations in the new report
           CollisionValidationReportPtr_t colReport = boost::dynamic_pointer_cast<CollisionValidationReport>(validationReport);
           if(colReport->result.isCollision()){
@@ -176,8 +173,8 @@ namespace hpp {
         else
           rbprmReport->romsValid=false;
         validationReport = rbprmReport;
-        //std::string tr = (filterMatch >= filter.size()) ? "true" : "false";
-        //hppDout(notice," validate romes ?" << filterMatch << " " <<  tr );
+        std::string tr = (filterMatch >= filter.size()) ? "true" : "false";
+        hppDout(notice," validate romes ?" << filterMatch << " " <<  tr );
         return filterMatch >= filter.size();
     }
 

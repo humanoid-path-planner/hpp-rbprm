@@ -49,7 +49,7 @@ namespace hpp {
       bool collision = !hpp::core::CollisionValidation::validate(config, romReport);
       RbprmValidationReportPtr_t rbprmReport =boost::dynamic_pointer_cast<RbprmValidationReport>(validationReport);
       if(rbprmReport){
-        hppDout(notice,"rbprm-validation-report correctly cast");
+        //hppDout(notice,"rbprm-validation-report correctly cast");
       }else{
         hppDout(notice,"Validation report is not a valid rbprm-validation-report instance");
       }

@@ -293,6 +293,7 @@ namespace
 
 hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
 {
+    hppDout(notice,"!!! Random shoot");
     JointVector_t jv = robot_->getJointVector ();
     ConfigurationPtr_t config (new Configuration_t (robot_->Device::currentConfiguration()));
     std::size_t limit = shootLimit_;
@@ -383,6 +384,7 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
         limit--;
     }
     if (!found) std::cout << "no config found" << std::endl;
+    hppDout(info,"shoot : "<<model::displayConfig(*config));
     return config;
 }
 
