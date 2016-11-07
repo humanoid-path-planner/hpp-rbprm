@@ -98,42 +98,29 @@ namespace
             SampleRotationRec(config,jv,current);
     }
 
-    void SampleRotation(model::DevicePtr_t so3, ConfigurationPtr_t config, JointVector_t& /*jv*/)
+    void SampleRotation(model::DevicePtr_t so3, ConfigurationPtr_t config, JointVector_t& jv)
     {
-      size_t id = 0;
-      if(so3->rootJoint())
-      {
-          std::size_t rank = 3;
-          //so3->rootJoint()->configuration()->uniformlySample(rank,*config);
-          Eigen::Matrix <value_type, 3, 1> confso3;
-        
-          id+=1;
-          model::JointPtr_t joint = so3->rootJoint();
-          for(int i =0; i <3; ++i)
-          {
-             //hppDout(notice,"JOINT : name = "<<joint->name()<<" size = "<<joint->configSize());
-             //hppDout(notice,"JOINT : lower bound = "<<joint->lowerBound(0)<<"upper bound = "<<joint->upperBound(0));
-              joint->configuration()->uniformlySample (i, confso3);
-              if(i<2)
-                joint = joint->childJoint(0);
-          }
-          //std::cout<<confso3<<std::endl;
-          Eigen::Quaterniond qt = Eigen::AngleAxisd(confso3(0), Eigen::Vector3d::UnitZ())
-            * Eigen::AngleAxisd(confso3(1), Eigen::Vector3d::UnitY())
-            * Eigen::AngleAxisd(confso3(2), Eigen::Vector3d::UnitX());
-          //std::cout<<"quat = "<<qt.w()<<" , "<<qt.x()<<" , "<<qt.y()<<" , "<<qt.z()<<" , "<<std::endl;
-          (*config)(rank+0) = qt.w();
-          (*config)(rank+1) = qt.x();
-          (*config)(rank+2) = qt.y();
-          (*config)(rank+3) = qt.z();
-          //std::cout<<model::displayConfig(*config)<<std::endl;
-          
-      }
-     /* if(id < jv.size()){
-          std::cout<<"SampleRotationRec"<<std::endl;
-          SampleRotationRec(config,jv,id);
-      }   */
-        
+        std::size_t id = 1;
+        if(so3->rootJoint())
+        {
+            Eigen::Matrix <value_type, 3, 1> confso3;
+            id+=1;
+            model::JointPtr_t joint = so3->rootJoint();
+            for(int i =0; i <3; ++i)
+            {
+                joint->configuration()->uniformlySample (i, confso3);
+            }
+            Eigen::Quaterniond qt = Eigen::AngleAxisd(confso3(0), Eigen::Vector3d::UnitZ())
+              * Eigen::AngleAxisd(confso3(1), Eigen::Vector3d::UnitY())
+              * Eigen::AngleAxisd(confso3(2), Eigen::Vector3d::UnitX());
+            std::size_t rank = 3;
+            (*config)(rank+0) = qt.w();
+            (*config)(rank+1) = qt.x();
+            (*config)(rank+2) = qt.y();
+            (*config)(rank+3) = qt.z();
+        }
+        if(id < jv.size())
+            SampleRotationRec(config,jv,id);
     }
 
     model::DevicePtr_t initSo3()
@@ -175,7 +162,6 @@ namespace
             else
             {
                 current->upperBound(0, *cit);
-                
                 current = current->numberChildJoints() > 0 ? current->childJoint(0) : 0;
             }
         }
