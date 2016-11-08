@@ -16,8 +16,8 @@
 // hpp-core  If not, see
 // <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_RBPRM_DYNAMIC_PLANNER_HH
-# define HPP_RBPRM_DYNAMIC_PLANNER_HH
+#ifndef HPP_RBPRM_PARABOLA_PLANNER_HH
+# define HPP_RBPRM_PARABOLA_PLANNER_HH
 
 # include <hpp/core/path-planner.hh>
 # include <hpp/core/steering-method.hh>
@@ -31,21 +31,21 @@ namespace hpp {
     /// \{
 
     // forward declaration of class Planner
-    HPP_PREDEF_CLASS (DynamicPlanner);
+    HPP_PREDEF_CLASS (ParabolaPlanner);
     // Planner objects are manipulated only via shared pointers
-    typedef boost::shared_ptr <DynamicPlanner> DynamicPlannerPtr_t;
+    typedef boost::shared_ptr <ParabolaPlanner> ParabolaPlannerPtr_t;
     typedef boost::tuple <core::NodePtr_t, core::ConfigurationPtr_t, core::PathPtr_t> DelayedEdge_t;
     typedef std::vector <DelayedEdge_t> DelayedEdges_t;
 
     /// Generic implementation of RRT algorithm
-    class  DynamicPlanner : public core::PathPlanner
+    class  ParabolaPlanner : public core::PathPlanner
     {
     public:
       /// Return shared pointer to new object.
-      static DynamicPlannerPtr_t createWithRoadmap
+      static ParabolaPlannerPtr_t createWithRoadmap
         (const core::Problem& problem, const core::RoadmapPtr_t& roadmap);
       /// Return shared pointer to new object.
-      static DynamicPlannerPtr_t create (const core::Problem& problem);
+      static ParabolaPlannerPtr_t create (const core::Problem& problem);
       /// One step of extension.
       virtual void oneStep ();
 
@@ -85,11 +85,11 @@ namespace hpp {
 
     protected:
       /// Constructor
-      DynamicPlanner (const core::Problem& problem, const core::RoadmapPtr_t& roadmap);
+      ParabolaPlanner (const core::Problem& problem, const core::RoadmapPtr_t& roadmap);
       /// Constructor with roadmap
-      DynamicPlanner (const core::Problem& problem);
+      ParabolaPlanner (const core::Problem& problem);
       /// Store weak pointer to itself
-      void init (const DynamicPlannerWkPtr_t& weak);
+      void init (const ParabolaPlannerWkPtr_t& weak);
       /// Extend a node in the direction of a configuration
       /// \param near node in the roadmap,
       /// \param target target configuration
@@ -115,7 +115,7 @@ namespace hpp {
 
       core::ConfigurationShooterPtr_t configurationShooter_;
       mutable core::Configuration_t qProj_;
-      DynamicPlannerWkPtr_t weakPtr_;
+      ParabolaPlannerWkPtr_t weakPtr_;
       SteeringMethodParabolaPtr_t smParabola_;
       const core::RbprmRoadmapPtr_t rbRoadmap_;
       const core::RoadmapPtr_t roadmap_;

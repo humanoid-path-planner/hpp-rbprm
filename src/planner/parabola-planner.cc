@@ -16,7 +16,7 @@
 // hpp-core  If not, see
 // <http://www.gnu.org/licenses/>.
 
-#include <hpp/rbprm/planner/dynamic-planner.hh>
+#include <hpp/rbprm/planner/parabola-planner.hh>
 #include <hpp/util/debug.hh>
 #include <hpp/util/timer.hh>
 #include <hpp/model/configuration.hh>
@@ -49,20 +49,20 @@ namespace hpp {
   namespace rbprm {
     using model::displayConfig;
     
-    DynamicPlannerPtr_t DynamicPlanner::createWithRoadmap
+    ParabolaPlannerPtr_t ParabolaPlanner::createWithRoadmap
     (const core::Problem& problem, const core::RoadmapPtr_t& roadmap)
     {
-      DynamicPlanner* ptr = new DynamicPlanner (problem, roadmap);
-      return DynamicPlannerPtr_t (ptr);
+      ParabolaPlanner* ptr = new ParabolaPlanner (problem, roadmap);
+      return ParabolaPlannerPtr_t (ptr);
     }
     
-    DynamicPlannerPtr_t DynamicPlanner::create (const core::Problem& problem)
+    ParabolaPlannerPtr_t ParabolaPlanner::create (const core::Problem& problem)
     {
-      DynamicPlanner* ptr = new DynamicPlanner (problem);
-      return DynamicPlannerPtr_t (ptr);
+      ParabolaPlanner* ptr = new ParabolaPlanner (problem);
+      return ParabolaPlannerPtr_t (ptr);
     }
     
-    DynamicPlanner::DynamicPlanner (const core::Problem& problem):
+    ParabolaPlanner::ParabolaPlanner (const core::Problem& problem):
       PathPlanner (problem),
       configurationShooter_ (problem.configurationShooter()),
       qProj_ (problem.robot ()->configSize ()),
@@ -71,7 +71,7 @@ namespace hpp {
     {
     }
     
-    DynamicPlanner::DynamicPlanner (const core::Problem& problem,
+    ParabolaPlanner::ParabolaPlanner (const core::Problem& problem,
                                     const core::RoadmapPtr_t& roadmap) :
       PathPlanner (problem, roadmap),
       configurationShooter_ (problem.configurationShooter()),
@@ -81,7 +81,7 @@ namespace hpp {
     {
     }
     
-    void DynamicPlanner::init (const DynamicPlannerWkPtr_t& weak)
+    void ParabolaPlanner::init (const ParabolaPlannerWkPtr_t &weak)
     {
       PathPlanner::init (weak);
       weakPtr_ = weak;
@@ -96,7 +96,7 @@ namespace hpp {
       return false;
     }
     
-    void DynamicPlanner::startSolve ()
+    void ParabolaPlanner::startSolve ()
     {
       // add 3 extraDof to save contact normal (used for parabola computation)
       //hppDout(notice,"set extra conf");
@@ -119,7 +119,7 @@ namespace hpp {
       polytope::init_library();
     }
     
-    core::PathPtr_t DynamicPlanner::extend (const core::NodePtr_t& near,
+    core::PathPtr_t ParabolaPlanner::extend (const core::NodePtr_t& near,
                                             const core::ConfigurationPtr_t& target)
     {
       const core::SteeringMethodPtr_t& sm (problem ().steeringMethod ());
@@ -144,7 +144,7 @@ namespace hpp {
       return path;
     }
     
-    core::PathPtr_t DynamicPlanner::extendParabola (const core::NodePtr_t& near,
+    core::PathPtr_t ParabolaPlanner::extendParabola (const core::NodePtr_t& near,
                                                     const core::ConfigurationPtr_t& target)
     {
       const core::SteeringMethodPtr_t& sm (problem ().steeringMethod ());
@@ -194,7 +194,7 @@ namespace hpp {
     ///  to avoid iterating on the list of connected components while modifying
     ///  this list.
     
-    void DynamicPlanner::oneStep ()
+    void ParabolaPlanner::oneStep ()
     {
       hppDout(notice,"# oneStep BEGIN");
       DelayedEdges_t delayedEdges;
@@ -348,7 +348,7 @@ namespace hpp {
     // This method call SteeringMethodParabola, but we don't try to connect two confuration, instead we shoot a random alpha0 and V0 valide for the initiale configuration and then compute the final point.
     // Then we check for collision (for the trunk)  and we check if the final point is in a valide configuration (trunk not in collision but limbs in accessible contact zone).
     // (Not anymore ) If this is true we do a reverse collision check until we find the first valide configuration, then we check for the friction cone and impact velocity constraint.(Not anymore : can't find normal after this)
-    core::PathPtr_t DynamicPlanner::computeRandomParabola(core::NodePtr_t x_start, core::ConfigurationPtr_t q_target, DelayedEdges_t &delayedEdges){
+    core::PathPtr_t ParabolaPlanner::computeRandomParabola(core::NodePtr_t x_start, core::ConfigurationPtr_t q_target, DelayedEdges_t &delayedEdges){
       hppDout(notice,"### compute random parabola :");
       std::vector<std::string> filter;
       core::PathPtr_t validPath, landingPath;
@@ -467,7 +467,7 @@ namespace hpp {
       return path;
     }
     
-    void DynamicPlanner::tryDirectPath ()
+    void ParabolaPlanner::tryDirectPath ()
     {
       // call steering method here to build a direct conexion
       core::PathValidationPtr_t pathValidation (problem ().pathValidation ());
@@ -542,7 +542,7 @@ namespace hpp {
     
     
     
-    void DynamicPlanner::configurationShooter
+    void ParabolaPlanner::configurationShooter
     (const core::ConfigurationShooterPtr_t& shooter)
     {
       configurationShooter_ = shooter;
@@ -619,7 +619,7 @@ namespace hpp {
       return pathVector;
     }*/
     
-    void DynamicPlanner::computeGIWC(const core::RbprmNodePtr_t x){
+    void ParabolaPlanner::computeGIWC(const core::RbprmNodePtr_t x){
       core::ValidationReportPtr_t report;
       problem().configValidations()->validate(*(x->configuration()),report);
       computeGIWC(x,report);
@@ -629,7 +629,7 @@ namespace hpp {
     
     
     
-    void DynamicPlanner::computeGIWC(const core::RbprmNodePtr_t node, core::ValidationReportPtr_t report){
+    void ParabolaPlanner::computeGIWC(const core::RbprmNodePtr_t node, core::ValidationReportPtr_t report){
       hppDout(notice,"## compute GIWC");
       core::ConfigurationPtr_t q = node->configuration();
       // fil normal information in node
