@@ -19,6 +19,7 @@
 #include <hpp/rbprm/planner/dynamic-planner.hh>
 #include <boost/tuple/tuple.hpp>
 #include <hpp/util/debug.hh>
+#include <hpp/util/timer.hh>
 #include <hpp/model/configuration.hh>
 #include <hpp/model/device.hh>
 #include <hpp/core/config-projector.hh>
@@ -26,12 +27,17 @@
 #include <hpp/core/edge.hh>
 #include <hpp/core/path.hh>
 #include <hpp/core/path-validation.hh>
+#include <hpp/core/config-validations.hh>
 #include <hpp/core/problem.hh>
 #include <hpp/core/roadmap.hh>
 #include <hpp/core/steering-method.hh>
 #include <hpp/core/basic-configuration-shooter.hh>
 #include <hpp/core/kinodynamic-distance.hh>
 #include <hpp/rbprm/planner/rbprm-roadmap.hh>
+#include <hpp/fcl/collision_data.h>
+#include <hpp/fcl/intersect.h>
+#include "utils/algorithms.h"
+#include <polytope/stability_margin.h>
 
 namespace hpp {
   namespace rbprm {
@@ -182,6 +188,164 @@ namespace hpp {
     }
 
 
+
+    void DynamicPlanner::computeGIWC(const core::RbprmNodePtr_t x){
+      core::ValidationReportPtr_t report;
+      problem().configValidations()->validate(*(x->configuration()),report);
+      computeGIWC(x,report);
+    }
+
+
+    void DynamicPlanner::computeGIWC(const core::RbprmNodePtr_t xNode, core::ValidationReportPtr_t report){
+      core::RbprmNodePtr_t node = static_cast<core::RbprmNodePtr_t>(xNode);
+      hppDout(notice,"## compute GIWC");
+      core::ConfigurationPtr_t q = node->configuration();
+      // fil normal information in node
+      if(node){
+        size_t cSize = problem().robot()->configSize();
+        hppDout(info,"~~ NODE cast correctly");
+        node->normal((*q)[cSize-3],(*q)[cSize-2],(*q)[cSize-1]);
+        hppDout(info,"~~ normal = "<<node->getNormal());
+
+      }else{
+        hppDout(error,"~~ NODE cannot be cast");
+        return;
+      }
+
+      hppDout(info,"~~ q = "<<displayConfig(*q));
+
+      core::RbprmValidationReportPtr_t rbReport = boost::dynamic_pointer_cast<core::RbprmValidationReport> (report);
+      // checks :
+      if(!rbReport)
+      {
+        hppDout(error,"~~ Validation Report cannot be cast");
+        return;
+      }
+      if(rbReport->trunkInCollision)
+      {
+        hppDout(warning,"~~ ComputeGIWC : trunk is in collision"); // shouldn't happen
+      }
+      if(!rbReport->romsValid)
+      {
+        hppDout(warning,"~~ ComputeGIWC : roms filter not respected"); // shouldn't happen
+      }
+
+      //TODO
+      polytope::T_rotation_t rotContact(3*rbReport->ROMReports.size(),3);
+      polytope::vector_t posContact(3*rbReport->ROMReports.size());
+
+
+      // get the 2 object in contact for each ROM :
+      hppDout(info,"~~ Number of roms in collision : "<<rbReport->ROMReports.size());
+      size_t indexRom = 0 ;
+      for(std::map<std::string,core::CollisionValidationReportPtr_t>::const_iterator it = rbReport->ROMReports.begin() ; it != rbReport->ROMReports.end() ; ++it)
+      {
+        hppDout(info,"~~ for rom : "<<it->first);
+        core::CollisionObjectPtr_t obj1 = it->second->object1;
+        core::CollisionObjectPtr_t obj2 = it->second->object2;
+        hppDout(notice,"~~ collision between : "<<obj1->name() << " and "<<obj2->name());
+        fcl::CollisionResult result = it->second->result;
+        /* size_t numContact =result.numContacts();
+        hppDout(notice,"~~ number of contact : "<<numContact);
+        std::ostringstream ss;
+        ss<<"[";
+        for(size_t i = 0 ; i < numContact ; i++)
+        { // print with python formating :
+          ss<<"["<<result.getContact(i).pos[0]<<","<<result.getContact(i).pos[1]<<","<<result.getContact(i).pos[2]<<"]";
+          if(i< (numContact-1))
+             ss<<",";
+        }
+        ss<<"]";
+        std::cout<<ss.str()<<std::endl;
+      */
+
+        // get intersection between the two objects :
+        obj1->fcl();
+        geom::T_Point vertices1;
+        geom::BVHModelOBConst_Ptr_t model1 =  geom::GetModel(obj1->fcl());
+        hppDout(info,"vertices obj1 : "<<obj1->name()<< " ( "<<model1->num_vertices<<" ) ");
+        std::ostringstream ss1;
+        ss1<<"[";
+        for(int i = 0 ; i < model1->num_vertices ; ++i)
+        {
+          vertices1.push_back(Eigen::Vector3d(model1->vertices[i][0], model1->vertices[i][1], model1->vertices[i][2]));
+          //hppDout(notice,"vertices : "<<model1->vertices[i]);
+          ss1<<"["<<model1->vertices[i][0]<<","<<model1->vertices[i][1]<<","<<model1->vertices[i][2]<<"]";
+          if(i< (model1->num_vertices-1))
+            ss1<<",";
+        }
+        ss1<<"]";
+        //std::cout<<ss1.str()<<std::endl;
+
+
+        obj2->fcl();
+        geom::T_Point vertices2;
+        geom::BVHModelOBConst_Ptr_t model2 =  geom::GetModel(obj2->fcl());
+        hppDout(info,"vertices obj2 : "<<obj2->name()<< " ( "<<model2->num_vertices<<" ) ");
+        std::ostringstream ss2;
+        ss2<<"[";
+        for(int i = 0 ; i < model2->num_vertices ; ++i)
+        {
+          vertices2.push_back(Eigen::Vector3d(model2->vertices[i][0], model2->vertices[i][1], model2->vertices[i][2]));
+          // hppDout(notice,"vertices : "<<model2->vertices[i]);
+          ss2<<"["<<model2->vertices[i][0]<<","<<model2->vertices[i][1]<<","<<model2->vertices[i][2]<<"]";
+          if(i< (model2->num_vertices -1))
+            ss2<<",";
+
+        }
+        ss2<<"]";
+        //std::cout<<ss2.str()<<std::endl;
+
+
+
+
+
+        hppStartBenchmark (COMPUTE_INTERSECTION);
+        geom::T_Point hull = geom::intersectPolygonePlane(model1,model2,fcl::Vec3f(0,0,1),geom::ZJUMP,result);
+        hppStopBenchmark (COMPUTE_INTERSECTION);
+        hppDisplayBenchmark (COMPUTE_INTERSECTION);
+        if(hull.size() == 0){
+          hppDout(error,"No intersection between rom and environnement");
+          node->giwc(0);
+          return;
+        }
+
+        // todo : compute center point of the hull
+        polytope::vector3_t normal,tangent0,tangent1;
+        geom::Point center = geom::center(hull.begin(),hull.end());
+        posContact.segment<3>(indexRom*3) = center;
+        std::cout<<center<<std::endl<<std::endl;
+        polytope::rotation_t rot;
+        normal = -result.getContact(0).normal;
+        hppDout(notice," !!! normal for GIWC : "<<normal);
+        // compute tangent vector :
+        tangent0 = normal.cross(polytope::vector3_t(1,0,0));
+        if(tangent0.dot(tangent0)<0.001)
+          tangent0 = normal.cross(polytope::vector3_t(0,1,0));
+        tangent1 = normal.cross(tangent0);
+        rot(0,0) = tangent0(0) ; rot(0,1) = tangent1(0) ; rot(0,2) = normal(0);
+        rot(1,0) = tangent0(1) ; rot(1,1) = tangent1(1) ; rot(1,2) = normal(1);
+        rot(2,0) = tangent0(2) ; rot(2,1) = tangent1(2) ; rot(2,2) = normal(2);
+
+        rotContact.block<3,3>(indexRom*3,0) = rot;
+        std::cout<<rot<<std::endl<<std::endl;
+
+        indexRom++;
+      } // for each ROMS
+
+      polytope::vector_t x(rbReport->ROMReports.size());
+      polytope::vector_t y(rbReport->ROMReports.size());
+      polytope::vector_t nu(rbReport->ROMReports.size());
+      for(size_t k = 0 ; k<rbReport->ROMReports.size() ; ++k){
+        x(k) = 0.25; // approx size of foot
+        y(k) = 0.15;
+        nu(k) = 0.5;
+      }
+      // save giwc in node structure
+      node->giwc(polytope::U_stance(rotContact,posContact,nu,x,y));
+
+
+    }// computeGIWC
 
 
   } // namespace core
