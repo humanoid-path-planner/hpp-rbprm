@@ -31,6 +31,7 @@
 #include <hpp/core/steering-method.hh>
 #include <hpp/core/basic-configuration-shooter.hh>
 #include <hpp/core/kinodynamic-distance.hh>
+#include <hpp/rbprm/planner/rbprm-roadmap.hh>
 
 namespace hpp {
   namespace rbprm {
@@ -60,14 +61,16 @@ namespace hpp {
 
     DynamicPlanner::DynamicPlanner (const Problem& problem):
       BiRRTPlanner (problem),
-      qProj_ (problem.robot ()->configSize ())
+      qProj_ (problem.robot ()->configSize ()),
+      roadmap_(boost::dynamic_pointer_cast<core::Roadmap>(core::RbprmRoadmap::create (problem.distance (),problem.robot())))
     {
     }
 
     DynamicPlanner::DynamicPlanner (const Problem& problem,
                                     const RoadmapPtr_t& roadmap) :
       BiRRTPlanner (problem, roadmap),
-      qProj_ (problem.robot ()->configSize ())
+      qProj_ (problem.robot ()->configSize ()),
+      roadmap_(boost::dynamic_pointer_cast<core::Roadmap>(core::RbprmRoadmap::create (problem.distance (),problem.robot())))
     {
     }
 
@@ -91,6 +94,13 @@ namespace hpp {
       ConfigurationPtr_t q_rand = configurationShooter_->shoot ();
       hppDout(info,"Random configuration : "<<displayConfig(*q_rand));
       near = roadmap()->nearestNode (q_rand, startComponent_, distance);
+      core::RbprmNodePtr_t castNode = static_cast<core::RbprmNodePtr_t>(near);
+      if(castNode)
+        hppDout(notice,"Node casted correctly");
+      else
+        hppDout(notice,"Impossible to cast node to rbprmNode");
+
+
       path = extendInternal (problem().steeringMethod(), qProj_, near, q_rand);
       if (path)
       {
@@ -104,6 +114,11 @@ namespace hpp {
             startComponentConnected = true;
             q_new = ConfigurationPtr_t (new Configuration_t(validPath->end ()));
             reachedNodeFromStart = roadmap()->addNodeAndEdge(near, q_new, validPath);
+            core::RbprmNodePtr_t castNode2 = static_cast<core::RbprmNodePtr_t>(reachedNodeFromStart);
+            if(castNode2)
+              hppDout(notice,"Node casted correctly");
+            else
+              hppDout(notice,"Impossible to cast node to rbprmNode");
             hppDout(info,"~~~~~~~~~~~~~~~~~~~~ New node added to start component : "<<displayConfig(*q_new));
 
           }
@@ -118,6 +133,11 @@ namespace hpp {
            itcc != endComponents_.end (); ++itcc)
       {
         near = roadmap()->nearestNode (q_rand, *itcc, distance,true);
+        core::RbprmNodePtr_t castNode3 = static_cast<core::RbprmNodePtr_t>(near);
+        if(castNode3)
+          hppDout(notice,"Node casted correctly");
+        else
+          hppDout(notice,"Impossible to cast node to rbprmNode");
         path = extendInternal (problem().steeringMethod(), qProj_, near, q_rand, true);
         if (path)
         {
@@ -137,6 +157,11 @@ namespace hpp {
             {
               ConfigurationPtr_t q_newEnd = ConfigurationPtr_t (new Configuration_t(validPath->initial()));
               core::NodePtr_t newNode = roadmap()->addNodeAndEdge(q_newEnd, near, validPath);
+              core::RbprmNodePtr_t castNode4 = static_cast<core::RbprmNodePtr_t>(newNode);
+              if(castNode4)
+                hppDout(notice,"Node casted correctly");
+              else
+                hppDout(notice,"Impossible to cast node to rbprmNode");
               hppDout(info,"~~~~~~~~~~~~~~~~~~~~~~ New node added to end component : "<<displayConfig(*q_newEnd));
 
               // now try to connect both nodes

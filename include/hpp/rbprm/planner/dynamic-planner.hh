@@ -20,6 +20,8 @@
 # define HPP_RBPRM_DYNAMIC_PLANNER_HH
 
 # include <hpp/core/bi-rrt-planner.hh>
+# include <hpp/rbprm/planner/rbprm-roadmap.hh>
+
 
 namespace hpp {
 namespace rbprm {
@@ -48,6 +50,13 @@ public:
     static DynamicPlannerPtr_t create (const Problem& problem);
     /// One step of extension.
     virtual void oneStep ();
+
+    // we need both method, because smart_pointer inheritance is not implemented (compiler don't know that rbprmRoadmapPtr_t derive from RoadmapPtr_t).
+    virtual const core::RoadmapPtr_t& roadmap () const{
+      return roadmap_;
+    }
+
+
 protected:
     /// Constructor
     DynamicPlanner (const Problem& problem, const RoadmapPtr_t& roadmap);
@@ -56,9 +65,12 @@ protected:
     /// Store weak pointer to itself
     void init (const DynamicPlannerWkPtr_t& weak);
 
+
+
 private:
     mutable Configuration_t qProj_;
     DynamicPlannerWkPtr_t weakPtr_;
+    const core::RoadmapPtr_t roadmap_;
 };
 /// \}
 } // namespace core

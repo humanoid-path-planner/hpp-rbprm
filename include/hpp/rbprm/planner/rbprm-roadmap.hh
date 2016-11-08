@@ -26,7 +26,7 @@ namespace hpp {
         clear ();
       }
       
-      virtual RbprmNodePtr_t addNode (const ConfigurationPtr_t& configuration)
+     /* virtual RbprmNodePtr_t addNode (const ConfigurationPtr_t& configuration)
       {
         value_type distance;
         if (nodes().size () != 0) {
@@ -54,7 +54,7 @@ namespace hpp {
         NodePtr_t nodeTo = Roadmap::addNodeAndEdges(from,to,path);
         return static_cast<core::RbprmNodePtr_t>(nodeTo);
       }
-      
+      */
     protected:
       /// Constructor
       /// \param distance distance function for nearest neighbor computations

@@ -112,6 +112,14 @@ namespace hpp {
        */
       void computeGIWC(const core::RbprmNodePtr_t x);
 
+      void computeGIWC(const core::NodePtr_t x){
+        computeGIWC(static_cast<core::RbprmNodePtr_t>(x));
+      }
+
+      void computeGIWC(const core::NodePtr_t node, core::ValidationReportPtr_t report){
+        computeGIWC(static_cast<core::RbprmNodePtr_t>(node),report);
+      }
+
 
       core::ConfigurationShooterPtr_t configurationShooter_;
       mutable core::Configuration_t qProj_;

@@ -243,7 +243,7 @@ namespace hpp {
             if (!pathValid || !belongs (q_new, newNodes)) {
               hppDout(notice, "### add new node and edges: ");
               hppDout(notice, displayConfig(*q_new));
-              core::RbprmNodePtr_t x_new = rbprmRoadmap()->addNodeAndEdges(near, q_new, validPath);
+              core::NodePtr_t x_new = rbprmRoadmap()->addNodeAndEdges(near, q_new, validPath);
               computeGIWC(x_new);
               
               newNodes.push_back (x_new);
@@ -305,13 +305,14 @@ namespace hpp {
         const core::NodePtr_t& near = itEdge-> get <0> ();
         const core::ConfigurationPtr_t& q_new = itEdge-> get <1> ();
         const core::PathPtr_t& validPath = itEdge-> get <2> ();
-        core::RbprmNodePtr_t newNode = rbprmRoadmap()->addNode (q_new);
-        computeGIWC(newNode);
+        core::NodePtr_t newNode = rbprmRoadmap()->addNode (q_new);
+        core::RbprmNodePtr_t newNodeCast = static_cast<core::RbprmNodePtr_t>(newNode);
+        computeGIWC(newNodeCast);
         ParabolaPathPtr_t parabolaPath = boost::dynamic_pointer_cast<ParabolaPath>(validPath);
         if(parabolaPath){
-          newNode->setAlphas(parabolaPath->alpha_,parabolaPath->alphaMin_,parabolaPath->alphaMax_);
-          newNode->Z(parabolaPath->Z_);
-          newNode->xTheta(parabolaPath->Xtheta_);
+          newNodeCast->setAlphas(parabolaPath->alpha_,parabolaPath->alphaMin_,parabolaPath->alphaMax_);
+          newNodeCast->Z(parabolaPath->Z_);
+          newNodeCast->xTheta(parabolaPath->Xtheta_);
         }
         roadmap ()->addEdge (near, newNode, validPath);
         roadmap ()->addEdge (newNode, near, validPath->reverse());
@@ -491,7 +492,7 @@ namespace hpp {
             roadmap ()->addEdge (*itn, initNode, path->reverse());
           }else if(validPath->timeRange ().second != path->timeRange ().first){
             core::ConfigurationPtr_t q_new(new core::Configuration_t(validPath->end()));
-            core::RbprmNodePtr_t x_new = rbprmRoadmap()->addNodeAndEdges(initNode,q_new,validPath);
+            core::NodePtr_t x_new = rbprmRoadmap()->addNodeAndEdges(initNode,q_new,validPath);
             computeGIWC(x_new);
             hppDout(notice,"### Straight path not fully valid, try parabola path between qnew and qGoal");
             hppStartBenchmark(EXTENDPARA);
@@ -505,7 +506,7 @@ namespace hpp {
               if (paraPathValid) { // only add if the full path is valid, otherwise it's the same as the straight line (because we can't extract a subpath of a parabola path)
                 hppDout(notice, "#### parabola path valid !");
                 core::ConfigurationPtr_t q_last (new core::Configuration_t(validPath->end ()));
-                core::RbprmNodePtr_t x_last = rbprmRoadmap()->addNode(q_last);
+                core::NodePtr_t x_last = rbprmRoadmap()->addNode(q_last);
                 computeGIWC(x_last);
                 rbprmRoadmap()->addEdge(x_new,x_last,validPath);
                 rbprmRoadmap()->addEdge(x_last,x_new,validPath->reverse());
@@ -522,13 +523,14 @@ namespace hpp {
                 const core::NodePtr_t& near = itEdge-> get <0> ();
                 const core::ConfigurationPtr_t& q_new = itEdge-> get <1> ();
                 const core::PathPtr_t& validPath = itEdge-> get <2> ();
-                core::RbprmNodePtr_t newNode = rbprmRoadmap ()->addNode (q_new);
-                computeGIWC(newNode);
+                core::NodePtr_t newNode = rbprmRoadmap ()->addNode (q_new);
+                core::RbprmNodePtr_t newNodeCast = static_cast<core::RbprmNodePtr_t>(newNode);
+                computeGIWC(newNodeCast);
                 ParabolaPathPtr_t parabolaPath = boost::dynamic_pointer_cast<ParabolaPath>(validPath);
                 if(parabolaPath){
-                  newNode->setAlphas(parabolaPath->alpha_,parabolaPath->alphaMin_,parabolaPath->alphaMax_);
-                  newNode->Z(parabolaPath->Z_);
-                  newNode->xTheta(parabolaPath->Xtheta_);
+                  newNodeCast->setAlphas(parabolaPath->alpha_,parabolaPath->alphaMin_,parabolaPath->alphaMax_);
+                  newNodeCast->Z(parabolaPath->Z_);
+                  newNodeCast->xTheta(parabolaPath->Xtheta_);
                 }
                 roadmap ()->addEdge (near, newNode, validPath);
                 roadmap ()->addEdge (newNode, near, validPath->reverse());
@@ -618,16 +620,15 @@ namespace hpp {
       } //for qgoals
       return pathVector;
     }*/
+
+
     
     void ParabolaPlanner::computeGIWC(const core::RbprmNodePtr_t x){
       core::ValidationReportPtr_t report;
       problem().configValidations()->validate(*(x->configuration()),report);
       computeGIWC(x,report);
     }
-    
-    
-    
-    
+          
     
     void ParabolaPlanner::computeGIWC(const core::RbprmNodePtr_t node, core::ValidationReportPtr_t report){
       hppDout(notice,"## compute GIWC");
