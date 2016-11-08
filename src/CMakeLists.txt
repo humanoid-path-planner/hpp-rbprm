@@ -67,6 +67,8 @@ SET(${LIBRARY_NAME}_SOURCES
         planner/steering-dynamic.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/planner/steering-dynamic.hh
         planner/steering-method-parabola.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/planner/steering-method-parabola.hh
         planner/parabola-path.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/planner/parabola-path.hh
+        planner/dynamic-planner.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/planner/dynamic-planner.hh
+
 
   )
 
