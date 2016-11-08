@@ -120,6 +120,7 @@ namespace hpp {
             startComponentConnected = true;
             q_new = ConfigurationPtr_t (new Configuration_t(validPath->end ()));
             reachedNodeFromStart = roadmap()->addNodeAndEdge(near, q_new, validPath);
+            computeGIWC(reachedNodeFromStart);
             core::RbprmNodePtr_t castNode2 = static_cast<core::RbprmNodePtr_t>(reachedNodeFromStart);
             if(castNode2)
               hppDout(notice,"Node casted correctly");
@@ -163,6 +164,7 @@ namespace hpp {
             {
               ConfigurationPtr_t q_newEnd = ConfigurationPtr_t (new Configuration_t(validPath->initial()));
               core::NodePtr_t newNode = roadmap()->addNodeAndEdge(q_newEnd, near, validPath);
+              computeGIWC(newNode);
               core::RbprmNodePtr_t castNode4 = static_cast<core::RbprmNodePtr_t>(newNode);
               if(castNode4)
                 hppDout(notice,"Node casted correctly");
@@ -189,14 +191,14 @@ namespace hpp {
 
 
 
-    void DynamicPlanner::computeGIWC(const core::RbprmNodePtr_t x){
+    void DynamicPlanner::computeGIWC(const core::NodePtr_t x){
       core::ValidationReportPtr_t report;
       problem().configValidations()->validate(*(x->configuration()),report);
       computeGIWC(x,report);
     }
 
 
-    void DynamicPlanner::computeGIWC(const core::RbprmNodePtr_t xNode, core::ValidationReportPtr_t report){
+    void DynamicPlanner::computeGIWC(const core::NodePtr_t xNode, core::ValidationReportPtr_t report){
       core::RbprmNodePtr_t node = static_cast<core::RbprmNodePtr_t>(xNode);
       hppDout(notice,"## compute GIWC");
       core::ConfigurationPtr_t q = node->configuration();
