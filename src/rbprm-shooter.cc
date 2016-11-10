@@ -362,11 +362,11 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
             (*config) [offset + i] = (upper - lower) * rand ()/RAND_MAX;
         }
         // save the normal (code from Mylène)
-        if(extraDim >= 3 ){
+       /* if(extraDim >= 3 ){
           size_type index = robot_->configSize() -3;  // rempli toujours les 3 derniers
           for (size_type i=0; i<3; ++i)
             (*config) [index + i] = lastDirection [i];
-        }
+        }*/
         limit--;
     }
     if (!found) std::cout << "no config found" << std::endl;
