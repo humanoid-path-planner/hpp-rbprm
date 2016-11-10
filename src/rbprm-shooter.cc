@@ -365,7 +365,7 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
         if(extraDim >= 3 ){
           size_type index = robot_->configSize() -3;  // rempli toujours les 3 derniers
           for (size_type i=0; i<3; ++i)
-            (*config) [index + i] = -lastDirection [i];
+            (*config) [index + i] = lastDirection [i];
         }
         limit--;
     }

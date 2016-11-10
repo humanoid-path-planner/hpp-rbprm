@@ -206,9 +206,6 @@ namespace hpp {
       if(node){
         size_t cSize = problem().robot()->configSize();
         hppDout(info,"~~ NODE cast correctly");
-        node->normal((*q)[cSize-3],(*q)[cSize-2],(*q)[cSize-1]);
-        hppDout(info,"~~ normal = "<<node->getNormal());
-
       }else{
         hppDout(error,"~~ NODE cannot be cast");
         return;
@@ -247,6 +244,7 @@ namespace hpp {
         core::CollisionObjectPtr_t obj2 = it->second->object2;
         hppDout(notice,"~~ collision between : "<<obj1->name() << " and "<<obj2->name());
         fcl::CollisionResult result = it->second->result;
+        // debug display :
         /* size_t numContact =result.numContacts();
         hppDout(notice,"~~ number of contact : "<<numContact);
         std::ostringstream ss;
@@ -319,7 +317,8 @@ namespace hpp {
         std::cout<<center<<std::endl<<std::endl;
         polytope::rotation_t rot;
         normal = -result.getContact(0).normal;
-        hppDout(notice," !!! normal for GIWC : "<<normal);
+        node->normal(normal);
+        hppDout(notice," !!! normal for GIWC : "<<node->getNormal());
         // compute tangent vector :
         tangent0 = normal.cross(polytope::vector3_t(1,0,0));
         if(tangent0.dot(tangent0)<0.001)
