@@ -185,6 +185,16 @@ namespace hpp {
 			const std::map<std::string, std::vector<std::string> >& affFilters, const fcl::Vec3f& direction,
 			bool& contactMaintained, bool& multipleBreaks, const bool allowFailure,
       const double robustnessTreshold = 0);
+
+    hpp::rbprm::State HPP_RBPRM_DLLAPI ProjectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
+                                                     const sampling::OctreeReport& report, core::CollisionValidationPtr_t validation,
+                                                     model::ConfigurationOut_t configuration, const hpp::rbprm::State& current, bool& success);
+
+    hpp::rbprm::State HPP_RBPRM_DLLAPI Project(const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
+                                               core::CollisionValidationPtr_t validation, model::ConfigurationOut_t configuration,
+                                               const fcl::Matrix3f& rotationTarget, const fcl::Vec3f& positionTarget, const fcl::Vec3f& normal,
+                                               const hpp::rbprm::State& current, bool& success);
+
   } // namespace rbprm
 
 } // namespace hpp

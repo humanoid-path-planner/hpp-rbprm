@@ -142,7 +142,7 @@ namespace stability{
     }
 
     robust_equilibrium::Vector3 setupLibrary(const RbPrmFullBodyPtr_t fullbody, State& state, StaticEquilibrium& sEq, StaticEquilibriumAlgorithm alg,
-                                             const core::value_type friction = 0.5)
+                                             const core::value_type friction = 0.3)
     {
         hpp::model::ConfigurationIn_t save = fullbody->device_->currentConfiguration();
         std::vector<std::string> contacts;
