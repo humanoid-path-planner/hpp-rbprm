@@ -33,7 +33,7 @@ namespace geom
   typedef T_Point2D::const_iterator CIT_Point2D;
   
   const double EPSILON = 1e-5;
-  const double ZJUMP = 0.037174; // value t for the floor in jump_easy_map
+  const double ZJUMP = 0.0; // value t for the floor in jump_easy_map
   
   typedef fcl::BVHModel<fcl::OBBRSS> BVHModelOB;
   typedef boost::shared_ptr<const BVHModelOB> BVHModelOBConst_Ptr_t;

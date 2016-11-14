@@ -37,6 +37,7 @@
 #include <hpp/fcl/collision_data.h>
 #include <hpp/fcl/intersect.h>
 #include "utils/algorithms.h"
+#include <hpp/core/path-projector.hh>
 #include <polytope/stability_margin.h>
 
 namespace hpp {
@@ -214,7 +215,7 @@ namespace hpp {
       hppDout(info,"~~ q = "<<displayConfig(*q));
 
       core::RbprmValidationReportPtr_t rbReport = boost::dynamic_pointer_cast<core::RbprmValidationReport> (report);
-      // checks :
+      // checks : (use assert ? )
       if(!rbReport)
       {
         hppDout(error,"~~ Validation Report cannot be cast");
@@ -222,14 +223,14 @@ namespace hpp {
       }
       if(rbReport->trunkInCollision)
       {
-        hppDout(warning,"~~ ComputeGIWC : trunk is in collision"); // shouldn't happen
+        hppDout(error,"~~ ComputeGIWC : trunk is in collision"); // shouldn't happen
       }
       if(!rbReport->romsValid)
       {
-        hppDout(warning,"~~ ComputeGIWC : roms filter not respected"); // shouldn't happen
+        hppDout(error,"~~ ComputeGIWC : roms filter not respected"); // shouldn't happen
       }
 
-      //TODO
+      //FIX ME : position of contact is in center of the collision surface
       polytope::T_rotation_t rotContact(3*rbReport->ROMReports.size(),3);
       polytope::vector_t posContact(3*rbReport->ROMReports.size());
 
@@ -314,6 +315,7 @@ namespace hpp {
         polytope::vector3_t normal,tangent0,tangent1;
         geom::Point center = geom::center(hull.begin(),hull.end());
         posContact.segment<3>(indexRom*3) = center;
+        hppDout(notice,"Center of rom collision :  ["<<center[0]<<" , "<<center[1]<<" , "<<center[2]<<"]");
         std::cout<<center<<std::endl<<std::endl;
         polytope::rotation_t rot;
         normal = -result.getContact(0).normal;
@@ -348,6 +350,39 @@ namespace hpp {
 
     }// computeGIWC
 
+
+    // re implement virtual method, same as base class but without the symetric edge (goal -> start)
+    void DynamicPlanner::tryDirectPath ()
+    {
+      // call steering method here to build a direct conexion
+      const core::SteeringMethodPtr_t& sm (problem ().steeringMethod ());
+      core::PathValidationPtr_t pathValidation (problem ().pathValidation ());
+      core::PathProjectorPtr_t pathProjector (problem ().pathProjector ());
+      core::PathPtr_t validPath, projPath, path;
+      core::NodePtr_t initNode = roadmap ()->initNode();
+      for (core::Nodes_t::const_iterator itn = roadmap ()->goalNodes ().begin();
+           itn != roadmap ()->goalNodes ().end (); ++itn) {
+        core::ConfigurationPtr_t q1 ((initNode)->configuration ());
+        core::ConfigurationPtr_t q2 ((*itn)->configuration ());
+        assert (*q1 != *q2);
+        path = (*sm) (*q1, *q2);
+        if (!path) continue;
+        if (pathProjector) {
+          if (!pathProjector->apply (path, projPath)) continue;
+        } else {
+          projPath = path;
+        }
+        if (projPath) {
+          core::PathValidationReportPtr_t report;
+          bool pathValid = pathValidation->validate (projPath, false, validPath,
+                                                     report);
+          if (pathValid && validPath->timeRange ().second !=
+              path->timeRange ().first) {
+            roadmap ()->addEdge (initNode, *itn, projPath);
+          }
+        }
+      }
+    }
 
   } // namespace core
 } // namespace hpp
