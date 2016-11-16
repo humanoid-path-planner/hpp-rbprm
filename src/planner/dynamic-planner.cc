@@ -302,6 +302,7 @@ namespace hpp {
 
 
         hppStartBenchmark (COMPUTE_INTERSECTION);
+        // FIX ME : compute plan equation first
         geom::T_Point hull = geom::intersectPolygonePlane(model1,model2,fcl::Vec3f(0,0,1),geom::ZJUMP,result);
         hppStopBenchmark (COMPUTE_INTERSECTION);
         hppDisplayBenchmark (COMPUTE_INTERSECTION);
@@ -336,6 +337,7 @@ namespace hpp {
         indexRom++;
       } // for each ROMS
 
+      // FIX ME : useless now ??
       polytope::vector_t x(rbReport->ROMReports.size());
       polytope::vector_t y(rbReport->ROMReports.size());
       polytope::vector_t nu(rbReport->ROMReports.size());
@@ -345,8 +347,10 @@ namespace hpp {
         nu(k) = 0.5;
       }
       // save giwc in node structure
-      node->giwc(polytope::U_stance(rotContact,posContact,nu,x,y));
+      //node->giwc(polytope::U_stance(rotContact,posContact,nu,x,y));
+      // TODO : SAVE needed info for LP problem ??
 
+      node->setContacts(posContact,rotContact);
 
     }// computeGIWC
 

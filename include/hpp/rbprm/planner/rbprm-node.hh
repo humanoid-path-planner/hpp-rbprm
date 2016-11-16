@@ -84,12 +84,19 @@ namespace hpp {
         alphaMin_=alphaMin;
         alphaMax_=alphaMax;
       }
+
+      void setContacts(polytope::vector_t posContact, polytope::T_rotation_t rotContact){
+        posContact_ = posContact;
+        rotContact_ = rotContact;
+      }
       
 
     private:
       fcl::Vec3f normal_;
       RbprmValidationReportPtr_t collisionReport_;
-      const polytope::ProjectedCone* giwc_;
+      const polytope::ProjectedCone* giwc_; // useless now ?
+      polytope::T_rotation_t rotContact_;
+      polytope::vector_t posContact_;
       double alpha_;    // for parent node ! not for this node
       double alphaMin_; // for parent node ! not for this node
       double alphaMax_; // for parent node ! not for this node
