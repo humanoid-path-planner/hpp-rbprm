@@ -22,6 +22,7 @@
 #include <hpp/rbprm/config.hh>
 #include <hpp/rbprm/rbprm-state.hh>
 #include <hpp/model/device.hh>
+#include <hpp/model/fwd.hh>
 #include <hpp/rbprm/rbprm-limb.hh>
 #include <hpp/core/collision-validation.hh>
 #include <hpp/rbprm/sampling/heuristic.hh>
@@ -195,6 +196,9 @@ namespace hpp {
                                                core::CollisionValidationPtr_t validation, model::ConfigurationOut_t configuration,
                                                const fcl::Matrix3f& rotationTarget, const fcl::Vec3f& positionTarget, const fcl::Vec3f& normal,
                                                const hpp::rbprm::State& current, bool& success);
+
+    hpp::model::ObjectVector_t HPP_RBPRM_DLLAPI getAffObjectsForLimb(const std::string& limb,
+        const affMap_t& affordances, const std::map<std::string, std::vector<std::string> >& affFilters);
 
   } // namespace rbprm
 
