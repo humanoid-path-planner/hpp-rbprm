@@ -238,10 +238,10 @@ namespace hpp {
       }
 
       //FIX ME : position of contact is in center of the collision surface
-      polytope::T_rotation_t rotContact(3*rbReport->ROMReports.size(),3);
-      polytope::vector_t posContact(3*rbReport->ROMReports.size());
-
-
+      MatrixXX V = MatrixXX::Zero(3*rbReport->ROMReports.size(),4*rbReport->ROMReports.size());
+      Matrix6X IP_hat = Matrix6X::Zero(6,3*rbReport->ROMReports.size());
+      Matrix3 Pi_hat;
+      MatrixXX Vi;
       // get the 2 object in contact for each ROM :
       hppDout(info,"~~ Number of roms in collision : "<<rbReport->ROMReports.size());
       size_t indexRom = 0 ;
@@ -320,44 +320,48 @@ namespace hpp {
         }
 
         // todo : compute center point of the hull
-        polytope::vector3_t normal,tangent0,tangent1;
+        vector3 ni,ti1,ti2;
         geom::Point center = geom::center(hull.begin(),hull.end());
-        posContact.segment<3>(indexRom*3) = center;
+
+        //TODO : fill IP_hat with position : [I_3  pi_hat] ^T
+        Pi_hat = Matrix3::Zero(3,3);
+        Pi_hat << 0         , -center[2] , center[1]  ,
+                  center[2] , 0          , -center[0] ,
+                 -center[1] , center[0]  , 0          ;
+
+        IP_hat.block<3,3>(0,3*indexRom) = MatrixXX::Identity(3,3);
+        IP_hat.block<3,3>(3,3*indexRom) =Pi_hat;
+
         hppDout(notice,"Center of rom collision :  ["<<center[0]<<" , "<<center[1]<<" , "<<center[2]<<"]");
-        std::cout<<center<<std::endl<<std::endl;
-        polytope::rotation_t rot;
-        normal = -result.getContact(0).normal;
-        node->normal(normal);
+        hppDout(info,"p"<<indexRom<<" = "<<center);
+        hppDout(info,"IP_hat at iter "<<indexRom<< " = \n"<<IP_hat);
+        ni = -result.getContact(0).normal;
+        node->normal(ni);
         hppDout(notice," !!! normal for GIWC : "<<node->getNormal());
         // compute tangent vector :
-        tangent0 = normal.cross(polytope::vector3_t(1,0,0));
-        if(tangent0.dot(tangent0)<0.001)
-          tangent0 = normal.cross(polytope::vector3_t(0,1,0));
-        tangent1 = normal.cross(tangent0);
-        rot(0,0) = tangent0(0) ; rot(0,1) = tangent1(0) ; rot(0,2) = normal(0);
-        rot(1,0) = tangent0(1) ; rot(1,1) = tangent1(1) ; rot(1,2) = normal(1);
-        rot(2,0) = tangent0(2) ; rot(2,1) = tangent1(2) ; rot(2,2) = normal(2);
+        ti1 = ni.cross(vector3(1,0,0));
+        if(ti1.dot(ti1)<0.001)
+          ti1 = ni.cross(vector3(0,1,0));
+        ti2 = ni.cross(ti1);
 
-        rotContact.block<3,3>(indexRom*3,0) = rot;
-        std::cout<<rot<<std::endl<<std::endl;
+        //TODO : fill V with generating ray ([ n_i + \mu t_{i1} & n_i - \mu t_{i1} & n_i + \mu t_{i2} & n_i - \mu t_{i2}]
+        Vi = MatrixXX::Zero(3,4);
+        Vi.col(0) = ni + mu*ti1;
+        Vi.col(1) = ni - mu*ti1;
+        Vi.col(2) = ni + mu*ti2;
+        Vi.col(3) = ni - mu*ti2;
+        V.block<4,3>(3*indexRom,4*indexRom) = Vi;
+        hppDout(info,"V at iter "<<indexRom<<" : \n"<<V);
 
         indexRom++;
       } // for each ROMS
 
-      // FIX ME : useless now ??
-      polytope::vector_t x(rbReport->ROMReports.size());
-      polytope::vector_t y(rbReport->ROMReports.size());
-      polytope::vector_t nu(rbReport->ROMReports.size());
-      for(size_t k = 0 ; k<rbReport->ROMReports.size() ; ++k){
-        x(k) = 0.25; // approx size of foot
-        y(k) = 0.15;
-        nu(k) = 0.5;
-      }
-      // save giwc in node structure
-      //node->giwc(polytope::U_stance(rotContact,posContact,nu,x,y));
-      // TODO : SAVE needed info for LP problem ??
 
-//      node->setContacts(posContact,rotContact); TODO : switch to new data structure
+      // save infos needed for LP problem in node structure
+      node->setV(V);
+      node->setIPHat(IP_hat);
+
+      //TODO : compute G directly Here ? (avoid re-computation at each call of the solver)
 
     }// computeGIWC
 

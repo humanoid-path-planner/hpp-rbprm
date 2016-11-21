@@ -84,6 +84,7 @@ private:
     mutable Configuration_t qProj_;
     DynamicPlannerWkPtr_t weakPtr_;
     const core::RoadmapPtr_t roadmap_;
+    const double mu = 0.5;
 };
 /// \}
 } // namespace core
