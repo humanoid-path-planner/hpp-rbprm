@@ -33,12 +33,14 @@
 #include <hpp/core/steering-method.hh>
 #include <hpp/core/basic-configuration-shooter.hh>
 #include <hpp/core/kinodynamic-distance.hh>
-#include <hpp/rbprm/planner/rbprm-roadmap.hh>
 #include <hpp/fcl/collision_data.h>
 #include <hpp/fcl/intersect.h>
 #include "utils/algorithms.h"
 #include <hpp/core/path-projector.hh>
-#include <polytope/stability_margin.h>
+#include <hpp/rbprm/planner/rbprm-roadmap.hh>
+#include <robust-equilibrium-lib/static_equilibrium.hh>
+
+
 
 namespace hpp {
   namespace rbprm {
@@ -53,6 +55,11 @@ namespace hpp {
     using core::Configuration_t;
     using core::ConfigurationPtr_t;
 
+
+    typedef robust_equilibrium::MatrixXX MatrixXX;
+    typedef robust_equilibrium::Matrix6X Matrix6X;
+    typedef robust_equilibrium::Vector3 vector3;
+    typedef robust_equilibrium::Matrix3 Matrix3;
     DynamicPlannerPtr_t DynamicPlanner::createWithRoadmap
     (const Problem& problem, const RoadmapPtr_t& roadmap)
     {

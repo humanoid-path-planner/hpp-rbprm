@@ -20,7 +20,6 @@
 # define HPP_RBPRM_DYNAMIC_PLANNER_HH
 
 # include <hpp/core/bi-rrt-planner.hh>
-# include <hpp/rbprm/planner/rbprm-roadmap.hh>
 
 
 namespace hpp {
