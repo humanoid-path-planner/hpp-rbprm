@@ -3,13 +3,17 @@
 
 #include <hpp/core/node.hh>
 #include <hpp/rbprm/rbprm-validation-report.hh>
-#include <polytope/stability_margin.h>
+#include <robust-equilibrium-lib/static_equilibrium.hh>
+
 
 namespace hpp {
   namespace core {
 
     HPP_PREDEF_CLASS (RbprmNode);
     typedef RbprmNode* RbprmNodePtr_t;
+
+    typedef robust_equilibrium::MatrixXX MatrixXX;
+    typedef robust_equilibrium::Matrix6X Matrix6X;
 
 
     class HPP_CORE_DLLAPI RbprmNode : public Node
@@ -51,9 +55,7 @@ namespace hpp {
         collisionReport_ = report;
       }
       
-      void giwc(const polytope::ProjectedCone* giwc){giwc_ = giwc;}
-      
-      const polytope::ProjectedCone* giwc(){return giwc_;}
+
       
       void alpha(double alpha){alpha_=alpha;}
       
@@ -85,18 +87,29 @@ namespace hpp {
         alphaMax_=alphaMax;
       }
 
-      void setContacts(polytope::vector_t posContact, polytope::T_rotation_t rotContact){
-        posContact_ = posContact;
-        rotContact_ = rotContact;
-      }
-      
+
+      void setV(MatrixXX V){V_ = V;}
+
+      MatrixXX getV(){return V_;}
+
+      void setIPHat(Matrix6X m){IP_hat_=m;}
+
+      Matrix6X getIPhat(){return IP_hat_;}
+
+      void setG(Matrix6X G){G_=G;}
+
+      Matrix6X getG(){return G_;}
 
     private:
       fcl::Vec3f normal_;
       RbprmValidationReportPtr_t collisionReport_;
-      const polytope::ProjectedCone* giwc_; // useless now ?
-      polytope::T_rotation_t rotContact_;
-      polytope::vector_t posContact_;
+    //  const polytope::ProjectedCone* giwc_; // useless now ?
+    //  polytope::T_rotation_t rotContact_;
+    //  polytope::vector_t posContact_;
+      MatrixXX V_;
+      Matrix6X IP_hat_;
+      Matrix6X G_; // not initialized yet
+      // remove this ? :
       double alpha_;    // for parent node ! not for this node
       double alphaMin_; // for parent node ! not for this node
       double alphaMax_; // for parent node ! not for this node

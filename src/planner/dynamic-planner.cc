@@ -308,7 +308,7 @@ namespace hpp {
         hppDisplayBenchmark (COMPUTE_INTERSECTION);
         if(hull.size() == 0){
           hppDout(error,"No intersection between rom and environnement");
-          node->giwc(0);
+         // node->giwc(0); TODO switch to new data structure
           return;
         }
 
@@ -350,7 +350,7 @@ namespace hpp {
       //node->giwc(polytope::U_stance(rotContact,posContact,nu,x,y));
       // TODO : SAVE needed info for LP problem ??
 
-      node->setContacts(posContact,rotContact);
+//      node->setContacts(posContact,rotContact); TODO : switch to new data structure
 
     }// computeGIWC
 
