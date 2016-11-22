@@ -108,6 +108,10 @@ namespace hpp {
 
       Vector6 geth(){return h_;}
 
+      void setNumberOfContacts(int n){numberOfContacts_ = n;}
+
+      int getNumberOfContacts(){return numberOfContacts_;}
+
     private:
       fcl::Vec3f normal_;
       RbprmValidationReportPtr_t collisionReport_;
@@ -119,6 +123,7 @@ namespace hpp {
       Matrix6X G_; // not initialized yet
       Matrix63 H_;
       Vector6 h_;
+      int numberOfContacts_;
       // remove this ? :
       double alpha_;    // for parent node ! not for this node
       double alphaMin_; // for parent node ! not for this node

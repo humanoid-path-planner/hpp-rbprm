@@ -63,6 +63,7 @@ namespace hpp {
     typedef robust_equilibrium::Matrix3 Matrix3;
     typedef robust_equilibrium::Matrix63 Matrix63;
     typedef robust_equilibrium::Vector6 Vector6;
+    typedef robust_equilibrium::VectorX VectorX;
 
 
     DynamicPlannerPtr_t DynamicPlanner::createWithRoadmap
@@ -251,7 +252,6 @@ namespace hpp {
       core::ConfigurationPtr_t q = node->configuration();
       // fil normal information in node
       if(node){
-        size_t cSize = problem().robot()->configSize();
         hppDout(info,"~~ NODE cast correctly");
       }else{
         hppDout(error,"~~ NODE cannot be cast");
@@ -277,6 +277,8 @@ namespace hpp {
       }
 
       //FIX ME : position of contact is in center of the collision surface
+      node->setNumberOfContacts((int)rbReport->ROMReports.size());
+      hppDout(info,"Number of contacts : "<<node->getNumberOfContacts());
       MatrixXX V = MatrixXX::Zero(3*rbReport->ROMReports.size(),4*rbReport->ROMReports.size());
       Matrix6X IP_hat = Matrix6X::Zero(6,3*rbReport->ROMReports.size());
       MatrixXX Vi;
@@ -395,7 +397,7 @@ namespace hpp {
       node->setV(V);
       node->setIPHat(IP_hat);
 
-      //TODO : compute G directly Here ? (avoid re-computation at each call of the solver)
+      // compute other LP values : (constant for each nodes)
       node->setG(IP_hat*V);
       double m = problem().robot()->mass();
       Vector3 c(3);
@@ -409,6 +411,14 @@ namespace hpp {
       g<< 0,0,-9.81 ; // FIXME : retrieve it from somewhere ? instead of hardcoded
       h.head(3) = g;
       h.tail(3) = c.cross(-g);
+
+      // debug output :
+      hppDout(info,"G = "<<node->getG());
+      hppDout(info,"c = "<<c);
+      hppDout(info,"m = "<<m);
+      hppDout(info,"h = "<<node->geth());
+      hppDout(info,"H = "<<node->getH());
+
 
     }// computeGIWC
 
@@ -448,7 +458,63 @@ namespace hpp {
 
     void DynamicPlanner::setSteeringMethodBounds(const core::NodePtr_t& near, const core::ConfigurationPtr_t target,bool reverse){
       //TODO compute the maximal acceleration from near, on a direction from near to target (oposite if revezrse == true)
+      core::RbprmNodePtr_t node = static_cast<core::RbprmNodePtr_t>(near);
+      assert(node && "Unable to cast near node to rbprmNode");
 
+      // compute direction (v) :
+
+      double alpha0=0; // main variable of our LP problem
+      Vector3 to,from,v;
+      if(reverse){
+        to = near->configuration()->head(3);
+        from = target->head(3);
+      }else{
+        from = near->configuration()->head(3);
+        to = target->head(3);
+      }
+      v = (to - from);
+      v.normalize();
+      hppDout(info,"from = "<<from);
+      hppDout(info,"to   = "<<to);
+      hppDout(info, "Direction of motion v = "<<v);
+
+      // define LP problem : with m+1 variables and m+6 constraints
+      int m = node->getNumberOfContacts() * 4;
+
+      /*
+       *  find          b, alpha0
+          minimize      -alpha0
+          subject to    -h <= [-G  (Hv)^T] [b a0]^T   <= -h
+                        0       <= [b a0]^T <= Inf
+        where
+          b         are the coefficient of the contact force generators (f = V b)
+          alpha0    is the maximal amplitude of the acceleration, for the given direction v
+          c         is the CoM position
+          G         is the matrix whose columns are the gravito-inertial wrench generators
+      */
+      VectorX b_a0(m+1);
+      VectorX c = VectorX::Zero(m+1);
+      c(m) = -1.0;  // because max alpha0
+      VectorX lb = VectorX::Zero(m+1);
+      VectorX ub = VectorX::Ones(m+1)*1e10; // Inf
+      VectorX Alb = node->geth();
+      VectorX Aub = node->geth();
+      MatrixXX A = MatrixXX::Zero(6+m, m+1);
+      // build A : [ -G (Hv)^T] :
+      A.topLeftCorner(6,m) = - node->getG();
+      MatrixXX Hv = (node->getH() * v);
+      assert(Hv.rows() == 6 && Hv.cols()==1 && "Hv should be a vector 6");
+      A.topRightCorner(6,1) = Hv;
+
+      hppDout(info,"H = "<<node->getH());
+      hppDout(info," Hv^T = "<<Hv);
+      hppDout(info,"A = "<<A);
+
+
+
+
+
+      sm_->setAmax(alpha0*v);
     }
 
 
