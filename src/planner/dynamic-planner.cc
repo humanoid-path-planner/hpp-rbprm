@@ -80,7 +80,7 @@ namespace hpp {
 
     DynamicPlanner::DynamicPlanner (const Problem& problem):
       BiRRTPlanner (problem),
-      qProj_ (problem.robot ()->configSize ()),
+      qProj_ (new core::Configuration_t(problem.robot()->configSize())),
       roadmap_(boost::dynamic_pointer_cast<core::Roadmap>(core::RbprmRoadmap::create (problem.distance (),problem.robot()))),
       sm_(boost::dynamic_pointer_cast<core::steeringMethod::Kinodynamic>(problem.steeringMethod()))
     {
@@ -90,7 +90,7 @@ namespace hpp {
     DynamicPlanner::DynamicPlanner (const Problem& problem,
                                     const RoadmapPtr_t& roadmap) :
       BiRRTPlanner (problem, roadmap),
-      qProj_ (problem.robot ()->configSize ()),
+      qProj_ (new core::Configuration_t(problem.robot()->configSize())),
       roadmap_(boost::dynamic_pointer_cast<core::Roadmap>(core::RbprmRoadmap::create (problem.distance (),problem.robot()))),
       sm_(boost::dynamic_pointer_cast<core::steeringMethod::Kinodynamic>(problem.steeringMethod()))
     {
@@ -103,7 +103,7 @@ namespace hpp {
       weakPtr_ = weak;
     }
 
-    core::PathPtr_t DynamicPlanner::extendInternal (core::Configuration_t& qProj_, const core::NodePtr_t& near,
+    core::PathPtr_t DynamicPlanner::extendInternal (core::ConfigurationPtr_t &qProj_, const core::NodePtr_t& near,
                     const core::ConfigurationPtr_t& target, bool reverse)
     {
         const core::ConstraintSetPtr_t& constraints (sm_->constraints ());
@@ -113,21 +113,24 @@ namespace hpp {
             if (configProjector)
             {
                 configProjector->projectOnKernel (*(near->configuration ()), *target,
-                        qProj_);
+                        *qProj_);
             }
             else
             {
-                qProj_ = *target;
+                *qProj_ = *target;
             }
-            if (constraints->apply (qProj_))
+
+            if (constraints->apply (*qProj_))
             {
-                return reverse ? (*sm_) (qProj_, *(near->configuration ())) : (*sm_) (*(near->configuration ()), qProj_);
+                setSteeringMethodBounds(near,qProj_,reverse);
+                return reverse ? (*sm_) (*qProj_, *(near->configuration ())) : (*sm_) (*(near->configuration ()), *qProj_);
             }
             else
             {
                 return PathPtr_t ();
             }
         }
+        setSteeringMethodBounds(near,target,reverse);
         return reverse ? (*sm_) (*target, *(near->configuration ())) : (*sm_) (*(near->configuration ()), *target);
     }
 
@@ -442,6 +445,12 @@ namespace hpp {
         }
       }
     }
+
+    void DynamicPlanner::setSteeringMethodBounds(const core::NodePtr_t& near, const core::ConfigurationPtr_t target,bool reverse){
+      //TODO compute the maximal acceleration from near, on a direction from near to target (oposite if revezrse == true)
+
+    }
+
 
   } // namespace core
 } // namespace hpp
