@@ -223,17 +223,25 @@ const fcl::Vec3f comfcl = comcptr->com();*/
     }
 
 
-    double IsStable(const RbPrmFullBodyPtr_t fullbody, State& state)
+    double IsStable(const RbPrmFullBodyPtr_t fullbody, State& state, const robust_equilibrium::StaticEquilibriumAlgorithm algorithm)
     {
 #ifdef PROFILE
     RbPrmProfiler& watch = getRbPrmProfiler();
     watch.start("test balance");
 #endif
         StaticEquilibrium staticEquilibrium(initLibrary(fullbody));
-        robust_equilibrium::Vector3 com = setupLibrary(fullbody,state,staticEquilibrium,STATIC_EQUILIBRIUM_ALGORITHM_DLP);
-        double res;
-
-        LP_status status = staticEquilibrium.computeEquilibriumRobustness(com,res);
+        robust_equilibrium::Vector3 com = setupLibrary(fullbody,state,staticEquilibrium,algorithm);
+        double res;LP_status status;
+        if(algorithm == STATIC_EQUILIBRIUM_ALGORITHM_PP)
+        {
+            bool isStable(false);
+            status = staticEquilibrium.checkRobustEquilibrium(com,isStable);
+            res = isStable? 1. : -1.;
+        }
+        else // STATIC_EQUILIBRIUM_ALGORITHM_DLP
+        {
+            status = staticEquilibrium.computeEquilibriumRobustness(com,res);
+        }
 #ifdef PROFILE
     watch.stop("test balance");
 #endif
