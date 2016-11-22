@@ -14,8 +14,8 @@ namespace hpp {
 
     typedef robust_equilibrium::MatrixXX MatrixXX;
     typedef robust_equilibrium::Matrix6X Matrix6X;
-
-
+    typedef robust_equilibrium::Matrix63 Matrix63;
+    typedef robust_equilibrium::Vector6 Vector6;
     class HPP_CORE_DLLAPI RbprmNode : public Node
     {
     public :
@@ -100,6 +100,14 @@ namespace hpp {
 
       Matrix6X getG(){return G_;}
 
+      void setH(Matrix63 H){H_=H;}
+
+      Matrix63 getH(){return H_;}
+
+      void seth(Vector6 h){h_=h;}
+
+      Vector6 geth(){return h_;}
+
     private:
       fcl::Vec3f normal_;
       RbprmValidationReportPtr_t collisionReport_;
@@ -109,6 +117,8 @@ namespace hpp {
       MatrixXX V_;
       Matrix6X IP_hat_;
       Matrix6X G_; // not initialized yet
+      Matrix63 H_;
+      Vector6 h_;
       // remove this ? :
       double alpha_;    // for parent node ! not for this node
       double alphaMin_; // for parent node ! not for this node

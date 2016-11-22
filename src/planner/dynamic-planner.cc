@@ -58,8 +58,12 @@ namespace hpp {
 
     typedef robust_equilibrium::MatrixXX MatrixXX;
     typedef robust_equilibrium::Matrix6X Matrix6X;
-    typedef robust_equilibrium::Vector3 vector3;
+    typedef robust_equilibrium::Vector3 Vector3;
     typedef robust_equilibrium::Matrix3 Matrix3;
+    typedef robust_equilibrium::Matrix63 Matrix63;
+    typedef robust_equilibrium::Vector6 Vector6;
+
+
     DynamicPlannerPtr_t DynamicPlanner::createWithRoadmap
     (const Problem& problem, const RoadmapPtr_t& roadmap)
     {
@@ -319,7 +323,7 @@ namespace hpp {
         }
 
         // todo : compute center point of the hull
-        vector3 ni,ti1,ti2;
+        Vector3 ni,ti1,ti2;
         geom::Point center = geom::center(hull.begin(),hull.end());
 
         //TODO : fill IP_hat with position : [I_3  pi_hat] ^T
@@ -334,9 +338,9 @@ namespace hpp {
         node->normal(ni);
         hppDout(notice," !!! normal for GIWC : "<<node->getNormal());
         // compute tangent vector :
-        ti1 = ni.cross(vector3(1,0,0));
+        ti1 = ni.cross(Vector3(1,0,0));
         if(ti1.dot(ti1)<0.001)
-          ti1 = ni.cross(vector3(0,1,0));
+          ti1 = ni.cross(Vector3(0,1,0));
         ti2 = ni.cross(ti1);
 
         //TODO : fill V with generating ray ([ n_i + \mu t_{i1} & n_i - \mu t_{i1} & n_i + \mu t_{i2} & n_i - \mu t_{i2}]
@@ -357,8 +361,19 @@ namespace hpp {
       node->setIPHat(IP_hat);
 
       //TODO : compute G directly Here ? (avoid re-computation at each call of the solver)
-
-
+      node->setG(IP_hat*V);
+      double m = problem().robot()->mass();
+      Vector3 c(3);
+      c << (*node->configuration())[0],(*node->configuration())[1],(*node->configuration())[2];
+      Matrix63 H = Matrix63::Zero(6,3);
+      H.block<3,3>(0,0) = Matrix3::Identity(3,3);
+      H.block<3,3>(3,0) = robust_equilibrium::crossMatrix(c);
+      node->setH(m*H);
+      Vector6 h = Vector6::Zero(6);
+      Vector3 g;
+      g<< 0,0,-9.81 ; // FIXME : retrieve it from somewhere ? instead of hardcoded
+      h.head(3) = g;
+      h.tail(3) = c.cross(-g);
 
     }// computeGIWC
 
