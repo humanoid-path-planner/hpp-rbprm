@@ -80,10 +80,18 @@ protected:
      */
     void computeGIWC(const core::NodePtr_t x);
 
+    core::PathPtr_t extendInternal (core::Configuration_t& qProj_, const core::NodePtr_t& near,
+                    const core::ConfigurationPtr_t& target, bool reverse=false);
+
 private:
+
+
+
+
     mutable Configuration_t qProj_;
     DynamicPlannerWkPtr_t weakPtr_;
     const core::RoadmapPtr_t roadmap_;
+    const core::steeringMethod::KinodynamicPtr_t sm_;
     const double mu = 0.5;
 };
 /// \}

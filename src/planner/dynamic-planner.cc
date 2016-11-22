@@ -33,6 +33,7 @@
 #include <hpp/core/steering-method.hh>
 #include <hpp/core/basic-configuration-shooter.hh>
 #include <hpp/core/kinodynamic-distance.hh>
+#include <hpp/core/steering-method/steering-kinodynamic.hh>
 #include <hpp/fcl/collision_data.h>
 #include <hpp/fcl/intersect.h>
 #include "utils/algorithms.h"
@@ -80,16 +81,20 @@ namespace hpp {
     DynamicPlanner::DynamicPlanner (const Problem& problem):
       BiRRTPlanner (problem),
       qProj_ (problem.robot ()->configSize ()),
-      roadmap_(boost::dynamic_pointer_cast<core::Roadmap>(core::RbprmRoadmap::create (problem.distance (),problem.robot())))
+      roadmap_(boost::dynamic_pointer_cast<core::Roadmap>(core::RbprmRoadmap::create (problem.distance (),problem.robot()))),
+      sm_(boost::dynamic_pointer_cast<core::steeringMethod::Kinodynamic>(problem.steeringMethod()))
     {
+          assert(sm_ && "steering method should be a kinodynamic steering method for this solver");
     }
 
     DynamicPlanner::DynamicPlanner (const Problem& problem,
                                     const RoadmapPtr_t& roadmap) :
       BiRRTPlanner (problem, roadmap),
       qProj_ (problem.robot ()->configSize ()),
-      roadmap_(boost::dynamic_pointer_cast<core::Roadmap>(core::RbprmRoadmap::create (problem.distance (),problem.robot())))
+      roadmap_(boost::dynamic_pointer_cast<core::Roadmap>(core::RbprmRoadmap::create (problem.distance (),problem.robot()))),
+      sm_(boost::dynamic_pointer_cast<core::steeringMethod::Kinodynamic>(problem.steeringMethod()))
     {
+          assert(sm_ && "steering method should be a kinodynamic steering method for this solver");
     }
 
     void DynamicPlanner::init (const DynamicPlannerWkPtr_t& weak)
@@ -98,6 +103,33 @@ namespace hpp {
       weakPtr_ = weak;
     }
 
+    core::PathPtr_t DynamicPlanner::extendInternal (core::Configuration_t& qProj_, const core::NodePtr_t& near,
+                    const core::ConfigurationPtr_t& target, bool reverse)
+    {
+        const core::ConstraintSetPtr_t& constraints (sm_->constraints ());
+        if (constraints)
+        {
+            core::ConfigProjectorPtr_t configProjector (constraints->configProjector ());
+            if (configProjector)
+            {
+                configProjector->projectOnKernel (*(near->configuration ()), *target,
+                        qProj_);
+            }
+            else
+            {
+                qProj_ = *target;
+            }
+            if (constraints->apply (qProj_))
+            {
+                return reverse ? (*sm_) (qProj_, *(near->configuration ())) : (*sm_) (*(near->configuration ()), qProj_);
+            }
+            else
+            {
+                return PathPtr_t ();
+            }
+        }
+        return reverse ? (*sm_) (*target, *(near->configuration ())) : (*sm_) (*(near->configuration ()), *target);
+    }
 
     void DynamicPlanner::oneStep ()
     {
@@ -119,7 +151,7 @@ namespace hpp {
         hppDout(notice,"Impossible to cast node to rbprmNode");
 
 
-      path = extendInternal (problem().steeringMethod(), qProj_, near, q_rand);
+      path = extendInternal (qProj_, near, q_rand);
       if (path)
       {
         core::PathValidationReportPtr_t report;
@@ -157,7 +189,7 @@ namespace hpp {
           hppDout(notice,"Node casted correctly");
         else
           hppDout(notice,"Impossible to cast node to rbprmNode");
-        path = extendInternal (problem().steeringMethod(), qProj_, near, q_rand, true);
+        path = extendInternal (qProj_, near, q_rand, true);
         if (path)
         {
           core::PathValidationReportPtr_t report;
