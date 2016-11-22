@@ -96,7 +96,6 @@ private:
 
 
 
-
     core::ConfigurationPtr_t qProj_;
     DynamicPlannerWkPtr_t weakPtr_;
     const core::RoadmapPtr_t roadmap_;

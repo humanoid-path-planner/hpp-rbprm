@@ -481,38 +481,20 @@ namespace hpp {
       // define LP problem : with m+1 variables and m+6 constraints
       int m = node->getNumberOfContacts() * 4;
 
-      /*
-       *  find          b, alpha0
-          minimize      -alpha0
-          subject to    -h <= [-G  (Hv)^T] [b a0]^T   <= -h
-                        0       <= [b a0]^T <= Inf
-        where
-          b         are the coefficient of the contact force generators (f = V b)
-          alpha0    is the maximal amplitude of the acceleration, for the given direction v
-          c         is the CoM position
-          G         is the matrix whose columns are the gravito-inertial wrench generators
-      */
-      VectorX b_a0(m+1);
-      VectorX c = VectorX::Zero(m+1);
-      c(m) = -1.0;  // because max alpha0
-      VectorX lb = VectorX::Zero(m+1);
-      VectorX ub = VectorX::Ones(m+1)*1e10; // Inf
-      VectorX Alb = node->geth();
-      VectorX Aub = node->geth();
       MatrixXX A = MatrixXX::Zero(6+m, m+1);
       // build A : [ -G (Hv)^T] :
       A.topLeftCorner(6,m) = - node->getG();
       MatrixXX Hv = (node->getH() * v);
       assert(Hv.rows() == 6 && Hv.cols()==1 && "Hv should be a vector 6");
       A.topRightCorner(6,1) = Hv;
-
       hppDout(info,"H = "<<node->getH());
       hppDout(info," Hv^T = "<<Hv);
       hppDout(info,"A = "<<A);
 
-
-
-
+      // call to robust_equilibrium_lib :
+      //FIX ME : build it only once and store it as attribut ?
+      robust_equilibrium::StaticEquilibrium sEq(problem().robot()->name(), problem().robot()->mass(),4,robust_equilibrium::SOLVER_LP_QPOASES,true,10,false);
+      sEq.findMaximumAcceleration(A, node->geth(),alpha0);
 
       sm_->setAmax(alpha0*v);
     }
