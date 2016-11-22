@@ -240,7 +240,6 @@ namespace hpp {
       //FIX ME : position of contact is in center of the collision surface
       MatrixXX V = MatrixXX::Zero(3*rbReport->ROMReports.size(),4*rbReport->ROMReports.size());
       Matrix6X IP_hat = Matrix6X::Zero(6,3*rbReport->ROMReports.size());
-      Matrix3 Pi_hat;
       MatrixXX Vi;
       // get the 2 object in contact for each ROM :
       hppDout(info,"~~ Number of roms in collision : "<<rbReport->ROMReports.size());
@@ -324,13 +323,9 @@ namespace hpp {
         geom::Point center = geom::center(hull.begin(),hull.end());
 
         //TODO : fill IP_hat with position : [I_3  pi_hat] ^T
-        Pi_hat = Matrix3::Zero(3,3);
-        Pi_hat << 0         , -center[2] , center[1]  ,
-                  center[2] , 0          , -center[0] ,
-                 -center[1] , center[0]  , 0          ;
 
         IP_hat.block<3,3>(0,3*indexRom) = MatrixXX::Identity(3,3);
-        IP_hat.block<3,3>(3,3*indexRom) =Pi_hat;
+        IP_hat.block<3,3>(3,3*indexRom) = robust_equilibrium::crossMatrix(center);
 
         hppDout(notice,"Center of rom collision :  ["<<center[0]<<" , "<<center[1]<<" , "<<center[2]<<"]");
         hppDout(info,"p"<<indexRom<<" = "<<center);
@@ -362,6 +357,8 @@ namespace hpp {
       node->setIPHat(IP_hat);
 
       //TODO : compute G directly Here ? (avoid re-computation at each call of the solver)
+
+
 
     }// computeGIWC
 
