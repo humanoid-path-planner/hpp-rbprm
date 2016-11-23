@@ -432,8 +432,10 @@ namespace hpp {
       core::PathProjectorPtr_t pathProjector (problem ().pathProjector ());
       core::PathPtr_t validPath, projPath, path;
       core::NodePtr_t initNode = roadmap ()->initNode();
+      computeGIWC(initNode);
       for (core::Nodes_t::const_iterator itn = roadmap ()->goalNodes ().begin();
            itn != roadmap ()->goalNodes ().end (); ++itn) {
+        computeGIWC(*itn);
         core::ConfigurationPtr_t q1 ((initNode)->configuration ());
         core::ConfigurationPtr_t q2 ((*itn)->configuration ());
         assert (*q1 != *q2);
@@ -490,12 +492,13 @@ namespace hpp {
       hppDout(info,"H = "<<node->getH());
       hppDout(info," Hv^T = "<<Hv);
       hppDout(info,"A = "<<A);
-
+/*
       // call to robust_equilibrium_lib :
       //FIX ME : build it only once and store it as attribut ?
       robust_equilibrium::StaticEquilibrium sEq(problem().robot()->name(), problem().robot()->mass(),4,robust_equilibrium::SOLVER_LP_QPOASES,true,10,false);
       sEq.findMaximumAcceleration(A, node->geth(),alpha0);
 
+      hppDout(info,"Amax found : "<<alpha0);*/
       sm_->setAmax(alpha0*v);
     }
 
