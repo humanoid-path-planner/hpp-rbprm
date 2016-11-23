@@ -435,8 +435,9 @@ namespace hpp {
       Vector6 h = Vector6::Zero(6);
       Vector3 g;
       g<< 0,0,-9.81 ; // FIXME : retrieve it from somewhere ? instead of hardcoded
-      h.head(3) = g;
+      h.head(3) = -g;
       h.tail(3) = c.cross(-g);
+      node->seth(m*h);
 
       // debug output :
       hppDout(info,"G = \n"<<node->getG());
@@ -502,9 +503,9 @@ namespace hpp {
       }
       v = (to - from);
       v.normalize();
-      hppDout(info,"from = "<<from);
-      hppDout(info,"to   = "<<to);
-      hppDout(info, "Direction of motion v = "<<v);
+      hppDout(info,"from = "<<from.transpose());
+      hppDout(info,"to   = "<<to.transpose());
+      hppDout(info, "Direction of motion v = "<<v.transpose());
 
       // define LP problem : with m+1 variables and m+6 constraints
       int m = node->getNumberOfContacts() * 4;
