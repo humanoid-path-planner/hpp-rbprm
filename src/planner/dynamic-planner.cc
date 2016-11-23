@@ -389,6 +389,9 @@ namespace hpp {
         hppDout(info,"p"<<indexRom<<" = "<<center.transpose());
         hppDout(info,"IP_hat at iter "<<indexRom<< " = \n"<<IP_hat);
         ni = -result.getContact(0).normal;
+        //FIXME : temp fix (fcl bug)
+        ni = Vector3::Zero(3);
+        ni[2] = 1;
         node->normal(ni);
         hppDout(notice,"normal for this contact : "<<node->getNormal());
         // compute tangent vector :
