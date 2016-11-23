@@ -385,17 +385,20 @@ namespace hpp {
         IP_hat.block<3,3>(0,3*indexRom) = MatrixXX::Identity(3,3);
         IP_hat.block<3,3>(3,3*indexRom) = robust_equilibrium::crossMatrix(center);
 
-        hppDout(notice,"Center of rom collision :  ["<<center[0]<<" , "<<center[1]<<" , "<<center[2]<<"]");
-        hppDout(info,"p"<<indexRom<<" = "<<center);
+        //hppDout(notice,"Center of rom collision :  ["<<center[0]<<" , "<<center[1]<<" , "<<center[2]<<"]");
+        hppDout(info,"p"<<indexRom<<" = "<<center.transpose());
         hppDout(info,"IP_hat at iter "<<indexRom<< " = \n"<<IP_hat);
         ni = -result.getContact(0).normal;
         node->normal(ni);
-        hppDout(notice," !!! normal for GIWC : "<<node->getNormal());
+        hppDout(notice,"normal for this contact : "<<node->getNormal());
         // compute tangent vector :
         ti1 = ni.cross(Vector3(1,0,0));
         if(ti1.dot(ti1)<0.001)
           ti1 = ni.cross(Vector3(0,1,0));
         ti2 = ni.cross(ti1);
+
+        hppDout(info,"t"<<indexRom<<"1 : "<<ti1.transpose());
+        hppDout(info,"t"<<indexRom<<"2 : "<<ti2.transpose());
 
         //TODO : fill V with generating ray ([ n_i + \mu t_{i1} & n_i - \mu t_{i1} & n_i + \mu t_{i2} & n_i - \mu t_{i2}]
         Vi = MatrixXX::Zero(3,4);
