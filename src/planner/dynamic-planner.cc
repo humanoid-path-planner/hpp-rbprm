@@ -353,18 +353,35 @@ namespace hpp {
         geom::T_Point hull = geom::intersectPolygonePlane(model1,model2,fcl::Vec3f(0,0,1),geom::ZJUMP,result);
         hppStopBenchmark (COMPUTE_INTERSECTION);
         hppDisplayBenchmark (COMPUTE_INTERSECTION);
+        /*
         if(hull.size() == 0){
           hppDout(error,"No intersection between rom and environnement");
-         // node->giwc(0); TODO switch to new data structure
+         // TODO switch to new data structure create matrix with good size to avoid crash ?
           return;
         }
 
-        // todo : compute center point of the hull
-        Vector3 ni,ti1,ti2;
+        // compute center point of the hull
         geom::Point center = geom::center(hull.begin(),hull.end());
+        */
+        // FIXME : temporary, for test only
+        geom::Point center;
+        center << (*node->configuration())[0],(*node->configuration())[1], 0;
+        if(indexRom == 0){ //front left
+          center[0] -= 0.3;
+          center[1] += 0.3;
+        }else if(indexRom == 1){ //front right
+          center[0] += 0.3;
+          center[1] += 0.3;
+        }else if(indexRom == 2){ //back right
+          center[0] += 0.3;
+          center[1] -= 0.3;
+        }else{ //back left
+          center[0] -= 0.3;
+          center[1] -= 0.3;
+        }
 
-        //TODO : fill IP_hat with position : [I_3  pi_hat] ^T
-
+        //fill IP_hat with position : [I_3  pi_hat] ^T
+        Vector3 ni,ti1,ti2;
         IP_hat.block<3,3>(0,3*indexRom) = MatrixXX::Identity(3,3);
         IP_hat.block<3,3>(3,3*indexRom) = robust_equilibrium::crossMatrix(center);
 
@@ -465,7 +482,7 @@ namespace hpp {
 
       // compute direction (v) :
 
-      double alpha0=0; // main variable of our LP problem
+      double alpha0=1.; // main variable of our LP problem
       Vector3 to,from,v;
       if(reverse){
         to = near->configuration()->head(3);
@@ -500,6 +517,7 @@ namespace hpp {
 
       hppDout(info,"Amax found : "<<alpha0);*/
       sm_->setAmax(alpha0*v);
+      sm_->setVmax(1.*v); //FIXME: read it from somewhere ?
     }
 
 
