@@ -409,7 +409,8 @@ namespace hpp {
         Vi.col(1) = ni - mu*ti1;
         Vi.col(2) = ni + mu*ti2;
         Vi.col(3) = ni - mu*ti2;
-        V.block<4,3>(3*indexRom,4*indexRom) = Vi;
+        hppDout(notice,"V"<<indexRom<<" = "<<Vi);
+        V.block<3,4>(3*indexRom,4*indexRom) = Vi;
         hppDout(info,"V at iter "<<indexRom<<" : \n"<<V);
 
         indexRom++;
