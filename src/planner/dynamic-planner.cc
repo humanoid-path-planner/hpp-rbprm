@@ -386,7 +386,7 @@ namespace hpp {
         IP_hat.block<3,3>(3,3*indexRom) = robust_equilibrium::crossMatrix(center);
 
         //hppDout(notice,"Center of rom collision :  ["<<center[0]<<" , "<<center[1]<<" , "<<center[2]<<"]");
-        hppDout(info,"p"<<indexRom<<" = "<<center.transpose());
+        hppDout(info,"p"<<indexRom<<"^T = "<<center.transpose());
         hppDout(info,"IP_hat at iter "<<indexRom<< " = \n"<<IP_hat);
         ni = -result.getContact(0).normal;
         //FIXME : temp fix (fcl bug)
@@ -405,11 +405,13 @@ namespace hpp {
 
         //TODO : fill V with generating ray ([ n_i + \mu t_{i1} & n_i - \mu t_{i1} & n_i + \mu t_{i2} & n_i - \mu t_{i2}]
         Vi = MatrixXX::Zero(3,4);
-        Vi.col(0) = ni + mu*ti1;
-        Vi.col(1) = ni - mu*ti1;
-        Vi.col(2) = ni + mu*ti2;
-        Vi.col(3) = ni - mu*ti2;
-        hppDout(notice,"V"<<indexRom<<" = "<<Vi);
+        Vi.col(0) = (ni + mu*ti1);
+        Vi.col(1) = (ni - mu*ti1);
+        Vi.col(2) = (ni + mu*ti2);
+        Vi.col(3) = (ni - mu*ti2);
+        for(size_t i = 0 ; i<4 ; i++)
+          Vi.col(i).normalize();
+        hppDout(notice,"V"<<indexRom<<" = \n"<<Vi);
         V.block<3,4>(3*indexRom,4*indexRom) = Vi;
         hppDout(info,"V at iter "<<indexRom<<" : \n"<<V);
 
@@ -437,11 +439,11 @@ namespace hpp {
       h.tail(3) = c.cross(-g);
 
       // debug output :
-      hppDout(info,"G = "<<node->getG());
-      hppDout(info,"c = "<<c);
+      hppDout(info,"G = \n"<<node->getG());
+      hppDout(info,"c^T = "<<c.transpose());
       hppDout(info,"m = "<<m);
-      hppDout(info,"h = "<<node->geth());
-      hppDout(info,"H = "<<node->getH());
+      hppDout(info,"h^T = "<<node->geth().transpose());
+      hppDout(info,"H = \n"<<node->getH());
 
 
     }// computeGIWC
