@@ -507,27 +507,27 @@ namespace hpp {
       hppDout(info,"to   = "<<to.transpose());
       hppDout(info, "Direction of motion v = "<<v.transpose());
 
-      // define LP problem : with m+1 variables and m+6 constraints
+      // define LP problem : with m+1 variables and 6 constraints
       int m = node->getNumberOfContacts() * 4;
 
-      MatrixXX A = MatrixXX::Zero(6+m, m+1);
+      MatrixXX A = MatrixXX::Zero(6, m+1);
       // build A : [ -G (Hv)^T] :
       A.topLeftCorner(6,m) = - node->getG();
       MatrixXX Hv = (node->getH() * v);
       assert(Hv.rows() == 6 && Hv.cols()==1 && "Hv should be a vector 6");
       A.topRightCorner(6,1) = Hv;
-      hppDout(info,"H = "<<node->getH());
-      hppDout(info," Hv^T = "<<Hv);
-      hppDout(info,"A = "<<A);
-/*
+      hppDout(info,"H = \n"<<node->getH());
+      hppDout(info," Hv^T = "<<Hv.transpose());
+      hppDout(info,"A = \n"<<A);
+
       // call to robust_equilibrium_lib :
       //FIX ME : build it only once and store it as attribut ?
       robust_equilibrium::StaticEquilibrium sEq(problem().robot()->name(), problem().robot()->mass(),4,robust_equilibrium::SOLVER_LP_QPOASES,true,10,false);
       sEq.findMaximumAcceleration(A, node->geth(),alpha0);
 
-      hppDout(info,"Amax found : "<<alpha0);*/
+      hppDout(info,"Amax found : "<<alpha0);
       sm_->setAmax(alpha0*v);
-      sm_->setVmax(1.*v); //FIXME: read it from somewhere ?
+      sm_->setVmax(2*Vector3::Ones(3)); //FIXME: read it from somewhere ?
     }
 
 

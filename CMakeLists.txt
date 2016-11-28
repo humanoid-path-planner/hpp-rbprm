@@ -109,6 +109,7 @@ SET(${PROJECT_NAME}_HEADERS
     include/hpp/rbprm/planner/steering-method-parabola.hh
     include/hpp/rbprm/planner/rbprm-node.hh
     include/hpp/rbprm/planner/rbprm-roadmap.hh
+    include/hpp/rbprm/planner/rbprm-steering-kinodynamic.hh
     include/utils/algorithms.h
   )
 
