@@ -35,6 +35,28 @@ namespace hpp {
 
     public:
 
+
+      core::PathPtr_t operator() (core::ConfigurationIn_t q1,
+                                  const core::NodePtr_t x) const
+      {
+        try {
+          return impl_compute (q1, x);
+        } catch (const core::projection_error& e) {
+          hppDout (info, "Could not build path: " << e.what());
+        }
+        return core::PathPtr_t ();
+      }
+
+      core::PathPtr_t operator() (const core::NodePtr_t x,
+                            core::ConfigurationIn_t q2) const
+      {
+        try {
+          return impl_compute (x, q2);
+        } catch (const core::projection_error& e) {
+          hppDout (info, "Could not build path: " << e.what());
+        }
+        return core::PathPtr_t ();
+      }
       /// Create an instance
       static SteeringMethodKinodynamicPtr_t create (const core::ProblemPtr_t& problem)
       {
@@ -64,6 +86,10 @@ namespace hpp {
       virtual core::PathPtr_t impl_compute (core::ConfigurationIn_t q1,
                                       core::ConfigurationIn_t q2) const;
 
+      core::PathPtr_t impl_compute (core::NodePtr_t x,
+                                            core::ConfigurationIn_t q2) const;
+
+      core::PathPtr_t impl_compute (core::ConfigurationIn_t q1,core::NodePtr_t x) const;
 
     protected:
 
