@@ -84,14 +84,7 @@ protected:
     core::PathPtr_t extendInternal (core::ConfigurationPtr_t& qProj_, const core::NodePtr_t& near,
                     const core::ConfigurationPtr_t& target, bool reverse=false);
 
-    /**
-     * @brief setSteeringMethodBounds Compute the maximal acceleration on a direction from near to target,
-     *                                and send it to the steering method
-     * @param near the node from where we take the the information about contact and position
-     * @param target the target configuration
-     * @param reverse if true, we compute the acceleration from target to near, with the information from near
-     */
-    void setSteeringMethodBounds(const core::NodePtr_t& near, const core::ConfigurationPtr_t target,bool reverse);
+
 
 private:
 

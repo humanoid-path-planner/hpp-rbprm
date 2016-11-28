@@ -20,6 +20,7 @@
 
 #include <hpp/rbprm/config.hh>
 #include <hpp/core/steering-method/steering-kinodynamic.hh>
+#include <hpp/rbprm/planner/rbprm-node.hh>
 
 namespace hpp {
   namespace rbprm {
@@ -37,7 +38,7 @@ namespace hpp {
 
 
       core::PathPtr_t operator() (core::ConfigurationIn_t q1,
-                                  const core::NodePtr_t x) const
+                                  const core::NodePtr_t x)
       {
         try {
           return impl_compute (q1, x);
@@ -48,7 +49,7 @@ namespace hpp {
       }
 
       core::PathPtr_t operator() (const core::NodePtr_t x,
-                            core::ConfigurationIn_t q2) const
+                            core::ConfigurationIn_t q2)
       {
         try {
           return impl_compute (x, q2);
@@ -87,9 +88,9 @@ namespace hpp {
                                       core::ConfigurationIn_t q2) const;
 
       core::PathPtr_t impl_compute (core::NodePtr_t x,
-                                            core::ConfigurationIn_t q2) const;
+                                            core::ConfigurationIn_t q2);
 
-      core::PathPtr_t impl_compute (core::ConfigurationIn_t q1,core::NodePtr_t x) const;
+      core::PathPtr_t impl_compute (core::ConfigurationIn_t q1,core::NodePtr_t x);
 
     protected:
 
@@ -105,6 +106,17 @@ namespace hpp {
         core::SteeringMethod::init (weak);
         weak_ = weak;
       }
+
+      /**
+       * @brief setSteeringMethodBounds Compute the maximal acceleration on a direction from near to target,
+       *                                and send it to the steering method
+       * @param near the node from where we take the the information about contact and position
+       * @param target the target configuration
+       * @param reverse if true, we compute the acceleration from target to near, with the information from near
+       * @return the node casted from near
+       */
+      core::RbprmNodePtr_t setSteeringMethodBounds(const core::NodePtr_t& near, const core::ConfigurationIn_t target,bool reverse);
+
 
     private:
       core::DeviceWkPtr_t device_;

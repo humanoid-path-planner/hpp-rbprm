@@ -123,7 +123,6 @@ namespace hpp {
 
             if (constraints->apply (*qProj_))
             {
-                setSteeringMethodBounds(near,qProj_,reverse);
                 return reverse ? (*sm_) (*qProj_, near) : (*sm_) (near, *qProj_);
             }
             else
@@ -131,7 +130,6 @@ namespace hpp {
                 return PathPtr_t ();
             }
         }
-        setSteeringMethodBounds(near,target,reverse);
         return reverse ? (*sm_) (*target, near) : (*sm_) (near, *target);
     }
 
@@ -484,50 +482,6 @@ namespace hpp {
       }
     }
 
-    void DynamicPlanner::setSteeringMethodBounds(const core::NodePtr_t& near, const core::ConfigurationPtr_t target,bool reverse){
-      //TODO compute the maximal acceleration from near, on a direction from near to target (oposite if revezrse == true)
-      core::RbprmNodePtr_t node = static_cast<core::RbprmNodePtr_t>(near);
-      assert(node && "Unable to cast near node to rbprmNode");
-
-      // compute direction (v) :
-
-      double alpha0=1.; // main variable of our LP problem
-      Vector3 to,from,v;
-      if(reverse){
-        to = near->configuration()->head(3);
-        from = target->head(3);
-      }else{
-        from = near->configuration()->head(3);
-        to = target->head(3);
-      }
-      v = (to - from);
-      v.normalize();
-      hppDout(info,"from = "<<from.transpose());
-      hppDout(info,"to   = "<<to.transpose());
-      hppDout(info, "Direction of motion v = "<<v.transpose());
-
-      // define LP problem : with m+1 variables and 6 constraints
-      int m = node->getNumberOfContacts() * 4;
-
-      MatrixXX A = MatrixXX::Zero(6, m+1);
-      // build A : [ -G (Hv)^T] :
-      A.topLeftCorner(6,m) = - node->getG();
-      MatrixXX Hv = (node->getH() * v);
-      assert(Hv.rows() == 6 && Hv.cols()==1 && "Hv should be a vector 6");
-      A.topRightCorner(6,1) = Hv;
-      hppDout(info,"H = \n"<<node->getH());
-      hppDout(info," Hv^T = "<<Hv.transpose());
-      hppDout(info,"A = \n"<<A);
-
-      // call to robust_equilibrium_lib :
-      //FIX ME : build it only once and store it as attribut ?
-      robust_equilibrium::StaticEquilibrium sEq(problem().robot()->name(), problem().robot()->mass(),4,robust_equilibrium::SOLVER_LP_QPOASES,true,10,false);
-      sEq.findMaximumAcceleration(A, node->geth(),alpha0);
-
-      hppDout(info,"Amax found : "<<alpha0);
-      sm_->setAmax(alpha0*v);
-      sm_->setVmax(2*Vector3::Ones(3)); //FIXME: read it from somewhere ?
-    }
 
 
   } // namespace core

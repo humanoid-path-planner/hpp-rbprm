@@ -23,10 +23,13 @@
 # include <hpp/core/weighed-distance.hh>
 # include <hpp/core/kinodynamic-path.hh>
 # include <hpp/rbprm/planner/rbprm-node.hh>
+# include <robust-equilibrium-lib/static_equilibrium.hh>
 
 namespace hpp{
   namespace rbprm{
 
+    using robust_equilibrium::Vector3;
+    using robust_equilibrium::MatrixXX;
 
     SteeringMethodKinodynamic::SteeringMethodKinodynamic (const core::ProblemPtr_t& problem) :
       core::steeringMethod::Kinodynamic (problem), device_ (problem->robot ()), weak_ ()
@@ -47,11 +50,10 @@ namespace hpp{
     }
 
     core::PathPtr_t SteeringMethodKinodynamic::impl_compute (core::NodePtr_t x,
-                                         core::ConfigurationIn_t q2) const
+                                         core::ConfigurationIn_t q2)
     {
       // get kinodynamic path from core::steeringMethod::Kinodynamic
-      core::RbprmNodePtr_t node =  static_cast<core::RbprmNodePtr_t>(x);
-      assert (node && "Rbprm-steering-kinodynamic impl_compute(node,configuration) should be called with a rbprmNode only");
+      core::RbprmNodePtr_t node =  setSteeringMethodBounds(x,q2,false);
       core::PathPtr_t path = core::steeringMethod::Kinodynamic::impl_compute(*x->configuration(),q2);
       core::KinodynamicPathPtr_t kinoPath = boost::dynamic_pointer_cast<core::KinodynamicPath>(path);
       assert (path && "Error while casting path shared ptr"); // really usefull ? should never happen
@@ -67,37 +69,29 @@ namespace hpp{
       hppDout(info,"## start checking intermediate accelerations");
       for(size_t ijoint = 0 ; ijoint < 3 ; ijoint++){
         hppDout(info,"for joint "<<ijoint);
-        t = t1[ijoint];
+        t = t1[ijoint] + 0.0001; // add an epsilon to get the value after the sign change
         (*kinoPath)(*q,t);
-        hppDout(info,"q = "<<model::displayConfig(*q));
+        hppDout(info,"q(t="<<t<<") = "<<model::displayConfig(*q));
         a = (*q).segment<3>(configSize+3);
         hppDout(info,"a = "<<a);
         //TODO check a
         if(tv[ijoint] > 0){
           t += tv[ijoint];
           (*kinoPath)(*q,t);
-          hppDout(info,"q = "<<model::displayConfig(*q));
+          hppDout(info,"q(t="<<t<<") = "<<model::displayConfig(*q));
           a = (*q).segment<3>(configSize+3);
           hppDout(info,"a = "<<a);
           //TODO check a
         }
-        t += t2[ijoint];
-        (*kinoPath)(*q,t);
-        hppDout(info,"q = "<<model::displayConfig(*q));
-        a = (*q).segment<3>(configSize+3);
-        hppDout(info,"a = "<<a);
-        //TODO check a
       }
 
       return kinoPath;
 
     }
 
-    core::PathPtr_t SteeringMethodKinodynamic::impl_compute (core::ConfigurationIn_t q1,core::NodePtr_t x) const
+    core::PathPtr_t SteeringMethodKinodynamic::impl_compute (core::ConfigurationIn_t q1,core::NodePtr_t x)
     {
-      // get kinodynamic path from core::steeringMethod::Kinodynamic
-      core::RbprmNodePtr_t node =  static_cast<core::RbprmNodePtr_t>(x);
-      assert (node && "Rbprm-steering-kinodynamic impl_compute(node,configuration) should be called with a rbprmNode only");
+      core::RbprmNodePtr_t node =  setSteeringMethodBounds(x,q1,true);
       core::PathPtr_t path = core::steeringMethod::Kinodynamic::impl_compute(q1,*x->configuration());
       core::KinodynamicPathPtr_t kinoPath = boost::dynamic_pointer_cast<core::KinodynamicPath>(path);
       assert (path && "Error while casting path shared ptr"); // really usefull ? should never happen
@@ -127,16 +121,55 @@ namespace hpp{
           hppDout(info,"a = "<<a);
           //TODO check a
         }
-        t += t2[ijoint];
-        (*kinoPath)(*q,t);
-        hppDout(info,"q = "<<model::displayConfig(*q));
-        a = (*q).segment<3>(configSize+3);
-        hppDout(info,"a = "<<a);
-        //TODO check a
       }
-
       return kinoPath;
 
+    }
+
+    core::RbprmNodePtr_t SteeringMethodKinodynamic::setSteeringMethodBounds(const core::NodePtr_t& near, const core::ConfigurationIn_t target,bool reverse) {
+      //TODO compute the maximal acceleration from near, on a direction from near to target (oposite if revezrse == true)
+      core::RbprmNodePtr_t node = static_cast<core::RbprmNodePtr_t>(near);
+      assert(node && "Unable to cast near node to rbprmNode");
+
+      // compute direction (v) :
+
+      double alpha0=1.; // main variable of our LP problem
+      Vector3 to,from,v;
+      if(reverse){
+        to = near->configuration()->head(3);
+        from = target.head(3);
+      }else{
+        from = near->configuration()->head(3);
+        to = target.head(3);
+      }
+      v = (to - from);
+      v.normalize();
+      hppDout(info,"from = "<<from.transpose());
+      hppDout(info,"to   = "<<to.transpose());
+      hppDout(info, "Direction of motion v = "<<v.transpose());
+
+      // define LP problem : with m+1 variables and 6 constraints
+      int m = node->getNumberOfContacts() * 4;
+
+      MatrixXX A = MatrixXX::Zero(6, m+1);
+      // build A : [ -G (Hv)^T] :
+      A.topLeftCorner(6,m) = - node->getG();
+      MatrixXX Hv = (node->getH() * v);
+      assert(Hv.rows() == 6 && Hv.cols()==1 && "Hv should be a vector 6");
+      A.topRightCorner(6,1) = Hv;
+      hppDout(info,"H = \n"<<node->getH());
+      hppDout(info," Hv^T = "<<Hv.transpose());
+      hppDout(info,"A = \n"<<A);
+
+      // call to robust_equilibrium_lib :
+      //FIX ME : build it only once and store it as attribut ?
+      robust_equilibrium::StaticEquilibrium sEq(problem_->robot()->name(), problem_->robot()->mass(),4,robust_equilibrium::SOLVER_LP_QPOASES,true,10,false);
+      sEq.findMaximumAcceleration(A, node->geth(),alpha0);
+
+      hppDout(info,"Amax found : "<<alpha0);
+      setAmax(alpha0*v);
+      setVmax(2*Vector3::Ones(3)); //FIXME: read it from somewhere ?
+      return node;
     }
 
   }//rbprm
