@@ -33,7 +33,7 @@
 #include <hpp/core/steering-method.hh>
 #include <hpp/core/basic-configuration-shooter.hh>
 #include <hpp/core/kinodynamic-distance.hh>
-#include <hpp/core/steering-method/steering-kinodynamic.hh>
+#include <hpp/rbprm/planner/rbprm-steering-kinodynamic.hh>
 #include <hpp/fcl/collision_data.h>
 #include <hpp/fcl/intersect.h>
 #include "utils/algorithms.h"
@@ -83,7 +83,7 @@ namespace hpp {
       BiRRTPlanner (problem),
       qProj_ (new core::Configuration_t(problem.robot()->configSize())),
       roadmap_(boost::dynamic_pointer_cast<core::Roadmap>(core::RbprmRoadmap::create (problem.distance (),problem.robot()))),
-      sm_(boost::dynamic_pointer_cast<core::steeringMethod::Kinodynamic>(problem.steeringMethod()))
+      sm_(boost::dynamic_pointer_cast<SteeringMethodKinodynamic>(problem.steeringMethod()))
     {
           assert(sm_ && "steering method should be a kinodynamic steering method for this solver");
     }
@@ -93,7 +93,7 @@ namespace hpp {
       BiRRTPlanner (problem, roadmap),
       qProj_ (new core::Configuration_t(problem.robot()->configSize())),
       roadmap_(boost::dynamic_pointer_cast<core::Roadmap>(core::RbprmRoadmap::create (problem.distance (),problem.robot()))),
-      sm_(boost::dynamic_pointer_cast<core::steeringMethod::Kinodynamic>(problem.steeringMethod()))
+      sm_(boost::dynamic_pointer_cast<SteeringMethodKinodynamic>(problem.steeringMethod()))
     {
           assert(sm_ && "steering method should be a kinodynamic steering method for this solver");
     }
@@ -124,7 +124,7 @@ namespace hpp {
             if (constraints->apply (*qProj_))
             {
                 setSteeringMethodBounds(near,qProj_,reverse);
-                return reverse ? (*sm_) (*qProj_, *(near->configuration ())) : (*sm_) (*(near->configuration ()), *qProj_);
+                return reverse ? (*sm_) (*qProj_, near) : (*sm_) (near, *qProj_);
             }
             else
             {
@@ -132,7 +132,7 @@ namespace hpp {
             }
         }
         setSteeringMethodBounds(near,target,reverse);
-        return reverse ? (*sm_) (*target, *(near->configuration ())) : (*sm_) (*(near->configuration ()), *target);
+        return reverse ? (*sm_) (*target, near) : (*sm_) (near, *target);
     }
 
     void DynamicPlanner::oneStep ()
@@ -454,7 +454,6 @@ namespace hpp {
     void DynamicPlanner::tryDirectPath ()
     {
       // call steering method here to build a direct conexion
-      const core::SteeringMethodPtr_t& sm (problem ().steeringMethod ());
       core::PathValidationPtr_t pathValidation (problem ().pathValidation ());
       core::PathProjectorPtr_t pathProjector (problem ().pathProjector ());
       core::PathPtr_t validPath, projPath, path;

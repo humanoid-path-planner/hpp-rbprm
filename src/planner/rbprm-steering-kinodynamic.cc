@@ -89,6 +89,8 @@ namespace hpp{
         //TODO check a
       }
 
+      return kinoPath;
+
     }
 
     core::PathPtr_t SteeringMethodKinodynamic::impl_compute (core::ConfigurationIn_t q1,core::NodePtr_t x) const

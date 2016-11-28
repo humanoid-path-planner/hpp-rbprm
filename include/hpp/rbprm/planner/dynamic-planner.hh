@@ -20,7 +20,7 @@
 # define HPP_RBPRM_DYNAMIC_PLANNER_HH
 
 # include <hpp/core/bi-rrt-planner.hh>
-
+# include <hpp/rbprm/planner/rbprm-steering-kinodynamic.hh>
 
 namespace hpp {
 namespace rbprm {
@@ -30,6 +30,7 @@ namespace rbprm {
   HPP_PREDEF_CLASS (DynamicPlanner);
   // Planner objects are manipulated only via shared pointers
   typedef boost::shared_ptr <DynamicPlanner> DynamicPlannerPtr_t;
+
 
   using core::Problem;
   using core::Roadmap;
@@ -99,7 +100,7 @@ private:
     core::ConfigurationPtr_t qProj_;
     DynamicPlannerWkPtr_t weakPtr_;
     const core::RoadmapPtr_t roadmap_;
-    const core::steeringMethod::KinodynamicPtr_t sm_;
+    const SteeringMethodKinodynamicPtr_t sm_;
     const double mu = 0.5;
 };
 /// \}
