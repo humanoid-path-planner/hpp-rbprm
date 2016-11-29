@@ -32,13 +32,17 @@ namespace hpp{
     using robust_equilibrium::MatrixXX;
 
     SteeringMethodKinodynamic::SteeringMethodKinodynamic (const core::ProblemPtr_t& problem) :
-      core::steeringMethod::Kinodynamic (problem), device_ (problem->robot ()), weak_ ()
+      core::steeringMethod::Kinodynamic (problem),
+      sEq_(new robust_equilibrium::StaticEquilibrium(problem_->robot()->name(), problem_->robot()->mass(),4,robust_equilibrium::SOLVER_LP_QPOASES,true,10,false)),
+      device_ (problem->robot ()), weak_ ()
     {
     }
 
     /// Copy constructor
     SteeringMethodKinodynamic::SteeringMethodKinodynamic (const SteeringMethodKinodynamic& other) :
-      core::steeringMethod::Kinodynamic (other), device_ (other.device_)
+      core::steeringMethod::Kinodynamic (other),
+      sEq_(new robust_equilibrium::StaticEquilibrium(problem_->robot()->name(), problem_->robot()->mass(),4,robust_equilibrium::SOLVER_LP_QPOASES,true,10,false)),
+      device_ (other.device_)
     {
     }
 
@@ -62,19 +66,23 @@ namespace hpp{
       // check if acceleration is valid after each sign change :
       core::vector_t t1 = kinoPath->getT1();
       core::vector_t tv = kinoPath->getTv();
-      core::vector_t t2 = kinoPath->getT2();
       double t=0;
       core::ConfigurationPtr_t q(new core::Configuration_t(problem_->robot()->configSize()));
       core::vector3_t a;
+      bool aValid;
       hppDout(info,"## start checking intermediate accelerations");
       for(size_t ijoint = 0 ; ijoint < 3 ; ijoint++){
-        hppDout(info,"for joint "<<ijoint);
-        t = t1[ijoint] + 0.0001; // add an epsilon to get the value after the sign change
-        (*kinoPath)(*q,t);
-        hppDout(info,"q(t="<<t<<") = "<<model::displayConfig(*q));
-        a = (*q).segment<3>(configSize+3);
-        hppDout(info,"a = "<<a);
-        //TODO check a
+        if(t1[ijoint] > 0){
+          hppDout(info,"for joint "<<ijoint);
+          t = t1[ijoint] + 0.0001; // add an epsilon to get the value after the sign change
+          (*kinoPath)(*q,t);
+          hppDout(info,"q(t="<<t<<") = "<<model::displayConfig(*q));
+          a = (*q).segment<3>(configSize+3);
+          hppDout(info,"a = "<<a);
+          //TODO check a
+          aValid = sEq_->checkAdmissibleAcceleration(node->getG(),node->getH(),node->geth(),a);
+          hppDout(info,"a valid : "<<aValid);
+        }
         if(tv[ijoint] > 0){
           t += tv[ijoint];
           (*kinoPath)(*q,t);
@@ -82,9 +90,34 @@ namespace hpp{
           a = (*q).segment<3>(configSize+3);
           hppDout(info,"a = "<<a);
           //TODO check a
+          aValid = sEq_->checkAdmissibleAcceleration(node->getG(),node->getH(),node->geth(),a);
+          hppDout(info,"a valid : "<<aValid);
         }
       }
-
+     /* a[0] = 5;
+      a[1] = 0;
+      a[2] = 0;
+      hppDout(info,"test : a  = "<<a);
+      aValid = sEq_->checkAdmissibleAcceleration(node->getG(),node->getH(),node->geth(),a);
+      hppDout(info,"a valid : "<<aValid);
+      a[0] = -5;
+      a[1] = 0;
+      a[2] = 0;
+      hppDout(info,"test : a  = "<<a);
+      aValid = sEq_->checkAdmissibleAcceleration(node->getG(),node->getH(),node->geth(),a);
+      hppDout(info,"a valid : "<<aValid);
+      a[0] = 7;
+      a[1] = 0;
+      a[2] = 0;
+      hppDout(info,"test : a  = "<<a);
+      aValid = sEq_->checkAdmissibleAcceleration(node->getG(),node->getH(),node->geth(),a);
+      hppDout(info,"a valid : "<<aValid);
+      a[0] = 4.5;
+      a[1] = 0;
+      a[2] = 3;
+      hppDout(info,"test : a  = "<<a);
+      aValid = sEq_->checkAdmissibleAcceleration(node->getG(),node->getH(),node->geth(),a);
+      hppDout(info,"a valid : "<<aValid);*/
       return kinoPath;
 
     }
@@ -104,6 +137,7 @@ namespace hpp{
       double t=0;
       core::ConfigurationPtr_t q(new core::Configuration_t(problem_->robot()->configSize()));
       core::vector3_t a;
+      bool aValid;
       hppDout(info,"## start checking intermediate accelerations");
       for(size_t ijoint = 0 ; ijoint < 3 ; ijoint++){
         hppDout(info,"for joint "<<ijoint);
@@ -112,14 +146,18 @@ namespace hpp{
         hppDout(info,"q = "<<model::displayConfig(*q));
         a = (*q).segment<3>(configSize+3);
         hppDout(info,"a = "<<a);
-        //TODO check a
+        //TODO check a :
+        aValid = sEq_->checkAdmissibleAcceleration(node->getG(),node->getH(),node->geth(),a);
+        hppDout(info,"a valid : "<<aValid);
         if(tv[ijoint] > 0){
           t += tv[ijoint];
           (*kinoPath)(*q,t);
           hppDout(info,"q = "<<model::displayConfig(*q));
           a = (*q).segment<3>(configSize+3);
           hppDout(info,"a = "<<a);
-          //TODO check a
+          //TODO check a :
+          aValid = sEq_->checkAdmissibleAcceleration(node->getG(),node->getH(),node->geth(),a);
+          hppDout(info,"a valid : "<<aValid);
         }
       }
       return kinoPath;
@@ -163,8 +201,7 @@ namespace hpp{
 
       // call to robust_equilibrium_lib :
       //FIX ME : build it only once and store it as attribut ?
-      robust_equilibrium::StaticEquilibrium sEq(problem_->robot()->name(), problem_->robot()->mass(),4,robust_equilibrium::SOLVER_LP_QPOASES,true,10,false);
-      sEq.findMaximumAcceleration(A, node->geth(),alpha0);
+      sEq_->findMaximumAcceleration(A, node->geth(),alpha0);
 
       hppDout(info,"Amax found : "<<alpha0);
       setAmax(alpha0*v);
