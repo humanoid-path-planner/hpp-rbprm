@@ -239,7 +239,10 @@ if (nbFailures > 1)
         for(CIT_StateFrame cit2 = originStates.begin()+1;
             cit2 != originStates.end()-1; ++cit, ++cit2)
         {
-            if((cit2->second.configuration_ - cit->second.configuration_).norm() > std::numeric_limits<double>::epsilon())
+            const State& current    = (cit2)->second;
+            const State& current_m1 = (cit)->second;
+            if((current.configuration_ - current_m1.configuration_).norm() > std::numeric_limits<double>::epsilon()
+                    && !(current.contactBreaks(current_m1).empty() && current.contactCreations(current_m1).empty()))
             {
                 res.push_back(std::make_pair(cit2->first, cit2->second));
             }
