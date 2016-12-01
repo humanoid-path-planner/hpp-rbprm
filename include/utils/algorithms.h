@@ -207,6 +207,14 @@ namespace geom
    * @return A vector of point, empty if no intersection, with one point on the plane if there is an intersection, with s0 and s1 if the segment lie in the plan
    */
   T_Point intersectSegmentPlane(Point s0, Point s1, Eigen::Vector3d pn, Point p0 );
+
+  /**
+   * @brief intersectPolygonePlane compute the intersection between a polygone and a plane
+   * @param polygone
+   * @param plane
+   * @return an ordoned list of point (clockwise), which belong to both the polygone and the plane
+   */
+  T_Point intersectPolygonePlane(BVHModelOBConst_Ptr_t polygone,BVHModelOBConst_Ptr_t plane);
   
 } //namespace geom
 

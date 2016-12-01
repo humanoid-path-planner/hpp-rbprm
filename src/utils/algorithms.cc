@@ -479,5 +479,45 @@ namespace geom
   }
 
 
+  T_Point intersectPolygonePlane(BVHModelOBConst_Ptr_t polygone, BVHModelOBConst_Ptr_t plane){
+    T_Point res, sortedRes;
+    T_Point intersection;
+    // compute plane equation (normal, point inside the plan)
+    Point Pn, P0;
+    TrianglePoints triPlane;
+    triPlane.p1 = plane->vertices[plane->tri_indices[0][0]]; // FIXME : always use the first triangle, is it an issue ?
+    triPlane.p2 = plane->vertices[plane->tri_indices[0][1]];
+    triPlane.p3 = plane->vertices[plane->tri_indices[0][2]];
+    Pn = TriangleNormal(triPlane);
+    P0 = triPlane.p1; //FIXME : better point ?
+
+    for(size_t i = 0 ; i < polygone->num_tris ; i++){ // FIXME : can test 2 times the same line (in both triangles), avoid this ?
+      for(size_t j = 0 ; j < 3 ; j++){
+        intersection = intersectSegmentPlane(polygone->vertices[plane->tri_indices[i][j]],
+                                             polygone->vertices[plane->tri_indices[i][((j == 2) ? 0 : (j+1))]], Pn,P0);
+        if(intersection.size() > 0)
+          res.insert(res.end(),intersection.begin(),intersection.end());
+      }
+    }
+
+
+
+    // ordonate the point in the vector (clockwise) first point and last point are the same
+    sortedRes = convexHull(res.begin(),res.end());
+    hppDout(notice,"clipped point : ");
+    std::ostringstream ss;
+    ss<<"[";
+    for(size_t i = 0; i < sortedRes.size() ; ++i){
+      ss<<"["<<sortedRes[i][0]<<","<<sortedRes[i][1]<<","<<sortedRes[i][2]<<"]";
+      if(i< (sortedRes.size() -1))
+        ss<<",";
+    }
+    ss<<"]";
+    std::cout<<"intersection : "<<std::endl;
+    std::cout<<ss.str()<<std::endl;
+    hppDout(notice,"area = "<<area(sortedRes.begin(),sortedRes.end()));
+    return sortedRes;
+  }
+
 } //namespace geom
 
