@@ -12,6 +12,7 @@ namespace geom
   {
     Point normal = (tri.p2 - tri.p1).cross(tri.p3 - tri.p1);
     normal.normalize();
+    hppDout(notice,"normal, in geom :: "<<normal);
     return normal;
   }
   
@@ -479,11 +480,11 @@ namespace geom
   }
 
 
-  T_Point intersectPolygonePlane(BVHModelOBConst_Ptr_t polygone, BVHModelOBConst_Ptr_t plane){
+  T_Point intersectPolygonePlane(BVHModelOBConst_Ptr_t polygone, BVHModelOBConst_Ptr_t plane, Eigen::Ref<Point> Pn){
     T_Point res, sortedRes;
     T_Point intersection;
     // compute plane equation (normal, point inside the plan)
-    Point Pn, P0;
+    Point P0;
     TrianglePoints triPlane;
     triPlane.p1 = plane->vertices[plane->tri_indices[0][0]]; // FIXME : always use the first triangle, is it an issue ?
     triPlane.p2 = plane->vertices[plane->tri_indices[0][1]];
@@ -492,9 +493,11 @@ namespace geom
     P0 = triPlane.p1; //FIXME : better point ?
 
     for(size_t i = 0 ; i < polygone->num_tris ; i++){ // FIXME : can test 2 times the same line (in both triangles), avoid this ?
+      //hppDout(info,"triangle : "<<i);
       for(size_t j = 0 ; j < 3 ; j++){
-        intersection = intersectSegmentPlane(polygone->vertices[plane->tri_indices[i][j]],
-                                             polygone->vertices[plane->tri_indices[i][((j == 2) ? 0 : (j+1))]], Pn,P0);
+       // hppDout(info,"couple : "<<j);
+        intersection = intersectSegmentPlane(polygone->vertices[polygone->tri_indices[i][j]],
+                                             polygone->vertices[polygone->tri_indices[i][((j == 2) ? 0 : (j+1))]], Pn,P0);
         if(intersection.size() > 0)
           res.insert(res.end(),intersection.begin(),intersection.end());
       }

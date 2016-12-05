@@ -48,8 +48,8 @@ namespace hpp {
       ValidationReportPtr_t romReport;
       bool collision = !hpp::core::CollisionValidation::validate(config, romReport);
       CollisionValidationReportPtr_t reportCast = boost::dynamic_pointer_cast<CollisionValidationReport>(romReport);
-      hppDout(notice,"number of contacts  : "<<reportCast->result.numContacts());
-      hppDout(notice,"contact 1 "<<reportCast->result.getContact(0).pos);
+      //hppDout(notice,"number of contacts  : "<<reportCast->result.numContacts());
+      //hppDout(notice,"contact 1 "<<reportCast->result.getContact(0).pos);
       RbprmValidationReportPtr_t rbprmReport =boost::dynamic_pointer_cast<RbprmValidationReport>(validationReport);
       if(rbprmReport){
         //hppDout(notice,"rbprm-validation-report correctly cast");

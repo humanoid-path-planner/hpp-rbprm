@@ -212,9 +212,10 @@ namespace geom
    * @brief intersectPolygonePlane compute the intersection between a polygone and a plane
    * @param polygone
    * @param plane
+   * @param pn : output, normal of the plan
    * @return an ordoned list of point (clockwise), which belong to both the polygone and the plane
    */
-  T_Point intersectPolygonePlane(BVHModelOBConst_Ptr_t polygone,BVHModelOBConst_Ptr_t plane);
+  T_Point intersectPolygonePlane(BVHModelOBConst_Ptr_t polygone, BVHModelOBConst_Ptr_t plane, Eigen::Ref<Point> Pn);
   
 } //namespace geom
 

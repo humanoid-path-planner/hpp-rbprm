@@ -317,14 +317,14 @@ namespace hpp {
         {
           vertices1.push_back(Eigen::Vector3d(model1->vertices[i][0], model1->vertices[i][1], model1->vertices[i][2]));
           //hppDout(notice,"vertices : "<<model1->vertices[i]);
-          ss1<<"["<<model1->vertices[i][0]<<","<<model1->vertices[i][1]<<","<<model1->vertices[i][2]<<"]";
+/*          ss1<<"["<<model1->vertices[i][0]<<","<<model1->vertices[i][1]<<","<<model1->vertices[i][2]<<"]";
           if(i< (model1->num_vertices-1))
-            ss1<<",";
+ */           ss1<<",";
         }
-        ss1<<"]";
+/*        ss1<<"]";
         std::cout<<"obj "<<obj1->name()<<std::endl;
         std::cout<<ss1.str()<<std::endl;
-
+*/
 
         obj2->fcl();
         geom::T_Point vertices2;
@@ -336,22 +336,23 @@ namespace hpp {
         {
           vertices2.push_back(Eigen::Vector3d(model2->vertices[i][0], model2->vertices[i][1], model2->vertices[i][2]));
           // hppDout(notice,"vertices : "<<model2->vertices[i]);
-          ss2<<"["<<model2->vertices[i][0]<<","<<model2->vertices[i][1]<<","<<model2->vertices[i][2]<<"]";
+/*          ss2<<"["<<model2->vertices[i][0]<<","<<model2->vertices[i][1]<<","<<model2->vertices[i][2]<<"]";
           if(i< (model2->num_vertices -1))
             ss2<<",";
-
+*/
         }
-        ss2<<"]";
+/*        ss2<<"]";
         std::cout<<"obj "<<obj2->name()<<std::endl;
         std::cout<<ss2.str()<<std::endl;
+*/
 
 
 
 
-/*
         hppStartBenchmark (COMPUTE_INTERSECTION);
+        geom::Point pn;
         // FIX ME : compute plan equation first
-        geom::T_Point hull = geom::intersectPolygonePlane(model1,model2,fcl::Vec3f(0,0,-1),geom::ZJUMP,result);
+        geom::T_Point hull = geom::intersectPolygonePlane(model1,model2,pn);
         hppStopBenchmark (COMPUTE_INTERSECTION);
         hppDisplayBenchmark (COMPUTE_INTERSECTION);
 
@@ -365,53 +366,36 @@ namespace hpp {
 
         // compute center point of the hull
         geom::Point center = geom::center(hull.begin(),hull.end());
-*/
-        geom::Point center;
-        // FIXME : temporary, for test only
-        center << (*node->configuration())[0],(*node->configuration())[1], 0;
-        if(indexRom == 0){ //front left
-          center[0] -= 0.3;
-          center[1] += 0.3;
-        }else if(indexRom == 1){ //front right
-          center[0] += 0.3;
-          center[1] += 0.3;
-        }else if(indexRom == 2){ //back right
-          center[0] += 0.3;
-          center[1] -= 0.3;
-        }else{ //back left
-          center[0] -= 0.3;
-          center[1] -= 0.3;
-        }
+
+        hppDout(notice,"Center : "<<center.transpose());
+        hppDout(notice,"Normal : "<<pn.transpose());
+
 
         //fill IP_hat with position : [I_3  pi_hat] ^T
-        Vector3 ni,ti1,ti2;
+        Vector3 ti1,ti2;
         IP_hat.block<3,3>(0,3*indexRom) = MatrixXX::Identity(3,3);
         IP_hat.block<3,3>(3,3*indexRom) = robust_equilibrium::crossMatrix(center);
 
         //hppDout(notice,"Center of rom collision :  ["<<center[0]<<" , "<<center[1]<<" , "<<center[2]<<"]");
         hppDout(info,"p"<<indexRom<<"^T = "<<center.transpose());
         hppDout(info,"IP_hat at iter "<<indexRom<< " = \n"<<IP_hat);
-        ni = -result.getContact(0).normal;
-        //FIXME : temp fix (fcl bug)
-        ni = Vector3::Zero(3);
-        ni[2] = 1;
-        node->normal(ni);
+        node->normal(pn);
         hppDout(notice,"normal for this contact : "<<node->getNormal());
         // compute tangent vector :
-        ti1 = ni.cross(Vector3(1,0,0));
+        ti1 = pn.cross(Vector3(1,0,0));
         if(ti1.dot(ti1)<0.001)
-          ti1 = ni.cross(Vector3(0,1,0));
-        ti2 = ni.cross(ti1);
+          ti1 = pn.cross(Vector3(0,1,0));
+        ti2 = pn.cross(ti1);
 
         hppDout(info,"t"<<indexRom<<"1 : "<<ti1.transpose());
         hppDout(info,"t"<<indexRom<<"2 : "<<ti2.transpose());
 
         //TODO : fill V with generating ray ([ n_i + \mu t_{i1} & n_i - \mu t_{i1} & n_i + \mu t_{i2} & n_i - \mu t_{i2}]
         Vi = MatrixXX::Zero(3,4);
-        Vi.col(0) = (ni + mu*ti1);
-        Vi.col(1) = (ni - mu*ti1);
-        Vi.col(2) = (ni + mu*ti2);
-        Vi.col(3) = (ni - mu*ti2);
+        Vi.col(0) = (pn + mu*ti1);
+        Vi.col(1) = (pn - mu*ti1);
+        Vi.col(2) = (pn + mu*ti2);
+        Vi.col(3) = (pn - mu*ti2);
         for(size_t i = 0 ; i<4 ; i++)
           Vi.col(i).normalize();
         hppDout(notice,"V"<<indexRom<<" = \n"<<Vi);
