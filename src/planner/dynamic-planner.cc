@@ -291,7 +291,7 @@ namespace hpp {
         hppDout(notice,"~~ collision between : "<<obj1->name() << " and "<<obj2->name());
         fcl::CollisionResult result = it->second->result;
         // debug display :
-        /* size_t numContact =result.numContacts();
+        size_t numContact =result.numContacts();
         hppDout(notice,"~~ number of contact : "<<numContact);
         std::ostringstream ss;
         ss<<"[";
@@ -302,8 +302,9 @@ namespace hpp {
              ss<<",";
         }
         ss<<"]";
+        std::cout<<"contact point : "<<std::endl;
         std::cout<<ss.str()<<std::endl;
-      */
+
 
         // get intersection between the two objects :
         obj1->fcl();
@@ -321,7 +322,8 @@ namespace hpp {
             ss1<<",";
         }
         ss1<<"]";
-        //std::cout<<ss1.str()<<std::endl;
+        std::cout<<"obj "<<obj1->name()<<std::endl;
+        std::cout<<ss1.str()<<std::endl;
 
 
         obj2->fcl();
@@ -340,18 +342,21 @@ namespace hpp {
 
         }
         ss2<<"]";
-        //std::cout<<ss2.str()<<std::endl;
+        std::cout<<"obj "<<obj2->name()<<std::endl;
+        std::cout<<ss2.str()<<std::endl;
 
 
 
 
-
+/*
         hppStartBenchmark (COMPUTE_INTERSECTION);
         // FIX ME : compute plan equation first
-        geom::T_Point hull = geom::intersectPolygonePlane(model1,model2,fcl::Vec3f(0,0,1),geom::ZJUMP,result);
+        geom::T_Point hull = geom::intersectPolygonePlane(model1,model2,fcl::Vec3f(0,0,-1),geom::ZJUMP,result);
         hppStopBenchmark (COMPUTE_INTERSECTION);
         hppDisplayBenchmark (COMPUTE_INTERSECTION);
-        /*
+
+
+
         if(hull.size() == 0){
           hppDout(error,"No intersection between rom and environnement");
          // TODO switch to new data structure create matrix with good size to avoid crash ?
@@ -360,9 +365,9 @@ namespace hpp {
 
         // compute center point of the hull
         geom::Point center = geom::center(hull.begin(),hull.end());
-        */
-        // FIXME : temporary, for test only
+*/
         geom::Point center;
+        // FIXME : temporary, for test only
         center << (*node->configuration())[0],(*node->configuration())[1], 0;
         if(indexRom == 0){ //front left
           center[0] -= 0.3;

@@ -31,9 +31,18 @@ namespace geom
 */
   typedef std::vector<Eigen::Vector2d> T_Point2D;
   typedef T_Point2D::const_iterator CIT_Point2D;
+
+  /// Helper struct that saves the global position of the triangle
+  /// vertices of a fcl::Triangle.
+  struct TrianglePoints
+  {
+    fcl::Vec3f p1, p2, p3;
+  };
+
+
   
   const double EPSILON = 1e-5;
-  const double ZJUMP = 0.0; // value t for the floor in jump_easy_map
+  const double ZJUMP = 0.001; // value t for the floor in jump_easy_map
   
   typedef fcl::BVHModel<fcl::OBBRSS> BVHModelOB;
   typedef boost::shared_ptr<const BVHModelOB> BVHModelOBConst_Ptr_t;
@@ -166,7 +175,7 @@ namespace geom
    * @param result the collision report between the 2 geometries
    */
   void intersect3DGeoms(BVHModelOBConst_Ptr_t model1,BVHModelOBConst_Ptr_t model2,fcl::CollisionResult result);
-  
+
   /**
    * @brief intersectPolygonePlane Compute the intersection of a polygon and a plane
    * The returned point belongs to the surfaces of @param model2 corresponding to the plan equation.
@@ -177,8 +186,10 @@ namespace geom
    * @param useT if false, all the plan with a normal n are used, if true we also check that t is equal
    * @param result
    */
-  T_Point intersectPolygonePlane(BVHModelOBConst_Ptr_t polygone, BVHModelOBConst_Ptr_t model2, fcl::Vec3f n , double t, fcl::CollisionResult result, bool useT = true, double epsilon = EPSILON);  
-  
+  //T_Point intersectPolygonePlane(BVHModelOBConst_Ptr_t polygone, BVHModelOBConst_Ptr_t model2, fcl::Vec3f n , double t, fcl::CollisionResult result, bool useT = true, double epsilon = EPSILON);
+
+
+
   /**
    * @brief intersectTriangles compute intersection between 2 triangles (not commutative)
    * @param tri first triangle MUST BE DIMENSION 3
@@ -187,6 +198,15 @@ namespace geom
    */
   T_Point intersectTriangles(fcl::Vec3f* tri, fcl::Vec3f* tri2,std::ostringstream* ss=0);
   
+  /**
+   * @brief intersectSegmentPlane compute the intersection between a segment and a plane (infinite)
+   * @param s0 first point of the segment
+   * @param s1 last point of the segment
+   * @param n normal of the plan
+   * @param p0 a point in the plan
+   * @return A vector of point, empty if no intersection, with one point on the plane if there is an intersection, with s0 and s1 if the segment lie in the plan
+   */
+  T_Point intersectSegmentPlane(Point s0, Point s1, Eigen::Vector3d pn, Point p0 );
   
 } //namespace geom
 
