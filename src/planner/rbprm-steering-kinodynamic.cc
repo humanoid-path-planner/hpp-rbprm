@@ -58,6 +58,7 @@ namespace hpp{
     {
       // get kinodynamic path from core::steeringMethod::Kinodynamic
       core::RbprmNodePtr_t node =  setSteeringMethodBounds(x,q2,false);
+      //return core::steeringMethod::Kinodynamic::impl_compute(*x->configuration(),q2);
       core::PathPtr_t path = core::steeringMethod::Kinodynamic::impl_compute(*x->configuration(),q2);
       core::KinodynamicPathPtr_t kinoPath = boost::dynamic_pointer_cast<core::KinodynamicPath>(path);
       assert (path && "Error while casting path shared ptr"); // really usefull ? should never happen
@@ -102,10 +103,11 @@ namespace hpp{
 
       hppDout(info, "t = "<<kinoPath->length()<<" maxT = "<<maxT);
       if(maxT < t)
-        return kinoPath->extract(std::make_pair(0,maxT));
+        return kinoPath->extract(core::interval_t(kinoPath->timeRange().first,kinoPath->timeRange().first + maxT));
       return kinoPath;
     }
 
+    // reverse (from q1 to x, but end() should always be x)
     core::PathPtr_t SteeringMethodKinodynamic::impl_compute (core::ConfigurationIn_t q1,core::NodePtr_t x)
     {
       core::RbprmNodePtr_t node =  setSteeringMethodBounds(x,q1,true);
@@ -113,7 +115,6 @@ namespace hpp{
       core::KinodynamicPathPtr_t kinoPath = boost::dynamic_pointer_cast<core::KinodynamicPath>(path);
       assert (path && "Error while casting path shared ptr"); // really usefull ? should never happen
       core::size_type configSize = problem_->robot()->configSize() - problem_->robot()->extraConfigSpace().dimension ();
-
       // check if acceleration is valid after each sign change :
       core::vector_t t1 = kinoPath->getT1();
       core::vector_t tv = kinoPath->getTv();
@@ -122,12 +123,12 @@ namespace hpp{
       core::ConfigurationPtr_t q(new core::Configuration_t(problem_->robot()->configSize()));
       core::vector3_t a;
       bool aValid;
-      double maxT = kinoPath->length();
+      double minT = kinoPath->timeRange().second;
       hppDout(info,"## start checking intermediate accelerations");
       for(size_t ijoint = 0 ; ijoint < 3 ; ijoint++){
         hppDout(info,"for joint "<<ijoint);
         if(t1[ijoint] > 0){
-          t = t1[ijoint];
+          t = t1[ijoint] + 0.0001;
           (*kinoPath)(*q,t);
           hppDout(info,"q = "<<model::displayConfig(*q));
           a = (*q).segment<3>(configSize+3);
@@ -135,8 +136,8 @@ namespace hpp{
           //TODO check a :
           aValid = sEq_->checkAdmissibleAcceleration(node->getG(),node->getH(),node->geth(),a);
           hppDout(info,"a valid : "<<aValid);
-          if(!aValid && t < maxT)
-            maxT = t;
+          if(aValid && t < minT)
+            minT = t;
         }
         if(tv[ijoint] > 0){
           t += tv[ijoint];
@@ -147,13 +148,16 @@ namespace hpp{
           //TODO check a :
           aValid = sEq_->checkAdmissibleAcceleration(node->getG(),node->getH(),node->geth(),a);
           hppDout(info,"a valid : "<<aValid);
-          if(!aValid && t < maxT)
-            maxT = t;
+          if(aValid && t < minT)
+            minT = t;
         }
       }
-      hppDout(info, "t = "<<kinoPath->length()<<" maxT = "<<maxT);
-      if(maxT < t)
-        return kinoPath->extract(std::make_pair(0,maxT));
+      hppDout(info, "t = "<<kinoPath->length()<<" minT = "<<minT);
+      if(minT == kinoPath->timeRange().second)
+        return core::PathPtr_t();
+      if(minT > kinoPath->timeRange().first)
+        return kinoPath->extract(core::interval_t(minT,kinoPath->timeRange().second));
+      return kinoPath;
     }
 
     core::RbprmNodePtr_t SteeringMethodKinodynamic::setSteeringMethodBounds(const core::NodePtr_t& near, const core::ConfigurationIn_t target,bool reverse) {

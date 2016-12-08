@@ -167,13 +167,7 @@ namespace hpp {
             q_new = ConfigurationPtr_t (new Configuration_t(validPath->end ()));
             reachedNodeFromStart = roadmap()->addNodeAndEdge(near, q_new, validPath);
             computeGIWC(reachedNodeFromStart);
-            core::RbprmNodePtr_t castNode2 = static_cast<core::RbprmNodePtr_t>(reachedNodeFromStart);
-            if(castNode2)
-              hppDout(notice,"Node casted correctly");
-            else
-              hppDout(notice,"Impossible to cast node to rbprmNode");
             hppDout(info,"~~~~~~~~~~~~~~~~~~~~ New node added to start component : "<<displayConfig(*q_new));
-
           }
         }
       }
@@ -186,16 +180,13 @@ namespace hpp {
            itcc != endComponents_.end (); ++itcc)
       {
         near = roadmap()->nearestNode (q_rand, *itcc, distance,true);
-        core::RbprmNodePtr_t castNode3 = static_cast<core::RbprmNodePtr_t>(near);
-        if(castNode3)
-          hppDout(notice,"Node casted correctly");
-        else
-          hppDout(notice,"Impossible to cast node to rbprmNode");
         path = extendInternal (qProj_, near, q_rand, true);
         if (path)
         {
           core::PathValidationReportPtr_t report;
           pathValidFromEnd = pathValidation->validate (path, true, validPath, report);
+          if(pathValidFromStart)
+            pathValidFromEnd = pathValidFromEnd && (validPath->initial() == *q_new);
           if(pathValidFromEnd && pathValidFromStart)
           {
             // we won, a path is found
@@ -211,22 +202,19 @@ namespace hpp {
               ConfigurationPtr_t q_newEnd = ConfigurationPtr_t (new Configuration_t(validPath->initial()));
               core::NodePtr_t newNode = roadmap()->addNodeAndEdge(q_newEnd, near, validPath);
               computeGIWC(newNode);
-              core::RbprmNodePtr_t castNode4 = static_cast<core::RbprmNodePtr_t>(newNode);
-              if(castNode4)
-                hppDout(notice,"Node casted correctly");
-              else
-                hppDout(notice,"Impossible to cast node to rbprmNode");
               hppDout(info,"~~~~~~~~~~~~~~~~~~~~~~ New node added to end component : "<<displayConfig(*q_newEnd));
 
               // now try to connect both nodes
               if(startComponentConnected)
               {
-                path = (*(problem().steeringMethod())) (*q_new, *q_newEnd);
+                path = extendInternal (qProj_, reachedNodeFromStart, q_newEnd, false);
                 if(path && pathValidation->validate (path, false, validPath, report))
                 {
-                  roadmap()->addEdge (reachedNodeFromStart, newNode, path);
-                  hppDout(info,"~~~~~~~~ both new nodes connected together !!!!!! "<<displayConfig(*q_new));
-                  return;
+                  if(validPath->end() == *q_newEnd){
+                    roadmap()->addEdge (reachedNodeFromStart, newNode, path);
+                    hppDout(info,"~~~~~~~~ both new nodes connected together !!!!!! "<<displayConfig(*q_new));
+                    return;
+                  }
                 }
               }
             }
