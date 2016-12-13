@@ -46,7 +46,8 @@ namespace hpp {
     core::Configuration_t configPosition(core::ConfigurationIn_t previous, const core::PathVectorConstPtr_t path, double i)
     {
         core::Configuration_t configuration = previous;
-        const core::Configuration_t configPosition = path->operator ()(std::min(i, path->timeRange().second));
+        core::Configuration_t configPosition(path->outputSize());
+        (*path)(configPosition,std::min(i, path->timeRange().second));
         configuration.head(configPosition.rows()) = configPosition;
         return configuration;
     }
