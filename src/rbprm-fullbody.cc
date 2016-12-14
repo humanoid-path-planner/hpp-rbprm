@@ -188,14 +188,14 @@ namespace hpp {
                               State& current,
                               core::CollisionValidationPtr_t validation,
                               const hpp::rbprm::RbPrmLimbPtr_t& limb, model::ConfigurationOut_t configuration,
-                              const double robustnessTreshold, bool stability = true)
+                              const double robustnessTreshold, bool stability = true,const fcl::Vec3f acceleration = fcl::Vec3f(0,0,0))
     {
         for(sampling::SampleVector_t::const_iterator cit = limb->sampleContainer_.samples_.begin();
             cit != limb->sampleContainer_.samples_.end(); ++cit)
         {
             sampling::Load(*cit, configuration);
             hpp::core::ValidationReportPtr_t valRep (new hpp::core::CollisionValidationReport);
-            if(validation->validate(configuration, valRep) && (!stability || stability::IsStable(body,current) >=robustnessTreshold))
+            if(validation->validate(configuration, valRep) && (!stability || stability::IsStable(body,current,acceleration) >=robustnessTreshold))
             {
                 current.configuration_ = configuration;
                 return true;
@@ -253,14 +253,14 @@ namespace hpp {
                 else
                 {
                     contactMaintained = false;
-                    ComputeCollisionFreeConfiguration(body,current,limbValidations.at(name),limb,current.configuration_,robustnessTreshold,false);
+                    ComputeCollisionFreeConfiguration(body,current,limbValidations.at(name),limb,current.configuration_,robustnessTreshold,false,acceleration);
                     brokenContacts.push_back(name);
                 }
             }
             else
             {
                 contactMaintained = false;
-                ComputeCollisionFreeConfiguration(body,current,limbValidations.at(name),limb,current.configuration_,robustnessTreshold,false);
+                ComputeCollisionFreeConfiguration(body,current,limbValidations.at(name),limb,current.configuration_,robustnessTreshold,false,acceleration);
                 brokenContacts.push_back(name);
             }
         }
@@ -424,7 +424,7 @@ rotation = alignRotation * limb->effector_->currentTransformation().getRotation(
                     tmp.contactNormals_[limbId] = normal;
                     tmp.configuration_ = configuration;
                     ++tmp.nbContacts;
-                    double robustness = stability::IsStable(body,tmp);
+                    double robustness = stability::IsStable(body,tmp,acceleration);
                     if((tmp.nbContacts == 1 && !stableForOneContact) || robustness>=robustnessTreshold)
                     {
                         maxRob = std::max(robustness, maxRob);
@@ -482,7 +482,7 @@ else
 #endif
           if(!found_sample)
           {
-              ComputeCollisionFreeConfiguration(body, current, validation, limb, configuration,robustnessTreshold,false);
+              ComputeCollisionFreeConfiguration(body, current, validation, limb, configuration,robustnessTreshold,false,acceleration);
           }
       }
       if(found_sample || unstableContact)

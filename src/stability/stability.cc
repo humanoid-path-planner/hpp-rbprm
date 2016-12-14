@@ -223,7 +223,7 @@ const fcl::Vec3f comfcl = comcptr->com();*/
     }
 
 
-    double IsStable(const RbPrmFullBodyPtr_t fullbody, State& state)
+    double IsStable(const RbPrmFullBodyPtr_t fullbody, State& state, const fcl::Vec3f acc)
     {
 #ifdef PROFILE
     RbPrmProfiler& watch = getRbPrmProfiler();
