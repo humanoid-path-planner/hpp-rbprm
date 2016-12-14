@@ -15,7 +15,7 @@
 // hpp-rbprm. If not, see <http://www.gnu.org/licenses/>.
 
 #include <hpp/rbprm/interpolation/rbprm-path-interpolation.hh>
-
+#include <hpp/model/configuration.hh>
 #ifdef PROFILE
     #include "hpp/rbprm/rbprm-profiler.hh"
 #endif
@@ -74,7 +74,6 @@ namespace hpp {
     {
         int nbFailures = 0;
         size_t accIndex = path_->outputSize()-3; // index of the start of the acceleration vector (of size 3), in the configuration vector
-        hppDout(notice,"acc index = "<<accIndex);
         model::value_type currentVal(initValue);
         rbprm::T_StateFrame states;
         states.push_back(std::make_pair(currentVal, this->start_));

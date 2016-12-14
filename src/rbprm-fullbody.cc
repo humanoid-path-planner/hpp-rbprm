@@ -644,6 +644,7 @@ else
       const bool allowFailure, const double robustnessTreshold,
       const fcl::Vec3f& acceleration)
     {
+
 //static int id = 0;
     const T_Limb& limbs = body->GetLimbs();
     // save old configuration

@@ -290,8 +290,8 @@ namespace hpp {
              ss<<",";
         }
         ss<<"]";
-        std::cout<<"contact point : "<<std::endl;
-        std::cout<<ss.str()<<std::endl;
+       // std::cout<<"contact point : "<<std::endl;
+       // std::cout<<ss.str()<<std::endl;
 
 
         // get intersection between the two objects :
