@@ -207,7 +207,7 @@ namespace hpp {
     // first step
     State MaintainPreviousContacts(const State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body,
                                    std::map<std::string,core::CollisionValidationPtr_t>& limbValidations,
-                                   model::ConfigurationIn_t configuration, bool& contactMaintained, bool& multipleBreaks, const double robustnessTreshold)
+                                   model::ConfigurationIn_t configuration, bool& contactMaintained, bool& multipleBreaks, const double robustnessTreshold, const fcl::Vec3f acceleration = fcl::Vec3f(0,0,0))
     {
         contactMaintained = true;
         std::vector<std::string> brokenContacts;
@@ -308,6 +308,7 @@ namespace hpp {
                               const fcl::Vec3f& direction,
                               fcl::Vec3f& position, fcl::Vec3f& normal, const double robustnessTreshold,
                               bool contactIfFails = true, bool stableForOneContact = true,
+                              const fcl::Vec3f& acceleration = fcl::Vec3f(0,0,0),
                               const sampling::heuristic evaluate = 0)
     {
       // state already stable just find collision free configuration
@@ -605,7 +606,7 @@ else
     hpp::rbprm::State ComputeContacts(const hpp::rbprm::RbPrmFullBodyPtr_t& body,
 			model::ConfigurationIn_t configuration, const affMap_t& affordances,
       const std::map<std::string, std::vector<std::string> >& affFilters, const fcl::Vec3f& direction,
-			const double robustnessTreshold)
+      const double robustnessTreshold,const fcl::Vec3f& acceleration)
     {
         const T_Limb& limbs = body->GetLimbs();
         State result;
@@ -625,7 +626,7 @@ else
                 ComputeStableContact(body,result, 
 									body->limbcollisionValidations_.at(lit->first), lit->first,
 									lit->second, configuration, result.configuration_, affs,
-									direction, position, normal, robustnessTreshold, true, false);
+                  direction, position, normal, robustnessTreshold, true, false,acceleration);
             }
             result.nbContacts = result.contactNormals_.size();
         }
@@ -640,7 +641,8 @@ else
 			const affMap_t& affordances,
 			const std::map<std::string, std::vector<std::string> >& affFilters,
 			const fcl::Vec3f& direction, bool& contactMaintained, bool& multipleBreaks,
-      const bool allowFailure, const double robustnessTreshold)
+      const bool allowFailure, const double robustnessTreshold,
+      const fcl::Vec3f& acceleration)
     {
 //static int id = 0;
     const T_Limb& limbs = body->GetLimbs();
@@ -653,7 +655,7 @@ else
     body->device_->currentConfiguration(configuration);
     body->device_->computeForwardKinematics ();
     // try to maintain previous contacts
-    State result = MaintainPreviousContacts(previous,body, body->limbcollisionValidations_, configuration, contactMaintained, multipleBreaks, robustnessTreshold);
+    State result = MaintainPreviousContacts(previous,body, body->limbcollisionValidations_, configuration, contactMaintained, multipleBreaks, robustnessTreshold,acceleration);
     // If more than one are broken, go back to previous state
     // and reposition
     if(multipleBreaks && !allowFailure)
@@ -673,8 +675,8 @@ else
 					body->limbcollisionValidations_.at(replaceContact),
 					replaceContact,body->limbs_.at(replaceContact),
           configuration, config,affs,direction,
-					position, normal, robustnessTreshold, true, false,
-					body->factory_.heuristics_["random"]) != STABLE_CONTACT)
+          position, normal, robustnessTreshold,true, false,acceleration,
+          body->factory_.heuristics_["random"]) != STABLE_CONTACT)
         {
             result = previous;
             result.contactOrder_.pop();
@@ -705,7 +707,7 @@ else
             contactCreated = ComputeStableContact(body, result,
 							body->limbcollisionValidations_.at(lit->first), lit->first,
 							lit->second, configuration, config, affs, direction, position, normal,
-							robustnessTreshold) != NO_CONTACT || contactCreated;
+              robustnessTreshold,true,true,acceleration) != NO_CONTACT || contactCreated;
         }
     }
     contactMaintained = !contactCreated && contactMaintained;
@@ -751,7 +753,7 @@ else
 									body->limbcollisionValidations_.at(replaceContact),replaceContact,
                   body->limbs_.at(replaceContact), configuration, 
 								        config, affs, direction,position,
-									normal,robustnessTreshold) != STABLE_CONTACT)
+                  normal,robustnessTreshold,true,true,acceleration) != STABLE_CONTACT)
                 {
                     multipleBreaks = true;
                     result = previous;

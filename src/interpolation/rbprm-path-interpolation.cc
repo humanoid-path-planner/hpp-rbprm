@@ -73,11 +73,14 @@ namespace hpp {
                                                         const model::value_type timeStep, const model::value_type initValue, const bool filterStates)
     {
         int nbFailures = 0;
+        size_t accIndex = path_->outputSize()-3; // index of the start of the acceleration vector (of size 3), in the configuration vector
+        hppDout(notice,"acc index = "<<accIndex);
         model::value_type currentVal(initValue);
         rbprm::T_StateFrame states;
         states.push_back(std::make_pair(currentVal, this->start_));
         std::size_t nbRecontacts = 0;
         bool allowFailure = true;
+        Eigen::Vector3d dir,acc;
 #ifdef PROFILE
     RbPrmProfiler& watch = getRbPrmProfiler();
     watch.reset_all();
@@ -87,7 +90,8 @@ namespace hpp {
         {
             const State& previous = states.back().second;
             core::Configuration_t configuration = *cit;
-            Eigen::Vector3d dir = configuration.head<3>() - previous.configuration_.head<3>();
+            acc = configuration.segment<3>(accIndex);
+            dir = configuration.head<3>() - previous.configuration_.head<3>();
             fcl::Vec3f direction(dir[0], dir[1], dir[2]);
             bool nonZero(false);
             direction.normalize(&nonZero);
@@ -96,25 +100,25 @@ namespace hpp {
             bool sameAsPrevious(true);
             bool multipleBreaks(false);
             State newState = ComputeContacts(previous, robot_,configuration, affordances,affFilters,direction,
-                                             sameAsPrevious, multipleBreaks,allowFailure,robustnessTreshold);
+                                             sameAsPrevious, multipleBreaks,allowFailure,robustnessTreshold,acc);
             if(allowFailure && multipleBreaks)
             {
-                ++ nbFailures;
+                ++nbFailures;
                 ++cit;
                 currentVal+= timeStep;
-if (nbFailures > 1)
-{
-#ifdef PROFILE
-    watch.stop("complete generation");
-    watch.add_to_count("planner failed", 1);
-    std::ofstream fout;
-    fout.open("log.txt", std::fstream::out | std::fstream::app);
-    std::ostream* fp = &fout;
-    watch.report_count(*fp);
-    fout.close();
-#endif
-    return FilterStates(states, filterStates);
-}
+                if (nbFailures > 1)
+                {
+                  #ifdef PROFILE
+                    watch.stop("complete generation");
+                    watch.add_to_count("planner failed", 1);
+                    std::ofstream fout;
+                    fout.open("log.txt", std::fstream::out | std::fstream::app);
+                    std::ostream* fp = &fout;
+                    watch.report_count(*fp);
+                    fout.close();
+                  #endif
+                  return FilterStates(states, filterStates);
+                }
             }
             if(multipleBreaks && !allowFailure)
             {
@@ -135,15 +139,15 @@ if (nbFailures > 1)
             allowFailure = nbRecontacts > robot_->GetLimbs().size() + 6;
         }
         states.push_back(std::make_pair(this->path_->timeRange().second, this->end_));
-#ifdef PROFILE
-        watch.add_to_count("planner succeeded", 1);
-        watch.stop("complete generation");
-        /*std::ofstream fout;
-        fout.open("log.txt", std::fstream::out | std::fstream::app);
-        std::ostream* fp = &fout;
-        watch.report_all_and_count(2,*fp);
-        fout.close();*/
-#endif
+        #ifdef PROFILE
+          watch.add_to_count("planner succeeded", 1);
+          watch.stop("complete generation");
+          /*std::ofstream fout;
+          fout.open("log.txt", std::fstream::out | std::fstream::app);
+          std::ostream* fp = &fout;
+          watch.report_all_and_count(2,*fp);
+          fout.close();*/
+        #endif
         return FilterStates(states, filterStates);
         //return states;
     }
