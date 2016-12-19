@@ -71,7 +71,17 @@ double BackwardHeuristic(const sampling::Sample& sample,
 double StaticHeuristic(const sampling::Sample& sample,
                       const Eigen::Vector3d& /*direction*/, const Eigen::Vector3d& /*normal*/)
 {
+    hppDout(info,"sample : ");
+    hppDout(info,"sample : "<<&sample);
+    hppDout(info,"id = "<<sample.id_);
+    hppDout(info,"length = "<<sample.length_);
+    hppDout(info,"startRank = "<<sample.startRank_);
+    hppDout(info,"effectorPosition = "<<sample.effectorPosition_);
+    hppDout(info,"configuration = "<<sample.configuration_);
+    hppDout(info,"staticValue = "<<sample.staticValue_);
     return sample.staticValue_;
+    hppDout(info,"sample OK");
+
 }
 
 

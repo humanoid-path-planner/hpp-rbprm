@@ -516,8 +516,8 @@ namespace geom
         ss<<",";
     }
     ss<<"]";
-    std::cout<<"intersection : "<<std::endl;
-    std::cout<<ss.str()<<std::endl;
+   // std::cout<<"intersection : "<<std::endl;
+   // std::cout<<ss.str()<<std::endl;
     hppDout(notice,"area = "<<area(sortedRes.begin(),sortedRes.end()));
     return sortedRes;
   }

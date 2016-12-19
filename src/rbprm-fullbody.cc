@@ -146,6 +146,7 @@ namespace hpp {
     RbPrmFullBody::RbPrmFullBody (const model::DevicePtr_t& device)
         : device_(device)
         , collisionValidation_(core::CollisionValidation::create(device))
+        , staticStability_(true)
         , weakPtr_()
     {
         // NOTHING
@@ -539,8 +540,9 @@ else
 			core::CollisionValidationPtr_t validation,
       model::ConfigurationOut_t config, const affMap_t& affordances,
       const std::map<std::string, std::vector<std::string> >& affFilters, const fcl::Vec3f& direction,
-			const double robustnessTreshold)
+      const double robustnessTreshold, const fcl::Vec3f acceleration = fcl::Vec3f(0,0,0))
     {
+        hppDout(notice,"Reposition contacts !! ");
         // replace existing contacts
         // start with older contact created
         std::stack<std::string> poppedContacts;
@@ -565,7 +567,7 @@ else
 									affordances, affFilters);
 
                 if(ComputeStableContact(body, result, validation, *cit, body->GetLimbs().at(*cit),save, config,
-                	affs, direction, position, normal, robustnessTreshold, false)
+                  affs, direction, position, normal, robustnessTreshold, false,true,acceleration)
                   == STABLE_CONTACT)
                 {
                     nContactName = *cit;
@@ -723,7 +725,7 @@ else
             contactMaintained = false;
             // could not reposition any contact. Planner has failed
             if (!RepositionContacts(result, body, body->collisionValidation_,
-							config, affordances, affFilters, direction, robustnessTreshold))
+              config, affordances, affFilters, direction, robustnessTreshold,acceleration))
             {
                 std::cout << "planner is stuck; failure " <<  std::endl;
                 body->device_->currentConfiguration(save);

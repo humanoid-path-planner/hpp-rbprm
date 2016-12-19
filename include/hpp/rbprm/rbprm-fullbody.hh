@@ -106,6 +106,8 @@ namespace hpp {
         const rbprm::T_Limb& GetLimbs() {return limbs_;}
         const T_LimbGroup& GetGroups() {return limbGroups_;}
         const model::DevicePtr_t device_;
+        void staticStability(bool staticStability){staticStability_ = staticStability;}
+        const bool staticStability(){return staticStability_;}
 
     private:
         core::CollisionValidationPtr_t collisionValidation_;
@@ -113,6 +115,7 @@ namespace hpp {
         rbprm::T_Limb limbs_;
         T_LimbGroup limbGroups_;
         sampling::HeuristicFactory factory_;
+        bool staticStability_;
 
     private:
         void AddLimbPrivate(rbprm::RbPrmLimbPtr_t limb, const std::string& id, const std::string& name,
@@ -142,7 +145,7 @@ namespace hpp {
 				bool& contactMaintained, bool& multipleBreaks, const bool allowFailure,
         const double robustnessTreshold,
         const fcl::Vec3f& acceleration);
-    }; // class RbPrmDevice
+    }; // class RbPrmFullBody
 
     /// Generates a balanced contact configuration, considering the
     /// given current configuration of the robot, and a direction of motion.

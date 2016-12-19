@@ -232,8 +232,12 @@ const fcl::Vec3f comfcl = comcptr->com();*/
         StaticEquilibrium staticEquilibrium(initLibrary(fullbody));
         robust_equilibrium::Vector3 com = setupLibrary(fullbody,state,staticEquilibrium,STATIC_EQUILIBRIUM_ALGORITHM_DLP);
         double res;
+        LP_status status;
+        if(fullbody->staticStability())
+          status = staticEquilibrium.computeEquilibriumRobustness(com,res);
+        else
+          status = staticEquilibrium.computeEquilibriumRobustness(com,acc,res);
 
-        LP_status status = staticEquilibrium.computeEquilibriumRobustness(com,res);
 #ifdef PROFILE
     watch.stop("test balance");
 #endif
