@@ -295,7 +295,6 @@ namespace hpp {
 
 
         // get intersection between the two objects :
-        obj1->fcl();
         geom::T_Point vertices1;
         geom::BVHModelOBConst_Ptr_t model1 =  geom::GetModel(obj1->fcl());
         hppDout(info,"vertices obj1 : "<<obj1->name()<< " ( "<<model1->num_vertices<<" ) ");
@@ -314,7 +313,6 @@ namespace hpp {
         std::cout<<ss1.str()<<std::endl;
 */
 
-        obj2->fcl();
         geom::T_Point vertices2;
         geom::BVHModelOBConst_Ptr_t model2 =  geom::GetModel(obj2->fcl());
         hppDout(info,"vertices obj2 : "<<obj2->name()<< " ( "<<model2->num_vertices<<" ) ");

@@ -242,34 +242,37 @@ bool rbprm::sampling::GetCandidates(const SampleDB& sc, const fcl::Transform3f& 
         //verifying that position is theoritically reachable from next position
         {
             voxelIt = sc.samplesInVoxels_.find(contact.b1);
-            const VoxelSampleId& voxelSampleIds = voxelIt->second;
-            hppDout(notice,"voxel first = "<<voxelSampleIds.first);
-            hppDout(notice,"voxel second = "<<voxelSampleIds.second);
-            totalSamples += (int)voxelSampleIds.second;
-            for(T_Sample::const_iterator sit = sc.samples_.begin()+ voxelSampleIds.first;
-                sit != sc.samples_.begin()+ voxelSampleIds.first + voxelSampleIds.second; ++sit)
-            {
-                //find normal id
-                assert(contact.o2->getObjectType() == fcl::OT_BVH); // only works with meshes
-                const fcl::BVHModel<fcl::OBBRSS>* surface = static_cast<const fcl::BVHModel<fcl::OBBRSS>*> (contact.o2);
-                fcl::Vec3f normal;
-                const fcl::Triangle& tr = surface->tri_indices[contact.b2];
-                const fcl::Vec3f& v1 = surface->vertices[tr[0]];
-                const fcl::Vec3f& v2 = surface->vertices[tr[1]];
-                const fcl::Vec3f& v3 = surface->vertices[tr[2]];
-                normal = (v2 - v1).cross(v3 - v1);
-                normal.normalize();
-                Eigen::Vector3d eNormal(normal[0], normal[1], normal[2]);
-                hppDout(notice,"sample normal : "<<eNormal.transpose());
-                hppDout(notice,"sample contact tri = "<<contact.b2);
-                hppDout(notice,"sample contact position = "<<contact.pos);
-                hppDout(notice,"sample id "<<sit->id_);
-                hppDout(notice,"sample id OK");
+            if(voxelIt != sc.samplesInVoxels_.end()){
+              const VoxelSampleId& voxelSampleIds = voxelIt->second;
+              hppDout(notice,"voxel first = "<<voxelSampleIds.first);
+              hppDout(notice,"voxel second = "<<voxelSampleIds.second);
+              totalSamples += (int)voxelSampleIds.second;
+              for(T_Sample::const_iterator sit = sc.samples_.begin()+ voxelSampleIds.first;
+                  sit != sc.samples_.begin()+ voxelSampleIds.first + voxelSampleIds.second; ++sit)
+              {
+                  //find normal id
+                  assert(contact.o2->getObjectType() == fcl::OT_BVH); // only works with meshes
+                  const fcl::BVHModel<fcl::OBBRSS>* surface = static_cast<const fcl::BVHModel<fcl::OBBRSS>*> (contact.o2);
+                  fcl::Vec3f normal;
+                  const fcl::Triangle& tr = surface->tri_indices[contact.b2];
+                  const fcl::Vec3f& v1 = surface->vertices[tr[0]];
+                  const fcl::Vec3f& v2 = surface->vertices[tr[1]];
+                  const fcl::Vec3f& v3 = surface->vertices[tr[2]];
+                  normal = (v2 - v1).cross(v3 - v1);
+                  normal.normalize();
+                  Eigen::Vector3d eNormal(normal[0], normal[1], normal[2]);
+                  hppDout(notice,"sample normal : "<<eNormal.transpose());
+                  hppDout(notice,"sample contact tri = "<<contact.b2);
+                  hppDout(notice,"sample contact position = "<<contact.pos);
+                  hppDout(notice,"sample id "<<sit->id_);
+                  hppDout(notice,"sample id OK");
 
-                OctreeReport report(&(*sit), contact, evaluate ? ((*evaluate)(*sit, eDir, eNormal)) :0, eNormal);
-                ++okay;
-                reports.insert(report);
-            }
+                  OctreeReport report(&(*sit), contact, evaluate ? ((*evaluate)(*sit, eDir, eNormal)) :0, eNormal);
+                  ++okay;
+                  reports.insert(report);
+              }
+            }else
+              hppDout(warning,"no voxels in specified triangle : "<<contact.b1);
         }
     }
     return !reports.empty();
