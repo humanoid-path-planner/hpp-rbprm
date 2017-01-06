@@ -194,7 +194,7 @@ namespace hpp {
 
     hpp::rbprm::State HPP_RBPRM_DLLAPI Project(const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
                                                core::CollisionValidationPtr_t validation, model::ConfigurationOut_t configuration,
-                                               const fcl::Matrix3f& rotationTarget, const fcl::Vec3f& positionTarget, const fcl::Vec3f& normal,
+                                               const fcl::Matrix3f& rotationTarget, const std::vector<bool>& rotationFilter, const fcl::Vec3f& positionTarget, const fcl::Vec3f& normal,
                                                const hpp::rbprm::State& current, bool& success);
 
     hpp::model::ObjectVector_t HPP_RBPRM_DLLAPI getAffObjectsForLimb(const std::string& limb,
