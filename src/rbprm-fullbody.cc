@@ -347,15 +347,6 @@ namespace hpp {
                   rotation = limb->effector_->currentTransformation().getRotation();
                   normal = tmp.contactNormals_.at(limbId);
                   found_sample = true;
-
-
-                  double rob2 =stability::IsStable(body,tmp,robust_equilibrium::STATIC_EQUILIBRIUM_ALGORITHM_PP);
-                  if((rob2 < 0 && robustness > 0 ) || (rob2 > 0 && robustness < 0 ))
-                  {
-                      std::cout << "libcdd and DLP disagree on whether the configuration is in static equilibrium" << std::endl;
-                      std::cout << "libcdd says " <<  rob2 << std::endl;
-                      std::cout << "DLP says " <<  robustness << std::endl;
-                  }
               }
               // if no stable candidate is found, select best contact
               // anyway
