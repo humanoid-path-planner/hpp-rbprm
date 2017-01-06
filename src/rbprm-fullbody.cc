@@ -153,7 +153,7 @@ namespace hpp {
     }
 
     // assumes unit direction
-    std::vector<bool> setMaintainRotationConstraints(const fcl::Vec3f&) // direction)
+    std::vector<bool> setMaintainRotationConstraints()//const fcl::Vec3f&) // direction)
     {
         std::vector<bool> res;
         for(std::size_t i =0; i <3; ++i)
@@ -166,11 +166,11 @@ namespace hpp {
     std::vector<bool> setRotationConstraints(const fcl::Vec3f&)// direction)
     {
         std::vector<bool> res;
-        for(std::size_t i =0; i <2; ++i)
+        for(std::size_t i =0; i <3; ++i)
         {
             res.push_back(true);
         }
-        res.push_back(false);
+        //res.push_back(false);
         return res;
     }
 
@@ -230,15 +230,9 @@ namespace hpp {
             hpp::tools::LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
             const fcl::Vec3f z = limb->effector_->currentTransformation().getRotation() * limb->normal_;
             const fcl::Matrix3f& rotation = previous.contactRotation_.at(name);
-            proj->add(core::NumericalConstraint::create (constraints::Position::create("pos_maintain_contact",body->device_, limb->effector_,fcl::Vec3f(0,0,0), ppos)));
-            if(limb->contactType_ == hpp::rbprm::_6_DOF)
-            {
-                proj->add(core::NumericalConstraint::create (constraints::Orientation::create("rot_maintain_contact",body->device_,
-                                                                                  limb->effector_,
-                                                                                  rotation,
-                                                                                  setMaintainRotationConstraints(z))));
-            }
-            if(proj->apply(config))
+            bool success(false);
+            State tmp = Project(body,name,limb,limbValidations.at(name),config,rotation, setMaintainRotationConstraints(), ppos,pnormal,current,success);
+            if(success)
             {
                 hpp::core::ValidationReportPtr_t valRep (new hpp::core::CollisionValidationReport);
                 if(limbValidations.at(name)->validate(config, valRep))
@@ -774,6 +768,95 @@ else
     body->device_->controlComputation (flag);
     result.nbContacts = result.contactNormals_.size();
     return result;
+    }
+
+    hpp::rbprm::State Project(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
+                              core::CollisionValidationPtr_t validation, model::ConfigurationOut_t configuration,
+                              const fcl::Matrix3f& rotationTarget, const std::vector<bool> &rotationFilter, const fcl::Vec3f& positionTarget, const fcl::Vec3f& normal,
+                              const hpp::rbprm::State& current, bool& success)
+    {
+        // Add constraints to resolve Ik
+        success = false;
+        // Add constraints to resolve Ik
+        core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 20);
+        // get current normal orientation
+        hpp::tools::LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
+        fcl::Transform3f localFrame, globalFrame;
+        globalFrame.setTranslation(positionTarget);
+        proj->add(core::NumericalConstraint::create (constraints::Position::create("",body->device_,
+                                                                                   limb->effector_,
+                                                                                   localFrame,
+                                                                                   globalFrame,
+                                                                                   setTranslationConstraints())));
+
+        if(limb->contactType_ == hpp::rbprm::_6_DOF)
+        {
+            proj->add(core::NumericalConstraint::create (constraints::Orientation::create("",body->device_,
+                                                                                          limb->effector_,
+                                                                                          fcl::Transform3f(rotationTarget),
+                                                                                          rotationFilter)));
+        }
+#ifdef PROFILE
+        RbPrmProfiler& watch = getRbPrmProfiler();
+        watch.start("ik");
+#endif
+        if(proj->apply(configuration))
+        {
+#ifdef PROFILE
+            watch.stop("ik");
+#endif
+#ifdef PROFILE
+            RbPrmProfiler& watch = getRbPrmProfiler();
+            watch.start("collision");
+#endif
+            hpp::core::ValidationReportPtr_t valRep (new hpp::core::CollisionValidationReport);
+            if(validation->validate(configuration, valRep))
+        {
+#ifdef PROFILE
+            watch.stop("collision");
+#endif
+            // test stability of new configuration
+            body->device_->currentConfiguration(configuration);
+            body->device_->computeForwardKinematics();
+            State tmp (current);
+            tmp.contacts_[limbId] = true;
+            tmp.contactPositions_[limbId] = limb->effector_->currentTransformation().getTranslation();
+            tmp.contactRotation_[limbId] = limb->effector_->currentTransformation().getRotation();
+            tmp.contactNormals_[limbId] = normal;
+            tmp.configuration_ = configuration;
+            ++tmp.nbContacts;
+            success = true;
+            return tmp;
+        }
+#ifdef PROFILE
+        else
+            watch.stop("collision");
+#endif
+        }
+#ifdef PROFILE
+        else
+            watch.stop("ik");
+#endif
+        success = false;
+        return current;
+    }
+
+    hpp::rbprm::State ProjectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
+                       const sampling::OctreeReport& report, core::CollisionValidationPtr_t validation,
+                       model::ConfigurationOut_t configuration, const hpp::rbprm::State& current, bool& success)
+    {
+        sampling::Load(*report.sample_, configuration);
+        body->device_->currentConfiguration(configuration);
+        body->device_->computeForwardKinematics();
+        const fcl::Vec3f& normal = report.normal_;
+        const fcl::Vec3f& position = report.contact_.pos;
+        // the normal is given by the normal of the contacted object
+        const fcl::Vec3f z = limb->effector_->currentTransformation().getRotation() * limb->normal_;
+        const fcl::Matrix3f alignRotation = tools::GetRotationMatrix(z,normal);
+        const fcl::Matrix3f rotation = alignRotation * limb->effector_->currentTransformation().getRotation();
+        fcl::Vec3f posOffset = position - rotation * limb->offset_;
+        posOffset = posOffset + normal * epsilon;
+        return Project(body, limbId, limb, validation, configuration, rotation, setRotationConstraints(),posOffset, normal, current, success);
     }
   } // rbprm
 } //hpp

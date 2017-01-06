@@ -191,6 +191,19 @@ namespace hpp {
 			bool& contactMaintained, bool& multipleBreaks, const bool allowFailure,
       const double robustnessTreshold = 0,
       const fcl::Vec3f& acceleration = fcl::Vec3f(0,0,0));
+
+    hpp::rbprm::State HPP_RBPRM_DLLAPI ProjectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
+                                                     const sampling::OctreeReport& report, core::CollisionValidationPtr_t validation,
+                                                     model::ConfigurationOut_t configuration, const hpp::rbprm::State& current, bool& success);
+
+    hpp::rbprm::State HPP_RBPRM_DLLAPI Project(const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
+                                               core::CollisionValidationPtr_t validation, model::ConfigurationOut_t configuration,
+                                               const fcl::Matrix3f& rotationTarget, const std::vector<bool>& rotationFilter, const fcl::Vec3f& positionTarget, const fcl::Vec3f& normal,
+                                               const hpp::rbprm::State& current, bool& success);
+
+    hpp::model::ObjectVector_t HPP_RBPRM_DLLAPI getAffObjectsForLimb(const std::string& limb,
+        const affMap_t& affordances, const std::map<std::string, std::vector<std::string> >& affFilters);
+
   } // namespace rbprm
 
 } // namespace hpp
