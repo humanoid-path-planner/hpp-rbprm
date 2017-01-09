@@ -84,6 +84,9 @@ namespace hpp {
                                         const model::value_type timeStep = 1., const model::value_type initValue = 0.,
                                         const bool filterStates = false);
 
+        core::Configuration_t configPosition(core::ConfigurationIn_t previous, const core::PathVectorConstPtr_t path, double i);
+
+
     public:
         const core::PathVectorConstPtr_t path_;
         const State start_;

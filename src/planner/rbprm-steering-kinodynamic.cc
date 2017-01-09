@@ -201,7 +201,7 @@ namespace hpp{
 
       hppDout(info,"Amax found : "<<alpha0);
       setAmax(alpha0*v);
-      setVmax(2*Vector3::Ones(3)); //FIXME: read it from somewhere ?
+      //setVmax(2*Vector3::Ones(3)); //FIXME: read it from somewhere ?
       return node;
     }
 

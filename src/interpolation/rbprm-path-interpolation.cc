@@ -41,17 +41,18 @@ namespace hpp {
 
     // ========================================================================
 
-    namespace
-    {
-    core::Configuration_t configPosition(core::ConfigurationIn_t previous, const core::PathVectorConstPtr_t path, double i)
+
+    core::Configuration_t RbPrmInterpolation ::configPosition(core::ConfigurationIn_t previous, const core::PathVectorConstPtr_t path, double i)
     {
         core::Configuration_t configuration = previous;
+        size_t pathConfigSize = path->outputSize() - robot_->device_->extraConfigSpace().dimension();
         core::Configuration_t configPosition(path->outputSize());
         (*path)(configPosition,std::min(i, path->timeRange().second));
-        configuration.head(configPosition.rows()) = configPosition;
+        configuration.head(pathConfigSize) = configPosition.head(pathConfigSize);
+        configuration.tail(robot_->device_->extraConfigSpace().dimension()) = configPosition.tail(robot_->device_->extraConfigSpace().dimension()) ;
         return configuration;
     }
-    }
+
 
     rbprm::T_StateFrame RbPrmInterpolation::Interpolate(const affMap_t& affordances,
             const std::map<std::string, std::vector<std::string> >& affFilters, const double timeStep, const double robustnessTreshold, const bool filterStates)
