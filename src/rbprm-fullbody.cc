@@ -163,7 +163,8 @@ namespace hpp {
         return res;
     }
 
-    std::vector<bool> setRotationConstraints(const fcl::Vec3f&)// direction)
+
+    std::vector<bool> setRotationConstraints()
     {
         std::vector<bool> res;
         for(std::size_t i =0; i <3; ++i)
@@ -172,10 +173,10 @@ namespace hpp {
         }
         //res.push_back(false);
         return res;
-    }
+}
 
 
-    std::vector<bool> setTranslationConstraints(const fcl::Vec3f&)// normal)
+    std::vector<bool> setTranslationConstraints()
     {
         std::vector<bool> res;
         for(std::size_t i =0; i <3; ++i)
@@ -183,7 +184,7 @@ namespace hpp {
             res.push_back(true);
         }
         return res;
-    }
+}
 
     bool ComputeCollisionFreeConfiguration(const hpp::rbprm::RbPrmFullBodyPtr_t& body,
                               State& current,
@@ -226,9 +227,7 @@ namespace hpp {
             const RbPrmLimbPtr_t limb = body->GetLimbs().at(name);
             // try to maintain contact
             const fcl::Vec3f& ppos  =previous.contactPositions_.at(name);
-            core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 30);
-            hpp::tools::LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
-            const fcl::Vec3f z = limb->effector_->currentTransformation().getRotation() * limb->normal_;
+            const fcl::Vec3f& pnormal =previous.contactNormals_.at(name);
             const fcl::Matrix3f& rotation = previous.contactRotation_.at(name);
             bool success(false);
             State tmp = Project(body,name,limb,limbValidations.at(name),config,rotation, setMaintainRotationConstraints(), ppos,pnormal,current,success);
@@ -238,12 +237,12 @@ namespace hpp {
                 if(limbValidations.at(name)->validate(config, valRep))
                 {
                     // stable?
-                    current.contacts_[name] = true;
-                    current.contactPositions_[name] = previous.contactPositions_.at(name);
-                    current.contactNormals_[name] = previous.contactNormals_.at(name);
-                    current.contactRotation_[name] = previous.contactRotation_.at(name);
-                    current.contactOrder_.push(name);
-                    current.configuration_ = config;
+                  current.contacts_[name] = true;
+                  current.contactPositions_[name] = previous.contactPositions_.at(name);
+                  current.contactNormals_[name] = previous.contactNormals_.at(name);
+                  current.contactRotation_[name] = previous.contactRotation_.at(name);
+                  current.contactOrder_.push(name);
+                  current.configuration_ = tmp.configuration_;
                 }
                 else
                 {
@@ -376,7 +375,7 @@ rotation = alignRotation * limb->effector_->currentTransformation().getRotation(
                                                                                          limb->effector_,
                                                                                          localFrame,
                                                                                          globalFrame,
-                                                                                         setTranslationConstraints(normal))));//
+                                                                                         setTranslationConstraints())));//
 
 
 
@@ -386,7 +385,7 @@ rotation = alignRotation * limb->effector_->currentTransformation().getRotation(
                                                                                                 limb->effector_,
                                                                                                 fcl::Transform3f(rotation),
                                                                                                 //localFrame.getRotation(),
-                                                                                                setRotationConstraints(z))));
+                                                                                                setRotationConstraints())));
               }
 #ifdef PROFILE
     RbPrmProfiler& watch = getRbPrmProfiler();
