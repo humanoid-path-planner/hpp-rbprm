@@ -229,6 +229,11 @@ const fcl::Vec3f comfcl = comcptr->com();*/
     RbPrmProfiler& watch = getRbPrmProfiler();
     watch.start("test balance");
 #endif
+        //hppDout(notice,"isStable, acceleration = "<<acc);
+       /* if(acc.norm() == 0){
+          hppDout(notice,"isStable ? called with acc = 0");
+          hppDout(notice,"configuration in state = "<<state.configuration_);
+        }*/
         StaticEquilibrium staticEquilibrium(initLibrary(fullbody));
         robust_equilibrium::Vector3 com = setupLibrary(fullbody,state,staticEquilibrium,STATIC_EQUILIBRIUM_ALGORITHM_DLP);
         double res;
