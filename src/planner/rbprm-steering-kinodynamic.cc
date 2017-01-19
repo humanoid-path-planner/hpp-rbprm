@@ -196,11 +196,11 @@ namespace hpp{
       hppDout(info,"A = \n"<<A);
 
       // call to robust_equilibrium_lib :
-      //FIX ME : build it only once and store it as attribut ?
       sEq_->findMaximumAcceleration(A, node->geth(),alpha0);
 
       hppDout(info,"Amax found : "<<alpha0);
       setAmax(alpha0*v);
+      hppDout(info,"Amax vector : "<<aMax_.transpose());
       //setVmax(2*Vector3::Ones(3)); //FIXME: read it from somewhere ?
       return node;
     }
