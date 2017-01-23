@@ -53,7 +53,7 @@ using namespace core;
 
     bool IsLine(const T_Waypoint& wayPoints)
     {
-return true;
+//return true;
         const vector_t& init  = wayPoints.front().second;
         // compute line between first and last
         vector_t dir =  wayPoints.back().second- init;

@@ -179,8 +179,9 @@ namespace
                                             const std::size_t shootLimit, const std::size_t displacementLimit)
     {
       unsigned int seed = (unsigned int)(time(NULL));
-      srand (seed);
-      hppDout(notice,"&&&&&& SEED = "<<seed);
+      //srand (seed);
+      srand(1484926006);
+      hppDout(notice,"&&&&&& SEED = "<<1484926006);
       RbPrmShooter* ptr = new RbPrmShooter (robot, geometries, affordances,
                                             filter, affFilters, shootLimit, displacementLimit);
 
