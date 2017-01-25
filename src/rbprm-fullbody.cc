@@ -312,7 +312,8 @@ namespace hpp {
       }
       fcl::Matrix3f rotation;
       sampling::T_OctreeReport finalSet;
-
+      fcl::Vec3f dir  = acceleration;
+      dir.normalize();
       limb->limb_->robot()->currentConfiguration(rbconfiguration);
       limb->limb_->robot()->computeForwardKinematics ();
       fcl::Transform3f transform = limb->octreeRoot(); // get root transform from configuration
@@ -332,9 +333,9 @@ namespace hpp {
           oit != affordances.end(); ++oit, ++i)
       {
           if(eval)
-            sampling::GetCandidates(limb->sampleContainer_, transform, *oit, direction, reports[i], eval);
+            sampling::GetCandidates(limb->sampleContainer_, transform, *oit, dir, reports[i], eval);
           else
-            sampling::GetCandidates(limb->sampleContainer_, transform, *oit, direction, reports[i]);
+            sampling::GetCandidates(limb->sampleContainer_, transform, *oit, dir, reports[i]);
       }
       // order samples according to EFORT
       for(std::vector<sampling::T_OctreeReport>::const_iterator cit = reports.begin();
