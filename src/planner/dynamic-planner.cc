@@ -40,7 +40,8 @@
 #include <hpp/core/path-projector.hh>
 #include <hpp/rbprm/planner/rbprm-roadmap.hh>
 #include <robust-equilibrium-lib/static_equilibrium.hh>
-
+#include <hpp/rbprm/rbprm-path-validation.hh>
+#include <hpp/rbprm/rbprm-validation-report.hh>
 
 
 namespace hpp {
@@ -165,8 +166,67 @@ namespace hpp {
       return path;
     }
 
-    bool DynamicPlanner::tryParabolaPath(const core::NodePtr_t& near, core::ConfigurationPtr_t q_last, const core::ConfigurationPtr_t& target, bool reverse, core::NodePtr_t& nodeReached){
+    bool DynamicPlanner::tryParabolaPath(const core::NodePtr_t& x_near, core::ConfigurationPtr_t q_last, const core::ConfigurationPtr_t& target, bool reverse, core::NodePtr_t& x_new){
       bool success(false);
+      core::PathValidationPtr_t pathValidation (problem ().pathValidation ());
+      RbPrmPathValidationPtr_t rbprmPathValidation = boost::dynamic_pointer_cast<RbPrmPathValidation>(pathValidation);
+      std::vector<std::string> filter;
+      core::PathPtr_t validPath, kinoPath, paraPath;
+      core::PathValidationReportPtr_t report;
+
+      bool paraPathValid(false),kinoPathValid(false);
+      hppDout(notice,"!! begin tryParabolaPath");
+
+      // 1. compute a parabola between last configuration valid in contact, and qrand (target)
+      paraPath = extendParabola(q_last,target,reverse);
+      if(paraPath){
+        hppDout(notice,"!! ParaPath computed");
+        // check collision but without the contact-constraint (filter = {} )
+        paraPathValid = rbprmPathValidation->validate (paraPath, false, validPath, report, filter);
+        if (paraPathValid) { // only add if the full path is valid (because we can't extract a subpath of a parabola path)
+          hppDout(notice, "!! parabola path valid !");
+          core::ConfigurationPtr_t q_new (new core::Configuration_t(paraPath->end ()));
+          core::ConfigurationPtr_t q_jump (new core::Configuration_t(paraPath->initial ()));
+          // 2. update q_jump with the correct initial velocity needed for the computed parabola
+          //TODO : update q_jump with the right velocity from parabola
+
+          hppDout(notice,"q_last = "<<displayConfig(*q_last));
+          hppDout(notice,"q_jump = "<<displayConfig(*q_jump));
+
+          // 3. compute a kinodynamic path between near and q_jump
+          kinoPath = extendInternal(qProj_,x_near,q_jump,reverse);
+          if(kinoPath){
+            hppDout(notice,"!! Kino path computed");
+            kinoPathValid = pathValidation->validate (kinoPath, false, validPath, report);
+            if(kinoPathValid){
+              hppDout(notice,"!! Kino path valid !");
+              value_type t_final = validPath->timeRange ().second;
+              if (t_final != kinoPath->timeRange ().first)
+              {
+                // 4. add both nodes and edges to the roadmap
+                success = true;
+                hppDout(notice,"add both nodes and edges to the roadmap");
+                core::NodePtr_t x_jump = roadmap()->addNodeAndEdge(x_near,q_jump,kinoPath);
+                computeGIWC(x_jump);
+                x_new = roadmap()->addNodeAndEdge(x_jump,q_new,paraPath);
+                computeGIWC(x_new);
+              }else{
+                hppDout(notice, "!! lenght of Kino path null.");
+              }
+            }else{
+              hppDout(notice, "!! Kino path not valid.");
+            }
+          }else{
+            hppDout(notice, "!! Kino path doesn't exist.");
+          }
+        }else{
+          hppDout(notice, "!! Parabola path not valid.");
+        }
+      }else{
+        hppDout(notice, "!! parabola path doesn't exist.");
+      }
+
+
 
       return success;
     }
