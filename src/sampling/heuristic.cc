@@ -94,7 +94,10 @@ double DistanceToLimitHeuristic(const sampling::Sample& sample,
 
 HeuristicFactory::HeuristicFactory()
 {
-    srand ( (unsigned int) (time(NULL)) );
+    unsigned int seed =  (unsigned int) (time(NULL)) ;
+    //seed = 1485441926; // prepare_jump
+    srand ( seed);
+    hppDout(notice,"SEED for heuristic = "<<seed);
     heuristics_.insert(std::make_pair("static", &StaticHeuristic));
     heuristics_.insert(std::make_pair("EFORT", &EFORTHeuristic));
     heuristics_.insert(std::make_pair("EFORT_Normal", &EFORTNormalHeuristic));
