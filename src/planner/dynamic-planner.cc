@@ -364,17 +364,17 @@ namespace hpp {
 
         //hppDout(notice,"Center of rom collision :  ["<<center[0]<<" , "<<center[1]<<" , "<<center[2]<<"]");
         hppDout(info,"p"<<indexRom<<"^T = "<<center.transpose());
-        hppDout(info,"IP_hat at iter "<<indexRom<< " = \n"<<IP_hat);
+        //hppDout(info,"IP_hat at iter "<<indexRom<< " = \n"<<IP_hat);
         node->normal(pn);
-        hppDout(notice,"normal for this contact : "<<node->getNormal());
+        //hppDout(notice,"normal for this contact : "<<node->getNormal());
         // compute tangent vector :
         ti1 = pn.cross(Vector3(1,0,0));
         if(ti1.dot(ti1)<0.001)
           ti1 = pn.cross(Vector3(0,1,0));
         ti2 = pn.cross(ti1);
 
-        hppDout(info,"t"<<indexRom<<"1 : "<<ti1.transpose());
-        hppDout(info,"t"<<indexRom<<"2 : "<<ti2.transpose());
+        //hppDout(info,"t"<<indexRom<<"1 : "<<ti1.transpose());
+        //hppDout(info,"t"<<indexRom<<"2 : "<<ti2.transpose());
 
         //TODO : fill V with generating ray ([ n_i + \mu t_{i1} & n_i - \mu t_{i1} & n_i + \mu t_{i2} & n_i - \mu t_{i2}]
         Vi = MatrixXX::Zero(3,4);
@@ -384,9 +384,9 @@ namespace hpp {
         Vi.col(3) = (pn - mu*ti2);
         for(size_t i = 0 ; i<4 ; i++)
           Vi.col(i).normalize();
-        hppDout(notice,"V"<<indexRom<<" = \n"<<Vi);
+       // hppDout(notice,"V"<<indexRom<<" = \n"<<Vi);
         V.block<3,4>(3*indexRom,4*indexRom) = Vi;
-        hppDout(info,"V at iter "<<indexRom<<" : \n"<<V);
+       // hppDout(info,"V at iter "<<indexRom<<" : \n"<<V);
 
         indexRom++;
       } // for each ROMS
@@ -413,12 +413,12 @@ namespace hpp {
       node->seth(m*h);
 
       // debug output :
-      hppDout(info,"G = \n"<<node->getG());
+      /*hppDout(info,"G = \n"<<node->getG());
       hppDout(info,"c^T = "<<c.transpose());
       hppDout(info,"m = "<<m);
       hppDout(info,"h^T = "<<node->geth().transpose());
       hppDout(info,"H = \n"<<node->getH());
-
+*/
 
     }// computeGIWC
 
