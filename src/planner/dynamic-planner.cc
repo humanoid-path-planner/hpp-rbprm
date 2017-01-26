@@ -83,7 +83,8 @@ namespace hpp {
       BiRRTPlanner (problem),
       qProj_ (new core::Configuration_t(problem.robot()->configSize())),
       roadmap_(boost::dynamic_pointer_cast<core::Roadmap>(core::RbprmRoadmap::create (problem.distance (),problem.robot()))),
-      sm_(boost::dynamic_pointer_cast<SteeringMethodKinodynamic>(problem.steeringMethod()))
+      sm_(boost::dynamic_pointer_cast<SteeringMethodKinodynamic>(problem.steeringMethod())),
+      smParabola_(rbprm::SteeringMethodParabola::create((core::ProblemPtr_t(&problem))))
     {
           assert(sm_ && "steering method should be a kinodynamic steering method for this solver");
     }
@@ -93,7 +94,8 @@ namespace hpp {
       BiRRTPlanner (problem, roadmap),
       qProj_ (new core::Configuration_t(problem.robot()->configSize())),
       roadmap_(boost::dynamic_pointer_cast<core::Roadmap>(core::RbprmRoadmap::create (problem.distance (),problem.robot()))),
-      sm_(boost::dynamic_pointer_cast<SteeringMethodKinodynamic>(problem.steeringMethod()))
+      sm_(boost::dynamic_pointer_cast<SteeringMethodKinodynamic>(problem.steeringMethod())),
+      smParabola_(rbprm::SteeringMethodParabola::create((core::ProblemPtr_t(&problem))))
     {
           assert(sm_ && "steering method should be a kinodynamic steering method for this solver");
     }
@@ -133,6 +135,42 @@ namespace hpp {
         return reverse ? (*sm_) (*target, near) : (*sm_) (near, *target);
     }
 
+    core::PathPtr_t DynamicPlanner::extendParabola (const core::ConfigurationPtr_t& from,
+                    const core::ConfigurationPtr_t& target, bool reverse)
+    {
+      const core::SteeringMethodPtr_t& sm (problem ().steeringMethod ());
+      const core::ConstraintSetPtr_t& constraints (sm->constraints ());
+      core::PathPtr_t path;
+      if (constraints) {
+        core::ConfigProjectorPtr_t configProjector (constraints->configProjector ());
+        if (configProjector) {
+          configProjector->projectOnKernel (*from, *target, *qProj_);
+        } else {
+          *qProj_ = *target;
+        }
+        if (constraints->apply (*qProj_)) {
+          if(reverse)
+            path = (*smParabola_) (*qProj_,*from);
+          else
+            path = (*smParabola_) (*from,*qProj_);
+        } else {
+          return core::PathPtr_t ();
+        }
+      }else{
+        if(reverse)
+          path = (*smParabola_) ( *target,*from);
+        else
+          path = (*smParabola_) (*from, *target);
+      }
+      return path;
+    }
+
+    bool DynamicPlanner::tryParabolaPath(const core::NodePtr_t& near, core::ConfigurationPtr_t q_last, const core::ConfigurationPtr_t& target, bool reverse, core::NodePtr_t& nodeReached){
+      bool success(false);
+
+      return success;
+    }
+
     void DynamicPlanner::oneStep ()
     {
       hppDout(info,"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ new Step ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
@@ -142,9 +180,12 @@ namespace hpp {
       core::NodePtr_t near, reachedNodeFromStart;
       bool startComponentConnected(false), pathValidFromStart(false),pathValidFromEnd(false);
       ConfigurationPtr_t q_new;
-      // first try to connect to start component
       ConfigurationPtr_t q_rand = configurationShooter_->shoot ();
       hppDout(info,"Random configuration : "<<displayConfig(*q_rand));
+
+
+      // ######################## first , try to connect to start component #################### //
+
       near = roadmap()->nearestNode (q_rand, startComponent_, distance);
       core::RbprmNodePtr_t castNode = static_cast<core::RbprmNodePtr_t>(near);
       if(castNode)
@@ -174,7 +215,7 @@ namespace hpp {
 
       hppDout(info,"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Try to connect end component ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
-      // now try to connect to end components
+      // ######################## now try to connect qrand to end components (in reverse )######################## //
       for (std::vector<core::ConnectedComponentPtr_t>::const_iterator itcc =
            endComponents_.begin ();
            itcc != endComponents_.end (); ++itcc)
@@ -187,7 +228,7 @@ namespace hpp {
           pathValidFromEnd = pathValidation->validate (path, true, validPath, report);
           if(pathValidFromStart)
             pathValidFromEnd = pathValidFromEnd && (validPath->initial() == *q_new);
-          if(pathValidFromEnd && pathValidFromStart)
+          if(pathValidFromEnd && pathValidFromStart) // qrand was successfully connected to both trees
           {
             // we won, a path is found
             roadmap()->addEdge(reachedNodeFromStart, near, validPath);
@@ -204,9 +245,8 @@ namespace hpp {
               computeGIWC(newNode);
               hppDout(info,"~~~~~~~~~~~~~~~~~~~~~~ New node added to end component : "<<displayConfig(*q_newEnd));
 
-              // now try to connect both nodes
               if(startComponentConnected)
-              {
+              { // now try to connect both nodes (qnew -> qnewEnd)
                 path = extendInternal (qProj_, reachedNodeFromStart, q_newEnd, false);
                 if(path && pathValidation->validate (path, false, validPath, report))
                 {

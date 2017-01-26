@@ -21,7 +21,7 @@
 
 # include <hpp/core/bi-rrt-planner.hh>
 # include <hpp/rbprm/planner/rbprm-steering-kinodynamic.hh>
-
+# include <hpp/rbprm/planner/steering-method-parabola.hh>
 namespace hpp {
 namespace rbprm {
 /// \addtogroup path_planning
@@ -84,7 +84,10 @@ protected:
     core::PathPtr_t extendInternal (core::ConfigurationPtr_t& qProj_, const core::NodePtr_t& near,
                     const core::ConfigurationPtr_t& target, bool reverse=false);
 
+    bool tryParabolaPath(const core::NodePtr_t& near, core::ConfigurationPtr_t q_last, const core::ConfigurationPtr_t& target, bool reverse, core::NodePtr_t& nodeReached);
 
+    core::PathPtr_t extendParabola (const core::ConfigurationPtr_t &from,
+                    const core::ConfigurationPtr_t& target, bool reverse);
 
 private:
 
@@ -94,6 +97,7 @@ private:
     DynamicPlannerWkPtr_t weakPtr_;
     const core::RoadmapPtr_t roadmap_;
     const SteeringMethodKinodynamicPtr_t sm_;
+    const SteeringMethodParabolaPtr_t smParabola_;
     const double mu = 0.5;
 };
 /// \}
