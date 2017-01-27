@@ -42,7 +42,7 @@
 #include <robust-equilibrium-lib/static_equilibrium.hh>
 #include <hpp/rbprm/rbprm-path-validation.hh>
 #include <hpp/rbprm/rbprm-validation-report.hh>
-
+#include <hpp/rbprm/planner/parabola-path.hh>
 
 namespace hpp {
   namespace rbprm {
@@ -56,7 +56,7 @@ namespace hpp {
     using core::PathPtr_t;
     using core::Configuration_t;
     using core::ConfigurationPtr_t;
-
+    using core::size_type;
 
     typedef robust_equilibrium::MatrixXX MatrixXX;
     typedef robust_equilibrium::Matrix6X Matrix6X;
@@ -169,28 +169,33 @@ namespace hpp {
     bool DynamicPlanner::tryParabolaPath(const core::NodePtr_t& x_near, core::ConfigurationPtr_t q_last, const core::ConfigurationPtr_t& target, bool reverse, core::NodePtr_t& x_new){
       bool success(false);
       core::PathValidationPtr_t pathValidation (problem ().pathValidation ());
-      RbPrmPathValidationPtr_t rbprmPathValidation = boost::dynamic_pointer_cast<RbPrmPathValidation>(pathValidation);
-      std::vector<std::string> filter;
-      core::PathPtr_t validPath, kinoPath, paraPath;
+      core::PathPtr_t validPath, kinoPath, path;
       core::PathValidationReportPtr_t report;
-
+      const size_type indexECS =problem().robot()->configSize() - problem().robot()->extraConfigSpace().dimension (); // ecs index
       bool paraPathValid(false),kinoPathValid(false);
       hppDout(notice,"!! begin tryParabolaPath");
 
       // 1. compute a parabola between last configuration valid in contact, and qrand (target)
-      paraPath = extendParabola(q_last,target,reverse);
-      if(paraPath){
+      path = extendParabola(q_last,target,reverse);
+      if(path){
         hppDout(notice,"!! ParaPath computed");
-        if(paraPath->length() > 0) { // only add if the full path is valid (because we can't extract a subpath of a parabola path)
+        if(path->length() > 0) { // only add if the full path is valid (because we can't extract a subpath of a parabola path)
           paraPathValid = true;
           hppDout(notice, "!! parabola path valid !");
+          ParabolaPathPtr_t paraPath = boost::dynamic_pointer_cast<ParabolaPath>(path);
           core::ConfigurationPtr_t q_new (new core::Configuration_t(paraPath->end ()));
           core::ConfigurationPtr_t q_jump (new core::Configuration_t(paraPath->initial ()));
           // 2. update q_jump with the correct initial velocity needed for the computed parabola
           //TODO : update q_jump with the right velocity from parabola
+          for(size_t i = 0 ; i < 3 ; ++i){
+            (*q_jump)[indexECS+i] = paraPath->V0_[i];
+            (*q_new)[indexECS+i] = paraPath->Vimp_[i];
+          }
 
           hppDout(notice,"q_last = "<<displayConfig(*q_last));
           hppDout(notice,"q_jump = "<<displayConfig(*q_jump));
+          hppDout(notice,"q_target = "<<displayConfig(*target));
+          hppDout(notice,"q_new = "<<displayConfig(*q_new));
 
           // 3. compute a kinodynamic path between near and q_jump
           kinoPath = extendInternal(qProj_,x_near,q_jump,reverse);
@@ -551,6 +556,12 @@ namespace hpp {
           if (pathValid && validPath->timeRange ().second !=
               path->timeRange ().first) {
             roadmap ()->addEdge (initNode, *itn, projPath);
+          }else{
+            core::ConfigurationPtr_t q_jump(new core::Configuration_t(validPath->end()));
+            core::NodePtr_t x_goal;
+            bool parabolaSuccess = tryParabolaPath(initNode,q_jump,q2,false,x_goal);
+            hppDout(notice,"parabola success = "<<parabolaSuccess);
+            hppDout(notice,"x_goal conf = "<<displayConfig(*(x_goal->configuration())));
           }
         }
       }

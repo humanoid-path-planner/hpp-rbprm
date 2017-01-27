@@ -84,7 +84,7 @@ protected:
     core::PathPtr_t extendInternal (core::ConfigurationPtr_t& qProj_, const core::NodePtr_t& near,
                     const core::ConfigurationPtr_t& target, bool reverse=false);
 
-    bool tryParabolaPath(const core::NodePtr_t& near, core::ConfigurationPtr_t q_last, const core::ConfigurationPtr_t& target, bool reverse, core::NodePtr_t& nodeReached);
+    bool tryParabolaPath(const core::NodePtr_t& near, core::ConfigurationPtr_t q_jump, const core::ConfigurationPtr_t& target, bool reverse, core::NodePtr_t& nodeReached);
 
     core::PathPtr_t extendParabola (const core::ConfigurationPtr_t &from,
                     const core::ConfigurationPtr_t& target, bool reverse);
