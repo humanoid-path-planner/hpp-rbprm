@@ -59,21 +59,44 @@ namespace hpp {
                                        core::value_type length,
                                        core::vector_t coefficients)
       {
-	ParabolaPath* ptr = new ParabolaPath (device, init, end, length,
-					      coefficients);
-	ParabolaPathPtr_t shPtr (ptr);
-	ptr->init (shPtr);
-	return shPtr;
+        ParabolaPath* ptr = new ParabolaPath (device, init, end, length,
+                                              coefficients);
+        ParabolaPathPtr_t shPtr (ptr);
+        ptr->init (shPtr);
+        return shPtr;
+      }
+
+      /// Create instance and return shared pointer
+      /// \param device Robot corresponding to configurations
+      /// \param init, end Start and end configurations of the path
+      /// \param length Distance between the configurations.
+      /// \param V0, Vimp initial and final velocity vectors
+      /// \param initialROMnames, endROMnames initial and final ROM names
+      static ParabolaPathPtr_t create(const core::DevicePtr_t& device,
+                                      core::ConfigurationIn_t init,
+                                      core::ConfigurationIn_t end,
+                                      core::value_type length,
+                                      core::vector_t coefficients,
+                                      core::vector_t V0, core::vector_t Vimp,
+                                      std::vector <std::string> initialROMnames,
+                                      std::vector <std::string> endROMnames)
+      {
+        ParabolaPath* ptr = new ParabolaPath (device, init, end, length,
+                                              coefficients, V0, Vimp,
+                                              initialROMnames, endROMnames);
+        ParabolaPathPtr_t shPtr (ptr);
+        ptr->init (shPtr);
+        return shPtr;
       }
 
       /// Create copy and return shared pointer
       /// \param path path to copy
       static ParabolaPathPtr_t createCopy (const ParabolaPathPtr_t& path)
       {
-	ParabolaPath* ptr = new ParabolaPath (*path);
-	ParabolaPathPtr_t shPtr (ptr);
-	ptr->initCopy (shPtr);
-	return shPtr;
+        ParabolaPath* ptr = new ParabolaPath (*path);
+        ParabolaPathPtr_t shPtr (ptr);
+        ptr->initCopy (shPtr);
+        return shPtr;
       }
 
       /// Create copy and return shared pointer
@@ -81,13 +104,13 @@ namespace hpp {
       /// \param constraints the path is subject to
       /// <!> constraints part NOT IMPLEMENTED YET
       static ParabolaPathPtr_t createCopy
-        (const ParabolaPathPtr_t& path, const core::ConstraintSetPtr_t& /*constraints*/)
+      (const ParabolaPathPtr_t& path, const core::ConstraintSetPtr_t& /*constraints*/)
       {
-	//ParabolaPath* ptr = new ParabolaPath (*path, constraints);
-	ParabolaPath* ptr = new ParabolaPath (*path);
-	ParabolaPathPtr_t shPtr (ptr);
-	ptr->initCopy (shPtr);
-	return shPtr;
+        //ParabolaPath* ptr = new ParabolaPath (*path, constraints);
+        ParabolaPath* ptr = new ParabolaPath (*path);
+        ParabolaPathPtr_t shPtr (ptr);
+        ptr->initCopy (shPtr);
+        return shPtr;
       }
 
       /// Return a shared pointer to this
@@ -96,7 +119,7 @@ namespace hpp {
       /// they do not need to be copied.
       virtual core::PathPtr_t copy () const
       {
-	return createCopy (weak_.lock ());
+        return createCopy (weak_.lock ());
       }
 
       /// Return a shared pointer to a copy of this and set constraints
@@ -105,7 +128,7 @@ namespace hpp {
       /// \precond *this should not have constraints.
       virtual core::PathPtr_t copy (const core::ConstraintSetPtr_t& constraints) const
       {
-	return createCopy (weak_.lock (), constraints);
+        return createCopy (weak_.lock (), constraints);
       }
 
       /// Extraction/Reversion of a sub-path
@@ -125,8 +148,8 @@ namespace hpp {
       /// configuration
       void initialConfig (core::ConfigurationIn_t initial)
       {
-	assert (initial.size () == initial_.size ());
-	initial_ = initial;
+        assert (initial.size () == initial_.size ());
+        initial_ = initial;
       }
 
       /// Modify end configuration
@@ -135,10 +158,10 @@ namespace hpp {
       /// configuration
       void endConfig (core::ConfigurationIn_t end)
       {
-	assert (end.size () == end_.size ());
-	end_ = end;
+        assert (end.size () == end_.size ());
+        end_ = end;
       }
-      
+
       /// Return the internal robot.
       core::DevicePtr_t device () const;
 
@@ -156,71 +179,79 @@ namespace hpp {
 
       /// Get previously computed length
       virtual core::value_type length () const {
-	return length_;
+        return length_;
       }
 
       /// Set the three parabola coefficients
       void coefficients (core::vector_t coefs) const {
-	assert (coefs.size () == 3 || coefs.size () == 5);
-	if (coefs.size () == 3) {
-	  coefficients_(0) = coefs (0);
-	  coefficients_(1) = coefs (1);
-	  coefficients_(2) = coefs (2);
-	}
-	else {
-	  coefficients_(0) = coefs (0);
-	  coefficients_(1) = coefs (1);
-	  coefficients_(2) = coefs (2);
-	  coefficients_(3) = coefs (3);
-	  coefficients_(4) = coefs (4);
-	}
+        for (std::size_t i = 0; i < coefs.size (); i++)
+          coefficients_(i) = coefs (i);
       }
 
       /// Get path coefficients
-     core::vector_t coefficients () const {
-	return coefficients_;
+      core::vector_t coefficients () const {
+        return coefficients_;
       }
-     
-     
-     double alpha_;    
-     double alphaMin_;
-     double alphaMax_; 
-     double Xtheta_;   
-     double Z_;        
-     
+
+      core::value_type computeLength (const core::ConfigurationIn_t q1,
+                                      const core::ConfigurationIn_t q2) const;
+
+      /// Evaluate velocity vector at path abcissa t
+      core::vector_t evaluateVelocity (const core::value_type t) const;
+
+      core::value_type alpha_; // chosen alpha in interval
+      core::value_type alphaMin_; // min bound of alpha interval
+      core::value_type alphaMax_; // max bound of alpha interval
+      core::value_type Xtheta_;
+      core::value_type Z_;
+      core::vector_t V0_; // initial velocity
+      core::vector_t Vimp_; // final velocity
+      std::vector <std::string> initialROMnames_; // active ROM list at begining
+      std::vector <std::string> endROMnames_; // active ROM list at end
+
+
     protected:
       /// Print path in a stream
       virtual std::ostream& print (std::ostream &os) const
       {
-	os << "ParabolaPath:" << std::endl;
-	os << "interval: [ " << timeRange ().first << ", "
-	   << timeRange ().second << " ]" << std::endl;
-	os << "initial configuration: " << initial_.transpose () << std::endl;
-	os << "final configuration:   " << end_.transpose () << std::endl;
-	return os;
+        os << "ParabolaPath:" << std::endl;
+        os << "interval: [ " << timeRange ().first << ", "
+           << timeRange ().second << " ]" << std::endl;
+        os << "initial configuration: " << initial_.transpose () << std::endl;
+        os << "final configuration:   " << end_.transpose () << std::endl;
+        return os;
       }
       /// Constructor
-      ParabolaPath (const core::DevicePtr_t& robot, core::ConfigurationIn_t init,
+      ParabolaPath (const core::DevicePtr_t& robot,
+                    core::ConfigurationIn_t init,
                     core::ConfigurationIn_t end, core::value_type length,
                     core::vector_t coefficients);
 
+      /// Constructor with velocities and ROMnames
+      ParabolaPath (const core::DevicePtr_t& device,
+                    core::ConfigurationIn_t init,
+                    core::ConfigurationIn_t end,
+                    core::value_type length,
+                    core::vector_t coefs,
+                    core::vector_t V0_, core::vector_t Vimp,
+                    std::vector <std::string> initialROMnames,
+                    std::vector <std::string> endROMnames);
+
       /// Copy constructor
       ParabolaPath (const ParabolaPath& path);
-
-      core::value_type computeLength(const core::ConfigurationIn_t q1, const core::ConfigurationIn_t q2) const;
 
       core::value_type lengthFunction (const core::value_type x)const;
 
       void init (ParabolaPathPtr_t self)
       {
-	parent_t::init (self);
-	weak_ = self;
+        parent_t::init (self);
+        weak_ = self;
       }
 
       void initCopy (ParabolaPathPtr_t self)
       {
-	parent_t::initCopy (self);
-	weak_ = self;
+        parent_t::initCopy (self);
+        weak_ = self;
       }
 
       /// Param is the curvilinear abcissa \in [0 : pathLength]
@@ -230,21 +261,14 @@ namespace hpp {
       /// config(1) = coefs(0)*x(param)^2 + coefs(1)*x(param) + coefs(2)
       virtual bool impl_compute (core::ConfigurationOut_t result,
                                  core::value_type param) const;
-      
-
 
     private:
       core::DevicePtr_t device_;
       core::Configuration_t initial_;
       core::Configuration_t end_;
       ParabolaPathWkPtr_t weak_;
-      mutable core::vector_t coefficients_; // 3 parabola coefficients
+      mutable core::vector_t coefficients_; // parabola coefficients
       mutable core::value_type length_;
-      mutable bool workspaceDim_; // true for 3D, false for 2D
-      
-
-      
-      
     }; // class ParabolaPath
   } //   namespace rbprm
 } // namespace hpp

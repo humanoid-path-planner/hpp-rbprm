@@ -40,128 +40,138 @@ namespace hpp {
                                 vector_t coefs) :
       parent_t (interval_t (0, length), device->configSize (),
                 device->numberDof ()), device_ (device), initial_ (init),
-      end_ (end), coefficients_ (vector_t(3)), length_ (length),
-      workspaceDim_ (false)
+      end_ (end), coefficients_ (vector_t(coefs.size ())), length_ (length),
+      V0_ (vector_t(3)), Vimp_ (vector_t(3))
     {
       assert (device);
-      /* Define dimension: 2D or 3D */
-      std::string name = device->getJointVector () [0]->name ();
-      if (name == "base_joint_xyz") {// 3D (2D by default)
-        workspaceDim_ = true;
-        coefficients_.resize (5);
-      }
       coefficients (coefs);
+      initialROMnames_.reserve (10);
+      endROMnames_.reserve (10);
+    }
+
+    ParabolaPath::ParabolaPath (const core::DevicePtr_t& device,
+                                core::ConfigurationIn_t init,
+                                core::ConfigurationIn_t end,
+                                value_type length,
+                                vector_t coefs,
+                                vector_t V0, vector_t Vimp,
+                                std::vector <std::string> initialROMnames,
+                                std::vector <std::string> endROMnames) :
+      parent_t (interval_t (0, length), device->configSize (),
+                device->numberDof ()), device_ (device), initial_ (init),
+      end_ (end), coefficients_ (vector_t(coefs.size ())), length_ (length),
+      V0_ (V0), Vimp_ (Vimp), initialROMnames_ (initialROMnames),
+      endROMnames_ (endROMnames)
+    {
+      assert (device);
+      coefficients (coefs);
+      hppDout (info, "V0_= " << V0_.transpose () << " Vimp_= " << Vimp_.transpose ());
+      hppDout (info, "initialROMnames size= " << initialROMnames_.size ());
     }
 
     ParabolaPath::ParabolaPath (const ParabolaPath& path) :
       parent_t (path), device_ (path.device_), initial_ (path.initial_),
       end_ (path.end_), coefficients_ (path.coefficients_),
-      length_ (path.length_), workspaceDim_ (path.workspaceDim_)
+      length_ (path.length_), V0_ (path.V0_), Vimp_ (path.Vimp_),
+      initialROMnames_ (path.initialROMnames_),
+      endROMnames_ (path.endROMnames_)
     {
+      hppDout (info, "V0_= " << V0_.transpose () << " Vimp_= " << Vimp_.transpose ());
+      hppDout (info, "initialROMnames size= " << initialROMnames_.size ());
     }
 
     bool ParabolaPath::impl_compute (core::ConfigurationOut_t result,
                                      value_type param) const
     {
-
-      //hppDout (info, "param: " << param);
       if (param == 0 || initial_(0) == end_(0)) {
         result = initial_;
         return true;
       }
-      if (param == length_) {
+      if (param >= length_) {
         result = end_;
         return true;
       }
 
       const size_type nbConfig = device_->configSize();
-      const size_type dirDim = device_->extraConfigSpace ().dimension ();
+      const size_type ecsDim = device_->extraConfigSpace ().dimension ();
       const value_type u = param/length_;
-      
-      result (0) = (1 - u)*initial_(0) + u*end_(0);
+      const value_type theta = coefficients_(3);
+      const value_type x_theta_max = - 0.5 *
+          coefficients_ (1) / coefficients_ (0);
+      const value_type x_theta_initial = cos(theta)*initial_ (0) +
+          sin(theta)*initial_ (1);
+      const value_type x_theta_end = cos(theta)*end_ (0) +
+          sin(theta)*end_ (1);
+      const bool tanThetaNotDefined = (theta < M_PI/2 + 1e-2 && theta > M_PI/2 - 1e-2) || (theta > -M_PI/2 - 1e-2 && theta < -M_PI/2 + 1e-2);
 
-      if (!workspaceDim_) { /* 2D */
-        result (1) = coefficients_(0)*result (0)*result (0)
-            + coefficients_(1)*result (0) + coefficients_(2);
-        //hppDout (info, "x: " << result (0));
-        //hppDout (info, "f(x) = " << result (1));
-
-        result (nbConfig-dirDim) = (1 - u)
-            * initial_(nbConfig-dirDim) + u*end_(nbConfig-dirDim);
-        result (nbConfig-dirDim+1) = (1 - u)
-            * initial_(nbConfig-dirDim+1) + u*end_(nbConfig-dirDim+1);
-      }
-      else { /* 3D */
-        result (1) = tan(coefficients_(3))*result (0) + coefficients_(4);
-
-        const value_type theta = coefficients_(3);
+      if (!tanThetaNotDefined) { //theta != +- pi/2
+        const value_type tanTheta = tan(theta);
+        result (0) = (1 - u)*initial_(0) + u*end_(0);
+        result (1) = tanTheta*result (0) -tanTheta*initial_(0) + initial_(1);
         const value_type x_theta = cos(theta)*result (0) +
             sin(theta)*result (1);
-        const value_type x_theta_max = - 0.5 *
-            coefficients_ (1) / coefficients_ (0);
-        const value_type x_theta_initial = cos(theta)*initial_ (0) +
-            sin(theta)*initial_ (1);
-        const value_type x_theta_end = cos(theta)*end_ (0) +
-            sin(theta)*end_ (1);
-        const value_type u_max = (x_theta_max - x_theta_initial)
-            / (x_theta_end - x_theta_initial);
-
         result (2) = coefficients_(0)*x_theta*x_theta
             + coefficients_(1)*x_theta + coefficients_(2);
-
-        /* Quaternions interpolation */
-        const core::JointPtr_t SO3joint = device_->getJointByName ("base_joint_SO3");
-        const std::size_t rank = SO3joint->rankInConfiguration ();
-        const core::size_type dimSO3 = SO3joint->configSize ();
-        SO3joint->configuration ()->interpolate
-            (initial_, end_, u, rank, result);
-
-        /* if robot has internal DoF (except freeflyer ones) */
-        // translation dimension of freeflyer hardcoded...
-        // min value (to reach for u = u_max) hardcoded...
-        // manual interpolation since joint not available with index...
-        const value_type maxVal = 0; // because here initial_ = end_ ...
-        if (nbConfig > dirDim + 3 + dimSO3) {
-          for (core::size_type i = 7; i<nbConfig-dirDim; i++)
-          {
-            if (u <= u_max) {
-              const value_type u_prime = u / u_max;
-              result (i) = (1 - u_prime) * initial_ (i) + u_prime * maxVal;
-            }
-            else {
-              const value_type u_prime = (u - u_max) / (1 - u_max);
-              result (i) = (1 - u_prime) * maxVal + u_prime * end_ (i);
-            }
-          }
-        }
-
-        /* Normal vector interpolation
-     result (nbConfig-dirDim) = (1 - u) *
-     initial_(nbConfig-dirDim) + u*end_(nbConfig-dirDim);
-     result (nbConfig-dirDim+1) = (1 - u) *
-     initial_(nbConfig-dirDim+1) + u*end_(nbConfig-dirDim+1);
-     result (nbConfig-dirDim+2) = (1 - u) *
-     initial_(nbConfig-dirDim+2) + u*end_(nbConfig-dirDim+2);*/
       }
+      else { //theta = +- pi/2
+        result (0) = initial_ (0);
+        result (1) = (1 - u)*initial_(1) + u*end_(1);
+        const value_type x_theta = cos(theta)*result (0) +
+            sin(theta)*result (1);
+        result (2) = coefficients_(0)*x_theta*x_theta
+            + coefficients_(1)*x_theta + coefficients_(2);
+      }
+
+      /* Quaternions interpolation */
+      const core::JointPtr_t SO3joint = device_->getJointByName ("base_joint_SO3");
+      const std::size_t rank = SO3joint->rankInConfiguration ();
+      const core::size_type dimSO3 = SO3joint->configSize ();
+      SO3joint->configuration ()->interpolate
+          (initial_, end_, u, rank, result);
+
+      /* if robot-trunk has internal DoF (except freeflyer ones) */
+      // then linear interpolation on them
+      const std::size_t freeflyerDim = 3 + dimSO3;
+      const bool hasInternalDof = nbConfig > ecsDim + freeflyerDim;
+      if (hasInternalDof) {
+        for (core::size_type i = freeflyerDim; i<nbConfig-ecsDim; i++) {
+          result (i) = (1 - u) * initial_ (i) + u * end_ (i);
+        }
+      }
+
+      /* Set to zero extra-configs (only on path, not on extremities */
+      const std::size_t indexECS = nbConfig - ecsDim;
+      for (std::size_t i = 0; i < ecsDim; i++)
+        result (indexECS + i) = 0;
       return true;
     }
 
 
     core::PathPtr_t ParabolaPath::extract (const interval_t& subInterval) const throw (hpp::core::projection_error)
     {
+      hppDout (error, "path extract is not recommended on parabola path");
       bool success;
       core::Configuration_t q1 ((*this) (subInterval.first, success)); // straight
       core::Configuration_t q2 ((*this) (subInterval.second, success)); // straight
-      core::PathPtr_t result = rbprm::ParabolaPath::create(device_,q1,q2,computeLength(q1,q2),coefficients_);
+      ParabolaPathPtr_t result = rbprm::ParabolaPath::create(device_,q1,q2,computeLength(q1,q2),coefficients_, V0_, Vimp_, initialROMnames_, endROMnames_);
+      hppDout (info, "initialROMnames size= " << (*result).initialROMnames_.size ());
       return result;
     }
 
     core::PathPtr_t ParabolaPath::reverse () const{
-      hppDout(notice, "reverse path parabola !!!!!!!!!!!!!!!!!!!!!!!!");
-      core::Configuration_t q1 ((*this) (length_));
-      core::Configuration_t q2 ((*this) (0));
-      core::PathPtr_t result = ParabolaPath::create (device_, q1, q2, length_,
-                                                     coefficients_);
+      hppDout(notice, " ~ reverse path parabola !!!!!!!!!!!!!!!!!!!!!!");
+      bool success;
+      core::Configuration_t q1 ((*this) (length_, success));
+      core::Configuration_t q2 ((*this) (0, success));
+      ParabolaPathPtr_t result = ParabolaPath::create (device_, q1, q2, length_,
+                                                       coefficients_, Vimp_,
+                                                       V0_, endROMnames_,
+                                                       initialROMnames_);
+      hppDout (info, "V0_= " << V0_.transpose () << " Vimp_= " << Vimp_.transpose ());
+      hppDout (info, "result V0_= " << (*result).V0_.transpose () << " result Vimp_= " << (*result).Vimp_.transpose ());
+      hppDout (info, "path->initialROMnames size= " << (*result).initialROMnames_.size ());
+      hppDout (info, "this->initialROMnames size= " << (*this).initialROMnames_.size ());
+      hppDout (info, "result->initialROMnames size= " << (*result).initialROMnames_.size ());
       return result;
     }
 
@@ -176,14 +186,10 @@ namespace hpp {
       // for N = 4, computation error ~= 1e-5.
       // for N = 20, computation error ~= 1e-11.
       value_type length = 0;
-      value_type x1 = q1 (0);
-      value_type x2 = q2 (0);
-
-      if (workspaceDim_) { // 3D
-        const value_type theta = coefficients_ (3);
-        x1 = cos(theta) * q1 (0)  + sin(theta) * q1 (1); // x_theta_0
-        x2 = cos(theta) * q2 (0) + sin(theta) * q2 (1); // x_theta_imp
-      }
+      const value_type theta = coefficients_ (3);
+      value_type x1 = cos(theta) * q1 (0)  + sin(theta) * q1 (1); // x_theta_0
+      value_type x2 = cos(theta) * q2 (0) + sin(theta) * q2 (1); // x_theta_imp
+      hppDout(notice,"xTheta0 = "<<x1 << " , "<<coefficients_[6]<<"   xThetaImp = "<<x2);
 
       // Define integration bounds
       if (x1 > x2) { // re-order integration bounds
@@ -210,6 +216,23 @@ namespace hpp {
                                  * (2*coefficients_ (0)*x+coefficients_(1)));
       return y;
     }
+
+    vector_t ParabolaPath::evaluateVelocity (const value_type t) const {
+      vector_t vel (3);
+      bool success;
+      const value_type theta = coefficients_(3);
+      const value_type alpha = coefficients_(4);
+      const value_type x_theta_0_dot = coefficients_(5);
+      const value_type inv_x_theta_0_dot_sq = 1/(x_theta_0_dot*x_theta_0_dot);
+      const value_type x_theta_0 = coefficients_(6);
+      const core::Configuration_t q = (*this) (t, success);
+      const value_type x_theta = q [0]*cos(theta) + q [1]*sin(theta);
+      vel [0] = x_theta_0_dot * cos(theta);
+      vel [1] = x_theta_0_dot * sin(theta);
+      vel [2] = x_theta_0_dot * (-9.81 * (x_theta - x_theta_0)*inv_x_theta_0_dot_sq + tan(alpha));
+      return vel;
+    }
+
   } //   namespace rbprm
 } // namespace hpp
 
