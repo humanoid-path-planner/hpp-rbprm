@@ -561,7 +561,8 @@ namespace hpp {
             core::NodePtr_t x_goal;
             bool parabolaSuccess = tryParabolaPath(initNode,q_jump,q2,false,x_goal);
             hppDout(notice,"parabola success = "<<parabolaSuccess);
-            hppDout(notice,"x_goal conf = "<<displayConfig(*(x_goal->configuration())));
+            if(parabolaSuccess)
+              hppDout(notice,"x_goal conf = "<<displayConfig(*(x_goal->configuration())));
           }
         }
       }

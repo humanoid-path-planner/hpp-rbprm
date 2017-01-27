@@ -120,7 +120,9 @@ namespace hpp {
       hppDout (info, "phi: " << phi);
 
       /* 5th constraint: first cone */
-      value_type delta1;
+      value_type delta1,delta2;
+
+      /*   Remove friction check (testing)
       if (1000 * (q1 (index) * q1 (index) + q1 (index+1) * q1 (index+1))
           > q1 (index+2) * q1 (index+2)) { // cone 1 not vertical
         if (!fiveth_constraint (q1, theta, 1, &delta1)) {
@@ -135,8 +137,7 @@ namespace hpp {
       }
       hppDout (info, "delta1: " << delta1);
 
-      /* 5th constraint: second cone */
-      value_type delta2;
+      // 5th constraint: second cone //
       if (1000 * (q2 (index) * q2 (index) + q2 (index+1) * q2 (index+1))
           > q2 (index+2) * q2 (index+2)) { // cone 1 not vertical
         if (!fiveth_constraint (q2, theta, 2, &delta2)) {
@@ -150,7 +151,7 @@ namespace hpp {
       }
       hppDout (info, "delta2: " << delta2);
 
-      /* Definition of gamma_theta angles */
+      // Definition of gamma_theta angles //
       const value_type n1_angle = atan2(q1 (index+2), cos(theta)*q1 (index) +
                                         sin(theta)*q1 (index+1));
       const value_type n2_angle = atan2(q2 (index+2), cos(theta)*q2 (index) +
@@ -159,8 +160,8 @@ namespace hpp {
       hppDout (info, "n2_angle: " << n2_angle);
 
       // Only for demo without friction :
-      // delta1 = 100.;
-      // delta2 = 100.;
+      //delta1 = 100.;
+      //delta2 = 100.;
 
       const value_type alpha_0_min = n1_angle - delta1;
       const value_type alpha_0_max = n1_angle + delta1;
@@ -168,9 +169,7 @@ namespace hpp {
       hppDout (info, "alpha_0_min: " << alpha_0_min);
       hppDout (info, "alpha_0_max: " << alpha_0_max);
 
-      value_type alpha_inf4;
-      alpha_inf4 = atan (Z/X_theta);
-      hppDout (info, "alpha_inf4: " << alpha_inf4);
+
 
       value_type alpha_imp_min = n2_angle - M_PI - delta2;
       value_type alpha_imp_max = n2_angle - M_PI + delta2;
@@ -178,8 +177,25 @@ namespace hpp {
         alpha_imp_min = n2_angle + M_PI - delta2;
         alpha_imp_max = n2_angle + M_PI + delta2;
       }
+
+*/ // Commented in order to remove non friction test (testing)
+
+      value_type alpha_inf4;
+      alpha_inf4 = atan (Z/X_theta);
+      hppDout (info, "alpha_inf4: " << alpha_inf4);
+
+
+      // Ajout pour test sans friction :
+      const value_type alpha_0_min = -2 * M_PI;
+      const value_type alpha_0_max = 2 * M_PI;
+      value_type alpha_imp_min = -2 * M_PI;
+      value_type alpha_imp_max = 2 * M_PI;
+      const value_type n2_angle = 1.5;
+      // ########### ^  a enlever   ^  ############ //
+
       hppDout (info, "alpha_imp_min: " << alpha_imp_min);
       hppDout (info, "alpha_imp_max: " << alpha_imp_max);
+
 
       value_type alpha_lim_plus;
       value_type alpha_lim_minus;
@@ -209,9 +225,9 @@ namespace hpp {
 
       value_type alpha_imp_inf;
       value_type alpha_imp_sup;
-      bool fail3 = third_constraint (fail, X_theta, Z, alpha_imp_min,
-                                     alpha_imp_max, &alpha_imp_sup,
-                                     &alpha_imp_inf, n2_angle);
+      // commented (Pierre) : test without friction
+      bool fail3 = third_constraint (fail, X_theta, Z, alpha_imp_min, alpha_imp_max, &alpha_imp_sup, &alpha_imp_inf, n2_angle);
+
       if (fail3) {
         hppDout (info, "failed to apply 3rd constraint");
         // problem_->parabolaResults_ [2] ++;
@@ -457,6 +473,12 @@ namespace hpp {
       if (fail)
         return fail;
       else {
+        // Pierre : disable this test, always return true (for testing)
+        fail = false;
+        *alpha_imp_sup = alpha_imp_max;
+        *alpha_imp_inf = alpha_imp_min;
+        return false;
+        // ########## ^ a enlever ^ ######## //
         if (X > 0) {
           if (n2_angle >= 0) {
             if (alpha_imp_max > -M_PI/2) {
