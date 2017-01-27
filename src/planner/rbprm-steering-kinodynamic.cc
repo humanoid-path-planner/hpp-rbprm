@@ -102,8 +102,11 @@ namespace hpp{
       }
 
       hppDout(info, "t = "<<kinoPath->length()<<" maxT = "<<maxT);
-      if(maxT < t)
-        return kinoPath->extract(core::interval_t(kinoPath->timeRange().first,kinoPath->timeRange().first + maxT));
+      if(maxT < kinoPath->length()){
+        core::PathPtr_t extracted = kinoPath->extract(core::interval_t(kinoPath->timeRange().first,kinoPath->timeRange().first + maxT));
+        hppDout(notice,"extracted path : end = "<<model::displayConfig((extracted->end())));
+        return extracted;
+      }
       return kinoPath;
     }
 
