@@ -286,15 +286,11 @@ namespace hpp {
       /* Select alpha_0 as middle of ]alpha_inf_bound,alpha_sup_bound[ */
       value_type alpha = 0.5*(alpha_inf_bound + alpha_sup_bound);
       // for demo only :
-      /* alpha = alpha_inf_bound + 0.1*(alpha_sup_bound - alpha_inf_bound);
-      if(alpha < 0)
-          alpha = 0;
-      hppDout (info, "alpha: " << alpha);*/
+      alpha = alpha_inf_bound + 0.1*(alpha_sup_bound - alpha_inf_bound);
+      /*if(alpha < 0)
+          alpha = 0;*/
 
-      /* Compute Parabola coefficients */
-      vector_t coefs = computeCoefficients (alpha, theta, X_theta, Z,
-                                            x_theta_0, z_0);
-      hppDout (info, "coefs: " << coefs.transpose ());
+      hppDout (info, "alpha: " << alpha);
 
       /* Verify that maximal heigh of smaller parab is not out of the bounds */
       const vector_t coefsInf = computeCoefficients (alpha_inf_bound, theta,
@@ -307,6 +303,14 @@ namespace hpp {
         // problem_->parabolaResults_ [0] ++;
         return core::PathPtr_t ();
       }
+
+      /* Compute Parabola coefficients */
+      vector_t coefs = computeCoefficients (alpha, theta, X_theta, Z,
+                                            x_theta_0, z_0);
+      hppDout (info, "coefs: " << coefs.transpose ());
+
+
+
       maxHeightRespected = parabMaxHeightRespected (coefs, x_theta_0,
                                                     x_theta_imp);
 

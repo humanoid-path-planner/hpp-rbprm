@@ -168,30 +168,30 @@ namespace hpp {
       return path;
     }
 
-    bool DynamicPlanner::tryParabolaPath(const core::NodePtr_t& x_near, core::ConfigurationPtr_t q_last, const core::ConfigurationPtr_t& target, bool reverse, core::NodePtr_t& x_new){
+    bool DynamicPlanner::tryParabolaPath(const core::NodePtr_t& x_near, core::ConfigurationPtr_t q_last, const core::ConfigurationPtr_t& target, bool reverse, core::NodePtr_t& x_jump,core::NodePtr_t& x_new, core::PathPtr_t& kinoPath, core::PathPtr_t& paraPath){
       bool success(false);
       core::PathValidationPtr_t pathValidation (problem ().pathValidation ());
-      core::PathPtr_t validPath, kinoPath, path;
+      core::PathPtr_t validPath;
       core::PathValidationReportPtr_t report;
       const size_type indexECS =problem().robot()->configSize() - problem().robot()->extraConfigSpace().dimension (); // ecs index
       bool paraPathValid(false),kinoPathValid(false);
       hppDout(notice,"!! begin tryParabolaPath");
 
       // 1. compute a parabola between last configuration valid in contact, and qrand (target)
-      path = extendParabola(q_last,target,reverse);
-      if(path){
+      paraPath = extendParabola(q_last,target,reverse);
+      if(paraPath){
         hppDout(notice,"!! ParaPath computed");
-        if(path->length() > 0) { // only add if the full path is valid (because we can't extract a subpath of a parabola path)
+        if(paraPath->length() > 0) { // only add if the full path is valid (because we can't extract a subpath of a parabola path)
           paraPathValid = true;
           hppDout(notice, "!! parabola path valid !");
-          ParabolaPathPtr_t paraPath = boost::dynamic_pointer_cast<ParabolaPath>(path);
-          core::ConfigurationPtr_t q_new (new core::Configuration_t(paraPath->end ()));
-          core::ConfigurationPtr_t q_jump (new core::Configuration_t(paraPath->initial ()));
+          ParabolaPathPtr_t parabolaPath = boost::dynamic_pointer_cast<ParabolaPath>(paraPath);
+          core::ConfigurationPtr_t q_new (new core::Configuration_t(parabolaPath->end ()));
+          core::ConfigurationPtr_t q_jump (new core::Configuration_t(parabolaPath->initial ()));
           // 2. update q_jump with the correct initial velocity needed for the computed parabola
           //TODO : update q_jump with the right velocity from parabola
           for(size_t i = 0 ; i < 3 ; ++i){
-            (*q_jump)[indexECS+i] = paraPath->V0_[i];
-            (*q_new)[indexECS+i] = paraPath->Vimp_[i];
+            (*q_jump)[indexECS+i] = parabolaPath->V0_[i];
+            (*q_new)[indexECS+i] = parabolaPath->Vimp_[i];
           }
 
           hppDout(notice,"q_last = "<<displayConfig(*q_last));
@@ -212,7 +212,7 @@ namespace hpp {
                 // 4. add both nodes and edges to the roadmap
                 success = true;
                 hppDout(notice,"add both nodes and edges to the roadmap");
-                core::NodePtr_t x_jump = roadmap()->addNodeAndEdge(x_near,q_jump,kinoPath);
+                x_jump = roadmap()->addNodeAndEdge(x_near,q_jump,kinoPath);
                 computeGIWC(x_jump);
                 x_new = roadmap()->addNodeAndEdge(x_jump,q_new,paraPath);
                 computeGIWC(x_new);
@@ -535,8 +535,9 @@ namespace hpp {
       // call steering method here to build a direct conexion
       core::PathValidationPtr_t pathValidation (problem ().pathValidation ());
       core::PathProjectorPtr_t pathProjector (problem ().pathProjector ());
-      core::PathPtr_t validPath, projPath, path;
+      core::PathPtr_t validPath, projPath, path,kinoPath,paraPath;
       core::NodePtr_t initNode = roadmap ()->initNode();
+      core::NodePtr_t x_jump;
       computeGIWC(initNode);
       for (core::Nodes_t::const_iterator itn = roadmap ()->goalNodes ().begin();
            itn != roadmap ()->goalNodes ().end (); ++itn) {
@@ -553,6 +554,8 @@ namespace hpp {
         }
         if (projPath) {
           core::PathValidationReportPtr_t report;
+         // roadmap ()->addEdge (initNode, *itn, projPath);  // TODO a supprimer
+
           bool pathValid = pathValidation->validate (projPath, false, validPath,
                                                      report);
           if (pathValid && validPath->timeRange ().second !=
@@ -572,10 +575,11 @@ namespace hpp {
             if(trunkValid){ // if it failed because of the ROM, we can try a parabola
               core::ConfigurationPtr_t q_jump(new core::Configuration_t(validPath->end()));
               core::NodePtr_t x_goal;
-              bool parabolaSuccess = tryParabolaPath(initNode,q_jump,q2,false,x_goal);
+              bool parabolaSuccess = tryParabolaPath(initNode,q_jump,q2,false,x_jump,x_goal,kinoPath,paraPath);
               hppDout(notice,"parabola success = "<<parabolaSuccess);
               if(parabolaSuccess)
                 hppDout(notice,"x_goal conf = "<<displayConfig(*(x_goal->configuration())));
+                roadmap()->addEdge(x_jump,*itn,paraPath);
             }else{
               hppDout(notice,"trunk in collision");
             }
