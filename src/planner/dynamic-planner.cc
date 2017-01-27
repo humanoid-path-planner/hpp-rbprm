@@ -181,9 +181,8 @@ namespace hpp {
       paraPath = extendParabola(q_last,target,reverse);
       if(paraPath){
         hppDout(notice,"!! ParaPath computed");
-        // check collision but without the contact-constraint (filter = {} )
-        paraPathValid = rbprmPathValidation->validate (paraPath, false, validPath, report, filter);
-        if (paraPathValid) { // only add if the full path is valid (because we can't extract a subpath of a parabola path)
+        if(paraPath->length() > 0) { // only add if the full path is valid (because we can't extract a subpath of a parabola path)
+          paraPathValid = true;
           hppDout(notice, "!! parabola path valid !");
           core::ConfigurationPtr_t q_new (new core::Configuration_t(paraPath->end ()));
           core::ConfigurationPtr_t q_jump (new core::Configuration_t(paraPath->initial ()));
