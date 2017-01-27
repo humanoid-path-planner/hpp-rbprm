@@ -202,6 +202,8 @@ namespace hpp{
       sEq_->findMaximumAcceleration(A, node->geth(),alpha0);
 
       hppDout(info,"Amax found : "<<alpha0);
+      alpha0 = std::min(alpha0,aMaxFixed_);
+      hppDout(info,"Amax after min : "<<alpha0);
       setAmax(alpha0*v);
       hppDout(info,"Amax vector : "<<aMax_.transpose());
       //setVmax(2*Vector3::Ones(3)); //FIXME: read it from somewhere ?

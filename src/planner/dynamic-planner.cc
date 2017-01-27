@@ -43,6 +43,8 @@
 #include <hpp/rbprm/rbprm-path-validation.hh>
 #include <hpp/rbprm/rbprm-validation-report.hh>
 #include <hpp/rbprm/planner/parabola-path.hh>
+#include <hpp/core/path-validation-report.hh>
+#include <hpp/rbprm/rbprm-path-validation.hh>
 
 namespace hpp {
   namespace rbprm {
@@ -555,14 +557,28 @@ namespace hpp {
                                                      report);
           if (pathValid && validPath->timeRange ().second !=
               path->timeRange ().first) {
-            roadmap ()->addEdge (initNode, *itn, projPath);
+            if(validPath->end() == *((*itn)->configuration())){
+              roadmap ()->addEdge (initNode, *itn, projPath);
+            }else{
+              core::ConfigurationPtr_t q_new(new core::Configuration_t(validPath->end()));
+              roadmap()->addNodeAndEdge(initNode,q_new,validPath);
+            }
           }else{
-            core::ConfigurationPtr_t q_jump(new core::Configuration_t(validPath->end()));
-            core::NodePtr_t x_goal;
-            bool parabolaSuccess = tryParabolaPath(initNode,q_jump,q2,false,x_goal);
-            hppDout(notice,"parabola success = "<<parabolaSuccess);
-            if(parabolaSuccess)
-              hppDout(notice,"x_goal conf = "<<displayConfig(*(x_goal->configuration())));
+            std::vector<std::string> filter;
+            core::ValidationReportPtr_t valReport;
+            // check if the validation fail because of the ROM or because of the trunk
+            RbPrmPathValidationPtr_t rbprmPathValidation = boost::dynamic_pointer_cast<RbPrmPathValidation>(pathValidation);
+            bool trunkValid = rbprmPathValidation->getValidator()->validate((*projPath)(report->parameter),valReport,filter);
+            if(trunkValid){ // if it failed because of the ROM, we can try a parabola
+              core::ConfigurationPtr_t q_jump(new core::Configuration_t(validPath->end()));
+              core::NodePtr_t x_goal;
+              bool parabolaSuccess = tryParabolaPath(initNode,q_jump,q2,false,x_goal);
+              hppDout(notice,"parabola success = "<<parabolaSuccess);
+              if(parabolaSuccess)
+                hppDout(notice,"x_goal conf = "<<displayConfig(*(x_goal->configuration())));
+            }else{
+              hppDout(notice,"trunk in collision");
+            }
           }
         }
       }

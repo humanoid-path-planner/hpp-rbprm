@@ -44,14 +44,14 @@ namespace hpp {
       /// Create instance and return shared pointer
       static SteeringMethodParabolaPtr_t create (const core::ProblemPtr_t& problem)
       {
-        SteeringMethodParabola* ptr = new SteeringMethodParabola (problem);
-        SteeringMethodParabolaPtr_t shPtr (ptr);
-        ptr->init (shPtr);
-        return shPtr;
+  SteeringMethodParabola* ptr = new SteeringMethodParabola (problem);
+  SteeringMethodParabolaPtr_t shPtr (ptr);
+  ptr->init (shPtr);
+  return shPtr;
       }
       /// Copy instance and return shared pointer
       static SteeringMethodParabolaPtr_t createCopy
-      (const SteeringMethodParabolaPtr_t& other)
+  (const SteeringMethodParabolaPtr_t& other)
       {
         SteeringMethodParabola* ptr = new SteeringMethodParabola (*other);
         SteeringMethodParabolaPtr_t shPtr (ptr);
@@ -65,41 +65,41 @@ namespace hpp {
       }
 
       core::PathPtr_t operator() (core::ConfigurationIn_t q1,
-                                  core::ConfigurationIn_t q2) const
+                            core::ConfigurationIn_t q2) const
       {
         return impl_compute (q1, q2);
       }
 
       /// create a path between two configurations
       virtual core::PathPtr_t impl_compute (core::ConfigurationIn_t q1,
-                                            core::ConfigurationIn_t q2) const;
+              core::ConfigurationIn_t q2) const;
 
       /// Compute a random parabola in direction of q1->q2
       core::PathPtr_t compute_random_3D_path (core::ConfigurationIn_t q1,
-                                              core::ConfigurationIn_t q2,
-                                              value_type* alpha0,
-                                              value_type* v0) const;
+                core::ConfigurationIn_t q2,
+                value_type* alpha0,
+                value_type* v0) const;
 
       /// Compute third constraint : landing in the friction cone
       /// return false if constraint can never be respected.
       /// fill alpha_imp_sup/inf angles limiting initial angle
       /// to respect the constraint.
       bool third_constraint (bool fail, const value_type& X,
-                             const value_type& Y,
-                             const value_type alpha_imp_min,
-                             const value_type alpha_imp_max,
-                             value_type *alpha_imp_sup,
-                             value_type *alpha_imp_inf,
-                             const value_type n2_angle) const;
+           const value_type& Y,
+           const value_type alpha_imp_min,
+           const value_type alpha_imp_max,
+           value_type *alpha_imp_sup,
+           value_type *alpha_imp_inf,
+           const value_type n2_angle) const;
 
       /// Compute fiveth constraint: compute intersection between coneS
       /// and plane_theta. If not empty, compute the two lines and the angle
       /// between them = 2*delta.
       /// Equations have been obtained using Matlab.
       bool fiveth_constraint (const core::ConfigurationIn_t q,
-                              const value_type theta,
-                              const int number,
-                              value_type *delta) const;
+            const value_type theta,
+            const int number,
+            value_type *delta) const;
 
       // return maximal final (or impact) velocity
       value_type getVImpMax() {return Vimpmax_;}
@@ -111,14 +111,14 @@ namespace hpp {
 
       /// Copy constructor
       SteeringMethodParabola (const SteeringMethodParabola& other) :
-        SteeringMethod (other),
-        problem_ (other.problem_), device_ (other.device_),
-        distance_ (other.distance_), weak_ (), g_(other.g_),
-        V0max_ (other.V0max_), Vimpmax_ (other.Vimpmax_),mu_ (other.mu_),
-        Dalpha_ (other.Dalpha_), nLimit_ (other.nLimit_), V0_ (other.V0_),
-        Vimp_ (other.Vimp_)
-      {
-      }
+  SteeringMethod (other),
+  problem_ (other.problem_), device_ (other.device_),
+  distance_ (other.distance_), weak_ (), g_(other.g_),
+  V0max_ (other.V0max_), Vimpmax_ (other.Vimpmax_),mu_ (other.mu_),
+  Dalpha_ (other.Dalpha_), nLimit_ (other.nLimit_), V0_ (other.V0_),
+  Vimp_ (other.Vimp_)
+  {
+  }
 
       /// Store weak pointer to itself
       void init (SteeringMethodParabolaWkPtr_t weak)
@@ -130,29 +130,29 @@ namespace hpp {
     private:
       /// 3D impl_compute
       core::PathPtr_t compute_3D_path (core::ConfigurationIn_t q1,
-                                       core::ConfigurationIn_t q2) const;
+               core::ConfigurationIn_t q2) const;
 
       /// Compute second constraint: V0 <= V0max
       /// return false if constraint can never be respected.
       /// fill alpha_lim_plus/minus angles limiting initial angle
       /// to respect the constraint.
       bool second_constraint (const value_type& X, const value_type& Y,
-                              value_type *alpha_lim_plus,
-                              value_type *alpha_lim_minus) const;
+            value_type *alpha_lim_plus,
+            value_type *alpha_lim_minus) const;
 
       /// Compute sixth constraint: V_imp <= V_imp_max
       /// return false if constraint can never be respected.
       /// fill alpha_imp_plus/minus angles limiting initial angle
       /// to respect the constraint.
       bool sixth_constraint (const value_type& X, const value_type& Y,
-                             value_type *alpha_imp_plus,
-                             value_type *alpha_imp_minus) const;
+           value_type *alpha_imp_plus,
+           value_type *alpha_imp_minus) const;
 
       /// Get the length of the path by numerical integration (Simpson method)
       /// Length is computed only when the path is created
       virtual value_type computeLength (const core::ConfigurationIn_t q1,
-                                        const core::ConfigurationIn_t q2,
-                                        const vector_t coefs) const;
+          const core::ConfigurationIn_t q2,
+          const vector_t coefs) const;
 
       /// Function equivalent to sqrt( 1 + f'(x)^2 ) in 2D
       /// Function equivalent to sqrt( 1 + y0_dot/x0_dot + fz'(x)^2 ) in 3D
@@ -160,25 +160,25 @@ namespace hpp {
 
       /// Compute parabola coefficients from takeoff angle and other parameters
       vector_t computeCoefficients (const value_type alpha,
-                                    const value_type theta,
-                                    const value_type X_theta,
-                                    const value_type Z,
-                                    const value_type x_theta_0,
-                                    const value_type z_0) const;
+            const value_type theta,
+            const value_type X_theta,
+            const value_type Z,
+            const value_type x_theta_0,
+            const value_type z_0) const;
 
       /// Return true if the maximal height of the parabola does not exceed the
       /// freeflyer translation bounds, false otherwise.
       bool parabMaxHeightRespected (const vector_t coefs,
-                                    const value_type x_theta_0,
-                                    const value_type x_theta_imp) const;
+            const value_type x_theta_0,
+            const value_type x_theta_imp) const;
 
       /// Process Dichotomy at rank n in interval ]a_inf, a_plus[
       value_type dichotomy (value_type a_inf, value_type a_plus,
-                            std::size_t n) const;
+          std::size_t n) const;
 
       /// Loop on collision ROMs and fill names in ParabolaPath
       void fillROMnames (core::ConfigurationIn_t q,
-                         std::vector <std::string> * ROMnames) const;
+       std::vector <std::string> * ROMnames) const;
 
       core::ProblemPtr_t problem_;
       core::DeviceWkPtr_t device_;
