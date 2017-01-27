@@ -207,7 +207,7 @@ namespace hpp {
             if(kinoPathValid){
               hppDout(notice,"!! Kino path valid !");
               value_type t_final = validPath->timeRange ().second;
-              if (t_final != kinoPath->timeRange ().first)
+              if (t_final != kinoPath->timeRange ().first && validPath->end() == *(q_jump))
               {
                 // 4. add both nodes and edges to the roadmap
                 success = true;
@@ -217,7 +217,7 @@ namespace hpp {
                 x_new = roadmap()->addNodeAndEdge(x_jump,q_new,paraPath);
                 computeGIWC(x_new);
               }else{
-                hppDout(notice, "!! lenght of Kino path null.");
+                hppDout(notice, "!! lenght of Kino path incorrect.");
               }
             }else{
               hppDout(notice, "!! Kino path not valid.");
@@ -577,9 +577,10 @@ namespace hpp {
               core::NodePtr_t x_goal;
               bool parabolaSuccess = tryParabolaPath(initNode,q_jump,q2,false,x_jump,x_goal,kinoPath,paraPath);
               hppDout(notice,"parabola success = "<<parabolaSuccess);
-              if(parabolaSuccess)
+              if(parabolaSuccess){
                 hppDout(notice,"x_goal conf = "<<displayConfig(*(x_goal->configuration())));
                 roadmap()->addEdge(x_jump,*itn,paraPath);
+              }
             }else{
               hppDout(notice,"trunk in collision");
             }
