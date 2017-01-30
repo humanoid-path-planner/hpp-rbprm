@@ -73,6 +73,15 @@ namespace hpp{
       bool aValid;
       double maxT = kinoPath->length();
       hppDout(info,"## start checking intermediate accelerations");
+      t = 0.0001;
+      (*kinoPath)(*q,t);
+      hppDout(info,"q(t="<<t<<") = "<<model::displayConfig(*q));
+      a = (*q).segment<3>(configSize+3);
+      hppDout(info,"a = "<<a);
+      aValid = sEq_->checkAdmissibleAcceleration(node->getG(),node->getH(),node->geth(),a);
+      hppDout(info,"a valid : "<<aValid);
+      if(!aValid && t < maxT)
+        maxT = t;
       for(size_t ijoint = 0 ; ijoint < 3 ; ijoint++){
         if(t1[ijoint] > 0){
           hppDout(info,"for joint "<<ijoint);
@@ -81,7 +90,6 @@ namespace hpp{
           hppDout(info,"q(t="<<t<<") = "<<model::displayConfig(*q));
           a = (*q).segment<3>(configSize+3);
           hppDout(info,"a = "<<a);
-          //TODO check a
           aValid = sEq_->checkAdmissibleAcceleration(node->getG(),node->getH(),node->geth(),a);
           hppDout(info,"a valid : "<<aValid);
           if(!aValid && t < maxT)
@@ -93,7 +101,6 @@ namespace hpp{
           hppDout(info,"q(t="<<t<<") = "<<model::displayConfig(*q));
           a = (*q).segment<3>(configSize+3);
           hppDout(info,"a = "<<a);
-          //TODO check a
           aValid = sEq_->checkAdmissibleAcceleration(node->getG(),node->getH(),node->geth(),a);
           hppDout(info,"a valid : "<<aValid);
           if(!aValid && t < maxT)
