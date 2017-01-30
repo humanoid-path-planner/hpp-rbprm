@@ -106,6 +106,7 @@ SET(${PROJECT_NAME}_HEADERS
     include/hpp/rbprm/planner/dynamic-planner.hh
     include/hpp/rbprm/planner/steering-dynamic.hh
     include/hpp/rbprm/planner/parabola-path.hh
+    include/hpp/rbprm/planner/timed-parabola-path.hh
     include/hpp/rbprm/planner/steering-method-parabola.hh
     include/hpp/rbprm/planner/rbprm-node.hh
     include/hpp/rbprm/planner/rbprm-roadmap.hh
