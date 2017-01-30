@@ -25,7 +25,7 @@
 # include <hpp/core/path-validation.hh>
 # include <hpp/core/path-vector.hh>
 # include <hpp/core/problem.hh>
-# include <hpp/rbprm/planner/parabola-path.hh>
+# include <hpp/rbprm/planner/timed-parabola-path.hh>
 # include <hpp/rbprm/planner/steering-method-parabola.hh>
 # include <hpp/rbprm/rbprm-device.hh>
 # include <hpp/rbprm/rbprm-path-validation.hh>
@@ -355,7 +355,7 @@ namespace hpp {
         }//while
       }
       if (hasCollisions || !maxHeightRespected) return core::PathPtr_t ();
-      return pp;
+      return TimedParabolaPath::create(device_.lock(),pp->initial(),pp->end(),pp);
     }
 
     // From Pierre
