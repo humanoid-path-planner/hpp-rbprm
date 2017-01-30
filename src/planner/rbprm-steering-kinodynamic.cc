@@ -174,31 +174,41 @@ namespace hpp{
       //TODO compute the maximal acceleration from near, on a direction from near to target (oposite if revezrse == true)
       core::RbprmNodePtr_t node = static_cast<core::RbprmNodePtr_t>(near);
       assert(node && "Unable to cast near node to rbprmNode");
-
+      const model::size_type indexECS =problem_->robot()->configSize() - problem_->robot()->extraConfigSpace().dimension (); // ecs index
       // compute direction (v) :
 
       double alpha0=1.; // main variable of our LP problem
-      Vector3 to,from,v;
-      if(reverse){
-        to = near->configuration()->head(3);
-        from = target.head(3);
-      }else{
-        from = near->configuration()->head(3);
-        to = target.head(3);
-      }
-      v = (to - from);
-      v.normalize();
-      hppDout(info,"from = "<<from.transpose());
-      hppDout(info,"to   = "<<to.transpose());
-      hppDout(info, "Direction of motion v = "<<v.transpose());
+      Vector3 toP,fromP,dPosition;
+      Vector3 toV,fromV,dVelocity;
+      Vector3 direction;
 
+      if(reverse){
+        toP = near->configuration()->head(3);
+        fromP = target.head(3);
+        toV = near->configuration()->segment<3>(indexECS);
+        fromV = target.segment<3>(indexECS);
+      }else{
+        fromP = near->configuration()->head(3);
+        toP = target.head(3);
+        fromV = near->configuration()->segment<3>(indexECS);
+        toV = target.segment<3>(indexECS);
+      }
+      dPosition = (toP - fromP);
+     // dPosition.normalize();
+      dVelocity = (toV - fromV);
+    //  dVelocity.normalize();
+      hppDout(info, "delta position  = "<<dPosition.transpose());
+      hppDout(info, "delta velocity  = "<<dVelocity.transpose());
+      direction = dPosition + dVelocity;
+      direction.normalize();
+      hppDout(info, "direction  = "<<direction.transpose());
       // define LP problem : with m+1 variables and 6 constraints
       int m = node->getNumberOfContacts() * 4;
 
       MatrixXX A = MatrixXX::Zero(6, m+1);
       // build A : [ -G (Hv)^T] :
       A.topLeftCorner(6,m) = - node->getG();
-      MatrixXX Hv = (node->getH() * v);
+      MatrixXX Hv = (node->getH() * direction);
       assert(Hv.rows() == 6 && Hv.cols()==1 && "Hv should be a vector 6");
       A.topRightCorner(6,1) = Hv;
       hppDout(info,"H = \n"<<node->getH());
@@ -209,9 +219,12 @@ namespace hpp{
       sEq_->findMaximumAcceleration(A, node->geth(),alpha0);
 
       hppDout(info,"Amax found : "<<alpha0);
-      alpha0 = std::min(alpha0,aMaxFixed_);
+      if(alpha0 <= 0 )
+        alpha0 = aMaxFixed_;
+      else
+        alpha0 = std::min(alpha0,aMaxFixed_);
       hppDout(info,"Amax after min : "<<alpha0);
-      setAmax(alpha0*v);
+      setAmax(alpha0*direction);
       hppDout(info,"Amax vector : "<<aMax_.transpose());
       //setVmax(2*Vector3::Ones(3)); //FIXME: read it from somewhere ?
       return node;
