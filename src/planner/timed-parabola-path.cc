@@ -41,8 +41,8 @@ namespace hpp {
     TimedParabolaPath::TimedParabolaPath (const core::DevicePtr_t& robot,
                   core::ConfigurationIn_t init,
                   core::ConfigurationIn_t end, ParabolaPathPtr_t parabolaPath):
-    parent_t(interval_t (0, computeLength(parabolaPath)), robot->configSize (), robot->numberDof ()),
-    device_ (robot), initial_ (init), end_ (end),parabolaPath_(parabolaPath),length_(computeLength(parabolaPath))
+    parent_t(*parabolaPath),
+    device_ (robot), initial_ (init), end_ (end),parabolaPath_(parabolaPath),length_(computeTimedLength(parabolaPath))
     {
     }
 
@@ -52,10 +52,10 @@ namespace hpp {
                   core::ConfigurationIn_t init,
                   core::ConfigurationIn_t end, core::value_type length,
                   core::vector_t coefficients):
-    parent_t(interval_t (0, length), robot->configSize (), robot->numberDof ()),
+    parent_t(robot,init,end,length,coefficients),
     device_ (robot), initial_ (init), end_ (end),
     parabolaPath_(ParabolaPath::create(robot,init,end,length,coefficients)),
-    length_(computeLength(parabolaPath_))
+    length_(computeTimedLength(parabolaPath_))
     {
     }
 
@@ -72,10 +72,10 @@ namespace hpp {
                   core::vector_t V0, core::vector_t Vimp,
                   std::vector <std::string> initialROMnames,
                   std::vector <std::string> endROMnames):
-      parent_t(interval_t (0, length), robot->configSize (), robot->numberDof ()),
+      parent_t(robot,init,end,length,coefs,V0,Vimp,initialROMnames,endROMnames),
       device_ (robot), initial_ (init), end_ (end),
       parabolaPath_(ParabolaPath::create(robot,init,end,length,coefs,V0,Vimp,initialROMnames,endROMnames)),
-      length_(computeLength(parabolaPath_))
+      length_(computeTimedLength(parabolaPath_))
     {
     }
 
@@ -110,16 +110,16 @@ namespace hpp {
 
 
 
-    double TimedParabolaPath::computeLength(double x_theta, double v0, double alpha0){
+    double TimedParabolaPath::computeTimedLength(double x_theta, double v0, double alpha0){
       return x_theta/(v0*cos(alpha0));
     }
 
-    double TimedParabolaPath::computeLength(ParabolaPathPtr_t parabolaPath){
+    double TimedParabolaPath::computeTimedLength(ParabolaPathPtr_t parabolaPath){
       const value_type X = parabolaPath->end()[0] - parabolaPath->initial()[0];
       const value_type Y = parabolaPath->end()[1] - parabolaPath->initial()[1];;
       // theta = coef[3]
       const value_type X_theta = X*cos(parabolaPath->coefficients()[3]) + Y*sin(parabolaPath->coefficients()[3]);
-      return computeLength(X_theta , parabolaPath->V0_.norm(),parabolaPath->coefficients()[4]);
+      return computeTimedLength(X_theta , parabolaPath->V0_.norm(),parabolaPath->coefficients()[4]);
     }
 
 

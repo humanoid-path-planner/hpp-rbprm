@@ -37,10 +37,10 @@ namespace hpp {
     /// ballistic path between 2 configurations
     ///
     /// call parabola-path but work with the time as parameter instead of x_theta
-    class TimedParabolaPath : public core::Path
+    class TimedParabolaPath : public ParabolaPath
     {
     public:
-      typedef core::Path parent_t;
+      typedef ParabolaPath parent_t;
       /// Destructor
       virtual ~TimedParabolaPath () throw () {}
 
@@ -234,8 +234,8 @@ namespace hpp {
       virtual bool impl_compute (core::ConfigurationOut_t result,
                                  core::value_type t) const;
 
-      double computeLength(double x_theta, double v0, double alpha0);
-      double computeLength(ParabolaPathPtr_t parabolaPath);
+      virtual double computeTimedLength(double x_theta, double v0, double alpha0);
+      virtual double computeTimedLength(ParabolaPathPtr_t parabolaPath);
 
       /// Print path in a stream
       virtual std::ostream& print (std::ostream &os) const

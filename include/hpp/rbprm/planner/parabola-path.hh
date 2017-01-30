@@ -193,7 +193,7 @@ namespace hpp {
         return coefficients_;
       }
 
-      core::value_type computeLength (const core::ConfigurationIn_t q1,
+      virtual core::value_type computeLength (const core::ConfigurationIn_t q1,
                                       const core::ConfigurationIn_t q2) const;
 
       /// Evaluate velocity vector at path abcissa t
