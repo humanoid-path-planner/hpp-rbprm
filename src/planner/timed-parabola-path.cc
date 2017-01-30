@@ -101,8 +101,8 @@ namespace hpp {
     /// \return a new path that is this one reversed.
     core::PathPtr_t TimedParabolaPath::reverse () const{
       hppDout(notice, " ~ reverse timed path parabola !!!!!!!!!!!!!!!!!!!!!!");
-      bool success;
-      ParabolaPathPtr_t paraReverse = parabolaPath_->reverse();
+      core::PathPtr_t reversePath = parabolaPath_->reverse();
+      ParabolaPathPtr_t paraReverse = boost::dynamic_pointer_cast<ParabolaPath>(reversePath);
       return TimedParabolaPath::create(device_,end_,initial_,paraReverse);
     }
 
@@ -134,12 +134,24 @@ namespace hpp {
         result = end_;
         return true;
       }
+      value_type v0 = parabolaPath_->V0_.norm();
 
-      // TODO : compute u and call parabolaPath
-
-
+      // compute u and call parabolaPath
+      value_type u = t *v0*cos(parabolaPath_->coefficients()[4]);
+      result = (*parabolaPath_)(u);
 
       // TODO : compute extraDOF
+      const size_type indexEcs = device_->configSize()  - device_->extraConfigSpace ().dimension (); // ecs index
+      //velocity :
+      vector_t vel = parabolaPath_->evaluateVelocity(u);
+      result[indexEcs] = vel[0];
+      result[indexEcs+1] = vel[1];
+      result[indexEcs+2] = vel[2];
+      //acceleration :
+      result[indexEcs+3]=0.;
+      result[indexEcs+4]=0.;
+      result[indexEcs+5]=-9.81; //FIXME : retrieve it from somewhere
+
 
     } // impl_compute
 
