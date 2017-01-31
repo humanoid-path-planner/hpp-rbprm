@@ -180,7 +180,7 @@ namespace hpp {
       return device_;
     }
 
-    value_type ParabolaPath::computeLength
+  /*  value_type ParabolaPath::computeLength
     (const core::ConfigurationIn_t q1, const core::ConfigurationIn_t q2) const {
       const int N = 6; // number -1 of interval sub-divisions
       // for N = 4, computation error ~= 1e-5.
@@ -207,6 +207,17 @@ namespace hpp {
       }
       hppDout (notice, "length = " << length);
       return length;
+    }*/
+
+    // test (pierre) :
+    value_type ParabolaPath::computeLength
+        (const core::ConfigurationIn_t q1, const core::ConfigurationIn_t q2) const {
+      const value_type theta = coefficients_ (3);
+      const value_type X = q2[0] - q1[0];
+      const value_type Y = q2[1] - q1[1];;
+      // theta = coef[3]
+      const value_type X_theta = X*cos(theta) + Y*sin(theta);
+      return X_theta;
     }
 
     // Function equivalent to sqrt( 1 + f'(x)^2 )

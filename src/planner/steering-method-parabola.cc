@@ -716,7 +716,7 @@ namespace hpp {
       return y;
     }
 
-    value_type SteeringMethodParabola::computeLength
+   /* value_type SteeringMethodParabola::computeLength
     (const core::ConfigurationIn_t q1, const core::ConfigurationIn_t q2,
      const vector_t coefs) const {
       const int N = 6; // number -1 of interval sub-divisions
@@ -745,6 +745,18 @@ namespace hpp {
       }
       hppDout (info, "length = " << length);
       return length;
+    }*/
+
+    // test (pierre) :
+    value_type SteeringMethodParabola::computeLength
+        (const core::ConfigurationIn_t q1, const core::ConfigurationIn_t q2,
+         const vector_t coefs) const {
+      const value_type theta = coefs (3);
+      const value_type X = q2[0] - q1[0];
+      const value_type Y = q2[1] - q1[1];;
+      // theta = coef[3]
+      const value_type X_theta = X*cos(theta) + Y*sin(theta);
+      return X_theta;
     }
 
     vector_t SteeringMethodParabola::computeCoefficients

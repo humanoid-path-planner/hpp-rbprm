@@ -138,14 +138,14 @@ namespace hpp {
       }
       value_type v0 = parabolaPath_->V0_.norm();
 
-     /* hppDout(notice,"impl compute timed-path-parabola");
+   /*   hppDout(notice,"impl compute timed-path-parabola");
       hppDout(notice,"lenght = "<<length_);
       hppDout(notice,"t = "<<t);
 */
       // compute u and call parabolaPath
       value_type u = t *v0*cos(parabolaPath_->coefficients()[4]);
-      //hppDout(notice,"parabola-path length = "<<parabolaPath_->length());
-     // hppDout(notice,"u = "<<u);
+    /*  hppDout(notice,"parabola-path length = "<<parabolaPath_->length());
+      hppDout(notice,"u = "<<u);*/
       result = (*parabolaPath_)(u);
 
       // TODO : compute extraDOF

@@ -189,7 +189,6 @@ namespace hpp {
 
       /// Get previously computed length
       virtual core::value_type length () const {
-        hppDout(notice,"timed-parabola-path lenght : "<<length_);
         return length_;
       }
 
