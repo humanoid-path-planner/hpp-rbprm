@@ -44,6 +44,7 @@ namespace hpp {
     parent_t(*parabolaPath),
     device_ (robot), initial_ (init), end_ (end),parabolaPath_(parabolaPath),length_(computeTimedLength(parabolaPath))
     {
+      hppDout(notice,"timed path constructor : end = "<<model::displayConfig(end_));
     }
 
 

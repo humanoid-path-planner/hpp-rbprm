@@ -355,7 +355,12 @@ namespace hpp {
         }//while
       }
       if (hasCollisions || !maxHeightRespected) return core::PathPtr_t ();
-      return TimedParabolaPath::create(device_.lock(),pp->initial(),pp->end(),pp);
+      core::Configuration_t init = pp->initial();
+      core::Configuration_t end = pp->end();
+      init.segment<3>(index) = pp->V0_;
+      init[index+5] = -g_;
+      end.segment<3>(index) = pp->Vimp_;
+      return TimedParabolaPath::create(device_.lock(),init,end,pp);
     }
 
     // From Pierre
