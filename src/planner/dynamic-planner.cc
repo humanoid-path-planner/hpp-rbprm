@@ -389,7 +389,6 @@ namespace hpp {
       }
 
       //FIX ME : position of contact is in center of the collision surface
-      hppDout(info,"Number of contacts : "<<node->getNumberOfContacts());
       int numContactpoints = (rbReport->ROMReports.size() + 3*rectangularContact_*rbReport->ROMReports.size());
       node->setNumberOfContacts(numContactpoints);
       hppDout(notice,"number of contact points = "<<numContactpoints);

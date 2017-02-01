@@ -31,8 +31,10 @@ namespace
                                                    const std::map<std::string, std::vector<std::string> >& affFilters)
   {
     hpp::rbprm::T_RomValidation result;
+    hppDout(notice,"Number of ROM : "<<robot->robotRoms_.size());
     for(hpp::model::T_Rom::const_iterator cit = robot->robotRoms_.begin(); cit != robot->robotRoms_.end(); ++cit)
     {
+      hppDout(notice,"name = "<<cit->first);
       std::map<std::string, std::vector<std::string> >::const_iterator cfit = affFilters.find(cit->first);
       if(cfit != affFilters.end())
       {
@@ -134,8 +136,6 @@ namespace hpp {
 
       // build a rbprm report and copy trunk report informations
       RbprmValidationReportPtr_t rbprmReport(new RbprmValidationReport);
-
-      //hppDout(notice,"report in validateRoms = "<<rbprmReport);
 
       if(validationReport){// if the trunk is in collision, we copy the informations in the new report
         CollisionValidationReportPtr_t colReport = boost::dynamic_pointer_cast<CollisionValidationReport>(validationReport);
