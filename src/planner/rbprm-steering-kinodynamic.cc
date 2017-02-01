@@ -219,7 +219,7 @@ namespace hpp{
       sEq_->findMaximumAcceleration(A, node->geth(),alpha0);
 
       hppDout(info,"Amax found : "<<alpha0);
-      if(alpha0 <= 0 )
+      if(alpha0 < 0 )
         alpha0 = aMaxFixed_;
       else{
         alpha0 = std::min(alpha0,aMaxFixed_);

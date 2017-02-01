@@ -94,33 +94,22 @@ namespace hpp {
 
       const size_type nbConfig = device_->configSize();
       const size_type ecsDim = device_->extraConfigSpace ().dimension ();
+      // param = x_theta
       const value_type u = param/length_;
       const value_type theta = coefficients_(3);
-      const value_type x_theta_max = - 0.5 *
+     /* const value_type x_theta_max = - 0.5 *
           coefficients_ (1) / coefficients_ (0);
       const value_type x_theta_initial = cos(theta)*initial_ (0) +
           sin(theta)*initial_ (1);
       const value_type x_theta_end = cos(theta)*end_ (0) +
           sin(theta)*end_ (1);
       const bool tanThetaNotDefined = (theta < M_PI/2 + 1e-2 && theta > M_PI/2 - 1e-2) || (theta > -M_PI/2 - 1e-2 && theta < -M_PI/2 + 1e-2);
+*/
+      result (0) = initial_(0) + u*length_*cos(theta);
+      result (1) = initial_(1) + u*length_*sin(theta);
+      const value_type x_theta = cos(theta)*result (0) + sin(theta)*result (1);
+      result (2) = coefficients_(0)*x_theta*x_theta + coefficients_(1)*x_theta + coefficients_(2);
 
-      if (!tanThetaNotDefined) { //theta != +- pi/2
-        const value_type tanTheta = tan(theta);
-        result (0) = (1 - u)*initial_(0) + u*end_(0);
-        result (1) = tanTheta*result (0) -tanTheta*initial_(0) + initial_(1);
-        const value_type x_theta = cos(theta)*result (0) +
-            sin(theta)*result (1);
-        result (2) = coefficients_(0)*x_theta*x_theta
-            + coefficients_(1)*x_theta + coefficients_(2);
-      }
-      else { //theta = +- pi/2
-        result (0) = initial_ (0);
-        result (1) = (1 - u)*initial_(1) + u*end_(1);
-        const value_type x_theta = cos(theta)*result (0) +
-            sin(theta)*result (1);
-        result (2) = coefficients_(0)*x_theta*x_theta
-            + coefficients_(1)*x_theta + coefficients_(2);
-      }
 
       /* Quaternions interpolation */
       const core::JointPtr_t SO3joint = device_->getJointByName ("base_joint_SO3");
@@ -143,6 +132,7 @@ namespace hpp {
       const std::size_t indexECS = nbConfig - ecsDim;
       for (std::size_t i = 0; i < ecsDim; i++)
         result (indexECS + i) = 0;
+      hppDout(notice,"impl compuite = "<<model::displayConfig(result));
       return true;
     }
 
