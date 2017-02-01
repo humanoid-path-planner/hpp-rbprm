@@ -643,7 +643,7 @@ namespace hpp {
               core::ConfigurationPtr_t q_new(new core::Configuration_t(validPath->end()));
               roadmap()->addNodeAndEdge(initNode,q_new,validPath);
             }
-          }else{
+          }/*else{
             std::vector<std::string> filter;
             core::ValidationReportPtr_t valReport;
             // check if the validation fail because of the ROM or because of the trunk
@@ -661,7 +661,7 @@ namespace hpp {
             }else{
               hppDout(notice,"trunk in collision");
             }
-          }
+          }*/
         }
       }
     }
