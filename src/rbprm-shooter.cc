@@ -183,6 +183,7 @@ namespace
       //seed = 1485276927;
       //seed = 1485359407;
       // seed = 1485441926 ; // prepare_jump
+      // seed = 1485973442 ; // stair bauzil
       srand (seed);
       hppDout(notice,"&&&&&& SEED = "<<seed);
       RbPrmShooter* ptr = new RbPrmShooter (robot, geometries, affordances,
