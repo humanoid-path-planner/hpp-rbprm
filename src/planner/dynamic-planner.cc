@@ -398,6 +398,9 @@ namespace hpp {
       // get the 2 object in contact for each ROM :
       hppDout(info,"~~ Number of roms in collision : "<<rbReport->ROMReports.size());
       size_t indexRom = 0 ;
+      std::ostringstream ssContacts,ssCenters;
+      ssContacts<<"[";
+      ssCenters<<"[";
       for(std::map<std::string,core::CollisionValidationReportPtr_t>::const_iterator it = rbReport->ROMReports.begin() ; it != rbReport->ROMReports.end() ; ++it)
       {
         hppDout(info,"~~ for rom : "<<it->first);
@@ -523,6 +526,7 @@ namespace hpp {
           hppDout(notice,"shift y = "<<shiftY.transpose());
 
           hppDout(notice,"Center of rom collision :  ["<<center[0]<<" , "<<center[1]<<" , "<<center[2]<<"]");
+          ssCenters<<"["<<center[0]<<" , "<<center[1]<<" , "<<center[2]<<"],";
           for(size_t i = 0 ; i<4 ; ++i){
             // make a rectangle around center :
             pContact = center;
@@ -540,6 +544,7 @@ namespace hpp {
             IP_hat.block<3,3>(3,3*(indexRom+i)) = robust_equilibrium::crossMatrix(pContact);
 
             hppDout(notice,"position of rom collision :  ["<<pContact[0]<<" , "<<pContact[1]<<" , "<<pContact[2]<<"]");
+            ssContacts<<"["<<pContact[0]<<" , "<<pContact[1]<<" , "<<pContact[2]<<"],";
            // hppDout(info,"p"<<(indexRom+i)<<"^T = "<<pContact.transpose());
             //hppDout(info,"IP_hat at iter "<<indexRom<< " = \n"<<IP_hat);
 
@@ -554,6 +559,7 @@ namespace hpp {
           IP_hat.block<3,3>(3,3*indexRom) = robust_equilibrium::crossMatrix(center);
 
           //hppDout(notice,"Center of rom collision :  ["<<center[0]<<" , "<<center[1]<<" , "<<center[2]<<"]");
+          ssCenters<<"["<<center[0]<<" , "<<center[1]<<" , "<<center[2]<<"],";
           hppDout(info,"p"<<indexRom<<"^T = "<<center.transpose());
           //hppDout(info,"IP_hat at iter "<<indexRom<< " = \n"<<IP_hat);
 
@@ -593,6 +599,9 @@ namespace hpp {
       hppDout(info,"h^T = "<<node->geth().transpose());
       hppDout(info,"H = \n"<<node->getH());
 */
+      hppDout(notice,"list of all contacts = "<<ssContacts.str()<<"]");
+      hppDout(notice,"list of all centers = "<<ssCenters.str()<<"]");
+
 
     }// computeGIWC
 
