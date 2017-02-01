@@ -90,6 +90,16 @@ namespace hpp {
       smParabola_(rbprm::SteeringMethodParabola::create((core::ProblemPtr_t(&problem))))
     {
           assert(sm_ && "steering method should be a kinodynamic steering method for this solver");
+          try {
+            sizeFootX_ = problem.get<double> (std::string("sizeFootX"))/2.;
+            sizeFootY_ = problem.get<double> (std::string("sizeFootY"))/2.;
+            rectangularContact_ = 1;
+          } catch (const std::exception& e) {
+            hppDout(warning,"Warning : size of foot not definied, use 0 (contact point)");
+            sizeFootX_ =0;
+            sizeFootY_ =0;
+            rectangularContact_ = 0;
+          }
     }
 
     DynamicPlanner::DynamicPlanner (const Problem& problem,
@@ -101,6 +111,16 @@ namespace hpp {
       smParabola_(rbprm::SteeringMethodParabola::create((core::ProblemPtr_t(&problem))))
     {
           assert(sm_ && "steering method should be a kinodynamic steering method for this solver");
+          try {
+            sizeFootX_ = problem.get<double> (std::string("sizeFootX"))/2.;
+            sizeFootY_ = problem.get<double> (std::string("sizeFootY"))/2.;
+            rectangularContact_ = 1;
+          } catch (const std::exception& e) {
+            hppDout(warning,"Warning : size of foot not definied, use 0 (contact point)");
+            sizeFootX_ =0;
+            sizeFootY_ =0;
+            rectangularContact_ = 0;
+          }
     }
 
     void DynamicPlanner::init (const DynamicPlannerWkPtr_t& weak)
@@ -369,10 +389,12 @@ namespace hpp {
       }
 
       //FIX ME : position of contact is in center of the collision surface
-      node->setNumberOfContacts((int)rbReport->ROMReports.size());
       hppDout(info,"Number of contacts : "<<node->getNumberOfContacts());
-      MatrixXX V = MatrixXX::Zero(3*rbReport->ROMReports.size(),4*rbReport->ROMReports.size());
-      Matrix6X IP_hat = Matrix6X::Zero(6,3*rbReport->ROMReports.size());
+      int numContactpoints = (rbReport->ROMReports.size() + 3*rectangularContact_*rbReport->ROMReports.size());
+      node->setNumberOfContacts(numContactpoints);
+      hppDout(notice,"number of contact points = "<<numContactpoints);
+      MatrixXX V = MatrixXX::Zero(3*numContactpoints,4*numContactpoints);
+      Matrix6X IP_hat = Matrix6X::Zero(6,3*numContactpoints);
       MatrixXX Vi;
       // get the 2 object in contact for each ROM :
       hppDout(info,"~~ Number of roms in collision : "<<rbReport->ROMReports.size());
@@ -463,15 +485,9 @@ namespace hpp {
         hppDout(notice,"Normal : "<<pn.transpose());
 
 
-        //fill IP_hat with position : [I_3  pi_hat] ^T
-        Vector3 ti1,ti2;
-        IP_hat.block<3,3>(0,3*indexRom) = MatrixXX::Identity(3,3);
-        IP_hat.block<3,3>(3,3*indexRom) = robust_equilibrium::crossMatrix(center);
 
-        //hppDout(notice,"Center of rom collision :  ["<<center[0]<<" , "<<center[1]<<" , "<<center[2]<<"]");
-        hppDout(info,"p"<<indexRom<<"^T = "<<center.transpose());
-        //hppDout(info,"IP_hat at iter "<<indexRom<< " = \n"<<IP_hat);
         node->normal(pn);
+        Vector3 ti1,ti2;
         //hppDout(notice,"normal for this contact : "<<node->getNormal());
         // compute tangent vector :
         ti1 = pn.cross(Vector3(1,0,0));
@@ -482,7 +498,7 @@ namespace hpp {
         //hppDout(info,"t"<<indexRom<<"1 : "<<ti1.transpose());
         //hppDout(info,"t"<<indexRom<<"2 : "<<ti2.transpose());
 
-        //TODO : fill V with generating ray ([ n_i + \mu t_{i1} & n_i - \mu t_{i1} & n_i + \mu t_{i2} & n_i - \mu t_{i2}]
+        //fill V with generating ray ([ n_i + \mu t_{i1} & n_i - \mu t_{i1} & n_i + \mu t_{i2} & n_i - \mu t_{i2}]
         Vi = MatrixXX::Zero(3,4);
         Vi.col(0) = (pn + mu*ti1);
         Vi.col(1) = (pn - mu*ti1);
@@ -490,11 +506,51 @@ namespace hpp {
         Vi.col(3) = (pn - mu*ti2);
         for(size_t i = 0 ; i<4 ; i++)
           Vi.col(i).normalize();
-       // hppDout(notice,"V"<<indexRom<<" = \n"<<Vi);
-        V.block<3,4>(3*indexRom,4*indexRom) = Vi;
-       // hppDout(info,"V at iter "<<indexRom<<" : \n"<<V);
 
-        indexRom++;
+        if(rectangularContact_){
+          Vector3 pContact;
+          hppDout(notice,"Center of rom collision :  ["<<center[0]<<" , "<<center[1]<<" , "<<center[2]<<"]");
+          for(size_t i = 0 ; i<4 ; ++i){
+            // make a rectangle around center :
+            pContact = center;
+            //FIXME : only work on flat ground (z up)
+            if(i < 2 )
+              pContact[0] += sizeFootX_;
+            else
+              pContact[0] -= sizeFootX_;
+            if(i%2 == 0)
+              pContact[1] += sizeFootY_;
+            else
+              pContact[1] -= sizeFootY_;
+
+            //fill IP_hat with position : [I_3  pi_hat] ^T
+            IP_hat.block<3,3>(0,3*(indexRom+i)) = MatrixXX::Identity(3,3);
+            IP_hat.block<3,3>(3,3*(indexRom+i)) = robust_equilibrium::crossMatrix(pContact);
+
+            hppDout(notice,"position of rom collision :  ["<<pContact[0]<<" , "<<pContact[1]<<" , "<<pContact[2]<<"]");
+            hppDout(info,"p"<<(indexRom+i)<<"^T = "<<pContact.transpose());
+            hppDout(info,"IP_hat at iter "<<indexRom<< " = \n"<<IP_hat);
+
+            hppDout(notice,"V"<<indexRom<<" = \n"<<Vi);
+            V.block<3,4>(3*(indexRom+i),4*(indexRom+i)) = Vi;
+            hppDout(info,"V at iter "<<indexRom<<" : \n"<<V);
+          }
+          indexRom+=4;
+        }else{
+          //fill IP_hat with position : [I_3  pi_hat] ^T
+          IP_hat.block<3,3>(0,3*indexRom) = MatrixXX::Identity(3,3);
+          IP_hat.block<3,3>(3,3*indexRom) = robust_equilibrium::crossMatrix(center);
+
+          //hppDout(notice,"Center of rom collision :  ["<<center[0]<<" , "<<center[1]<<" , "<<center[2]<<"]");
+          hppDout(info,"p"<<indexRom<<"^T = "<<center.transpose());
+          //hppDout(info,"IP_hat at iter "<<indexRom<< " = \n"<<IP_hat);
+
+         // hppDout(notice,"V"<<indexRom<<" = \n"<<Vi);
+          V.block<3,4>(3*indexRom,4*indexRom) = Vi;
+         // hppDout(info,"V at iter "<<indexRom<<" : \n"<<V);
+        }
+
+
       } // for each ROMS
 
 

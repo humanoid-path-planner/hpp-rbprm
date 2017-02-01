@@ -99,6 +99,8 @@ private:
     const SteeringMethodKinodynamicPtr_t sm_;
     const SteeringMethodParabolaPtr_t smParabola_;
     const double mu = 0.5;
+    double sizeFootX_,sizeFootY_;
+    bool rectangularContact_;
 };
 /// \}
 } // namespace core
