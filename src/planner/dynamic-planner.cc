@@ -490,13 +490,19 @@ namespace hpp {
         Vector3 ti1,ti2;
         //hppDout(notice,"normal for this contact : "<<node->getNormal());
         // compute tangent vector :
-        ti1 = pn.cross(Vector3(1,0,0));
+        //tProj is the the direction of the head of the robot projected in plan (x,y)
+        Eigen::Quaterniond quat((*q)[3],(*q)[4],(*q)[5],(*q)[6]);
+        Vector3 tProj = quat*Vector3(1,0,0);
+        tProj[2] = 0;
+        ti1 = pn.cross(tProj);
+        if(ti1.dot(ti1)<0.001)
+          ti1 = pn.cross(Vector3(1,0,0));
         if(ti1.dot(ti1)<0.001)
           ti1 = pn.cross(Vector3(0,1,0));
         ti2 = pn.cross(ti1);
 
-        //hppDout(info,"t"<<indexRom<<"1 : "<<ti1.transpose());
-        //hppDout(info,"t"<<indexRom<<"2 : "<<ti2.transpose());
+        hppDout(info,"t"<<indexRom<<"1 : "<<ti1.transpose());
+        hppDout(info,"t"<<indexRom<<"2 : "<<ti2.transpose());
 
         //fill V with generating ray ([ n_i + \mu t_{i1} & n_i - \mu t_{i1} & n_i + \mu t_{i2} & n_i - \mu t_{i2}]
         Vi = MatrixXX::Zero(3,4);
@@ -509,31 +515,38 @@ namespace hpp {
 
         if(rectangularContact_){
           Vector3 pContact;
+          Vector3 shiftX,shiftY;
+          shiftX = sizeFootX_*ti2;
+          shiftY = sizeFootY_*ti1;
+
+
+          hppDout(notice,"shift x = "<<shiftX.transpose());
+          hppDout(notice,"shift y = "<<shiftY.transpose());
+
           hppDout(notice,"Center of rom collision :  ["<<center[0]<<" , "<<center[1]<<" , "<<center[2]<<"]");
           for(size_t i = 0 ; i<4 ; ++i){
             // make a rectangle around center :
             pContact = center;
-            //FIXME : only work on flat ground (z up)
             if(i < 2 )
-              pContact[0] += sizeFootX_;
+              pContact += shiftX;
             else
-              pContact[0] -= sizeFootX_;
+              pContact -= shiftX;
             if(i%2 == 0)
-              pContact[1] += sizeFootY_;
+              pContact += shiftY;
             else
-              pContact[1] -= sizeFootY_;
+              pContact -= shiftY;
 
             //fill IP_hat with position : [I_3  pi_hat] ^T
             IP_hat.block<3,3>(0,3*(indexRom+i)) = MatrixXX::Identity(3,3);
             IP_hat.block<3,3>(3,3*(indexRom+i)) = robust_equilibrium::crossMatrix(pContact);
 
             hppDout(notice,"position of rom collision :  ["<<pContact[0]<<" , "<<pContact[1]<<" , "<<pContact[2]<<"]");
-            hppDout(info,"p"<<(indexRom+i)<<"^T = "<<pContact.transpose());
-            hppDout(info,"IP_hat at iter "<<indexRom<< " = \n"<<IP_hat);
+           // hppDout(info,"p"<<(indexRom+i)<<"^T = "<<pContact.transpose());
+            //hppDout(info,"IP_hat at iter "<<indexRom<< " = \n"<<IP_hat);
 
-            hppDout(notice,"V"<<indexRom<<" = \n"<<Vi);
+           //hppDout(notice,"V"<<indexRom<<" = \n"<<Vi);
             V.block<3,4>(3*(indexRom+i),4*(indexRom+i)) = Vi;
-            hppDout(info,"V at iter "<<indexRom<<" : \n"<<V);
+           // hppDout(info,"V at iter "<<indexRom<<" : \n"<<V);
           }
           indexRom+=4;
         }else{
