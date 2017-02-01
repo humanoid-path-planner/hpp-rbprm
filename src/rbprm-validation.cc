@@ -20,32 +20,31 @@
 
 namespace
 {
-    hpp::core::CollisionValidationPtr_t tuneFclValidation(const hpp::model::RbPrmDevicePtr_t& robot)
-    {
-        hpp::core::CollisionValidationPtr_t validation = hpp::core::CollisionValidation::create(robot);
-        validation->collisionRequest_.enable_contact = true;
-        return validation;
-    }
+  hpp::core::CollisionValidationPtr_t tuneFclValidation(const hpp::model::RbPrmDevicePtr_t& robot)
+  {
+    hpp::core::CollisionValidationPtr_t validation = hpp::core::CollisionValidation::create(robot);
+    validation->collisionRequest_.enable_contact = true;
+    return validation;
+  }
 
-    hpp::rbprm::T_RomValidation createRomValidations(const hpp::model::RbPrmDevicePtr_t& robot,
-                                                     const std::map<std::string, std::vector<std::string> >& affFilters)
+  hpp::rbprm::T_RomValidation createRomValidations(const hpp::model::RbPrmDevicePtr_t& robot,
+                                                   const std::map<std::string, std::vector<std::string> >& affFilters)
+  {
+    hpp::rbprm::T_RomValidation result;
+    for(hpp::model::T_Rom::const_iterator cit = robot->robotRoms_.begin(); cit != robot->robotRoms_.end(); ++cit)
     {
-        hpp::rbprm::T_RomValidation result;
-        for(hpp::model::T_Rom::const_iterator cit = robot->robotRoms_.begin();
-            cit != robot->robotRoms_.end(); ++cit)
-        {
-            std::map<std::string, std::vector<std::string> >::const_iterator cfit = affFilters.find(cit->first);
-            if(cfit != affFilters.end())
-            {
-                result.insert(std::make_pair(cit->first, hpp::rbprm::RbPrmRomValidation::create(cit->second, cfit->second)));
-            }
-            else
-            {
-                result.insert(std::make_pair(cit->first, hpp::rbprm::RbPrmRomValidation::create(cit->second)));
-            }
-        }
-        return result;
+      std::map<std::string, std::vector<std::string> >::const_iterator cfit = affFilters.find(cit->first);
+      if(cfit != affFilters.end())
+      {
+        result.insert(std::make_pair(cit->first, hpp::rbprm::RbPrmRomValidation::create(cit->second, cfit->second)));
+      }
+      else
+      {
+        result.insert(std::make_pair(cit->first, hpp::rbprm::RbPrmRomValidation::create(cit->second)));
+      }
     }
+    return result;
+  }
 }
 
 namespace hpp {
@@ -54,77 +53,79 @@ namespace hpp {
 
     RbPrmValidationPtr_t RbPrmValidation::create
     (const model::RbPrmDevicePtr_t& robot, const std::vector<std::string>& filter,
-			const std::map<std::string, std::vector<std::string> >& affFilters,
-			const std::map<std::string, std::vector<model::CollisionObjectPtr_t> >& affordances,
-			const core::ObjectVector_t& geometries)
+     const std::map<std::string, std::vector<std::string> >& affFilters,
+     const std::map<std::string, std::vector<model::CollisionObjectPtr_t> >& affordances,
+     const core::ObjectVector_t& geometries)
     {
       RbPrmValidation* ptr = new RbPrmValidation (robot, filter, affFilters,
-																									affordances, geometries);
+                                                  affordances, geometries);
       return RbPrmValidationPtr_t (ptr);
     }
 
     RbPrmValidation::RbPrmValidation (const model::RbPrmDevicePtr_t& robot
                                       , const std::vector<std::string>& filter,
-																				const std::map<std::string,
-																					std::vector<std::string> >& affFilters,
-																				const std::map<std::string, 
-																					std::vector<model::CollisionObjectPtr_t> >& affordances,
-																				const core::ObjectVector_t& geometries)
-        : trunkValidation_(tuneFclValidation(robot))
-        , romValidations_(createRomValidations(robot, affFilters))
-        , defaultFilter_(filter)
-        , unusedReport_(new CollisionValidationReport)
+                                      const std::map<std::string,
+                                      std::vector<std::string> >& affFilters,
+                                      const std::map<std::string,
+                                      std::vector<model::CollisionObjectPtr_t> >& affordances,
+                                      const core::ObjectVector_t& geometries)
+      : trunkValidation_(tuneFclValidation(robot))
+      , romValidations_(createRomValidations(robot, affFilters))
+      , unusedReport_(new CollisionValidationReport)
     {
-        for(std::vector<std::string>::const_iterator cit = defaultFilter_.begin();
-            cit != defaultFilter_.end(); ++cit)
+      for(std::vector<std::string>::const_iterator cit = filter.begin();
+          cit != filter.end(); ++cit)
+      {
+        if(romValidations_.find(*cit) == romValidations_.end())
         {
-            if(romValidations_.find(*cit) == romValidations_.end())
-            {
-                std::cout << "warning: default filter impossible to match in rbprmshooter" << std::endl;
-            }
+          std::cout << "warning: default filter impossible to match in rbprmshooter" << std::endl;
         }
+      }
 
-        for(hpp::core::ObjectVector_t::const_iterator cit = geometries.begin();
-            cit != geometries.end(); ++cit)
-        {
-            addObstacle(*cit);
+      for(hpp::core::ObjectVector_t::const_iterator cit = geometries.begin();
+          cit != geometries.end(); ++cit)
+      {
+        addObstacle(*cit);
+      }
+      // Add obstacles corresponding to affordances of given rom
+      hppDout(notice,"add obstacle, filter size = "<<filter.size());
+      for(hpp::model::T_Rom::const_iterator cit = robot->robotRoms_.begin(); cit != robot->robotRoms_.end(); ++cit)
+      {
+        std::map<std::string, std::vector<std::string> >::const_iterator affFilterIt = affFilters.find(cit->first);
+        // Check if all rom filters have been given an affordance filter.
+        // If not, an error is thrown.
+        if (affFilterIt == affFilters.end ()) {
+          hppDout(notice,"Filter " + cit->first + " has no affordance filter settings! Please add them to continue.");
+        }else{
+          defaultFilter_.push_back(cit->first);
+
+          T_RomValidation::const_iterator romIt = romValidations_.find (affFilterIt->first);
+          if (romIt == romValidations_.end ()) {
+            // TODO: Throw error?
+            std::runtime_error ("No romValidator object found for filter " + affFilterIt->first + "!");
+          }
+          for (unsigned int fIdx = 0; fIdx < affFilterIt->second.size (); fIdx++) {
+            std::map<std::string, std::vector<model::CollisionObjectPtr_t> >::const_iterator affIt = affordances.find (affFilterIt->second[fIdx]);
+            if (affIt == affordances.end ()) {
+              std::cout << "Filter " << affFilterIt->first << " has invalid affordance filter setting "
+                        << affFilterIt->second[fIdx] << ". Ignoring such filter setting." << std::endl;
+            } else {
+              for (unsigned int affIdx = 0; affIdx < affIt->second.size (); affIdx++) {
+                romIt->second->addObstacle(affIt->second[affIdx]);
+              }
+            }
+          }
+          if(std::find(filter.begin(), filter.end(), romIt->first) == filter.end()){
+            romIt->second->setOptional(true);
+          }
         }
-				// Add obstacles corresponding to affordances of given rom
-				std::vector<std::string>::const_iterator filterIt;
-				for (filterIt = defaultFilter_.begin (); filterIt != defaultFilter_.end();
-					filterIt++) {
-						std::map<std::string, std::vector<std::string> >::const_iterator affFilterIt =
-							affFilters.find(*filterIt);
-						// Check if all rom filters have been given an affordance filter.
-						// If not, an error is thrown.
-						if (affFilterIt == affFilters.end ()) {
-							throw std::runtime_error ("Filter "
-              	+ *filterIt + " has no affordance filter settings! Please add them to continue.");
-						}
-					for (unsigned int fIdx = 0; fIdx < affFilterIt->second.size (); fIdx++) {
-						std::map<std::string, std::vector<model::CollisionObjectPtr_t> >::const_iterator affIt =
-							affordances.find (affFilterIt->second[fIdx]);
-						if (affIt == affordances.end ()) {
-						std::cout << "Filter " << affFilterIt->first << " has invalid affordance filter setting "
-						<< affFilterIt->second[fIdx] << ". Ignoring such filter setting." << std::endl;
-						} else {
-							for (unsigned int affIdx = 0; affIdx < affIt->second.size (); affIdx++) {
-								T_RomValidation::const_iterator romIt =
-								romValidations_.find (affFilterIt->first);
-								if (romIt == romValidations_.end ()) {
-									// TODO: Throw error?
-									std::runtime_error ("No romValidator object found for filter " + affFilterIt->first + "!");
-						 		} else {
-        					romIt->second->addObstacle(affIt->second[affIdx]);
-								}
-							}
-						}
-					}
-				}
+      }
+
     }
 
+
     bool RbPrmValidation::validateRoms(const core::Configuration_t& config,
-                      const std::vector<std::string>& filter, ValidationReportPtr_t& validationReport)
+                                       const std::vector<std::string>& filter, ValidationReportPtr_t& validationReport)
 
     {
       /*  hppDout(notice, "Filters = ");
@@ -132,116 +133,115 @@ namespace hpp {
           hppDout(notice,"filter : "<<*it);*/
 
       // build a rbprm report and copy trunk report informations
-        RbprmValidationReportPtr_t rbprmReport(new RbprmValidationReport);
+      RbprmValidationReportPtr_t rbprmReport(new RbprmValidationReport);
 
-        //hppDout(notice,"report in validateRoms = "<<rbprmReport);
+      //hppDout(notice,"report in validateRoms = "<<rbprmReport);
 
-        if(validationReport){// if the trunk is in collision, we copy the informations in the new report
-          CollisionValidationReportPtr_t colReport = boost::dynamic_pointer_cast<CollisionValidationReport>(validationReport);
-          if(colReport->result.isCollision()){
-            rbprmReport->object1 = colReport->object1;
-            rbprmReport->object2 = colReport->object2;
-            rbprmReport->result = colReport->result;
-            rbprmReport->trunkInCollision = true;
-          }else{
-            rbprmReport->trunkInCollision=false;
-          }
-          //hppDout(notice, "trunk report exist");
+      if(validationReport){// if the trunk is in collision, we copy the informations in the new report
+        CollisionValidationReportPtr_t colReport = boost::dynamic_pointer_cast<CollisionValidationReport>(validationReport);
+        if(colReport->result.isCollision()){
+          rbprmReport->object1 = colReport->object1;
+          rbprmReport->object2 = colReport->object2;
+          rbprmReport->result = colReport->result;
+          rbprmReport->trunkInCollision = true;
         }else{
           rbprmReport->trunkInCollision=false;
-          //hppDout(notice, "trunk report doesn't exist");
         }
+        //hppDout(notice, "trunk report exist");
+      }else{
+        rbprmReport->trunkInCollision=false;
+        //hppDout(notice, "trunk report doesn't exist");
+      }
 
-        ValidationReportPtr_t rbprmReportCast =  rbprmReport;
+      ValidationReportPtr_t rbprmReportCast =  rbprmReport;
 
-        //hppDout(notice,"after cast  = "<<rbprmReportCast);
+      //hppDout(notice,"after cast  = "<<rbprmReportCast);
 
-
-        unsigned int filterMatch(0);
-        for(T_RomValidation::const_iterator cit = romValidations_.begin();
-            cit != romValidations_.end() && (filterMatch < 1 || filterMatch < filter.size()); ++cit)
+      unsigned int filterMatch(0);
+      for(T_RomValidation::const_iterator cit = romValidations_.begin();
+          cit != romValidations_.end() && (filterMatch < 1 || filterMatch < filter.size()); ++cit)
+      {
+        if((filter.empty() || std::find(filter.begin(), filter.end(), cit->first) != filter.end())
+           && cit->second->validate(config, rbprmReportCast))
         {
-            if((filter.empty() || std::find(filter.begin(), filter.end(), cit->first) != filter.end())
-                    && cit->second->validate(config, rbprmReportCast))
-            {
-                ++filterMatch;
-            }
+          ++filterMatch;
         }
+      }
 
-        if(filterMatch >= filter.size())
-          rbprmReport->romsValid=true;
-        else
-          rbprmReport->romsValid=false;
-        validationReport = rbprmReport;
-   //     std::string tr = (filterMatch >= filter.size()) ? "true" : "false";
-   //     hppDout(notice," validate romes ?" << filterMatch << " " <<  tr );
-        return filterMatch >= filter.size();
+      if(filterMatch >= filter.size())
+        rbprmReport->romsValid=true;
+      else
+        rbprmReport->romsValid=false;
+      validationReport = rbprmReport;
+      //     std::string tr = (filterMatch >= filter.size()) ? "true" : "false";
+      //     hppDout(notice," validate romes ?" << filterMatch << " " <<  tr );
+      return filterMatch >= filter.size();
     }
 
     bool RbPrmValidation::validateRoms(const core::Configuration_t& config, ValidationReportPtr_t& validationReport)
     {
-        return validateRoms(config,defaultFilter_,validationReport);
+      return validateRoms(config,defaultFilter_,validationReport);
     }
 
     bool RbPrmValidation::validateRoms(const core::Configuration_t& config,const std::vector<std::string>& filter)
     {
-        ValidationReportPtr_t unusedReport;
-        return validateRoms(config,filter,unusedReport);
+      ValidationReportPtr_t unusedReport;
+      return validateRoms(config,filter,unusedReport);
     }
 
     bool RbPrmValidation::validateRoms(const core::Configuration_t& config)
     {
-        ValidationReportPtr_t unusedReport;
-        return validateRoms(config,defaultFilter_,unusedReport);
+      ValidationReportPtr_t unusedReport;
+      return validateRoms(config,defaultFilter_,unusedReport);
     }
 
 
     bool RbPrmValidation::validate (const Configuration_t& config)
     {
-        return trunkValidation_->validate(config,unusedReport_)
-             && validateRoms(config, defaultFilter_);
+      return trunkValidation_->validate(config,unusedReport_)
+          && validateRoms(config, defaultFilter_);
     }
 
     bool RbPrmValidation::validate (const Configuration_t& config,
-               ValidationReportPtr_t& validationReport)
+                                    ValidationReportPtr_t& validationReport)
     {
-        return trunkValidation_->validate(config, validationReport)
-                && validateRoms(config, defaultFilter_,validationReport);
+      return trunkValidation_->validate(config, validationReport)
+          && validateRoms(config, defaultFilter_,validationReport);
 
     }
 
 
 
     bool RbPrmValidation::validate (const Configuration_t& config,
-               const std::vector<std::string> &filter)
+                                    const std::vector<std::string> &filter)
     {
-        return trunkValidation_->validate(config, unusedReport_)
-                && validateRoms(config, filter);
+      return trunkValidation_->validate(config, unusedReport_)
+          && validateRoms(config, filter);
     }
 
     bool RbPrmValidation::validate (const Configuration_t& config,
-                    hpp::core::ValidationReportPtr_t &validationReport,
-                    const std::vector<std::string>& filter)
+                                    hpp::core::ValidationReportPtr_t &validationReport,
+                                    const std::vector<std::string>& filter)
     {
-        return trunkValidation_->validate(config, validationReport)
-                && validateRoms(config, filter,validationReport);
+      return trunkValidation_->validate(config, validationReport)
+          && validateRoms(config, filter,validationReport);
     }
 
 
     void RbPrmValidation::addObstacle (const CollisionObjectPtr_t& object)
     {
-        trunkValidation_->addObstacle(object);
-		}
+      trunkValidation_->addObstacle(object);
+    }
 
     void RbPrmValidation::removeObstacleFromJoint
     (const JointPtr_t& joint, const CollisionObjectPtr_t& obstacle)
     {
-        trunkValidation_->removeObstacleFromJoint(joint, obstacle);
-        for(T_RomValidation::const_iterator cit = romValidations_.begin();
-            cit != romValidations_.end(); ++cit)
-        {
-            cit->second->removeObstacleFromJoint(joint, obstacle);
-        }
+      trunkValidation_->removeObstacleFromJoint(joint, obstacle);
+      for(T_RomValidation::const_iterator cit = romValidations_.begin();
+          cit != romValidations_.end(); ++cit)
+      {
+        cit->second->removeObstacleFromJoint(joint, obstacle);
+      }
     }
 
   }// namespace rbprm

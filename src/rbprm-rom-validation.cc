@@ -35,7 +35,9 @@ namespace hpp {
                                            ,const std::vector<std::string>& affFilters)
         : hpp::core::CollisionValidation(robot)
         , filter_(affFilters)
-        , unusedReport_(new CollisionValidationReport) {}
+        , unusedReport_(new CollisionValidationReport)
+        , optional_(false)
+    { }
 
     bool RbPrmRomValidation::validate (const Configuration_t& config)
     {
@@ -73,7 +75,10 @@ namespace hpp {
            collision = false;
        }*/
 
-      return collision;
+      if(optional_)
+        return true;
+      else
+        return collision;
     }
 
   }// namespace rbprm

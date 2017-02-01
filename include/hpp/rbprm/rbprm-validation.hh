@@ -142,7 +142,7 @@ namespace hpp {
       const core::CollisionValidationPtr_t trunkValidation_;
       /// CollisionValidation for the range of motion of the limbs
       const T_RomValidation romValidations_;
-      const std::vector<std::string> defaultFilter_;
+      std::vector<std::string> defaultFilter_;
 
     protected:
       RbPrmValidation (const model::RbPrmDevicePtr_t& robot,

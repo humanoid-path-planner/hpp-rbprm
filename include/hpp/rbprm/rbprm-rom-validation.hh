@@ -61,11 +61,14 @@ namespace hpp {
     public:
       const std::vector<std::string> filter_;
 
+      void setOptional(bool optional){optional_ = optional;}
     protected:
       RbPrmRomValidation (const model::DevicePtr_t &robot,
                        const std::vector<std::string>& affFilters);
     private:
       core::ValidationReportPtr_t unusedReport_;
+      bool optional_;
+
     }; // class RbPrmValidation
     /// \}
   } // namespace rbprm
