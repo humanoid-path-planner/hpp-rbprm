@@ -181,6 +181,8 @@ namespace hpp{
       Vector3 toV,fromV,dVelocity;
       Vector3 direction;
 
+      hppDout(notice,"near = "<<model::displayConfig((*(near->configuration()))));
+      hppDout(notice,"target = "<<model::displayConfig(target));
       if(reverse){
         toP = near->configuration()->head(3);
         fromP = target.head(3);
@@ -204,7 +206,7 @@ namespace hpp{
       hppDout(info, "direction  = "<<direction.transpose());
       // define LP problem : with m+1 variables and 6 constraints
       int m = node->getNumberOfContacts() * 4;
-
+      hppDout(notice,"m = "<<m);
       MatrixXX A = MatrixXX::Zero(6, m+1);
       // build A : [ -G (Hv)^T] :
       A.topLeftCorner(6,m) = - node->getG();

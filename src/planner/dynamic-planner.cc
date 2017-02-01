@@ -285,6 +285,7 @@ namespace hpp {
       {
         core::PathValidationReportPtr_t report;
         pathValidFromStart = pathValidation->validate (path, false, validPath, report);
+        pathValidFromStart = pathValidFromStart && (validPath->end() == *q_rand);
         // Insert new path to q_near in roadmap
         if(validPath){
           value_type t_final = validPath->timeRange ().second;
@@ -641,7 +642,8 @@ namespace hpp {
               roadmap ()->addEdge (initNode, *itn, projPath);
             }else{
               core::ConfigurationPtr_t q_new(new core::Configuration_t(validPath->end()));
-              roadmap()->addNodeAndEdge(initNode,q_new,validPath);
+              core::NodePtr_t x_new = roadmap()->addNodeAndEdge(initNode,q_new,validPath);
+              computeGIWC(x_new);
             }
           }/*else{
             std::vector<std::string> filter;
