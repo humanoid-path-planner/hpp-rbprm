@@ -122,6 +122,7 @@ namespace hpp {
       robust_equilibrium::StaticEquilibrium* sEq_;
       core::DeviceWkPtr_t device_;
       SteeringMethodKinodynamicWkPtr_t weak_;
+
     }; // class rbprm-kinodynamic
   } // namespace hpp
 } // namespace rbprm

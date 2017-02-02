@@ -101,6 +101,7 @@ private:
     const double mu = 0.5;
     double sizeFootX_,sizeFootY_;
     bool rectangularContact_;
+    bool tryJump_;
 };
 /// \}
 } // namespace core

@@ -100,6 +100,13 @@ namespace hpp {
             sizeFootY_ =0;
             rectangularContact_ = 0;
           }
+          try {
+            tryJump_ = (bool)problem.get<double> (std::string("tryJump"));
+          } catch (const std::exception& e) {
+            tryJump_=false;
+          }
+          hppDout(notice,"tryJump in steering method = "<<tryJump_);
+
     }
 
     DynamicPlanner::DynamicPlanner (const Problem& problem,
@@ -121,6 +128,13 @@ namespace hpp {
             sizeFootY_ =0;
             rectangularContact_ = 0;
           }
+          try {
+            tryJump_ = (bool)problem.get<double> (std::string("tryJump"));
+          } catch (const std::exception& e) {
+            tryJump_=false;
+          }
+          hppDout(notice,"tryJump in planner = "<<tryJump_);
+
     }
 
     void DynamicPlanner::init (const DynamicPlannerWkPtr_t& weak)
@@ -632,7 +646,7 @@ namespace hpp {
         }
         if (projPath) {
           core::PathValidationReportPtr_t report;
-         // roadmap ()->addEdge (initNode, *itn, projPath);  // TODO a supprimer
+         // roadmap ()->addEdge (initNode, *itn, projPath);  // (TODO a supprimer)display the path no matter if it's successful or not
 
           bool pathValid = pathValidation->validate (projPath, false, validPath,
                                                      report);
@@ -640,30 +654,32 @@ namespace hpp {
               path->timeRange ().first) {
             if(validPath->end() == *((*itn)->configuration())){
               roadmap ()->addEdge (initNode, *itn, projPath);
-            }else{
+            }
+          }else{
+            if(tryJump_){
+              std::vector<std::string> filter;
+              core::ValidationReportPtr_t valReport;
+              // check if the validation fail because of the ROM or because of the trunk
+              RbPrmPathValidationPtr_t rbprmPathValidation = boost::dynamic_pointer_cast<RbPrmPathValidation>(pathValidation);
+              bool trunkValid = rbprmPathValidation->getValidator()->validate((*projPath)(report->parameter),valReport,filter);
+              if(trunkValid){ // if it failed because of the ROM, we can try a parabola
+                core::ConfigurationPtr_t q_jump(new core::Configuration_t(validPath->end()));
+                core::NodePtr_t x_goal;
+                bool parabolaSuccess = tryParabolaPath(initNode,q_jump,q2,false,x_jump,x_goal,kinoPath,paraPath);
+                hppDout(notice,"parabola success = "<<parabolaSuccess);
+                if(parabolaSuccess){
+                  hppDout(notice,"x_goal conf = "<<displayConfig(*(x_goal->configuration())));
+                  roadmap()->addEdge(x_jump,*itn,paraPath);
+                }
+              }else{
+                hppDout(notice,"trunk in collision");
+              }
+            }else if(validPath->timeRange ().second !=  path->timeRange ().first){
               core::ConfigurationPtr_t q_new(new core::Configuration_t(validPath->end()));
               core::NodePtr_t x_new = roadmap()->addNodeAndEdge(initNode,q_new,validPath);
               computeGIWC(x_new);
             }
-          }/*else{
-            std::vector<std::string> filter;
-            core::ValidationReportPtr_t valReport;
-            // check if the validation fail because of the ROM or because of the trunk
-            RbPrmPathValidationPtr_t rbprmPathValidation = boost::dynamic_pointer_cast<RbPrmPathValidation>(pathValidation);
-            bool trunkValid = rbprmPathValidation->getValidator()->validate((*projPath)(report->parameter),valReport,filter);
-            if(trunkValid){ // if it failed because of the ROM, we can try a parabola
-              core::ConfigurationPtr_t q_jump(new core::Configuration_t(validPath->end()));
-              core::NodePtr_t x_goal;
-              bool parabolaSuccess = tryParabolaPath(initNode,q_jump,q2,false,x_jump,x_goal,kinoPath,paraPath);
-              hppDout(notice,"parabola success = "<<parabolaSuccess);
-              if(parabolaSuccess){
-                hppDout(notice,"x_goal conf = "<<displayConfig(*(x_goal->configuration())));
-                roadmap()->addEdge(x_jump,*itn,paraPath);
-              }
-            }else{
-              hppDout(notice,"trunk in collision");
-            }
-          }*/
+          }
         }
       }
     }

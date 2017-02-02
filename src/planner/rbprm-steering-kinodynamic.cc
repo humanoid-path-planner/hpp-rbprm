@@ -200,8 +200,8 @@ namespace hpp{
     //  dVelocity.normalize();
       hppDout(info, "delta position  = "<<dPosition.transpose());
       hppDout(info, "delta velocity  = "<<dVelocity.transpose());
-      direction = dPosition + dVelocity;
-      //direction = dPosition;
+      //direction = dPosition + dVelocity;
+      direction = dPosition;
       direction.normalize();
       hppDout(info, "direction  = "<<direction.transpose());
       // define LP problem : with m+1 variables and 6 constraints
@@ -221,15 +221,12 @@ namespace hpp{
       sEq_->findMaximumAcceleration(A, node->geth(),alpha0);
 
       hppDout(info,"Amax found : "<<alpha0);
-      if(alpha0 < 0 )
-        alpha0 = aMaxFixed_;
-      else{
-        alpha0 = std::min(alpha0,aMaxFixed_);
-        alpha0 -= 0.01; //FIX ME ???
-      }
+      alpha0 = std::min(alpha0,aMaxFixed_);
+      alpha0 -= 0.01; //FIX ME ???
+
       hppDout(info,"Amax after min : "<<alpha0);
       Vector3 aMax = alpha0*direction;
-      if(aMax[2] < aMaxFixed_)
+      if((aMax[2] < aMaxFixed_) && tryJump_)
         aMax[2] = aMaxFixed_;
       setAmax(aMax);
       hppDout(info,"Amax vector : "<<aMax_.transpose());

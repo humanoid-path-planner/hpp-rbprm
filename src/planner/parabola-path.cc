@@ -132,7 +132,6 @@ namespace hpp {
       const std::size_t indexECS = nbConfig - ecsDim;
       for (std::size_t i = 0; i < ecsDim; i++)
         result (indexECS + i) = 0;
-      hppDout(notice,"impl compuite = "<<model::displayConfig(result));
       return true;
     }
 
