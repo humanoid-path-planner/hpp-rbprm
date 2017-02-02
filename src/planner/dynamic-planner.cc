@@ -567,8 +567,8 @@ namespace hpp {
          // hppDout(notice,"V"<<indexRom<<" = \n"<<Vi);
           V.block<3,4>(3*indexRom,4*indexRom) = Vi;
          // hppDout(info,"V at iter "<<indexRom<<" : \n"<<V);
+          indexRom++;
         }
-
 
       } // for each ROMS
 
