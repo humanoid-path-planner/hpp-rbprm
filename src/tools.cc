@@ -19,9 +19,11 @@
 #include <iostream>
 #include <fstream>
 #include <hpp/model/joint.hh>
+#include <hpp/model/joint-configuration.hh>
 #include <hpp/model/device.hh>
 #include <hpp/core/config-projector.hh>
 #include <hpp/core/locked-joint.hh>
+#include <hpp/core/equation.hh>
 
 namespace hpp {
   namespace tools {
@@ -90,6 +92,91 @@ namespace hpp {
             }
         }
         return result;
+    }
+
+    fcl::Matrix3f GetZRotMatrix(const core::value_type theta)
+    {
+        core::value_type c = cos(theta), s= sin(theta);
+        fcl::Matrix3f r;
+        r(0,0)= c; r(0,1)= -s;
+        r(1,0)= s; r(1,1)= c;
+        r(2,2)= 1;
+        return r;
+    }
+
+    fcl::Matrix3f GetYRotMatrix(const core::value_type theta)
+    {
+        core::value_type c = cos(theta), s= sin(theta);
+        fcl::Matrix3f r;
+        r(0,0)=  c; r(0,2)= s;
+        r(1,1)= 1;
+        r(2,0)= -s; r(2,2)= c;
+        return r;
+    }
+
+    fcl::Matrix3f GetXRotMatrix(const core::value_type theta)
+    {
+        core::value_type c = cos(theta), s= sin(theta);
+        fcl::Matrix3f r;
+        r(0,0)= 1;
+        r(1,1)= c; r(1,2)= -s;
+        r(2,0)= s; r(2,2)=  c;
+        return r;
+    }
+
+    model::value_type angleBetweenQuaternions (model::ConfigurationIn_t  q1, model::ConfigurationIn_t  q2,
+                                               bool& cosIsNegative)
+    {
+        if (q1 == q2)
+        {
+            cosIsNegative = false;
+            return 0;
+        }
+        model::value_type innerprod = q1.dot(q2);
+        assert (fabs (innerprod) < 1.001);
+        if (innerprod < -1) innerprod = -1;
+        if (innerprod >  1) innerprod =  1;
+        cosIsNegative = (innerprod < 0);
+        model::value_type theta = acos (innerprod);
+        return theta;
+    }
+
+    model::Configuration_t interpolate(model::ConfigurationIn_t  q1, model::ConfigurationIn_t  q2, const model::value_type& u)
+    {
+        bool cosIsNegative;
+        model::value_type angle = angleBetweenQuaternions(q1, q2, cosIsNegative);
+        const int invertor = (cosIsNegative) ? -1 : 1;
+        const model::value_type theta = (cosIsNegative) ? (M_PI - angle) : angle;
+        // theta is between 0 and M_PI/2.
+        // sin(alpha*theta)/sin(theta) in 0 should be computed differently.
+        if (fabs (theta) > 1e-6)
+        {
+            const model::value_type sintheta_inv = 1 / sin (theta);
+            return (sin ((1-u)*theta) * sintheta_inv)  * q1 + invertor * (sin (u*theta) * sintheta_inv) * q2;
+        }
+        else
+        {
+            return (1-u) * q1 + invertor * u * q2;
+        }
+    }
+
+    model::value_type distance (model::ConfigurationIn_t  q1, model::ConfigurationIn_t  q2)
+    {
+        bool cosIsNegative;
+        model::value_type theta = angleBetweenQuaternions (q1, q2, cosIsNegative);
+        return 2 * (cosIsNegative ? M_PI - theta : theta);
+    }
+
+    void LockJoint(const model::JointPtr_t joint, core::ConfigProjectorPtr_t& projector, const bool constant)
+    {
+        const core::Configuration_t& c = joint->robot()->currentConfiguration();
+        core::size_type rankInConfiguration (joint->rankInConfiguration ());
+        core::LockedJointPtr_t lockedJoint = core::LockedJoint::create(joint,c.segment(rankInConfiguration, joint->configSize()));
+        if(!constant)
+        {
+            lockedJoint->comparisonType(core::Equality::create());
+        }
+        projector->add(lockedJoint);
     }
 
     void LockJointRec(const std::string& spared, const model::JointPtr_t joint, core::ConfigProjectorPtr_t& projector)

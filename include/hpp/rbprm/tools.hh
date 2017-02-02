@@ -30,6 +30,11 @@ namespace hpp {
   /// Uses Rodriguez formula to find transformation between two vectors.
   Eigen::Matrix3d GetRotationMatrix(const Eigen::Vector3d& from, const Eigen::Vector3d& to);
   fcl::Matrix3f GetRotationMatrix(const fcl::Vec3f& from, const fcl::Vec3f& to);
+  fcl::Matrix3f GetZRotMatrix(const core::value_type theta);
+  fcl::Matrix3f GetYRotMatrix(const core::value_type theta);
+  fcl::Matrix3f GetXRotMatrix(const core::value_type theta);
+  model::Configuration_t interpolate(model::ConfigurationIn_t q1, model::ConfigurationIn_t q2, const model::value_type& u);
+  model::value_type distance (model::ConfigurationIn_t q1, model::ConfigurationIn_t q2);
 
   template<typename T>
   void RemoveEffectorCollision(T& validation, model::JointPtr_t effectorJoint, const model::ObjectVector_t& obstacles);
@@ -49,6 +54,12 @@ namespace hpp {
   /// \param joint Root of the considered kinematic chain to block
   /// \param projector Projector on which to block the joints
   void LockJointRec(const std::vector<std::string>& spared, const model::JointPtr_t joint, core::ConfigProjectorPtr_t& projector);
+
+  ///Lock a single joint
+  /// \param joint of the considered kinematic chain to block
+  /// \param projector Projector on which to block the joints
+  /// \param constant if false, joint lock constraint can be updated with rightHandSide method
+  void LockJoint(const model::JointPtr_t joint, core::ConfigProjectorPtr_t& projector, const bool constant=true);
   ///Some io tools for serialization
   namespace io
   {
@@ -71,7 +82,15 @@ namespace hpp {
   template<typename T>
   void RemoveEffectorCollisionRec(T& validation, model::JointPtr_t joint, const model::CollisionObjectPtr_t obstacle)
   {
-      validation.removeObstacleFromJoint(joint,obstacle);
+      try
+      {
+        validation.removeObstacleFromJoint(joint,obstacle);
+      }
+      catch(const std::runtime_error& e)
+      {
+          std::cout << "WARNING: " << e.what() << std::endl;
+          return;
+      }
       //then sons
       for(std::size_t i =0; i < joint->numberChildJoints(); ++i)
       {
@@ -92,8 +111,16 @@ namespace hpp {
   template<typename T>
   void RemoveEffectorCollision(T& validation, model::JointPtr_t effectorJoint, const model::CollisionObjectPtr_t obstacle)
   {
-      //remove actual effector or not ?
-      validation.removeObstacleFromJoint(effectorJoint,obstacle);
+      try
+      {
+          //remove actual effector or not ?
+          validation.removeObstacleFromJoint(effectorJoint,obstacle);
+      }
+      catch(const std::runtime_error& e)
+      {
+          std::cout << "WARNING: " << e.what() << std::endl;
+          return;
+      }
       //then sons
       for(std::size_t i =0; i < effectorJoint->numberChildJoints(); ++i)
       {
@@ -111,7 +138,15 @@ namespace hpp {
       for(model::ObjectVector_t::const_iterator cit = collisionObjects.begin();
           cit != collisionObjects.end(); ++cit)
       {
-          collisionValidation.removeObstacleFromJoint(joint, *cit);
+          try
+          {
+              collisionValidation.removeObstacleFromJoint(joint, *cit);
+          }
+          catch(const std::runtime_error& e)
+          {
+              std::cout << "WARNING: "<< e.what() << std::endl;
+              return;
+          }
       }
       for(std::size_t i=0; i<joint->numberChildJoints(); ++i)
       {

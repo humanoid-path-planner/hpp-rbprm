@@ -16,8 +16,8 @@
 // hpp-core  If not, see
 // <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_RBPRM_LIMB_RRT_SHOOTER_HH
-# define HPP_RBPRM_LIMB_RRT_SHOOTER_HH
+#ifndef HPP_RBPRM_COM_RRT_SHOOTER_HH
+# define HPP_RBPRM_COM_RRT_SHOOTER_HH
 
 # include <hpp/rbprm/config.hh>
 # include <hpp/rbprm/interpolation/time-constraint-shooter.hh>
@@ -31,16 +31,29 @@
 namespace hpp {
     namespace rbprm {
     namespace interpolation {
-    struct LimbRRTShooterFactory
+
+    struct ComRRTShooterFactory
     {
-        TimeConstraintShooterPtr_t operator()(const RbPrmFullBodyPtr_t fullBody, const hpp::core::PathPtr_t path,
+         ComRRTShooterFactory(core::PathPtr_t guidePath) : guidePath_(guidePath){}
+        ~ComRRTShooterFactory(){}
+        TimeConstraintShooterPtr_t operator()(const RbPrmFullBodyPtr_t fullBody, const hpp::core::PathPtr_t comPath,
                         const std::size_t pathDofRank, const hpp::rbprm::State &from, const hpp::rbprm::State &to,
                                               const T_TimeDependant& tds, core::ConfigProjectorPtr_t projector) const;
+        core::PathPtr_t guidePath_;
     };
 
+    struct EffectorRRTShooterFactory
+    {
+         EffectorRRTShooterFactory(core::PathPtr_t guidePath) : guidePath_(guidePath){}
+        ~EffectorRRTShooterFactory(){}
+        TimeConstraintShooterPtr_t operator()(const RbPrmFullBodyPtr_t fullBody, const hpp::core::PathPtr_t comPath,
+                        const std::size_t pathDofRank, const hpp::rbprm::State &from, const hpp::rbprm::State &to,
+                                              const T_TimeDependant& tds, core::ConfigProjectorPtr_t projector) const;
+        core::PathPtr_t guidePath_;
+    };
 /// \}
     } // namespace interpolation
     } // namespace rbprm
 } // namespace hpp
 
-#endif // HPP_RBPRM_LIMB_RRT_SHOOTER_HH
+#endif // HPP_RBPRM_COM_RRT_SHOOTER_HH

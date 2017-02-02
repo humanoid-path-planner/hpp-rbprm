@@ -9,7 +9,7 @@ using namespace std;
 
 namespace
 {
-    const double Epsilon = 0.0001;
+    const double Epsilon = 0.001;
 
     typedef std::vector<Vector3d,Eigen::aligned_allocator<Vector3d> > T_Point;
 }
@@ -19,7 +19,7 @@ namespace
 //    Return: >0 for P2 left of the line through P0 and P1
 //            =0 for P2 on the line
 //            <0 for P2 right of the line
-//    See: the January 2001 Algorithm "Area of 2D and 3D Triangles and Polygons"
+//    See: the January 201 Algorithm "Area of 2D and 3D Triangles and Polygons"
 double isLeft( const Vector3d& P0, const Vector3d& P1, const Vector3d& P2 )
 {
     return ( (P1.x() - P0.x()) * (P2.y() - P0.y())
