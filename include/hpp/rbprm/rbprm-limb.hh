@@ -43,6 +43,7 @@ namespace hpp {
     class RbPrmLimb;
     typedef boost::shared_ptr <RbPrmLimb> RbPrmLimbPtr_t;
     typedef std::map<std::string, const rbprm::RbPrmLimbPtr_t > T_Limb;
+    typedef T_Limb::const_iterator CIT_Limb;
 
     class HPP_RBPRM_DLLAPI RbPrmLimb
     {

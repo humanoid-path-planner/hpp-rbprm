@@ -30,7 +30,7 @@ namespace
 {
     typedef fcl::BVHModel<OBBRSS> BVHModelOB;
     typedef boost::shared_ptr<const BVHModelOB> BVHModelOBConst_Ptr_t;
-
+		
     BVHModelOBConst_Ptr_t GetModel(const fcl::CollisionObjectConstPtr_t object)
     {
         assert(object->collisionGeometry()->getNodeType() == BV_OBBRSS);
@@ -172,12 +172,14 @@ namespace
 
     RbPrmShooterPtr_t RbPrmShooter::create (const model::RbPrmDevicePtr_t& robot,
                                             const ObjectVector_t& geometries,
+																						const affMap_t& affordances,
                                             const std::vector<std::string>& filter,
-                                            const std::map<std::string, rbprm::NormalFilter>& normalFilters,
+                                            const std::map<std::string, std::vector<std::string> >& affFilters,
                                             const std::size_t shootLimit, const std::size_t displacementLimit)
     {
         srand ((unsigned int)(time(NULL)));
-        RbPrmShooter* ptr = new RbPrmShooter (robot, geometries, filter, normalFilters, shootLimit, displacementLimit);
+        RbPrmShooter* ptr = new RbPrmShooter (robot, geometries, affordances,
+					filter, affFilters, shootLimit, displacementLimit);
         RbPrmShooterPtr_t shPtr (ptr);
         ptr->init (shPtr);
         return shPtr;
@@ -199,15 +201,17 @@ namespace
 
     RbPrmShooter::RbPrmShooter (const model::RbPrmDevicePtr_t& robot,
                               const ObjectVector_t& geometries,
+															const affMap_t& affordances,
                               const std::vector<std::string>& filter,
-                              const std::map<std::string, rbprm::NormalFilter>& normalFilters,
+                              const std::map<std::string, std::vector<std::string> >& affFilters,
                               const std::size_t shootLimit,
                               const std::size_t displacementLimit)
     : shootLimit_(shootLimit)
     , displacementLimit_(displacementLimit)
     , filter_(filter)
     , robot_ (robot)
-    , validator_(rbprm::RbPrmValidation::create(robot_, filter, normalFilters))
+    , validator_(rbprm::RbPrmValidation::create(robot_, filter, affFilters,
+																								affordances, geometries))
     , eulerSo3_(initSo3())
     {
         for(hpp::core::ObjectVector_t::const_iterator cit = geometries.begin();
@@ -216,7 +220,7 @@ namespace
             validator_->addObstacle(*cit);
         }
         this->InitWeightedTriangles(geometries);
-    }
+		}
 
     void RbPrmShooter::InitWeightedTriangles(const model::ObjectVector_t& geometries)
     {
@@ -249,7 +253,6 @@ namespace
             }
         }
     }
-
 
   const RbPrmShooter::T_TriangleNormal &RbPrmShooter::RandomPointIntriangle() const
   {
@@ -284,7 +287,7 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
             sampled = &RandomPointIntriangle();
         else
             sampled = &WeightedTriangle();
-        const TrianglePoints& tri = sampled->second;
+				const TrianglePoints& tri = sampled->second;
         //http://stackoverflow.com/questions/4778147/sample-random-point-in-triangle
         double r1, r2;
         r1 = ((double) rand() / (RAND_MAX)); r2 = ((double) rand() / (RAND_MAX));

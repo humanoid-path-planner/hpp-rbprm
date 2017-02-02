@@ -52,22 +52,24 @@ namespace hpp {
     }
     }
 
-    rbprm::T_StateFrame RbPrmInterpolation::Interpolate(const model::ObjectVector_t &collisionObjects, const double timeStep, const double robustnessTreshold)
+    rbprm::T_StateFrame RbPrmInterpolation::Interpolate(const affMap_t& affordances,
+            const std::map<std::string, std::vector<std::string> >& affFilters, const double timeStep, const double robustnessTreshold, const bool filterStates)
     {
-        if(!path_) throw std::runtime_error ("Can not interpolate; not path given to interpolator ");
-        std::vector<model::Configuration_t> configs;
+        if(!path_) throw std::runtime_error ("Cannot interpolate; no path given to interpolator ");
+        T_Configuration configs;
         const core::interval_t& range = path_->timeRange();
         configs.push_back(start_.configuration_);
         for(double i = range.first + timeStep; i< range.second; i+= timeStep)
         {
             configs.push_back(configPosition(configs.back(),path_,i));
         }
-        return Interpolate(collisionObjects, configs, robustnessTreshold, timeStep, range.first);
+        return Interpolate(affordances, affFilters, configs, robustnessTreshold, timeStep, range.first, filterStates);
     }
 
-    rbprm::T_StateFrame RbPrmInterpolation::Interpolate(const model::ObjectVector_t &collisionObjects,
-                                                        const std::vector<model::Configuration_t>& configs, const double robustnessTreshold,
-                                                        const model::value_type timeStep, const model::value_type initValue)
+    rbprm::T_StateFrame RbPrmInterpolation::Interpolate(const affMap_t& affordances,
+                                                        const std::map<std::string, std::vector<std::string> >& affFilters,
+                                                        const hpp::rbprm::T_Configuration &configs, const double robustnessTreshold,
+                                                        const model::value_type timeStep, const model::value_type initValue, const bool filterStates)
     {
         int nbFailures = 0;
         model::value_type currentVal(initValue);
@@ -80,7 +82,7 @@ namespace hpp {
     watch.reset_all();
     watch.start("complete generation");
 #endif
-        for(std::vector<model::Configuration_t>::const_iterator cit = configs.begin()+1; cit != configs.end(); ++cit, currentVal+= timeStep)
+        for(CIT_Configuration cit = configs.begin()+1; cit != configs.end(); ++cit, currentVal+= timeStep)
         {
             const State& previous = states.back().second;
             core::Configuration_t configuration = *cit;
@@ -92,7 +94,8 @@ namespace hpp {
             // TODO Direction 6d
             bool sameAsPrevious(true);
             bool multipleBreaks(false);
-            State newState = ComputeContacts(previous, robot_,configuration,collisionObjects,direction,sameAsPrevious,multipleBreaks,allowFailure,robustnessTreshold);
+            State newState = ComputeContacts(previous, robot_,configuration, affordances,affFilters,direction,
+                                             sameAsPrevious, multipleBreaks,allowFailure,robustnessTreshold);
             if(allowFailure && multipleBreaks)
             {
                 ++ nbFailures;
@@ -109,7 +112,7 @@ if (nbFailures > 1)
     watch.report_count(*fp);
     fout.close();
 #endif
-    return states;
+    return FilterStates(states, filterStates);
 }
             }
             if(multipleBreaks && !allowFailure)
@@ -134,13 +137,14 @@ if (nbFailures > 1)
 #ifdef PROFILE
         watch.add_to_count("planner succeeded", 1);
         watch.stop("complete generation");
-        std::ofstream fout;
+        /*std::ofstream fout;
         fout.open("log.txt", std::fstream::out | std::fstream::app);
         std::ostream* fp = &fout;
         watch.report_all_and_count(2,*fp);
-        fout.close();
+        fout.close();*/
 #endif
-        return states;
+        return FilterStates(states, filterStates);
+        //return states;
     }
 
     void RbPrmInterpolation::init(const RbPrmInterpolationWkPtr_t& weakPtr)
@@ -155,6 +159,121 @@ if (nbFailures > 1)
         , robot_(robot)
     {
         // TODO
+    }
+
+    bool EqStringVec(const std::vector<std::string>& v1, const std::vector<std::string>& v2)
+    {
+        return (v1.size() == v2.size()) && std::equal ( v1.begin(), v1.end(), v2.begin() );
+    }
+
+    void FilterRepositioning(const CIT_StateFrame& from, const CIT_StateFrame to, T_StateFrame& res)
+    {
+        if(from == to) return;
+        const State& current    = (from)->second;
+        const State& current_m1 = (from-1)->second;
+        const State& current_p1 = (from+1)->second;
+        if(EqStringVec(current.contactBreaks(current_m1),
+                       current_p1.contactBreaks(current_m1)) &&
+           EqStringVec(current.contactCreations(current_m1),
+                       current_p1.contactCreations(current)))
+        {
+            if(from+1 == to) return;
+            res.push_back(std::make_pair((from+1)->first, (from+1)->second));
+            FilterRepositioning(from+2, to, res);
+        }
+        else
+        {
+            res.push_back(std::make_pair(from->first, from->second));
+            FilterRepositioning(from+1, to, res);
+        }
+    }
+
+    void FilterBreakCreate(const CIT_StateFrame& from, const CIT_StateFrame to, T_StateFrame& res)
+    {
+        if(from == to) return;
+        const State& current    = (from)->second;
+        const State& current_m1 = (from-1)->second;
+        const State& current_p1 = (from+1)->second;
+        if(current.contactCreations(current_m1).empty()  &&
+           current_p1.contactBreaks(current).empty() &&
+           EqStringVec(current_p1.contactCreations(current),
+                       current.contactBreaks(current_m1)))
+        {
+            if(from+1 == to) return;
+            res.push_back(std::make_pair((from+1)->first, (from+1)->second));
+            FilterBreakCreate(from+2, to, res);
+        }
+        else
+        {
+            res.push_back(std::make_pair(from->first, from->second));
+            FilterBreakCreate(from+1, to, res);
+        }
+    }
+
+    T_StateFrame FilterRepositioning(const T_StateFrame& originStates)
+    {
+        if(originStates.size() < 3) return originStates;
+        T_StateFrame res;
+        res.push_back(originStates.front());
+        FilterRepositioning(originStates.begin()+1, originStates.end()-1, res);
+        res.push_back(originStates.back());
+        return res;
+    }
+
+    T_StateFrame FilterBreakCreate(const T_StateFrame& originStates)
+    {
+        if(originStates.size() < 3) return originStates;
+        T_StateFrame res;
+        res.push_back(originStates.front());
+        FilterBreakCreate(originStates.begin()+1, originStates.end()-1, res);
+        res.push_back(originStates.back());
+        return res;
+    }
+
+    T_StateFrame FilterObsolete(const T_StateFrame& originStates)
+    {
+        if(originStates.size() < 3) return originStates;
+        T_StateFrame res;
+        res.push_back(originStates.front());
+        CIT_StateFrame cit = originStates.begin();
+        for(CIT_StateFrame cit2 = originStates.begin()+1;
+            cit2 != originStates.end()-1; ++cit, ++cit2)
+        {
+            const State& current    = (cit2)->second;
+            const State& current_m1 = (cit)->second;
+            if((current.configuration_ - current_m1.configuration_).norm() > std::numeric_limits<double>::epsilon()
+                    && !(current.contactBreaks(current_m1).empty() && current.contactCreations(current_m1).empty()))
+            {
+                res.push_back(std::make_pair(cit2->first, cit2->second));
+            }
+        }
+        res.push_back(originStates.back());
+        return res;
+    }
+
+    T_StateFrame FilterStatesRec(const T_StateFrame& originStates)
+    {
+        return FilterObsolete(FilterBreakCreate(FilterRepositioning(originStates)));
+    }
+
+    T_StateFrame FilterStates(const T_StateFrame& originStates, const bool deep)
+    {
+        T_StateFrame res = originStates;
+        if(deep)
+        {
+            std::size_t previousSize;
+            do
+            {
+                previousSize = res.size();
+                res = FilterStatesRec(res);
+            }
+            while(res.size() != previousSize);
+            return res;
+        }
+        else
+        {
+            return FilterObsolete(originStates);
+        }
     }
     } // interpolation
   } // rbprm

@@ -22,7 +22,7 @@
 #include <hpp/core/collision-validation.hh>
 #include <hpp/core/config-validations.hh>
 #include <hpp/core/path.hh>
-#include <hpp/rbprm/interpolation/limb-rrt-path-validation.hh>
+#include <hpp/rbprm/interpolation/time-constraint-path-validation.hh>
 
 namespace hpp {
   using namespace core;
@@ -30,17 +30,17 @@ namespace hpp {
   namespace rbprm {
   namespace interpolation{
 
-    LimbRRTPathValidationPtr_t
-    LimbRRTPathValidation::create (const DevicePtr_t& robot,
+    TimeConstraintPathValidationPtr_t
+    TimeConstraintPathValidation::create (const DevicePtr_t& robot,
                                    const value_type& stepSize,
                                    const std::size_t pathDofRank)
     {
-        LimbRRTPathValidation* ptr =
-        new LimbRRTPathValidation(robot, stepSize, pathDofRank);
-        return LimbRRTPathValidationPtr_t (ptr);
+        TimeConstraintPathValidation* ptr =
+        new TimeConstraintPathValidation(robot, stepSize, pathDofRank);
+        return TimeConstraintPathValidationPtr_t (ptr);
     }
 
-    bool LimbRRTPathValidation::validate (const PathPtr_t& path,
+    bool TimeConstraintPathValidation::validate (const PathPtr_t& path,
                                           bool reverse, PathPtr_t& validPart,
                                           PathValidationReportPtr_t& validationReport)
     {
@@ -52,7 +52,7 @@ namespace hpp {
         return DiscretizedPathValidation::validate(path,reverse,validPart,validationReport);
     }
 
-    LimbRRTPathValidation::LimbRRTPathValidation(const DevicePtr_t& robot,
+    TimeConstraintPathValidation::TimeConstraintPathValidation(const DevicePtr_t& robot,
                                                  const value_type& stepSize,
                                                  const std::size_t pathDofRank)
         : DiscretizedPathValidation(robot,stepSize)

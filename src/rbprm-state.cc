@@ -117,6 +117,20 @@ void State::contactBreaks(const State& previous, std::vector<std::string>& outLi
   previous.contactCreations(*this, outList);
 }
 
+std::vector<std::string> State::contactBreaks(const State& previous) const
+{
+    std::vector<std::string> res;
+    contactBreaks(previous, res);
+    return res;
+}
+
+std::vector<std::string> State::contactCreations(const State& previous) const
+{
+    std::vector<std::string> res;
+    contactCreations(previous, res);
+    return res;
+}
+
 namespace
 {
 // Given known contact variations, computes all effector that were not in contacts
@@ -160,7 +174,9 @@ std::vector<std::string> State::fixedContacts(const State& previous) const
     {
         const std::string& name = cit->first;
         if(std::find(variations.begin(), variations.end(), name) == variations.end())
+        {
             res.push_back(name);
+        }
     }
     return res;
 }
@@ -324,6 +340,21 @@ void State::print(std::stringstream& ss, const State& previous) const
       ss << " " << configuration_[i];
   }
   ss << "\n \n";*/
+}
+
+model::value_type effectorDistance(const State& from, const State& to)
+{
+    std::vector<std::string> variations = to.contactCreations(from);
+    model::value_type norm = 0.;
+    for(std::vector<std::string>::const_iterator cit = variations.begin(); cit != variations.end(); ++cit)
+    {
+        std::string name = *cit;
+        if(from.contactPositions_.find(name) != from.contactPositions_.end())
+        {
+            norm  = std::max(norm,(from.contactPositions_.at(name) - to.contactPositions_.at(name)).norm());
+        }
+    }
+    return norm;
 }
 
   }// namespace rbprm

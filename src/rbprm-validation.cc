@@ -28,14 +28,14 @@ namespace
     }
 
     hpp::rbprm::T_RomValidation createRomValidations(const hpp::model::RbPrmDevicePtr_t& robot,
-                                                     const std::map<std::string, hpp::rbprm::NormalFilter>& normalFilters)
+                                                     const std::map<std::string, std::vector<std::string> >& affFilters)
     {
         hpp::rbprm::T_RomValidation result;
         for(hpp::model::T_Rom::const_iterator cit = robot->robotRoms_.begin();
             cit != robot->robotRoms_.end(); ++cit)
         {
-            std::map<std::string, hpp::rbprm::NormalFilter>::const_iterator cfit = normalFilters.find(cit->first);
-            if(cfit != normalFilters.end())
+            std::map<std::string, std::vector<std::string> >::const_iterator cfit = affFilters.find(cit->first);
+            if(cfit != affFilters.end())
             {
                 result.insert(std::make_pair(cit->first, hpp::rbprm::RbPrmRomValidation::create(cit->second, cfit->second)));
             }
@@ -53,16 +53,25 @@ namespace hpp {
   namespace rbprm {
 
     RbPrmValidationPtr_t RbPrmValidation::create
-    (const model::RbPrmDevicePtr_t& robot, const std::vector<std::string>& filter, const std::map<std::string, rbprm::NormalFilter>& normalFilters)
+    (const model::RbPrmDevicePtr_t& robot, const std::vector<std::string>& filter,
+			const std::map<std::string, std::vector<std::string> >& affFilters,
+			const std::map<std::string, std::vector<model::CollisionObjectPtr_t> >& affordances,
+			const core::ObjectVector_t& geometries)
     {
-      RbPrmValidation* ptr = new RbPrmValidation (robot, filter, normalFilters);
+      RbPrmValidation* ptr = new RbPrmValidation (robot, filter, affFilters,
+																									affordances, geometries);
       return RbPrmValidationPtr_t (ptr);
     }
 
     RbPrmValidation::RbPrmValidation (const model::RbPrmDevicePtr_t& robot
-                                      , const std::vector<std::string>& filter, const std::map<std::string, rbprm::NormalFilter>& normalFilters)
+                                      , const std::vector<std::string>& filter,
+																				const std::map<std::string,
+																					std::vector<std::string> >& affFilters,
+																				const std::map<std::string, 
+																					std::vector<model::CollisionObjectPtr_t> >& affordances,
+																				const core::ObjectVector_t& geometries)
         : trunkValidation_(tuneFclValidation(robot))
-        , romValidations_(createRomValidations(robot, normalFilters))
+        , romValidations_(createRomValidations(robot, affFilters))
         , defaultFilter_(filter)
         , unusedReport_(new CollisionValidationReport)
     {
@@ -74,6 +83,44 @@ namespace hpp {
                 std::cout << "warning: default filter impossible to match in rbprmshooter" << std::endl;
             }
         }
+
+        for(hpp::core::ObjectVector_t::const_iterator cit = geometries.begin();
+            cit != geometries.end(); ++cit)
+        {
+            addObstacle(*cit);
+        }
+				// Add obstacles corresponding to affordances of given rom
+				std::vector<std::string>::const_iterator filterIt;
+				for (filterIt = defaultFilter_.begin (); filterIt != defaultFilter_.end();
+					filterIt++) {
+						std::map<std::string, std::vector<std::string> >::const_iterator affFilterIt =
+							affFilters.find(*filterIt);
+						// Check if all rom filters have been given an affordance filter.
+						// If not, an error is thrown.
+						if (affFilterIt == affFilters.end ()) {
+							throw std::runtime_error ("Filter "
+              	+ *filterIt + " has no affordance filter settings! Please add them to continue.");
+						}
+					for (unsigned int fIdx = 0; fIdx < affFilterIt->second.size (); fIdx++) {
+						std::map<std::string, std::vector<model::CollisionObjectPtr_t> >::const_iterator affIt =
+							affordances.find (affFilterIt->second[fIdx]);
+						if (affIt == affordances.end ()) {
+						std::cout << "Filter " << affFilterIt->first << " has invalid affordance filter setting "
+						<< affFilterIt->second[fIdx] << ". Ignoring such filter setting." << std::endl;
+						} else {
+							for (unsigned int affIdx = 0; affIdx < affIt->second.size (); affIdx++) {
+								T_RomValidation::const_iterator romIt =
+								romValidations_.find (affFilterIt->first);
+								if (romIt == romValidations_.end ()) {
+									// TODO: Throw error?
+									std::runtime_error ("No romValidator object found for filter " + affFilterIt->first + "!");
+						 		} else {
+        					romIt->second->addObstacle(affIt->second[affIdx]);
+								}
+							}
+						}
+					}
+				}
     }
 
     bool RbPrmValidation::validateRoms(const core::Configuration_t& config,
@@ -128,12 +175,7 @@ namespace hpp {
     void RbPrmValidation::addObstacle (const CollisionObjectPtr_t& object)
     {
         trunkValidation_->addObstacle(object);
-        for(T_RomValidation::const_iterator cit = romValidations_.begin();
-            cit != romValidations_.end(); ++cit)
-        {
-            cit->second->addObstacle(object);
-        }
-    }
+		}
 
     void RbPrmValidation::removeObstacleFromJoint
     (const JointPtr_t& joint, const CollisionObjectPtr_t& obstacle)
