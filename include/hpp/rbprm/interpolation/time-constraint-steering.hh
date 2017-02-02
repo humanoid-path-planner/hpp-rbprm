@@ -16,13 +16,14 @@
 // hpp-core  If not, see
 // <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_RBPRM_LIMB_RRT_STEERING_HH
-# define HPP_RBPRM_LIMB_RRT_STEERING_HH
+#ifndef HPP_TIME_CONSTRAINT_STEERING_HH
+# define HPP_TIME_CONSTRAINT_STEERING_HH
 
 # include <hpp/core/discretized-path-validation.hh>
 # include <hpp/core/steering-method-straight.hh>
 # include <hpp/core/straight-path.hh>
-# include <hpp/rbprm/interpolation/limb-rrt-path.hh>
+# include <hpp/rbprm/interpolation/time-constraint-path.hh>
+# include <hpp/rbprm/interpolation/time-dependant.hh>
 
 namespace hpp {
   namespace rbprm {
@@ -34,39 +35,39 @@ namespace hpp {
     /// Apply some configuration validation algorithms at discretized values
     /// of the path parameter.
     template<class Path_T>
-    class LimbRRTSteering: public hpp::core::SteeringMethod
+    class TimeConstraintSteering: public hpp::core::SteeringMethod
     {
     typedef Path_T path_t;
-    typedef boost::shared_ptr <LimbRRTSteering> LimbRRTSteeringPtr_t;
-    typedef boost::weak_ptr   <LimbRRTSteering> LimbRRTSteeringWkPtr_t;
+    typedef boost::shared_ptr <TimeConstraintSteering> TimeConstraintSteeringPtr_t;
+    typedef boost::weak_ptr   <TimeConstraintSteering> TimeConstraintSteeringWkPtr_t;
     public:
       /// Create instance and return shared pointer
-      static LimbRRTSteeringPtr_t create (const core::ProblemPtr_t& problem,
+      static TimeConstraintSteeringPtr_t create (const core::ProblemPtr_t& problem,
                                           const std::size_t pathDofRank)
       {
-    LimbRRTSteering* ptr = new LimbRRTSteering (problem, pathDofRank);
-    LimbRRTSteeringPtr_t shPtr (ptr);
+    TimeConstraintSteering* ptr = new TimeConstraintSteering (problem, pathDofRank);
+    TimeConstraintSteeringPtr_t shPtr (ptr);
     ptr->init (shPtr);
     return shPtr;
       }
       /// Create instance and return shared pointer
-      static LimbRRTSteeringPtr_t create
+      static TimeConstraintSteeringPtr_t create
     (const core::DevicePtr_t& device, const core::WeighedDistancePtr_t& distance,
       const std::size_t pathDofRank)
         HPP_CORE_DEPRECATED
       {
-    LimbRRTSteering* ptr = new LimbRRTSteering (device,
+    TimeConstraintSteering* ptr = new TimeConstraintSteering (device,
                                   distance, pathDofRank);
-    LimbRRTSteeringPtr_t shPtr (ptr);
+    TimeConstraintSteeringPtr_t shPtr (ptr);
     ptr->init (shPtr);
     return shPtr;
       }
       /// Copy instance and return shared pointer
-      static LimbRRTSteeringPtr_t createCopy
-    (const LimbRRTSteeringPtr_t& other)
+      static TimeConstraintSteeringPtr_t createCopy
+    (const TimeConstraintSteeringPtr_t& other)
       {
-    LimbRRTSteering* ptr = new LimbRRTSteering (*other);
-    LimbRRTSteeringPtr_t shPtr (ptr);
+    TimeConstraintSteering* ptr = new TimeConstraintSteering (*other);
+    TimeConstraintSteeringPtr_t shPtr (ptr);
     ptr->init (shPtr);
     return shPtr;
       }
@@ -89,19 +90,18 @@ namespace hpp {
           c = constraints ();
         }
         core::PathPtr_t path = path_t::create
-          (problem_->robot(), q1, q2, length, c, pathDofRank_);
+          (problem_->robot(), q1, q2, length, c, pathDofRank_, tds_);
             return path;
       }
     protected:
       /// Constructor with robot
       /// Weighed distance is created from robot
-      LimbRRTSteering (const core::ProblemPtr_t& problem,
+      TimeConstraintSteering (const core::ProblemPtr_t& problem,
                        const std::size_t pathDofRank) :
-    SteeringMethod (problem), pathDofRank_(pathDofRank), weak_ ()
-      {
-      }
+    SteeringMethod (problem), pathDofRank_(pathDofRank), weak_ () {}
+
       /// Constructor with weighed distance
-      LimbRRTSteering (const core::DevicePtr_t& device,
+      TimeConstraintSteering (const core::DevicePtr_t& device,
                   const core::WeighedDistancePtr_t& distance,
                        const std::size_t pathDofRank) :
     SteeringMethod (new core::Problem (device)), pathDofRank_(pathDofRank), weak_ ()
@@ -109,25 +109,28 @@ namespace hpp {
         problem_->distance (distance);
       }
       /// Copy constructor
-      LimbRRTSteering (const LimbRRTSteering& other) :
-    SteeringMethod (other), pathDofRank_(other.pathDofRank_), weak_ ()
-      {
-      }
+      TimeConstraintSteering (const TimeConstraintSteering& other) :
+    SteeringMethod (other), pathDofRank_(other.pathDofRank_), weak_ (), tds_(other.tds_) {}
 
       /// Store weak pointer to itself
-      void init (LimbRRTSteeringWkPtr_t weak)
+      void init (TimeConstraintSteeringWkPtr_t weak)
       {
     SteeringMethod::init (weak);
     weak_ = weak;
       }
 
+
     private:      
+      const core::PathPtr_t model_;
       const std::size_t pathDofRank_;
-      LimbRRTSteeringWkPtr_t weak_;
+      TimeConstraintSteeringWkPtr_t weak_;
+
+    public:
+      T_TimeDependant tds_;
     }; // SteeringMethodStraight
     /// \}
   } // namespace interpolation
   } // namespace rbprm
 } // namespace hpp
 
-#endif // HPP_RBPRM_LIMB_RRT_STEERING_HH
+#endif // HPP_TIME_CONSTRAINT_STEERING_HH

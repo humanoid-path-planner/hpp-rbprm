@@ -73,6 +73,13 @@ double StaticHeuristic(const sampling::Sample& sample,
 {
     return sample.staticValue_;
 }
+
+
+double DistanceToLimitHeuristic(const sampling::Sample& sample,
+                      const Eigen::Vector3d& /*direction*/, const Eigen::Vector3d& /*normal*/)
+{
+    return sample.configuration_.norm();
+}
 }
 
 HeuristicFactory::HeuristicFactory()
@@ -85,6 +92,7 @@ HeuristicFactory::HeuristicFactory()
     heuristics_.insert(std::make_pair("random", &RandomHeuristic));
     heuristics_.insert(std::make_pair("forward", &ForwardHeuristic));
     heuristics_.insert(std::make_pair("backward", &BackwardHeuristic));
+    heuristics_.insert(std::make_pair("jointlimits", &DistanceToLimitHeuristic));
 }
 
 HeuristicFactory::~HeuristicFactory(){}

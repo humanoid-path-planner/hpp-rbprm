@@ -17,7 +17,7 @@ We recommend reading the IJRR submission before going using RB-PRM.
 
 The planner has applications in both robotics and computer graphics applications (click on the pictures to watch videos):
 
-[![IMAGE ALT TEXT](http://img.youtube.com/vi/7ShD_03P9K8/0.jpg)](https://www.youtube.com/watch?v=7ShD_03P9K8 "An efficient acyclic contact planner for multiped robots")
+[![IMAGE ALT TEXT](http://img.youtube.com/vi/K3ivZe0AS68/0.jpg)](http://www.youtube.com/watch?v=K3ivZe0AS68 "An efficient acyclic contact planner for multiped robots")
 [![IMAGE ALT TEXT](http://img.youtube.com/vi/YjL-DBQgXwk/0.jpg)](http://www.youtube.com/watch?v=YjL-DBQgXwk "https://www.youtube.com/watch?v=YjL-DBQgXwk")
 [![IMAGE ALT TEXT](http://img.youtube.com/vi/NhvL8jWlka0/0.jpg)](http://www.youtube.com/watch?v=NhvL8jWlka0 "Character contact re-positioning under large environment deformation")
 
@@ -27,19 +27,23 @@ To install HPP-RBPRM:
 
   1. install HPP 
 	- see https://github.com/humanoid-path-planner/hpp-doc
+	- IMPORTANT: you should use the devel branch of the project hpp-fcl for the software to work correctly
 
-  2. install robust-equilibrium-lib, a library for quickly asserting static equilibrium
+  2. install hpp-affordance, and hpp-affordance corba, comprising terrain analysis tools
+	- see https://github.com/humanoid-path-planner/hpp-affordance
+
+  3. install robust-equilibrium-lib, a library for quickly asserting static equilibrium
 	- see https://github.com/andreadelprete/robust-equilibrium-lib
 
  
-  3. Use CMake to install the library. For instance:
+  4. Use CMake to install the library. For instance:
 
 				mkdir $HPP_RBPRM_DIR/build
 				cd $HPP_RBPRM_DIR/build
 				cd cmake ..
 				make install
 
-  4. Optionally, install the python bindings for python, and example scripts (HPP-RBPRM-CORBA)
+  5. Optionally, install the python bindings for python, and example scripts (HPP-RBPRM-CORBA)
 	- see https://github.com/stonneau/hpp-rbprm-corba
   
 

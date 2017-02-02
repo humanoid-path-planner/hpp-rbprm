@@ -85,6 +85,16 @@ typedef T_StateFrame::const_iterator CIT_StateFrame;
         /// \return the list of all created contacts between two States
         void contactCreations(const State& previous, std::vector<std::string>& outList) const;
 
+        /// Given a antecedent State, computes the list of Contacts that were created between the two States
+        ///
+        /// \return the list of all created contacts between two States
+        std::vector<std::string> contactCreations(const State& previous) const;
+
+        /// Given a antecedent State, computes the list of Contacts that were broken between the two States
+        ///
+        /// \return the list of all broken contacts between two States
+        std::vector<std::string> contactBreaks(const State& previous) const;
+
         /// Given a antecedent State, computes the list of Contacts that were broken between the two States
         ///
         /// \return the list of all broken contacts between two States
@@ -107,6 +117,9 @@ typedef T_StateFrame::const_iterator CIT_StateFrame;
         bool stable;
         double robustness;
     }; // struct State
+    /// Given two State, compute the contact effectors distance travelled
+    /// between two states
+    HPP_RBPRM_DLLAPI model::value_type effectorDistance(const State& from, const State& to);
   } // namespace rbprm
 } // namespace hpp
 

@@ -27,7 +27,9 @@
 # include <vector>
 
 namespace hpp {
-  namespace rbprm {
+  namespace rbprm {  
+    typedef std::vector<model::vector_t,Eigen::aligned_allocator<model::vector_t> > T_Configuration;
+    typedef T_Configuration::const_iterator CIT_Configuration;
     namespace interpolation {
     HPP_PREDEF_CLASS(RbPrmInterpolation);
 
@@ -56,23 +58,31 @@ namespace hpp {
         /// Transforms the path computed by RB-PRM into
         /// a discrete sequence of balanced contact configurations.
         ///
-        /// \param collisionObjects the objects to consider for contact and collision avoidance
+        /// \param affordances the set of 3D objects to consider for contact creation.
+        /// \param affFilters a vector of strings determining which affordance
+        ///  types are to be used in generating contacts for each limb.
         /// \param timeStep the discretization step of the path.
         /// \param robustnessTreshold minimum value of the static equilibrium robustness criterion required to accept the configuration (0 by default).
         /// \return a pointer to the created RbPrmInterpolation instance
-        rbprm::T_StateFrame Interpolate(const model::ObjectVector_t &collisionObjects,
-                                       const double timeStep = 0.01, const double robustnessTreshold=0.);
+        rbprm::T_StateFrame Interpolate(const affMap_t& affordances, const std::map<std::string, std::vector<std::string> >& affFilters,
+                                        const double timeStep = 0.01, const double robustnessTreshold=0.,
+                                        const bool filterStates = false);
 
         /// Transforms a discrete sequence of configurations into
         /// a discrete sequence of balanced contact configurations.
         ///
-        /// \param collisionObjects the objects to consider for contact and collision avoidance
-        /// \param timeStep the discretization step of the path.
-        /// \param initValue initial time value associated to the first configuration
+        /// \param affordances the set of 3D objects to consider for contact creation.
+        /// \param affFilters a vector of strings determining which affordance
+        ///  types are to be used in generating contacts for each limb.
+        /// \param configs
+		/// \param timeStep the discretization step of the path.
+		/// \param initValue initial time value associated to the first configuration        
         /// \param robustnessTreshold minimum value of the static equilibrium robustness criterion required to accept the configuration (0 by default).
-        /// \return The time parametrized list of states according to the reference path
-        rbprm::T_StateFrame Interpolate(const model::ObjectVector_t &collisionObjects, const std::vector<model::Configuration_t>& configs,
-                                        const double robustnessTreshold=0., const model::value_type timeStep = 1., const model::value_type initValue = 0.);
+       /// \return The time parametrized list of states according to the reference path
+        rbprm::T_StateFrame Interpolate(const affMap_t& affordances, const std::map<std::string, std::vector<std::string> >& affFilters,
+                                        const T_Configuration& configs, const double robustnessTreshold=0.,
+                                        const model::value_type timeStep = 1., const model::value_type initValue = 0.,
+                                        const bool filterStates = false);
 
     public:
         const core::PathVectorConstPtr_t path_;
@@ -93,6 +103,16 @@ namespace hpp {
     private:
       RbPrmInterpolationWkPtr_t weakPtr_;
     }; // class RbPrmLimb
+
+    /// Remove redundant State in terms of contacts, defined as follows:
+    /// - The same effector is repositioned two or more times in a row, while
+    /// and the root trajectory is approximatively linear all along
+    /// - An effector is broken, and the same effector is replaced in the following state
+    /// \param originStates original state list
+    /// \param deep if false, only matching configurations in sequence are removed
+    /// \return A list of key states filtered
+    T_StateFrame FilterStates(const T_StateFrame& originStates, const bool deep);
+
     } // namespace interpolation
   } // namespace rbprm
 } // namespace hpp

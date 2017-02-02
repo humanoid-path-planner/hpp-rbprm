@@ -24,25 +24,17 @@ namespace hpp {
   namespace rbprm {
 
     RbPrmRomValidationPtr_t RbPrmRomValidation::create
-    (const model::DevicePtr_t& robot, const NormalFilter& normalFilter)
+    (const model::DevicePtr_t& robot, const std::vector<std::string>& affFilters)
     {
-      RbPrmRomValidation* ptr = new RbPrmRomValidation (robot, normalFilter);
+      RbPrmRomValidation* ptr = new RbPrmRomValidation (robot, affFilters);
       return RbPrmRomValidationPtr_t (ptr);
     }
 
     RbPrmRomValidation::RbPrmRomValidation (const model::DevicePtr_t& robot
-                                           ,const NormalFilter& normalFilter)
+                                           ,const std::vector<std::string>& affFilters)
         : hpp::core::CollisionValidation(robot)
-        , filter_(normalFilter)
-        , unusedReport_(new CollisionValidationReport)
-    {
-        if(!normalFilter.unConstrained_)
-        {
-            collisionRequest_.enable_contact = true;
-            collisionRequest_.num_max_contacts = 30;
-        }
-    }
-
+        , filter_(affFilters)
+        , unusedReport_(new CollisionValidationReport) {}
 
     bool RbPrmRomValidation::validate (const Configuration_t& config)
     {
@@ -51,30 +43,8 @@ namespace hpp {
 
     bool RbPrmRomValidation::validate (const Configuration_t& config,
                     ValidationReportPtr_t& validationReport)
-    {        
-        bool collision = !hpp::core::CollisionValidation::validate(config, validationReport);
-        if(collision && !filter_.unConstrained_)
-        {
-            collision = false;
-            CollisionValidationReport* report =
-                    static_cast <CollisionValidationReport*> (validationReport.get());
-            for(std::size_t i = 0; i< report->result.numContacts() && !collision; ++i)
-            {
-                // retrieve triangle
-                const fcl::Contact& contact =  report->result.getContact(i);
-                assert(contact.o2->getObjectType() == fcl::OT_BVH); // only works with meshes
-                const fcl::BVHModel<fcl::OBBRSS>* surface = static_cast<const fcl::BVHModel<fcl::OBBRSS>*> (contact.o2);
-                const fcl::Triangle& tr = surface->tri_indices[contact.b2];
-                const fcl::Vec3f& v1 = surface->vertices[tr[0]];
-                const fcl::Vec3f& v2 = surface->vertices[tr[1]];
-                const fcl::Vec3f& v3 = surface->vertices[tr[2]];
-                fcl::Vec3f normal = (v2 - v1).cross(v3 - v1);
-                normal.normalize();
-                if(normal.dot(filter_.normal_)>=filter_.range_)
-                    collision = true;
-            }
-        }
-        return collision;
-    }
+    {       
+				return !hpp::core::CollisionValidation::validate(config, validationReport);
+		}
   }// namespace rbprm
 }// namespace hpp

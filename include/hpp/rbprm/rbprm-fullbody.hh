@@ -22,6 +22,7 @@
 #include <hpp/rbprm/config.hh>
 #include <hpp/rbprm/rbprm-state.hh>
 #include <hpp/model/device.hh>
+#include <hpp/model/fwd.hh>
 #include <hpp/rbprm/rbprm-limb.hh>
 #include <hpp/core/collision-validation.hh>
 #include <hpp/rbprm/sampling/heuristic.hh>
@@ -40,6 +41,7 @@ namespace hpp {
     ///
     class RbPrmFullBody;
     typedef boost::shared_ptr <RbPrmFullBody> RbPrmFullBodyPtr_t;
+		typedef std::map<std::string, std::vector<model::CollisionObjectPtr_t> > affMap_t;
 
     class HPP_RBPRM_DLLAPI RbPrmFullBody
     {
@@ -104,6 +106,7 @@ namespace hpp {
     public:
         const rbprm::T_Limb& GetLimbs() {return limbs_;}
         const T_LimbGroup& GetGroups() {return limbGroups_;}
+        const core::CollisionValidationPtr_t& GetCollisionValidation() {return collisionValidation_;}
         const model::DevicePtr_t device_;
 
     private:
@@ -127,11 +130,19 @@ namespace hpp {
 
     private:
       RbPrmFullBodyWkPtr_t weakPtr_;
-      friend hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration,
-                                        const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction, const double robustnessTreshold);
+      friend hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(
+        const hpp::rbprm::RbPrmFullBodyPtr_t& body,
+        model::ConfigurationIn_t configuration, const affMap_t& affordances,
+        const std::map<std::string, std::vector<std::string> >& affFilters,
+        const fcl::Vec3f& direction, const double robustnessTreshold);
 
-      friend hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(const hpp::rbprm::State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration,
-                                        const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction, bool& contactMaintained, bool& multipleBreaks, const bool allowFailure, const double robustnessTreshold);
+      friend hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(
+				const hpp::rbprm::State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body,
+				model::ConfigurationIn_t configuration,
+				const affMap_t& affordances,
+        const std::map<std::string, std::vector<std::string> >& affFilters, const fcl::Vec3f& direction,
+				bool& contactMaintained, bool& multipleBreaks, const bool allowFailure,
+				const double robustnessTreshold);
     }; // class RbPrmDevice
 
     /// Generates a balanced contact configuration, considering the
@@ -140,13 +151,17 @@ namespace hpp {
     ///
     /// \param body The considered FullBody robot for which to generate contacts
     /// \param configuration Current full body configuration.
-    /// \param collisionObjects the set of 3D objects to consider for collision and contact creation.
+    /// \param affordances the set of 3D objects to consider for contact creation.
+    /// \param affFilters a vector of strings determining which affordance
+    ///  types are to be used in generating contacts for each limb.
     /// \param direction An estimation of the direction of motion of the character.
     /// \param robustnessTreshold minimum value of the static equilibrium robustness criterion required to accept the configuration (0 by default).
     /// \return a State describing the computed contact configuration, with relevant contact information and balance information.
-    hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration,
-                                      const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction,
-                                                       const double robustnessTreshold = 0);
+    hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(
+      const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration,
+      const affMap_t& affordances,
+      const std::map<std::string, std::vector<std::string> >& affFilters, const fcl::Vec3f& direction,
+      const double robustnessTreshold = 0);
 
     /// Generates a balanced contact configuration, considering the
     /// given current configuration of the robot, and a previous, balanced configuration.
@@ -156,16 +171,35 @@ namespace hpp {
     /// \param previous The previously computed State of the robot
     /// \param body The considered FullBody robot for which to generate contacts
     /// \param configuration Current full body configuration.
-    /// \param collisionObjects the set of 3D objects to consider for collision and contact creation.
+    /// \param affordances the set of 3D objects to consider for contact creation.
+    /// \param affFilters a vector of strings determining which affordance
+    ///  types are to be used in generating contacts for each limb.
     /// \param direction An estimation of the direction of motion of the character.
     /// \param contactMaintained parameter set to true if all the contacts were maintained, regarding the previous state
     /// \param multipleBreaks If the contact generation failed at this stage because multiple contacts were broken, is set to true.
     /// \param allowFailure allow multiple breaks in the contact computation.
     /// \param robustnessTreshold minimum value of the static equilibrium robustness criterion required to accept the configuration (0 by default).
     /// \return a State describing the computed contact configuration, with relevant contact information and balance information.
-    hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(const hpp::rbprm::State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body, model::ConfigurationIn_t configuration,
-                                            const model::ObjectVector_t& collisionObjects, const fcl::Vec3f& direction, bool& contactMaintained, bool& multipleBreaks, const bool allowFailure,
-                                            const double robustnessTreshold = 0);
+    hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(
+			const hpp::rbprm::State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body,
+			model::ConfigurationIn_t configuration,
+	        	const affMap_t& affordances,
+			const std::map<std::string, std::vector<std::string> >& affFilters, const fcl::Vec3f& direction,
+			bool& contactMaintained, bool& multipleBreaks, const bool allowFailure,
+      const double robustnessTreshold = 0);
+
+    hpp::rbprm::State HPP_RBPRM_DLLAPI ProjectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
+                                                     const sampling::OctreeReport& report, core::CollisionValidationPtr_t validation,
+                                                     model::ConfigurationOut_t configuration, const hpp::rbprm::State& current, bool& success);
+
+    hpp::rbprm::State HPP_RBPRM_DLLAPI Project(const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
+                                               core::CollisionValidationPtr_t validation, model::ConfigurationOut_t configuration,
+                                               const fcl::Matrix3f& rotationTarget, const std::vector<bool>& rotationFilter, const fcl::Vec3f& positionTarget, const fcl::Vec3f& normal,
+                                               const hpp::rbprm::State& current, bool& success);
+
+    hpp::model::ObjectVector_t HPP_RBPRM_DLLAPI getAffObjectsForLimb(const std::string& limb,
+        const affMap_t& affordances, const std::map<std::string, std::vector<std::string> >& affFilters);
+
   } // namespace rbprm
 
 } // namespace hpp
