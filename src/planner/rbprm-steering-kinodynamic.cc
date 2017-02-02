@@ -200,8 +200,8 @@ namespace hpp{
     //  dVelocity.normalize();
       hppDout(info, "delta position  = "<<dPosition.transpose());
       hppDout(info, "delta velocity  = "<<dVelocity.transpose());
-     // direction = dPosition + dVelocity;
-      direction = dPosition;
+      direction = dPosition + dVelocity;
+      //direction = dPosition;
       direction.normalize();
       hppDout(info, "direction  = "<<direction.transpose());
       // define LP problem : with m+1 variables and 6 constraints
