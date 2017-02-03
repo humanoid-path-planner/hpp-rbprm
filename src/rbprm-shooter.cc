@@ -184,8 +184,9 @@ namespace
       //seed = 1485359407; //darpa
       // seed = 1485441926 ; // prepare_jump
       // seed = 1485973442 ; // stair bauzil (old)
-     // seed = 1486137554 ; // stair bauzil (new)
-      seed = 1486137883; // stair bauzil (new, better)
+      // seed = 1486137883; // stair bauzil (new, better) interpolation don't work, too far from ramp
+     //  seed = 1486140324; // stair bauzil NOT WORKING ??
+      seed = 1486140446; // stair bauzil : work with extract path but not the interpolation
       srand (seed);
       hppDout(notice,"&&&&&& SEED = "<<seed);
       RbPrmShooter* ptr = new RbPrmShooter (robot, geometries, affordances,

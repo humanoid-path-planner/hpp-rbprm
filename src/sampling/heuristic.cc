@@ -96,6 +96,7 @@ HeuristicFactory::HeuristicFactory()
 {
     unsigned int seed =  (unsigned int) (time(NULL)) ;
     //seed = 1485441926; // prepare_jump
+    // seed = 1486147856; // stairs (18)
     srand ( seed);
     hppDout(notice,"SEED for heuristic = "<<seed);
     heuristics_.insert(std::make_pair("static", &StaticHeuristic));
