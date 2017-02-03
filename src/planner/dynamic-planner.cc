@@ -483,10 +483,11 @@ namespace hpp {
         hppStartBenchmark (COMPUTE_INTERSECTION);
         geom::Point pn;
         // FIX ME : compute plan equation first
-        geom::T_Point hull = geom::intersectPolygonePlane(model1,model2,pn);
+        geom::T_Point plane = geom::intersectPolygonePlane(model1,model2,pn);
         hppStopBenchmark (COMPUTE_INTERSECTION);
         hppDisplayBenchmark (COMPUTE_INTERSECTION);
 
+        geom::T_Point hull = geom::compute3DIntersection(geom::convertBVH(model2),plane);
 
 
         if(hull.size() == 0){

@@ -88,14 +88,21 @@ namespace geom
   /// \param aPointsBegin, aPointsEnd iterators to first and last points of the first polygon
   /// \param bPointsBegin, bPointsEnd iterators to first and last points of the second polygon
   /// \return the convex polygon resulting from the intersection
-  T_Point computeIntersection(CIT_Point aPointsBegin, CIT_Point aPointsEnd, CIT_Point bPointsBegin, CIT_Point bPointsEnd);
+  T_Point compute2DIntersection(CIT_Point aPointsBegin, CIT_Point aPointsEnd, CIT_Point bPointsBegin, CIT_Point bPointsEnd);
   
   /// Computes whether two convex polygons intersect
   ///
   /// \param subPolygon list of vertices of the first polygon
-  /// \param clipPolygon list of vertices of the first polygon
+  /// \param clipPolygon list of vertices of the second polygon
   /// \return the convex polygon resulting from the intersection
-  T_Point computeIntersection(T_Point subPolygon, T_Point clipPolygon);
+  T_Point compute2DIntersection(T_Point subPolygon, T_Point clipPolygon);
+  
+  /// Computes whether two convex polygons intersect
+  ///
+  /// \param subPolygon list of vertices of the first polygon
+  /// \param clipPolygon list of vertices of the second polygon
+  /// \return the convex polygon resulting from the intersection
+  T_Point compute3DIntersection(T_Point subPolygon, T_Point clipPolygon);
   
   /// isLeft(): tests if a point is Left|On|Right of an infinite line.
   /// \param lA 1st point of the line
@@ -216,6 +223,8 @@ namespace geom
    * @return an ordoned list of point (clockwise), which belong to both the polygone and the plane
    */
   T_Point intersectPolygonePlane(BVHModelOBConst_Ptr_t polygone, BVHModelOBConst_Ptr_t plane, Eigen::Ref<Point> Pn);
+
+  T_Point convertBVH(BVHModelOBConst_Ptr_t obj);
   
 } //namespace geom
 
