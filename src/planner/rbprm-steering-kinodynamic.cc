@@ -73,19 +73,20 @@ namespace hpp{
       bool aValid;
       double maxT = kinoPath->length();
       hppDout(info,"## start checking intermediate accelerations");
-      t = 0.0001;
+      double epsilon = 0.0001;
+      t = epsilon;
       (*kinoPath)(*q,t);
       hppDout(info,"q(t="<<t<<") = "<<model::displayConfig(*q));
       a = (*q).segment<3>(configSize+3);
       hppDout(info,"a = "<<a);
       aValid = sEq_->checkAdmissibleAcceleration(node->getG(),node->getH(),node->geth(),a);
       hppDout(info,"a valid : "<<aValid);
-      if(!aValid && t < maxT)
-        maxT = t;
+      if(!aValid)
+        return core::PathPtr_t();
       for(size_t ijoint = 0 ; ijoint < 3 ; ijoint++){
         if(t1[ijoint] > 0){
           hppDout(info,"for joint "<<ijoint);
-          t = t1[ijoint] + 0.0001; // add an epsilon to get the value after the sign change
+          t = t1[ijoint] + epsilon; // add an epsilon to get the value after the sign change
           (*kinoPath)(*q,t);
           hppDout(info,"q(t="<<t<<") = "<<model::displayConfig(*q));
           a = (*q).segment<3>(configSize+3);
@@ -108,8 +109,10 @@ namespace hpp{
         }
       }
 
+
       hppDout(info, "t = "<<kinoPath->length()<<" maxT = "<<maxT);
       if(maxT < kinoPath->length()){
+        maxT -= epsilon;
         core::PathPtr_t extracted = kinoPath->extract(core::interval_t(kinoPath->timeRange().first,kinoPath->timeRange().first + maxT));
         hppDout(notice,"extracted path : end = "<<model::displayConfig((extracted->end())));
         return extracted;
