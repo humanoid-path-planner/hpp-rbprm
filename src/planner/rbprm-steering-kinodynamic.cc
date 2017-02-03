@@ -216,10 +216,20 @@ namespace hpp{
       hppDout(notice,"m = "<<m);
       MatrixXX A = MatrixXX::Zero(6, m+1);
       // build A : [ -G (Hv)^T] :
+      hppDout(info,"A init");
+      hppDout(notice,"G size : "<<node->getG().rows()<<" , "<<node->getG().cols());
+      hppDout(notice," G = \n"<<node->getG());
+      hppDout(notice," H = \n"<<node->getH());
+      hppDout(notice," h = \n"<<node->geth());
+      hppDout(notice," V = \n"<<node->getV());
+      hppDout(notice," Ip = \n"<<node->getIPhat());
+
       A.topLeftCorner(6,m) = - node->getG();
+      hppDout(info,"G ok");
       MatrixXX Hv = (node->getH() * direction);
+      hppDout(info,"Hv init");
       assert(Hv.rows() == 6 && Hv.cols()==1 && "Hv should be a vector 6");
-      A.topRightCorner(6,1) = Hv;
+      A.topRightCorner(6,1) = Hv;      
       hppDout(info,"H = \n"<<node->getH());
       hppDout(info," Hv^T = "<<Hv.transpose());
       hppDout(info,"A = \n"<<A);

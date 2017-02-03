@@ -368,6 +368,9 @@ namespace hpp {
 
     void DynamicPlanner::computeGIWC(const core::NodePtr_t x){
       core::ValidationReportPtr_t report;
+      //randomnize the collision pair, in order to get a different surface of contact each time
+      // (because only the first one in collision is considered by fcl and put in the report)
+      problem().configValidations()->randomnizeCollisionPairs();
       problem().configValidations()->validate(*(x->configuration()),report);
       computeGIWC(x,report);
     }
@@ -426,7 +429,7 @@ namespace hpp {
         // debug display :
         size_t numContact =result.numContacts();
         hppDout(notice,"~~ number of contact : "<<numContact);
-        std::ostringstream ss;
+    /*    std::ostringstream ss;
         ss<<"[";
         for(size_t i = 0 ; i < numContact ; i++)
         { // print with python formating :
@@ -435,6 +438,7 @@ namespace hpp {
              ss<<",";
         }
         ss<<"]";
+        */
        // std::cout<<"contact point : "<<std::endl;
        // std::cout<<ss.str()<<std::endl;
 
@@ -467,15 +471,16 @@ namespace hpp {
         {
           vertices2.push_back(Eigen::Vector3d(model2->vertices[i][0], model2->vertices[i][1], model2->vertices[i][2]));
           // hppDout(notice,"vertices : "<<model2->vertices[i]);
-/*          ss2<<"["<<model2->vertices[i][0]<<","<<model2->vertices[i][1]<<","<<model2->vertices[i][2]<<"]";
+          ss2<<"["<<model2->vertices[i][0]<<","<<model2->vertices[i][1]<<","<<model2->vertices[i][2]<<"]";
           if(i< (model2->num_vertices -1))
             ss2<<",";
-*/
+
         }
-/*        ss2<<"]";
-        std::cout<<"obj "<<obj2->name()<<std::endl;
-        std::cout<<ss2.str()<<std::endl;
-*/
+        ss2<<"]";
+       // std::cout<<"obj "<<obj2->name()<<std::endl;
+       // std::cout<<ss2.str()<<std::endl;
+        hppDout(notice," "<<ss2.str());
+
 
 
 
@@ -512,6 +517,7 @@ namespace hpp {
         Eigen::Quaterniond quat((*q)[3],(*q)[4],(*q)[5],(*q)[6]);
         Vector3 tProj = quat*Vector3(1,0,0);
         tProj[2] = 0;
+        tProj.normalize();
         ti1 = pn.cross(tProj);
         if(ti1.dot(ti1)<0.001)
           ti1 = pn.cross(Vector3(1,0,0));

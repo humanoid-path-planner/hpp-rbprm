@@ -136,6 +136,10 @@ namespace hpp {
                         const std::vector<std::string>& filter,
                          core::ValidationReportPtr_t &validationReport);
 
+      /// Rearrange the collisions pairs of all configValidation in a random manner
+      /// \brief randomnizeCollisionPairs
+      ///
+      virtual void randomnizeCollisionPairs();
 
     public:
       /// CollisionValidation for the trunk

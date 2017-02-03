@@ -244,5 +244,13 @@ namespace hpp {
       }
     }
 
+    void RbPrmValidation::randomnizeCollisionPairs(){
+      for(T_RomValidation::const_iterator cit = romValidations_.begin();
+          cit != romValidations_.end(); ++cit)
+      {
+        cit->second->randomnizeCollisionPairs();
+      }
+    }
+
   }// namespace rbprm
 }// namespace hpp
