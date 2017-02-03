@@ -497,8 +497,27 @@ namespace hpp {
 
         if(hull.size() == 0){
           hppDout(error,"No intersection between rom and environnement");
-         // TODO switch to new data structure create matrix with good size to avoid crash ?
-          return;
+          // save infos needed for LP problem in node structure
+          // FIXME : Or retry with another obstacle ???
+          node->setV(V);
+          node->setIPHat(IP_hat);
+
+          // compute other LP values : (constant for each nodes)
+          node->setG(IP_hat*V);
+          double m = problem().robot()->mass();
+          Vector3 c(3);
+          c << (*node->configuration())[0],(*node->configuration())[1],(*node->configuration())[2];
+          Matrix63 H = Matrix63::Zero(6,3);
+          H.block<3,3>(0,0) = Matrix3::Identity(3,3);
+          H.block<3,3>(3,0) = robust_equilibrium::crossMatrix(c);
+          node->setH(m*H);
+          Vector6 h = Vector6::Zero(6);
+          Vector3 g;
+          g<< 0,0,-9.81 ; // FIXME : retrieve it from somewhere ? instead of hardcoded
+          h.head(3) = -g;
+          h.tail(3) = c.cross(-g);
+          node->seth(m*h);
+          return ;
         }
 
         // compute center point of the hull
