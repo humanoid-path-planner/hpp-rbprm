@@ -82,7 +82,7 @@ namespace hpp {
                           bool disableEndEffectorCollision)
         : limb_(limb)
         , effector_(GetEffector(limb, effectorName))
-        , effectorDefaultRotation_(GetEffectorTransform(limb))
+        , effectorDefaultRotation_(GetEffectorTransform(effector_))
         , offset_(effectorDefaultRotation_* offset)
         , normal_(effectorDefaultRotation_* normal)
         , x_(x)
