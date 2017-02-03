@@ -37,8 +37,8 @@ namespace hpp {
     struct HPP_CORE_DLLAPI RbprmValidationReport : public CollisionValidationReport
     {
       /// Directing vector between collision point of geometries
-      std::map<std::string,CollisionValidationReportPtr_t> ROMReports;
-      std::map<std::string,bool> ROMFilters;
+      std::map<std::string,CollisionValidationReportPtr_t> ROMReports; // name ; collision report
+      std::map<std::string,bool> ROMFilters; // name ; true if valid
 
       bool trunkInCollision;
       bool romsValid;
@@ -53,7 +53,8 @@ namespace hpp {
           os << "Rom filters not respected : "<<std::endl;
           for(std::map<std::string,bool>::const_iterator it = ROMFilters.begin() ; it != ROMFilters.end() ; ++it)
           {
-            os << " "<<it->first << std::endl;
+            if(! it->second)
+              os << " "<<it->first << std::endl;
           }
         }
         return os;

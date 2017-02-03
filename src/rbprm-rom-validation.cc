@@ -55,13 +55,13 @@ namespace hpp {
       RbprmValidationReportPtr_t rbprmReport =boost::dynamic_pointer_cast<RbprmValidationReport>(validationReport);
       if(rbprmReport){
         //hppDout(notice,"rbprm-validation-report correctly cast");
+        rbprmReport->ROMFilters.insert(std::make_pair(robot_->name(),collision));
       }else{
         hppDout(notice,"Validation report is not a valid rbprm-validation-report instance");
       }
       if(collision){
         if(rbprmReport ){  // if the report is a correct rbprm report, we add the rom information
           rbprmReport->ROMReports.insert(std::make_pair(robot_->name(),boost::dynamic_pointer_cast<CollisionValidationReport>(romReport)));
-          rbprmReport->ROMFilters.insert(std::make_pair(robot_->name(),collision));
         }else{
           validationReport = romReport;
         }
