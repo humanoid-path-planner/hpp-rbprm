@@ -58,6 +58,8 @@ namespace hpp{
     {
       // get kinodynamic path from core::steeringMethod::Kinodynamic
       core::RbprmNodePtr_t node =  setSteeringMethodBounds(x,q2,false);
+      if(aMax_.norm() <= 0)
+        return core::PathPtr_t();
       //return core::steeringMethod::Kinodynamic::impl_compute(*x->configuration(),q2);
       core::PathPtr_t path = core::steeringMethod::Kinodynamic::impl_compute(*x->configuration(),q2);
       core::KinodynamicPathPtr_t kinoPath = boost::dynamic_pointer_cast<core::KinodynamicPath>(path);
@@ -124,6 +126,8 @@ namespace hpp{
     core::PathPtr_t SteeringMethodKinodynamic::impl_compute (core::ConfigurationIn_t q1,core::NodePtr_t x)
     {
       core::RbprmNodePtr_t node =  setSteeringMethodBounds(x,q1,true);
+      if(aMax_.norm() <= 0)
+        return core::PathPtr_t();
       core::PathPtr_t path = core::steeringMethod::Kinodynamic::impl_compute(q1,*x->configuration());
       core::KinodynamicPathPtr_t kinoPath = boost::dynamic_pointer_cast<core::KinodynamicPath>(path);
       assert (path && "Error while casting path shared ptr"); // really usefull ? should never happen
@@ -225,7 +229,7 @@ namespace hpp{
 
       hppDout(info,"Amax found : "<<alpha0);
       alpha0 = std::min(alpha0,aMaxFixed_);
-      alpha0 -= 0.01; //FIX ME ???
+    //  alpha0 -= 0.01; //FIX ME ???
 
       hppDout(info,"Amax after min : "<<alpha0);
       Vector3 aMax = alpha0*direction;
