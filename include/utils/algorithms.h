@@ -145,6 +145,9 @@ namespace geom
    * @return the center of the polygon
    */
   Point center(CIT_Point pointsBegin, CIT_Point pointsEnd);
+
+  Point centroid(CIT_Point pointsBegin, CIT_Point pointsEnd,double &area);
+
   
   /**
    * @brief distanceToPlane Distance point plan

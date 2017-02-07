@@ -84,6 +84,28 @@ namespace geom
     
     return Point(cx,cy,cz);
   }
+
+  /// see https://en.wikipedia.org/wiki/Centroid#Centroid_of_polygon
+  Point centroid(CIT_Point pointsBegin, CIT_Point pointsEnd, double &area){
+    area = 0;
+    double cx=0;
+    double cy=0;
+    double cz=0;
+
+    for(CIT_Point pit = pointsBegin ; pit != pointsEnd -1 ; ++pit){
+      area += ((*pit)[0]*(*(pit+1))[1]) - (((*(pit+1))[0])*((*pit)[1]));
+      cx += ((*pit)[0] + (*(pit+1))[0])*((*pit)[0]*(*(pit+1))[1] - (*(pit+1))[0]*(*pit)[1]);
+      cy += ((*pit)[1] + (*(pit+1))[1])*((*pit)[0]*(*(pit+1))[1] - (*(pit+1))[0]*(*pit)[1]);
+    }
+    area = area/2.;
+    cx = cx / (6.*area);
+    cy = cy / (6.*area);
+
+    // compute cz in the plan :
+    //TODO
+    return Point(cx,cy,cz);
+
+  }
   
   
   Point centerPlanar (T_Point points,const fcl::Vec3f& n, double t ){
@@ -351,8 +373,17 @@ namespace geom
       }
 
     }
+   /* std::ostringstream ss;
+    ss<<"[";
+    for(size_t i = 0; i < outputList.size() ; ++i){
+      ss<<"["<<outputList[i][0]<<","<<outputList[i][1]<<","<<outputList[i][2]<<"]";
+      if(i< (outputList.size() -1))
+        ss<<",";
+    }
+    ss<<"]";
+    hppDout(notice,"intersection3D = "<<ss.str());
+    */
     return outputList;
-
   }
 
   
@@ -584,8 +615,10 @@ namespace geom
 
 
     // ordonate the point in the vector (clockwise) first point and last point are the same
+    if(res.size() == 0)
+      return res;
     sortedRes = convexHull(res.begin(),res.end());
-    hppDout(notice,"clipped point : ");
+   /* hppDout(notice,"clipped point : ");
     std::ostringstream ss;
     ss<<"[";
     for(size_t i = 0; i < sortedRes.size() ; ++i){
@@ -594,9 +627,10 @@ namespace geom
         ss<<",";
     }
     ss<<"]";
+    hppDout(notice,"intersection = "<<ss.str());
+*/
    // std::cout<<"intersection : "<<std::endl;
    // std::cout<<ss.str()<<std::endl;
-    hppDout(notice,"area = "<<area(sortedRes.begin(),sortedRes.end()));
     return sortedRes;
   }
 

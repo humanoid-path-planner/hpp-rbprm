@@ -491,8 +491,9 @@ namespace hpp {
         geom::T_Point plane = geom::intersectPolygonePlane(model1,model2,pn);
         hppStopBenchmark (COMPUTE_INTERSECTION);
         hppDisplayBenchmark (COMPUTE_INTERSECTION);
-
-        geom::T_Point hull = geom::compute3DIntersection(geom::convertBVH(model2),plane);
+        geom::T_Point hull;
+        if(plane.size() > 0)
+          hull = geom::compute3DIntersection(plane,geom::convertBVH(model2));
 
 
         if(hull.size() == 0){
@@ -606,7 +607,7 @@ namespace hpp {
 
          // hppDout(notice,"V"<<indexRom<<" = \n"<<Vi);
           V.block<3,4>(3*indexRom,4*indexRom) = Vi;
-          hppDout(info,"V at iter "<<indexRom<<" : \n"<<V);
+          //hppDout(info,"V at iter "<<indexRom<<" : \n"<<V);
           indexRom++;
         }
 
