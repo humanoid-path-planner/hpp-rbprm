@@ -329,11 +329,12 @@ namespace hpp {
           pathValidFromEnd = pathValidation->validate (path, true, validPath, report);
           if(pathValidFromStart)
             pathValidFromEnd = pathValidFromEnd && (validPath->initial() == *q_new);
-          if(pathValidFromEnd && pathValidFromStart) // qrand was successfully connected to both trees
+          if(pathValidFromStart && startComponentConnected && pathValidFromEnd) // qrand was successfully connected to both trees
           {
             // we won, a path is found
             roadmap()->addEdge(reachedNodeFromStart, near, validPath);
             hppDout(info,"~~~~~~~~~~~~~~~~~~~~ Start and goal component connected !!!!!! "<<displayConfig(*q_new));
+            hppDout(notice,"#### end of planning phase #### ");
             return;
           }
           else if (validPath)
