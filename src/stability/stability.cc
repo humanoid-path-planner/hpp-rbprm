@@ -19,6 +19,7 @@
 #include <hpp/rbprm/stability/stability.hh>
 #include <hpp/rbprm/stability/support.hh>
 #include <hpp/model/device.hh>
+#include <hpp/model/configuration.hh>
 #include <hpp/model/joint.hh>
 #include <hpp/model/center-of-mass-computation.hh>
 #include <hpp/rbprm/tools.hh>
@@ -223,17 +224,20 @@ const fcl::Vec3f comfcl = comcptr->com();*/
     }
 
 
-    double IsStable(const RbPrmFullBodyPtr_t fullbody, State& state, const fcl::Vec3f acc)
+    double IsStable(const RbPrmFullBodyPtr_t fullbody, State& state,fcl::Vec3f acc)
     {
 #ifdef PROFILE
     RbPrmProfiler& watch = getRbPrmProfiler();
     watch.start("test balance");
 #endif
         //hppDout(notice,"isStable, acceleration = "<<acc);
-       /* if(acc.norm() == 0){
+        if(acc.norm() == 0){
           hppDout(notice,"isStable ? called with acc = 0");
-          hppDout(notice,"configuration in state = "<<state.configuration_);
-        }*/
+          hppDout(notice,"configuration in state = "<<model::displayConfig(state.configuration_));
+          core::size_type configSize = fullbody->device_->configSize() - fullbody->device_->extraConfigSpace().dimension ();
+          acc = state.configuration_.segment<3>(configSize+3);
+          hppDout(notice,"new acceleration = "<<acc);
+        }
         StaticEquilibrium staticEquilibrium(initLibrary(fullbody));
         robust_equilibrium::Vector3 com = setupLibrary(fullbody,state,staticEquilibrium,STATIC_EQUILIBRIUM_ALGORITHM_DLP);
         double res;
