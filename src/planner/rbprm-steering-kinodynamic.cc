@@ -211,6 +211,7 @@ namespace hpp{
       direction = dPosition;
       direction.normalize();
       hppDout(info, "direction  = "<<direction.transpose());
+      hppDout(info,"vector = ["<<fromP[0]<<","<<fromP[1]<<","<<fromP[2]<<","<<direction[0]<<","<<direction[1]<<","<<direction[2]<<",0]");
       // define LP problem : with m+1 variables and 6 constraints
       int m = node->getNumberOfContacts() * 4;
       hppDout(notice,"number of contacts :  "<<node->getNumberOfContacts());
@@ -233,7 +234,17 @@ namespace hpp{
       hppDout(info,"A = \n"<<A);
 */
       // call to robust_equilibrium_lib :
-      sEq_->findMaximumAcceleration(A, node->geth(),alpha0);
+      robust_equilibrium::LP_status lpStatus = sEq_->findMaximumAcceleration(A, node->geth(),alpha0);
+      if(lpStatus==robust_equilibrium::LP_STATUS_UNBOUNDED){
+        hppDout(notice,"Primal LP problem is unbounded : "<<(lpStatus));
+      }
+      if(lpStatus==robust_equilibrium::LP_STATUS_OPTIMAL)
+      {
+        hppDout(notice,"Primal LP correctly solved: "<<(lpStatus));
+      }
+      if(lpStatus==robust_equilibrium::LP_STATUS_INFEASIBLE){
+        hppDout(notice,"Primal LP problem could not be solved: "<<(lpStatus));
+      }
 
       hppDout(info,"Amax found : "<<alpha0);
       alpha0 = std::min(alpha0,aMaxFixed_);
@@ -241,7 +252,7 @@ namespace hpp{
 
       hppDout(info,"Amax after min : "<<alpha0);
       Vector3 aMax = alpha0*direction;
-      if((aMax[2] < aMaxFixed_) && tryJump_)
+      if((aMax[2] < aMaxFixed_)/* && tryJump_*/)
         aMax[2] = aMaxFixed_;
       setAmax(aMax);
       hppDout(info,"Amax vector : "<<aMax_.transpose());

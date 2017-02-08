@@ -681,6 +681,9 @@ namespace hpp {
               path->timeRange ().first) {
             if(validPath->end() == *((*itn)->configuration())){
               roadmap ()->addEdge (initNode, *itn, projPath);
+            }else{
+              core::ConfigurationPtr_t q_jump(new core::Configuration_t(validPath->end()));
+              roadmap()->addNodeAndEdge(initNode,q_jump,validPath);
             }
           }else{
             if(tryJump_){

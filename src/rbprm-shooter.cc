@@ -190,6 +190,7 @@ namespace
     //  seed = 1486403996; // sideWall
       srand (seed);
       hppDout(notice,"&&&&&& SEED = "<<seed);
+      std::cout<<"seed = "<<seed<<std::endl;
       RbPrmShooter* ptr = new RbPrmShooter (robot, geometries, affordances,
                                             filter, affFilters, shootLimit, displacementLimit);
 
