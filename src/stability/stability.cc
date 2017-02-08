@@ -166,6 +166,7 @@ namespace stability{
             const RbPrmLimbPtr_t limb =limbs.at(contacts[c]);
             const fcl::Vec3f& n = state.contactNormals_.at(contacts[c]);
             Vector3 normal(n[0],n[1],n[2]);
+            normal.normalize();
             const std::size_t& inc = *cit;
             if(inc > 1)
                 computeRectangleContact(contacts[c], limb,state,positions.middleRows<4>(currentIndex));
