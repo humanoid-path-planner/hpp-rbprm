@@ -88,7 +88,14 @@ namespace hpp {
                  core::ValidationReportPtr_t& validationReport,
                  const std::vector<std::string>& filter);
 
-
+      /// Compute whether the configuration is valid for the root (collision and joint-bound)
+      ///
+      /// \param config the config to check for validity,
+      /// \retval validationReport report on validation (used only for rom shape). This parameter will
+      ///         dynamically cast into CollisionValidationReport type,
+      /// \return whether the whole config is valid.
+      virtual bool validateTrunk(const core::Configuration_t& config,
+                                             hpp::core::ValidationReportPtr_t &validationReport);
 
 
       /// Add an obstacle to validation
@@ -144,6 +151,7 @@ namespace hpp {
     public:
       /// CollisionValidation for the trunk
       const core::CollisionValidationPtr_t trunkValidation_;
+      const core::JointBoundValidationPtr_t boundValidation_;
       /// CollisionValidation for the range of motion of the limbs
       const T_RomValidation romValidations_;
       std::vector<std::string> defaultFilter_;

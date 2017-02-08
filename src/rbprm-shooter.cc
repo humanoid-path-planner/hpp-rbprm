@@ -320,7 +320,7 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
         Vec3f lastDirection(1,0,0);
         while(!found && limitDis >0)
         {
-            bool valid = validator_->trunkValidation_->validate(*config, reportShPtr);
+            bool valid = validator_->validateTrunk(*config, reportShPtr);
             found = valid && validator_->validateRoms(*config, filter_,reportShPtr);
             CollisionValidationReport* report = static_cast<CollisionValidationReport*>(reportShPtr.get());
 

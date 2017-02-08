@@ -16,7 +16,9 @@
 
 #include <hpp/rbprm/rbprm-validation.hh>
 #include <hpp/core/collision-validation.hh>
+#include <hpp/core/joint-bound-validation.hh>
 #include <hpp/rbprm/rbprm-validation-report.hh>
+
 
 namespace
 {
@@ -72,6 +74,7 @@ namespace hpp {
                                       std::vector<model::CollisionObjectPtr_t> >& affordances,
                                       const core::ObjectVector_t& geometries)
       : trunkValidation_(tuneFclValidation(robot))
+      , boundValidation_(core::JointBoundValidation::create(robot))
       , romValidations_(createRomValidations(robot, affFilters))
       , unusedReport_(new CollisionValidationReport)
     {
@@ -198,14 +201,14 @@ namespace hpp {
 
     bool RbPrmValidation::validate (const Configuration_t& config)
     {
-      return trunkValidation_->validate(config,unusedReport_)
+      return trunkValidation_->validate(config,unusedReport_) && boundValidation_->validate(config,unusedReport_)
           && validateRoms(config, defaultFilter_);
     }
 
     bool RbPrmValidation::validate (const Configuration_t& config,
                                     ValidationReportPtr_t& validationReport)
     {
-      return trunkValidation_->validate(config, validationReport)
+      return trunkValidation_->validate(config, validationReport) && boundValidation_->validate(config,validationReport)
           && validateRoms(config, defaultFilter_,validationReport);
 
     }
@@ -215,7 +218,7 @@ namespace hpp {
     bool RbPrmValidation::validate (const Configuration_t& config,
                                     const std::vector<std::string> &filter)
     {
-      return trunkValidation_->validate(config, unusedReport_)
+      return trunkValidation_->validate(config, unusedReport_) && boundValidation_->validate(config,unusedReport_)
           && validateRoms(config, filter);
     }
 
@@ -223,8 +226,14 @@ namespace hpp {
                                     hpp::core::ValidationReportPtr_t &validationReport,
                                     const std::vector<std::string>& filter)
     {
-      return trunkValidation_->validate(config, validationReport)
+      return trunkValidation_->validate(config, validationReport) && boundValidation_->validate(config,validationReport)
           && validateRoms(config, filter,validationReport);
+    }
+
+    bool RbPrmValidation::validateTrunk(const Configuration_t& config,
+                                           hpp::core::ValidationReportPtr_t &validationReport)
+    {
+      return trunkValidation_->validate(config, validationReport) && boundValidation_->validate(config,validationReport);
     }
 
 
