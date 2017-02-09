@@ -27,7 +27,7 @@ To install HPP-RBPRM:
 
   1. install HPP 
 	- see https://github.com/humanoid-path-planner/hpp-doc
-	- IMPORTANT: you should use the devel branch of the project hpp-fcl for the software to work correctly
+	- IMPORTANT: you should use the devel installation of the project for the software to work correctly
 
   2. install hpp-affordance, and hpp-affordance corba, comprising terrain analysis tools
 	- see https://github.com/humanoid-path-planner/hpp-affordance
