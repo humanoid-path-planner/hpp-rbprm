@@ -74,7 +74,8 @@ namespace hpp {
                                                         const model::value_type timeStep, const model::value_type initValue, const bool filterStates)
     {
         int nbFailures = 0;
-        size_t accIndex = path_->outputSize()-3; // index of the start of the acceleration vector (of size 3), in the configuration vector
+        size_t accIndex = robot_->device_->configSize() - robot_->device_->extraConfigSpace().dimension () + 3 ; // index of the start of the acceleration vector (of size 3), in the configuration vector
+        hppDout(notice,"acceleration index : "<<accIndex);
         model::value_type currentVal(initValue);
         rbprm::T_StateFrame states;
         states.push_back(std::make_pair(currentVal, this->start_));
