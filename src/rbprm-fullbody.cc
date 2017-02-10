@@ -19,6 +19,7 @@
 #include <hpp/rbprm/tools.hh>
 #include <hpp/rbprm/stability/stability.hh>
 #include <hpp/rbprm/ik-solver.hh>
+#include <hpp/rbprm/projection/projection.hh>
 
 #include <hpp/core/constraint-set.hh>
 #include <hpp/core/config-projector.hh>
@@ -204,11 +205,64 @@ namespace hpp {
     }
 
     // first step
-    State MaintainPreviousContacts(const State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body,
+    /*State MaintainPreviousContacts(const State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body,
                                    std::map<std::string,core::CollisionValidationPtr_t>& limbValidations,
                                    model::ConfigurationIn_t configuration, bool& contactMaintained, bool& multipleBreaks, const double robustnessTreshold)
     {
         contactMaintained = true;
+        std::vector<std::string> brokenContacts;
+        // iterate over every existing contact and try to maintain them
+        State current;
+        current.configuration_ = configuration;
+        model::Configuration_t config = configuration;
+        core::ConfigurationIn_t save = body->device_->currentConfiguration();
+        // iterate over contact filo list
+        std::queue<std::string> previousStack = previous.contactOrder_;
+        while(!previousStack.empty())
+        {
+            const std::string name = previousStack.front();
+            previousStack.pop();
+            const RbPrmLimbPtr_t limb = body->GetLimbs().at(name);
+            // try to maintain contact
+            const fcl::Vec3f& ppos  =previous.contactPositions_.at(name);
+            const fcl::Vec3f& pnormal  =previous.contactNormals_.at(name);
+            const fcl::Matrix3f& rotation = previous.contactRotation_.at(name);
+            bool success(false);
+            State tmp = Project(body,name,limb,limbValidations.at(name),config,rotation, setMaintainRotationConstraints(), ppos,pnormal,current,success);
+            if(success)
+            {
+                // stable?
+                current.contacts_[name] = true;
+                current.contactPositions_[name] = previous.contactPositions_.at(name);
+                current.contactNormals_[name] = previous.contactNormals_.at(name);
+                current.contactRotation_[name] = previous.contactRotation_.at(name);
+                current.contactOrder_.push(name);
+                current.configuration_ = tmp.configuration_;
+            }
+            else
+            {
+                contactMaintained = false;
+                ComputeCollisionFreeConfiguration(body,current,limbValidations.at(name),limb,current.configuration_,robustnessTreshold,false);
+                brokenContacts.push_back(name);
+            }
+        }
+        // reload previous configuration
+        body->device_->currentConfiguration(save);
+        if(brokenContacts.size() > 1)
+        {
+            contactMaintained = false;
+            multipleBreaks = true;
+        }
+        return current;
+    }*/
+
+    State MaintainPreviousContacts(const State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body,
+                                   std::map<std::string,core::CollisionValidationPtr_t>& limbValidations,
+                                   model::ConfigurationIn_t configuration, bool& contactMaintained, bool& multipleBreaks, const double robustnessTreshold)
+    {
+        projection::ProjectionReport rep = projection::project_to_root_position(body,configuration.head<3>(),previous,1);
+        contactMaintained = rep.success_ && rep.contactAltered_.empty();
+        contactMaintained = rep.success_ && rep.contactAltered_.size()<2;
         std::vector<std::string> brokenContacts;
         // iterate over every existing contact and try to maintain them
         State current;
