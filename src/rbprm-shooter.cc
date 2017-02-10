@@ -188,6 +188,11 @@ namespace
      //  seed = 1486140324; // stair bauzil NOT WORKING ??
     // seed = 1486140446; // stair bauzil : work with extract path but not the interpolation (best on yet)
     //  seed = 1486403996; // sideWall
+     //  seed = 1486557940; // downSlope, lent ( + 5min mais fonctionne) (minz = 0.3)
+       // seed = 1486560453; // downSlop minz = 0.45 (20min)
+      // seed = 1486564172 ; // downSlop minz = 0.45 (20min)
+      //seed = 1486643780; // downSlope HyQ_large
+       seed = 1486657707 ; // downSlope hrp2
       srand (seed);
       hppDout(notice,"&&&&&& SEED = "<<seed);
       std::cout<<"seed = "<<seed<<std::endl;

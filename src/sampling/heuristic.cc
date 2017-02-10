@@ -98,6 +98,8 @@ HeuristicFactory::HeuristicFactory()
     //seed = 1485441926; // prepare_jump
     // seed = 1486147856; // stairs (18)
     //seed = 1486392757; // sideWall HyQ
+    // seed = 1486721923; //hrp2 downSLope
+    // seed = 1486742598; // hrp2 +0.15 z axis
     srand ( seed);
     hppDout(notice,"SEED for heuristic = "<<seed);
     heuristics_.insert(std::make_pair("static", &StaticHeuristic));

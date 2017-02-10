@@ -229,7 +229,7 @@ namespace hpp{
       MatrixXX Hv = (node->getH() * direction);
       assert(Hv.rows() == 6 && Hv.cols()==1 && "Hv should be a vector 6");
       A.topRightCorner(6,1) = Hv;      
-     /* hppDout(info,"H = \n"<<node->getH());
+    /*  hppDout(info,"H = \n"<<node->getH());
       hppDout(info," Hv^T = "<<Hv.transpose());
       hppDout(info,"A = \n"<<A);
 */

@@ -231,7 +231,11 @@ const fcl::Vec3f comfcl = comcptr->com();*/
     RbPrmProfiler& watch = getRbPrmProfiler();
     watch.start("test balance");
 #endif
-        //hppDout(notice,"isStable, acceleration = "<<acc);
+        /*
+        hppDout(notice,"isStable, acceleration = "<<acc);
+        hppDout(notice,"configuration in state = "<<model::displayConfig(state.configuration_));
+        hppDout(notice,"use acceleration : "<<!fullbody->staticStability());
+        */
         if(acc.norm() == 0){
           hppDout(notice,"isStable ? called with acc = 0");
           hppDout(notice,"configuration in state = "<<model::displayConfig(state.configuration_));
@@ -253,11 +257,17 @@ const fcl::Vec3f comfcl = comcptr->com();*/
 #endif
         if(status != LP_STATUS_OPTIMAL)
         {
-            if(status == LP_STATUS_INFEASIBLE || status == LP_STATUS_UNBOUNDED)
+            if(status == LP_STATUS_UNBOUNDED)
+              hppDout(notice,"isStable : lp unbounded");
+            if(status == LP_STATUS_INFEASIBLE || status == LP_STATUS_UNBOUNDED){
                 //return 1.1; // completely arbitrary: TODO
+                //hppDout(notice,"isStable LP infeasible");
                 return -1.1; // completely arbitrary: TODO
+            }
+            //hppDout(notice,"isStable error in LP");
             return -std::numeric_limits<double>::max();
         }
+        //hppDout(notice,"isStable LP successfully solved : robustness = "<<res);
         return res ;
     }
 }
