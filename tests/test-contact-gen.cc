@@ -58,13 +58,13 @@ BOOST_AUTO_TEST_CASE (maintain_combinatorial) {
     BOOST_CHECK_MESSAGE(q.size() == 4, "Expected 4 combinations");
 
     q = contact::maintain_contacts_combinatorial(state,2);
-    BOOST_CHECK_MESSAGE(q.size() == 10, "Expected 10 combinations");
+    BOOST_CHECK_MESSAGE(q.size() == 7, "Expected 7 combinations");
 
     q = contact::maintain_contacts_combinatorial(state,3);
-    BOOST_CHECK_MESSAGE(q.size() == 16, "Expected 16 combinations");
+    BOOST_CHECK_MESSAGE(q.size() == 8, "Expected 8 combinations");
 
     q = contact::maintain_contacts_combinatorial(state,4);
-    BOOST_CHECK_MESSAGE(q.size() == 16, "Expected 16 combinations");
+    BOOST_CHECK_MESSAGE(q.size() == 8, "Expected 8 combinations");
 }
 BOOST_AUTO_TEST_SUITE_END()
 

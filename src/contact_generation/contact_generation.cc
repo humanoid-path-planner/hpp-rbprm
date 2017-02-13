@@ -29,7 +29,13 @@ typedef std::vector<T_State > T_DepthState;
 
 bool push_if_new(T_State& states, const State currentState)
 {
-
+    for(CIT_State cit = states.begin(); cit != states.end(); ++cit)
+    {
+        if(currentState.contactOrder_== cit->contactOrder_)
+            return false;
+    }
+    states.push_back(currentState);
+    return true;
 }
 
 void maintain_contacts_combinatorial_rec(const hpp::rbprm::State& currentState, const unsigned int depth,
