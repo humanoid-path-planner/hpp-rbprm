@@ -33,12 +33,20 @@ typedef std::queue<hpp::rbprm::State> Q_State;
 
 struct ContactGenHelper
 {
+     ContactGenHelper(RbPrmFullBodyPtr_t fb, const State& ps,
+                      model::ConfigurationIn_t configuration,
+                      const double robustnessTreshold = 0,
+                      const std::size_t maxContactBreaks = 1,
+                      const bool checkStability = false,
+                      const fcl::Vec3f& acceleration = fcl::Vec3f(0,0,0));
+    ~ContactGenHelper(){}
     hpp::rbprm::RbPrmFullBodyPtr_t fullBody_;
-    hpp::rbprm::State previousState_;
-    Q_State& candidates_;
+    const hpp::rbprm::State previousState_;
+    const bool checkStability_;
+    const fcl::Vec3f acceleration_;
+    const double robustnessTreshold_;
+    Q_State candidates_;
     model::Configuration_t targetRootConfiguration_;
-    bool checkStability_;
-    fcl::Vec3f acceleration_;
 };
 
 

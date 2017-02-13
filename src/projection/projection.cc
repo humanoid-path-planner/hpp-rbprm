@@ -18,6 +18,7 @@
 
 #include <hpp/rbprm/projection/projection.hh>
 #include <hpp/rbprm/interpolation/interpolation-constraints.hh>
+#include <hpp/model/joint.hh>
 
 
 
@@ -81,17 +82,37 @@ ProjectionReport projectToRootPosition(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, 
     return res;
 }
 
+typedef std::vector<model::JointPtr_t> T_Joint;
 
-void LockFromRoot(hpp::model::DevicePtr_t device, model::ConfigurationIn_t targetRootConfiguration, core::ConfigProjectorPtr_t& projector)
+T_Joint getJointsFromLimbs(const rbprm::T_Limb limbs)
 {
+    T_Joint res;
+    for(rbprm::CIT_Limb cit = limbs.begin(); cit != limbs.end(); ++cit)
+        res.push_back(cit->second->limb_);
+    return res;
+}
+
+bool not_a_limb(model::JointPtr_t cJoint, T_Joint limbs)
+{
+    for(T_Joint::const_iterator cit = limbs.begin(); cit != limbs.end(); ++cit)
+    {
+        if(cJoint->name() == (*cit)->name()) return false;
+    }
+    return true;
+}
+
+void LockFromRoot(hpp::model::DevicePtr_t device, const rbprm::T_Limb& limbs, model::ConfigurationIn_t targetRootConfiguration, core::ConfigProjectorPtr_t& projector)
+{
+    std::vector<model::JointPtr_t> jointLimbs = getJointsFromLimbs(limbs);
     model::JointPtr_t cJoint = device->rootJoint();
-    std::size_t currentLength(0);
     core::size_type rankInConfiguration;
-    while(currentLength<=targetRootConfiguration.rows())
+    while(not_a_limb(cJoint, jointLimbs))
     {
         rankInConfiguration = (cJoint->rankInConfiguration ());
         projector->add(core::LockedJoint::create(cJoint,targetRootConfiguration.segment(rankInConfiguration, cJoint->configSize())));
-        currentLength += cJoint->configSize();
+        if (cJoint->numberChildJoints() !=1)
+            return;
+        cJoint = cJoint->childJoint(0);
     }
 }
 
@@ -102,7 +123,7 @@ ProjectionReport projectToRootConfiguration(hpp::rbprm::RbPrmFullBodyPtr_t fullB
     ProjectionReport res;
     core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(fullBody->device_,"proj", 0.001, 40);
     CreateContactConstraints(fullBody, currentState, proj);
-    LockFromRoot(fullBody->device_, conf, proj);
+    LockFromRoot(fullBody->device_, fullBody->GetLimbs(), conf, proj);
     model::Configuration_t configuration = currentState.configuration_;
     res.success_ = proj->apply(configuration);
     res.result_ = currentState;
@@ -110,7 +131,8 @@ ProjectionReport projectToRootConfiguration(hpp::rbprm::RbPrmFullBodyPtr_t fullB
     return res;
 }
 
-ProjectionReport setCollisionFree(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const std::string& limbName,const hpp::rbprm::State& currentState)
+ProjectionReport setCollisionFree(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const core::CollisionValidationPtr_t& validation ,
+                                  const std::string& limbName,const hpp::rbprm::State& currentState)
 {
     ProjectionReport res;
     res.result_ = currentState;
@@ -124,6 +146,7 @@ ProjectionReport setCollisionFree(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const
         {
             res.result_.configuration_ = configuration;
             res.success_ = true;
+            return res;
         }
         // load after to test current configuraiton (so miss the last configuration but that s probably okay..)
         sampling::Load(*cit, configuration);

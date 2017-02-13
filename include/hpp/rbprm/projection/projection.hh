@@ -58,7 +58,7 @@ ProjectionReport projectToRootConfiguration(hpp::rbprm::RbPrmFullBodyPtr_t fullB
 /// \param fullBody target Robot
 /// \param limb considered limb
 /// \return projection report containing the state projected
-ProjectionReport setCollisionFree(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const std::string& limb, const hpp::rbprm::State& currentState);
+ProjectionReport setCollisionFree(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const core::CollisionValidationPtr_t &validation, const std::string& limb, const hpp::rbprm::State& currentState);
     } // namespace projection
   } // namespace rbprm
 } // namespace hpp

@@ -20,6 +20,7 @@
 #include <hpp/rbprm/stability/stability.hh>
 #include <hpp/rbprm/ik-solver.hh>
 #include <hpp/rbprm/projection/projection.hh>
+#include <hpp/rbprm/contact_generation/contact_generation.hh>
 
 #include <hpp/core/constraint-set.hh>
 #include <hpp/core/config-projector.hh>
@@ -205,7 +206,7 @@ namespace hpp {
     }
 
     // first step
-    State MaintainPreviousContacts(const State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body,
+    /*State MaintainPreviousContacts(const State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body,
                                    std::map<std::string,core::CollisionValidationPtr_t>& limbValidations,
                                    model::ConfigurationIn_t configuration, bool& contactMaintained, bool& multipleBreaks, const double robustnessTreshold)
     {
@@ -254,6 +255,25 @@ namespace hpp {
             multipleBreaks = true;
         }
         return current;
+    }*/
+
+    State MaintainPreviousContacts(const State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body,
+                                   std::map<std::string,core::CollisionValidationPtr_t>& limbValidations,
+                                   model::ConfigurationIn_t configuration, bool& contactMaintained, bool& multipleBreaks, const double robustnessTreshold)
+    {
+        contact::ContactGenHelper cHelper(body,previous,configuration,robustnessTreshold,1,false);
+        projection::ProjectionReport rep = contact::maintain_contacts(cHelper);
+        if(rep.success_)
+        {
+            contactMaintained = rep.result_.contactBreaks(previous).empty();
+            multipleBreaks = false;
+        }
+        else
+        {
+            contactMaintained = false;
+            multipleBreaks = true;
+        }
+        return rep.result_;
     }
 
 
