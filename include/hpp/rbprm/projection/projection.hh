@@ -28,9 +28,10 @@ namespace projection{
 
 struct ProjectionReport
 {
+     ProjectionReport(): success_ (false){}
+    ~ProjectionReport(){}
     bool success_;
     hpp::rbprm::State result_;
-    std::vector<std::string> contactAltered_;
 };
 
 /// Project a configuration to a target position, while maintaining contact constraints.
@@ -39,11 +40,25 @@ struct ProjectionReport
 /// \param fullBody target Robot
 /// \param target, desired root position
 /// \param currentState current state of the robot (configuration and contacts)
-/// \param maxBrokenContacts max number of contacts that can be broken in the process
 /// \return projection report containing the state projected
-ProjectionReport project_to_root_position(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const fcl::Vec3f& target,
-                                           const hpp::rbprm::State& currentState, const unsigned int maxBrokenContacts=1);
+ProjectionReport projectToRootPosition(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const fcl::Vec3f& target,
+                                           const hpp::rbprm::State& currentState);
 
+/// Project a configuration to a target root configuration, while maintaining contact constraints.
+/// If required, up to maxBrokenContacts can be broken in the process.
+/// root position is assumed to be at the 3 first dof.
+/// \param fullBody target Robot
+/// \param target, desired root position
+/// \param currentState current state of the robot (configuration and contacts)
+/// \return projection report containing the state projected
+ProjectionReport projectToRootConfiguration(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const model::ConfigurationIn_t conf,
+                                           const hpp::rbprm::State& currentState);
+
+/// Project a configuration such that a given limb configuration is collision free
+/// \param fullBody target Robot
+/// \param limb considered limb
+/// \return projection report containing the state projected
+ProjectionReport setCollisionFree(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const std::string& limb, const hpp::rbprm::State& currentState);
     } // namespace projection
   } // namespace rbprm
 } // namespace hpp

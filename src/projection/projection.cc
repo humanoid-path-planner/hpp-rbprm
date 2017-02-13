@@ -67,10 +67,10 @@ void CreateRootPosConstraint(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const fcl:
                                                           fullBody->device_->rootJoint(),fcl::Vec3f(0,0,0), target)));
 }
 
-
-ProjectionReport project_to_root_position_private(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const fcl::Vec3f& target,
-                                           const hpp::rbprm::State& currentState, ProjectionReport& res)
+ProjectionReport projectToRootPosition(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const fcl::Vec3f& target,
+                                           const hpp::rbprm::State& currentState)
 {
+    ProjectionReport res;
     core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(fullBody->device_,"proj", 0.001, 40);
     CreateContactConstraints(fullBody, currentState, proj);
     CreateRootPosConstraint(fullBody, target, proj);
@@ -82,31 +82,53 @@ ProjectionReport project_to_root_position_private(hpp::rbprm::RbPrmFullBodyPtr_t
 }
 
 
-ProjectionReport project_to_root_position_rec(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const fcl::Vec3f& target,
-                                              const hpp::rbprm::State& currentState, const unsigned int maxBrokenContacts,
-                                              ProjectionReport& res)
+void LockFromRoot(hpp::model::DevicePtr_t device, model::ConfigurationIn_t targetRootConfiguration, core::ConfigProjectorPtr_t& projector)
 {
-    res = project_to_root_position_private(fullBody, target, currentState, res);
-    if(res.success_ || maxBrokenContacts ==0) return res;
-    std::queue<std::string> contactOrder = currentState.contactOrder_;
-    while(!(contactOrder.empty() || res.success_  ))
+    model::JointPtr_t cJoint = device->rootJoint();
+    std::size_t currentLength(0);
+    core::size_type rankInConfiguration;
+    while(currentLength<=targetRootConfiguration.rows())
     {
-        hpp::rbprm::State copyState = currentState;
-        const std::string contactRemoved = contactOrder.front();
-        copyState.RemoveContact(contactRemoved);
-        contactOrder.pop();
-        res = project_to_root_position_rec(fullBody, target, currentState, maxBrokenContacts-1, res);
-        if(res.success_)
-            res.contactAltered_.push_back(contactRemoved);
+        rankInConfiguration = (cJoint->rankInConfiguration ());
+        projector->add(core::LockedJoint::create(cJoint,targetRootConfiguration.segment(rankInConfiguration, cJoint->configSize())));
+        currentLength += cJoint->configSize();
     }
+}
+
+
+ProjectionReport projectToRootConfiguration(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const model::ConfigurationIn_t conf,
+                                           const hpp::rbprm::State& currentState)
+{
+    ProjectionReport res;
+    core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(fullBody->device_,"proj", 0.001, 40);
+    CreateContactConstraints(fullBody, currentState, proj);
+    LockFromRoot(fullBody->device_, conf, proj);
+    model::Configuration_t configuration = currentState.configuration_;
+    res.success_ = proj->apply(configuration);
+    res.result_ = currentState;
+    res.result_.configuration_ = configuration;
     return res;
 }
 
-ProjectionReport project_to_root_position(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const fcl::Vec3f& target,
-                                           const hpp::rbprm::State& currentState, const unsigned int maxBrokenContacts)
+ProjectionReport setCollisionFree(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const std::string& limbName,const hpp::rbprm::State& currentState)
 {
     ProjectionReport res;
-    return project_to_root_position_rec(fullBody, target, currentState, maxBrokenContacts,res);
+    res.result_ = currentState;
+    model::Configuration_t configuration = currentState.configuration_;
+    RbPrmLimbPtr_t limb = fullBody->GetLimbs().at(limbName);
+    for(sampling::SampleVector_t::const_iterator cit = limb->sampleContainer_.samples_.begin();
+        cit != limb->sampleContainer_.samples_.end(); ++cit)
+    {
+        hpp::core::ValidationReportPtr_t valRep (new hpp::core::CollisionValidationReport);
+        if(validation->validate(configuration, valRep) )
+        {
+            res.result_.configuration_ = configuration;
+            res.success_ = true;
+        }
+        // load after to test current configuraiton (so miss the last configuration but that s probably okay..)
+        sampling::Load(*cit, configuration);
+    }
+    return res;
 }
 
 } // namespace projection

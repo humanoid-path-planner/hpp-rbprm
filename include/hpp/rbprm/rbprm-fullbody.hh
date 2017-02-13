@@ -107,6 +107,7 @@ namespace hpp {
         const rbprm::T_Limb& GetLimbs() {return limbs_;}
         const T_LimbGroup& GetGroups() {return limbGroups_;}
         const core::CollisionValidationPtr_t& GetCollisionValidation() {return collisionValidation_;}
+        const std::map<std::string, core::CollisionValidationPtr_t>& GetLimbCollisionValidation() {return limbcollisionValidations_;}
         const model::DevicePtr_t device_;
 
     private:

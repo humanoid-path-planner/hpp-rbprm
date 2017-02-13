@@ -17,6 +17,7 @@
 // <http://www.gnu.org/licenses/>.
 
 #include <hpp/rbprm/contact_generation/contact_generation.hh>
+#include <hpp/rbprm/stability/stability.hh>
 
 
 
@@ -69,6 +70,72 @@ Q_State maintain_contacts_combinatorial(const hpp::rbprm::State& currentState, c
     T_DepthState res(maxBrokenContacts+1);
     maintain_contacts_combinatorial_rec(currentState, 0, maxBrokenContacts,res);
     return flatten(res);
+}
+
+using namespace projection;
+
+bool maintain_contacts_stability_rec(hpp::rbprm::RbPrmFullBodyPtr_t fullBody,
+                        model::ConfigurationIn_t targetRootConfiguration,
+                        Q_State& candidates,const std::size_t contactLength,
+                        const fcl::Vec3f& acceleration, ProjectionReport& currentRep)
+{
+    if(stability::IsStable(fullBody,currentRep.result_)) return true;
+    if(!candidates.empty())
+    {
+        State cState = candidates.front();
+        candidates.pop();
+         // removed more contacts, cannot be stable if previous state was not
+        if(cState.contactOrder_.size() < contactLength) return false;
+        ProjectionReport rep = projectToRootConfiguration(fullBody,targetRootConfiguration,cState);
+        Q_State copy_candidates = candidates;
+        if(maintain_contacts_stability_rec(fullBody,targetRootConfiguration,copy_candidates,contactLength,acceleration, rep))
+        {
+            currentRep = rep;
+            candidates = copy_candidates;
+            return true;
+        }
+    }
+    return false;
+}
+
+ProjectionReport maintain_contacts_stability(ContactGenHelper &contactGenHelper, ProjectionReport& currentRep)
+{
+    const std::size_t contactLength(currentRep.result_.contactOrder_.size());
+    maintain_contacts_stability_rec(contactGenHelper.fullBody_,
+                                    contactGenHelper.targetRootConfiguration_,
+                                    contactGenHelper.candidates_,
+                                    contactLength, contactGenHelper.acceleration_, currentRep);
+    return currentRep;
+}
+
+ProjectionReport genColFree(ContactGenHelper &contactGenHelper, ProjectionReport& currentRep)
+{
+    ProjectionReport res = currentRep;
+    // identify broken limbs and find collision free configurations for each one of them.
+    std::vector<std::string> brokenContacts(currentRep.result_.contactBreaks(contactGenHelper.previousState_));
+    for(std::vector<std::string>::const_iterator cit = brokenContacts.begin(); cit != brokenContacts.end() && res.success_; ++cit)
+        res = projection::setCollisionFree(contactGenHelper.fullBody_,*cit,res.result_);
+    return res;
+}
+
+ProjectionReport maintain_contacts(ContactGenHelper &contactGenHelper)
+{
+    ProjectionReport rep;
+    Q_State& candidates = contactGenHelper.candidates_;
+    while(!contactGenHelper.candidates_.empty() || rep.success_)
+    {
+        //retrieve latest state
+        State cState = candidates.front();
+        candidates.pop();
+        rep = projectToRootConfiguration(contactGenHelper.fullBody_,contactGenHelper.targetRootConfiguration_,cState);
+        if(rep.success_)
+            rep = genColFree(contactGenHelper, rep);
+    }
+    if(rep.success_ && contactGenHelper.checkStability_)
+    {
+        return maintain_contacts_stability(contactGenHelper, rep);
+    }
+    return rep;
 }
 
 } // namespace projection
