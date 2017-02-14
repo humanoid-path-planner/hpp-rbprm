@@ -182,7 +182,7 @@ namespace hpp {
         if(EqStringVec(current.contactBreaks(current_m1),
                        current_p1.contactBreaks(current_m1)) &&
            EqStringVec(current.contactCreations(current_m1),
-                       current_p1.contactCreations(current)))
+                       current_p1.contactCreations(current_m1)))
         {
             if(from+1 == to) return;
             res.push_back(std::make_pair((from+1)->first, (from+1)->second));
