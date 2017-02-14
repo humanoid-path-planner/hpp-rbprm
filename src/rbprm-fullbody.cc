@@ -229,7 +229,7 @@ namespace hpp {
             const fcl::Vec3f& pnormal  =previous.contactNormals_.at(name);
             const fcl::Matrix3f& rotation = previous.contactRotation_.at(name);
             bool success(false);
-            State tmp = Project(body,name,limb,limbValidations.at(name),config,rotation, setMaintainRotationConstraints(), ppos,pnormal,current,success);
+            State tmp = projectEffector(body,name,limb,limbValidations.at(name),config,rotation, setMaintainRotationConstraints(), ppos,pnormal,current,success);
             if(success)
             {
                 // stable?
@@ -354,9 +354,9 @@ namespace hpp {
       for(;!found_sample && it!=finalSet.end(); ++it)
       {
           const sampling::OctreeReport& bestReport = *it;
-          bool success (false);
-          hpp::rbprm::State tmp = projection::ProjectSampleToObstacle(body, limbId, limb, bestReport, validation, configuration, current, success);
-          if(success)
+          projection::ProjectionReport rep = projection::projectSampleToObstacle(body, limbId, limb, bestReport, validation, configuration, current);
+          State& tmp = rep.result_;
+          if(rep.success_)
           {
               double robustness = stability::IsStable(body,tmp);
               if((tmp.nbContacts == 1 && !stableForOneContact) || robustness>=robustnessTreshold)

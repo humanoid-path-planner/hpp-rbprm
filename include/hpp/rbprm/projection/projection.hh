@@ -72,14 +72,14 @@ ProjectionReport HPP_RBPRM_DLLAPI projectToRootConfiguration(hpp::rbprm::RbPrmFu
 ProjectionReport  HPP_RBPRM_DLLAPI setCollisionFree(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const core::CollisionValidationPtr_t &validation, const std::string& limb, const hpp::rbprm::State& currentState);
 
 
-hpp::rbprm::State HPP_RBPRM_DLLAPI ProjectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
+ProjectionReport HPP_RBPRM_DLLAPI projectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
                                                  const sampling::OctreeReport& report, core::CollisionValidationPtr_t validation,
-                                                 model::ConfigurationOut_t configuration, const hpp::rbprm::State& current, bool& success);
+                                                 model::ConfigurationOut_t configuration, const hpp::rbprm::State& current);
 
-hpp::rbprm::State HPP_RBPRM_DLLAPI Project(const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
+ProjectionReport HPP_RBPRM_DLLAPI projectEffector(const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
                                            core::CollisionValidationPtr_t validation, model::ConfigurationOut_t configuration,
                                            const fcl::Matrix3f& rotationTarget, const std::vector<bool>& rotationFilter, const fcl::Vec3f& positionTarget, const fcl::Vec3f& normal,
-                                           const hpp::rbprm::State& current, bool& success);
+                                           const hpp::rbprm::State& current);
 
     } // namespace projection
   } // namespace rbprm

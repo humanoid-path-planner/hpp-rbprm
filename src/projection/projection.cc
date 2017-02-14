@@ -179,13 +179,15 @@ std::vector<bool> setTranslationConstraints()
     }
     return res;
 }
-hpp::rbprm::State Project(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
+ProjectionReport projectEffector(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
                           core::CollisionValidationPtr_t validation, model::ConfigurationOut_t configuration,
                           const fcl::Matrix3f& rotationTarget, const std::vector<bool> &rotationFilter, const fcl::Vec3f& positionTarget, const fcl::Vec3f& normal,
-                          const hpp::rbprm::State& current, bool& success)
+                          const hpp::rbprm::State& current)
 {
+    ProjectionReport rep;
     // Add constraints to resolve Ik
-    success = false;
+    rep.success_ = false;
+    rep.result_ = current;
     // Add constraints to resolve Ik
     core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 20);
     // get current normal orientation
@@ -233,8 +235,8 @@ hpp::rbprm::State Project(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const std:
         tmp.contactNormals_[limbId] = normal;
         tmp.configuration_ = configuration;
         ++tmp.nbContacts;
-        success = true;
-        return tmp;
+        rep.success_ = true;
+        rep.result_ = tmp;
     }
 #ifdef PROFILE
     else
@@ -245,13 +247,12 @@ hpp::rbprm::State Project(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const std:
     else
         watch.stop("ik");
 #endif
-    success = false;
-    return current;
+    return rep;
 }
 
-hpp::rbprm::State ProjectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
+ProjectionReport projectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
                    const sampling::OctreeReport& report, core::CollisionValidationPtr_t validation,
-                   model::ConfigurationOut_t configuration, const hpp::rbprm::State& current, bool& success)
+                   model::ConfigurationOut_t configuration, const hpp::rbprm::State& current)
 {
     sampling::Load(*report.sample_, configuration);
     body->device_->currentConfiguration(configuration);
@@ -264,7 +265,7 @@ hpp::rbprm::State ProjectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& 
     const fcl::Matrix3f rotation = alignRotation * limb->effector_->currentTransformation().getRotation();
     fcl::Vec3f posOffset = position - rotation * limb->offset_;
     posOffset = posOffset + normal * epsilon;
-    return Project(body, limbId, limb, validation, configuration, rotation, setRotationConstraints(),posOffset, normal, current, success);
+    return projectEffector(body, limbId, limb, validation, configuration, rotation, setRotationConstraints(),posOffset, normal, current);
 }
 
 } // namespace projection

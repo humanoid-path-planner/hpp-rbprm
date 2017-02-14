@@ -336,20 +336,18 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
     for(;!found_sample && it!=finalSet.end(); ++it)
     {
         const sampling::OctreeReport& bestReport = *it;
-        bool success (false);
-        hpp::rbprm::State tmp =
-                ProjectSampleToObstacle(contactGenHelper.fullBody_, limbId, limb, bestReport, validation, configuration, current, success);
-        if(success)
+        ProjectionReport rep = projectSampleToObstacle(contactGenHelper.fullBody_, limbId, limb, bestReport, validation, configuration, current);
+        if(rep.success_)
         {
-            double robustness = stability::IsStable(contactGenHelper.fullBody_,tmp);
+            double robustness = stability::IsStable(contactGenHelper.fullBody_,rep.result_);
             if(    !contactGenHelper.checkStability_
-                || (tmp.nbContacts == 1 && !contactGenHelper.stableForOneContact_)
+                || (rep.result_.nbContacts == 1 && !contactGenHelper.stableForOneContact_)
                 || robustness>=contactGenHelper.robustnessTreshold_)
             {
                 maxRob = std::max(robustness, maxRob);
                 position = limb->effector_->currentTransformation().getTranslation();
                 rotation = limb->effector_->currentTransformation().getRotation();
-                normal = tmp.contactNormals_.at(limbId);
+                normal = rep.result_.contactNormals_.at(limbId);
                 found_sample = true;
             }
             // if no stable candidate is found, select best contact
@@ -360,7 +358,7 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
                 maxRob = robustness;
                 position = limb->effector_->currentTransformation().getTranslation();
                 rotation = limb->effector_->currentTransformation().getRotation();
-                normal = tmp.contactNormals_.at(limbId);
+                normal = rep.result_.contactNormals_.at(limbId);
                 unstableContact = true;
             }
         }
