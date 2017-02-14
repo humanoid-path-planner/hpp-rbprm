@@ -30,6 +30,8 @@ namespace rbprm {
 namespace contact{
 
 typedef std::queue<hpp::rbprm::State> Q_State;
+typedef std::pair <hpp::rbprm::State, std::vector<std::string> > ContactState;
+typedef std::queue<ContactState> T_ContactState;
 
 struct ContactGenHelper
 {
@@ -58,29 +60,30 @@ struct ContactGenHelper
 /// \param maxBrokenContacts max number of contacts that can be broken in the process
 /// \return a queue of contact states candidates for maintenance, ordered by number of contacts broken
 /// and priority in the list wrt the contact order
-Q_State maintain_contacts_combinatorial(const hpp::rbprm::State& currentState, const unsigned int maxBrokenContacts=1);
+Q_State maintain_contacts_combinatorial(const hpp::rbprm::State& currentState, const std::size_t maxBrokenContacts=1);
 
-/// Generates all potentially valid cases of valid contact creation
-/// given a current State.
-/// \param fullBody target Robot
-/// \param target, desired root position
-/// \param currentState current state of the robot (configuration and contacts)
-/// \param maxBrokenContacts max number of contacts that can be broken in the process
+/// Generates all potentially valid cases of valid contact creation by removing the top state of the priority
+/// stack
+/// \param freeEffectors list of free candidates
+/// \param previous current state of the robot
+/// \param maxCreatedContacts max number of contacts that can be created in the process
+/// \return a QUEUE of contact states candidates for maintenance, ordered by number of contacts broken
+/// and priority in the list wrt the contact order
+T_ContactState gen_contacts_combinatorial(const std::vector<std::string>& freeEffectors, const State& previous, const std::size_t maxCreatedContacts);
+
+/// Generates all potentially valid cases of valid contact creation by removing the top state of the priority
+/// stack
+/// \param ContactGenHelper parametrization of the planner
+/// \param maxCreatedContacts max number of contacts that can be created in the process
 /// \return a queue of contact states candidates for maintenance, ordered by number of contacts broken
 /// and priority in the list wrt the contact order
-//Q_State gen_contacts_combinatorial(const hpp::rbprm::State& currentState, const unsigned int maxCreatedContacts=1);
+T_ContactState gen_contacts_combinatorial(ContactGenHelper& contactGenHelper, const std::size_t maxCreatedContacts=1);
 
 /// Given a combinatorial of possible contacts, generate
 /// the first "valid" configuration, that the first kinematic
 /// configuration that removes the minimum number of contacts and
 /// is collision free.
-/// \param fullBody target Robot
-/// \param previousState, desired root configuration
-/// \param targetRootConfiguration, desired root configuration
-/// \param candidates queue of candidates. The queue elements are decreased as trials go on.
-/// \param checkStability if true, among the solution candidates of similar rank, will return
-/// the first one that provides stability.
-/// \param acceleration current COM acceleration
+/// \param ContactGenHelper parametrization of the planner
 /// \return the best candidate wrt the priority in the list and the contact order
 projection::ProjectionReport maintain_contacts(ContactGenHelper& contactGenHelper);
 

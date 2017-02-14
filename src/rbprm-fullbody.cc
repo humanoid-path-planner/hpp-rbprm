@@ -261,7 +261,7 @@ namespace hpp {
                                    std::map<std::string,core::CollisionValidationPtr_t>& limbValidations,
                                    model::ConfigurationIn_t configuration, bool& contactMaintained, bool& multipleBreaks, const double robustnessTreshold)
     {
-        contact::ContactGenHelper cHelper(body,previous,configuration,robustnessTreshold,1,false);
+        contact::ContactGenHelper cHelper(body,previous,configuration,robustnessTreshold,2,true);
         projection::ProjectionReport rep = contact::maintain_contacts(cHelper);
         if(rep.success_)
         {

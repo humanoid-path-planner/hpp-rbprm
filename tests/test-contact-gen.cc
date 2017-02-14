@@ -45,6 +45,23 @@ void addState(const State& s1,T_StateFrame& states)
     states.push_back(std::make_pair(states.size(), s1));
 }
 
+void __debug_print(const T_ContactState& que)
+{
+    T_ContactState q = que;
+    std::cout << "******** printing q of size " << q.size() << std::endl;
+    while(!q.empty())
+    {
+        ContactState cs = q.front(); q.pop();
+        std::cout << "\t one state " << std::endl;
+        for(std::vector<std::string>::const_iterator cit = cs.second.begin(); cit != cs.second.end(); ++cit)
+        {
+            std::cout << "\t \t " << *cit << std::endl;
+        }
+        std::cout << "\t END one state "  << std::endl;
+    }
+    std::cout << "end printing q of size ******** " << q.size() << std::endl;
+}
+
 BOOST_AUTO_TEST_CASE (maintain_combinatorial) {
     State state;
     AddToState("c1", state);
@@ -66,6 +83,42 @@ BOOST_AUTO_TEST_CASE (maintain_combinatorial) {
     q = contact::maintain_contacts_combinatorial(state,4);
     BOOST_CHECK_MESSAGE(q.size() == 8, "Expected 8 combinations");
 }
+
+BOOST_AUTO_TEST_CASE (gen_combinatorial) {
+    std::vector<std::string> allcontacts;
+    allcontacts.push_back("c1"); allcontacts.push_back("c2");
+    State state;
+    AddToState("c1", state);
+    AddToState("c2", state);
+
+    T_ContactState q = contact::gen_contacts_combinatorial(allcontacts,state,1);
+    //__debug_print(q);
+    BOOST_CHECK_MESSAGE(q.size() == 1, "Expected 1 combinations");
+
+
+    allcontacts.push_back("c3"); allcontacts.push_back("c4");
+
+    q = contact::gen_contacts_combinatorial(allcontacts,state,0);
+    //__debug_print(q);
+    BOOST_CHECK_MESSAGE(q.size() == 1, "Expected 1 combinations");
+
+
+    q =  contact::gen_contacts_combinatorial(allcontacts,state,1);
+    //__debug_print(q);
+    BOOST_CHECK_MESSAGE(q.size() == 3, "Expected 3 combinations");
+
+
+    q =  contact::gen_contacts_combinatorial(allcontacts,state,2);
+    //__debug_print(q);
+    BOOST_CHECK_MESSAGE(q.size() == 5, "Expected 5 combinations");
+
+    q =  contact::gen_contacts_combinatorial(allcontacts,state,3);
+    //__debug_print(q);
+    BOOST_CHECK_MESSAGE(q.size() == 5, "Expected 5 combinations");
+
+
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 

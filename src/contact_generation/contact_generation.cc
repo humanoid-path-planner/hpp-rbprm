@@ -18,6 +18,7 @@
 
 #include <hpp/rbprm/contact_generation/contact_generation.hh>
 #include <hpp/rbprm/stability/stability.hh>
+#include <hpp/rbprm/tools.hh>
 
 
 
@@ -53,8 +54,8 @@ bool push_if_new(T_State& states, const State currentState)
     return true;
 }
 
-void maintain_contacts_combinatorial_rec(const hpp::rbprm::State& currentState, const unsigned int depth,
-                                         const unsigned int maxBrokenContacts, T_DepthState& res)
+void maintain_contacts_combinatorial_rec(const hpp::rbprm::State& currentState, const std::size_t  depth,
+                                         const std::size_t maxBrokenContacts, T_DepthState& res)
 {
     if (!push_if_new(res[depth], currentState) || depth>=maxBrokenContacts) return;
     std::queue<std::string> contactOrder = currentState.contactOrder_;
@@ -79,7 +80,7 @@ Q_State flatten(const T_DepthState& depthstates)
     return res;
 }
 
-Q_State maintain_contacts_combinatorial(const hpp::rbprm::State& currentState, const unsigned int maxBrokenContacts)
+Q_State maintain_contacts_combinatorial(const hpp::rbprm::State& currentState, const std::size_t maxBrokenContacts)
 {
     T_DepthState res(maxBrokenContacts+1);
     maintain_contacts_combinatorial_rec(currentState, 0, maxBrokenContacts,res);
@@ -163,6 +164,85 @@ ProjectionReport maintain_contacts(ContactGenHelper &contactGenHelper)
     if(rep.success_ && contactGenHelper.checkStability_)
         return maintain_contacts_stability(contactGenHelper, rep);
     return rep;
+}
+
+std::vector<std::string> extractEffectorsName(const rbprm::T_Limb& limbs)
+{
+    std::vector<std::string> res;
+    for(rbprm::T_Limb::const_iterator cit = limbs.begin(); cit != limbs.end(); ++cit)
+        res.push_back(cit->first);
+    return res;
+}
+
+void print_string_vect(const std::vector<std::string>& strings)
+{
+    for(std::vector<std::string>::const_iterator cit = strings.begin(); cit != strings.end(); ++cit)
+    {
+        std::cout << *cit <<  std::endl;
+    }
+}
+
+void print_string_string_vec(std::vector<std::vector<std::string> >& strings)
+{
+    for(std::vector<std::vector<std::string> >::const_iterator cit = strings.begin(); cit != strings.end(); ++cit)
+    {
+        std::cout << "***one string vector ***" << std::endl;
+        print_string_vect(*cit);
+        std::cout << "***one string vector ***" << std::endl;
+    }
+}
+
+void stringCombinatorialRec(std::vector<std::vector<std::string> >& res, const std::vector<std::string>& candidates, const std::size_t depth)
+{
+    if(depth == 0) return;
+    std::vector<std::vector<std::string> > newStates;
+    for(std::vector<std::vector<std::string> >::iterator it = res.begin(); it != res.end(); ++it)
+    {
+        for(std::vector<std::string>::const_iterator canditates_it = candidates.begin(); canditates_it != candidates.end(); ++canditates_it)
+        {
+            std::vector<std::string> contacts = *it;
+            if(tools::insertIfNew(contacts,*canditates_it))
+            {
+                newStates.push_back(contacts);
+            }
+        }
+    }
+    stringCombinatorialRec(newStates, candidates, depth-1);
+    res.insert(res.end(),newStates.begin(),newStates.end());
+}
+
+
+std::vector<std::vector<std::string> > stringCombinatorial(const State& previous, const std::vector<std::string>& candidates, const std::size_t maxDepth)
+{
+    std::vector<std::vector<std::string> > res;
+    res.push_back(previous.fixedContacts(previous));
+    stringCombinatorialRec(res, candidates, maxDepth);
+    return res;
+}
+
+void gen_contacts_combinatorial_rec(const std::vector<std::string>& freeEffectors, const State& previous, T_ContactState& res, const std::size_t maxCreatedContacts)
+{
+    std::vector<std::vector<std::string> > allNewStates = stringCombinatorial(previous, freeEffectors, maxCreatedContacts);
+    for(std::vector<std::vector<std::string> >::const_iterator cit = allNewStates.begin(); cit!=allNewStates.end();++cit)
+    {
+        ContactState contactState; contactState.first = previous; contactState.second = *cit;
+        res.push(contactState);
+    }
+}
+
+T_ContactState gen_contacts_combinatorial(const std::vector<std::string>& freeEffectors, const State& previous, const std::size_t maxCreatedContacts)
+{
+    T_ContactState res;;
+    gen_contacts_combinatorial_rec(freeEffectors, previous, res, maxCreatedContacts);
+    return res;
+}
+
+T_ContactState gen_contacts_combinatorial(ContactGenHelper& contactGenHelper, const std::size_t maxCreatedContacts)
+{
+    State cState = contactGenHelper.candidates_.front();
+    contactGenHelper.candidates_.pop();
+    const std::vector<std::string> freeLimbs = rbprm::freeEffectors(contactGenHelper.previousState_, extractEffectorsName(contactGenHelper.fullBody_->GetLimbs()));
+    return gen_contacts_combinatorial(freeLimbs, cState, maxCreatedContacts);
 }
 
 } // namespace projection

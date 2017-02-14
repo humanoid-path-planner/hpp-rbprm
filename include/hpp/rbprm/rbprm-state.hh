@@ -120,6 +120,26 @@ typedef T_StateFrame::const_iterator CIT_StateFrame;
     /// Given two State, compute the contact effectors distance travelled
     /// between two states
     HPP_RBPRM_DLLAPI model::value_type effectorDistance(const State& from, const State& to);
+
+
+    /// Given a State and a list of effectors, computes the list of
+    /// all the effectors that moved between the two States (ie contact was not maintained)
+    ///
+    /// \return the list of all modified effectors between two States
+    template<typename T>
+    HPP_RBPRM_DLLAPI std::vector<std::string> freeEffectors(const State& state, const T& allEffectors)
+    {
+        std::vector<std::string> res;
+        std::queue<std::string> contactOrder = state.contactOrder_;
+        while(!contactOrder.empty())
+        {
+            std::string eff = contactOrder.front();
+            contactOrder.pop();
+            if(std::find(allEffectors.begin(), allEffectors.end(), eff) == allEffectors.end())
+                res.push_back(eff);
+        }
+        return res;
+    }
   } // namespace rbprm
 } // namespace hpp
 
