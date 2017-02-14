@@ -99,7 +99,10 @@ namespace hpp {
             if(allowFailure && multipleBreaks)
             {
                 ++ nbFailures;
-                ++cit;
+                if(cit != configs.end() && (cit+1)!= configs.end())
+                {
+                    ++cit;
+                }
                 currentVal+= timeStep;
 if (nbFailures > 1)
 {

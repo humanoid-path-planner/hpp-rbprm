@@ -28,18 +28,28 @@ namespace contact{
 
 
 ContactGenHelper::ContactGenHelper(RbPrmFullBodyPtr_t fb, const State& ps, model::ConfigurationIn_t configuration,
+                                    const hpp::rbprm::affMap_t &affordances, const std::map<std::string, std::vector<std::string> > &affFilters,
                                     const double robustnessTreshold,
-                                    const std::size_t maxContactBreaks,
+                                    const std::size_t maxContactBreaks, const std::size_t maxContactCreations,
                                     const bool checkStability,
-                                    const fcl::Vec3f& acceleration)
+                                    const fcl::Vec3f& direction,
+                                    const fcl::Vec3f& acceleration,
+                                    const bool contactIfFails,
+                                    const bool stableForOneContact)
 : fullBody_(fb)
 , previousState_(ps)
 , checkStability_(checkStability)
+, contactIfFails_(contactIfFails)
+, stableForOneContact_(stableForOneContact)
 , acceleration_(acceleration)
+, direction_(direction)
 , robustnessTreshold_(robustnessTreshold)
+, maxContactBreaks_(maxContactBreaks)
+, maxContactCreations_(maxContactCreations)
+, affordances_(affordances)
+, affFilters_(affFilters)
 , candidates_(maintain_contacts_combinatorial(ps, maxContactBreaks))
-, targetRootConfiguration_(configuration)
-{}
+, targetRootConfiguration_(configuration){}
 
 typedef std::vector<T_State > T_DepthState;
 
@@ -115,18 +125,49 @@ bool maintain_contacts_stability_rec(hpp::rbprm::RbPrmFullBodyPtr_t fullBody,
 }
 
 
-void pState(const State& state)
+hpp::model::ObjectVector_t getAffObjectsForLimb(const std::string& limb,
+    const affMap_t& affordances, const std::map<std::string, std::vector<std::string> >& affFilters)
 {
-    std::cout << "**** active contacts ****" << std::endl;
-    std::queue<std::string> queue = state.contactOrder_;
-    while(!queue.empty())
+    model::ObjectVector_t affs;
+    std::vector<std::string> affTypes;
+    bool settingFound = false;
+    for (std::map<std::string, std::vector<std::string> >::const_iterator fIt =
+        affFilters.begin (); fIt != affFilters.end (); ++fIt)
     {
-        std::string c = queue.front();
-        queue.pop();
-        std::cout << c << std::endl;
+        std::size_t found = fIt->first.find(limb);
+        if (found != std::string::npos)
+        {
+            affTypes = fIt->second;
+            settingFound = true;
+            break;
+        }
     }
-    std::cout << "**** end active contacts ****" << std::endl;
+    if (!settingFound)
+    {
+        // TODO: Keep warning or delete it?
+        std::cout << "No affordance filter setting found for limb " << limb
+            << ". Has such filter been set?" << std::endl;
+        // Use all AFF OBJECTS as default if no filter setting exists
+        for (affMap_t::const_iterator affordanceIt = affordances.begin ();
+            affordanceIt != affordances.end (); ++affordanceIt)
+        {
+            std::copy (affordanceIt->second.begin (), affordanceIt->second.end (), std::back_inserter (affs));
+        }
+    }
+    else
+    {
+        for (std::vector<std::string>::const_iterator affTypeIt = affTypes.begin ();
+            affTypeIt != affTypes.end (); ++affTypeIt)
+        {
+            affMap_t::const_iterator affIt = affordances.find(*affTypeIt);
+            std::copy (affIt->second.begin (), affIt->second.end (), std::back_inserter (affs));
+        }
+    }
+    if (affs.empty())
+        throw std::runtime_error ("No aff objects found for limb " + limb);
+    return affs;
 }
+
 ProjectionReport maintain_contacts_stability(ContactGenHelper &contactGenHelper, ProjectionReport& currentRep)
 {
     const std::size_t contactLength(currentRep.result_.contactOrder_.size());
@@ -138,33 +179,6 @@ ProjectionReport maintain_contacts_stability(ContactGenHelper &contactGenHelper,
     return currentRep;
 }
 
-ProjectionReport genColFree(ContactGenHelper &contactGenHelper, ProjectionReport& currentRep)
-{
-    ProjectionReport res = currentRep;
-    // identify broken limbs and find collision free configurations for each one of them.
-    std::vector<std::string> brokenContacts(currentRep.result_.contactBreaks(contactGenHelper.previousState_));
-    for(std::vector<std::string>::const_iterator cit = brokenContacts.begin(); cit != brokenContacts.end() && res.success_; ++cit)
-        res = projection::setCollisionFree(contactGenHelper.fullBody_,contactGenHelper.fullBody_->GetCollisionValidation(),*cit,res.result_);
-    return res;
-}
-
-ProjectionReport maintain_contacts(ContactGenHelper &contactGenHelper)
-{
-    ProjectionReport rep;
-    Q_State& candidates = contactGenHelper.candidates_;
-    while(!candidates.empty() && !rep.success_)
-    {
-        //retrieve latest state
-        State cState = candidates.front();
-        candidates.pop();
-        rep = projectToRootConfiguration(contactGenHelper.fullBody_,contactGenHelper.targetRootConfiguration_,cState);
-        if(rep.success_)
-            rep = genColFree(contactGenHelper, rep);
-    }
-    if(rep.success_ && contactGenHelper.checkStability_)
-        return maintain_contacts_stability(contactGenHelper, rep);
-    return rep;
-}
 
 std::vector<std::string> extractEffectorsName(const rbprm::T_Limb& limbs)
 {
@@ -174,6 +188,18 @@ std::vector<std::string> extractEffectorsName(const rbprm::T_Limb& limbs)
     return res;
 }
 
+ProjectionReport genColFree(ContactGenHelper &contactGenHelper, ProjectionReport& currentRep)
+{
+    ProjectionReport res = currentRep;
+    // identify broken limbs and find collision free configurations for each one of them.
+    //std::vector<std::string> brokenContacts(currentRep.result_.contactBreaks(contactGenHelper.previousState_));
+    const std::vector<std::string> freeLimbs = rbprm::freeEffectors(currentRep.result_, extractEffectorsName(contactGenHelper.fullBody_->GetLimbs()));
+    for(std::vector<std::string>::const_iterator cit = freeLimbs.begin(); cit != freeLimbs.end() && res.success_; ++cit)
+        res = projection::setCollisionFree(contactGenHelper.fullBody_,contactGenHelper.fullBody_->GetCollisionValidation(),*cit,res.result_);
+    return res;
+}
+
+/*** TODO DEBUG */
 void print_string_vect(const std::vector<std::string>& strings)
 {
     for(std::vector<std::string>::const_iterator cit = strings.begin(); cit != strings.end(); ++cit)
@@ -191,6 +217,7 @@ void print_string_string_vec(std::vector<std::vector<std::string> >& strings)
         std::cout << "***one string vector ***" << std::endl;
     }
 }
+/*** TODO DEBUG */
 
 void stringCombinatorialRec(std::vector<std::vector<std::string> >& res, const std::vector<std::string>& candidates, const std::size_t depth)
 {
@@ -243,6 +270,180 @@ T_ContactState gen_contacts_combinatorial(ContactGenHelper& contactGenHelper, co
     contactGenHelper.candidates_.pop();
     const std::vector<std::string> freeLimbs = rbprm::freeEffectors(contactGenHelper.previousState_, extractEffectorsName(contactGenHelper.fullBody_->GetLimbs()));
     return gen_contacts_combinatorial(freeLimbs, cState, maxCreatedContacts);
+}
+
+ProjectionReport maintain_contacts(ContactGenHelper &contactGenHelper)
+{
+    ProjectionReport rep;
+    Q_State& candidates = contactGenHelper.candidates_;
+    while(!candidates.empty() && !rep.success_)
+    {
+        //retrieve latest state
+        State cState = candidates.front();
+        candidates.pop();
+        rep = projectToRootConfiguration(contactGenHelper.fullBody_,contactGenHelper.targetRootConfiguration_,cState);
+        if(rep.success_)
+            rep = genColFree(contactGenHelper, rep);
+    }
+    if(rep.success_ && contactGenHelper.checkStability_)
+        return maintain_contacts_stability(contactGenHelper, rep);
+    return rep;
+}
+
+
+sampling::T_OctreeReport CollideOctree(const ContactGenHelper &contactGenHelper, const std::string& limbName,
+                                                    RbPrmLimbPtr_t limb)
+{
+    fcl::Transform3f transform = limb->octreeRoot(); // get root transform from configuration
+    hpp::model::ObjectVector_t affordances = getAffObjectsForLimb (limbName,contactGenHelper.affordances_, contactGenHelper.affFilters_);
+
+    //#pragma omp parallel for
+    // request samples which collide with each of the collision objects
+    sampling::heuristic eval =  limb->evaluate_;
+    std::size_t i (0);
+    if (affordances.empty ())
+      throw std::runtime_error ("No aff objects found!!!");
+
+    std::vector<sampling::T_OctreeReport> reports(affordances.size());
+    for(model::ObjectVector_t::const_iterator oit = affordances.begin();
+        oit != affordances.end(); ++oit, ++i)
+    {
+        if(eval)
+            sampling::GetCandidates(limb->sampleContainer_, transform, *oit, contactGenHelper.direction_, reports[i], eval);
+        else
+            sampling::GetCandidates(limb->sampleContainer_, transform, *oit, contactGenHelper.direction_, reports[i]);
+    }
+    sampling::T_OctreeReport finalSet;
+    // order samples according to EFORT
+    for(std::vector<sampling::T_OctreeReport>::const_iterator cit = reports.begin();
+        cit != reports.end(); ++cit)
+    {
+        finalSet.insert(cit->begin(), cit->end());
+    }
+    return finalSet;
+}
+
+hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, const std::string& limbId,
+                        RbPrmLimbPtr_t limb, core::CollisionValidationPtr_t validation, bool& found_sample, bool& unstableContact)
+{
+    State current = contactGenHelper.previousState_;
+    sampling::T_OctreeReport finalSet = CollideOctree(contactGenHelper, limbId, limb);
+    core::Configuration_t moreRobust, configuration;
+    double maxRob = -std::numeric_limits<double>::max();
+    sampling::T_OctreeReport::const_iterator it = finalSet.begin();
+    fcl::Vec3f position, normal;
+    fcl::Matrix3f rotation;
+    for(;!found_sample && it!=finalSet.end(); ++it)
+    {
+        const sampling::OctreeReport& bestReport = *it;
+        bool success (false);
+        hpp::rbprm::State tmp =
+                ProjectSampleToObstacle(contactGenHelper.fullBody_, limbId, limb, bestReport, validation, configuration, current, success);
+        if(success)
+        {
+            double robustness = stability::IsStable(contactGenHelper.fullBody_,tmp);
+            if(    !contactGenHelper.checkStability_
+                || (tmp.nbContacts == 1 && !contactGenHelper.stableForOneContact_)
+                || robustness>=contactGenHelper.robustnessTreshold_)
+            {
+                maxRob = std::max(robustness, maxRob);
+                position = limb->effector_->currentTransformation().getTranslation();
+                rotation = limb->effector_->currentTransformation().getRotation();
+                normal = tmp.contactNormals_.at(limbId);
+                found_sample = true;
+            }
+            // if no stable candidate is found, select best contact
+            // anyway
+            else if((robustness > maxRob) && contactGenHelper.contactIfFails_)
+            {
+                moreRobust = configuration;
+                maxRob = robustness;
+                position = limb->effector_->currentTransformation().getTranslation();
+                rotation = limb->effector_->currentTransformation().getRotation();
+                normal = tmp.contactNormals_.at(limbId);
+                unstableContact = true;
+            }
+        }
+    }
+    if(found_sample || unstableContact)
+    {
+        current.contacts_[limbId] = true;
+        current.contactNormals_[limbId] = normal;
+        current.contactPositions_[limbId] = position;
+        current.contactRotation_[limbId] = rotation;
+        current.contactOrder_.push(limbId);
+    }
+    if(found_sample)
+    {
+        current.configuration_ = configuration;
+        current.stable = true;
+    }
+    if(unstableContact)
+        current.configuration_ = moreRobust;
+        current.stable = false;
+    return current;
+}
+
+ProjectionReport generate_contact(const ContactGenHelper &contactGenHelper, const std::string& limbName)
+{
+    ProjectionReport rep;
+
+    RbPrmLimbPtr_t limb = contactGenHelper.fullBody_->GetLimbs().at(limbName);
+    core::CollisionValidationPtr_t validation = contactGenHelper.fullBody_->GetLimbCollisionValidation().at(limbName);
+    limb->limb_->robot()->currentConfiguration(contactGenHelper.targetRootConfiguration_);
+    limb->limb_->robot()->computeForwardKinematics ();
+
+    // pick first sample which is collision free
+    bool found_sample(false);
+    bool unstableContact(false); //set to true in case no stable contact is found
+    rep.result_ = findValidCandidate(contactGenHelper,limbName,limb, validation, found_sample,unstableContact);
+    if(found_sample)
+    {
+        rep.status_ = STABLE_CONTACT;
+        rep.success_ = true;
+#ifdef PROFILE
+  RbPrmProfiler& watch = getRbPrmProfiler();
+  watch.add_to_count("contact", 1);
+#endif
+    }
+    else if(unstableContact)
+    {
+        rep.status_ = UNSTABLE_CONTACT;
+        rep.success_ = !contactGenHelper.checkStability_;
+#ifdef PROFILE
+  RbPrmProfiler& watch = getRbPrmProfiler();
+  watch.add_to_count("unstable contact", 1);
+#endif
+    }
+    else
+    {
+        rep =  setCollisionFree(contactGenHelper.fullBody_,validation,limbName,rep.result_);
+        rep.status_ = NO_CONTACT;
+        rep.success_ = false;
+#ifdef PROFILE
+  RbPrmProfiler& watch = getRbPrmProfiler();
+  watch.add_to_count("no contact", 1);
+#endif
+    }
+    return rep;
+}
+
+ProjectionReport gen_contacts(ContactGenHelper &contactGenHelper)
+{
+    ProjectionReport rep;
+    Q_State& candidates = contactGenHelper.candidates_;
+    while(!candidates.empty() && !rep.success_)
+    {
+        //retrieve latest state
+        State cState = candidates.front();
+        candidates.pop();
+        rep = projectToRootConfiguration(contactGenHelper.fullBody_,contactGenHelper.targetRootConfiguration_,cState);
+        if(rep.success_)
+            rep = genColFree(contactGenHelper, rep);
+    }
+    if(rep.success_ && contactGenHelper.checkStability_)
+        return maintain_contacts_stability(contactGenHelper, rep);
+    return rep;
 }
 
 } // namespace projection

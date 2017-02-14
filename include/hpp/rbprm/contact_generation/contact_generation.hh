@@ -37,20 +37,36 @@ struct ContactGenHelper
 {
      ContactGenHelper(RbPrmFullBodyPtr_t fb, const State& ps,
                       model::ConfigurationIn_t configuration,
+                      const affMap_t& affordances,
+                      const std::map<std::string, std::vector<std::string> >& affFilters,
                       const double robustnessTreshold = 0,
                       const std::size_t maxContactBreaks = 1,
+                      const std::size_t maxContactCreations = 1,
                       const bool checkStability = false,
-                      const fcl::Vec3f& acceleration = fcl::Vec3f(0,0,0));
+                      const fcl::Vec3f& direction = fcl::Vec3f(0,0,1),
+                      const fcl::Vec3f& acceleration = fcl::Vec3f(0,0,0),
+                      const bool contactIfFails = false,
+                      const bool stableForOneContact = false);
     ~ContactGenHelper(){}
     hpp::rbprm::RbPrmFullBodyPtr_t fullBody_;
-    const hpp::rbprm::State previousState_;
+    hpp::rbprm::State previousState_;
     const bool checkStability_;
+    const bool contactIfFails_;
+    const bool stableForOneContact_;
     const fcl::Vec3f acceleration_;
+    const fcl::Vec3f direction_;
     const double robustnessTreshold_;
+    const std::size_t maxContactBreaks_;
+    const std::size_t maxContactCreations_;
+    const affMap_t& affordances_;
+    const std::map<std::string, std::vector<std::string> >& affFilters_;
     Q_State candidates_;
     model::Configuration_t targetRootConfiguration_;
 };
 
+
+hpp::model::ObjectVector_t HPP_RBPRM_DLLAPI getAffObjectsForLimb(const std::string& limb,
+    const affMap_t& affordances, const std::map<std::string, std::vector<std::string> >& affFilters);
 
 /// Generates all potentially valid cases of valid contact maintenance
 /// given a previous configuration.
@@ -71,21 +87,27 @@ Q_State maintain_contacts_combinatorial(const hpp::rbprm::State& currentState, c
 /// and priority in the list wrt the contact order
 T_ContactState gen_contacts_combinatorial(const std::vector<std::string>& freeEffectors, const State& previous, const std::size_t maxCreatedContacts);
 
-/// Generates all potentially valid cases of valid contact creation by removing the top state of the priority
-/// stack
-/// \param ContactGenHelper parametrization of the planner
-/// \param maxCreatedContacts max number of contacts that can be created in the process
-/// \return a queue of contact states candidates for maintenance, ordered by number of contacts broken
-/// and priority in the list wrt the contact order
-T_ContactState gen_contacts_combinatorial(ContactGenHelper& contactGenHelper, const std::size_t maxCreatedContacts=1);
-
 /// Given a combinatorial of possible contacts, generate
-/// the first "valid" configuration, that the first kinematic
+/// the first "valid" configuration, that is the first kinematic
 /// configuration that removes the minimum number of contacts and
 /// is collision free.
 /// \param ContactGenHelper parametrization of the planner
 /// \return the best candidate wrt the priority in the list and the contact order
 projection::ProjectionReport maintain_contacts(ContactGenHelper& contactGenHelper);
+
+/// Given a current state and an effector, tries to generate a contact configuration.
+/// \param ContactGenHelper parametrization of the planner
+/// \param limb the limb to create a contact with
+/// \return the best candidate wrt the priority in the list and the contact order
+projection::ProjectionReport generate_contact(const ContactGenHelper& contactGenHelper, const std::string& limb);
+
+/// Given a combinatorial of possible contacts, generate
+/// the first "valid" contact configuration, that is the first contact
+/// configuration is contact and equilibrium.
+/// \param ContactGenHelper parametrization of the planner
+/// \return the best candidate wrt the priority in the list and the contact order
+projection::ProjectionReport gen_contacts(ContactGenHelper& contactGenHelper);
+
 
     } // namespace projection
   } // namespace rbprm
