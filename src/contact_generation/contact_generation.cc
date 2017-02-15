@@ -292,14 +292,14 @@ ProjectionReport maintain_contacts(ContactGenHelper &contactGenHelper)
 
 
 sampling::T_OctreeReport CollideOctree(const ContactGenHelper &contactGenHelper, const std::string& limbName,
-                                                    RbPrmLimbPtr_t limb)
+                                                    RbPrmLimbPtr_t limb, const sampling::heuristic evaluate)
 {
     fcl::Transform3f transform = limb->octreeRoot(); // get root transform from configuration
     hpp::model::ObjectVector_t affordances = getAffObjectsForLimb (limbName,contactGenHelper.affordances_, contactGenHelper.affFilters_);
 
     //#pragma omp parallel for
     // request samples which collide with each of the collision objects
-    sampling::heuristic eval =  limb->evaluate_;
+    sampling::heuristic eval =  evaluate == 0 ? limb->evaluate_ : evaluate;
     std::size_t i (0);
     if (affordances.empty ())
       throw std::runtime_error ("No aff objects found!!!");
@@ -324,11 +324,13 @@ sampling::T_OctreeReport CollideOctree(const ContactGenHelper &contactGenHelper,
 }
 
 hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, const std::string& limbId,
-                        RbPrmLimbPtr_t limb, core::CollisionValidationPtr_t validation, bool& found_sample, bool& unstableContact)
+                        RbPrmLimbPtr_t limb, core::CollisionValidationPtr_t validation, bool& found_sample,
+                                     bool& unstableContact, const sampling::heuristic evaluate = 0)
 {
     State current = contactGenHelper.previousState_;
-    sampling::T_OctreeReport finalSet = CollideOctree(contactGenHelper, limbId, limb);
+    sampling::T_OctreeReport finalSet = CollideOctree(contactGenHelper, limbId, limb, evaluate);
     core::Configuration_t moreRobust, configuration;
+    configuration = current.configuration_;
     double maxRob = -std::numeric_limits<double>::max();
     sampling::T_OctreeReport::const_iterator it = finalSet.begin();
     fcl::Vec3f position, normal;
@@ -377,12 +379,15 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
         current.stable = true;
     }
     if(unstableContact)
+    {
         current.configuration_ = moreRobust;
         current.stable = false;
+    }
     return current;
 }
 
-ProjectionReport generate_contact(const ContactGenHelper &contactGenHelper, const std::string& limbName)
+ProjectionReport generate_contact(const ContactGenHelper &contactGenHelper, const std::string& limbName,
+                                  const sampling::heuristic evaluate)
 {
     ProjectionReport rep;
 
@@ -394,7 +399,7 @@ ProjectionReport generate_contact(const ContactGenHelper &contactGenHelper, cons
     // pick first sample which is collision free
     bool found_sample(false);
     bool unstableContact(false); //set to true in case no stable contact is found
-    rep.result_ = findValidCandidate(contactGenHelper,limbName,limb, validation, found_sample,unstableContact);
+    rep.result_ = findValidCandidate(contactGenHelper,limbName,limb, validation, found_sample,unstableContact, evaluate);
     if(found_sample)
     {
         rep.status_ = STABLE_CONTACT;

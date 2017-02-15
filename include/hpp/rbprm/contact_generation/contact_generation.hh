@@ -50,14 +50,14 @@ struct ContactGenHelper
     ~ContactGenHelper(){}
     hpp::rbprm::RbPrmFullBodyPtr_t fullBody_;
     hpp::rbprm::State previousState_;
-    const bool checkStability_;
-    const bool contactIfFails_;
-    const bool stableForOneContact_;
-    const fcl::Vec3f acceleration_;
-    const fcl::Vec3f direction_;
-    const double robustnessTreshold_;
-    const std::size_t maxContactBreaks_;
-    const std::size_t maxContactCreations_;
+    bool checkStability_;
+    bool contactIfFails_;
+    bool stableForOneContact_;
+    fcl::Vec3f acceleration_;
+    fcl::Vec3f direction_;
+    double robustnessTreshold_;
+    std::size_t maxContactBreaks_;
+    std::size_t maxContactCreations_;
     const affMap_t& affordances_;
     const std::map<std::string, std::vector<std::string> >& affFilters_;
     Q_State candidates_;
@@ -99,7 +99,8 @@ projection::ProjectionReport maintain_contacts(ContactGenHelper& contactGenHelpe
 /// \param ContactGenHelper parametrization of the planner
 /// \param limb the limb to create a contact with
 /// \return the best candidate wrt the priority in the list and the contact order
-projection::ProjectionReport generate_contact(const ContactGenHelper& contactGenHelper, const std::string& limb);
+projection::ProjectionReport generate_contact(const ContactGenHelper& contactGenHelper, const std::string& limb,
+                                              const sampling::heuristic evaluate = 0);
 
 /// Given a combinatorial of possible contacts, generate
 /// the first "valid" contact configuration, that is the first contact
