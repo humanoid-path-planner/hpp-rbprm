@@ -130,11 +130,10 @@ typedef T_StateFrame::const_iterator CIT_StateFrame;
     HPP_RBPRM_DLLAPI std::vector<std::string> freeEffectors(const State& state, const T& allEffectors)
     {
         std::vector<std::string> res;
-        std::queue<std::string> contactOrder = state.contactOrder_;
-        while(!contactOrder.empty())
+        for(std::map<std::string, bool>::const_iterator cit = state.contacts_.begin();
+            cit != state.contacts_.end();++cit)
         {
-            std::string eff = contactOrder.front();
-            contactOrder.pop();
+            const std::string& eff = cit->first;
             if(std::find(allEffectors.begin(), allEffectors.end(), eff) == allEffectors.end())
                 res.push_back(eff);
         }

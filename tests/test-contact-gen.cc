@@ -86,7 +86,6 @@ BOOST_AUTO_TEST_CASE (maintain_combinatorial) {
 
 BOOST_AUTO_TEST_CASE (gen_combinatorial) {
     std::vector<std::string> allcontacts;
-    allcontacts.push_back("c1"); allcontacts.push_back("c2");
     State state;
     AddToState("c1", state);
     AddToState("c2", state);
@@ -94,7 +93,6 @@ BOOST_AUTO_TEST_CASE (gen_combinatorial) {
     T_ContactState q = contact::gen_contacts_combinatorial(allcontacts,state,1);
     //__debug_print(q);
     BOOST_CHECK_MESSAGE(q.size() == 1, "Expected 1 combinations");
-
 
     allcontacts.push_back("c3"); allcontacts.push_back("c4");
 

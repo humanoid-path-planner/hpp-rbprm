@@ -31,14 +31,14 @@ ContactGenHelper::ContactGenHelper(RbPrmFullBodyPtr_t fb, const State& ps, model
                                     const hpp::rbprm::affMap_t &affordances, const std::map<std::string, std::vector<std::string> > &affFilters,
                                     const double robustnessTreshold,
                                     const std::size_t maxContactBreaks, const std::size_t maxContactCreations,
-                                    const bool checkStability,
+                                    const bool checkStabilityMaintain, const bool checkStabilityGenerate,
                                     const fcl::Vec3f& direction,
                                     const fcl::Vec3f& acceleration,
                                     const bool contactIfFails,
                                     const bool stableForOneContact)
 : fullBody_(fb)
 , previousState_(ps)
-, checkStability_(checkStability)
+, checkStabilityMaintain_(checkStabilityMaintain)
 , contactIfFails_(contactIfFails)
 , stableForOneContact_(stableForOneContact)
 , acceleration_(acceleration)
@@ -48,8 +48,12 @@ ContactGenHelper::ContactGenHelper(RbPrmFullBodyPtr_t fb, const State& ps, model
 , maxContactCreations_(maxContactCreations)
 , affordances_(affordances)
 , affFilters_(affFilters)
-, candidates_(maintain_contacts_combinatorial(ps, maxContactBreaks))
-, targetRootConfiguration_(configuration){}
+, targetRootConfiguration_(configuration)
+, workingState_(previousState_)
+, checkStabilityGenerate_(checkStabilityGenerate)
+{
+    workingState_.configuration_ = configuration;
+}
 
 typedef std::vector<T_State > T_DepthState;
 
@@ -172,7 +176,7 @@ ProjectionReport maintain_contacts_stability(ContactGenHelper &contactGenHelper,
 {
     const std::size_t contactLength(currentRep.result_.contactOrder_.size());
     maintain_contacts_stability_rec(contactGenHelper.fullBody_,
-                                    contactGenHelper.targetRootConfiguration_,
+                                    contactGenHelper.workingState_.configuration_,
                                     contactGenHelper.candidates_,
                                     contactLength, contactGenHelper.acceleration_,
                                     contactGenHelper.robustnessTreshold_, currentRep);
@@ -239,17 +243,18 @@ void stringCombinatorialRec(std::vector<std::vector<std::string> >& res, const s
 }
 
 
-std::vector<std::vector<std::string> > stringCombinatorial(const State& previous, const std::vector<std::string>& candidates, const std::size_t maxDepth)
+std::vector<std::vector<std::string> > stringCombinatorial(const std::vector<std::string>& candidates, const std::size_t maxDepth)
 {
     std::vector<std::vector<std::string> > res;
-    res.push_back(previous.fixedContacts(previous));
+    std::vector<std::string> tmp;
+    res.push_back(tmp);
     stringCombinatorialRec(res, candidates, maxDepth);
     return res;
 }
 
 void gen_contacts_combinatorial_rec(const std::vector<std::string>& freeEffectors, const State& previous, T_ContactState& res, const std::size_t maxCreatedContacts)
 {
-    std::vector<std::vector<std::string> > allNewStates = stringCombinatorial(previous, freeEffectors, maxCreatedContacts);
+    std::vector<std::vector<std::string> > allNewStates = stringCombinatorial(freeEffectors, maxCreatedContacts);
     for(std::vector<std::vector<std::string> >::const_iterator cit = allNewStates.begin(); cit!=allNewStates.end();++cit)
     {
         ContactState contactState; contactState.first = previous; contactState.second = *cit;
@@ -264,28 +269,29 @@ T_ContactState gen_contacts_combinatorial(const std::vector<std::string>& freeEf
     return res;
 }
 
-T_ContactState gen_contacts_combinatorial(ContactGenHelper& contactGenHelper, const std::size_t maxCreatedContacts)
+T_ContactState gen_contacts_combinatorial(ContactGenHelper& contactGenHelper)
 {
-    State cState = contactGenHelper.candidates_.front();
-    contactGenHelper.candidates_.pop();
-    const std::vector<std::string> freeLimbs = rbprm::freeEffectors(contactGenHelper.previousState_, extractEffectorsName(contactGenHelper.fullBody_->GetLimbs()));
-    return gen_contacts_combinatorial(freeLimbs, cState, maxCreatedContacts);
+    State& cState = contactGenHelper.workingState_;
+    const std::vector<std::string> freeLimbs = rbprm::freeEffectors(cState, extractEffectorsName(contactGenHelper.fullBody_->GetLimbs()));
+    std::cout << "num free limbs: " << freeLimbs.size() << std::endl;
+    return gen_contacts_combinatorial(freeLimbs, cState, contactGenHelper.maxContactCreations_);
 }
 
 ProjectionReport maintain_contacts(ContactGenHelper &contactGenHelper)
 {
     ProjectionReport rep;
+    contactGenHelper.candidates_ = maintain_contacts_combinatorial(contactGenHelper.previousState_,contactGenHelper.maxContactBreaks_);
     Q_State& candidates = contactGenHelper.candidates_;
     while(!candidates.empty() && !rep.success_)
     {
         //retrieve latest state
         State cState = candidates.front();
         candidates.pop();
-        rep = projectToRootConfiguration(contactGenHelper.fullBody_,contactGenHelper.targetRootConfiguration_,cState);
+        rep = projectToRootConfiguration(contactGenHelper.fullBody_,contactGenHelper.workingState_.configuration_,cState);
         if(rep.success_)
             rep = genColFree(contactGenHelper, rep);
     }
-    if(rep.success_ && contactGenHelper.checkStability_)
+    if(rep.success_ && contactGenHelper.checkStabilityMaintain_)
         return maintain_contacts_stability(contactGenHelper, rep);
     return rep;
 }
@@ -342,7 +348,7 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
         if(rep.success_)
         {
             double robustness = stability::IsStable(contactGenHelper.fullBody_,rep.result_);
-            if(    !contactGenHelper.checkStability_
+            if(    !contactGenHelper.checkStabilityGenerate_
                 || (rep.result_.nbContacts == 1 && !contactGenHelper.stableForOneContact_)
                 || robustness>=contactGenHelper.robustnessTreshold_)
             {
@@ -393,7 +399,7 @@ ProjectionReport generate_contact(const ContactGenHelper &contactGenHelper, cons
 
     RbPrmLimbPtr_t limb = contactGenHelper.fullBody_->GetLimbs().at(limbName);
     core::CollisionValidationPtr_t validation = contactGenHelper.fullBody_->GetLimbCollisionValidation().at(limbName);
-    limb->limb_->robot()->currentConfiguration(contactGenHelper.targetRootConfiguration_);
+    limb->limb_->robot()->currentConfiguration(contactGenHelper.workingState_.configuration_);
     limb->limb_->robot()->computeForwardKinematics ();
 
     // pick first sample which is collision free
@@ -412,7 +418,7 @@ ProjectionReport generate_contact(const ContactGenHelper &contactGenHelper, cons
     else if(unstableContact)
     {
         rep.status_ = UNSTABLE_CONTACT;
-        rep.success_ = !contactGenHelper.checkStability_;
+        rep.success_ = !contactGenHelper.checkStabilityGenerate_;
 #ifdef PROFILE
   RbPrmProfiler& watch = getRbPrmProfiler();
   watch.add_to_count("unstable contact", 1);
@@ -434,18 +440,45 @@ ProjectionReport generate_contact(const ContactGenHelper &contactGenHelper, cons
 ProjectionReport gen_contacts(ContactGenHelper &contactGenHelper)
 {
     ProjectionReport rep;
-    Q_State& candidates = contactGenHelper.candidates_;
+    T_ContactState candidates = gen_contacts_combinatorial(contactGenHelper);
+    std::cout << "num contact candidates" << candidates.size() << std::endl;
     while(!candidates.empty() && !rep.success_)
     {
         //retrieve latest state
-        State cState = candidates.front();
+        ContactState cState = candidates.front();
         candidates.pop();
-        rep = projectToRootConfiguration(contactGenHelper.fullBody_,contactGenHelper.targetRootConfiguration_,cState);
-        if(rep.success_)
-            rep = genColFree(contactGenHelper, rep);
+        contactGenHelper.workingState_ = cState.first;
+        bool checkStability(contactGenHelper.checkStabilityGenerate_);
+        contactGenHelper.checkStabilityGenerate_ = false; // stability not mandatory before last contact is created
+        std::cout << "num limb candidates" << cState.second.size() << std::endl;
+        if(cState.second.empty() && contactGenHelper.workingState_.stable)
+        {
+            std::cout << "tout roule stable " << std::endl;
+            rep.result_ = contactGenHelper.workingState_;
+            rep.status_ = STABLE_CONTACT;
+            rep.success_ = true;
+            return rep;
+        }
+        for(std::vector<std::string>::const_iterator cit = cState.second.begin();
+            cit != cState.second.end(); ++cit)
+        {
+            std::cout << "lilmb " << *cit  << std::endl;
+            if(cit+1 == cState.second.end())
+            {
+                std::cout << "enable stability " << std::endl;
+                contactGenHelper.checkStabilityGenerate_ = checkStability;
+            }
+            rep = generate_contact(contactGenHelper,*cit);
+            if(rep.success_)
+            {
+                std::cout << "yay " << std::endl;
+                contactGenHelper.workingState_ = rep.result_;
+            }
+            else
+                break;
+        }
     }
-    if(rep.success_ && contactGenHelper.checkStability_)
-        return maintain_contacts_stability(contactGenHelper, rep);
+    std::cout << "found ? " << rep.success_ << std::endl;
     return rep;
 }
 

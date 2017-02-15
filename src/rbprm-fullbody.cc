@@ -254,7 +254,7 @@ namespace hpp {
                               const sampling::heuristic evaluate = 0)
     {
 
-        contact::ContactGenHelper contactGenHelper(body,current,rbconfiguration,affordances,affFilters,robustnessTreshold,1,1,true,
+        contact::ContactGenHelper contactGenHelper(body,current,rbconfiguration,affordances,affFilters,robustnessTreshold,1,1,false,true,
                                           direction,fcl::Vec3f(0,0,0),contactIfFails,stableForOneContact);
         ProjectionReport rep = contact::generate_contact(contactGenHelper,limbId,evaluate);
         current = rep.result_;
@@ -388,7 +388,8 @@ namespace hpp {
     body->device_->currentConfiguration(configuration);
     body->device_->computeForwardKinematics ();
     // try to maintain previous contacts
-    contact::ContactGenHelper cHelper(body,previous,configuration,affordances,affFilters,robustnessTreshold,1,1,false);
+    contact::ContactGenHelper cHelper(body,previous,configuration,affordances,affFilters,robustnessTreshold,1,1,false,
+                                      true,direction,fcl::Vec3f(0,0,0),true,false);
     State result = MaintainPreviousContacts(cHelper, contactMaintained, multipleBreaks);
     // If more than one are broken, go back to previous state
     // and reposition
@@ -401,17 +402,6 @@ namespace hpp {
         model::Configuration_t config = previous.configuration_;
         body->device_->currentConfiguration(config);
         body->device_->computeForwardKinematics();
-                hpp::model::ObjectVector_t affs = contact::getAffObjectsForLimb (replaceContact,
-                    affordances, affFilters);
-        // if no stable replacement contact found
-        // modify contact order to try to replace another contact at the next step
-        /*cHelper.checkStability_ = true;
-        cHelper.contactIfFails_ = true;
-        cHelper.targetRootConfiguration_ = config;
-        cHelper.previousState_ = result;
-        /*projection::ProjectionReport rep = contact::generate_contact(cHelper, replaceContact, body->factory_.heuristics_["random"]);
-        result = rep.result_;
-        if(rep.status_ != STABLE_CONTACT)*/
         if(ComputeStableContact(body,result,
                     body->limbcollisionValidations_.at(replaceContact),
                     replaceContact,body->limbs_.at(replaceContact),
@@ -432,14 +422,19 @@ namespace hpp {
     // no more than one contact was broken
     // we can go on normally
     core::Configuration_t config = result.configuration_;
+cHelper.workingState_ = result;
     bool contactCreated(false);
     // iterate over each const free limb to try to generate contacts
+    std::cout << "STATE " << std::endl;
+    int num_free(0);
     for(T_Limb::const_iterator lit = limbs.begin(); lit != limbs.end(); ++lit)
     {
         fcl::Vec3f normal, position;
         if(result.contacts_.find(lit->first) == result.contacts_.end()
                 && !ContactExistsWithinGroup(lit->second, body->limbGroups_ ,result))
         {
+            std::cout << "limb not in contact " << lit->first << std::endl;
+            ++num_free;
                         hpp::model::ObjectVector_t affs = contact::getAffObjectsForLimb (lit->first,
                             affordances, affFilters);
 
@@ -451,7 +446,17 @@ namespace hpp {
                             robustnessTreshold) != NO_CONTACT || contactCreated;
         }
     }
-    contactMaintained = !contactCreated && contactMaintained;
+    std::cout << "END STATE " << std::endl;
+//if(num_free<2)
+{
+std::cout << "calling gen STATE " << std::endl;
+cHelper.workingState_ = result;
+ProjectionReport rep = contact::gen_contacts(cHelper);
+contactCreated = rep.success_;
+contactMaintained = !contactCreated && contactMaintained;
+result = rep.result_;
+config = rep.result_.configuration_;
+}
     // reload previous configuration
     // no stable contact was found / limb maintained
     if(!result.stable)

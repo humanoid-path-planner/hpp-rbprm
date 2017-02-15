@@ -42,26 +42,29 @@ struct ContactGenHelper
                       const double robustnessTreshold = 0,
                       const std::size_t maxContactBreaks = 1,
                       const std::size_t maxContactCreations = 1,
-                      const bool checkStability = false,
+                      const bool checkStabilityMaintain = false,
+                      const bool checkStabilityGenerate = true,
                       const fcl::Vec3f& direction = fcl::Vec3f(0,0,1),
                       const fcl::Vec3f& acceleration = fcl::Vec3f(0,0,0),
                       const bool contactIfFails = false,
                       const bool stableForOneContact = false);
     ~ContactGenHelper(){}
     hpp::rbprm::RbPrmFullBodyPtr_t fullBody_;
-    hpp::rbprm::State previousState_;
-    bool checkStability_;
-    bool contactIfFails_;
-    bool stableForOneContact_;
-    fcl::Vec3f acceleration_;
-    fcl::Vec3f direction_;
-    double robustnessTreshold_;
-    std::size_t maxContactBreaks_;
-    std::size_t maxContactCreations_;
+    const hpp::rbprm::State previousState_;
+    const bool checkStabilityMaintain_;
+    const bool contactIfFails_;
+    const bool stableForOneContact_;
+    const fcl::Vec3f acceleration_;
+    const fcl::Vec3f direction_;
+    const double robustnessTreshold_;
+    const std::size_t maxContactBreaks_;
+    const std::size_t maxContactCreations_;
     const affMap_t& affordances_;
     const std::map<std::string, std::vector<std::string> >& affFilters_;
+    const model::Configuration_t targetRootConfiguration_;
+    hpp::rbprm::State workingState_;
+    bool checkStabilityGenerate_;
     Q_State candidates_;
-    model::Configuration_t targetRootConfiguration_;
 };
 
 
