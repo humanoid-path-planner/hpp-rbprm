@@ -66,6 +66,7 @@ SET(${PROJECT_NAME}_HEADERS
     include/hpp/rbprm/rbprm-limb.hh
 		include/hpp/rbprm/projection/projection.hh
 		include/hpp/rbprm/contact_generation/contact_generation.hh
+		include/hpp/rbprm/contact_generation/algorithm.hh
     include/hpp/rbprm/interpolation/rbprm-path-interpolation.hh
     include/hpp/rbprm/interpolation/time-constraint-helper.hh
     include/hpp/rbprm/interpolation/time-constraint-helper.inl

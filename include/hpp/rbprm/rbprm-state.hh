@@ -126,15 +126,15 @@ typedef T_StateFrame::const_iterator CIT_StateFrame;
     /// all the effectors that moved between the two States (ie contact was not maintained)
     ///
     /// \return the list of all modified effectors between two States
-    template<typename T>
-    HPP_RBPRM_DLLAPI std::vector<std::string> freeEffectors(const State& state, const T& allEffectors)
+    template<typename Iter>
+    HPP_RBPRM_DLLAPI std::vector<std::string> freeEffectors(const State& state, Iter start, Iter end)
     {
         std::vector<std::string> res;
-        for(std::map<std::string, bool>::const_iterator cit = state.contacts_.begin();
-            cit != state.contacts_.end();++cit)
+        for(Iter it = start; it != end; ++it)
         {
-            const std::string& eff = cit->first;
-            if(std::find(allEffectors.begin(), allEffectors.end(), eff) == allEffectors.end())
+            const std::string& eff = *it;
+            std::map<std::string, bool>::const_iterator cit = state.contacts_.find(eff);
+            if(cit == state.contacts_.end() || !cit->second)
                 res.push_back(eff);
         }
         return res;
