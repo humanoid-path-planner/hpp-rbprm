@@ -1,9 +1,9 @@
-/// Copyright (c) 2015 CNRS
-/// Authors: Joseph Mirabel
+/// Copyright (c) 2017 CNRS
+/// Authors: stonneau
 ///
 ///
-// This file is part of hpp-wholebody-step.
-// hpp-wholebody-step-planner is free software: you can redistribute it
+// This file is part of hpp-rbprm.
+// hpp-rbprm is free software: you can redistribute it
 // and/or modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation, either version
 // 3 of the License, or (at your option) any later version.

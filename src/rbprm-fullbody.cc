@@ -21,6 +21,7 @@
 #include <hpp/rbprm/ik-solver.hh>
 #include <hpp/rbprm/projection/projection.hh>
 #include <hpp/rbprm/contact_generation/contact_generation.hh>
+#include <hpp/rbprm/contact_generation/algorithm.hh>
 
 #include <hpp/core/constraint-set.hh>
 #include <hpp/core/config-projector.hh>
@@ -257,6 +258,8 @@ namespace hpp {
     {
         contact::ContactGenHelper contactGenHelper(body,current,current.configuration_,affordances,affFilters,robustnessTreshold,1,1,false,true,
                                           direction,fcl::Vec3f(0,0,0),contactIfFails,stableForOneContact);
+
+        ProjectionReport rep = contact::generate_contact(contactGenHelper,limbId,evaluate);
         current = rep.result_;
         configuration = rep.result_.configuration_;
         if(rep.status_ != NO_CONTACT)
@@ -388,9 +391,29 @@ namespace hpp {
     body->device_->currentConfiguration(configuration);
     body->device_->computeForwardKinematics ();
     // try to maintain previous contacts
-    contact::ContactGenHelper cHelper(body,previous,configuration,affordances,affFilters,robustnessTreshold,1,1,false,
+    contact::ContactGenHelper cHelper(body,previous,configuration,affordances,affFilters,robustnessTreshold,4,4,false,
                                       true,direction,fcl::Vec3f(0,0,0),true,false);
-    State result = MaintainPreviousContacts(cHelper, contactMaintained, multipleBreaks);
+
+    projection::ProjectionReport rep = contact::oneStep(cHelper);
+    std::cout << "num contacts " << rep.result_.nbContacts << std::endl;
+    State result = rep.result_;
+    bool contactCreated(false);
+    /*if(rep.success_)
+    {
+        contactMaintained = false;
+        multipleBreaks = false;
+        contactCreated = true;
+    }
+    else
+    {
+        contactMaintained = false;
+        multipleBreaks = true;
+    }*/
+    contactCreated = (result.contactCreations(previous).size() > 0);
+    contactMaintained = (result.fixedContacts(previous).size() == previous.nbContacts);
+    multipleBreaks = (result.contactBreaks(previous).size() > 1);
+
+    /*State result = MaintainPreviousContacts(cHelper, contactMaintained, multipleBreaks);
 
     std::cout << "ROOT CONFIG AFTER MAINTAINT ? "<< result.configuration_.head<7>().transpose() << std::endl;
     // If more than one are broken, go back to previous state
@@ -479,8 +502,8 @@ if(rep.status_ == STABLE_CONTACT)
 
 std::cout << "STATE NEW, IS STABLE ? "<< result.stable << std::endl;
 std::cout << "STATE NEW CONFIG ?" << result.configuration_.head<7>().transpose() << std::endl;
-}
-contactMaintained = !contactCreated && contactMaintained;
+
+contactMaintained = !contactCreated && contactMaintained;}*/
     // reload previous configuration
     // no stable contact was found / limb maintained
     if(!result.stable)
@@ -490,6 +513,7 @@ contactMaintained = !contactCreated && contactMaintained;
         // existing previously to find a stable value
         if(contactMaintained)
         {
+core::Configuration_t config = result.configuration_;
             std::cout << "CONTACT MAINTAINED " << std::endl;
             contactMaintained = false;
             // could not reposition any contact. Planner has failed

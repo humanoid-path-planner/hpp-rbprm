@@ -281,11 +281,15 @@ T_ContactState gen_contacts_combinatorial(ContactGenHelper& contactGenHelper)
     return gen_contacts_combinatorial(freeLimbs, cState, contactGenHelper.maxContactCreations_);
 }
 
+
 ProjectionReport maintain_contacts(ContactGenHelper &contactGenHelper)
 {
     ProjectionReport rep;
-    contactGenHelper.candidates_ = maintain_contacts_combinatorial(contactGenHelper.previousState_,contactGenHelper.maxContactBreaks_);
     Q_State& candidates = contactGenHelper.candidates_;
+    if(candidates.empty())
+        candidates = maintain_contacts_combinatorial(contactGenHelper.previousState_,contactGenHelper.maxContactBreaks_);
+    else
+        candidates.pop(); // first candidate already treated.
     while(!candidates.empty() && !rep.success_)
     {
         //retrieve latest state
@@ -338,6 +342,7 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
                                      bool& unstableContact, const sampling::heuristic evaluate = 0)
 {
     State current = contactGenHelper.workingState_;
+    current.stable = false;
     sampling::T_OctreeReport finalSet = CollideOctree(contactGenHelper, limbId, limb, evaluate);
     core::Configuration_t moreRobust, configuration;
     configuration = current.configuration_;
