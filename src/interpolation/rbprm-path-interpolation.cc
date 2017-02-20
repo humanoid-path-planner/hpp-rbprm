@@ -50,7 +50,7 @@ namespace hpp {
         (*path)(configPosition,std::min(i, path->timeRange().second));
         configuration.head(pathConfigSize) = configPosition.head(pathConfigSize);
         configuration.tail(robot_->device_->extraConfigSpace().dimension()) = configPosition.tail(robot_->device_->extraConfigSpace().dimension()) ;
-        configuration[2] = configuration[2]+0.15; //FIXME : test hrp2 only
+       // configuration[2] = configuration[2]+0.15; //FIXME : test hrp2 only
         return configuration;
     }
 
@@ -182,7 +182,7 @@ namespace hpp {
         if(EqStringVec(current.contactBreaks(current_m1),
                        current_p1.contactBreaks(current_m1)) &&
            EqStringVec(current.contactCreations(current_m1),
-                       current_p1.contactCreations(current_m1)))
+                       current_p1.contactCreations(current)))
         {
             if(from+1 == to) return;
             res.push_back(std::make_pair((from+1)->first, (from+1)->second));
