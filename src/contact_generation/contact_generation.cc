@@ -174,6 +174,7 @@ hpp::model::ObjectVector_t getAffObjectsForLimb(const std::string& limb,
 ProjectionReport maintain_contacts_stability(ContactGenHelper &contactGenHelper, ProjectionReport& currentRep)
 {
     const std::size_t contactLength(currentRep.result_.contactOrder_.size());
+//contactGenHelper.candidates_.pop(); // TODO REMOVE (TEST)
     maintain_contacts_stability_rec(contactGenHelper.fullBody_,
                                     contactGenHelper.workingState_.configuration_,
                                     contactGenHelper.candidates_,
@@ -195,11 +196,11 @@ ProjectionReport genColFree(ContactGenHelper &contactGenHelper, ProjectionReport
 {
     ProjectionReport res = currentRep;
     // identify broken limbs and find collision free configurations for each one of them.
-    //std::vector<std::string> brokenContacts(currentRep.result_.contactBreaks(contactGenHelper.previousState_));
     std::vector<std::string> effNames(extractEffectorsName(contactGenHelper.fullBody_->GetLimbs()));
     const std::vector<std::string> freeLimbs = rbprm::freeEffectors(currentRep.result_,effNames.begin(), effNames.end() );
     for(std::vector<std::string>::const_iterator cit = freeLimbs.begin(); cit != freeLimbs.end() && res.success_; ++cit)
-        res = projection::setCollisionFree(contactGenHelper.fullBody_,contactGenHelper.fullBody_->GetCollisionValidation(),*cit,res.result_);
+        res = projection::setCollisionFree(contactGenHelper.fullBody_,contactGenHelper.fullBody_->GetLimbCollisionValidation().at(*cit),*cit,res.result_);
+
     return res;
 }
 
@@ -225,18 +226,15 @@ void print_string_string_vec(std::vector<std::vector<std::string> >& strings)
 
 void stringCombinatorialRec(std::vector<std::vector<std::string> >& res, const std::vector<std::string>& candidates, const std::size_t depth)
 {
-    std::cout << "stringCombinatorialRec " <<  depth << std::endl;
     if(depth == 0) return;
     std::vector<std::vector<std::string> > newStates;
     for(std::vector<std::vector<std::string> >::iterator it = res.begin(); it != res.end(); ++it)
     {
         for(std::vector<std::string>::const_iterator canditates_it = candidates.begin(); canditates_it != candidates.end(); ++canditates_it)
         {
-            std::cout << "test limb " << *canditates_it << std::endl;
             std::vector<std::string> contacts = *it;
             if(tools::insertIfNew(contacts,*canditates_it))
             {
-                std::cout << "adding limb " << *canditates_it << std::endl;
                 newStates.push_back(contacts);
             }
         }
@@ -277,7 +275,6 @@ T_ContactState gen_contacts_combinatorial(ContactGenHelper& contactGenHelper)
     State& cState = contactGenHelper.workingState_;
     std::vector<std::string> effNames(extractEffectorsName(contactGenHelper.fullBody_->GetLimbs()));
     const std::vector<std::string> freeLimbs = rbprm::freeEffectors(cState,effNames.begin(), effNames.end() );
-    std::cout << "num free limbs: " << freeLimbs.size() << std::endl;
     return gen_contacts_combinatorial(freeLimbs, cState, contactGenHelper.maxContactCreations_);
 }
 
@@ -296,8 +293,15 @@ ProjectionReport maintain_contacts(ContactGenHelper &contactGenHelper)
         State cState = candidates.front();
         candidates.pop();
         rep = projectToRootConfiguration(contactGenHelper.fullBody_,contactGenHelper.workingState_.configuration_,cState);
+if(rep.status_)
         if(rep.success_)
             rep = genColFree(contactGenHelper, rep);
+        if(rep.success_)
+        {
+            //collision validation
+            hpp::core::ValidationReportPtr_t valRep (new hpp::core::CollisionValidationReport);
+            rep.success_ = contactGenHelper.fullBody_->GetCollisionValidation()->validate(rep.result_.configuration_, valRep);
+        }
     }
     if(rep.success_ && contactGenHelper.checkStabilityMaintain_)
         return maintain_contacts_stability(contactGenHelper, rep);
@@ -450,7 +454,6 @@ ProjectionReport gen_contacts(ContactGenHelper &contactGenHelper)
 {
     ProjectionReport rep;
     T_ContactState candidates = gen_contacts_combinatorial(contactGenHelper);
-    std::cout << "num contact candidates" << candidates.size() << std::endl;
     while(!candidates.empty() && !rep.success_)
     {
         //retrieve latest state
@@ -459,10 +462,8 @@ ProjectionReport gen_contacts(ContactGenHelper &contactGenHelper)
         //contactGenHelper.workingState_ = cState.first;
         bool checkStability(contactGenHelper.checkStabilityGenerate_);
         contactGenHelper.checkStabilityGenerate_ = false; // stability not mandatory before last contact is created
-        std::cout << "num limb candidate WTDs" << cState.second.size() << std::endl;
         if(cState.second.empty() && contactGenHelper.workingState_.stable)
         {
-            std::cout << "tout roule stable " << std::endl;
             rep.result_ = contactGenHelper.workingState_;
             rep.status_ = NO_CONTACT;
             rep.success_ = true;
@@ -471,25 +472,19 @@ ProjectionReport gen_contacts(ContactGenHelper &contactGenHelper)
         for(std::vector<std::string>::const_iterator cit = cState.second.begin();
             cit != cState.second.end(); ++cit)
         {
-            std::cout << "WTFFFFFFFFFFFFFFFFFFFF " << *cit  << std::endl;
             if(cit+1 == cState.second.end())
             {
-                std::cout << "enable stability " << std::endl;
                 contactGenHelper.checkStabilityGenerate_ = checkStability;
             }
-            std::cout << "CANDIDATE ROOT ?" << contactGenHelper.workingState_.configuration_.head<7>().transpose() << std::endl;
             rep = generate_contact(contactGenHelper,*cit);
             if(rep.success_)
             {
-                std::cout << "yay for limb  " << *cit << std::endl;
-                std::cout << "root   " << rep.result_.configuration_.head<7>().transpose() << std::endl;
                 contactGenHelper.workingState_ = rep.result_;
             }
             else
                 break;
         }
     }
-    std::cout << "found ? " << rep.success_ << " " << rep.status_ << std::endl;
     return rep;
 }
 

@@ -210,8 +210,6 @@ namespace hpp {
 
     State MaintainPreviousContacts(contact::ContactGenHelper& cHelper, bool& contactMaintained, bool& multipleBreaks)
     {
-        std::cout << "PREVIOUS STATE ROOT << " << cHelper.previousState_.configuration_.head<7>().transpose() << std::endl;
-        std::cout << "before maintain previous contacts << " << cHelper.workingState_.configuration_.head<7>().transpose() << std::endl;
         projection::ProjectionReport rep = contact::maintain_contacts(cHelper);
         if(rep.success_)
         {
@@ -222,7 +220,7 @@ namespace hpp {
         {
             contactMaintained = false;
             multipleBreaks = true;
-        }std::cout << "AFTER     maintain previous contacts << " << cHelper.workingState_.configuration_.head<7>().transpose() << std::endl;
+        }
         return rep.result_;
     }
 
@@ -256,7 +254,7 @@ namespace hpp {
                               bool contactIfFails = true, bool stableForOneContact = true,
                               const sampling::heuristic evaluate = 0)
     {
-        contact::ContactGenHelper contactGenHelper(body,current,current.configuration_,affordances,affFilters,robustnessTreshold,1,1,false,true,
+        contact::ContactGenHelper contactGenHelper(body,current,current.configuration_,affordances,affFilters,robustnessTreshold,1,1,false,false,
                                           direction,fcl::Vec3f(0,0,0),contactIfFails,stableForOneContact);
 
         ProjectionReport rep = contact::generate_contact(contactGenHelper,limbId,evaluate);
@@ -340,6 +338,9 @@ namespace hpp {
         return result.stable;
     }
 
+    static int nbFAILSNEW = 0;
+    static int nbSUCCNEW = 0;
+
     hpp::rbprm::State ComputeContacts(const hpp::rbprm::RbPrmFullBodyPtr_t& body,
 			model::ConfigurationIn_t configuration, const affMap_t& affordances,
       const std::map<std::string, std::vector<std::string> >& affFilters, const fcl::Vec3f& direction,
@@ -391,11 +392,10 @@ namespace hpp {
     body->device_->currentConfiguration(configuration);
     body->device_->computeForwardKinematics ();
     // try to maintain previous contacts
-    contact::ContactGenHelper cHelper(body,previous,configuration,affordances,affFilters,robustnessTreshold,4,4,false,
+    contact::ContactGenHelper cHelper(body,previous,configuration,affordances,affFilters,robustnessTreshold,1,1,false,
                                       true,direction,fcl::Vec3f(0,0,0),true,false);
 
     projection::ProjectionReport rep = contact::oneStep(cHelper);
-    std::cout << "num contacts " << rep.result_.nbContacts << std::endl;
     State result = rep.result_;
     bool contactCreated(false);
     /*if(rep.success_)
@@ -413,7 +413,25 @@ namespace hpp {
     contactMaintained = (result.fixedContacts(previous).size() == previous.nbContacts);
     multipleBreaks = (result.contactBreaks(previous).size() > 1);
 
-    /*State result = MaintainPreviousContacts(cHelper, contactMaintained, multipleBreaks);
+    if(rep.success_)
+    {
+        nbSUCCNEW = nbSUCCNEW+1;
+        /*std::cout << "BIG SUCCESS " << nbSUCCNEW << std::endl;
+        std::cout << "(fails) " << nbFAILSNEW << std::endl;
+        std::cout << "(stable) " << rep.result_.stable << std::endl;
+        std::cout << "(contactCreated) " << contactCreated << std::endl;
+        std::cout << "(contactMaintained) " << contactMaintained << std::endl;
+        std::cout << "(multipleBreaks) " << multipleBreaks << std::endl;*/
+        if(result.stable)
+            return result;
+    }
+    else //if(!rep.success_)
+    {
+        std::cout << "BIG FAIL " << ++nbFAILSNEW << std::endl;
+        std::cout << "(successes) " << nbSUCCNEW << std::endl;
+    }
+    if(false){
+   /*State*/ result = MaintainPreviousContacts(cHelper, contactMaintained, multipleBreaks);
 
     std::cout << "ROOT CONFIG AFTER MAINTAINT ? "<< result.configuration_.head<7>().transpose() << std::endl;
     // If more than one are broken, go back to previous state
@@ -453,7 +471,6 @@ cHelper.contactIfFails_ = true;
 //cHelper.workingState_.configuration_ = configuration;
     bool contactCreated(false);
     // iterate over each const free limb to try to generate contacts
-    std::cout << "STATE OLD, IS STABLE ? "<< result.stable << std::endl;
     int num_free(0);
     for(T_Limb::const_iterator lit = limbs.begin(); lit != limbs.end(); ++lit)
     {
@@ -461,7 +478,6 @@ cHelper.contactIfFails_ = true;
         if(result.contacts_.find(lit->first) == result.contacts_.end()
                 && !ContactExistsWithinGroup(lit->second, body->limbGroups_ ,result))
         {
-            std::cout << "limb not in contact " << lit->first << std::endl;
             ++num_free;
                         hpp::model::ObjectVector_t affs = contact::getAffObjectsForLimb (lit->first,
                             affordances, affFilters);
@@ -471,56 +487,42 @@ cHelper.contactIfFails_ = true;
                                                  body->limbcollisionValidations_.at(lit->first), lit->first,
                                                  lit->second, configuration, config, affordances,affFilters, direction, position, normal,
                                                  robustnessTreshold) != NO_CONTACT;
-            if(created)
-                std::cout << "created for limb " << lit->first  << std::endl;
 
             // if the contactMaintained flag remains true,
             // the contacts have not changed, and the state can be merged with the previous one eventually
             contactCreated = created|| contactCreated;
         }
     }
-    std::cout << "END STATE OLD, IS STABLE ?" << result.stable << std::endl;
-    std::cout << "END STATE OLD, ROOT CONFIG ?" << result.configuration_.head<7>().transpose() << std::endl;
 if(num_free<-2)
 {
-std::cout << "calling gen STATE, num free limbs  " <<  num_free << std::endl;
 //cHelper.workingState_ = result;
-contact::ContactGenHelper contactGenHelper2(body,cHelper.workingState_,configuration,affordances,affFilters,robustnessTreshold,1,1,false,true,
-                                  direction,fcl::Vec3f(0,0,0),true,true);
-
-std::cout << "STATE NEW WORKIUNG STATE ?" << cHelper.workingState_.configuration_.head<7>().transpose() << std::endl;
 ProjectionReport rep = contact::gen_contacts(cHelper);
-std::cout << "do creation differ ? " <<  (contactCreated ^  (rep.status_ != NO_CONTACT))<< std::endl;
 //if((contactCreated ^  (rep.status_ != NO_CONTACT)))
 //    throw;
 contactCreated = rep.status_ != NO_CONTACT;
 result = rep.result_;
 config = rep.result_.configuration_;
-std::cout << "STATE NEW, IS STABLE ? "<< result.stable << std::endl;
 if(rep.status_ == STABLE_CONTACT)
     result.stable = true;
 
-std::cout << "STATE NEW, IS STABLE ? "<< result.stable << std::endl;
-std::cout << "STATE NEW CONFIG ?" << result.configuration_.head<7>().transpose() << std::endl;
 
-contactMaintained = !contactCreated && contactMaintained;}*/
+contactMaintained = !contactCreated && contactMaintained;}
     // reload previous configuration
     // no stable contact was found / limb maintained
+}
+
     if(!result.stable)
     {
-        std::cout << "RESULT NOT STABLE " << std::endl;
         // if no contact changes happened, try to modify one contact
         // existing previously to find a stable value
         if(contactMaintained)
         {
 core::Configuration_t config = result.configuration_;
-            std::cout << "CONTACT MAINTAINED " << std::endl;
             contactMaintained = false;
             // could not reposition any contact. Planner has failed
             if (!RepositionContacts(result, body, body->collisionValidation_,
 							config, affordances, affFilters, direction, robustnessTreshold))
             {
-                std::cout << "planner is stuck; failure " <<  std::endl;
                 body->device_->currentConfiguration(save);
                 body->device_->controlComputation (flag);
                 result.nbContacts = 0;
@@ -531,7 +533,6 @@ core::Configuration_t config = result.configuration_;
         // if a new contact was created
         else
         {
-            std::cout << "CONTACT NOT MAINTAINED " << std::endl;
             fcl::Vec3f normal, position;
             result = previous;
             result.stable = false;
@@ -552,7 +553,6 @@ core::Configuration_t config = result.configuration_;
                                         config, affordances,affFilters, direction,position,
                                     normal,robustnessTreshold) != STABLE_CONTACT)
                 {
-                    std::cout << "AND CONTACT CREATED " << std::endl;
                     multipleBreaks = true;
                     result = previous;
                     result.contactOrder_.pop();

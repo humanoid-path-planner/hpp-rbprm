@@ -59,7 +59,9 @@ namespace hpp {
         T_Configuration configs;
         const core::interval_t& range = path_->timeRange();
         configs.push_back(start_.configuration_);
+int j = 0;
         for(double i = range.first + timeStep; i< range.second; i+= timeStep)
+        //for(double i = range.first; i< range.second && j < 30; i+= timeStep, ++j)
         {
             configs.push_back(configPosition(configs.back(),path_,i));
         }

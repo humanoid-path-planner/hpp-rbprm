@@ -49,7 +49,6 @@ projection::ProjectionReport oneStep(ContactGenHelper& helper)
         rep = genContactFromOneMaintainCombinatorial(helper);
     }
     while(!rep.success_ && !helper.candidates_.empty());
-    std::cout << "yay FINAL??? " << rep.success_ << " stable " << rep.result_.stable << std::endl;
     return rep;
 }
 
