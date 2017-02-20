@@ -39,6 +39,7 @@ enum ContactComputationStatus
 struct HPP_RBPRM_DLLAPI ProjectionReport
 {
      ProjectionReport(): success_ (false), status_(NO_CONTACT){}
+     ProjectionReport(const ProjectionReport&);
     ~ProjectionReport(){}
     bool success_;
     hpp::rbprm::State result_;

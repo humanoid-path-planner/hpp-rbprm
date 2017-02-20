@@ -33,6 +33,15 @@ namespace projection{
 
 const double epsilon = 10e-3;
 
+ProjectionReport::ProjectionReport(const ProjectionReport& from)
+    : success_(from.success_)
+    , result_(from.result_)
+    , status_(from.status_)
+{
+    // NOTHING
+}
+
+
 std::vector<bool> setMaintainRotationConstraints()
 {
     std::vector<bool> res;

@@ -27,6 +27,37 @@ namespace hpp {
 namespace rbprm {
 namespace contact{
 
+ContactReport::ContactReport()
+    : projection::ProjectionReport()
+    , contactMaintained_(false)
+    , multipleBreaks_(false)
+    , contactCreated_(false)
+    , repositionedInPlace_(false)
+{
+    // NOTHING
+}
+
+ContactReport::ContactReport(const projection::ProjectionReport& parent)
+    : projection::ProjectionReport(parent)
+    , contactMaintained_(false)
+    , multipleBreaks_(false)
+    , contactCreated_(false)
+    , repositionedInPlace_(false)
+{
+    // NOTHING
+}
+
+ContactReport generateContactReport(const projection::ProjectionReport& parent, const ContactGenHelper& helper, bool repositionedInPlace=false)
+{
+    const State& previous = helper.previousState_;
+    const State& result = parent.result_;
+    ContactReport report(parent) ;
+    report.contactMaintained_ = (result.contactCreations(previous).size() > 0);
+    report.contactCreated_ = (result.fixedContacts(previous).size() == previous.nbContacts);
+    report.multipleBreaks_ = (result.contactBreaks(previous).size() > 1);
+    report.repositionedInPlace_ = repositionedInPlace;
+    return report;
+}
 
 projection::ProjectionReport genContactFromOneMaintainCombinatorial(ContactGenHelper& helper)
 {
@@ -41,15 +72,23 @@ projection::ProjectionReport genContactFromOneMaintainCombinatorial(ContactGenHe
     return rep;
 }
 
-projection::ProjectionReport oneStep(ContactGenHelper& helper)
+// if contact generation failed, tries to reposition the contacts without moving the root
+ContactReport handleFailure(ContactGenHelper& helper)
+{
+    helper.workingState_ = helper.previousState_;
+    projection::ProjectionReport rep = repositionContacts(helper);
+    return generateContactReport(rep,helper,true);
+}
+
+ContactReport oneStep(ContactGenHelper& helper)
 {
     projection::ProjectionReport rep;
     do
-    {
         rep = genContactFromOneMaintainCombinatorial(helper);
-    }
     while(!rep.success_ && !helper.candidates_.empty());
-    return rep;
+    if(!rep.success_) // TODO only possible in quasi static
+        return handleFailure(helper);
+    return generateContactReport(rep,helper);
 }
 
 } // namespace projection

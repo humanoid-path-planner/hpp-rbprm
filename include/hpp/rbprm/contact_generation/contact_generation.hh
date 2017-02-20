@@ -111,7 +111,11 @@ projection::ProjectionReport generate_contact(const ContactGenHelper& contactGen
 /// \return the best candidate wrt the priority in the list and the contact order
 projection::ProjectionReport gen_contacts(ContactGenHelper& contactGenHelper);
 
-
+/// Tries to reposition one contact of a given state into
+/// a new one, more balanced
+/// \param ContactGenHelper parametrization of the planner
+/// \return the best candidate wrt the priority in the list and the contact order
+projection::ProjectionReport repositionContacts(ContactGenHelper& contactGenHelper);
     } // namespace projection
   } // namespace rbprm
 } // namespace hpp

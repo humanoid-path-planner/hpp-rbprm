@@ -204,26 +204,6 @@ ProjectionReport genColFree(ContactGenHelper &contactGenHelper, ProjectionReport
     return res;
 }
 
-/*** TODO DEBUG */
-void print_string_vect(const std::vector<std::string>& strings)
-{
-    for(std::vector<std::string>::const_iterator cit = strings.begin(); cit != strings.end(); ++cit)
-    {
-        std::cout << *cit <<  std::endl;
-    }
-}
-
-void print_string_string_vec(std::vector<std::vector<std::string> >& strings)
-{
-    for(std::vector<std::vector<std::string> >::const_iterator cit = strings.begin(); cit != strings.end(); ++cit)
-    {
-        std::cout << "***one string vector ***" << std::endl;
-        print_string_vect(*cit);
-        std::cout << "***one string vector ***" << std::endl;
-    }
-}
-/*** TODO DEBUG */
-
 void stringCombinatorialRec(std::vector<std::vector<std::string> >& res, const std::vector<std::string>& candidates, const std::size_t depth)
 {
     if(depth == 0) return;
@@ -486,6 +466,75 @@ ProjectionReport gen_contacts(ContactGenHelper &contactGenHelper)
         }
     }
     return rep;
+}
+
+projection::ProjectionReport repositionContacts(ContactGenHelper& helper)
+{
+    ProjectionReport resultReport;
+    State result = helper.workingState_;
+    result.stable = false;
+    State previous = result;
+    // replace existing contacts
+    // start with older contact created
+    std::stack<std::string> poppedContacts;
+    std::queue<std::string> oldOrder = result.contactOrder_;
+    std::queue<std::string> newOrder;
+    std::string nContactName ="";
+    core::Configuration_t savedConfig = helper.previousState_.configuration_;
+    core::Configuration_t config = savedConfig;
+    while(!result.stable &&  !oldOrder.empty())
+    {
+        std::string previousContactName = oldOrder.front();
+        std::string groupName = helper.fullBody_->GetLimbs().at(previousContactName)->limb_->name();
+        const std::vector<std::string>& group = helper.fullBody_->GetGroups().at(groupName);
+        oldOrder.pop();
+        core::ConfigurationIn_t save = helper.fullBody_->device_->currentConfiguration();
+        bool notFound(true);
+        for(std::vector<std::string>::const_iterator cit = group.begin();
+            notFound && cit != group.end(); ++cit)
+        {
+            result.RemoveContact(*cit);
+            helper.workingState_ = result;
+            projection::ProjectionReport rep = contact::generate_contact(helper,*cit);
+            if(rep.status_ == STABLE_CONTACT)
+            {
+                nContactName = *cit;
+                notFound = false;
+                result = rep.result_;
+            }
+            else
+            {
+                result = previous;
+                config = savedConfig;
+            }
+        }
+        if(notFound)
+        {
+            config = savedConfig;
+            result.configuration_ = savedConfig;
+            poppedContacts.push(previousContactName);
+            helper.fullBody_->device_->currentConfiguration(save);
+        }
+    }
+    while(!poppedContacts.empty())
+    {
+        newOrder.push(poppedContacts.top());
+        poppedContacts.pop();
+    }
+    while(!oldOrder.empty())
+    {
+        newOrder.push(oldOrder.front());
+        oldOrder.pop();
+    }
+    if(result.stable)
+    {
+        newOrder.push(nContactName);
+        resultReport.status_ = STABLE_CONTACT;
+        resultReport.success_ = true;
+    }
+    result.contactOrder_ = newOrder;
+    resultReport.result_ = result;
+    return resultReport;
 }
 
 } // namespace projection

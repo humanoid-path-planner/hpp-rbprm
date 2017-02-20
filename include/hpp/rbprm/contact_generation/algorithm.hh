@@ -30,6 +30,16 @@ namespace hpp {
 namespace rbprm {
 namespace contact{
 
+struct ContactReport : public projection::ProjectionReport
+{
+    ContactReport();
+    ContactReport(const projection::ProjectionReport&);
+    bool contactMaintained_;
+    bool multipleBreaks_;
+    bool contactCreated_;
+    bool repositionedInPlace_;
+};
+
 /// Generates one step of the contact planner.
 /// First, generates all possible cases of contact maintenance (feasible).
 /// Starting with the preferred case, generates all admissible contact combinatorial.
@@ -37,7 +47,7 @@ namespace contact{
 /// iterates like this until either all solution failed or a feasible contact is found.
 /// \param ContactGenHelper parametrization of the planner
 /// \return whether a step was successfully generated
-projection::ProjectionReport HPP_RBPRM_DLLAPI oneStep(ContactGenHelper& helper);
+ContactReport HPP_RBPRM_DLLAPI oneStep(ContactGenHelper& helper);
 
 
     } // namespace projection
