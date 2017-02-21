@@ -24,6 +24,8 @@
 # include <hpp/core/kinodynamic-path.hh>
 # include <hpp/rbprm/planner/rbprm-node.hh>
 # include <robust-equilibrium-lib/static_equilibrium.hh>
+# include <hpp/util/debug.hh>
+# include <hpp/util/timer.hh>
 
 namespace hpp{
   namespace rbprm{
@@ -61,7 +63,10 @@ namespace hpp{
       if(aMax_.norm() <= 0)
         return core::PathPtr_t();
       //return core::steeringMethod::Kinodynamic::impl_compute(*x->configuration(),q2);
+      hppStartBenchmark(steering_kino);
       core::PathPtr_t path = core::steeringMethod::Kinodynamic::impl_compute(*x->configuration(),q2);
+      hppStopBenchmark(steering_kino);
+      hppDisplayBenchmark(steering_kino);
       core::KinodynamicPathPtr_t kinoPath = boost::dynamic_pointer_cast<core::KinodynamicPath>(path);
       assert (path && "Error while casting path shared ptr"); // really usefull ? should never happen
       core::size_type configSize = problem_->robot()->configSize() - problem_->robot()->extraConfigSpace().dimension ();
@@ -177,16 +182,25 @@ namespace hpp{
       return kinoPath;
     }
 
+    Vector3 SteeringMethodKinodynamic::computeDirection(const core::ConfigurationIn_t from, const core::ConfigurationIn_t to){
+      core::PathPtr_t path = core::steeringMethod::Kinodynamic::impl_compute(from,to);
+      core::KinodynamicPathPtr_t kinoPath = boost::dynamic_pointer_cast<core::KinodynamicPath>(path);
+      Vector3 direction = kinoPath->getA1();
+      direction.normalize();
+      return direction;
+    }
+
     core::RbprmNodePtr_t SteeringMethodKinodynamic::setSteeringMethodBounds(const core::NodePtr_t& near, const core::ConfigurationIn_t target,bool reverse) {
       core::RbprmNodePtr_t node = static_cast<core::RbprmNodePtr_t>(near);
       assert(node && "Unable to cast near node to rbprmNode");
-      const model::size_type indexECS =problem_->robot()->configSize() - problem_->robot()->extraConfigSpace().dimension (); // ecs index
       // compute direction (v) :
 
+
       double alpha0=1.; // main variable of our LP problem
-      Vector3 toP,fromP,dPosition;
-      Vector3 toV,fromV,dVelocity;
       Vector3 direction;
+      /*Vector3 toP,fromP,dPosition;
+      Vector3 toV,fromV,dVelocity;
+      const model::size_type indexECS =problem_->robot()->configSize() - problem_->robot()->extraConfigSpace().dimension (); // ecs index
 
       hppDout(notice,"near = "<<model::displayConfig((*(near->configuration()))));
       hppDout(notice,"target = "<<model::displayConfig(target));
@@ -210,8 +224,10 @@ namespace hpp{
       //direction = dPosition + dVelocity;
       direction = dPosition;
       direction.normalize();
+      */
+      direction = computeDirection(*(near->configuration()),target);
       hppDout(info, "direction  = "<<direction.transpose());
-      hppDout(info,"vector = ["<<fromP[0]<<","<<fromP[1]<<","<<fromP[2]<<","<<direction[0]<<","<<direction[1]<<","<<direction[2]<<",0]");
+      hppDout(info,"vector = ["<<(*(near->configuration()))[0]<<","<<(*(near->configuration()))[1]<<","<<(*(near->configuration()))[2]<<","<<direction[0]<<","<<direction[1]<<","<<direction[2]<<",0]");
       // define LP problem : with m+1 variables and 6 constraints
       int m = node->getNumberOfContacts() * 4;
       hppDout(notice,"number of contacts :  "<<node->getNumberOfContacts());
@@ -252,11 +268,22 @@ namespace hpp{
 
       hppDout(info,"Amax after min : "<<alpha0);
       Vector3 aMax = alpha0*direction;
-      if((aMax[2] < aMaxFixed_)/* && tryJump_*/)
+      if((aMax[2] < aMaxFixed_) && tryJump_)
         aMax[2] = aMaxFixed_;
       setAmax(aMax);
       hppDout(info,"Amax vector : "<<aMax_.transpose());
       //setVmax(2*Vector3::Ones(3)); //FIXME: read it from somewhere ?
+      hppDout(notice,"TEST DIRECTION :");
+      hppDout(info, "direction1  = "<<direction.transpose());
+      Vector3 direction2 = computeDirection(*(near->configuration()),target);
+      hppDout(info, "direction2  = "<<direction2.transpose());
+      Vector3 diff = direction - direction2;
+
+      if(diff.norm() > 0.5){
+        hppDout(notice,"diff really big : "<<diff.transpose());
+      }else if(diff.norm() > 0.1){
+        hppDout(notice,"diff not null : "<<diff.transpose());
+      }
       return node;
     }
 

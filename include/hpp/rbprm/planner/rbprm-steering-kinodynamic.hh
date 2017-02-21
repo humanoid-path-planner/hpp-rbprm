@@ -108,6 +108,14 @@ namespace hpp {
       }
 
       /**
+       * @brief computeDirection compute the direction that the steering method will choose in order to connect from to to
+       * @param from
+       * @param to
+       * @return
+       */
+      robust_equilibrium::Vector3 computeDirection(const core::ConfigurationIn_t from, const core::ConfigurationIn_t to);
+
+      /**
        * @brief setSteeringMethodBounds Compute the maximal acceleration on a direction from near to target,
        *                                and send it to the steering method
        * @param near the node from where we take the the information about contact and position
@@ -116,6 +124,8 @@ namespace hpp {
        * @return the node casted from near
        */
       core::RbprmNodePtr_t setSteeringMethodBounds(const core::NodePtr_t& near, const core::ConfigurationIn_t target,bool reverse);
+
+
 
 
     private:
