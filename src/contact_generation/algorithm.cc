@@ -52,10 +52,10 @@ ContactReport generateContactReport(const projection::ProjectionReport& parent, 
     const State& previous = helper.previousState_;
     const State& result = parent.result_;
     ContactReport report(parent) ;
-    report.contactMaintained_ = (result.contactCreations(previous).size() > 0);
     report.contactCreated_ = (result.fixedContacts(previous).size() == previous.nbContacts);
     report.multipleBreaks_ = (result.contactBreaks(previous).size() > 1);
     report.repositionedInPlace_ = repositionedInPlace;
+    report.contactMaintained_ = !repositionedInPlace && !(result.contactCreations(previous).size() > 0);
     return report;
 }
 

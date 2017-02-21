@@ -136,7 +136,7 @@ if (nbFailures > 1)
             }
             newState.nbContacts = newState.contactNormals_.size();
             states.push_back(std::make_pair(currentVal, newState));
-            allowFailure = nbRecontacts > robot_->GetLimbs().size() + 6;
+            allowFailure = nbRecontacts < robot_->GetLimbs().size() + 6;
         }
         states.push_back(std::make_pair(this->path_->timeRange().second, this->end_));
 #ifdef PROFILE

@@ -160,9 +160,7 @@ namespace hpp {
     {
         std::vector<bool> res;
         for(std::size_t i =0; i <3; ++i)
-        {
             res.push_back(true);
-        }
         return res;
     }
 
@@ -170,10 +168,7 @@ namespace hpp {
     {
         std::vector<bool> res;
         for(std::size_t i =0; i <3; ++i)
-        {
             res.push_back(true);
-        }
-        //res.push_back(false);
         return res;
     }
 
@@ -182,9 +177,7 @@ namespace hpp {
     {
         std::vector<bool> res;
         for(std::size_t i =0; i <3; ++i)
-        {
             res.push_back(true);
-        }
         return res;
     }
 

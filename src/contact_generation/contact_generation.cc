@@ -108,7 +108,12 @@ bool maintain_contacts_stability_rec(hpp::rbprm::RbPrmFullBodyPtr_t fullBody,
                         const fcl::Vec3f& acceleration, const double robustness,
                         ProjectionReport& currentRep)
 {
-    if(stability::IsStable(fullBody,currentRep.result_) > robustness) return true;
+    if(stability::IsStable(fullBody,currentRep.result_) > robustness)
+    {
+        currentRep.result_.stable = true;
+        return true;
+    }
+    currentRep.result_.stable = false;
     if(!candidates.empty())
     {
         State cState = candidates.front();
@@ -273,7 +278,6 @@ ProjectionReport maintain_contacts(ContactGenHelper &contactGenHelper)
         State cState = candidates.front();
         candidates.pop();
         rep = projectToRootConfiguration(contactGenHelper.fullBody_,contactGenHelper.workingState_.configuration_,cState);
-if(rep.status_)
         if(rep.success_)
             rep = genColFree(contactGenHelper, rep);
         if(rep.success_)
@@ -439,7 +443,6 @@ ProjectionReport gen_contacts(ContactGenHelper &contactGenHelper)
         //retrieve latest state
         ContactState cState = candidates.front();
         candidates.pop();
-        //contactGenHelper.workingState_ = cState.first;
         bool checkStability(contactGenHelper.checkStabilityGenerate_);
         contactGenHelper.checkStabilityGenerate_ = false; // stability not mandatory before last contact is created
         if(cState.second.empty() && contactGenHelper.workingState_.stable)
@@ -453,14 +456,10 @@ ProjectionReport gen_contacts(ContactGenHelper &contactGenHelper)
             cit != cState.second.end(); ++cit)
         {
             if(cit+1 == cState.second.end())
-            {
                 contactGenHelper.checkStabilityGenerate_ = checkStability;
-            }
             rep = generate_contact(contactGenHelper,*cit);
             if(rep.success_)
-            {
                 contactGenHelper.workingState_ = rep.result_;
-            }
             else
                 break;
         }
