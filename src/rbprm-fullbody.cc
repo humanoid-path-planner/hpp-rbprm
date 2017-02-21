@@ -155,68 +155,6 @@ namespace hpp {
         // NOTHING
     }
 
-    // assumes unit direction
-    std::vector<bool> setMaintainRotationConstraints()//const fcl::Vec3f&) // direction)
-    {
-        std::vector<bool> res;
-        for(std::size_t i =0; i <3; ++i)
-            res.push_back(true);
-        return res;
-    }
-
-    std::vector<bool> setRotationConstraints()
-    {
-        std::vector<bool> res;
-        for(std::size_t i =0; i <3; ++i)
-            res.push_back(true);
-        return res;
-    }
-
-
-    std::vector<bool> setTranslationConstraints()
-    {
-        std::vector<bool> res;
-        for(std::size_t i =0; i <3; ++i)
-            res.push_back(true);
-        return res;
-    }
-
-    bool ComputeCollisionFreeConfiguration(const hpp::rbprm::RbPrmFullBodyPtr_t& body,
-                              State& current,
-                              core::CollisionValidationPtr_t validation,
-                              const hpp::rbprm::RbPrmLimbPtr_t& limb, model::ConfigurationOut_t configuration,
-                              const double robustnessTreshold, bool stability = true)
-    {
-        for(sampling::SampleVector_t::const_iterator cit = limb->sampleContainer_.samples_.begin();
-            cit != limb->sampleContainer_.samples_.end(); ++cit)
-        {
-            sampling::Load(*cit, configuration);
-            hpp::core::ValidationReportPtr_t valRep (new hpp::core::CollisionValidationReport);
-            if(validation->validate(configuration, valRep) && (!stability || stability::IsStable(body,current) >=robustnessTreshold))
-            {
-                current.configuration_ = configuration;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    State MaintainPreviousContacts(contact::ContactGenHelper& cHelper, bool& contactMaintained, bool& multipleBreaks)
-    {
-        projection::ProjectionReport rep = contact::maintain_contacts(cHelper);
-        if(rep.success_)
-        {
-            contactMaintained = rep.result_.contactBreaks(cHelper.previousState_).empty();
-            multipleBreaks = false;
-        }
-        else
-        {
-            contactMaintained = false;
-            multipleBreaks = true;
-        }
-        return rep.result_;
-    }
-
     bool ContactExistsWithinGroup(const hpp::rbprm::RbPrmLimbPtr_t& limb,
                                   const hpp::rbprm::RbPrmFullBody::T_LimbGroup& limbGroups,
                                   const State& current)
@@ -263,70 +201,8 @@ namespace hpp {
         return rep.status_;
     }
 
-    bool RepositionContacts(State& result, contact::ContactGenHelper& helper)
-    {
-        // replace existing contacts
-        // start with older contact created
-        std::stack<std::string> poppedContacts;
-        std::queue<std::string> oldOrder = result.contactOrder_;
-        std::queue<std::string> newOrder;
-        core::Configuration_t savedConfig = helper.previousState_.configuration_;
-        core::Configuration_t config = savedConfig;
-        std::string nContactName ="";
-        State previous = result;
-        while(!result.stable &&  !oldOrder.empty())
-        {
-            std::string previousContactName = oldOrder.front();
-            std::string groupName = helper.fullBody_->GetLimbs().at(previousContactName)->limb_->name();
-            const std::vector<std::string>& group = helper.fullBody_->GetGroups().at(groupName);
-            oldOrder.pop();
-            //fcl::Vec3f normal, position;
-            core::ConfigurationIn_t save = helper.fullBody_->device_->currentConfiguration();
-            bool notFound(true);
-            for(std::vector<std::string>::const_iterator cit = group.begin();
-                notFound && cit != group.end(); ++cit)
-            {
-                projection::ProjectionReport rep = contact::generate_contact(helper,*cit);
-                /*if(ComputeStableContact(helper.fullBody_, result, helper.fullBody_->GetCollisionValidation(), *cit, helper.fullBody_->GetLimbs().at(*cit),save, config,
-                    helper.affordances_,helper.affFilters_, helper.direction_, position, normal, helper.robustnessTreshold_, false)
-                  == STABLE_CONTACT)*/
-                if(rep.status_ == STABLE_CONTACT)
-                {
-                    nContactName = *cit;
-                    notFound = false;
-                }
-                else
-                {
-                    result = previous;
-                    config = savedConfig;
-                }
-            }
-            if(notFound)
-            {
-                config = savedConfig;
-                result.configuration_ = savedConfig;
-                poppedContacts.push(previousContactName);
-                helper.fullBody_->device_->currentConfiguration(save);
-            }
-        }
-        while(!poppedContacts.empty())
-        {
-            newOrder.push(poppedContacts.top());
-            poppedContacts.pop();
-        }
-        while(!oldOrder.empty())
-        {
-            newOrder.push(oldOrder.front());
-            oldOrder.pop();
-        }
-        if(result.stable)
-            newOrder.push(nContactName);
-        result.contactOrder_ = newOrder;
-        return result.stable;
-    }
-
-    static int nbFAILSNEW = 0;
-    static int nbSUCCNEW = 0;
+    /*static int nbFAILSNEW = 0;
+    static int nbSUCCNEW = 0;*/
 
     hpp::rbprm::State ComputeContacts(const hpp::rbprm::RbPrmFullBodyPtr_t& body,
 			model::ConfigurationIn_t configuration, const affMap_t& affordances,
@@ -384,19 +260,10 @@ namespace hpp {
         contactMaintained = rep.contactMaintained_;
         multipleBreaks = rep.multipleBreaks_;
 
-        /*std::cout << "computation report " << std::endl;
-        std::cout << "breaks report " << rep.result_.contactBreaks(previous).size() << std::endl;
-        std::cout << "creation report " << rep.result_.contactCreations(previous).size() << std::endl;
-        std::cout << "stabilioty report " << rep.result_.stable << std::endl;*/
-
-        if(rep.result_.contactBreaks(previous).size() > 1 || rep.result_.contactCreations(previous).size() >1)
-        {
-            std::cout << "WTF" << std::endl;
-        }
 
         if(rep.repositionedInPlace_)
             multipleBreaks = true;
-        if(!rep.success_ || rep.repositionedInPlace_)
+        /*if(!rep.success_ || rep.repositionedInPlace_)
         {
             std::cout << "Contact repositionning occured " << ++nbFAILSNEW << std::endl;
             std::cout << "(successes) " << nbSUCCNEW << std::endl;
@@ -404,7 +271,7 @@ namespace hpp {
         else
         {
             ++nbSUCCNEW;
-        }
+        }*/
         body->device_->currentConfiguration(save);
         body->device_->controlComputation (flag);
         return rep.result_;
