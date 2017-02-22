@@ -105,6 +105,7 @@ namespace hpp {
     public:
         const rbprm::T_Limb& GetLimbs() {return limbs_;}
         const T_LimbGroup& GetGroups() {return limbGroups_;}
+        const core::CollisionValidationPtr_t& GetCollisionValidation() {return collisionValidation_;}
         const model::DevicePtr_t device_;
         void staticStability(bool staticStability){staticStability_ = staticStability;}
         const bool staticStability(){return staticStability_;}

@@ -225,17 +225,12 @@ const fcl::Vec3f comfcl = comcptr->com();*/
     }
 
 
-    double IsStable(const RbPrmFullBodyPtr_t fullbody, State& state,fcl::Vec3f acc)
+    double IsStable(const RbPrmFullBodyPtr_t fullbody, State& state,fcl::Vec3f acc,const robust_equilibrium::StaticEquilibriumAlgorithm algorithm )
     {
 #ifdef PROFILE
     RbPrmProfiler& watch = getRbPrmProfiler();
     watch.start("test balance");
 #endif
-        /*
-        hppDout(notice,"isStable, acceleration = "<<acc);
-        hppDout(notice,"configuration in state = "<<model::displayConfig(state.configuration_));
-        hppDout(notice,"use acceleration : "<<!fullbody->staticStability());
-        */
         if(acc.norm() == 0){
           hppDout(notice,"isStable ? called with acc = 0");
           hppDout(notice,"configuration in state = "<<model::displayConfig(state.configuration_));
@@ -244,14 +239,21 @@ const fcl::Vec3f comfcl = comcptr->com();*/
           hppDout(notice,"new acceleration = "<<acc);
         }
         StaticEquilibrium staticEquilibrium(initLibrary(fullbody));
-        robust_equilibrium::Vector3 com = setupLibrary(fullbody,state,staticEquilibrium,STATIC_EQUILIBRIUM_ALGORITHM_DLP);
-        double res;
-        LP_status status;
-        if(fullbody->staticStability())
-          status = staticEquilibrium.computeEquilibriumRobustness(com,res);
-        else
-          status = staticEquilibrium.computeEquilibriumRobustness(com,acc,res);
-
+        robust_equilibrium::Vector3 com = setupLibrary(fullbody,state,staticEquilibrium,algorithm);
+              double res;LP_status status;
+        if(algorithm == STATIC_EQUILIBRIUM_ALGORITHM_PP)
+        {
+            bool isStable(false);
+            status = staticEquilibrium.checkRobustEquilibrium(com,isStable);
+            res = isStable? 1. : -1.;
+        }
+        else // STATIC_EQUILIBRIUM_ALGORITHM_DLP
+        {
+			 if(fullbody->staticStability())
+          		status = staticEquilibrium.computeEquilibriumRobustness(com,res);
+        	 else
+          		status = staticEquilibrium.computeEquilibriumRobustness(com,acc,res);
+        }
 #ifdef PROFILE
     watch.stop("test balance");
 #endif

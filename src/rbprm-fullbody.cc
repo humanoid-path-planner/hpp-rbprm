@@ -26,7 +26,6 @@
 #include <hpp/model/device.hh>
 #include <hpp/constraints/generic-transformation.hh>
 
-
 #include <hpp/fcl/BVH/BVH_model.h>
 
 #include <stack>
@@ -153,7 +152,7 @@ namespace hpp {
     }
 
     // assumes unit direction
-    std::vector<bool> setMaintainRotationConstraints()//const fcl::Vec3f&) // direction)
+    std::vector<bool> setMaintainRotationConstraints() // direction)
     {
         std::vector<bool> res;
         for(std::size_t i =0; i <3; ++i)
@@ -162,7 +161,6 @@ namespace hpp {
         }
         return res;
     }
-
 
     std::vector<bool> setRotationConstraints()
     {
@@ -173,7 +171,7 @@ namespace hpp {
         }
         //res.push_back(false);
         return res;
-}
+    }
 
 
     std::vector<bool> setTranslationConstraints()
@@ -184,20 +182,20 @@ namespace hpp {
             res.push_back(true);
         }
         return res;
-}
+    }
 
     bool ComputeCollisionFreeConfiguration(const hpp::rbprm::RbPrmFullBodyPtr_t& body,
                               State& current,
                               core::CollisionValidationPtr_t validation,
                               const hpp::rbprm::RbPrmLimbPtr_t& limb, model::ConfigurationOut_t configuration,
-                              const double robustnessTreshold, bool stability = true,const fcl::Vec3f acceleration = fcl::Vec3f(0,0,0))
+                              const double robustnessTreshold, bool stability = true)
     {
         for(sampling::SampleVector_t::const_iterator cit = limb->sampleContainer_.samples_.begin();
             cit != limb->sampleContainer_.samples_.end(); ++cit)
         {
             sampling::Load(*cit, configuration);
             hpp::core::ValidationReportPtr_t valRep (new hpp::core::CollisionValidationReport);
-            if(validation->validate(configuration, valRep) && (!stability || stability::IsStable(body,current,acceleration) >=robustnessTreshold))
+            if(validation->validate(configuration, valRep) && (!stability || stability::IsStable(body,current) >=robustnessTreshold))
             {
                 current.configuration_ = configuration;
                 return true;
@@ -209,7 +207,7 @@ namespace hpp {
     // first step
     State MaintainPreviousContacts(const State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body,
                                    std::map<std::string,core::CollisionValidationPtr_t>& limbValidations,
-                                   model::ConfigurationIn_t configuration, bool& contactMaintained, bool& multipleBreaks, const double robustnessTreshold, const fcl::Vec3f acceleration = fcl::Vec3f(0,0,0))
+                                   model::ConfigurationIn_t configuration, bool& contactMaintained, bool& multipleBreaks, const double robustnessTreshold)
     {
         contactMaintained = true;
         std::vector<std::string> brokenContacts;
@@ -227,7 +225,7 @@ namespace hpp {
             const RbPrmLimbPtr_t limb = body->GetLimbs().at(name);
             // try to maintain contact
             const fcl::Vec3f& ppos  =previous.contactPositions_.at(name);
-            const fcl::Vec3f& pnormal =previous.contactNormals_.at(name);
+            const fcl::Vec3f& pnormal  =previous.contactNormals_.at(name);
             const fcl::Matrix3f& rotation = previous.contactRotation_.at(name);
             bool success(false);
             State tmp = Project(body,name,limb,limbValidations.at(name),config,rotation, setMaintainRotationConstraints(), ppos,pnormal,current,success);
@@ -247,14 +245,14 @@ namespace hpp {
                 else
                 {
                     contactMaintained = false;
-                    ComputeCollisionFreeConfiguration(body,current,limbValidations.at(name),limb,current.configuration_,robustnessTreshold,false,acceleration);
+                    ComputeCollisionFreeConfiguration(body,current,limbValidations.at(name),limb,current.configuration_,robustnessTreshold,false);
                     brokenContacts.push_back(name);
                 }
             }
             else
             {
                 contactMaintained = false;
-                ComputeCollisionFreeConfiguration(body,current,limbValidations.at(name),limb,current.configuration_,robustnessTreshold,false,acceleration);
+                ComputeCollisionFreeConfiguration(body,current,limbValidations.at(name),limb,current.configuration_,robustnessTreshold,false);
                 brokenContacts.push_back(name);
             }
         }
@@ -477,7 +475,7 @@ else
 #endif
           if(!found_sample)
           {
-              ComputeCollisionFreeConfiguration(body, current, validation, limb, configuration,robustnessTreshold,false,acceleration);
+              ComputeCollisionFreeConfiguration(body, current, validation, limb, configuration,robustnessTreshold,false);
           }
       }
       if(found_sample || unstableContact)
@@ -640,7 +638,6 @@ else
       const bool allowFailure, const double robustnessTreshold,
       const fcl::Vec3f& acceleration)
     {
-
 //static int id = 0;
     const T_Limb& limbs = body->GetLimbs();
     // save old configuration
@@ -652,7 +649,7 @@ else
     body->device_->currentConfiguration(configuration);
     body->device_->computeForwardKinematics ();
     // try to maintain previous contacts
-    State result = MaintainPreviousContacts(previous,body, body->limbcollisionValidations_, configuration, contactMaintained, multipleBreaks, robustnessTreshold,acceleration);
+    State result = MaintainPreviousContacts(previous,body, body->limbcollisionValidations_, configuration, contactMaintained, multipleBreaks, robustnessTreshold);
     // If more than one are broken, go back to previous state
     // and reposition
     if(multipleBreaks && !allowFailure)
