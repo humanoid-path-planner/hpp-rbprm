@@ -102,25 +102,28 @@ namespace hpp {
             bool sameAsPrevious(true);
             bool multipleBreaks(false);
             State newState = ComputeContacts(previous, robot_,configuration, affordances,affFilters,direction,
-                                             sameAsPrevious, multipleBreaks,allowFailure,robustnessTreshold,acc);
+                                             sameAsPrevious, multipleBreaks,allowFailure,robustnessTreshold);
             if(allowFailure && multipleBreaks)
             {
-                ++nbFailures;
-                ++cit;
-                currentVal+= timeStep;
-                if (nbFailures > 1)
+                ++ nbFailures;
+                if(cit != configs.end() && (cit+1)!= configs.end())
                 {
-                  #ifdef PROFILE
-                    watch.stop("complete generation");
-                    watch.add_to_count("planner failed", 1);
-                    std::ofstream fout;
-                    fout.open("log.txt", std::fstream::out | std::fstream::app);
-                    std::ostream* fp = &fout;
-                    watch.report_count(*fp);
-                    fout.close();
-                  #endif
-                  return FilterStates(states, filterStates);
+                    ++cit;
                 }
+                currentVal+= timeStep;
+if (nbFailures > 1)
+{
+#ifdef PROFILE
+    watch.stop("complete generation");
+    watch.add_to_count("planner failed", 1);
+    std::ofstream fout;
+    fout.open("log.txt", std::fstream::out | std::fstream::app);
+    std::ostream* fp = &fout;
+    watch.report_count(*fp);
+    fout.close();
+#endif
+    return FilterStates(states, filterStates);
+}
             }
             if(multipleBreaks && !allowFailure)
             {
@@ -138,7 +141,7 @@ namespace hpp {
             }
             newState.nbContacts = newState.contactNormals_.size();
             states.push_back(std::make_pair(currentVal, newState));
-            allowFailure = nbRecontacts > robot_->GetLimbs().size() + 6;
+            allowFailure = nbRecontacts < robot_->GetLimbs().size() + 6;
         }
         states.push_back(std::make_pair(this->path_->timeRange().second, this->end_));
         #ifdef PROFILE

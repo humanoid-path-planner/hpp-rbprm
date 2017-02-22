@@ -51,8 +51,9 @@ MACRO(ADD_TESTCASE NAME GENERATED)
 
 ENDMACRO(ADD_TESTCASE)
 
-#ADD_TESTCASE (test-device FALSE)
-#ADD_TESTCASE (test-rbprm-shooter FALSE)
+# ADD_TESTCASE (test-device FALSE)
+# ADD_TESTCASE (test-rbprm-shooter FALSE)
 ADD_TESTCASE (test-sampling FALSE)
 #ADD_TESTCASE (test-fullbody FALSE)
 #ADD_TESTCASE (test-interpolate FALSE)
+ADD_TESTCASE (test-contact-gen FALSE)

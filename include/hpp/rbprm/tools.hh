@@ -36,6 +36,12 @@ namespace hpp {
   model::Configuration_t interpolate(model::ConfigurationIn_t q1, model::ConfigurationIn_t q2, const model::value_type& u);
   model::value_type distance (model::ConfigurationIn_t q1, model::ConfigurationIn_t q2);
 
+  template<typename K, typename V>
+  void addToMap(const K& key, const V& value);
+
+  template<typename T>
+  bool insertIfNew(std::vector<T>& data, const T& value);
+
   template<typename T>
   void RemoveEffectorCollision(T& validation, model::JointPtr_t effectorJoint, const model::ObjectVector_t& obstacles);
   template<typename T>
@@ -60,6 +66,7 @@ namespace hpp {
   /// \param projector Projector on which to block the joints
   /// \param constant if false, joint lock constraint can be updated with rightHandSide method
   void LockJoint(const model::JointPtr_t joint, core::ConfigProjectorPtr_t& projector, const bool constant=true);
+
   ///Some io tools for serialization
   namespace io
   {
@@ -152,6 +159,27 @@ namespace hpp {
       {
           RemoveNonLimbCollisionRec(joint->childJoint(i), limbname, collisionObjects, collisionValidation);
       }
+  }
+
+
+  template<typename K, typename V>
+  void addToMap(std::map<K,V>& map, const K& key, const V& value)
+  {
+        if(map.find(key) != map.end())
+            map[key] = value;
+        else
+            map.insert(std::make_pair(key,value));
+  }
+
+  template<typename T>
+  bool insertIfNew(std::vector<T>& data, const T& value)
+  {
+      if(std::find(data.begin(), data.end(), value) == data.end())
+      {
+          data.push_back(value);
+          return true;
+      }
+      return false;
   }
 
 
