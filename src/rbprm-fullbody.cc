@@ -188,7 +188,7 @@ namespace hpp {
                               const fcl::Vec3f& acceleration = fcl::Vec3f(0,0,0),
                               const sampling::heuristic evaluate = 0)
     {
-        contact::ContactGenHelper contactGenHelper(body,current,current.configuration_,affordances,affFilters,robustnessTreshold,1,1,false,false,
+        contact::ContactGenHelper contactGenHelper(body,current,current.configuration_,affordances,affFilters,robustnessTreshold,1,1,false,true,
                                           direction,acceleration,contactIfFails,stableForOneContact);
 
         ProjectionReport rep = contact::generate_contact(contactGenHelper,limbId,evaluate);
