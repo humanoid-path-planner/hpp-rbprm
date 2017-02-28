@@ -674,7 +674,7 @@ namespace hpp {
         }
         if (projPath) {
           core::PathValidationReportPtr_t report;
-          roadmap ()->addEdge (initNode, *itn, projPath);  // (TODO a supprimer)display the path no matter if it's successful or not
+          //roadmap ()->addEdge (initNode, *itn, projPath);  // (TODO a supprimer)display the path no matter if it's successful or not
 
           bool pathValid = pathValidation->validate (projPath, false, validPath,
                                                      report);
