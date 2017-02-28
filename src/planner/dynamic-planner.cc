@@ -723,7 +723,7 @@ namespace hpp {
       std::cout<<"rejected_paths = "<<sm_->rejectedPath_<<std::endl;
 
       std::ofstream myfile;
-      myfile.open ("/local/dev_hpp/benchs/benchHrp2_wall.txt", std::ios::out | std::ios::app );
+      myfile.open ("/local/dev_hpp/benchs/benchHyq_darpa.txt", std::ios::out | std::ios::app );
       myfile<<"total_path_computed = "<<sm_->totalTimeComputed_<<std::endl;
       myfile<<"total_path_validated = "<<sm_->totalTimeValidated_<<std::endl;
       myfile<<"percentage_validated_path ="<<(double)sm_->totalTimeValidated_/sm_->totalTimeValidated_<<std::endl;
