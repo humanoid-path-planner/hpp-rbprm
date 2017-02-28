@@ -260,7 +260,12 @@ namespace hpp {
         contactMaintained = rep.contactMaintained_;
         multipleBreaks = rep.multipleBreaks_;
 
-
+        // copy extra dofs
+        if(rep.success_)
+        {
+            const model::size_type& extraDim = body->device_->extraConfigSpace().dimension();
+            rep.result_.configuration_.tail(extraDim) = configuration.tail(extraDim);
+        }
         if(rep.repositionedInPlace_)
             multipleBreaks = true;
         /*if(!rep.success_ || rep.repositionedInPlace_)
