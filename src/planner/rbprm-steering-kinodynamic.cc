@@ -36,7 +36,7 @@ namespace hpp{
     SteeringMethodKinodynamic::SteeringMethodKinodynamic (const core::ProblemPtr_t& problem) :
       core::steeringMethod::Kinodynamic (problem),
       sEq_(new robust_equilibrium::StaticEquilibrium(problem_->robot()->name(), problem_->robot()->mass(),4,robust_equilibrium::SOLVER_LP_QPOASES,true,10,false)),
-      device_ (problem->robot ()), weak_ ()
+      device_ (problem->robot ()),lastDirection_(),totalTimeComputed_(0),totalTimeValidated_(0),dirTotal_(0),dirValid_(0),rejectedPath_(0), weak_ ()
     {
     }
 
@@ -44,7 +44,7 @@ namespace hpp{
     SteeringMethodKinodynamic::SteeringMethodKinodynamic (const SteeringMethodKinodynamic& other) :
       core::steeringMethod::Kinodynamic (other),
       sEq_(new robust_equilibrium::StaticEquilibrium(problem_->robot()->name(), problem_->robot()->mass(),4,robust_equilibrium::SOLVER_LP_QPOASES,true,10,false)),
-      device_ (other.device_)
+      device_ (other.device_),lastDirection_(),totalTimeComputed_(0),totalTimeValidated_(0),dirTotal_(0),dirValid_(0),rejectedPath_(0),weak_()
     {
     }
 
@@ -52,6 +52,7 @@ namespace hpp{
     core::PathPtr_t SteeringMethodKinodynamic::impl_compute (core::ConfigurationIn_t q1,
                                          core::ConfigurationIn_t q2) const
     {
+      hppDout(notice,"Old prototype called !!!");
       return core::steeringMethod::Kinodynamic::impl_compute(q1,q2);
     }
 
@@ -68,6 +69,20 @@ namespace hpp{
       hppStopBenchmark(steering_kino);
       hppDisplayBenchmark(steering_kino);
       core::KinodynamicPathPtr_t kinoPath = boost::dynamic_pointer_cast<core::KinodynamicPath>(path);
+      if(kinoPath->length() > maxLength_){
+        rejectedPath_ ++;
+        return core::PathPtr_t();
+      }
+      Vector3 direction = kinoPath->getA1();
+      direction.normalize();
+      dirTotal_++;
+      if(direction.dot(lastDirection_)>=0.8)
+        dirValid_++;
+
+      totalTimeComputed_+= kinoPath->length();
+      hppDout(notice,"TotaltimeComputed = "<<totalTimeComputed_);
+
+
       assert (path && "Error while casting path shared ptr"); // really usefull ? should never happen
       core::size_type configSize = problem_->robot()->configSize() - problem_->robot()->extraConfigSpace().dimension ();
 
@@ -88,8 +103,9 @@ namespace hpp{
       hppDout(info,"a = "<<a);
       aValid = sEq_->checkAdmissibleAcceleration(node->getG(),node->getH(),node->geth(),a);
       hppDout(info,"a valid : "<<aValid);
-      if(!aValid)
+      if(!aValid){
         return core::PathPtr_t();
+      }
       for(size_t ijoint = 0 ; ijoint < 3 ; ijoint++){
         if(t1[ijoint] > 0){
           hppDout(info,"for joint "<<ijoint);
@@ -116,14 +132,17 @@ namespace hpp{
         }
       }
 
-
       hppDout(info, "t = "<<kinoPath->length()<<" maxT = "<<maxT);
       if(maxT < kinoPath->length()){
         maxT -= epsilon;
+        totalTimeValidated_ += maxT;
+        hppDout(notice,"totalTimeValidated = "<<totalTimeValidated_);
         core::PathPtr_t extracted = kinoPath->extract(core::interval_t(kinoPath->timeRange().first,kinoPath->timeRange().first + maxT));
         hppDout(notice,"extracted path : end = "<<model::displayConfig((extracted->end())));
         return extracted;
       }
+      totalTimeValidated_ += kinoPath->length();
+      hppDout(notice,"totalTimeValidated = "<<totalTimeValidated_);
       return kinoPath;
     }
 
@@ -135,6 +154,12 @@ namespace hpp{
         return core::PathPtr_t();
       core::PathPtr_t path = core::steeringMethod::Kinodynamic::impl_compute(q1,*x->configuration());
       core::KinodynamicPathPtr_t kinoPath = boost::dynamic_pointer_cast<core::KinodynamicPath>(path);
+      if(kinoPath->length() > maxLength_){
+        rejectedPath_ ++;
+        return core::PathPtr_t();
+      }
+      totalTimeComputed_+= kinoPath->length();
+      hppDout(notice,"TotaltimeComputed = "<<totalTimeComputed_);
       assert (path && "Error while casting path shared ptr"); // really usefull ? should never happen
       core::size_type configSize = problem_->robot()->configSize() - problem_->robot()->extraConfigSpace().dimension ();
       // check if acceleration is valid after each sign change :
@@ -145,48 +170,66 @@ namespace hpp{
       core::ConfigurationPtr_t q(new core::Configuration_t(problem_->robot()->configSize()));
       core::vector3_t a;
       bool aValid;
-      double minT = kinoPath->timeRange().second;
+      double minT = 0;
+
       hppDout(info,"## start checking intermediate accelerations");
+      double epsilon = 0.0001;
+      t = kinoPath->length() - epsilon;
+      (*kinoPath)(*q,t);
+      hppDout(info,"q(t="<<t<<") = "<<model::displayConfig(*q));
+      a = (*q).segment<3>(configSize+3);
+      hppDout(info,"a = "<<a);
+      aValid = sEq_->checkAdmissibleAcceleration(node->getG(),node->getH(),node->geth(),a);
+      hppDout(info,"a valid : "<<aValid);
+      if(!aValid){
+        return core::PathPtr_t();
+      }
       for(size_t ijoint = 0 ; ijoint < 3 ; ijoint++){
         hppDout(info,"for joint "<<ijoint);
         if(t1[ijoint] > 0){
-          t = t1[ijoint] + 0.0001;
+          t = t1[ijoint] - epsilon;
           (*kinoPath)(*q,t);
-          hppDout(info,"q = "<<model::displayConfig(*q));
+          hppDout(info,"q(t="<<t<<") = "<<model::displayConfig(*q));
           a = (*q).segment<3>(configSize+3);
           hppDout(info,"a = "<<a);
-          //TODO check a :
           aValid = sEq_->checkAdmissibleAcceleration(node->getG(),node->getH(),node->geth(),a);
           hppDout(info,"a valid : "<<aValid);
-          if(aValid && t < minT)
+          if(!aValid && t > minT)
             minT = t;
         }
         if(tv[ijoint] > 0){
           t += tv[ijoint];
           (*kinoPath)(*q,t);
-          hppDout(info,"q = "<<model::displayConfig(*q));
+          hppDout(info,"q(t="<<t<<") = "<<model::displayConfig(*q));
           a = (*q).segment<3>(configSize+3);
           hppDout(info,"a = "<<a);
-          //TODO check a :
           aValid = sEq_->checkAdmissibleAcceleration(node->getG(),node->getH(),node->geth(),a);
           hppDout(info,"a valid : "<<aValid);
-          if(aValid && t < minT)
+          if(!aValid && t > minT)
             minT = t;
         }
       }
       hppDout(info, "t = "<<kinoPath->length()<<" minT = "<<minT);
-      if(minT == kinoPath->timeRange().second)
-        return core::PathPtr_t();
-      if(minT > kinoPath->timeRange().first)
-        return kinoPath->extract(core::interval_t(minT,kinoPath->timeRange().second));
+      if(minT > 0){
+        minT += epsilon;
+        totalTimeValidated_ += (kinoPath->length() - minT);
+        hppDout(notice,"totalTimeValidated = "<<totalTimeValidated_);
+        core::PathPtr_t extracted = kinoPath->extract(core::interval_t(minT,kinoPath->timeRange().second));
+        hppDout(notice,"extracted path : end = "<<model::displayConfig((extracted->end())));
+        return extracted;
+      }
+      totalTimeValidated_ += kinoPath->length();
+      hppDout(notice,"totalTimeValidated = "<<totalTimeValidated_);
       return kinoPath;
     }
 
     Vector3 SteeringMethodKinodynamic::computeDirection(const core::ConfigurationIn_t from, const core::ConfigurationIn_t to){
+      setAmax(Vector3::Ones(3)*aMaxFixed_);
       core::PathPtr_t path = core::steeringMethod::Kinodynamic::impl_compute(from,to);
       core::KinodynamicPathPtr_t kinoPath = boost::dynamic_pointer_cast<core::KinodynamicPath>(path);
       Vector3 direction = kinoPath->getA1();
       direction.normalize();
+      lastDirection_=direction;
       return direction;
     }
 
@@ -194,11 +237,21 @@ namespace hpp{
       core::RbprmNodePtr_t node = static_cast<core::RbprmNodePtr_t>(near);
       assert(node && "Unable to cast near node to rbprmNode");
       // compute direction (v) :
+      Vector3 aMax ;
+      // ###################################
+
+      aMax = Vector3::Ones(3)*aMaxFixed_;
+      setAmax(aMax);
+      return node;
+
+      // ####################################
+
+
 
 
       double alpha0=1.; // main variable of our LP problem
       Vector3 direction;
-      /*Vector3 toP,fromP,dPosition;
+/*    Vector3 toP,fromP,dPosition;
       Vector3 toV,fromV,dVelocity;
       const model::size_type indexECS =problem_->robot()->configSize() - problem_->robot()->extraConfigSpace().dimension (); // ecs index
 
@@ -224,7 +277,9 @@ namespace hpp{
       //direction = dPosition + dVelocity;
       direction = dPosition;
       direction.normalize();
-      */
+
+*/
+
       direction = computeDirection(*(near->configuration()),target);
       hppDout(info, "direction  = "<<direction.transpose());
       hppDout(info,"vector = ["<<(*(near->configuration()))[0]<<","<<(*(near->configuration()))[1]<<","<<(*(near->configuration()))[2]<<","<<direction[0]<<","<<direction[1]<<","<<direction[2]<<",0]");
@@ -244,7 +299,7 @@ namespace hpp{
       A.topLeftCorner(6,m) = - node->getG();
       MatrixXX Hv = (node->getH() * direction);
       assert(Hv.rows() == 6 && Hv.cols()==1 && "Hv should be a vector 6");
-      A.topRightCorner(6,1) = Hv;      
+      A.topRightCorner(6,1) = Hv;
     /*  hppDout(info,"H = \n"<<node->getH());
       hppDout(info," Hv^T = "<<Hv.transpose());
       hppDout(info,"A = \n"<<A);
@@ -264,26 +319,16 @@ namespace hpp{
 
       hppDout(info,"Amax found : "<<alpha0);
       alpha0 = std::min(alpha0,aMaxFixed_);
-    //  alpha0 -= 0.01; //FIX ME ???
+      alpha0 -= 0.01; //FIX ME ???
 
       hppDout(info,"Amax after min : "<<alpha0);
-      Vector3 aMax = alpha0*direction;
+      aMax = alpha0*direction;
       if((aMax[2] < aMaxFixed_) && tryJump_)
         aMax[2] = aMaxFixed_;
       setAmax(aMax);
       hppDout(info,"Amax vector : "<<aMax_.transpose());
       //setVmax(2*Vector3::Ones(3)); //FIXME: read it from somewhere ?
-      hppDout(notice,"TEST DIRECTION :");
-      hppDout(info, "direction1  = "<<direction.transpose());
-      Vector3 direction2 = computeDirection(*(near->configuration()),target);
-      hppDout(info, "direction2  = "<<direction2.transpose());
-      Vector3 diff = direction - direction2;
 
-      if(diff.norm() > 0.5){
-        hppDout(notice,"diff really big : "<<diff.transpose());
-      }else if(diff.norm() > 0.1){
-        hppDout(notice,"diff not null : "<<diff.transpose());
-      }
       return node;
     }
 

@@ -92,6 +92,14 @@ namespace hpp {
 
       core::PathPtr_t impl_compute (core::ConfigurationIn_t q1,core::NodePtr_t x);
 
+      double totalTimeComputed_;
+      double totalTimeValidated_;
+      int dirValid_;
+      int dirTotal_;
+      int rejectedPath_;
+
+      double maxLength_ = 200;
+
     protected:
 
       /// Constructor
@@ -131,6 +139,7 @@ namespace hpp {
     private:
       robust_equilibrium::StaticEquilibrium* sEq_;
       core::DeviceWkPtr_t device_;
+      robust_equilibrium::Vector3 lastDirection_;
       SteeringMethodKinodynamicWkPtr_t weak_;
 
     }; // class rbprm-kinodynamic

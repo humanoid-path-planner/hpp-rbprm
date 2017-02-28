@@ -716,6 +716,25 @@ namespace hpp {
     }
 
 
+    core::PathVectorPtr_t DynamicPlanner::finishSolve (const core::PathVectorPtr_t& path){
+  /*    std::cout<<"total_path_computed = "<<sm_->totalTimeValidated_<<std::endl;
+      std::cout<<"total_path_validated = "<<sm_->totalTimeValidated_<<std::endl;
+      std::cout<<"percentage validated path ="<<(sm_->totalTimeValidated_)/(sm_->totalTimeValidated_)<<std::endl;
+      std::cout<<"rejected_paths = "<<sm_->rejectedPath_<<std::endl;
+
+      std::ofstream myfile;
+      myfile.open ("/local/dev_hpp/benchs/benchHrp2_slope_user_3.txt", std::ios::out | std::ios::app );
+      myfile<<"total_path_computed = "<<sm_->totalTimeComputed_<<std::endl;
+      myfile<<"total_path_validated = "<<sm_->totalTimeValidated_<<std::endl;
+      myfile<<"percentage_validated_path ="<<(sm_->totalTimeValidated_)/(sm_->totalTimeValidated_)<<std::endl;
+      myfile<<"total_direction_computed = "<<sm_->dirTotal_<<std::endl;
+      myfile<<"total_direction_valid = "<<sm_->dirValid_<<std::endl;
+      myfile<<"percentage_validate_direction ="<<(sm_->dirValid_)/(sm_->dirTotal_)<<std::endl;
+      myfile<<"rejected_paths = "<<sm_->rejectedPath_<<std::endl;
+      myfile.close();
+  */
+      return path;
+    }
 
   } // namespace core
 } // namespace hpp

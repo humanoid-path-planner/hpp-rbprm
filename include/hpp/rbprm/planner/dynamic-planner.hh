@@ -59,6 +59,8 @@ public:
       return roadmap_;
     }
 
+    virtual core::PathVectorPtr_t finishSolve (const core::PathVectorPtr_t& path);
+
 
 protected:
     /// Constructor
