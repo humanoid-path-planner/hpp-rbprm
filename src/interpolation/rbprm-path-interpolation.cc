@@ -50,7 +50,7 @@ namespace hpp {
         (*path)(configPosition,std::min(i, path->timeRange().second));
         configuration.head(pathConfigSize) = configPosition.head(pathConfigSize);
         configuration.tail(robot_->device_->extraConfigSpace().dimension()) = configPosition.tail(robot_->device_->extraConfigSpace().dimension()) ;
-        configuration[2] = configuration[2]+0.15; //FIXME : test hrp2 (slope) only; // hrp2 wall : 0.1
+        configuration[2] = configuration[2]+0.1; //FIXME : test hrp2 (slope) only; // hrp2 wall : 0.1
         return configuration;
     }
 
