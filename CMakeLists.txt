@@ -30,7 +30,7 @@ SET(PROJECT_DESCRIPTION
 
 
 # Set to 1 for profiling
- # add_definitions(-DPROFILE)
+add_definitions(-DPROFILE)
 
 # Where to compile shared objects
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)

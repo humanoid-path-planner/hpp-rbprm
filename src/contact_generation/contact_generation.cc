@@ -19,7 +19,9 @@
 #include <hpp/rbprm/contact_generation/contact_generation.hh>
 #include <hpp/rbprm/stability/stability.hh>
 #include <hpp/rbprm/tools.hh>
-
+#ifdef PROFILE
+    #include "hpp/rbprm/rbprm-profiler.hh"
+#endif
 
 
 namespace hpp {

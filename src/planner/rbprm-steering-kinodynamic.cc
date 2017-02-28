@@ -239,11 +239,11 @@ namespace hpp{
       // compute direction (v) :
       Vector3 aMax ;
       // ###################################
-
+/*
       aMax = Vector3::Ones(3)*aMaxFixed_;
       setAmax(aMax);
       return node;
-
+*/
       // ####################################
 
 

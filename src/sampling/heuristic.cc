@@ -100,7 +100,6 @@ HeuristicFactory::HeuristicFactory()
     //seed = 1486392757; // sideWall HyQ
     // seed = 1486721923; //hrp2 downSLope
    // seed = 1487082431; // hrp2 +0.15 z axis
-    seed = 1487082431; // hyq _ slalom
 
     srand ( seed);
     hppDout(notice,"SEED for heuristic = "<<seed);
