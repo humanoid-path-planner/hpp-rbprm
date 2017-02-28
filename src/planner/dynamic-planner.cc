@@ -723,14 +723,16 @@ namespace hpp {
       std::cout<<"rejected_paths = "<<sm_->rejectedPath_<<std::endl;
 
       std::ofstream myfile;
-      myfile.open ("/local/dev_hpp/benchs/benchHrp2_detour.txt", std::ios::out | std::ios::app );
+      myfile.open ("/local/dev_hpp/benchs/benchHrp2_slope.txt", std::ios::out | std::ios::app );
       myfile<<"total_path_computed = "<<sm_->totalTimeComputed_<<std::endl;
       myfile<<"total_path_validated = "<<sm_->totalTimeValidated_<<std::endl;
-      myfile<<"percentage_validated_path ="<<(double)(((double)sm_->totalTimeValidated_)/((double)sm_->totalTimeValidated_))<<std::endl;
+      myfile<<"percentage_validated_path ="<<(double)sm_->totalTimeValidated_/sm_->totalTimeValidated_<<std::endl;
       myfile<<"total_direction_computed = "<<sm_->dirTotal_<<std::endl;
       myfile<<"total_direction_valid = "<<sm_->dirValid_<<std::endl;
       myfile<<"percentage_valide_direction ="<<(double)(((double)sm_->dirValid_)/((double)sm_->dirTotal_))<<std::endl;
       myfile<<"rejected_paths = "<<sm_->rejectedPath_<<std::endl;
+      myfile<<"num_nodes = "<<roadmap()->nodes().size()<<std::endl;
+
       myfile.close();
 
       return path;

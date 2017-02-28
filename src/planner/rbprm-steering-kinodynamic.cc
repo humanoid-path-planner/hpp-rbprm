@@ -327,11 +327,11 @@ namespace hpp{
 
       hppDout(info,"Amax found : "<<alpha0);
       alpha0 = std::min(alpha0,aMaxFixed_);
-      alpha0 -= 0.01; //FIX ME ???
+      //alpha0 -= 0.01; //FIX ME ???
 
       hppDout(info,"Amax after min : "<<alpha0);
       aMax = alpha0*direction;
-      if((aMax[2] < aMaxFixed_) && tryJump_)
+      if((aMax[2] < aMaxFixed_) /*&& tryJump_*/)
         aMax[2] = aMaxFixed_;
       setAmax(aMax);
       hppDout(info,"Amax vector : "<<aMax_.transpose());
