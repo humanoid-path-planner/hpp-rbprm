@@ -98,7 +98,7 @@ namespace hpp {
       int dirTotal_;
       int rejectedPath_;
 
-      double maxLength_ = 1000;
+      double maxLength_ = 200;
 
     protected:
 

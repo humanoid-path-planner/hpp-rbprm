@@ -76,7 +76,7 @@ namespace hpp{
       Vector3 direction = kinoPath->getA1();
       direction.normalize();
       dirTotal_++;
-      if(direction.dot(lastDirection_)>=0.8)
+      if(std::fabs(direction.dot(lastDirection_))>=0.8)
         dirValid_++;
 
       totalTimeComputed_+= kinoPath->length();
@@ -159,6 +159,14 @@ namespace hpp{
         return core::PathPtr_t();
       }
       totalTimeComputed_+= kinoPath->length();
+      Vector3 direction = kinoPath->getA1();
+      direction.normalize();
+      dirTotal_++;
+      if(std::fabs(direction.dot(lastDirection_))>=0.8)
+        dirValid_++;
+
+
+
       hppDout(notice,"TotaltimeComputed = "<<totalTimeComputed_);
       assert (path && "Error while casting path shared ptr"); // really usefull ? should never happen
       core::size_type configSize = problem_->robot()->configSize() - problem_->robot()->extraConfigSpace().dimension ();
