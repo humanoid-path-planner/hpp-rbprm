@@ -722,6 +722,7 @@ namespace hpp {
       std::cout<<"percentage validated path ="<<(sm_->totalTimeValidated_)/(sm_->totalTimeValidated_)<<std::endl;
       std::cout<<"rejected_paths = "<<sm_->rejectedPath_<<std::endl;
 
+      /*
       std::ofstream myfile;
       myfile.open ("/local/dev_hpp/benchs/benchHyq_darpa.txt", std::ios::out | std::ios::app );
       myfile<<"total_path_computed = "<<sm_->totalTimeComputed_<<std::endl;
@@ -734,7 +735,7 @@ namespace hpp {
       myfile<<"num_nodes = "<<roadmap()->nodes().size()<<std::endl;
 
       myfile.close();
-
+      */
       return path;
     }
 
