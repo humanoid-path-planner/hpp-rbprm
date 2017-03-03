@@ -666,7 +666,10 @@ namespace hpp {
         core::ConfigurationPtr_t q2 ((*itn)->configuration ());
         assert (*q1 != *q2);
         path = extendInternal(qProj_,initNode,q2);
+        hppDout(notice,"try direction path, after extendInternal");
         if (!path) continue;
+        hppDout(notice,"try direction path, after continue");
+
         if (pathProjector) {
           if (!pathProjector->apply (path, projPath)) continue;
         } else {

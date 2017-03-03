@@ -196,6 +196,7 @@ namespace
       // seed = 1487238007; // slalom hyq v=1
      //seed = 1487348584 ; // hyq slalom v = 0.5
      // seed = 1488288253; // detour  kino
+      //seed = 1488449318; // downSLope (close to ground ... )
       srand (seed);
       hppDout(notice,"&&&&&& SEED = "<<seed);
       std::cout<<"seed = "<<seed<<std::endl;

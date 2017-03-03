@@ -68,6 +68,8 @@ namespace hpp{
       core::PathPtr_t path = core::steeringMethod::Kinodynamic::impl_compute(*x->configuration(),q2);
       hppStopBenchmark(steering_kino);
       hppDisplayBenchmark(steering_kino);
+      if(!path)
+        return core::PathPtr_t();
       core::KinodynamicPathPtr_t kinoPath = boost::dynamic_pointer_cast<core::KinodynamicPath>(path);
       if(kinoPath->length() > maxLength_){
         rejectedPath_ ++;
@@ -153,6 +155,8 @@ namespace hpp{
       if(aMax_.norm() <= 0)
         return core::PathPtr_t();
       core::PathPtr_t path = core::steeringMethod::Kinodynamic::impl_compute(q1,*x->configuration());
+      if(!path)
+        return core::PathPtr_t();
       core::KinodynamicPathPtr_t kinoPath = boost::dynamic_pointer_cast<core::KinodynamicPath>(path);
       if(kinoPath->length() > maxLength_){
         rejectedPath_ ++;
