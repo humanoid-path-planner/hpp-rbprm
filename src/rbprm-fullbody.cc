@@ -28,7 +28,7 @@
 #include <hpp/core/locked-joint.hh>
 #include <hpp/model/device.hh>
 #include <hpp/constraints/generic-transformation.hh>
-
+#include <hpp/model/configuration.hh>
 #include <hpp/fcl/BVH/BVH_model.h>
 
 #include <stack>
@@ -194,6 +194,7 @@ namespace hpp {
         ProjectionReport rep = contact::generate_contact(contactGenHelper,limbId,evaluate);
         current = rep.result_;
         configuration = rep.result_.configuration_;
+        hppDout(notice,"computeStableContact : configuration = "<<model::displayConfig(configuration));
         if(rep.status_ != NO_CONTACT)
         {
             position = rep.result_.contactPositions_[limbId];
@@ -219,6 +220,8 @@ namespace hpp {
         result.configuration_ = configuration;
         body->device_->currentConfiguration(configuration);
         body->device_->computeForwardKinematics();
+        hppDout(notice,"computeContacts Without previous configuration : "<<model::displayConfig(configuration));
+        hppDout(notice,"computeContacts Without previous acceleration : "<<acceleration);
         for(T_Limb::const_iterator lit = limbs.begin(); lit != limbs.end(); ++lit)
         {
             if(!ContactExistsWithinGroup(lit->second, body->limbGroups_ ,result))
@@ -257,6 +260,8 @@ namespace hpp {
         body->device_->currentConfiguration(configuration);
         body->device_->computeForwardKinematics ();
         // try to maintain previous contacts
+        hppDout(notice,"computeContacts With previous configuration : "<<model::displayConfig(configuration));
+        hppDout(notice,"computeContacts With previous acceleration : "<<acceleration);
         contact::ContactGenHelper cHelper(body,previous,configuration,affordances,affFilters,robustnessTreshold,1,1,false,
                                           true,direction,acceleration,true,false);
 

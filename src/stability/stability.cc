@@ -101,6 +101,7 @@ namespace stability{
                 p.row(i) = (roWorld * pLocal).getTranslation();
             }
         }
+
     }
 
     void computePointContact(const std::string& name, const RbPrmLimbPtr_t limb, const State& state, Ref_vector3 p)
@@ -243,16 +244,22 @@ const fcl::Vec3f comfcl = comcptr->com();*/
               double res;LP_status status;
         if(algorithm == STATIC_EQUILIBRIUM_ALGORITHM_PP)
         {
+            hppDout(notice,"isStable Called with STATIC_EQUILIBRIUM_ALGORITHM_PP");
             bool isStable(false);
             status = staticEquilibrium.checkRobustEquilibrium(com,isStable);
             res = isStable? 1. : -1.;
         }
         else // STATIC_EQUILIBRIUM_ALGORITHM_DLP
         {
-			 if(fullbody->staticStability())
+           if(fullbody->staticStability()){
           		status = staticEquilibrium.computeEquilibriumRobustness(com,res);
-        	 else
+              hppDout(notice,"isStable Called with staticStability");
+           }
+           else{
           		status = staticEquilibrium.computeEquilibriumRobustness(com,acc,res);
+              hppDout(notice,"isStable : COM = "<<com);
+              hppDout(notice,"isStable : acc = "<<acc);
+           }
         }
 #ifdef PROFILE
     watch.stop("test balance");
@@ -269,7 +276,7 @@ const fcl::Vec3f comfcl = comcptr->com();*/
             //hppDout(notice,"isStable error in LP");
             return -std::numeric_limits<double>::max();
         }
-        //hppDout(notice,"isStable LP successfully solved : robustness = "<<res);
+        hppDout(notice,"isStable LP successfully solved : robustness = "<<res);
         return res ;
     }
 }

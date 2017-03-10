@@ -105,7 +105,7 @@ namespace hpp {
             bool sameAsPrevious(true);
             bool multipleBreaks(false);
             State newState = ComputeContacts(previous, robot_,configuration, affordances,affFilters,direction,
-                                             sameAsPrevious, multipleBreaks,allowFailure,robustnessTreshold);
+                                             sameAsPrevious, multipleBreaks,allowFailure,robustnessTreshold,acc);
             if(allowFailure && multipleBreaks)
             {
                 ++ nbFailures;
