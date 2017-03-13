@@ -54,6 +54,7 @@ ContactGenHelper::ContactGenHelper(RbPrmFullBodyPtr_t fb, const State& ps, model
 , checkStabilityGenerate_(checkStabilityGenerate)
 {
     workingState_.configuration_ = configuration;
+    workingState_.stable = false;
 }
 
 typedef std::vector<T_State > T_DepthState;
@@ -271,7 +272,7 @@ ProjectionReport maintain_contacts(ContactGenHelper &contactGenHelper)
     ProjectionReport rep;
     Q_State& candidates = contactGenHelper.candidates_;
     if(candidates.empty())
-        candidates = maintain_contacts_combinatorial(contactGenHelper.previousState_,contactGenHelper.maxContactBreaks_);
+        candidates = maintain_contacts_combinatorial(contactGenHelper.workingState_,contactGenHelper.maxContactBreaks_);
     else
         candidates.pop(); // first candidate already treated.
     while(!candidates.empty() && !rep.success_)
@@ -447,7 +448,7 @@ ProjectionReport gen_contacts(ContactGenHelper &contactGenHelper)
         candidates.pop();
         bool checkStability(contactGenHelper.checkStabilityGenerate_);
         contactGenHelper.checkStabilityGenerate_ = false; // stability not mandatory before last contact is created
-        if(cState.second.empty() && contactGenHelper.workingState_.stable)
+        if(cState.second.empty() && (contactGenHelper.workingState_.stable || (stability::IsStable(contactGenHelper.fullBody_,contactGenHelper.workingState_,contactGenHelper.acceleration_) > contactGenHelper.robustnessTreshold_ )) )
         {
             rep.result_ = contactGenHelper.workingState_;
             rep.status_ = NO_CONTACT;
