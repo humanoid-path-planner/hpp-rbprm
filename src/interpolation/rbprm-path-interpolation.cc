@@ -82,6 +82,7 @@ namespace hpp {
         hppDout(notice,"acceleration index : "<<accIndex);
         model::value_type currentVal(initValue);
         rbprm::T_StateFrame states;
+        rbprm::T_StateFrame currentContactsStates;
         states.push_back(std::make_pair(currentVal, this->start_));
         std::size_t nbRecontacts = 0;
         bool allowFailure = true;
@@ -138,13 +139,15 @@ if (nbFailures > 1)
             {
                 nbRecontacts = 0;
             }
-            if(sameAsPrevious)
-            {
-                states.pop_back();
-            }
+
             newState.nbContacts = newState.contactNormals_.size();
-            states.push_back(std::make_pair(currentVal, newState));
             allowFailure = nbRecontacts < robot_->GetLimbs().size() + 6;
+            currentContactsStates.push_back(std::make_pair(currentVal, newState));
+
+            if(!sameAsPrevious){  // add the state in the midpoint between the contacts transitions
+              states.push_back(currentContactsStates.at(round(currentContactsStates.size()/2)));
+              currentContactsStates.clear();
+            }
         }
         states.push_back(std::make_pair(this->path_->timeRange().second, this->end_));
         #ifdef PROFILE
