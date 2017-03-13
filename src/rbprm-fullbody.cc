@@ -220,8 +220,6 @@ namespace hpp {
         result.configuration_ = configuration;
         body->device_->currentConfiguration(configuration);
         body->device_->computeForwardKinematics();
-        hppDout(notice,"computeContacts Without previous configuration : "<<model::displayConfig(configuration));
-        hppDout(notice,"computeContacts Without previous acceleration : "<<acceleration);
         for(T_Limb::const_iterator lit = limbs.begin(); lit != limbs.end(); ++lit)
         {
             if(!ContactExistsWithinGroup(lit->second, body->limbGroups_ ,result))
@@ -233,7 +231,7 @@ namespace hpp {
                 ComputeStableContact(body,result,
                                     body->limbcollisionValidations_.at(lit->first), lit->first,
                                     lit->second, configuration, result.configuration_, affordances,affFilters,
-                                    direction, position, normal, robustnessTreshold, true, false, acceleration);
+                                    direction, position, normal, robustnessTreshold, false, false, acceleration);
             }
             result.nbContacts = result.contactNormals_.size();
         }
@@ -260,11 +258,8 @@ namespace hpp {
         body->device_->currentConfiguration(configuration);
         body->device_->computeForwardKinematics ();
         // try to maintain previous contacts
-        hppDout(notice,"computeContacts With previous configuration : "<<model::displayConfig(configuration));
-        hppDout(notice,"computeContacts With previous acceleration : "<<acceleration);
         contact::ContactGenHelper cHelper(body,previous,configuration,affordances,affFilters,robustnessTreshold,1,1,false,
-                                          true,direction,acceleration,true,false);
-
+                                          true,direction,acceleration,false,false);
         contact::ContactReport rep = contact::oneStep(cHelper);
         contactMaintained = rep.contactMaintained_;
         multipleBreaks = rep.multipleBreaks_;

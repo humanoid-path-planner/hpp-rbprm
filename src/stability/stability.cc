@@ -257,7 +257,8 @@ const fcl::Vec3f comfcl = comcptr->com();*/
            }
            else{
           		status = staticEquilibrium.computeEquilibriumRobustness(com,acc,res);
-              hppDout(notice,"isStable : COM = "<<com);
+              hppDout(notice,"isStable : config = "<<model::displayConfig(state.configuration_));
+              hppDout(notice,"isStable : COM = "<<com.transpose());
               hppDout(notice,"isStable : acc = "<<acc);
            }
         }
