@@ -240,7 +240,7 @@ const fcl::Vec3f comfcl = comcptr->com();*/
         }
         else // STATIC_EQUILIBRIUM_ALGORITHM_DLP
         {
-            status = staticEquilibrium.computeEquilibriumRobustness(com,res);
+           status = staticEquilibrium.computeEquilibriumRobustness(com,res);
         }
 #ifdef PROFILE
     watch.stop("test balance");

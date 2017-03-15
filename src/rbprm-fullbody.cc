@@ -227,7 +227,7 @@ namespace hpp {
                 ComputeStableContact(body,result,
                                     body->limbcollisionValidations_.at(lit->first), lit->first,
                                     lit->second, configuration, result.configuration_, affordances,affFilters,
-                                    direction, position, normal, robustnessTreshold, true, false);
+                                    direction, position, normal, robustnessTreshold, false, false);
             }
             result.nbContacts = result.contactNormals_.size();
         }
@@ -254,8 +254,7 @@ namespace hpp {
         body->device_->computeForwardKinematics ();
         // try to maintain previous contacts
         contact::ContactGenHelper cHelper(body,previous,configuration,affordances,affFilters,robustnessTreshold,1,1,false,
-                                          true,direction,fcl::Vec3f(0,0,0),true,false);
-
+                                          true,direction,fcl::Vec3f(0,0,0),false,false);
         contact::ContactReport rep = contact::oneStep(cHelper);
         contactMaintained = rep.contactMaintained_;
         multipleBreaks = rep.multipleBreaks_;
