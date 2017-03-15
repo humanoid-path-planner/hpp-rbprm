@@ -103,7 +103,8 @@ namespace hpp{
       hppDout(info,"q(t="<<t<<") = "<<model::displayConfig(*q));
       a = (*q).segment<3>(configSize+3);
       hppDout(info,"a = "<<a);
-      aValid = sEq_->checkAdmissibleAcceleration(node->getG(),node->getH(),node->geth(),a);
+      sEq_->setG(node->getG());
+      aValid = sEq_->checkAdmissibleAcceleration(node->getH(),node->geth(),a);
       hppDout(info,"a valid : "<<aValid);
       if(!aValid){
         return core::PathPtr_t();
@@ -116,7 +117,7 @@ namespace hpp{
           hppDout(info,"q(t="<<t<<") = "<<model::displayConfig(*q));
           a = (*q).segment<3>(configSize+3);
           hppDout(info,"a = "<<a);
-          aValid = sEq_->checkAdmissibleAcceleration(node->getG(),node->getH(),node->geth(),a);
+          aValid = sEq_->checkAdmissibleAcceleration(node->getH(),node->geth(),a);
           hppDout(info,"a valid : "<<aValid);
           if(!aValid && t < maxT)
             maxT = t;
@@ -127,7 +128,7 @@ namespace hpp{
           hppDout(info,"q(t="<<t<<") = "<<model::displayConfig(*q));
           a = (*q).segment<3>(configSize+3);
           hppDout(info,"a = "<<a);
-          aValid = sEq_->checkAdmissibleAcceleration(node->getG(),node->getH(),node->geth(),a);
+          aValid = sEq_->checkAdmissibleAcceleration(node->getH(),node->geth(),a);
           hppDout(info,"a valid : "<<aValid);
           if(!aValid && t < maxT)
             maxT = t;
@@ -191,7 +192,8 @@ namespace hpp{
       hppDout(info,"q(t="<<t<<") = "<<model::displayConfig(*q));
       a = (*q).segment<3>(configSize+3);
       hppDout(info,"a = "<<a);
-      aValid = sEq_->checkAdmissibleAcceleration(node->getG(),node->getH(),node->geth(),a);
+      sEq_->setG(node->getG());
+      aValid = sEq_->checkAdmissibleAcceleration(node->getH(),node->geth(),a);
       hppDout(info,"a valid : "<<aValid);
       if(!aValid){
         return core::PathPtr_t();
@@ -204,7 +206,7 @@ namespace hpp{
           hppDout(info,"q(t="<<t<<") = "<<model::displayConfig(*q));
           a = (*q).segment<3>(configSize+3);
           hppDout(info,"a = "<<a);
-          aValid = sEq_->checkAdmissibleAcceleration(node->getG(),node->getH(),node->geth(),a);
+          aValid = sEq_->checkAdmissibleAcceleration(node->getH(),node->geth(),a);
           hppDout(info,"a valid : "<<aValid);
           if(!aValid && t > minT)
             minT = t;
@@ -215,7 +217,7 @@ namespace hpp{
           hppDout(info,"q(t="<<t<<") = "<<model::displayConfig(*q));
           a = (*q).segment<3>(configSize+3);
           hppDout(info,"a = "<<a);
-          aValid = sEq_->checkAdmissibleAcceleration(node->getG(),node->getH(),node->geth(),a);
+          aValid = sEq_->checkAdmissibleAcceleration(node->getH(),node->geth(),a);
           hppDout(info,"a valid : "<<aValid);
           if(!aValid && t > minT)
             minT = t;
@@ -295,29 +297,11 @@ namespace hpp{
       direction = computeDirection(*(near->configuration()),target);
       hppDout(info, "direction  = "<<direction.transpose());
       hppDout(info,"vector = ["<<(*(near->configuration()))[0]<<","<<(*(near->configuration()))[1]<<","<<(*(near->configuration()))[2]<<","<<direction[0]<<","<<direction[1]<<","<<direction[2]<<",0]");
-      // define LP problem : with m+1 variables and 6 constraints
-      int m = node->getNumberOfContacts() * 4;
       hppDout(notice,"number of contacts :  "<<node->getNumberOfContacts());
-      MatrixXX A = MatrixXX::Zero(6, m+1);
-      // build A : [ -G (Hv)^T] :
-     /* hppDout(info,"A init");
-      hppDout(notice,"G size : "<<node->getG().rows()<<" , "<<node->getG().cols());
-      hppDout(notice," G = \n"<<node->getG());
-      hppDout(notice," H = \n"<<node->getH());
-      hppDout(notice," h = \n"<<node->geth());
-      hppDout(notice," V = \n"<<node->getV());
-      hppDout(notice," Ip = \n"<<node->getIPhat());
-*/
-      A.topLeftCorner(6,m) = - node->getG();
-      MatrixXX Hv = (node->getH() * direction);
-      assert(Hv.rows() == 6 && Hv.cols()==1 && "Hv should be a vector 6");
-      A.topRightCorner(6,1) = Hv;
-    /*  hppDout(info,"H = \n"<<node->getH());
-      hppDout(info," Hv^T = "<<Hv.transpose());
-      hppDout(info,"A = \n"<<A);
-*/
+
       // call to robust_equilibrium_lib :
-      robust_equilibrium::LP_status lpStatus = sEq_->findMaximumAcceleration(A, node->geth(),alpha0);
+      sEq_->setG(node->getG());
+      robust_equilibrium::LP_status lpStatus = sEq_->findMaximumAcceleration(node->getH(), node->geth(),direction,alpha0);
       if(lpStatus==robust_equilibrium::LP_STATUS_UNBOUNDED){
         hppDout(notice,"Primal LP problem is unbounded : "<<(lpStatus));
       }
