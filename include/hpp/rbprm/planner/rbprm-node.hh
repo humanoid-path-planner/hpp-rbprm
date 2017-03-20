@@ -56,36 +56,6 @@ namespace hpp {
       }
       
 
-      
-      void alpha(double alpha){alpha_=alpha;}
-      
-      double alpha(){return alpha_;}
-      
-      void alphaMin(double alphaMin){alphaMin_=alphaMin;}
-      
-      double alphaMin(){return alphaMin_;}
-      
-      void alphaMax(double alphaMax){alphaMax_=alphaMax;}
-      
-      double alphaMax(){return alphaMax_;}
-      
-      double xTheta(){return Xtheta_;}
-      
-      void xTheta(double xTheta){Xtheta_ = xTheta;}
-      
-      double Z(){return Z_;}
-      
-      void Z(double Z){Z_ = Z;}
-      
-      double v0(double alpha0){
-        return sqrt((9.81*Xtheta_*Xtheta_)/(2*Xtheta_*tan(alpha0) - Z_));
-      }
-      
-      void setAlphas(double alpha, double alphaMin, double alphaMax){
-        alpha_=alpha;
-        alphaMin_=alphaMin;
-        alphaMax_=alphaMax;
-      }
 
 
       void setV(MatrixXX V){V_ = V;}
@@ -112,6 +82,8 @@ namespace hpp {
 
       int getNumberOfContacts(){return numberOfContacts_;}
 
+      void fillNodeMatrices(ValidationReportPtr_t report,bool rectangularContact, double sizeFootx, double sizeFooty, double m,double mu);
+
     private:
       fcl::Vec3f normal_;
       RbprmValidationReportPtr_t collisionReport_;
@@ -124,12 +96,6 @@ namespace hpp {
       Matrix63 H_;
       Vector6 h_;
       int numberOfContacts_;
-      // remove this ? :
-      double alpha_;    // for parent node ! not for this node
-      double alphaMin_; // for parent node ! not for this node
-      double alphaMax_; // for parent node ! not for this node
-      double Xtheta_;   // for parent node ! not for this node
-      double Z_;        // for parent node ! not for this node
       
 
     }; // class
