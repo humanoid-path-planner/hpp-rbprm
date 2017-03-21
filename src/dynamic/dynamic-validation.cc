@@ -19,6 +19,8 @@
 #include <hpp/rbprm/dynamic/dynamic-validation.hh>
 #include <hpp/util/debug.hh>
 
+
+
 namespace hpp {
   namespace rbprm {
 
@@ -46,6 +48,7 @@ namespace hpp {
         hppDout(notice,"dynamic validation : rom report have the same size");
       }
       bool sameContacts(true);
+
       for(std::map<std::string,core::CollisionValidationReportPtr_t>::const_iterator it = rbReport->ROMReports.begin() ; it != rbReport->ROMReports.end() ; ++it){
         if(initialReport_->ROMReports.find(it->first) != initialReport_->ROMReports.end()){ // test if the same rom was in collision in init report
           hppDout(notice,"rom "<<it->first<<" is in both reports");
@@ -81,6 +84,8 @@ namespace hpp {
       rectangularContact_(rectangularContact),sizeFootX_(sizeFootX),sizeFootY_(sizeFootY),mass_(mass),mu_(mu),
       sEq_(new robust_equilibrium::StaticEquilibrium("dynamic_val", mass,4,robust_equilibrium::SOLVER_LP_QPOASES,true,10,false))
     {
+      hppDout(info,"Dynamic validation created with attribut : rectangular contact = "<<rectangularContact<<" size foot : "<<sizeFootX);
+      hppDout(info,"mass = "<<mass<<"  mu = "<<mu);
     }
 
 

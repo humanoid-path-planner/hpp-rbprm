@@ -48,7 +48,9 @@ namespace hpp {
                     ValidationReportPtr_t& validationReport)
     {
       ValidationReportPtr_t romReport;
+
       bool collision = !hpp::core::CollisionValidation::validate(config, romReport);
+      core::CollisionValidationReportPtr_t romCollisionReport = boost::dynamic_pointer_cast<CollisionValidationReport>(romReport);
       //CollisionValidationReportPtr_t reportCast = boost::dynamic_pointer_cast<CollisionValidationReport>(romReport);
       //hppDout(notice,"number of contacts  : "<<reportCast->result.numContacts());
       //hppDout(notice,"contact 1 "<<reportCast->result.getContact(0).pos);
@@ -61,21 +63,35 @@ namespace hpp {
       }
       if(collision){
         if(rbprmReport ){  // if the report is a correct rbprm report, we add the rom information
-          rbprmReport->ROMReports.insert(std::make_pair(robot_->name(),boost::dynamic_pointer_cast<CollisionValidationReport>(romReport)));
+          rbprmReport->ROMReports.insert(std::make_pair(robot_->name(),romCollisionReport));
         }else{
           validationReport = romReport;
         }
       }
 
-      // test min area of contact
-     /* if(collision){
-         geom::BVHModelOBConst_Ptr_t model1 =  geom::GetModel(colReport->object1->fcl());
-         geom::BVHModelOBConst_Ptr_t model2 =  geom::GetModel(colReport->object2->fcl());
-         geom::T_Point intersection = geom::intersectPolygonePlane(model1,model2,filter_.normal_,0,colReport->result,false,filter_.range_);
-         double a = geom::area(intersection.begin(),intersection.end());
-         if(a <= 0.1)
-           collision = false;
-       }*/
+
+      // re arrange the collision pair such that the first one is the pair in collision
+      // (allow us to maintain the contact with the same obstacle as long as possible)
+      hppDout(info,"collision pairs for : "<<robot_->name());
+      CollisionObjectPtr_t obj2 = romCollisionReport->object2;
+      CollisionPair_t colPair;
+      bool first(true);
+      for(CollisionPairs_t::iterator it = collisionPairs_.begin() ; it != collisionPairs_.end() ; ++it){
+        hppDout(info,"obj 1 = "<<it->first->name()<< "  obj 2 "<<it->second->name());
+        if(it->second == obj2){
+          hppDout(info,"found ! ");
+          colPair = *it;
+          break;
+        }
+        first=false;
+      }
+      hppDout(info,"first = "<<first);
+
+      if(!first){
+        collisionPairs_.remove(colPair);
+        collisionPairs_.push_front(colPair);
+      }
+
 
       if(optional_)
         return true;

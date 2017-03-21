@@ -25,6 +25,7 @@
 #include <hpp/core/validation-report.hh>
 #include <hpp/core/collision-path-validation-report.hh>
 #include <hpp/util/debug.hh>
+#include <hpp/model/configuration.hh>
 
 namespace hpp {
   namespace rbprm {
@@ -126,17 +127,22 @@ namespace hpp {
     }
 
     bool DynamicPathValidation::validate (const core::PathPtr_t& path, bool reverse,  core::PathPtr_t& validPart,  core::PathValidationReportPtr_t& validationReport){
-      hppDout(notice,"dynamic path validation called");
+      hppDout(info,"dynamic path validation called");
+      hppDout(info,"path begin : "<<path->timeRange ().first);
+      hppDout(info,"path end : "<<path->timeRange ().second);
+
       core::ValidationReportPtr_t configReport;
-      Configuration_t q;
+      Configuration_t q (path->outputSize());
       if(reverse)
         (*path)(q,path->timeRange ().second);
       else
         (*path)(q,path->timeRange ().first);
 
+      hppDout(info,"q = "<<model::displayConfig(q));
       rbprmValidation_->validate(q,configReport);
+      hppDout(info,"rbprmValidation called" );
       dynamicValidation_->setInitialReport(configReport);
-      hppDout(notice,"dynamic validation set initial report OK");
+      hppDout(info,"dynamic validation set initial report OK");
       return core::DiscretizedPathValidation::validate(path,reverse,validPart,validationReport);
     }
 
