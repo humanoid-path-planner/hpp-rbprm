@@ -74,7 +74,7 @@ SET(${LIBRARY_NAME}_SOURCES
         planner/dynamic-planner.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/planner/dynamic-planner.hh
         planner/rbprm-steering-kinodynamic.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/planner/rbprm-steering-kinodynamic.hh
         planner/rbprm-node.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/planner/rbprm-node.hh
-
+        dynamic/dynamic-validation.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/dynamic/dynamic-validation.hh
 
   )
 
