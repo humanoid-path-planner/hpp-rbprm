@@ -116,6 +116,7 @@ SET(${PROJECT_NAME}_HEADERS
     include/hpp/rbprm/planner/rbprm-steering-kinodynamic.hh
     include/utils/algorithms.h
     include/hpp/rbprm/dynamic/dynamic-validation.hh
+    include/hpp/rbprm/dynamic/dynamic-path-validation.hh
   )
 
 # Activate hpp-util logging if requested

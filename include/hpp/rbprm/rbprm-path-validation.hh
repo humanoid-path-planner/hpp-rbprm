@@ -40,6 +40,11 @@ namespace hpp {
       /// validate with custom filter for the rom validation
       virtual bool validate (const core::PathPtr_t& path, bool reverse, core::PathPtr_t& validPart,			     core::PathValidationReportPtr_t& report,const std::vector<std::string>& filter);
 
+      virtual bool validate (const core::PathPtr_t& path, bool reverse,  core::PathPtr_t& validPart,  core::PathValidationReportPtr_t& report){
+        return core::DiscretizedPathValidation::validate(path,reverse,validPart,report);
+      }
+
+
       /// Add a configuration validation object
       virtual void add (const core::ConfigValidationPtr_t& configValidation);
 
@@ -52,9 +57,8 @@ namespace hpp {
       /// Users need to call RbPrmPlanner::create in order to create instances.
       RbPrmPathValidation (const core::DevicePtr_t& robot, const core::value_type& stepSize);
 
-
-    private:
       RbPrmValidationPtr_t rbprmValidation_;
+
 
     }; // class RbPrmPlanner
   } // namespace rbprm

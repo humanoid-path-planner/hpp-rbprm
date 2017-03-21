@@ -55,25 +55,15 @@ namespace hpp {
     public:
       static DynamicValidationPtr_t create (bool rectangularContact, double sizeFootX, double sizeFootY, double mass, double mu);
 
-      /// Compute whether the configuration is valid
-      ///
-      /// \param config the config to check for validity,
-      /// \retval validationReport report on validation. If non valid,
-      ///         a validation report will be allocated and returned via this
-      ///         shared pointer.
-      /// \return whether the whole config is valid.
-      virtual bool validate (const core::Configuration_t& config, core::ValidationReportPtr_t& report);
-
 
       /// Compute whether the configuration is valid
       ///
       /// \param config the config to check for validity,
-      /// \param a rbprm-validation-report filled with the last collision checking informations
-      /// \retval validationReport report on validation. If non valid,
-      ///         a validation report will be allocated and returned via this
-      ///         shared pointer.
+      /// \retval validationReport report on validation. Must be a valid rbprmReport with the latest collision informations.
+      ///         If non valid, a new validation report will be allocated
+      ///         and returned via this shared pointer.
       /// \return whether the whole config is valid.
-      virtual bool validate (const core::Configuration_t& config, core::ValidationReportPtr_t& inputReport, core::ValidationReportPtr_t& outputReport);
+      virtual bool validate (const core::Configuration_t& config, core::ValidationReportPtr_t& validationReport);
 
       void setInitialReport(core::ValidationReportPtr_t initialReport);
 

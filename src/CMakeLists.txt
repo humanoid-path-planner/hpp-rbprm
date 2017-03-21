@@ -75,7 +75,7 @@ SET(${LIBRARY_NAME}_SOURCES
         planner/rbprm-steering-kinodynamic.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/planner/rbprm-steering-kinodynamic.hh
         planner/rbprm-node.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/planner/rbprm-node.hh
         dynamic/dynamic-validation.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/dynamic/dynamic-validation.hh
-
+        dynamic/dynamic-path-validation.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/dynamic/dynamic-path-validation.hh
   )
 
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/src)

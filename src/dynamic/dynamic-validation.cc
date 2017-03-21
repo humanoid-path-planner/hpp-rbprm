@@ -29,16 +29,16 @@ namespace hpp {
       return DynamicValidationPtr_t (ptr);
     }
 
-    bool DynamicValidation::validate (const core::Configuration_t& /*config*/, core::ValidationReportPtr_t& /*report*/){
-      hppDout(warning,"Dynamic validation called without rbprm reports");
-      return true;
-    }
 
 
-    bool DynamicValidation::validate (const core::Configuration_t& config, core::ValidationReportPtr_t& inputReport, core::ValidationReportPtr_t& outputReport){
+    bool DynamicValidation::validate (const core::Configuration_t& config, core::ValidationReportPtr_t& validationReport){
       hppDout(notice,"Begin dynamic validation");
       // test if the same number of ROM are in collision :
-      core::RbprmValidationReportPtr_t rbReport = boost::dynamic_pointer_cast<core::RbprmValidationReport> (inputReport);
+      core::RbprmValidationReportPtr_t rbReport = boost::dynamic_pointer_cast<core::RbprmValidationReport> (validationReport);
+      if(!rbReport){
+        hppDout(error,"error while casting the report");
+        return false;
+      }
       if(initialReport_->ROMReports.size() != rbReport->ROMReports.size()){
         hppDout(notice,"dynamic validation : rom report not the same size");
         return false;
