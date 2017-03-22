@@ -22,7 +22,6 @@
 # include <hpp/core/config-validation.hh>
 # include <robust-equilibrium-lib/static_equilibrium.hh>
 # include <hpp/rbprm/rbprm-validation-report.hh>
-
 namespace hpp {
   namespace rbprm {
 
@@ -78,9 +77,11 @@ namespace hpp {
       double mass_;
       double mu_;
       robust_equilibrium::StaticEquilibrium* sEq_;
-      core::RbprmValidationReportPtr_t initialReport_;
-
-
+      core::RbprmValidationReportPtr_t lastReport_;
+      bool initContacts_;
+      core::Configuration_t lastAcc_;
+      robust_equilibrium::Matrix63 H_;
+      robust_equilibrium::Vector6 h_;
 
     }; // class dynamicValidation
     /// \}

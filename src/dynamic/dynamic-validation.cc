@@ -16,9 +16,10 @@
 // hpp-core  If not, see
 // <http://www.gnu.org/licenses/>.
 
-#include <hpp/rbprm/dynamic/dynamic-validation.hh>
-#include <hpp/util/debug.hh>
-
+# include <hpp/rbprm/dynamic/dynamic-validation.hh>
+# include <hpp/util/debug.hh>
+# include <hpp/rbprm/planner/rbprm-node.hh>
+# include <hpp/model/configuration.hh>
 
 
 namespace hpp {
@@ -41,7 +42,7 @@ namespace hpp {
         hppDout(error,"error while casting the report");
         return false;
       }
-      if(initialReport_->ROMReports.size() != rbReport->ROMReports.size()){
+      if(lastReport_->ROMReports.size() != rbReport->ROMReports.size()){
         hppDout(notice,"dynamic validation : rom report not the same size");
         return false;
       }else{
@@ -50,9 +51,9 @@ namespace hpp {
       bool sameContacts(true);
 
       for(std::map<std::string,core::CollisionValidationReportPtr_t>::const_iterator it = rbReport->ROMReports.begin() ; it != rbReport->ROMReports.end() ; ++it){
-        if(initialReport_->ROMReports.find(it->first) != initialReport_->ROMReports.end()){ // test if the same rom was in collision in init report
+        if(lastReport_->ROMReports.find(it->first) != lastReport_->ROMReports.end()){ // test if the same rom was in collision in init report
           hppDout(notice,"rom "<<it->first<<" is in both reports");
-          if(initialReport_->ROMReports.at(it->first)->object2 != it->second->object2){
+          if(lastReport_->ROMReports.at(it->first)->object2 != it->second->object2){
             hppDout(notice,"detect contact change for rom : "<<it->first);
             sameContacts=false;
             break;
@@ -61,18 +62,52 @@ namespace hpp {
           }
         }
       }
+       // if !sameContact, compute new contacts infos and test acceleration
+      if(sameContacts && initContacts_){
+        hppDout(notice,"initial contacts still active");
+        return true;
+      }
+      size_t configSize = config.size();
 
+      if(sameContacts){ // new contacts already computed
+        if(config.segment<3>(configSize-3) == lastAcc_){
+          hppDout(notice,"this acceleration is already verified");
+          return true;
+        }else{ // new acceleration, check if valid
+          lastAcc_ = config.segment<3>(configSize-3);
+          bool aValid = sEq_->checkAdmissibleAcceleration(H_,h_,lastAcc_);
+          hppDout(notice,"new acceleration : "<<lastAcc_.transpose()<<", valid = "<<aValid);
+          return aValid;
+        }
+      }else{ // changes in contacts, recompute the matrices and check the acceleration :
+        initContacts_ = false;
+        hppDout(notice,"new contacts ! for config = "<<model::displayConfig(config));
+        lastAcc_ = config.segment<3>(configSize-3);
+        lastReport_=rbReport;
+        core::ConfigurationPtr_t q = core::ConfigurationPtr_t (new core::Configuration_t(config));
+        core::RbprmNode node(q);
+        node.fillNodeMatrices(rbReport,rectangularContact_,sizeFootX_,sizeFootY_,mass_,mu_);
+        sEq_->setG(node.getG());
+        h_=node.geth();
+        H_=node.getH();
+        hppDout(notice,"fill matrices OK, test acceleration : ");
 
-      return sameContacts;
-      //TODO : if !sameContact, compute new contacts infos and test acceleration
+        // test the acceleration
+        bool aValid = sEq_->checkAdmissibleAcceleration(H_,h_,lastAcc_);
+        hppDout(notice,"new acceleration : "<<lastAcc_.transpose()<<", valid = "<<aValid);
+        return aValid;
+      }
+
     }
 
 
 
     void DynamicValidation::setInitialReport(core::ValidationReportPtr_t initialReport){
       core::RbprmValidationReportPtr_t rbReport = boost::dynamic_pointer_cast<core::RbprmValidationReport> (initialReport);
-      if(rbReport)
-        initialReport_ = rbReport;
+      if(rbReport){
+        lastReport_ = rbReport;
+        initContacts_=true;
+      }
       else
         hppDout(error,"Error while casting rbprmReport");
     }

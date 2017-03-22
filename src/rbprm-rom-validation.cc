@@ -72,20 +72,16 @@ namespace hpp {
 
       // re arrange the collision pair such that the first one is the pair in collision
       // (allow us to maintain the contact with the same obstacle as long as possible)
-      hppDout(info,"collision pairs for : "<<robot_->name());
       CollisionObjectPtr_t obj2 = romCollisionReport->object2;
       CollisionPair_t colPair;
       bool first(true);
       for(CollisionPairs_t::iterator it = collisionPairs_.begin() ; it != collisionPairs_.end() ; ++it){
-        hppDout(info,"obj 1 = "<<it->first->name()<< "  obj 2 "<<it->second->name());
         if(it->second == obj2){
-          hppDout(info,"found ! ");
           colPair = *it;
           break;
         }
         first=false;
       }
-      hppDout(info,"first = "<<first);
 
       if(!first){
         collisionPairs_.remove(colPair);
