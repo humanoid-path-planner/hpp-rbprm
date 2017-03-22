@@ -95,5 +95,16 @@ namespace hpp {
         return collision;
     }
 
+
+    void RbPrmRomValidation::randomnizeCollisionPairs(){
+      std::vector<CollisionPair_t> v;
+      v.reserve(collisionPairs_.size());
+      v.insert(v.end(),collisionPairs_.begin(),collisionPairs_.end());
+      std::random_shuffle(v.begin(), v.end());
+      collisionPairs_.clear();
+      collisionPairs_.insert(collisionPairs_.end(),v.begin(),v.end());
+    }
+
+
   }// namespace rbprm
 }// namespace hpp

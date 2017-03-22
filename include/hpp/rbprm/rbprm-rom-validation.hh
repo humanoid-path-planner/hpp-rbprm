@@ -58,6 +58,11 @@ namespace hpp {
       /// \return whether the whole config is valid.
       virtual bool validate (const core::Configuration_t& config, core::ValidationReportPtr_t& validationReport);
 
+      /// Rearrange the collisions pairs of all configValidation in a random manner
+      /// \brief randomnizeCollisionPairs
+      ///
+      virtual void randomnizeCollisionPairs();
+
     public:
       const std::vector<std::string> filter_;
 

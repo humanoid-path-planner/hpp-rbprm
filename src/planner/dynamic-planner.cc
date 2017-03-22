@@ -371,7 +371,8 @@ namespace hpp {
       core::ValidationReportPtr_t report;
       //randomnize the collision pair, in order to get a different surface of contact each time
       // (because only the first one in collision is considered by fcl and put in the report)
-      problem().configValidations()->randomnizeCollisionPairs();
+      RbPrmPathValidationPtr_t rbprmPathValidation = boost::dynamic_pointer_cast<RbPrmPathValidation>(problem().pathValidation());
+      rbprmPathValidation->getValidator()->randomnizeCollisionPairs();
       problem().configValidations()->validate(*(x->configuration()),report);
       computeGIWC(x,report);
     }
