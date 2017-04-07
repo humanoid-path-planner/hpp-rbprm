@@ -53,7 +53,7 @@ ContactReport generateContactReport(const projection::ProjectionReport& parent, 
     const State& result = parent.result_;
     ContactReport report(parent) ;
     report.contactCreated_ = (result.fixedContacts(previous).size() == previous.nbContacts);
-    report.multipleBreaks_ = (result.contactBreaks(previous).size() > 1);
+    report.multipleBreaks_ = (result.contactBreaks(previous).size() > helper.maxContactBreaks_);
     report.repositionedInPlace_ = repositionedInPlace;
     report.contactMaintained_ = !repositionedInPlace && !(result.contactCreations(previous).size() > 0);
     return report;
@@ -87,7 +87,9 @@ ContactReport oneStep(ContactGenHelper& helper)
         rep = genContactFromOneMaintainCombinatorial(helper);
     while(!rep.success_ && !helper.candidates_.empty());
     if(!rep.success_) // TODO only possible in quasi static
+    {
         return handleFailure(helper);
+    }
     return generateContactReport(rep,helper);
 }
 

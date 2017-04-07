@@ -341,10 +341,11 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
     sampling::T_OctreeReport::const_iterator it = finalSet.begin();
     fcl::Vec3f position, normal;
     fcl::Matrix3f rotation;
+    ProjectionReport rep ;
     for(;!found_sample && it!=finalSet.end(); ++it)
     {
         const sampling::OctreeReport& bestReport = *it;
-        ProjectionReport rep = projectSampleToObstacle(contactGenHelper.fullBody_, limbId, limb, bestReport, validation, configuration, current);
+        /*ProjectionReport */rep = projectSampleToObstacle(contactGenHelper.fullBody_, limbId, limb, bestReport, validation, configuration, current);
         if(rep.success_)
         {
             double robustness = stability::IsStable(contactGenHelper.fullBody_,rep.result_, contactGenHelper.acceleration_);
@@ -447,7 +448,7 @@ ProjectionReport gen_contacts(ContactGenHelper &contactGenHelper)
         ContactState cState = candidates.front();
         candidates.pop();
         bool checkStability(contactGenHelper.checkStabilityGenerate_);
-        contactGenHelper.checkStabilityGenerate_ = false; // stability not mandatory before last contact is created
+        //contactGenHelper.checkStabilityGenerate_ = false; // stability not mandatory before last contact is created
         if(cState.second.empty() && (contactGenHelper.workingState_.stable || (stability::IsStable(contactGenHelper.fullBody_,contactGenHelper.workingState_,contactGenHelper.acceleration_) > contactGenHelper.robustnessTreshold_ )) )
         {
             rep.result_ = contactGenHelper.workingState_;
@@ -462,9 +463,11 @@ ProjectionReport gen_contacts(ContactGenHelper &contactGenHelper)
                 contactGenHelper.checkStabilityGenerate_ = checkStability;
             rep = generate_contact(contactGenHelper,*cit);
             if(rep.success_)
+            {
                 contactGenHelper.workingState_ = rep.result_;
-            else
-                break;
+            }
+            //else
+            //    break;
         }
     }
     return rep;
