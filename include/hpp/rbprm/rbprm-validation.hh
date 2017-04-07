@@ -148,6 +148,12 @@ namespace hpp {
       ///
       virtual void randomnizeCollisionPairs();
 
+      /// \brief set if the collision validation should compute all the possible
+      /// contacts or stop after the first pairs in collision
+      ///
+      void computeAllContacts(bool computeAllContacts);
+
+
     public:
       /// CollisionValidation for the trunk
       const core::CollisionValidationPtr_t trunkValidation_;

@@ -100,9 +100,11 @@ HeuristicFactory::HeuristicFactory()
     //seed = 1486392757; // sideWall HyQ
     // seed = 1486721923; //hrp2 downSLope
    // seed = 1487082431; // hrp2 +0.15 z axis
-     seed = 1488532591; // downSLope (good contact but not interp) (yaml 1)
+    //seed = 1488532591; // downSLope (good contact but not interp) (yaml 1)
     // seed = 1488545915 ; //downSlope (need test)
-    //seed = 1488550692 ; // downslope 2
+    // seed = 1488550692 ; // downslope 2
+    //seed = 1491571994;
+    std::cout<<"seed = "<<seed<<std::endl;
     srand ( seed);
     hppDout(notice,"SEED for heuristic = "<<seed);
     heuristics_.insert(std::make_pair("static", &StaticHeuristic));

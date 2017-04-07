@@ -261,5 +261,13 @@ namespace hpp {
       }
     }
 
+    void RbPrmValidation::computeAllContacts(bool computeAllContacts){
+      for(T_RomValidation::const_iterator cit = romValidations_.begin();
+          cit != romValidations_.end(); ++cit)
+      {
+        cit->second->computeAllContacts(computeAllContacts);
+      }
+    }
+
   }// namespace rbprm
 }// namespace hpp

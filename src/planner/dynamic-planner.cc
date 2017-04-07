@@ -372,8 +372,10 @@ namespace hpp {
       //randomnize the collision pair, in order to get a different surface of contact each time
       // (because only the first one in collision is considered by fcl and put in the report)
       RbPrmPathValidationPtr_t rbprmPathValidation = boost::dynamic_pointer_cast<RbPrmPathValidation>(problem().pathValidation());
-      rbprmPathValidation->getValidator()->randomnizeCollisionPairs();
+      rbprmPathValidation->getValidator()->randomnizeCollisionPairs(); // FIXME : remove if we compute all collision pairs
+      rbprmPathValidation->getValidator()->computeAllContacts(true);
       problem().configValidations()->validate(*(x->configuration()),report);
+      rbprmPathValidation->getValidator()->computeAllContacts(false);
       computeGIWC(x,report);
     }
 
@@ -393,6 +395,8 @@ namespace hpp {
       hppDout(info,"~~ q = "<<displayConfig(*q));
 
       node->fillNodeMatrices(report,rectangularContact_,sizeFootX_,sizeFootY_,problem().robot()->mass(),mu_);
+
+
     }// computeGIWC
 
 
