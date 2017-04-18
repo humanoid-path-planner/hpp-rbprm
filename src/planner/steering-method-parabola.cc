@@ -51,8 +51,10 @@ namespace hpp {
     {
       hppDout(notice,"Constructor steering-method-parabola");
       try {
-        V0max_ = problem_->get<double> (std::string("vMax"));
-        Vimpmax_ = problem_->get<double> (std::string("vMax"));
+        boost::any value_0 = problem_->get<boost::any> (std::string("vMax"));
+        boost::any value_imp = problem_->get<boost::any> (std::string("vMax"));
+        V0max_ = boost::any_cast<double>(value_0);
+        Vimpmax_ = boost::any_cast<double>(value_imp);
       } catch (const std::exception& e) {
         std::cout<<"Warning : no velocity bounds set in problem, use 1.0 as default"<<std::endl;
       }

@@ -91,8 +91,10 @@ namespace hpp {
     {
           assert(sm_ && "steering method should be a kinodynamic steering method for this solver");
           try {
-            sizeFootX_ = problem.get<double> (std::string("sizeFootX"))/2.;
-            sizeFootY_ = problem.get<double> (std::string("sizeFootY"))/2.;
+            boost::any value_x = problem.get<boost::any> (std::string("sizeFootX"));
+            boost::any value_y = problem.get<boost::any> (std::string("sizeFootY"));
+            sizeFootX_ = boost::any_cast<double>(value_x)/2.;
+            sizeFootY_ = boost::any_cast<double>(value_y)/2.;
             rectangularContact_ = 1;
           } catch (const std::exception& e) {
             hppDout(warning,"Warning : size of foot not definied, use 0 (contact point)");
@@ -101,7 +103,8 @@ namespace hpp {
             rectangularContact_ = 0;
           }
           try {
-            tryJump_ = (bool)problem.get<double> (std::string("tryJump"));
+            boost::any value = problem.get<boost::any> (std::string("tryJump"));
+            tryJump_ = boost::any_cast<bool>(value);
           } catch (const std::exception& e) {
             tryJump_=false;
           }
@@ -117,23 +120,35 @@ namespace hpp {
       sm_(boost::dynamic_pointer_cast<SteeringMethodKinodynamic>(problem.steeringMethod())),
       smParabola_(rbprm::SteeringMethodParabola::create((core::ProblemPtr_t(&problem))))
     {
-          assert(sm_ && "steering method should be a kinodynamic steering method for this solver");
-          try {
-            sizeFootX_ = problem.get<double> (std::string("sizeFootX"))/2.;
-            sizeFootY_ = problem.get<double> (std::string("sizeFootY"))/2.;
-            rectangularContact_ = 1;
-          } catch (const std::exception& e) {
-            hppDout(warning,"Warning : size of foot not definied, use 0 (contact point)");
-            sizeFootX_ =0;
-            sizeFootY_ =0;
-            rectangularContact_ = 0;
-          }
-          try {
-            tryJump_ = (bool)problem.get<double> (std::string("tryJump"));
-          } catch (const std::exception& e) {
-            tryJump_=false;
-          }
-          hppDout(notice,"tryJump in planner = "<<tryJump_);
+      assert(sm_ && "steering method should be a kinodynamic steering method for this solver");
+      try {
+        boost::any value_x = problem.get<boost::any> (std::string("sizeFootX"));
+        boost::any value_y = problem.get<boost::any> (std::string("sizeFootY"));
+        sizeFootX_ = boost::any_cast<double>(value_x)/2.;
+        sizeFootY_ = boost::any_cast<double>(value_y)/2.;
+        rectangularContact_ = 1;
+      } catch (const std::exception& e) {
+        hppDout(warning,"Warning : size of foot not definied, use 0 (contact point)");
+        sizeFootX_ =0;
+        sizeFootY_ =0;
+        rectangularContact_ = 0;
+      }
+      try {
+        boost::any value = problem.get<boost::any> (std::string("tryJump"));
+        tryJump_ = boost::any_cast<bool>(value);
+      } catch (const std::exception& e) {
+        tryJump_=false;
+      }
+      hppDout(notice,"tryJump in steering method = "<<tryJump_);
+
+      try {
+        boost::any value = problem.get<boost::any> (std::string("friction"));
+        mu_ = boost::any_cast<double>(value);
+        hppDout(notice,"mu define in python : "<<mu_);
+      } catch (const std::exception& e) {
+        mu_= 0.5;
+        hppDout(notice,"mu not defined, take : "<<mu_<<" as default.");
+      }
 
     }
 
