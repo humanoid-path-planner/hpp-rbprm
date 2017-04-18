@@ -110,6 +110,8 @@ namespace hpp {
         const model::DevicePtr_t device_;
         void staticStability(bool staticStability){staticStability_ = staticStability;}
         const bool staticStability(){return staticStability_;}
+        const double getFriction(){return mu_;}
+        void setFriction(double mu){mu_ = mu;}
 
     private:
         core::CollisionValidationPtr_t collisionValidation_;
@@ -118,6 +120,7 @@ namespace hpp {
         T_LimbGroup limbGroups_;
         sampling::HeuristicFactory factory_;
         bool staticStability_;
+        double mu_;
 
     private:
         void AddLimbPrivate(rbprm::RbPrmLimbPtr_t limb, const std::string& id, const std::string& name,

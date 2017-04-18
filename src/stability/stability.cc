@@ -143,9 +143,9 @@ namespace stability{
         return res;
     }
 
-    robust_equilibrium::Vector3 setupLibrary(const RbPrmFullBodyPtr_t fullbody, State& state, StaticEquilibrium& sEq, StaticEquilibriumAlgorithm alg,
-                                             const core::value_type friction = 0.5)
+    robust_equilibrium::Vector3 setupLibrary(const RbPrmFullBodyPtr_t fullbody, State& state, StaticEquilibrium& sEq, StaticEquilibriumAlgorithm alg)
     {
+        double friction = fullbody->getFriction();
         hpp::model::ConfigurationIn_t save = fullbody->device_->currentConfiguration();
         std::vector<std::string> contacts;
         for(std::map<std::string,bool>::const_iterator cit = state.contacts_.begin();
@@ -203,7 +203,7 @@ const fcl::Vec3f comfcl = comcptr->com();*/
         watch.start("test balance");
 #endif
         StaticEquilibrium staticEquilibrium(initLibrary(fullbody));
-        setupLibrary(fullbody,state,staticEquilibrium,STATIC_EQUILIBRIUM_ALGORITHM_PP, friction);
+        setupLibrary(fullbody,state,staticEquilibrium,STATIC_EQUILIBRIUM_ALGORITHM_PP);
 #ifdef PROFILE
     watch.stop("test balance");
 #endif

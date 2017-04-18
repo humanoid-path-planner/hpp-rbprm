@@ -100,10 +100,10 @@ private:
     const core::RoadmapPtr_t roadmap_;
     const SteeringMethodKinodynamicPtr_t sm_;
     const SteeringMethodParabolaPtr_t smParabola_;
-    const double mu_ = 0.5;
     double sizeFootX_,sizeFootY_;
     bool rectangularContact_;
     bool tryJump_;
+    double mu_;
 };
 /// \}
 } // namespace core

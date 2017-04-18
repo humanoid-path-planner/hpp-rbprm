@@ -151,6 +151,7 @@ namespace hpp {
         : device_(device)
         , collisionValidation_(core::CollisionValidation::create(device))
         , staticStability_(true)
+        , mu_(0.5)
         , weakPtr_()
     {
         // NOTHING

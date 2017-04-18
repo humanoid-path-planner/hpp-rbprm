@@ -110,6 +110,15 @@ namespace hpp {
           }
           hppDout(notice,"tryJump in steering method = "<<tryJump_);
 
+          try {
+            boost::any value = problem.get<boost::any> (std::string("friction"));
+            mu_ = boost::any_cast<double>(value);
+            hppDout(notice,"mu define in python : "<<mu_);
+          } catch (const std::exception& e) {
+            mu_= 0.5;
+            hppDout(notice,"mu not defined, take : "<<mu_<<" as default.");
+          }
+
     }
 
     DynamicPlanner::DynamicPlanner (const Problem& problem,
