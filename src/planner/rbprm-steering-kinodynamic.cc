@@ -36,7 +36,7 @@ namespace hpp{
     SteeringMethodKinodynamic::SteeringMethodKinodynamic (const core::ProblemPtr_t& problem) :
       core::steeringMethod::Kinodynamic (problem),
       sEq_(new robust_equilibrium::StaticEquilibrium(problem_->robot()->name(), problem_->robot()->mass(),4,robust_equilibrium::SOLVER_LP_QPOASES,true,10,false)),
-      device_ (problem->robot ()),lastDirection_(),totalTimeComputed_(0),totalTimeValidated_(0),dirTotal_(0),dirValid_(0),rejectedPath_(0), weak_ ()
+      totalTimeComputed_(0),totalTimeValidated_(0),dirTotal_(0),dirValid_(0),rejectedPath_(0),device_ (problem->robot ()),lastDirection_(), weak_ ()
     {
     }
 
@@ -44,7 +44,7 @@ namespace hpp{
     SteeringMethodKinodynamic::SteeringMethodKinodynamic (const SteeringMethodKinodynamic& other) :
       core::steeringMethod::Kinodynamic (other),
       sEq_(new robust_equilibrium::StaticEquilibrium(problem_->robot()->name(), problem_->robot()->mass(),4,robust_equilibrium::SOLVER_LP_QPOASES,true,10,false)),
-      device_ (other.device_),lastDirection_(),totalTimeComputed_(0),totalTimeValidated_(0),dirTotal_(0),dirValid_(0),rejectedPath_(0),weak_()
+      totalTimeComputed_(0),totalTimeValidated_(0),dirTotal_(0),dirValid_(0),rejectedPath_(0),device_ (other.device_),lastDirection_(),weak_()
     {
     }
 
@@ -265,7 +265,7 @@ namespace hpp{
 
       double alpha0=1.; // main variable of our LP problem
       Vector3 direction;
-/*    Vector3 toP,fromP,dPosition;
+/*   Vector3 toP,fromP,dPosition;
       Vector3 toV,fromV,dVelocity;
       const model::size_type indexECS =problem_->robot()->configSize() - problem_->robot()->extraConfigSpace().dimension (); // ecs index
 
@@ -293,7 +293,6 @@ namespace hpp{
       direction.normalize();
 
 */
-
       direction = computeDirection(*(near->configuration()),target);
       hppDout(info, "direction  = "<<direction.transpose());
       hppDout(info,"vector = ["<<(*(near->configuration()))[0]<<","<<(*(near->configuration()))[1]<<","<<(*(near->configuration()))[2]<<","<<direction[0]<<","<<direction[1]<<","<<direction[2]<<",0]");

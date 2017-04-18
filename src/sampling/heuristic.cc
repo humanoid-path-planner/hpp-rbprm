@@ -103,7 +103,9 @@ HeuristicFactory::HeuristicFactory()
     //seed = 1488532591; // downSLope (good contact but not interp) (yaml 1)
     // seed = 1488545915 ; //downSlope (need test)
     // seed = 1488550692 ; // downslope 2
-    //seed = 1491571994;
+    //seed = 1491571994; // straight walk 2 m static
+    //seed = 1491580336 ; // straight walk dynamic 0.5
+    //seed = 1492176551; // walk 0.3 ?
     std::cout<<"seed = "<<seed<<std::endl;
     srand ( seed);
     hppDout(notice,"SEED for heuristic = "<<seed);
