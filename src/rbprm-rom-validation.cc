@@ -50,7 +50,6 @@ namespace hpp {
       ValidationReportPtr_t romReport;
 
       bool collision = !hpp::core::CollisionValidation::validate(config, romReport);
-      core::CollisionValidationReportPtr_t romCollisionReport = boost::dynamic_pointer_cast<CollisionValidationReport>(romReport);
       //CollisionValidationReportPtr_t reportCast = boost::dynamic_pointer_cast<CollisionValidationReport>(romReport);
       //hppDout(notice,"number of contacts  : "<<reportCast->result.numContacts());
       //hppDout(notice,"contact 1 "<<reportCast->result.getContact(0).pos);
@@ -63,30 +62,32 @@ namespace hpp {
       }
       if(collision){
         if(rbprmReport ){  // if the report is a correct rbprm report, we add the rom information
+          core::CollisionValidationReportPtr_t romCollisionReport = boost::dynamic_pointer_cast<CollisionValidationReport>(romReport);
           rbprmReport->ROMReports.insert(std::make_pair(robot_->name(),romCollisionReport));
+
+          // re arrange the collision pair such that the first one is the pair in collision
+          // (allow us to maintain the contact with the same obstacle as long as possible)
+          CollisionObjectPtr_t obj2 = romCollisionReport->object2;
+          CollisionPair_t colPair;
+          bool first(true);
+          for(CollisionPairs_t::iterator it = collisionPairs_.begin() ; it != collisionPairs_.end() ; ++it){
+            if(it->second == obj2){
+              colPair = *it;
+              break;
+            }
+            first=false;
+          }
+
+          if(!first){
+            collisionPairs_.remove(colPair);
+            collisionPairs_.push_front(colPair);
+          }
+
         }else{
           validationReport = romReport;
         }
       }
 
-
-      // re arrange the collision pair such that the first one is the pair in collision
-      // (allow us to maintain the contact with the same obstacle as long as possible)
-      CollisionObjectPtr_t obj2 = romCollisionReport->object2;
-      CollisionPair_t colPair;
-      bool first(true);
-      for(CollisionPairs_t::iterator it = collisionPairs_.begin() ; it != collisionPairs_.end() ; ++it){
-        if(it->second == obj2){
-          colPair = *it;
-          break;
-        }
-        first=false;
-      }
-
-      if(!first){
-        collisionPairs_.remove(colPair);
-        collisionPairs_.push_front(colPair);
-      }
 
 
       if(optional_)
