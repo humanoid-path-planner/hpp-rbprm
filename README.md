@@ -32,8 +32,8 @@ To install HPP-RBPRM:
   2. install hpp-affordance, and hpp-affordance corba, comprising terrain analysis tools
 	- see https://github.com/humanoid-path-planner/hpp-affordance
 
-  3. install robust-equilibrium-lib, a library for quickly asserting static equilibrium
-	- see https://github.com/andreadelprete/robust-equilibrium-lib
+  3. install centroidal-dynamics-lib, a library for quickly asserting static equilibrium
+	- see https://github.com/stonneau/centroidal-dynamics-lib.git
 
  
   4. Use CMake to install the library. For instance:
