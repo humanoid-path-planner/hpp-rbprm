@@ -23,8 +23,6 @@
 #include <hpp/model/center-of-mass-computation.hh>
 #include <hpp/rbprm/tools.hh>
 
-#include <robust-equilibrium-lib/static_equilibrium.hh>
-
 #include <Eigen/Dense>
 
 #include <vector>
@@ -39,7 +37,7 @@ using namespace hpp;
 using namespace hpp::core;
 using namespace hpp::model;
 using namespace hpp::rbprm;
-using namespace robust_equilibrium;
+using namespace centroidal_dynamics;
 
 namespace hpp {
 namespace rbprm {
@@ -114,9 +112,9 @@ namespace stability{
         p = position + offset;
     }
 
-    StaticEquilibrium initLibrary(const RbPrmFullBodyPtr_t fullbody)
+    Equilibrium initLibrary(const RbPrmFullBodyPtr_t fullbody)
     {
-        return StaticEquilibrium(fullbody->device_->name(), fullbody->device_->mass(),4,SOLVER_LP_QPOASES,true,10,false);
+        return Equilibrium(fullbody->device_->name(), fullbody->device_->mass(),4,SOLVER_LP_QPOASES,true,10,false);
     }
 
     const std::size_t numContactPoints(const RbPrmLimbPtr_t& limb)
@@ -141,7 +139,7 @@ namespace stability{
         return res;
     }
 
-    robust_equilibrium::Vector3 setupLibrary(const RbPrmFullBodyPtr_t fullbody, State& state, StaticEquilibrium& sEq, StaticEquilibriumAlgorithm alg,
+    centroidal_dynamics::Vector3 setupLibrary(const RbPrmFullBodyPtr_t fullbody, State& state, Equilibrium& sEq, EquilibriumAlgorithm alg,
                                              const core::value_type friction = 0.3)
     {
         hpp::model::ConfigurationIn_t save = fullbody->device_->currentConfiguration();
@@ -156,8 +154,8 @@ namespace stability{
         const T_Limb limbs = fullbody->GetLimbs();
         std::size_t nbContactPoints(0);
         std::vector<std::size_t> contactPointsInc = numContactPoints(limbs, contacts,nbContactPoints);
-        robust_equilibrium::MatrixX3 normals  (nbContactPoints,3);
-        robust_equilibrium::MatrixX3 positions(nbContactPoints,3);
+        centroidal_dynamics::MatrixX3 normals  (nbContactPoints,3);
+        centroidal_dynamics::MatrixX3 positions(nbContactPoints,3);
         std::size_t currentIndex(0), c(0);
         for(std::vector<std::size_t>::const_iterator cit = contactPointsInc.begin();
             cit != contactPointsInc.end(); ++cit, ++c)
@@ -176,7 +174,7 @@ namespace stability{
             }
             currentIndex += inc;
         }
-        robust_equilibrium::Vector3 com;
+        centroidal_dynamics::Vector3 com;
 /*model::CenterOfMassComputationPtr_t comcptr = model::CenterOfMassComputation::create(fullbody->device_);
 comcptr->add(fullbody->device_->getJointByName("romeo/base_joint_xyz"));
 comcptr->computeMass();
@@ -199,8 +197,8 @@ const fcl::Vec3f comfcl = comcptr->com();*/
         RbPrmProfiler& watch = getRbPrmProfiler();
         watch.start("test balance");
 #endif
-        StaticEquilibrium staticEquilibrium(initLibrary(fullbody));
-        setupLibrary(fullbody,state,staticEquilibrium,STATIC_EQUILIBRIUM_ALGORITHM_PP, friction);
+        Equilibrium staticEquilibrium(initLibrary(fullbody));
+        setupLibrary(fullbody,state,staticEquilibrium,EQUILIBRIUM_ALGORITHM_PP, friction);
 #ifdef PROFILE
     watch.stop("test balance");
 #endif
@@ -223,16 +221,16 @@ const fcl::Vec3f comfcl = comcptr->com();*/
     }
 
 
-    double IsStable(const RbPrmFullBodyPtr_t fullbody, State& state, const robust_equilibrium::StaticEquilibriumAlgorithm algorithm)
+    double IsStable(const RbPrmFullBodyPtr_t fullbody, State& state, const centroidal_dynamics::EquilibriumAlgorithm algorithm)
     {
 #ifdef PROFILE
     RbPrmProfiler& watch = getRbPrmProfiler();
     watch.start("test balance");
 #endif
-        StaticEquilibrium staticEquilibrium(initLibrary(fullbody));
-        robust_equilibrium::Vector3 com = setupLibrary(fullbody,state,staticEquilibrium,algorithm);
+        Equilibrium staticEquilibrium(initLibrary(fullbody));
+        centroidal_dynamics::Vector3 com = setupLibrary(fullbody,state,staticEquilibrium,algorithm);
         double res;LP_status status;
-        if(algorithm == STATIC_EQUILIBRIUM_ALGORITHM_PP)
+        if(algorithm == EQUILIBRIUM_ALGORITHM_PP)
         {
             bool isStable(false);
             status = staticEquilibrium.checkRobustEquilibrium(com,isStable);

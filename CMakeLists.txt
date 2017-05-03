@@ -98,11 +98,6 @@ SET(${PROJECT_NAME}_HEADERS
     include/hpp/rbprm/rbprm-profiler.hh
     include/utils/Stdafx.hh
     include/utils/stop-watch.hh
-    include/spline/curve_abc.h
-    include/spline/bezier_curve.h
-    include/spline/exact_cubic.h
-    include/spline/cubic_function.h
-    include/spline/MathDefs.h
   )
 
 # Activate hpp-util logging if requested

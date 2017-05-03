@@ -22,7 +22,7 @@
 #include <hpp/model/device.hh>
 #include <hpp/rbprm/rbprm-state.hh>
 #include <hpp/rbprm/rbprm-fullbody.hh>
-#include <robust-equilibrium-lib/static_equilibrium.hh>
+#include <centroidal-dynamics-lib/centroidal_dynamics.hh>
 
 #include <map>
 #include <memory>
@@ -42,7 +42,7 @@ namespace hpp {
     /// \param fullbody The considered robot for static equilibrium
     /// \param state The current State of the robots, in terms of contact creation
     /// \return Whether the configuration is statically balanced
-    double IsStable(const RbPrmFullBodyPtr_t fullbody, State& state, const robust_equilibrium::StaticEquilibriumAlgorithm = robust_equilibrium::STATIC_EQUILIBRIUM_ALGORITHM_DLP);
+    double IsStable(const RbPrmFullBodyPtr_t fullbody, State& state, const centroidal_dynamics::EquilibriumAlgorithm = centroidal_dynamics::EQUILIBRIUM_ALGORITHM_DLP);
 
 
     /// Using the polytope computation of the gravito inertial wrench cone,

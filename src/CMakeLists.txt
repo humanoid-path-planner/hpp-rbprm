@@ -58,11 +58,6 @@ SET(${LIBRARY_NAME}_SOURCES
         ik-solver.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/ik-solver.hh
         utils/stop-watch.cc ${PROJECT_SOURCE_DIR}/include/utils/stop-watch.hh
         rbprm-profiler.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-profiler.hh
-        ${PROJECT_SOURCE_DIR}/include/spline/curve_abc.h
-        ${PROJECT_SOURCE_DIR}/include/spline/bezier_curve.h
-        ${PROJECT_SOURCE_DIR}/include/spline/exact_cubic.h
-        ${PROJECT_SOURCE_DIR}/include/spline/cubic_function.h
-        ${PROJECT_SOURCE_DIR}/include/spline/MathDefs.h
   )
 
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/src)
@@ -71,7 +66,7 @@ ADD_LIBRARY(${LIBRARY_NAME}
   ${${LIBRARY_NAME}_SOURCES}
   )
 
-TARGET_LINK_LIBRARIES(${LIBRARY_NAME} robust-equilibrium-lib)
+TARGET_LINK_LIBRARIES(${LIBRARY_NAME} centroidal-dynamics-lib)
 
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-core)
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-util)
