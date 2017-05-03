@@ -29,8 +29,10 @@ namespace hpp {
 namespace rbprm {
 namespace interpolation {
     HPP_PREDEF_CLASS (PolynomTrajectory);
-    typedef boost::shared_ptr <ComTrajectory>
-    ComTrajectoryPtr_t;
+    typedef boost::shared_ptr <PolynomTrajectory>
+    PolynomTrajectoryPtr_t;
+    typedef spline::curve_abc<core::value_type, core::value_type, 3, false, Eigen::Vector3d> Polynom;
+    typedef boost::shared_ptr <Polynom> PolynomPtr_t;
     /// Linear interpolation between two configurations
     ///
     /// Degrees of freedom are interpolated depending on the type of
@@ -40,25 +42,23 @@ namespace interpolation {
     ///       joints, and translation part of freeflyer joints,
     ///   \li angular interpolation for unbounded rotation joints,
     ///   \li constant angular velocity for SO(3) part of freeflyer joints.
-    class HPP_CORE_DLLAPI ComTrajectory : public core::Path
+    class HPP_CORE_DLLAPI PolynomTrajectory : public core::Path
     {
     public:
       typedef Path parent_t;
       /// Destructor
-      virtual ~ComTrajectory () throw () {}
+      virtual ~PolynomTrajectory () throw () {}
 
       /// Create instance and return shared pointer
       /// \param device Robot corresponding to configurations
       /// \param init, end Start and end configurations of the path
       /// \param length Distance between the configurations.
-      static ComTrajectoryPtr_t create (model::vector3_t init,
-                                        model::vector3_t end,
-                                        model::vector3_t initSpeed,
-                                        model::vector3_t acceleration,
-                                        core::value_type length)
+      static PolynomTrajectoryPtr_t create (PolynomPtr_t polynom,
+                                            core::value_type subSetStart = 0,
+                                            core::value_type subSetEnd = 1)
       {
-    ComTrajectory* ptr = new ComTrajectory (init, end, initSpeed, acceleration, length);
-    ComTrajectoryPtr_t shPtr (ptr);
+    PolynomTrajectory* ptr = new PolynomTrajectory (polynom, subSetStart, subSetEnd);
+    PolynomTrajectoryPtr_t shPtr (ptr);
     ptr->init (shPtr);
         ptr->checkPath ();
     return shPtr;
@@ -66,10 +66,10 @@ namespace interpolation {
 
       /// Create copy and return shared pointer
       /// \param path path to copy
-      static ComTrajectoryPtr_t createCopy (const ComTrajectoryPtr_t& path)
+      static PolynomTrajectoryPtr_t createCopy (const PolynomTrajectoryPtr_t& path)
       {
-    ComTrajectory* ptr = new ComTrajectory (*path);
-    ComTrajectoryPtr_t shPtr (ptr);
+    PolynomTrajectory* ptr = new PolynomTrajectory (*path);
+    PolynomTrajectoryPtr_t shPtr (ptr);
     ptr->initCopy (shPtr);
         ptr->checkPath ();
     return shPtr;
@@ -94,13 +94,13 @@ namespace interpolation {
       /// Get the initial configuration
       core::Configuration_t initial () const
       {
-        return initial_;
+        return polynom_->operator ()(polynom_->min());
       }
 
       /// Get the final configuration
       core::Configuration_t end () const
       {
-        return end_;
+        return polynom_->operator ()(polynom_->max());
       }
 
       virtual void checkPath () const {}
@@ -109,32 +109,27 @@ namespace interpolation {
       /// Print path in a stream
       virtual std::ostream& print (std::ostream &os) const
       {
-    os << "ComTrajectory:" << std::endl;
+    os << "PolynomTrajectory:" << std::endl;
     os << "interval: [ " << timeRange ().first << ", "
        << timeRange ().second << " ]" << std::endl;
-    os << "initial configuration: " << initial_ << std::endl;
-    os << "final configuration:   " << end_ << std::endl;
-    os << "init speed:   " << initSpeed_ << std::endl;
-    os << "acceleration (constant):   " << (acceleration_) << std::endl;
+    os << "initial configuration: " << initial() << std::endl;
+    os << "final configuration:   " << end() << std::endl;
     return os;
       }
       /// Constructor
-      ComTrajectory (model::vector3_t init,
-                     model::vector3_t end,
-                     model::vector3_t initSpeed,
-                     model::vector3_t acceleration,
-                     core::value_type length);
+      PolynomTrajectory (PolynomPtr_t polynom,
+                         core::value_type subSetStart,core::value_type subSetEnd);
 
       /// Copy constructor
-      ComTrajectory (const ComTrajectory& path);
+      PolynomTrajectory (const PolynomTrajectory& path);
 
-      void init (ComTrajectoryPtr_t self)
+      void init (PolynomTrajectoryPtr_t self)
       {
     parent_t::init (self);
     weak_ = self;
       }
 
-      void initCopy (ComTrajectoryPtr_t self)
+      void initCopy (PolynomTrajectoryPtr_t self)
       {
     parent_t::initCopy (self);
     weak_ = self;
@@ -146,15 +141,13 @@ namespace interpolation {
       virtual core::PathPtr_t copy(const core::ConstraintSetPtr_t&) const {throw;}
 
     public:
-      const model::vector3_t initial_;
-      const model::vector3_t end_;
-      const model::vector3_t initSpeed_;
-      const model::vector3_t half_acceleration_;
-      const model::vector3_t acceleration_;
-      const model::value_type length_;
+      const PolynomPtr_t polynom_;
+      const core::value_type subSetStart_;
+      const core::value_type subSetEnd_;
+      const core::value_type length_;
 
     private:
-      ComTrajectoryWkPtr_t weak_;
+      PolynomTrajectoryWkPtr_t weak_;
     }; // class ComTrajectory
 } // namespace interpolation
 } // namespace rbprm
