@@ -34,16 +34,20 @@ To install HPP-RBPRM:
 
   3. install centroidal-dynamics-lib, a library for quickly asserting static equilibrium
 	- see https://github.com/stonneau/centroidal-dynamics-lib.git
+	
+	
+  4. install spline, a library providing all sorts of constrained polynomials generation
+	- see https://github.com/stonneau/spline.git
 
  
-  4. Use CMake to install the library. For instance:
+  5. Use CMake to install the library. For instance:
 
 				mkdir $HPP_RBPRM_DIR/build
 				cd $HPP_RBPRM_DIR/build
 				cd cmake ..
 				make install
 
-  5. Optionally, install the python bindings for python, and example scripts (HPP-RBPRM-CORBA)
+  6. Optionally, install the python bindings for python, and example scripts (HPP-RBPRM-CORBA)
 	- see https://github.com/stonneau/hpp-rbprm-corba
   
 
