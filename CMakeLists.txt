@@ -80,6 +80,7 @@ SET(${PROJECT_NAME}_HEADERS
     include/hpp/rbprm/interpolation/time-constraint-path-validation.hh
     include/hpp/rbprm/interpolation/time-constraint-path.hh
     include/hpp/rbprm/interpolation/com-trajectory.hh
+    include/hpp/rbprm/interpolation/polynom-trajectory.hh
     include/hpp/rbprm/interpolation/time-dependant.hh
     include/hpp/rbprm/interpolation/interpolation-constraints.hh
     include/hpp/rbprm/interpolation/spline/effector-rrt.hh
