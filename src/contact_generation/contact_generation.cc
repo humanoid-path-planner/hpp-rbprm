@@ -73,13 +73,26 @@ void maintain_contacts_combinatorial_rec(const hpp::rbprm::State& currentState, 
 {
     if (!push_if_new(res[depth], currentState) || depth>=maxBrokenContacts) return;
     std::queue<std::string> contactOrder = currentState.contactOrder_;
-    while(!contactOrder.empty())
+    int size = contactOrder.size(); int i = 0;
+    while(!contactOrder.empty() && size != i)
     {
         hpp::rbprm::State copyState = currentState;
+std::vector<std::string> fixed = currentState.fixedContacts(currentState);
         const std::string contactRemoved = contactOrder.front();
+if(!
+((std::find(fixed.begin(), fixed.end(),std::string("hrp2_rleg_rom")) == fixed.end() && contactRemoved == std::string("hrp2_lleg_rom")) ||
+(std::find(fixed.begin(), fixed.end(),std::string("hrp2_lleg_rom")) == fixed.end() && contactRemoved == std::string("hrp2_rleg_rom"))))
+{
         copyState.RemoveContact(contactRemoved);
-        contactOrder.pop();
         maintain_contacts_combinatorial_rec(copyState, depth+1, maxBrokenContacts, res);
+}
+else
+{
+ std::cout << "avoided both leg removed"    << std::endl;
+ contactOrder.push(contactRemoved);
+}
+++i;
+contactOrder.pop();
     }
 }
 
@@ -447,7 +460,10 @@ ProjectionReport gen_contacts(ContactGenHelper &contactGenHelper)
         candidates.pop();
         bool checkStability(contactGenHelper.checkStabilityGenerate_);
         //contactGenHelper.checkStabilityGenerate_ = false; // stability not mandatory before last contact is created
-        if(cState.second.empty() && (contactGenHelper.workingState_.stable || (stability::IsStable(contactGenHelper.fullBody_,contactGenHelper.workingState_) > contactGenHelper.robustnessTreshold_ )) )
+
+        //if (false)
+        std::vector<std::string> fixed = contactGenHelper.workingState_.fixedContacts(contactGenHelper.workingState_);
+        if(fixed.size() > 2 && cState.second.empty() && (contactGenHelper.workingState_.stable || (stability::IsStable(contactGenHelper.fullBody_,contactGenHelper.workingState_) > contactGenHelper.robustnessTreshold_ )) )
         {
             rep.result_ = contactGenHelper.workingState_;
             rep.status_ = NO_CONTACT;
