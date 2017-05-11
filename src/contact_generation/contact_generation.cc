@@ -79,9 +79,9 @@ void maintain_contacts_combinatorial_rec(const hpp::rbprm::State& currentState, 
         hpp::rbprm::State copyState = currentState;
 std::vector<std::string> fixed = currentState.fixedContacts(currentState);
         const std::string contactRemoved = contactOrder.front();
-if(!
-((std::find(fixed.begin(), fixed.end(),std::string("hrp2_rleg_rom")) == fixed.end() && contactRemoved == std::string("hrp2_lleg_rom")) ||
-(std::find(fixed.begin(), fixed.end(),std::string("hrp2_lleg_rom")) == fixed.end() && contactRemoved == std::string("hrp2_rleg_rom"))))
+//if(!
+//((std::find(fixed.begin(), fixed.end(),std::string("hrp2_rleg_rom")) == fixed.end() && contactRemoved == std::string("hrp2_lleg_rom")) ||
+//(std::find(fixed.begin(), fixed.end(),std::string("hrp2_lleg_rom")) == fixed.end() && contactRemoved == std::string("hrp2_rleg_rom"))))
 {
         copyState.RemoveContact(contactRemoved);
         maintain_contacts_combinatorial_rec(copyState, depth+1, maxBrokenContacts, res);
@@ -211,12 +211,39 @@ std::vector<std::string> extractEffectorsName(const rbprm::T_Limb& limbs)
     return res;
 }
 
+std::vector<std::string> sortLimbs(const State& currentState, const std::vector<std::string>& freeLimbs)
+{
+    std::vector<std::string> res1;
+    std::vector<std::string> res2;
+    // first add unused limbs
+    // then undraw from contact order
+    std::queue<std::string> order = currentState.contactOrder_;
+    while(!order.empty())
+    {
+        const std::string l = order.front(); order.pop();
+        if(std::find(freeLimbs.begin(), freeLimbs.end(), l) != freeLimbs.end())
+            tools::insertIfNew(res1, l);
+    }
+    for(std::vector<std::string>::const_iterator cit = freeLimbs.begin(); cit!= freeLimbs.end(); ++cit)
+    {
+        if(std::find(res1.begin(), res1.end(), *cit) == res1.end())
+        {
+            res2.push_back(*cit);
+            std::cout << "push pord" << *cit << std::endl;
+        }
+    }
+    res2.insert(res2.end(), res1.begin(), res1.end());
+    //res2.insert(res2.begin(), res1.begin(), res1.end());
+    return res2;
+}
+
 ProjectionReport genColFree(ContactGenHelper &contactGenHelper, ProjectionReport& currentRep)
 {
     ProjectionReport res = currentRep;
     // identify broken limbs and find collision free configurations for each one of them.
     std::vector<std::string> effNames(extractEffectorsName(contactGenHelper.fullBody_->GetLimbs()));
-    const std::vector<std::string> freeLimbs = rbprm::freeEffectors(currentRep.result_,effNames.begin(), effNames.end() );
+    std::vector<std::string> freeLimbs = rbprm::freeEffectors(currentRep.result_,effNames.begin(), effNames.end() );
+    freeLimbs = sortLimbs(contactGenHelper.workingState_, freeLimbs);
     for(std::vector<std::string>::const_iterator cit = freeLimbs.begin(); cit != freeLimbs.end() && res.success_; ++cit)
         res = projection::setCollisionFree(contactGenHelper.fullBody_,contactGenHelper.fullBody_->GetLimbCollisionValidation().at(*cit),*cit,res.result_);
 
