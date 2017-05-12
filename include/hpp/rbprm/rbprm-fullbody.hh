@@ -76,7 +76,8 @@ namespace hpp {
                      const fcl::Vec3f &normal,const double x, const double y,
                      const model::ObjectVector_t &collisionObjects,
                      const std::size_t nbSamples, const std::string& heuristic = "static", const double resolution = 0.03,
-                     ContactType contactType = _6_DOF, const bool disableEffectorCollision = false);
+                     ContactType contactType = _6_DOF, const bool disableEffectorCollision = false,
+                     const bool grasp = false);
 
         /// Creates a Limb for the robot,
         /// identified by its name. Stores a sample
@@ -91,7 +92,8 @@ namespace hpp {
         /// This can be problematic in terms of performance. The default value is 3 cm.
         /// \param disableEffectorCollision, whether collision detection should be disabled for end effector bones
         void AddLimb(const std::string& database, const std::string& id, const model::ObjectVector_t &collisionObjects,
-                      const std::string& heuristicName, const bool loadValues, const bool disableEffectorCollision = false);
+                      const std::string& heuristicName, const bool loadValues, const bool disableEffectorCollision = false,
+                     const bool grasp = false);
 
         /// Add a new heuristic for biasing sample candidate selection
         ///

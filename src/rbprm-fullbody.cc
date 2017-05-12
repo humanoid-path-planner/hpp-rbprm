@@ -120,24 +120,25 @@ namespace hpp {
                                 const fcl::Vec3f &offset,const fcl::Vec3f &normal, const double x,
                                 const double y,
                                 const model::ObjectVector_t &collisionObjects, const std::size_t nbSamples, const std::string &heuristicName, const double resolution,
-                                ContactType contactType, const bool disableEffectorCollision)
+                                ContactType contactType, const bool disableEffectorCollision,  const bool grasp)
     {
         std::map<std::string, const sampling::heuristic>::const_iterator hit = checkLimbData(id, limbs_,factory_,heuristicName);
         model::JointPtr_t joint = device_->getJointByName(name);
-        rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(joint, effectorName, offset,normal,x,y, nbSamples, hit->second, resolution,contactType, disableEffectorCollision);
+        rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(joint, effectorName, offset,normal,x,y, nbSamples, hit->second, resolution,contactType, disableEffectorCollision, grasp);
         AddLimbPrivate(limb, id, name,collisionObjects, disableEffectorCollision);
     }
 
     void RbPrmFullBody::AddLimb(const std::string& database, const std::string& id,
                                 const model::ObjectVector_t &collisionObjects,
                                 const std::string& heuristicName,
-                                const bool loadValues, const bool disableEffectorCollision)
+                                const bool loadValues, const bool disableEffectorCollision,
+                                const bool grasp)
     {
         std::map<std::string, const sampling::heuristic>::const_iterator hit = checkLimbData(id, limbs_,factory_,heuristicName);;
         std::ifstream myfile (database.c_str());
         if (!myfile.good())
             throw std::runtime_error ("Impossible to open database");
-        rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(device_, myfile, loadValues, hit->second, disableEffectorCollision);
+        rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(device_, myfile, loadValues, hit->second, disableEffectorCollision, grasp);
         myfile.close();
         AddLimbPrivate(limb, id, limb->limb_->name(),collisionObjects, disableEffectorCollision);
     }
@@ -201,8 +202,8 @@ namespace hpp {
         return rep.status_;
     }
 
-    /*static int nbFAILSNEW = 0;
-    static int nbSUCCNEW = 0;*/
+    static int nbFAILSNEW = 0;
+    static int nbSUCCNEW = 0;
 
     hpp::rbprm::State ComputeContacts(const hpp::rbprm::RbPrmFullBodyPtr_t& body,
 			model::ConfigurationIn_t configuration, const affMap_t& affordances,
@@ -267,7 +268,7 @@ namespace hpp {
         }
         if(rep.repositionedInPlace_)
             multipleBreaks = true;
-        /*if(!rep.success_ || rep.repositionedInPlace_)
+        if(!rep.success_ || rep.repositionedInPlace_)
         {
             std::cout << "Contact repositionning occured " << ++nbFAILSNEW << std::endl;
             std::cout << "(successes) " << nbSUCCNEW << std::endl;
@@ -275,7 +276,7 @@ namespace hpp {
         else
         {
             ++nbSUCCNEW;
-        }*/
+        }
         body->device_->currentConfiguration(save);
         body->device_->controlComputation (flag);
         return rep.result_;

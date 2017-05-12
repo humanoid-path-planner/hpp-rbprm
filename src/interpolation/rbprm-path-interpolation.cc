@@ -118,6 +118,7 @@ if (nbFailures > 1)
     fout.close();
 #endif
     return FilterStates(states, filterStates);
+    //return states;
 }
             }
             if(multipleBreaks && !allowFailure)

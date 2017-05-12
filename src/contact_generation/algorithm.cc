@@ -69,6 +69,10 @@ projection::ProjectionReport genContactFromOneMaintainCombinatorial(ContactGenHe
         helper.workingState_ = rep.result_;
         return gen_contacts(helper);
     }
+    else
+    {
+        std::cout << "can t maintain" << ! rep.success_ << std::endl;
+    }
     return rep;
 }
 

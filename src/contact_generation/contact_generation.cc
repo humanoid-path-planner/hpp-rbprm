@@ -86,7 +86,7 @@ std::vector<std::string> fixed = currentState.fixedContacts(currentState);
         copyState.RemoveContact(contactRemoved);
         maintain_contacts_combinatorial_rec(copyState, depth+1, maxBrokenContacts, res);
 }
-else
+//else
 {
  std::cout << "avoided both leg removed"    << std::endl;
  contactOrder.push(contactRemoved);
@@ -348,6 +348,7 @@ sampling::T_OctreeReport CollideOctree(const ContactGenHelper &contactGenHelper,
       throw std::runtime_error ("No aff objects found!!!");
 
     std::vector<sampling::T_OctreeReport> reports(affordances.size());
+    std::cout << "get candidates for limb " << limbName << std::endl;
     for(model::ObjectVector_t::const_iterator oit = affordances.begin();
         oit != affordances.end(); ++oit, ++i)
     {
@@ -492,19 +493,33 @@ ProjectionReport gen_contacts(ContactGenHelper &contactGenHelper)
         std::vector<std::string> fixed = contactGenHelper.workingState_.fixedContacts(contactGenHelper.workingState_);
         if(fixed.size() > 2 && cState.second.empty() && (contactGenHelper.workingState_.stable || (stability::IsStable(contactGenHelper.fullBody_,contactGenHelper.workingState_) > contactGenHelper.robustnessTreshold_ )) )
         {
-            rep.result_ = contactGenHelper.workingState_;
-            rep.status_ = NO_CONTACT;
-            rep.success_ = true;
-            return rep;
+            if(contactGenHelper.workingState_.nbContacts > 2)
+            {
+                rep.result_ = contactGenHelper.workingState_;
+                rep.status_ = NO_CONTACT;
+                rep.success_ = true;
+                return rep;
+            }
         }
+
+        std::cout << "STAR active contacts in candidate" << std::endl;
+        for(std::map<std::string, fcl::Vec3f>::const_iterator  cit = cState.first.contactPositions_.begin(); cit !=cState.first.contactPositions_.end();
+            ++cit)
+        {
+            std::cout << cit->first << std::endl;
+        }
+        std::cout << "active contacts in candidate END" << std::endl;
         for(std::vector<std::string>::const_iterator cit = cState.second.begin();
             cit != cState.second.end(); ++cit)
         {
+
+            std::cout << "trying to generate contact " << *cit << std::endl;
             if(cit+1 == cState.second.end())
                 contactGenHelper.checkStabilityGenerate_ = checkStability;
             rep = generate_contact(contactGenHelper,*cit);
             if(rep.success_)
             {
+                std::cout << "SUCCESS " << rep.success_ << std::endl;
                 contactGenHelper.workingState_ = rep.result_;
             }
             //else
