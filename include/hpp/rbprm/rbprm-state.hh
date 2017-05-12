@@ -138,7 +138,6 @@ typedef T_StateFrame::const_iterator CIT_StateFrame;
             {
                 if( eff == std::string("hrp2_rleg_rom"))
                 {
-                    std::cout << "front " << std::endl;
                     res.insert( res.begin(), eff );
                 }
                 {
