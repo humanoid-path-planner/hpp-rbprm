@@ -94,13 +94,13 @@ namespace interpolation {
       /// Get the initial configuration
       core::Configuration_t initial () const
       {
-        return polynom_->operator ()(polynom_->min());
+        return polynom_->operator ()(subSetStart_);
       }
 
       /// Get the final configuration
       core::Configuration_t end () const
       {
-        return polynom_->operator ()(polynom_->max());
+        return polynom_->operator ()(subSetEnd_);
       }
 
       virtual void checkPath () const {}

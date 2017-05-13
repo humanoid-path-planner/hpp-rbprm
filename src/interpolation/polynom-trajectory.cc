@@ -37,6 +37,9 @@ namespace hpp {
         subSetEnd_(subSetEnd),
         length_(subSetEnd - subSetStart)
       {
+        timeRange_ = interval_t(subSetStart_, subSetEnd_);
+        std::cout << "subset start " <<subSetStart_ << std::endl;
+        std::cout << "subset end " <<subSetEnd_ << std::endl;
         assert (length_ >= 0);
         assert (!constraints ());
       }
@@ -57,7 +60,10 @@ namespace hpp {
         polynom_ (path.polynom_),
         subSetStart_(path.subSetStart_),
         subSetEnd_(path.subSetEnd_),
-        length_(path.length_){}
+        length_(path.length_)
+    {
+        timeRange_ = path.timeRange_;
+    }
 
     bool PolynomTrajectory::impl_compute (ConfigurationOut_t result,
 				     value_type param) const
@@ -66,14 +72,9 @@ namespace hpp {
         {
             result = initial();
         }
-        else if (param == timeRange ().second)
-        {
-            result = end();
-        }
         else
         {
-            value_type u = normalize(*this, param) * length_;
-            result = polynom_->operator ()(u);
+            result = polynom_->operator ()(param);
         }
         return true;
     }
