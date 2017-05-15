@@ -25,7 +25,7 @@
 #include <hpp/core/discretized-path-validation.hh>
 #include <hpp/constraints/position.hh>
 
-#include <spline/effector_spline.h>
+#include <spline/helpers/effector_spline.h>
 
 
 namespace hpp {

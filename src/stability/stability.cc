@@ -140,7 +140,7 @@ namespace stability{
     }
 
     centroidal_dynamics::Vector3 setupLibrary(const RbPrmFullBodyPtr_t fullbody, State& state, Equilibrium& sEq, EquilibriumAlgorithm& alg,
-                                             const core::value_type friction = 0.8)
+                                             const core::value_type friction = 0.3)
     {
         const rbprm::T_Limb& limbs = fullbody->GetLimbs();
         hpp::model::ConfigurationIn_t save = fullbody->device_->currentConfiguration();
