@@ -26,7 +26,7 @@ using namespace core;
 
   rbprm::T_Limb GetVaryingLimb(const RbPrmFullBodyPtr_t fullBody, const hpp::rbprm::State &from, const hpp::rbprm::State &to)
   {
-      rbprm::T_Limb res;
+      /*rbprm::T_Limb res;
       const rbprm::T_Limb& limbs = fullBody->GetLimbs();
       std::vector<std::string> variations = to.allVariations(from, extractEffectorsName(limbs));
       if(!variations.empty())
@@ -34,6 +34,18 @@ using namespace core;
           const std::string limbName = *(variations.begin());
           rbprm::RbPrmLimbPtr_t limb = limbs.at(limbName);
           res.insert(std::make_pair(limbName,limb));
+      }
+      return res;*/
+      rbprm::T_Limb res;
+      std::vector<std::string> fixedContacts = to.fixedContacts(from);
+      for(rbprm::CIT_Limb cit = fullBody->GetLimbs().begin();
+          cit != fullBody->GetLimbs().end(); ++cit)
+      {
+          if(std::find(fixedContacts.begin(), fixedContacts.end(), cit->first) == fixedContacts.end())
+          {
+              res.insert(*cit);
+              std::cout << "adding limb " << cit->first << std::endl;
+          }
       }
       return res;
   }

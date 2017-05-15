@@ -36,6 +36,7 @@ using namespace core;
             if(std::find(fixedContacts.begin(), fixedContacts.end(), cit->first) == fixedContacts.end())
             {
                 res.insert(*cit);
+                std::cout << "adding limb " << cit->first << std::endl;
             }
         }
         return res;

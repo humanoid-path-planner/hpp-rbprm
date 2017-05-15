@@ -142,7 +142,7 @@ namespace
         std::vector<std::string> variations = to.allVariations(from, extractEffectorsName(limbs));
         if(!variations.empty())
         {
-            DisableUnNecessaryCollisions(rootProblem_, variations, limbs);
+            //DisableUnNecessaryCollisions(rootProblem_, variations, limbs);
         }
         // TODO IS THIS REDUNDANT ?
         /*for(rbprm::CIT_Limb lit = limbs.begin(); lit != limbs.end(); ++lit)
