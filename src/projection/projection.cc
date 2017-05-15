@@ -116,19 +116,24 @@ bool not_a_limb(model::JointPtr_t cJoint, T_Joint limbs)
     return true;
 }
 
+void LockFromRootRec(model::JointPtr_t cJoint, const std::vector<model::JointPtr_t>& jointLimbs, model::ConfigurationIn_t targetRootConfiguration, core::ConfigProjectorPtr_t& projector)
+{
+    if(not_a_limb(cJoint, jointLimbs))
+    {
+        core::size_type rankInConfiguration = (cJoint->rankInConfiguration ());
+        projector->add(core::LockedJoint::create(cJoint,targetRootConfiguration.segment(rankInConfiguration, cJoint->configSize())));
+        if (cJoint->numberChildJoints() !=1)
+            return;
+        for(int i =0; i< cJoint->numberChildJoints(); ++i)
+            LockFromRootRec(cJoint->childJoint(i), jointLimbs, targetRootConfiguration, projector);
+    }
+}
+
 void LockFromRoot(hpp::model::DevicePtr_t device, const rbprm::T_Limb& limbs, model::ConfigurationIn_t targetRootConfiguration, core::ConfigProjectorPtr_t& projector)
 {
     std::vector<model::JointPtr_t> jointLimbs = getJointsFromLimbs(limbs);
     model::JointPtr_t cJoint = device->rootJoint();
-    core::size_type rankInConfiguration;
-    while(not_a_limb(cJoint, jointLimbs))
-    {
-        rankInConfiguration = (cJoint->rankInConfiguration ());
-        projector->add(core::LockedJoint::create(cJoint,targetRootConfiguration.segment(rankInConfiguration, cJoint->configSize())));
-        if (cJoint->numberChildJoints() !=1)
-            return;
-        cJoint = cJoint->childJoint(0);
-    }
+    LockFromRootRec(cJoint, jointLimbs, targetRootConfiguration, projector);
 }
 
 
@@ -249,7 +254,9 @@ ProjectionReport projectEffector(const hpp::rbprm::RbPrmFullBodyPtr_t& body, con
     }
 #ifdef PROFILE
     else
+        {
         watch.stop("collision");
+        }
 #endif
     }
 #ifdef PROFILE

@@ -87,7 +87,6 @@ namespace interpolation {
         model::CenterOfMassComputationPtr_t comComp = model::CenterOfMassComputation::
           create (device);
         comComp->add (device->rootJoint());
-//comComp->add (device->getJointByName("romeo/base_joint_xyz"));
         comComp->computeMass ();
         PointComFunctionPtr_t comFunc = PointComFunction::create ("COM-walkgen",
             device, 10000 * PointCom::create (comComp));
