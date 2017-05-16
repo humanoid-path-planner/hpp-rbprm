@@ -105,16 +105,12 @@ namespace
 
     inline void DisableUnNecessaryCollisions(core::Problem& problem, const std::vector<std::string>& variations,  const rbprm::T_Limb& limbs)
     {
-        // TODO should we really disable collisions for other bodies ?
-        tools::RemoveNonLimbCollisionRec<core::Problem>(problem.robot()->rootJoint(),
-                                                        //"all",
-                                                        variations,
-                                                        problem.collisionObstacles(),problem);
-
+        std::vector<std::string> jointNamesVariations;
         for(std::vector<std::string>::const_iterator cit = variations.begin();
                                 cit != variations.end(); ++cit)
         {
             rbprm::RbPrmLimbPtr_t limb = limbs.at(*cit);
+            jointNamesVariations.push_back(limb->limb_->name());
             if(limb->disableEndEffectorCollision_)
             {
                 hpp::tools::RemoveEffectorCollision<core::Problem>(problem,
@@ -122,6 +118,10 @@ namespace
                                                                    problem.collisionObstacles());
             }
         }
+        // TODO should we really disable collisions for other bodies ?
+        tools::RemoveNonLimbCollisionRec<core::Problem>(problem.robot()->rootJoint(),
+                                                        jointNamesVariations,
+                                                        problem.collisionObstacles(),problem);
     }
 
     inline core::PathPtr_t generateRootPath(const core::Problem& problem, const State& from, const State& to)
@@ -142,7 +142,7 @@ namespace
         std::vector<std::string> variations = to.allVariations(from, extractEffectorsName(limbs));
         if(!variations.empty())
         {
-            //DisableUnNecessaryCollisions(rootProblem_, variations, limbs);
+            DisableUnNecessaryCollisions(rootProblem_, variations, limbs);
         }
         // TODO IS THIS REDUNDANT ?
         /*for(rbprm::CIT_Limb lit = limbs.begin(); lit != limbs.end(); ++lit)
