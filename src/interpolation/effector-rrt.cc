@@ -89,7 +89,8 @@ return true;
         //create evaluation function
         constraints::PositionPtr_t position = createPositionMethod(device,fcl::Vec3f(), effector);
         // define arbitrary number of way points depending on length
-        std::size_t nbWayPoints = std::size_t(std::max(effectorDistance * 10, 3.));
+        //std::size_t nbWayPoints = std::size_t(std::max(effectorDistance * 10, 3.));
+        std::size_t nbWayPoints = 30;
         std::size_t dim = position->outputSize();
         if(!(nbWayPoints % 2)) nbWayPoints+=1;
         value_type pathIncrement = path->length() / nbWayPoints;
@@ -192,12 +193,16 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         double h1 = genHeight(found);
         fcl::Vec3f n2 = getNormal(effLimb, nextState, found);
         double h2 = genHeight(found);
-        exact_cubic_Ptr ptr = exact_cubic_Ptr(spline::helpers::effector_spline(
+        std::cout << "AM I CALLED " << n1 << "\n" <<  n2 << "\n h1 " << h1 << "\n h2 " << h2 <<  std::endl;
+       /* exact_cubic_Ptr ptr = exact_cubic_Ptr(spline::helpers::effector_spline(
                                                   wayPoints.begin(),
                                                   wayPoints.end(),
                                                   n1, n2,
                                                   h1, h2,
-                                                  h1, h2));
+                                                  h1, h2));*/
+        //exact_cubic_Ptr ptr = exact_cubic_Ptr(new spline_deriv_constraint_t(wayPoints.begin(), wayPoints.end()));
+        exact_cubic_Ptr ptr = exact_cubic_Ptr(new exact_cubic_t(wayPoints.begin(), wayPoints.end()));
+        isLine = true;
         //exact_cubic_Ptr ptr = exact_cubic_Ptr(new exact_cubic_t(wayPoints.begin(), wayPoints.end()));
         return ptr;
     }
