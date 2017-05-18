@@ -106,7 +106,7 @@ int j = 0;
                     ++cit;
                 }
                 currentVal+= timeStep;
-if (nbFailures > 1)
+if (nbFailures > 10)
 {
 #ifdef PROFILE
     watch.stop("complete generation");
