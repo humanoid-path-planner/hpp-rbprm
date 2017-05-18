@@ -105,7 +105,8 @@ HeuristicFactory::HeuristicFactory()
     // seed = 1488550692 ; // downslope 2
     //seed = 1491571994; // straight walk 2 m static
     //seed = 1491580336 ; // straight walk dynamic 0.5
-    //seed = 1492176551; // walk 0.3 ?
+    //seed = 1492176551; // walk 0.3 !!
+    //seed = 1493208163 ; // stairs static contacts
     std::cout<<"seed = "<<seed<<std::endl;
     srand ( seed);
     hppDout(notice,"SEED for heuristic = "<<seed);
