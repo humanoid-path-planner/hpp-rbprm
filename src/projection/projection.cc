@@ -122,8 +122,8 @@ void LockFromRootRec(model::JointPtr_t cJoint, const std::vector<model::JointPtr
     {
         core::size_type rankInConfiguration = (cJoint->rankInConfiguration ());
         projector->add(core::LockedJoint::create(cJoint,targetRootConfiguration.segment(rankInConfiguration, cJoint->configSize())));
-        if (cJoint->numberChildJoints() !=1)
-            return;
+        /*if (cJoint->numberChildJoints() !=1)
+            return;*/
         for(int i =0; i< cJoint->numberChildJoints(); ++i)
             LockFromRootRec(cJoint->childJoint(i), jointLimbs, targetRootConfiguration, projector);
     }

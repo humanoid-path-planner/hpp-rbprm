@@ -27,6 +27,7 @@
 #include <hpp/core/problem-target/goal-configurations.hh>
 #include <hpp/core/bi-rrt-planner.hh>
 #include <hpp/core/random-shortcut.hh>
+#include <hpp/core/path-optimization/partial-shortcut.hh>
 #include <hpp/core/constraint-set.hh>
 #include <hpp/constraints/generic-transformation.hh>
 #include <hpp/constraints/position.hh>
@@ -180,6 +181,11 @@ namespace
             for(std::size_t j=0; j<numOptimizations;++j)
             {
                 partialPath = rs->optimize(partialPath);
+            }
+            core::pathOptimization::PartialShortcutPtr_t rs2 = core::pathOptimization::PartialShortcut::create(helper.rootProblem_);
+            for(std::size_t j=0; j<numOptimizations;++j)
+            {
+                partialPath = rs2->optimize(partialPath);
             }
             return partialPath;
         }
