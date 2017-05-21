@@ -326,6 +326,24 @@ ProjectionReport maintain_contacts(ContactGenHelper &contactGenHelper)
             hpp::core::ValidationReportPtr_t valRep (new hpp::core::CollisionValidationReport);
             rep.success_ = contactGenHelper.fullBody_->GetCollisionValidation()->validate(rep.result_.configuration_, valRep);
         }
+        if(rep.success_)
+        {
+            std::vector<std::string> breaks = rep.result_.contactBreaks(contactGenHelper.previousState_);
+            std::vector<std::string> creations = rep.result_.contactCreations(contactGenHelper.previousState_);
+            if(breaks.size() > 0)
+            {
+            std::cout << "AFTER MAINTAIN " << breaks.size() << std::endl;
+            std::cout << "\t REMOVING CONTACT " << breaks.size() << std::endl;
+            std::cout << "\t CREATING CONTACT " << creations.size() << std::endl;
+            if(breaks.size()>0)
+                std::cout << "\t CONTACT REMOVED" << breaks[0] << std::endl;
+            if(breaks.size()>1)
+                std::cout << "\t WTTTTTTTTTTGGGGGGGGGGGGGGGG ? REMOVED" << breaks[1] << std::endl;
+            if(creations.size()>0)
+                std::cout << "\t WTTTTTTTTTTGGGGGGGGGGGGGGGG ? ADDED" << creations[0] << std::endl;
+            std::cout << "END MAINTAIN " << breaks.size() << std::endl;
+            }
+        }
     }
     if(rep.success_ && contactGenHelper.checkStabilityMaintain_)
         return maintain_contacts_stability(contactGenHelper, rep);
@@ -481,6 +499,7 @@ ProjectionReport gen_contacts(ContactGenHelper &contactGenHelper)
     T_ContactState candidates = gen_contacts_combinatorial(contactGenHelper);
     while(!candidates.empty() && !rep.success_)
     {
+        std::cout << "ONE CANDIDATE POPING " << std::endl;
         //retrieve latest state
         ContactState cState = candidates.front();
         candidates.pop();
@@ -488,7 +507,7 @@ ProjectionReport gen_contacts(ContactGenHelper &contactGenHelper)
         //contactGenHelper.checkStabilityGenerate_ = false; // stability not mandatory before last contact is created
 
         //if (false)
-        /*std::vector<std::string> fixed = contactGenHelper.workingState_.fixedContacts(contactGenHelper.workingState_);
+        std::vector<std::string> fixed = contactGenHelper.workingState_.fixedContacts(contactGenHelper.workingState_);
         if(fixed.size() > 1 && cState.second.empty() && (contactGenHelper.workingState_.stable || (stability::IsStable(contactGenHelper.fullBody_,contactGenHelper.workingState_) > contactGenHelper.robustnessTreshold_ )) )
         {
             if(contactGenHelper.workingState_.nbContacts > 1)
@@ -496,12 +515,20 @@ ProjectionReport gen_contacts(ContactGenHelper &contactGenHelper)
                 rep.result_ = contactGenHelper.workingState_;
                 rep.status_ = NO_CONTACT;
                 rep.success_ = true;
+                std::vector<std::string> breaks = rep.result_.contactBreaks(contactGenHelper.previousState_);
+                std::vector<std::string> creations = rep.result_.contactCreations(contactGenHelper.previousState_);
+                std::cout << "NO CONTACT ADDED " << creations.size() << std::endl;
+                std::cout << "\tREMOVING CONTACT " << breaks.size() << std::endl;
+                std::cout << "\tCREATING CONTACT " << creations.size() << std::endl;
+                std::cout << "END NO CONTACT ADDED" << breaks.size() << std::endl;
                 return rep;
             }
-        }*/
+        }
+        std::cout << "candidates for ONE GEN " << std::endl;
         for(std::vector<std::string>::const_iterator cit = cState.second.begin();
             cit != cState.second.end(); ++cit)
         {
+            std::cout << "\t " << *cit << std::endl;
             if(cit+1 == cState.second.end())
                 contactGenHelper.checkStabilityGenerate_ = checkStability;
             rep = generate_contact(contactGenHelper,*cit);
@@ -512,6 +539,24 @@ ProjectionReport gen_contacts(ContactGenHelper &contactGenHelper)
             //else
             //    break;
         }
+        std::cout << "END candidates for ONE GEN " << std::endl;
+
+        std::vector<std::string> breaks = rep.result_.contactBreaks(contactGenHelper.previousState_);
+        std::vector<std::string> creations = rep.result_.contactCreations(contactGenHelper.previousState_);
+        if(creations.size() > 0)
+            std::cout << creations[0] << std::endl;
+        std::cout << "AFTER GENERATION " << rep.success_ << std::endl;
+        if(rep.success_)
+        {
+            std::cout << "\tREMOVING CONTACT " << breaks.size() << std::endl;
+            for(std::vector<std::string>::const_iterator cit = breaks.begin(); cit != breaks.end(); ++cit)
+                std::cout << "\t \t " << *cit << std::endl;
+            std::cout << "\tCREATING CONTACT " << creations.size() << std::endl;
+            for(std::vector<std::string>::const_iterator cit = creations.begin(); cit != creations.end(); ++cit)
+                std::cout << "\t \t " << *cit << std::endl;
+        }
+        std::cout << "END AFTER GENERATION " << std::endl;
+        std::cout << "END ONE CANDIDATE POPING " << std::endl;
     }
     return rep;
 }
@@ -546,6 +591,7 @@ projection::ProjectionReport repositionContacts(ContactGenHelper& helper)
             projection::ProjectionReport rep = contact::generate_contact(helper,*cit);
             if(rep.status_ == STABLE_CONTACT)
             {
+                std::cout << "!!!!!!!stable contact occure !!!!!!!!!!!!" << *cit << std::endl;
                 nContactName = *cit;
                 notFound = false;
                 result = rep.result_;
@@ -582,6 +628,9 @@ projection::ProjectionReport repositionContacts(ContactGenHelper& helper)
     }
     result.contactOrder_ = newOrder;
     resultReport.result_ = result;
+    std::cout << "!!!!!!!repo occure !!!!!!!!!!!!" << result.contactVariations(helper.previousState_).size() << std::endl;
+    std::cout << "!!!!!!!repo contactCreations !!!!!!!!!!!!" << result.contactCreations(helper.previousState_).size() << std::endl;
+    std::cout << "!!!!!!!repo contactBreaks !!!!!!!!!!!!" << result.contactBreaks(helper.previousState_).size() << std::endl;
     return resultReport;
 }
 

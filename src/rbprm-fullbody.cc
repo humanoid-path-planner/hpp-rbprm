@@ -242,7 +242,7 @@ namespace hpp {
 			model::ConfigurationIn_t configuration,
 			const affMap_t& affordances,
 			const std::map<std::string, std::vector<std::string> >& affFilters,
-			const fcl::Vec3f& direction, bool& contactMaintained, bool& multipleBreaks,
+            const fcl::Vec3f& direction, bool& contactMaintained, bool& multipleBreaks, bool& repositioned,
       const bool allowFailure, const double robustnessTreshold)
     {
         // save old configuration
@@ -257,7 +257,7 @@ namespace hpp {
         contact::ContactGenHelper cHelper(body,previous,configuration,affordances,affFilters,robustnessTreshold,1,1,false,
                                           true,direction,fcl::Vec3f(0,0,0),false,false);
         contact::ContactReport rep = contact::oneStep(cHelper);
-        contactMaintained = rep.contactMaintained_;
+        contactMaintained = rep.success_ && rep.contactMaintained_;
         multipleBreaks = rep.multipleBreaks_;
 
         // copy extra dofs
@@ -266,10 +266,14 @@ namespace hpp {
             const model::size_type& extraDim = body->device_->extraConfigSpace().dimension();
             rep.result_.configuration_.tail(extraDim) = configuration.tail(extraDim);
         }
-        if(rep.repositionedInPlace_)
-            multipleBreaks = true;
-        if(!rep.success_ || rep.repositionedInPlace_)
+        else
         {
+            rep.multipleBreaks_ = true;
+            std::cout << "Contact gen failure" << ++nbFAILSNEW << std::endl;
+        }
+        if(rep.repositionedInPlace_)
+        {
+            repositioned = true;
             std::cout << "Contact repositionning occured " << ++nbFAILSNEW << std::endl;
             std::cout << "(successes) " << nbSUCCNEW << std::endl;
         }

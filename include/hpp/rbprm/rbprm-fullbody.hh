@@ -188,7 +188,7 @@ namespace hpp {
 			model::ConfigurationIn_t configuration,
 	        	const affMap_t& affordances,
 			const std::map<std::string, std::vector<std::string> >& affFilters, const fcl::Vec3f& direction,
-			bool& contactMaintained, bool& multipleBreaks, const bool allowFailure,
+            bool& contactMaintained, bool& multipleBreaks, bool& repositioned, const bool allowFailure,
       const double robustnessTreshold = 0);
 
   } // namespace rbprm

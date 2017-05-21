@@ -78,6 +78,7 @@ int j = 0;
         rbprm::T_StateFrame states;
         states.push_back(std::make_pair(currentVal, this->start_));
         std::size_t nbRecontacts = 0;
+        std::size_t repos = 0;
         bool allowFailure = true;
 #ifdef PROFILE
     RbPrmProfiler& watch = getRbPrmProfiler();
@@ -96,8 +97,25 @@ int j = 0;
             // TODO Direction 6d
             bool sameAsPrevious(true);
             bool multipleBreaks(false);
+            bool respositioned(false);
             State newState = ComputeContacts(previous, robot_,configuration, affordances,affFilters,direction,
-                                             sameAsPrevious, multipleBreaks,allowFailure,robustnessTreshold);
+                                             sameAsPrevious, multipleBreaks,respositioned,allowFailure,robustnessTreshold);
+
+            std::vector<std::string> breaks = newState.contactBreaks(previous);
+            std::vector<std::string> creations = newState.contactCreations(previous);
+            if(breaks.size() > 1 || creations.size() > 1)
+            {
+                std::cout << "<<<<<<<<<<<<<<<<<<<<<<<AFTER ONE STEP " << std::endl;
+                std::cout << "\t REMOVING CONTACT " << breaks.size() << std::endl;
+                for(std::vector<std::string>::const_iterator tf = breaks.begin(); tf != breaks.end(); ++tf)
+                    std::cout << "\t \t " << *tf << std::endl;
+                std::cout << "\t CREATING CONTACT " << creations.size() << std::endl;
+                for(std::vector<std::string>::const_iterator tf = creations.begin(); tf != creations.end(); ++tf)
+                    std::cout << "\t \t " << *tf << std::endl;
+
+                std::cout << "END AFTER ONE STEP>>>>>>>>>>>>>>>>>>>>>>>>  " << breaks.size() << std::endl;throw;
+            }
+
             if(allowFailure && multipleBreaks)
             {
                 ++ nbFailures;
@@ -106,8 +124,9 @@ int j = 0;
                     ++cit;
                 }
                 currentVal+= timeStep;
-if (nbFailures > 10)
+if (nbFailures > 0)
 {
+    std::cout << "failed " << std::endl;
 #ifdef PROFILE
     watch.stop("complete generation");
     watch.add_to_count("planner failed", 1);
@@ -127,17 +146,64 @@ if (nbFailures > 10)
                 cit--;
                 currentVal-= timeStep;
             }
+            else if(!multipleBreaks && respositioned)
+            {
+                ++nbRecontacts;
+                cit--;
+                currentVal-= timeStep;
+            }
             else
             {
                 nbRecontacts = 0;
             }
-            if(sameAsPrevious)
+            if(respositioned)
+            {
+                ++repos;
+                if (repos > 20)
+                {
+#ifdef PROFILE
+    watch.stop("complete generation");
+    watch.add_to_count("planner failed", 1);
+    std::ofstream fout;
+    fout.open("log.txt", std::fstream::out | std::fstream::app);
+    std::ostream* fp = &fout;
+    watch.report_count(*fp);
+    fout.close();
+#endif
+                    return FilterStates(states, filterStates);
+                }
+            }
+            if(sameAsPrevious && !multipleBreaks && !respositioned)
             {
                 states.pop_back();
+                std::cout << "POPED out " << states.size() <<  std::endl;
             }
             newState.nbContacts = newState.contactNormals_.size();
+            if(states.size()>1)
+            {
+            const State previ = states.back().second;
             states.push_back(std::make_pair(currentVal, newState));
-            allowFailure = nbRecontacts < robot_->GetLimbs().size() + 6;
+            const State nexi = states.back().second;
+            breaks = nexi.contactBreaks(previ);
+            creations = nexi.contactCreations(previ);
+            if(breaks.size() > 1 || creations.size() > 1)
+            {
+                std::cout << "<<<<<<<<<<<<<<<<<<<<<<<AFTER ONE STEP " << std::endl;
+                std::cout << "\t REMOVING CONTACT " << breaks.size() << std::endl;
+                for(std::vector<std::string>::const_iterator tf = breaks.begin(); tf != breaks.end(); ++tf)
+                    std::cout << "\t \t " << *tf << std::endl;
+                std::cout << "\t CREATING CONTACT " << creations.size() << std::endl;
+                for(std::vector<std::string>::const_iterator tf = creations.begin(); tf != creations.end(); ++tf)
+                    std::cout << "\t \t " << *tf << std::endl;
+
+                std::cout << "END AFTER ONE STEP>>>>>>>>>>>>>>>>>>>>>>>>  " << breaks.size() << std::endl;
+                throw;
+            }
+            }
+            std::cout << "AFTER HAT out " << states.size() <<  std::endl;
+            states.push_back(std::make_pair(currentVal, newState));
+            //allowFailure = nbRecontacts < robot_->GetLimbs().size();
+            allowFailure = nbRecontacts < 2;
         }
         states.push_back(std::make_pair(this->path_->timeRange().second, this->end_));
 #ifdef PROFILE
@@ -248,12 +314,35 @@ if (nbFailures > 10)
             const State& current    = (cit2)->second;
             const State& current_m1 = (cit)->second;
             if((current.configuration_ - current_m1.configuration_).norm() > std::numeric_limits<double>::epsilon()
-                    && !(current.contactBreaks(current_m1).empty() && current.contactCreations(current_m1).empty()))
+                   && !(current.contactBreaks(current_m1).empty() && current.contactCreations(current_m1).empty()))
             {
                 res.push_back(std::make_pair(cit2->first, cit2->second));
             }
         }
         res.push_back(originStates.back());
+
+        cit = res.begin();
+        std::size_t idx = 0;
+        for(T_StateFrame::const_iterator cit2 = res.begin()+1; cit2 != res.end()-1; ++cit, ++cit2, ++idx)
+        {
+            const State prev = cit->second;
+            const State next = cit2->second;
+            std::vector<std::string> breaks = next.contactBreaks(prev);
+            std::vector<std::string> creations = next.contactCreations(prev);
+            if(breaks.size() > 1 || creations.size() > 1)
+            {
+                std::cout << "AFTER FILTER " << std::endl;
+                std::cout << "\t REMOVING CONTACT " << breaks.size() << std::endl;
+                for(std::vector<std::string>::const_iterator tf = breaks.begin(); tf != breaks.end(); ++tf)
+                    std::cout << "\t \t " << *tf << std::endl;
+                std::cout << "\t CREATING CONTACT " << creations.size() << std::endl;
+                for(std::vector<std::string>::const_iterator tf = creations.begin(); tf != creations.end(); ++tf)
+                    std::cout << "\t \t " << *tf << std::endl;
+
+                std::cout << "END AFTERAFTER FILTER  " << breaks.size() << std::endl;
+            }
+
+        }
         return res;
     }
 
@@ -264,6 +353,30 @@ if (nbFailures > 10)
 
     T_StateFrame FilterStates(const T_StateFrame& originStates, const bool deep)
     {
+        //make sure they re ok
+        T_StateFrame::const_iterator cit = originStates.begin();
+        std::size_t idx = 0;
+        for(T_StateFrame::const_iterator cit2 = originStates.begin()+1; cit2 != originStates.end()-1; ++cit, ++cit2, ++idx)
+        {
+            const State prev = cit->second;
+            const State next = cit2->second;
+            std::vector<std::string> breaks = next.contactBreaks(prev);
+            std::vector<std::string> creations = next.contactCreations(prev);
+            if(breaks.size() > 1 || creations.size() > 1)
+            {
+                std::cout << "BEFORE FILTER " << std::endl;
+                std::cout << "\t REMOVING CONTACT " << breaks.size() << std::endl;
+                for(std::vector<std::string>::const_iterator tf = breaks.begin(); tf != breaks.end(); ++tf)
+                    std::cout << "\t \t " << *tf << std::endl;
+                std::cout << "\t CREATING CONTACT " << creations.size() << std::endl;
+                for(std::vector<std::string>::const_iterator tf = creations.begin(); tf != creations.end(); ++tf)
+                    std::cout << "\t \t " << *tf<< std::endl;
+
+                std::cout << "END BEFORE FILTER  " << breaks.size() << std::endl;
+            }
+
+        }
+
         T_StateFrame res = originStates;
         if(deep)
         {

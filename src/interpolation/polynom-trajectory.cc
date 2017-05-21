@@ -38,8 +38,6 @@ namespace hpp {
         length_(subSetEnd - subSetStart)
       {
         timeRange_ = interval_t(subSetStart_, subSetEnd_);
-        std::cout << "subset start " <<subSetStart_ << std::endl;
-        std::cout << "subset end " <<subSetEnd_ << std::endl;
         assert (length_ >= 0);
         assert (!constraints ());
       }

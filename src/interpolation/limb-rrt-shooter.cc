@@ -37,14 +37,18 @@ using namespace core;
       }
       return res;*/
       rbprm::T_Limb res;
-      std::vector<std::string> fixedContacts = to.fixedContacts(from);
+      std::vector<std::string> fixedContacts = to.fixedContacts(from);      
+      std::vector<std::string> variations = to.contactVariations(from);
       for(rbprm::CIT_Limb cit = fullBody->GetLimbs().begin();
           cit != fullBody->GetLimbs().end(); ++cit)
       {
           if(std::find(fixedContacts.begin(), fixedContacts.end(), cit->first) == fixedContacts.end())
           {
-              res.insert(*cit);
-              std::cout << "adding limb " << cit->first << std::endl;
+              if(std::find(variations.begin(), variations.end(), cit->first) != variations.end())
+              {
+                  std::cout << "adding limb " << cit->first << std::endl;
+                  res.insert(*cit);
+              }
           }
       }
       return res;
