@@ -99,17 +99,17 @@ ContactReport handleFailure(ContactGenHelper& helper)
 
 ContactReport oneStep(ContactGenHelper& helper)
 {
-    std::cout << "*********************** ONE STEP PPPPPPPPPPP *************** " << std::endl;
+    //std::cout << "*********************** ONE STEP PPPPPPPPPPP *************** " << std::endl;
     projection::ProjectionReport rep;
     do
         rep = genContactFromOneMaintainCombinatorial(helper);
     while(!rep.success_ && !helper.candidates_.empty());
     if(!rep.success_) // TODO only possible in quasi static
     {
-        std::cout << "*********************** ONE STEP REPOR *************** " << std::endl;
+        //std::cout << "*********************** ONE STEP REPOR *************** " << std::endl;
         return handleFailure(helper);
     }
-    std::cout << "*********************** END STEP *************** " << std::endl;
+    //std::cout << "*********************** END STEP *************** " << std::endl;
     return generateContactReport(rep,helper);
 }
 

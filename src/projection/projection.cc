@@ -87,7 +87,7 @@ ProjectionReport projectToRootPosition(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, 
                                            const hpp::rbprm::State& currentState)
 {
     ProjectionReport res;
-    core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(fullBody->device_,"proj", 0.001, 40);
+    core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(fullBody->device_,"proj", 0.00001, 40);
     CreateContactConstraints(fullBody, currentState, proj);
     CreateRootPosConstraint(fullBody, target, proj);
     model::Configuration_t configuration = currentState.configuration_;
@@ -122,8 +122,8 @@ void LockFromRootRec(model::JointPtr_t cJoint, const std::vector<model::JointPtr
     {
         core::size_type rankInConfiguration = (cJoint->rankInConfiguration ());
         projector->add(core::LockedJoint::create(cJoint,targetRootConfiguration.segment(rankInConfiguration, cJoint->configSize())));
-        /*if (cJoint->numberChildJoints() !=1)
-            return;*/
+        //if (cJoint->numberChildJoints() !=1)
+        //    return;
         for(int i =0; i< cJoint->numberChildJoints(); ++i)
             LockFromRootRec(cJoint->childJoint(i), jointLimbs, targetRootConfiguration, projector);
     }
@@ -141,7 +141,7 @@ ProjectionReport projectToRootConfiguration(hpp::rbprm::RbPrmFullBodyPtr_t fullB
                                            const hpp::rbprm::State& currentState)
 {
     ProjectionReport res;
-    core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(fullBody->device_,"proj", 0.001, 40);
+    core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(fullBody->device_,"proj", 0.00001, 40);
     CreateContactConstraints(fullBody, currentState, proj);
     LockFromRoot(fullBody->device_, fullBody->GetLimbs(), conf, proj);
     model::Configuration_t configuration = currentState.configuration_;

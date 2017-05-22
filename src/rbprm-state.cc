@@ -103,7 +103,7 @@ void State::contactCreations(const State& previous, std::vector<std::string>& ou
       bool newContact(true);
       if(previous.contactPositions_.find(name) != previous.contactPositions_.end())
       {
-          newContact = (previous.contactPositions_.at(name) - cit->second).norm() > 10e-2;
+          newContact = (previous.contactPositions_.at(name) - cit->second).norm() > 10e-4;
       }
       if(newContact && std::find(outList.begin(),outList.end(),name) == outList.end())
       {

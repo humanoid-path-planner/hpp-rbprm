@@ -65,6 +65,7 @@ int j = 0;
         {
             configs.push_back(configPosition(configs.back(),path_,i));
         }
+        configs.push_back(configPosition(configs.back(),path_,range.second));
         return Interpolate(affordances, affFilters, configs, robustnessTreshold, timeStep, range.first, filterStates);
     }
 
@@ -174,10 +175,7 @@ if (nbFailures > 0)
                 }
             }
             if(sameAsPrevious && !multipleBreaks && !respositioned)
-            {
                 states.pop_back();
-                std::cout << "POPED out " << states.size() <<  std::endl;
-            }
             newState.nbContacts = newState.contactNormals_.size();
             if(states.size()>1)
             {
@@ -200,7 +198,7 @@ if (nbFailures > 0)
                 throw;
             }
             }
-            std::cout << "AFTER HAT out " << states.size() <<  std::endl;
+            //std::cout << "AFTER HAT out " << states.size() <<  std::endl;
             states.push_back(std::make_pair(currentVal, newState));
             //allowFailure = nbRecontacts < robot_->GetLimbs().size();
             allowFailure = nbRecontacts < 2;
