@@ -20,6 +20,8 @@
 #include <hpp/rbprm/contact_generation/algorithm.hh>
 #include <hpp/rbprm/stability/stability.hh>
 #include <hpp/rbprm/tools.hh>
+# include <hpp/rbprm/rbprm-state.hh>
+# include <hpp/rbprm/rbprm-fullbody.hh>
 
 
 

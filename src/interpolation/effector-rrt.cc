@@ -14,7 +14,7 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-rbprm. If not, see <http://www.gnu.org/licenses/>.
 
-#include <hpp/rbprm/interpolation/com-rrt.hh>
+#include <hpp/rbprm/rbprm-fullbody.hh>
 #include <hpp/rbprm/interpolation/limb-rrt.hh>
 #include <hpp/rbprm/interpolation/spline/effector-rrt.hh>
 #include <hpp/rbprm/interpolation/com-rrt.hh>

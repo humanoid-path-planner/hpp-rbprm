@@ -19,32 +19,14 @@
 #ifndef HPP_RBPRM_PROJECTION_HH
 # define HPP_RBPRM_PROJECTION_HH
 
-# include <hpp/rbprm/rbprm-state.hh>
 # include <hpp/rbprm/rbprm-fullbody.hh>
+# include <hpp/rbprm/rbprm-state.hh>
+# include <hpp/rbprm/reports.hh>
 
 namespace hpp {
 namespace rbprm {
 namespace projection{
 
-
-
-enum ContactComputationStatus
-{
-  NO_CONTACT = 0,
-  STABLE_CONTACT = 1,
-  UNSTABLE_CONTACT = 2
-};
-
-
-struct HPP_RBPRM_DLLAPI ProjectionReport
-{
-     ProjectionReport(): success_ (false), status_(NO_CONTACT){}
-     ProjectionReport(const ProjectionReport&);
-    ~ProjectionReport(){}
-    bool success_;
-    hpp::rbprm::State result_;
-    ContactComputationStatus status_;
-};
 
 /// Project a configuration to a target position, while maintaining contact constraints.
 /// If required, up to maxBrokenContacts can be broken in the process.

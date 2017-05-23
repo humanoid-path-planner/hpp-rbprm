@@ -237,13 +237,11 @@ namespace hpp {
         return result;
     }
 
-    hpp::rbprm::State ComputeContacts(const hpp::rbprm::State& previous,
-			const hpp::rbprm::RbPrmFullBodyPtr_t& body,
-			model::ConfigurationIn_t configuration,
-			const affMap_t& affordances,
-			const std::map<std::string, std::vector<std::string> >& affFilters,
-            const fcl::Vec3f& direction, bool& contactMaintained, bool& multipleBreaks, bool& repositioned,
-      const bool allowFailure, const double robustnessTreshold)
+    hpp::rbprm::contact::ContactReport ComputeContacts(const hpp::rbprm::State& previous,
+            const hpp::rbprm::RbPrmFullBodyPtr_t& body,
+            model::ConfigurationIn_t configuration, const affMap_t& affordances,
+            const std::map<std::string, std::vector<std::string> >& affFilters,
+            const fcl::Vec3f& direction, const double robustnessTreshold)
     {
         // save old configuration
         core::ConfigurationIn_t save = body->device_->currentConfiguration();
@@ -257,8 +255,6 @@ namespace hpp {
         contact::ContactGenHelper cHelper(body,previous,configuration,affordances,affFilters,robustnessTreshold,1,1,false,
                                           true,direction,fcl::Vec3f(0,0,0),false,false);
         contact::ContactReport rep = contact::oneStep(cHelper);
-        contactMaintained = rep.success_ && rep.contactMaintained_;
-        multipleBreaks = rep.multipleBreaks_;
 
         // copy extra dofs
         if(rep.success_)
@@ -266,22 +262,9 @@ namespace hpp {
             const model::size_type& extraDim = body->device_->extraConfigSpace().dimension();
             rep.result_.configuration_.tail(extraDim) = configuration.tail(extraDim);
         }
-        else
-        {
-            rep.multipleBreaks_ = true;
-            std::cout << "Contact gen failure" << ++nbFAILSNEW << std::endl;
-        }
-        if(rep.repositionedInPlace_)
-        {
-            repositioned = true;
-        }
-        else
-        {
-            ++nbSUCCNEW;
-        }
         body->device_->currentConfiguration(save);
         body->device_->controlComputation (flag);
-        return rep.result_;
+        return rep;
     }
   } // rbprm
 } //hpp

@@ -96,28 +96,16 @@ int j = 0;
             direction.normalize(&nonZero);
             if(!nonZero) direction = fcl::Vec3f(0,0,1.);
             // TODO Direction 6d
-            bool sameAsPrevious(true);
-            bool multipleBreaks(false);
-            bool respositioned(false);
-            State newState = ComputeContacts(previous, robot_,configuration, affordances,affFilters,direction,
-                                             sameAsPrevious, multipleBreaks,respositioned,allowFailure,robustnessTreshold);
+            hpp::rbprm::contact::ContactReport rep = ComputeContacts(previous, robot_,configuration, affordances,affFilters,direction,
+                                             robustnessTreshold);
+            State& newState = rep.result_;
 
-            std::vector<std::string> breaks = newState.contactBreaks(previous);
-            std::vector<std::string> creations = newState.contactCreations(previous);
-            if(breaks.size() > 1 || creations.size() > 1)
-            {
-                std::cout << "<<<<<<<<<<<<<<<<<<<<<<<AFTER ONE STEP " << std::endl;
-                std::cout << "\t REMOVING CONTACT " << breaks.size() << std::endl;
-                for(std::vector<std::string>::const_iterator tf = breaks.begin(); tf != breaks.end(); ++tf)
-                    std::cout << "\t \t " << *tf << std::endl;
-                std::cout << "\t CREATING CONTACT " << creations.size() << std::endl;
-                for(std::vector<std::string>::const_iterator tf = creations.begin(); tf != creations.end(); ++tf)
-                    std::cout << "\t \t " << *tf << std::endl;
 
-                std::cout << "END AFTER ONE STEP>>>>>>>>>>>>>>>>>>>>>>>>  " << breaks.size() << std::endl;throw;
-            }
+            const bool  sameAsPrevious = rep.success_ && rep.contactMaintained_;
+            const bool& multipleBreaks = rep.multipleBreaks_;
+            const bool& respositioned = rep.repositionedInPlace_;
 
-            if(allowFailure && multipleBreaks)
+            if(allowFailure && (!rep.success_ || rep.multipleBreaks_))
             {
                 ++ nbFailures;
                 if(cit != configs.end() && (cit+1)!= configs.end())
@@ -177,28 +165,6 @@ if (nbFailures > 0)
             if(sameAsPrevious && !multipleBreaks && !respositioned)
                 states.pop_back();
             newState.nbContacts = newState.contactNormals_.size();
-            if(states.size()>1)
-            {
-            const State previ = states.back().second;
-            states.push_back(std::make_pair(currentVal, newState));
-            const State nexi = states.back().second;
-            breaks = nexi.contactBreaks(previ);
-            creations = nexi.contactCreations(previ);
-            if(breaks.size() > 1 || creations.size() > 1)
-            {
-                std::cout << "<<<<<<<<<<<<<<<<<<<<<<<AFTER ONE STEP " << std::endl;
-                std::cout << "\t REMOVING CONTACT " << breaks.size() << std::endl;
-                for(std::vector<std::string>::const_iterator tf = breaks.begin(); tf != breaks.end(); ++tf)
-                    std::cout << "\t \t " << *tf << std::endl;
-                std::cout << "\t CREATING CONTACT " << creations.size() << std::endl;
-                for(std::vector<std::string>::const_iterator tf = creations.begin(); tf != creations.end(); ++tf)
-                    std::cout << "\t \t " << *tf << std::endl;
-
-                std::cout << "END AFTER ONE STEP>>>>>>>>>>>>>>>>>>>>>>>>  " << breaks.size() << std::endl;
-                throw;
-            }
-            }
-            //std::cout << "AFTER HAT out " << states.size() <<  std::endl;
             states.push_back(std::make_pair(currentVal, newState));
             //allowFailure = nbRecontacts < robot_->GetLimbs().size();
             allowFailure = nbRecontacts < 2;

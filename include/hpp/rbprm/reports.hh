@@ -16,29 +16,48 @@
 // hpp-wholebody-step-planner. If not, see
 // <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_RBPRM_ALGORITHM_HH
-# define HPP_RBPRM_ALGORITHM_HH
+#ifndef HPP_RBPRM_CONTACT_REPORT_HH
+# define HPP_RBPRM_CONTACT_REPORT_HH
 
-# include <hpp/rbprm/reports.hh>
-# include <hpp/rbprm/contact_generation/contact_generation.hh>
-
-# include <queue>
+#include <hpp/rbprm/config.hh>
+#include <hpp/rbprm/rbprm-state.hh>
 
 namespace hpp {
 namespace rbprm {
+
+
+enum HPP_RBPRM_DLLAPI ContactComputationStatus
+{
+  NO_CONTACT = 0,
+  STABLE_CONTACT = 1,
+  UNSTABLE_CONTACT = 2
+};
+
+namespace projection{
+struct HPP_RBPRM_DLLAPI ProjectionReport
+{
+     ProjectionReport(): success_ (false), status_(NO_CONTACT){}
+     ProjectionReport(const ProjectionReport&);
+    ~ProjectionReport(){}
+    bool success_;
+    hpp::rbprm::State result_;
+    ContactComputationStatus status_;
+};
+
+}
+
 namespace contact{
 
-/// Generates one step of the contact planner.
-/// First, generates all possible cases of contact maintenance (feasible).
-/// Starting with the preferred case, generates all admissible contact combinatorial.
-/// Again starting with the preferred one, tries to generate a feasible contact.
-/// iterates like this until either all solution failed or a feasible contact is found.
-/// \param ContactGenHelper parametrization of the planner
-/// \return whether a step was successfully generated
-ContactReport HPP_RBPRM_DLLAPI oneStep(ContactGenHelper& helper);
-
-
-    } // namespace projection
-  } // namespace rbprm
+struct HPP_RBPRM_DLLAPI ContactReport : public projection::ProjectionReport
+{
+    ContactReport();
+    ContactReport(const projection::ProjectionReport&);
+    bool contactMaintained_;
+    bool multipleBreaks_;
+    bool contactCreated_;
+    bool repositionedInPlace_;
+};
+} // namespace contact
+} // namespace rbprm
 } // namespace hpp
 #endif // HPP_RBPRM_ALGORITHM_HH

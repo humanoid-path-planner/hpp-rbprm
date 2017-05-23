@@ -26,6 +26,7 @@
 #include <hpp/rbprm/rbprm-limb.hh>
 #include <hpp/core/collision-validation.hh>
 #include <hpp/rbprm/sampling/heuristic.hh>
+#include <hpp/rbprm/reports.hh>
 
 #include  <vector>
 
@@ -139,13 +140,12 @@ namespace hpp {
         const std::map<std::string, std::vector<std::string> >& affFilters,
         const fcl::Vec3f& direction, const double robustnessTreshold);
 
-      friend hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(
-				const hpp::rbprm::State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body,
-				model::ConfigurationIn_t configuration,
-				const affMap_t& affordances,
+      friend hpp::rbprm::contact::ContactReport HPP_RBPRM_DLLAPI ComputeContacts(
+                const hpp::rbprm::State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body,
+                model::ConfigurationIn_t configuration,
+                const affMap_t& affordances,
         const std::map<std::string, std::vector<std::string> >& affFilters, const fcl::Vec3f& direction,
-				bool& contactMaintained, bool& multipleBreaks, const bool allowFailure,
-				const double robustnessTreshold);
+                const double robustnessTreshold);
     }; // class RbPrmDevice
 
     /// Generates a balanced contact configuration, considering the
@@ -178,17 +178,13 @@ namespace hpp {
     /// \param affFilters a vector of strings determining which affordance
     ///  types are to be used in generating contacts for each limb.
     /// \param direction An estimation of the direction of motion of the character.
-    /// \param contactMaintained parameter set to true if all the contacts were maintained, regarding the previous state
-    /// \param multipleBreaks If the contact generation failed at this stage because multiple contacts were broken, is set to true.
-    /// \param allowFailure allow multiple breaks in the contact computation.
     /// \param robustnessTreshold minimum value of the static equilibrium robustness criterion required to accept the configuration (0 by default).
     /// \return a State describing the computed contact configuration, with relevant contact information and balance information.
-    hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(
-			const hpp::rbprm::State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body,
-			model::ConfigurationIn_t configuration,
-	        	const affMap_t& affordances,
-			const std::map<std::string, std::vector<std::string> >& affFilters, const fcl::Vec3f& direction,
-            bool& contactMaintained, bool& multipleBreaks, bool& repositioned, const bool allowFailure,
+    hpp::rbprm::contact::ContactReport HPP_RBPRM_DLLAPI ComputeContacts(
+            const hpp::rbprm::State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body,
+            model::ConfigurationIn_t configuration,
+                const affMap_t& affordances,
+            const std::map<std::string, std::vector<std::string> >& affFilters, const fcl::Vec3f& direction,
       const double robustnessTreshold = 0);
 
   } // namespace rbprm
