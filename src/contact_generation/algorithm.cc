@@ -69,10 +69,6 @@ projection::ProjectionReport genContactFromOneMaintainCombinatorial(ContactGenHe
         helper.workingState_ = rep.result_;
         return gen_contacts(helper);
     }
-    else
-    {
-        std::cout << "can t maintain" << ! rep.success_ << std::endl;
-    }
     return rep;
 }
 
@@ -84,32 +80,17 @@ ContactReport handleFailure(ContactGenHelper& helper)
 
     std::vector<std::string> breaks = rep.result_.contactBreaks(helper.previousState_);
     std::vector<std::string> creations = rep.result_.contactCreations(helper.previousState_);
-    std::cout << "AFTER REPOSITIONNING " << rep.success_ << std::endl;
-    {
-        std::cout << "\tREMOVING CONTACT " << breaks.size() << std::endl;
-        for(std::vector<std::string>::const_iterator cit = breaks.begin(); cit != breaks.end(); ++cit)
-            std::cout << "\t \t " << *cit << std::endl;
-        std::cout << "\tCREATING CONTACT " << creations.size() << std::endl;
-        for(std::vector<std::string>::const_iterator cit = creations.begin(); cit != creations.end(); ++cit)
-            std::cout << "\t \t " << *cit << std::endl;
-    }
-    std::cout << "END AFTER REPOSITIONNING "  << std::endl;
     return generateContactReport(rep,helper,true);
 }
 
 ContactReport oneStep(ContactGenHelper& helper)
 {
-    //std::cout << "*********************** ONE STEP PPPPPPPPPPP *************** " << std::endl;
     projection::ProjectionReport rep;
     do
         rep = genContactFromOneMaintainCombinatorial(helper);
     while(!rep.success_ && !helper.candidates_.empty());
     if(!rep.success_) // TODO only possible in quasi static
-    {
-        //std::cout << "*********************** ONE STEP REPOR *************** " << std::endl;
         return handleFailure(helper);
-    }
-    //std::cout << "*********************** END STEP *************** " << std::endl;
     return generateContactReport(rep,helper);
 }
 

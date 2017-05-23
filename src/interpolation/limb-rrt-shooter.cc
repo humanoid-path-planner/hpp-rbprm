@@ -46,7 +46,6 @@ using namespace core;
           {
               if(std::find(variations.begin(), variations.end(), cit->first) != variations.end())
               {
-                  std::cout << "adding limb " << cit->first << std::endl;
                   res.insert(*cit);
               }
           }

@@ -274,8 +274,6 @@ namespace hpp {
         if(rep.repositionedInPlace_)
         {
             repositioned = true;
-            std::cout << "Contact repositionning occured " << ++nbFAILSNEW << std::endl;
-            std::cout << "(successes) " << nbSUCCNEW << std::endl;
         }
         else
         {
