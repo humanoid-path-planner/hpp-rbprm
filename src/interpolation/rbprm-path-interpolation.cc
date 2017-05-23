@@ -15,6 +15,7 @@
 // hpp-rbprm. If not, see <http://www.gnu.org/licenses/>.
 
 #include <hpp/rbprm/interpolation/rbprm-path-interpolation.hh>
+#include <hpp/rbprm/contact_generation/algorithm.hh>
 
 #ifdef PROFILE
     #include "hpp/rbprm/rbprm-profiler.hh"
@@ -96,7 +97,7 @@ int j = 0;
             direction.normalize(&nonZero);
             if(!nonZero) direction = fcl::Vec3f(0,0,1.);
             // TODO Direction 6d
-            hpp::rbprm::contact::ContactReport rep = ComputeContacts(previous, robot_,configuration, affordances,affFilters,direction,
+            hpp::rbprm::contact::ContactReport rep = contact::ComputeContacts(previous, robot_,configuration, affordances,affFilters,direction,
                                              robustnessTreshold);
             State& newState = rep.result_;
 
