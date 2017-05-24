@@ -55,6 +55,9 @@ ProjectionReport HPP_RBPRM_DLLAPI projectToRootConfiguration(hpp::rbprm::RbPrmFu
 ProjectionReport  HPP_RBPRM_DLLAPI setCollisionFree(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const core::CollisionValidationPtr_t &validation, const std::string& limb, const hpp::rbprm::State& currentState);
 
 
+ProjectionReport HPP_RBPRM_DLLAPI projectStateToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
+                                                         const hpp::rbprm::State& current, const fcl::Vec3f &normal, const fcl::Vec3f &position);
+
 ProjectionReport HPP_RBPRM_DLLAPI projectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
                                                  const sampling::OctreeReport& report, core::CollisionValidationPtr_t validation,
                                                  model::ConfigurationOut_t configuration, const hpp::rbprm::State& current);

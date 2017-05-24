@@ -266,15 +266,12 @@ ProjectionReport projectEffector(const hpp::rbprm::RbPrmFullBodyPtr_t& body, con
     return rep;
 }
 
-ProjectionReport projectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
-                   const sampling::OctreeReport& report, core::CollisionValidationPtr_t validation,
-                   model::ConfigurationOut_t configuration, const hpp::rbprm::State& current)
+ProjectionReport projectToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
+                                   core::CollisionValidationPtr_t validation, model::ConfigurationOut_t configuration, const hpp::rbprm::State& current,
+                                   const fcl::Vec3f& normal, const fcl::Vec3f& position)
 {
-    sampling::Load(*report.sample_, configuration);
     body->device_->currentConfiguration(configuration);
     body->device_->computeForwardKinematics();
-    const fcl::Vec3f& normal = report.normal_;
-    const fcl::Vec3f& position = report.contact_.pos;
     // the normal is given by the normal of the contacted object
     const fcl::Vec3f z = limb->effector_->currentTransformation().getRotation() * limb->normal_;
     const fcl::Matrix3f alignRotation = tools::GetRotationMatrix(z,normal);
@@ -282,6 +279,26 @@ ProjectionReport projectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& b
     fcl::Vec3f posOffset = position - rotation * limb->offset_;
     posOffset = posOffset + normal * epsilon;
     return projectEffector(body, limbId, limb, validation, configuration, rotation, setRotationConstraints(),posOffset, normal, current);
+}
+
+ProjectionReport projectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
+                                         const sampling::OctreeReport& report, core::CollisionValidationPtr_t validation,
+                                         model::ConfigurationOut_t configuration, const hpp::rbprm::State& current)
+{
+    sampling::Load(*report.sample_, configuration);
+    const fcl::Vec3f& normal = report.normal_;
+    const fcl::Vec3f& position = report.contact_.pos;
+    return projectToObstacle(body, limbId, limb, validation, configuration, current, normal, position);
+}
+
+ProjectionReport projectStateToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
+                                        const hpp::rbprm::State& current, const fcl::Vec3f &normal, const fcl::Vec3f &position)
+{
+    hpp::rbprm::State state = current;
+    state.RemoveContact(limbId);
+    core::CollisionValidationPtr_t dummy = core::CollisionValidation::create(body->device_);
+    model::Configuration_t configuration = current.configuration_;
+    return projectToObstacle(body, limbId, limb, dummy, configuration, current, normal, position);
 }
 
 } // namespace projection

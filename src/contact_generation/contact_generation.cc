@@ -584,7 +584,6 @@ projection::ProjectionReport repositionContacts(ContactGenHelper& helper)
     resultReport.result_ = result;
     return resultReport;
 }
-
 } // namespace projection
 } // namespace rbprm
 } // namespace hpp
