@@ -62,7 +62,7 @@ ProjectionReport HPP_RBPRM_DLLAPI projectSampleToObstacle(const hpp::rbprm::RbPr
                                                  const sampling::OctreeReport& report, core::CollisionValidationPtr_t validation,
                                                  model::ConfigurationOut_t configuration, const hpp::rbprm::State& current);
 
-ProjectionReport HPP_RBPRM_DLLAPI projectEffector(const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
+ProjectionReport HPP_RBPRM_DLLAPI projectEffector(core::ConfigProjectorPtr_t proj, const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
                                            core::CollisionValidationPtr_t validation, model::ConfigurationOut_t configuration,
                                            const fcl::Matrix3f& rotationTarget, const std::vector<bool>& rotationFilter, const fcl::Vec3f& positionTarget, const fcl::Vec3f& normal,
                                            const hpp::rbprm::State& current);
