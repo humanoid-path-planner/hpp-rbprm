@@ -140,11 +140,9 @@ if (nbFailures > 1)
 
             newState.nbContacts = newState.contactNormals_.size();
             allowFailure = nbRecontacts < robot_->GetLimbs().size() + 6;
-            currentContactsStates.push_back(std::make_pair(currentVal, newState));
 
-            if(!sameAsPrevious){  // add the state in the midpoint between the contacts transitions
-              states.push_back(currentContactsStates.at(round(currentContactsStates.size()/2)));
-              currentContactsStates.clear();
+            if(!sameAsPrevious){  // add the first state with this contacts
+              states.push_back(std::make_pair(currentVal, newState));
             }
         }
         states.push_back(std::make_pair(this->path_->timeRange().second, this->end_));
