@@ -67,6 +67,9 @@ ProjectionReport HPP_RBPRM_DLLAPI projectEffector(core::ConfigProjectorPtr_t pro
                                            const fcl::Matrix3f& rotationTarget, const std::vector<bool>& rotationFilter, const fcl::Vec3f& positionTarget, const fcl::Vec3f& normal,
                                            const hpp::rbprm::State& current);
 
+fcl::Transform3f HPP_RBPRM_DLLAPI  computeProjectionMatrix(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const hpp::rbprm::RbPrmLimbPtr_t& limb, const model::ConfigurationIn_t configuration,
+                                         const fcl::Vec3f& normal, const fcl::Vec3f& position);
+
     } // namespace projection
   } // namespace rbprm
 } // namespace hpp

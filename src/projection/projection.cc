@@ -263,9 +263,8 @@ ProjectionReport projectEffector(hpp::core::ConfigProjectorPtr_t proj, const hpp
     return rep;
 }
 
-ProjectionReport projectToObstacle(core::ConfigProjectorPtr_t proj, const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
-                                   core::CollisionValidationPtr_t validation, model::ConfigurationOut_t configuration, const hpp::rbprm::State& current,
-                                   const fcl::Vec3f& normal, const fcl::Vec3f& position)
+fcl::Transform3f computeProjectionMatrix(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const hpp::rbprm::RbPrmLimbPtr_t& limb, const model::ConfigurationIn_t configuration,
+                                         const fcl::Vec3f& normal, const fcl::Vec3f& position)
 {
     body->device_->currentConfiguration(configuration);
     body->device_->computeForwardKinematics();
@@ -275,7 +274,15 @@ ProjectionReport projectToObstacle(core::ConfigProjectorPtr_t proj, const hpp::r
     const fcl::Matrix3f rotation = alignRotation * limb->effector_->currentTransformation().getRotation();
     fcl::Vec3f posOffset = position - rotation * limb->offset_;
     posOffset = posOffset + normal * epsilon;
-    return projectEffector(proj, body, limbId, limb, validation, configuration, rotation, setRotationConstraints(),posOffset, normal, current);
+    return fcl::Transform3f(rotation,posOffset);
+}
+
+ProjectionReport projectToObstacle(core::ConfigProjectorPtr_t proj, const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
+                                   core::CollisionValidationPtr_t validation, model::ConfigurationOut_t configuration, const hpp::rbprm::State& current,
+                                   const fcl::Vec3f& normal, const fcl::Vec3f& position)
+{
+    fcl::Transform3f pM = computeProjectionMatrix(body, limb, configuration, normal, position);
+    return projectEffector(proj, body, limbId, limb, validation, configuration, pM.getRotation(), setRotationConstraints(),pM.getTranslation(), normal, current);
 }
 
 ProjectionReport projectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
