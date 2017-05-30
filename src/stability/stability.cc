@@ -24,8 +24,6 @@
 #include <hpp/model/center-of-mass-computation.hh>
 #include <hpp/rbprm/tools.hh>
 
-#include <robust-equilibrium-lib/static_equilibrium.hh>
-
 #include <Eigen/Dense>
 
 #include <vector>
@@ -40,7 +38,7 @@ using namespace hpp;
 using namespace hpp::core;
 using namespace hpp::model;
 using namespace hpp::rbprm;
-using namespace robust_equilibrium;
+using namespace centroidal_dynamics;
 
 namespace hpp {
 namespace rbprm {
@@ -116,9 +114,9 @@ namespace stability{
         p = position + offset;
     }
 
-    StaticEquilibrium initLibrary(const RbPrmFullBodyPtr_t fullbody)
+    Equilibrium initLibrary(const RbPrmFullBodyPtr_t fullbody)
     {
-        return StaticEquilibrium(fullbody->device_->name(), fullbody->device_->mass(),4,SOLVER_LP_QPOASES,true,10,false);
+        return Equilibrium(fullbody->device_->name(), fullbody->device_->mass(),4,SOLVER_LP_QPOASES,true,10,false);
     }
 
     const std::size_t numContactPoints(const RbPrmLimbPtr_t& limb)
@@ -143,23 +141,30 @@ namespace stability{
         return res;
     }
 
-    robust_equilibrium::Vector3 setupLibrary(const RbPrmFullBodyPtr_t fullbody, State& state, StaticEquilibrium& sEq, StaticEquilibriumAlgorithm alg)
+
+    centroidal_dynamics::Vector3 setupLibrary(const RbPrmFullBodyPtr_t fullbody, State& state, Equilibrium& sEq, EquilibriumAlgorithm& alg,
+                                             core::value_type friction = 0.6)
     {
-        double friction = fullbody->getFriction();
+        friction = fullbody->getFriction();
+        const rbprm::T_Limb& limbs = fullbody->GetLimbs();
         hpp::model::ConfigurationIn_t save = fullbody->device_->currentConfiguration();
         std::vector<std::string> contacts;
-        for(std::map<std::string,bool>::const_iterator cit = state.contacts_.begin();
-            cit!=state.contacts_.end(); ++ cit)
+        std::vector<std::string> graspscontacts;
+        for(std::map<std::string,fcl::Vec3f>::const_iterator cit = state.contactPositions_.begin();
+            cit!=state.contactPositions_.end(); ++ cit)
         {
-            if(cit->second) contacts.push_back(cit->first);
+            if(limbs.at(cit->first)->grasps_)
+                graspscontacts.push_back(cit->first);
+            else
+                contacts.push_back(cit->first);
         }
         fullbody->device_->currentConfiguration(state.configuration_);
         fullbody->device_->computeForwardKinematics();
-        const T_Limb limbs = fullbody->GetLimbs();
         std::size_t nbContactPoints(0);
         std::vector<std::size_t> contactPointsInc = numContactPoints(limbs, contacts,nbContactPoints);
-        robust_equilibrium::MatrixX3 normals  (nbContactPoints,3);
-        robust_equilibrium::MatrixX3 positions(nbContactPoints,3);
+        std::vector<std::size_t> contactGraspPointsInc = numContactPoints(limbs, graspscontacts,nbContactPoints);
+        centroidal_dynamics::MatrixX3 normals  (nbContactPoints,3);
+        centroidal_dynamics::MatrixX3 positions(nbContactPoints,3);
         std::size_t currentIndex(0), c(0);
         for(std::vector<std::size_t>::const_iterator cit = contactPointsInc.begin();
             cit != contactPointsInc.end(); ++cit, ++c)
@@ -179,7 +184,30 @@ namespace stability{
             }
             currentIndex += inc;
         }
-        robust_equilibrium::Vector3 com;
+        int graspIndex = -1;
+        if(graspscontacts.size() > 0)
+        {
+            c = 0;
+            graspIndex = currentIndex;
+            for(std::vector<std::size_t>::const_iterator cit = contactGraspPointsInc.begin();
+                cit != contactGraspPointsInc.end(); ++cit, ++c)
+            {
+                const RbPrmLimbPtr_t limb =limbs.at(graspscontacts[c]);
+                const fcl::Vec3f& n = state.contactNormals_.at(graspscontacts[c]);
+                Vector3 normal(n[0],n[1],n[2]);
+                const std::size_t& inc = *cit;
+                if(inc > 1)
+                    computeRectangleContact(graspscontacts[c], limb,state,positions.middleRows<4>(currentIndex));
+                else
+                    computePointContact(graspscontacts[c], limb,state,positions.middleRows<1>(currentIndex,inc));
+                for(int i =0; i < inc; ++i)
+                {
+                    normals.middleRows<1>(currentIndex+i) = normal;
+                }
+                currentIndex += inc;
+            }
+        }
+        centroidal_dynamics::Vector3 com;
 /*model::CenterOfMassComputationPtr_t comcptr = model::CenterOfMassComputation::create(fullbody->device_);
 comcptr->add(fullbody->device_->getJointByName("romeo/base_joint_xyz"));
 comcptr->computeMass();
@@ -189,7 +217,11 @@ const fcl::Vec3f comfcl = comcptr->com();*/
         state.com_ = comfcl;
         for(int i=0; i< 3; ++i) com(i)=comfcl[i];
         fullbody->device_->currentConfiguration(save);
-        sEq.setNewContacts(positions,normals,friction,alg);
+        if(graspIndex >-1 && alg !=  EQUILIBRIUM_ALGORITHM_PP)
+        {
+            alg = EQUILIBRIUM_ALGORITHM_PP;
+        }
+        sEq.setNewContacts(positions,normals,friction,alg,graspIndex);
         return com;
     }
 
@@ -202,8 +234,9 @@ const fcl::Vec3f comfcl = comcptr->com();*/
         RbPrmProfiler& watch = getRbPrmProfiler();
         watch.start("test balance");
 #endif
-        StaticEquilibrium staticEquilibrium(initLibrary(fullbody));
-        setupLibrary(fullbody,state,staticEquilibrium,STATIC_EQUILIBRIUM_ALGORITHM_PP);
+        Equilibrium staticEquilibrium(initLibrary(fullbody));        
+        centroidal_dynamics::EquilibriumAlgorithm alg = EQUILIBRIUM_ALGORITHM_PP;
+        setupLibrary(fullbody,state,staticEquilibrium,alg, friction);
 #ifdef PROFILE
     watch.stop("test balance");
 #endif
@@ -226,12 +259,13 @@ const fcl::Vec3f comfcl = comcptr->com();*/
     }
 
 
-    double IsStable(const RbPrmFullBodyPtr_t fullbody, State& state,fcl::Vec3f acc,const robust_equilibrium::StaticEquilibriumAlgorithm algorithm )
+    double IsStable(const RbPrmFullBodyPtr_t fullbody, State& state,fcl::Vec3f acc, const centroidal_dynamics::EquilibriumAlgorithm algorithm)
     {
 #ifdef PROFILE
     RbPrmProfiler& watch = getRbPrmProfiler();
     watch.start("test balance");
 #endif
+        centroidal_dynamics::EquilibriumAlgorithm alg = algorithm;
         if(acc.norm() == 0){
           hppDout(notice,"isStable ? called with acc = 0");
           hppDout(notice,"configuration in state = "<<model::displayConfig(state.configuration_));
@@ -239,10 +273,11 @@ const fcl::Vec3f comfcl = comcptr->com();*/
           acc = state.configuration_.segment<3>(configSize+3);
           hppDout(notice,"new acceleration = "<<acc);
         }
-        StaticEquilibrium staticEquilibrium(initLibrary(fullbody));
-        robust_equilibrium::Vector3 com = setupLibrary(fullbody,state,staticEquilibrium,algorithm);
-              double res;LP_status status;
-        if(algorithm == STATIC_EQUILIBRIUM_ALGORITHM_PP)
+        Equilibrium staticEquilibrium(initLibrary(fullbody));
+        centroidal_dynamics::Vector3 com = setupLibrary(fullbody,state,staticEquilibrium,alg);
+        double res;
+        LP_status status;
+        if(alg == EQUILIBRIUM_ALGORITHM_PP)
         {
             hppDout(notice,"isStable Called with STATIC_EQUILIBRIUM_ALGORITHM_PP");
             bool isStable(false);

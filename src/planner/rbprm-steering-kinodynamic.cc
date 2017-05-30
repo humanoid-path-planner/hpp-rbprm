@@ -23,19 +23,19 @@
 # include <hpp/core/weighed-distance.hh>
 # include <hpp/core/kinodynamic-path.hh>
 # include <hpp/rbprm/planner/rbprm-node.hh>
-# include <robust-equilibrium-lib/static_equilibrium.hh>
+#include <centroidal-dynamics-lib/centroidal_dynamics.hh>
 # include <hpp/util/debug.hh>
 # include <hpp/util/timer.hh>
 
 namespace hpp{
   namespace rbprm{
 
-    using robust_equilibrium::Vector3;
-    using robust_equilibrium::MatrixXX;
+    using centroidal_dynamics::Vector3;
+    using centroidal_dynamics::MatrixXX;
 
     SteeringMethodKinodynamic::SteeringMethodKinodynamic (const core::ProblemPtr_t& problem) :
       core::steeringMethod::Kinodynamic (problem),
-      sEq_(new robust_equilibrium::StaticEquilibrium(problem_->robot()->name(), problem_->robot()->mass(),4,robust_equilibrium::SOLVER_LP_QPOASES,true,10,false)),
+      sEq_(new centroidal_dynamics::Equilibrium(problem_->robot()->name(), problem_->robot()->mass(),4,centroidal_dynamics::SOLVER_LP_QPOASES,true,10,false)),
       totalTimeComputed_(0),totalTimeValidated_(0),dirTotal_(0),dirValid_(0),rejectedPath_(0),device_ (problem->robot ()),lastDirection_(), weak_ ()
     {
     }
@@ -43,7 +43,7 @@ namespace hpp{
     /// Copy constructor
     SteeringMethodKinodynamic::SteeringMethodKinodynamic (const SteeringMethodKinodynamic& other) :
       core::steeringMethod::Kinodynamic (other),
-      sEq_(new robust_equilibrium::StaticEquilibrium(problem_->robot()->name(), problem_->robot()->mass(),4,robust_equilibrium::SOLVER_LP_QPOASES,true,10,false)),
+      sEq_(new centroidal_dynamics::Equilibrium(problem_->robot()->name(), problem_->robot()->mass(),4,centroidal_dynamics::SOLVER_LP_QPOASES,true,10,false)),
       totalTimeComputed_(0),totalTimeValidated_(0),dirTotal_(0),dirValid_(0),rejectedPath_(0),device_ (other.device_),lastDirection_(),weak_()
     {
     }
@@ -298,17 +298,17 @@ namespace hpp{
       hppDout(info,"vector = ["<<(*(near->configuration()))[0]<<","<<(*(near->configuration()))[1]<<","<<(*(near->configuration()))[2]<<","<<direction[0]<<","<<direction[1]<<","<<direction[2]<<",0]");
       hppDout(notice,"number of contacts :  "<<node->getNumberOfContacts());
 
-      // call to robust_equilibrium_lib :
+      // call to centroidal_dynamics_lib :
       sEq_->setG(node->getG());
-      robust_equilibrium::LP_status lpStatus = sEq_->findMaximumAcceleration(node->getH(), node->geth(),direction,alpha0);
-      if(lpStatus==robust_equilibrium::LP_STATUS_UNBOUNDED){
+      centroidal_dynamics::LP_status lpStatus = sEq_->findMaximumAcceleration(node->getH(), node->geth(),direction,alpha0);
+      if(lpStatus==centroidal_dynamics::LP_STATUS_UNBOUNDED){
         hppDout(notice,"Primal LP problem is unbounded : "<<(lpStatus));
       }
-      if(lpStatus==robust_equilibrium::LP_STATUS_OPTIMAL)
+      if(lpStatus==centroidal_dynamics::LP_STATUS_OPTIMAL)
       {
         hppDout(notice,"Primal LP correctly solved: "<<(lpStatus));
       }
-      if(lpStatus==robust_equilibrium::LP_STATUS_INFEASIBLE){
+      if(lpStatus==centroidal_dynamics::LP_STATUS_INFEASIBLE){
         hppDout(notice,"Primal LP problem could not be solved: "<<(lpStatus));
       }
 

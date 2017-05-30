@@ -19,32 +19,14 @@
 #ifndef HPP_RBPRM_PROJECTION_HH
 # define HPP_RBPRM_PROJECTION_HH
 
-# include <hpp/rbprm/rbprm-state.hh>
 # include <hpp/rbprm/rbprm-fullbody.hh>
+# include <hpp/rbprm/rbprm-state.hh>
+# include <hpp/rbprm/reports.hh>
 
 namespace hpp {
 namespace rbprm {
 namespace projection{
 
-
-
-enum ContactComputationStatus
-{
-  NO_CONTACT = 0,
-  STABLE_CONTACT = 1,
-  UNSTABLE_CONTACT = 2
-};
-
-
-struct HPP_RBPRM_DLLAPI ProjectionReport
-{
-     ProjectionReport(): success_ (false), status_(NO_CONTACT){}
-     ProjectionReport(const ProjectionReport&);
-    ~ProjectionReport(){}
-    bool success_;
-    hpp::rbprm::State result_;
-    ContactComputationStatus status_;
-};
 
 /// Project a configuration to a target position, while maintaining contact constraints.
 /// If required, up to maxBrokenContacts can be broken in the process.
@@ -73,14 +55,20 @@ ProjectionReport HPP_RBPRM_DLLAPI projectToRootConfiguration(hpp::rbprm::RbPrmFu
 ProjectionReport  HPP_RBPRM_DLLAPI setCollisionFree(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const core::CollisionValidationPtr_t &validation, const std::string& limb, const hpp::rbprm::State& currentState);
 
 
+ProjectionReport HPP_RBPRM_DLLAPI projectStateToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
+                                                         const hpp::rbprm::State& current, const fcl::Vec3f &normal, const fcl::Vec3f &position);
+
 ProjectionReport HPP_RBPRM_DLLAPI projectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
                                                  const sampling::OctreeReport& report, core::CollisionValidationPtr_t validation,
                                                  model::ConfigurationOut_t configuration, const hpp::rbprm::State& current);
 
-ProjectionReport HPP_RBPRM_DLLAPI projectEffector(const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
+ProjectionReport HPP_RBPRM_DLLAPI projectEffector(core::ConfigProjectorPtr_t proj, const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
                                            core::CollisionValidationPtr_t validation, model::ConfigurationOut_t configuration,
                                            const fcl::Matrix3f& rotationTarget, const std::vector<bool>& rotationFilter, const fcl::Vec3f& positionTarget, const fcl::Vec3f& normal,
                                            const hpp::rbprm::State& current);
+
+fcl::Transform3f HPP_RBPRM_DLLAPI  computeProjectionMatrix(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const hpp::rbprm::RbPrmLimbPtr_t& limb, const model::ConfigurationIn_t configuration,
+                                         const fcl::Vec3f& normal, const fcl::Vec3f& position);
 
     } // namespace projection
   } // namespace rbprm

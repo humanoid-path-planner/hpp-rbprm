@@ -26,13 +26,13 @@
 namespace hpp{
   namespace core{
 
-    typedef robust_equilibrium::MatrixXX MatrixXX;
-    typedef robust_equilibrium::Matrix6X Matrix6X;
-    typedef robust_equilibrium::Vector3 Vector3;
-    typedef robust_equilibrium::Matrix3 Matrix3;
-    typedef robust_equilibrium::Matrix63 Matrix63;
-    typedef robust_equilibrium::Vector6 Vector6;
-    typedef robust_equilibrium::VectorX VectorX;
+    typedef centroidal_dynamics::MatrixXX MatrixXX;
+    typedef centroidal_dynamics::Matrix6X Matrix6X;
+    typedef centroidal_dynamics::Vector3 Vector3;
+    typedef centroidal_dynamics::Matrix3 Matrix3;
+    typedef centroidal_dynamics::Matrix63 Matrix63;
+    typedef centroidal_dynamics::Vector6 Vector6;
+    typedef centroidal_dynamics::VectorX VectorX;
 
     void RbprmNode::fillNodeMatrices(ValidationReportPtr_t report, bool rectangularContact, double sizeFootX, double sizeFootY, double m,double mu){
       core::ConfigurationPtr_t q = configuration();
@@ -159,7 +159,7 @@ namespace hpp{
           c << (*configuration())[0],(*configuration())[1],(*configuration())[2];
           Matrix63 H = Matrix63::Zero(6,3);
           H.block<3,3>(0,0) = Matrix3::Identity(3,3);
-          H.block<3,3>(3,0) = robust_equilibrium::crossMatrix(c);
+          H.block<3,3>(3,0) = centroidal_dynamics::crossMatrix(c);
           setH(m*H);
           Vector6 h = Vector6::Zero(6);
           Vector3 g;
@@ -232,7 +232,7 @@ namespace hpp{
 
             //fill IP_hat with position : [I_3  pi_hat] ^T
             IP_hat.block<3,3>(0,3*(indexRom+i)) = MatrixXX::Identity(3,3);
-            IP_hat.block<3,3>(3,3*(indexRom+i)) = robust_equilibrium::crossMatrix(pContact);
+            IP_hat.block<3,3>(3,3*(indexRom+i)) = centroidal_dynamics::crossMatrix(pContact);
 
             hppDout(notice,"position of rom collision :  ["<<pContact[0]<<" , "<<pContact[1]<<" , "<<pContact[2]<<"]");
             ssContacts<<"["<<pContact[0]<<" , "<<pContact[1]<<" , "<<pContact[2]<<"],";
@@ -247,7 +247,7 @@ namespace hpp{
         }else{
           //fill IP_hat with position : [I_3  pi_hat] ^T
           IP_hat.block<3,3>(0,3*indexRom) = MatrixXX::Identity(3,3);
-          IP_hat.block<3,3>(3,3*indexRom) = robust_equilibrium::crossMatrix(center);
+          IP_hat.block<3,3>(3,3*indexRom) = centroidal_dynamics::crossMatrix(center);
 
           //hppDout(notice,"Center of rom collision :  ["<<center[0]<<" , "<<center[1]<<" , "<<center[2]<<"]");
           ssCenters<<"["<<center[0]<<" , "<<center[1]<<" , "<<center[2]<<"],";
@@ -273,7 +273,7 @@ namespace hpp{
       c << (*configuration())[0],(*configuration())[1],(*configuration())[2];
       Matrix63 H = Matrix63::Zero(6,3);
       H.block<3,3>(0,0) = Matrix3::Identity(3,3);
-      H.block<3,3>(3,0) = robust_equilibrium::crossMatrix(c);
+      H.block<3,3>(3,0) = centroidal_dynamics::crossMatrix(c);
       setH(m*H);
       Vector6 h = Vector6::Zero(6);
       Vector3 g;

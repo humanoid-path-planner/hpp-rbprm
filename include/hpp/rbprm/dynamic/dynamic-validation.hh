@@ -20,7 +20,7 @@
 # define HPP_RBPRM_DYNAMIC_VALIDATION_HH
 
 # include <hpp/core/config-validation.hh>
-# include <robust-equilibrium-lib/static_equilibrium.hh>
+#include <centroidal-dynamics-lib/centroidal_dynamics.hh>
 # include <hpp/rbprm/rbprm-validation-report.hh>
 namespace hpp {
   namespace rbprm {
@@ -30,7 +30,7 @@ namespace hpp {
     class DynamicValidationReport : public core::ValidationReport
     {
     public:
-      DynamicValidationReport (robust_equilibrium::Vector3 acc) :
+      DynamicValidationReport (centroidal_dynamics::Vector3 acc) :
   ValidationReport (),acc_(acc)
   {
   }
@@ -41,7 +41,7 @@ namespace hpp {
   return os;
       }
 
-      robust_equilibrium::Vector3 acc_;
+      centroidal_dynamics::Vector3 acc_;
     };
 
 
@@ -76,12 +76,12 @@ namespace hpp {
       double sizeFootY_;
       double mass_;
       double mu_;
-      robust_equilibrium::StaticEquilibrium* sEq_;
+      centroidal_dynamics::Equilibrium* sEq_;
       core::RbprmValidationReportPtr_t lastReport_;
       bool initContacts_;
       core::Configuration_t lastAcc_;
-      robust_equilibrium::Matrix63 H_;
-      robust_equilibrium::Vector6 h_;
+      centroidal_dynamics::Matrix63 H_;
+      centroidal_dynamics::Vector6 h_;
 
     }; // class dynamicValidation
     /// \}

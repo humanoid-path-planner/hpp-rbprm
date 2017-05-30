@@ -121,7 +121,7 @@ namespace hpp {
        * @param to
        * @return
        */
-      robust_equilibrium::Vector3 computeDirection(const core::ConfigurationIn_t from, const core::ConfigurationIn_t to);
+      centroidal_dynamics::Vector3 computeDirection(const core::ConfigurationIn_t from, const core::ConfigurationIn_t to);
 
       /**
        * @brief setSteeringMethodBounds Compute the maximal acceleration on a direction from near to target,
@@ -137,9 +137,9 @@ namespace hpp {
 
 
     private:
-      robust_equilibrium::StaticEquilibrium* sEq_;
+      centroidal_dynamics::Equilibrium* sEq_;
       core::DeviceWkPtr_t device_;
-      robust_equilibrium::Vector3 lastDirection_;
+      centroidal_dynamics::Vector3 lastDirection_;
       SteeringMethodKinodynamicWkPtr_t weak_;
 
     }; // class rbprm-kinodynamic

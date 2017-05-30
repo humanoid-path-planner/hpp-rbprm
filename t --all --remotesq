@@ -1,0 +1,737 @@
+[33mcommit f1125910d129ecc4d5d29ca996577c7f33594c56[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Wed Apr 13 10:52:35 2016 +0200
+
+    created name space interpolation
+
+[33mcommit 868450e07c0bfd53e0796d4f83feca2c474f2eb8[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Wed Apr 6 15:01:30 2016 +0200
+
+    storing min max values before normalization for reach value in sample analysis
+
+[33mcommit 1d9b53804b1663ba838e63452d41ee21a13ef4d2[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Wed Apr 6 10:50:03 2016 +0200
+
+    deactivate normalization of values
+
+[33mcommit 59483be316713eb95bc530572a4b077f5699ced8[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Tue Apr 5 15:36:33 2016 +0200
+
+    bug fix in config file inclusion
+
+[33mcommit 4d7be48aa7d7c7378a826991a18598bffb78fa12[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Tue Apr 5 11:29:53 2016 +0200
+
+    decomposed into translational and rotational manipulability based analysis
+
+[33mcommit 050250824918512093fa02e7259b599e67a18875[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Thu Mar 31 11:09:15 2016 +0200
+
+    can choose not to load all computed values for a limb database
+
+[33mcommit 90af63a9266ff2ceb4fd0ccef1ee798a9e0dc742[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Tue Mar 29 10:57:05 2016 +0200
+
+    self collision proba metric
+
+[33mcommit d40515a665c308e505b55c9fae95992a82ded987[m
+Merge: 93a54a9 dfdeb0f
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Tue Mar 29 10:45:14 2016 +0200
+
+    WIP on devel: 93a54a9 analysis metrics tested and fonctionnal
+
+[33mcommit dfdeb0fdc1369db0f756195ba95dadf96ccbd3d4[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Tue Mar 29 10:45:14 2016 +0200
+
+    index on devel: 93a54a9 analysis metrics tested and fonctionnal
+
+[33mcommit 93a54a9e20c4aef4249d08808b30fe032c5c1436[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Thu Mar 17 17:26:42 2016 +0100
+
+    analysis metrics tested and fonctionnal
+
+[33mcommit b5423c70bc41a9dc7a2f0f840deee081ddb092ae[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Tue Mar 15 19:05:23 2016 +0100
+
+    collision proba a,d distance to joint limits implementation
+
+[33mcommit c7fe74d2366c29140946aa0a0f7fc817d5d62c62[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Mon Mar 14 16:28:56 2016 +0100
+
+    adding analysis factory
+
+[33mcommit 17ac7e8e9604ff8faf3d53bf30d2531776a89e6f[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Mon Mar 14 15:43:22 2016 +0100
+
+    reoved dependency to old polytope library
+
+[33mcommit e53e084c748ffb6a392c065eb7d111fbfacf8f5e[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Mon Mar 14 15:43:22 2016 +0100
+
+    reoved dependency to old polytope library
+
+[33mcommit 4f438ebee88dfb0e1ab53167916d79cadda6ec1c[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Mon Mar 14 11:00:52 2016 +0100
+
+    functional sample database
+
+[33mcommit 22450bc4747f0bb5194d9cebbd07225e7574f867[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Thu Mar 10 15:26:50 2016 +0100
+
+    cleaning
+
+[33mcommit 5303b1c45c2987c04faa0c7181b6ab8491ba550a[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Thu Mar 10 14:49:55 2016 +0100
+
+    cleaning
+
+[33mcommit 5bef1a61ad4cb7bb50df374271b628ce9f2a28ab[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Thu Mar 10 11:43:42 2016 +0100
+
+    reorganizing database
+
+[33mcommit 51d64ae810130a84637a1f4183f1c663ee74a0a5[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Thu Mar 3 16:54:26 2016 +0100
+
+    bug fix in weighted sampling of triangles
+
+[33mcommit dd8fae9d73506d91f0cf3f4de2f05eeff82f9e1d[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Mon Feb 15 15:53:27 2016 +0100
+
+    readme file
+
+[33mcommit 6a3e344c6b72c798f8ab958bd69200fa97b5c2f4[m
+Author: Pierre Fernbach <pierre.fernbach@laas.fr>
+Date:   Wed Jan 27 14:23:34 2016 +0100
+
+    Don't send extraConfig to robotRoms
+
+[33mcommit 3cac01288ccc4557a206cb31c9a64bac9b93123e[m
+Author: Pierre Fernbach <pierre.fernbach@laas.fr>
+Date:   Wed Jan 20 17:19:35 2016 +0100
+
+    remove old unused file
+
+[33mcommit c55d94f724cfae8d51dd7ebafe9685826c6e810d[m
+Author: Pierre Fernbach <pierre.fernbach@laas.fr>
+Date:   Wed Jan 20 17:01:18 2016 +0100
+
+    add HPP_DEBUG option in cmake
+
+[33mcommit a194a8d32b362df2eaef15ee23c6edfae20e4942[m
+Author: Pierre Fernbach <pierre.fernbach@laas.fr>
+Date:   Wed Jan 20 15:43:10 2016 +0100
+
+    remove useless include directive
+
+[33mcommit 5fb3d49b9dc99ff88d565efae88ac144ec808e92[m
+Author: Pierre Fernbach <pierre.fernbach@laas.fr>
+Date:   Wed Jan 27 14:23:12 2016 +0100
+
+    Save normal in extra conf (for Mylene code)
+
+[33mcommit 2a22e621df3af89c6fd1db209c05f01c8700a368[m
+Author: Pierre Fernbach <pierre.fernbach@laas.fr>
+Date:   Wed Jan 27 14:22:54 2016 +0100
+
+    Add debug message
+
+[33mcommit 7d241cbf7e3c34126f6b6a243d430dccdf2d1508[m
+Author: Pierre Fernbach <pierre.fernbach@laas.fr>
+Date:   Tue Jan 26 16:08:58 2016 +0100
+
+    add and update steering method and path-parabola from Mylène
+
+[33mcommit 555fb6a62520dc72757dce7e5cf95c0a70409e4d[m
+Author: Pierre Fernbach <pierre.fernbach@laas.fr>
+Date:   Mon Jan 25 15:53:21 2016 +0100
+
+    update dynamicPlanner with changes in hpp-core
+
+[33mcommit 98467091d647340c739e3ec822ff15c7a75caa97[m
+Author: Pierre Fernbach <pierre.fernbach@laas.fr>
+Date:   Fri Jan 22 15:33:16 2016 +0100
+
+    move impl_compute in .cc file (was header only)
+
+[33mcommit 52d9db94eb82f1b1b3a6436fe14926bab228de0f[m
+Author: Pierre Fernbach <pierre.fernbach@laas.fr>
+Date:   Fri Jan 22 15:21:00 2016 +0100
+
+    add new planner and steering method
+
+[33mcommit 3c91cfde1794ab6b37bbe055ba80cae9db48dbdd[m
+Author: Pierre Fernbach <pierre.fernbach@laas.fr>
+Date:   Thu Jan 21 10:06:57 2016 +0100
+
+    always use same random seed, for debuging and repetability purpose
+
+[33mcommit 3bc41324c09f6d22e81281081dffddf78174e4e3[m
+Author: Pierre Fernbach <pierre.fernbach@laas.fr>
+Date:   Wed Jan 27 14:23:34 2016 +0100
+
+    Don't send extraConfig to robotRoms
+
+[33mcommit 86fe6564fc9e6938b8259a72346005200513f9a6[m
+Author: Pierre Fernbach <pierre.fernbach@laas.fr>
+Date:   Wed Jan 20 17:19:35 2016 +0100
+
+    remove old unused file
+
+[33mcommit 1b7f94c2838a18eb1d9e75b6576baa49d314dd3e[m
+Author: Pierre Fernbach <pierre.fernbach@laas.fr>
+Date:   Wed Jan 20 17:01:18 2016 +0100
+
+    add HPP_DEBUG option in cmake
+
+[33mcommit f5b4c5a2a58fa0eee04627203202980110e55bfe[m
+Author: Pierre Fernbach <pierre.fernbach@laas.fr>
+Date:   Wed Jan 20 15:43:10 2016 +0100
+
+    remove useless include directive
+
+[33mcommit 4a5ad0943834a0d68a3935d332b54e6fb6e23bac[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Mon Jan 11 09:19:12 2016 +0100
+
+    stats
+
+[33mcommit 462cb53408cb73675a7e26ab0f1ce4645662ed88[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Thu Jan 7 13:07:58 2016 +0100
+
+    disabled profiling by default
+
+[33mcommit 00929bb977918f4941f88a90c42b94412471eb36[m
+Merge: 1968f6d b2b721a
+Author: stonneau <stevetonneau@hotmail.fr>
+Date:   Thu Jan 7 12:03:38 2016 +0100
+
+    Merge pull request #1 from pFernbach/patch-1
+    
+    disable -Werror
+
+[33mcommit 1968f6db0077ef88e542a64f2a90a1aed4f8ac3d[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Thu Jan 7 12:00:22 2016 +0100
+
+    added contact types: 3 dof for hyq, 6 for hrp2
+
+[33mcommit d31451ed7bf84f4f0e54659a5b75619d94e24f57[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Thu Jan 7 11:22:35 2016 +0100
+
+    robustness is script defined
+
+[33mcommit b2b721ac39162585458b0905db7b73b4841dfd51[m
+Author: Fernbach Pierre <pFernbach@users.noreply.github.com>
+Date:   Tue Jan 5 15:53:56 2016 +0100
+
+    disable -Werror
+    
+    "Clean" method to do it (according to the others HPP CMakeLists)
+
+[33mcommit f72a193c92efbcfff00390532f37c47ddb364c21[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Wed Nov 25 13:46:15 2015 +0100
+
+    to ubuntu 14
+
+[33mcommit b92706f88af041ab19d7610bbd386ad1bcd668fb[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Mon Nov 23 12:01:34 2015 +0100
+
+    profiler upgrade
+
+[33mcommit 2aecfde523e311fe546c832f6f07b6d5a20294ae[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Tue Nov 10 11:53:28 2015 +0100
+
+    added profiling info
+
+[33mcommit 99518f117b9eb96fb55f162b661e74b2975fb9e0[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Tue Nov 10 10:11:28 2015 +0100
+
+    cleaning output
+
+[33mcommit bea0f5a0350edc79166ef579361748d4851cec2d[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Tue Nov 10 10:07:04 2015 +0100
+
+    added robustness to state computation
+
+[33mcommit 7b06cf7ff987b2884993f2c7c7fcaed4567ec1a7[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Wed Nov 4 12:12:22 2015 +0100
+
+    updated algorithm for robustness and new balance library
+
+[33mcommit 3260c4e9ffe9e5db6e971bb8757c055ea000d667[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Thu Oct 29 15:05:28 2015 +0100
+
+    fixed yet another error on octrees
+
+[33mcommit 6b4ec867f8e38569d4dbabf2386c641c52af0831[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Wed Oct 28 18:13:52 2015 +0100
+
+    octree root correctly set in parent frame
+
+[33mcommit 0ee0fffb36f074e17493afe81d245b1454909297[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Wed Oct 28 15:57:14 2015 +0100
+
+    octree drawing + bug fix on root orientation
+
+[33mcommit 65d36e75b047d14977ddf54cb8921c28e3ac069c[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Tue Oct 27 17:06:21 2015 +0100
+
+    bug fix in algo failures
+
+[33mcommit a65d545800bd4926558e71399f74f5328ad604da[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Thu Oct 22 11:44:01 2015 +0200
+
+    cleaning output plus updated heuristics
+
+[33mcommit f6b55012c3d72ebcb3f97d9b291512ab08a10b5b[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Mon Oct 19 16:54:11 2015 +0200
+
+    hyq on darpa
+
+[33mcommit e6902c07f7b44c711c23b1885ffc2d21c097fc3f[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Thu Oct 15 19:00:00 2015 +0200
+
+    next position ongoing
+
+[33mcommit a4cf9735fd511320e558d4a46318151fe05cec6d[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Mon Oct 12 16:05:13 2015 +0200
+
+    so3 constraint on rb_prm
+
+[33mcommit c912facc28036d7e4325b183a467d49454ffb2d6[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Wed Oct 7 11:30:25 2015 +0200
+
+    justin state + merge bug fix on transition
+
+[33mcommit 93d7d49cc090bd83c7113bc8d55ac453dd40b6e8[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Mon Oct 5 13:54:43 2015 +0200
+
+    heuristic can be chosen for each limb
+
+[33mcommit ee416e4c321cbc8a9904bff99f753d41c5e0c862[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Tue Sep 29 17:38:35 2015 +0200
+
+    more docuementation on rbprm classes
+
+[33mcommit 9068c91cef2841c0e42e83ffbcb9ad3a5fc7e60a[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Tue Sep 29 14:55:48 2015 +0200
+
+    documentation of rbprm device sampling and stability + code cleaning
+
+[33mcommit 8a365c880253dde17d95390577e771f5fc8f0728[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Tue Sep 29 13:53:15 2015 +0200
+
+    bug fix in algorithm that led to multiple contact changes after failed maintenance + balance
+
+[33mcommit 8653d1d968b7bcf6ce1a796318be048af3c07870[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Tue Sep 29 13:41:43 2015 +0200
+
+    hrp2 stands
+
+[33mcommit 7d0c4cfb2e0a15631490e443f95c4003f8b0fea2[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Wed Sep 9 17:03:42 2015 +0200
+
+    messy devs for dealine
+
+[33mcommit 07c892610bfff0b3ede30174e39d1938e9ca06e1[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Tue Sep 8 10:59:46 2015 +0200
+
+    crappy developments for andrea + bug fix planning
+
+[33mcommit c7a93422290e1c50ebaae5f9acf9304263f305c5[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Mon Aug 31 23:06:49 2015 +0200
+
+    walking robust for justin fully working
+
+[33mcommit 741aa0989fcee3928b2d45e332be0c86b7abb53b[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Mon Aug 31 21:11:37 2015 +0200
+
+    walking robust for justin
+
+[33mcommit 70e2ca1f5027eb269832525fb81053f34a025453[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Fri Aug 21 15:51:47 2015 +0200
+
+    cleaning
+
+[33mcommit 9e8af9e6b2f0b7499ff111ec18aa6d8517dd8008[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Fri Aug 21 14:13:36 2015 +0200
+
+    added surface filters for rom
+
+[33mcommit a8e86c91174c0291b3ec472feceddbaf1705e47a[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Fri Aug 21 11:42:03 2015 +0200
+
+    specialized collision validation for roms so as to select obstacle collision
+
+[33mcommit 1db41ce5407ca95f8582c89ff930aac9453a4c4f[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Thu Aug 20 15:59:51 2015 +0200
+
+    flexible trunk implemented
+
+[33mcommit 6c3eeba770d24b490079b8cfe85edffebf2baf1a[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Wed Aug 19 17:08:47 2015 +0200
+
+    finished integration or rbprm roms
+
+[33mcommit 8be59508d89ac45bcae6c7eb9b6849fc4f3d8c16[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Wed Aug 19 16:28:31 2015 +0200
+
+    unit tests for inclusion of several roms in prm stage
+
+[33mcommit ccbf02caf2d8c595b918d7ac863d2ee88a47ad56[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Wed Aug 19 11:21:40 2015 +0200
+
+    started integrating several roms
+
+[33mcommit e6b6addecd97ad0d367bac7579c680f448fb84c9[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Thu Aug 6 17:29:44 2015 +0200
+
+    stairs bauzil
+
+[33mcommit 64130da0b7ed0d0567088f120e70b8f64f15aeb0[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Wed Aug 5 00:46:12 2015 +0200
+
+    standing up scenario
+
+[33mcommit 75c3109baac1b8c3bffc7cdc6c67912401709bd3[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Tue Aug 4 14:58:57 2015 +0200
+
+    almost ok climb
+
+[33mcommit 034f099ad6dd624ee6a96e709fba511e43cf213d[m
+Author: Steve Tonneau <stonneau@laas.fr>
+Date:   Thu Jul 30 18:37:55 2015 +0200
+
+    weird bug on generate contacts
+
+[33mcommit a3bcfa81b41ab482d24e4cda2b52260d58d13b16[m
+Author: Steve Tonneau <stonneau@laas.fr>
+Date:   Wed Jul 29 21:23:13 2015 +0200
+
+    standing up against the wall
+
+[33mcommit 963cdfe712a451d625bca658e72e3d352d0f9852[m
+Author: Steve Tonneau <stonneau@laas.fr>
+Date:   Tue Jul 28 23:06:35 2015 +0200
+
+    fix fcl bug, using actual normals
+
+[33mcommit 747ff3bcc10da32c8ddc351d0dd0eea488c6e2b4[m
+Author: Steve Tonneau <stonneau@laas.fr>
+Date:   Fri Jul 24 17:16:16 2015 +0200
+
+    ongoing
+
+[33mcommit 18c66e050d7ee839491d0820eedb171b3b210781[m
+Author: Steve Tonneau <stonneau@laas.fr>
+Date:   Fri Jul 24 11:14:42 2015 +0200
+
+    knees and wrist
+
+[33mcommit b3ec04be160f3ac0284ba9ce3f71f5a18b3f64de[m
+Author: Steve Tonneau <stonneau@laas.fr>
+Date:   Thu Jul 23 21:59:47 2015 +0200
+
+    trying to alleviate constraints
+
+[33mcommit 4ac39091dafc537f76d02fefa7fb928abe5d2a1c[m
+Author: Steve Tonneau <stonneau@laas.fr>
+Date:   Thu Jul 23 17:04:31 2015 +0200
+
+    added non terminal effector
+
+[33mcommit 7abb30a57c72d2bc8eeaa948e7118d3ec0e92821[m
+Author: Steve Tonneau <stonneau@laas.fr>
+Date:   Thu Jul 23 14:11:05 2015 +0200
+
+    hrp2 walks
+
+[33mcommit e33175a5eb9bd53f0805e5ca928ed0c1cc6f5f6c[m
+Author: Steve Tonneau <stonneau@laas.fr>
+Date:   Thu Jul 23 13:04:50 2015 +0200
+
+    transition ok btw transitions
+
+[33mcommit 1142ced3382e5471c1aed0b6ad271d0ecd29a3cb[m
+Author: Steve Tonneau <stonneau@laas.fr>
+Date:   Thu Jul 23 12:47:20 2015 +0200
+
+    commit because computer bugging
+
+[33mcommit 00bd41ed16cf0e9d2a2758e853eaf30eb89b3679[m
+Author: Steve Tonneau <stonneau@laas.fr>
+Date:   Thu Jul 23 09:19:08 2015 +0200
+
+    implementing replanning
+
+[33mcommit 55f85779585cb202a2e91a869c013ad1b22d23ef[m
+Author: Steve Tonneau <stonneau@laas.fr>
+Date:   Thu Jul 23 09:17:11 2015 +0200
+
+    stability actually works
+
+[33mcommit 4f439da3b2918717292a3199ec8e2b5533770d51[m
+Author: Steve Tonneau <stonneau@laas.fr>
+Date:   Wed Jul 22 23:11:30 2015 +0200
+
+    zmp support works
+
+[33mcommit 1fbf832a54ed59b7deab12c7217a29e86d7c1394[m
+Author: Steve Tonneau <stonneau@laas.fr>
+Date:   Wed Jul 22 14:14:46 2015 +0200
+
+    default path interpolation
+
+[33mcommit 75efc89e3b71f6d8b2c732a84309cecbad5d8ee2[m
+Author: Steve Tonneau <stonneau@laas.fr>
+Date:   Wed Jul 22 13:15:41 2015 +0200
+
+    fixed transform error when computing contacts
+
+[33mcommit a302b7c92e33832c151b38741e61ca8d8a9c98b1[m
+Author: Steve Tonneau <stonneau@laas.fr>
+Date:   Tue Jul 21 23:34:43 2015 +0200
+
+    fix collision detection bug for multi limb
+
+[33mcommit 96fa2bba72cb11b7a26ea2c1c7b732051f5b2ccc[m
+Author: Steve Tonneau <stonneau@laas.fr>
+Date:   Tue Jul 21 16:37:06 2015 +0200
+
+    contact accurately created along surface
+
+[33mcommit 7d8ad4d56a7d9ff89103b7905675ac6f12dfe527[m
+Author: Steve Tonneau <stonneau@laas.fr>
+Date:   Fri Jul 17 16:31:30 2015 +0200
+
+    constraint does not lock root
+
+[33mcommit 49ffa42a1e6cb4b163b9333938d37babf090385a[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Fri Jul 17 14:25:43 2015 +0200
+
+    on going projection
+
+[33mcommit a443cb264d1de19fe818f6ae6b22a9c9064d4b54[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Fri Jul 10 09:12:43 2015 +0200
+
+    full body kinematic constraints on
+
+[33mcommit 43d79c9091b99a31ba720d80abcfc203b969dc6e[m
+Author: Steve Tonneau <stonneau@laas.fr>
+Date:   Thu Jul 9 11:56:15 2015 +0200
+
+    added if to sample
+
+[33mcommit 12b59d8ca92007cf8c5ba699a86dbc319e000809[m
+Author: Steve Tonneau <stonneau@laas.fr>
+Date:   Wed Jul 8 18:11:07 2015 +0200
+
+    generate contact no collision, no proper transform
+
+[33mcommit bcd08f5b54e331b8a030406cbc94dcb6e20535b5[m
+Author: Steve Tonneau <stonneau@laas.fr>
+Date:   Wed Jul 8 16:10:05 2015 +0200
+
+    contact generation method
+
+[33mcommit 2f67d8a9b4063e6aa89253f148342e6af0bb8d5c[m
+Author: Steve Tonneau <stonneau@laas.fr>
+Date:   Tue Jul 7 16:22:55 2015 +0200
+
+    build fix
+
+[33mcommit de42414cede95e1e2bfd0218cd0c665d4e54a79f[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Tue Jul 7 16:16:45 2015 +0200
+
+    continuing
+
+[33mcommit ba01842d6580b65a34febfa412aea3b837ec20dc[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Mon Jul 6 17:57:39 2015 +0200
+
+    starting development on full body robot
+
+[33mcommit ce29acb2c4d6b6f5845944d1bd1c1106699b02d9[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Mon Jul 6 16:43:53 2015 +0200
+
+    cleaning
+
+[33mcommit 7fddcd7b5fee3b6a724a1c5ed4855f33682ea4d3[m
+Author: Steve Tonneau <stonneau@axle.laas.fr>
+Date:   Mon Jul 6 12:45:06 2015 +0200
+
+    organizing samples from their id
+
+[33mcommit 0d179016410254d30cd3ad807bae27c49ebd471a[m
+Author: Steve Tonneau <stonneau@laas.fr>
+Date:   Fri Jul 3 18:10:43 2015 +0200
+
+    onto octree
+
+[33mcommit a2334fa6beb5d452d21c7b38f49d3701bd03189e[m
+Author: Steve Tonneau <stonneau@laas.fr>
+Date:   Thu Jul 2 17:08:09 2015 +0200
+
+    created sample container
+
+[33mcommit 850971aa2aab658d721d6ea3dcf63765f1d64412[m
+Author: Steve Tonneau <stonneau@laas.fr>
+Date:   Thu Jul 2 15:21:29 2015 +0200
+
+    generating samples
+
+[33mcommit 07cc8c1bb2177fe6440d65d4602a27fcc5eca2bb[m
+Author: Steve Tonneau <stonneau@laas.fr>
+Date:   Wed Jul 1 11:07:15 2015 +0200
+
+    wrong translation direction
+
+[33mcommit d4f1c35c08a70aebf8b2bcc902192b52576bc1e8[m
+Author: Steve Tonneau <stonneau@laas.fr>
+Date:   Mon Jun 22 16:52:32 2015 +0200
+
+    rbprm now working
+
+[33mcommit d79eb2f0c1f0ceda31270d9dbf825cad03242ea7[m
+Author: Steve Tonneau <stonneau@laas.fr>
+Date:   Fri Jun 19 18:03:08 2015 +0200
+
+    cleanin
+
+[33mcommit 061c3483bc6cd01bc64e3289a1d011315042a1f1[m
+Author: Steve Tonneau <stonneau@laas.fr>
+Date:   Fri Jun 19 18:01:44 2015 +0200
+
+    cleaning
+
+[33mcommit c7bc3b58617ab84b44341fcf889c501273a2a69c[m
+Author: Steve Tonneau <stonneau@laas.fr>
+Date:   Thu Jun 18 18:15:29 2015 +0200
+
+    integrated shooter to python, added commented integration test
+
+[33mcommit f4fac01220ffae0c380403aa84b91d2654d51c80[m
+Author: Steve Tonneau <stonneau@laas.fr>
+Date:   Mon Jun 15 19:25:58 2015 +0200
+
+    update export api
+
+[33mcommit 3ac2e45cb4b3e6ce187c63e47201c5db17a68e6c[m
+Author: Steve Tonneau <stonneau@meakandake>
+Date:   Thu Jun 11 14:20:21 2015 +0200
+
+    geometries of shooter of same type as in ProblemSolver
+
+[33mcommit 01f40ae6df6e452d896ae8a566831edf66f74f73[m
+Author: Steve Tonneau <stonneau@meakandake>
+Date:   Tue Jun 9 20:30:33 2015 +0200
+
+    bug fix in shooter + fcl information ised for generation
+
+[33mcommit 96fd3ea5642039a17f4788b1ec570a69cfd192b2[m
+Author: Steve Tonneau <stonneau@meakandake>
+Date:   Fri Jun 5 17:47:57 2015 +0200
+
+    rbprm shooter; slow
+
+[33mcommit fa05e32b92e24d58245bb75907b039584895bf67[m
+Author: Steve Tonneau <stonneau@meakandake>
+Date:   Thu Jun 4 10:28:10 2015 +0200
+
+    rbprm-device is now a Device
+
+[33mcommit 131507f436bfa4cd3f664c6c729f07f7da711aca[m
+Author: Steve Tonneau <stonneau@meakandake>
+Date:   Mon May 18 17:59:58 2015 +0200
+
+    shooter test
+
+[33mcommit 218f76f68d08c1375d09164bc484b089706f16fd[m
+Author: Steve Tonneau <stonneau@meakandake>
+Date:   Mon May 18 10:35:49 2015 +0200
+
+    reachability condition tests
+
+[33mcommit d4a023efc777977fd1ffdaa11f9d6020fb334ec0[m
+Author: Steve Tonneau <stonneau@meakandake>
+Date:   Wed May 6 17:48:20 2015 +0200
+
+    first test for rbprm
+
+[33mcommit 503d5b537b905a9b4843c6827f9cce536d011999[m
+Author: Steve Tonneau <stonneau@meakandake>
+Date:   Wed May 6 11:44:49 2015 +0200
+
+    rbprm now a library
+
+[33mcommit c07a674f7a2448f1b80be0582da8d1d72e4f5169[m
+Author: Steve Tonneau <stonneau@meakandake>
+Date:   Tue May 5 16:28:35 2015 +0200
+
+    rbprm base classes
+
+[33mcommit e6a77da978e31533b7ae473e87d2c6e3e38fad2a[m
+Author: Steve Tonneau <stonneau@meakandake>
+Date:   Wed Mar 25 14:33:40 2015 +0100
+
+    initial commit from hpp tutorial code

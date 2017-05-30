@@ -120,24 +120,25 @@ namespace hpp {
                                 const fcl::Vec3f &offset,const fcl::Vec3f &normal, const double x,
                                 const double y,
                                 const model::ObjectVector_t &collisionObjects, const std::size_t nbSamples, const std::string &heuristicName, const double resolution,
-                                ContactType contactType, const bool disableEffectorCollision)
+                                ContactType contactType, const bool disableEffectorCollision,  const bool grasp)
     {
         std::map<std::string, const sampling::heuristic>::const_iterator hit = checkLimbData(id, limbs_,factory_,heuristicName);
         model::JointPtr_t joint = device_->getJointByName(name);
-        rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(joint, effectorName, offset,normal,x,y, nbSamples, hit->second, resolution,contactType, disableEffectorCollision);
+        rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(joint, effectorName, offset,normal,x,y, nbSamples, hit->second, resolution,contactType, disableEffectorCollision, grasp);
         AddLimbPrivate(limb, id, name,collisionObjects, disableEffectorCollision);
     }
 
     void RbPrmFullBody::AddLimb(const std::string& database, const std::string& id,
                                 const model::ObjectVector_t &collisionObjects,
                                 const std::string& heuristicName,
-                                const bool loadValues, const bool disableEffectorCollision)
+                                const bool loadValues, const bool disableEffectorCollision,
+                                const bool grasp)
     {
         std::map<std::string, const sampling::heuristic>::const_iterator hit = checkLimbData(id, limbs_,factory_,heuristicName);;
         std::ifstream myfile (database.c_str());
         if (!myfile.good())
             throw std::runtime_error ("Impossible to open database");
-        rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(device_, myfile, loadValues, hit->second, disableEffectorCollision);
+        rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(device_, myfile, loadValues, hit->second, disableEffectorCollision, grasp);
         myfile.close();
         AddLimbPrivate(limb, id, limb->limb_->name(),collisionObjects, disableEffectorCollision);
     }
@@ -155,137 +156,6 @@ namespace hpp {
         , weakPtr_()
     {
         // NOTHING
-    }
-
-    bool ContactExistsWithinGroup(const hpp::rbprm::RbPrmLimbPtr_t& limb,
-                                  const hpp::rbprm::RbPrmFullBody::T_LimbGroup& limbGroups,
-                                  const State& current)
-    {
-        const std::vector<std::string>& group = limbGroups.at(limb->limb_->name());
-        for(std::vector<std::string>::const_iterator cit = group.begin();
-            cit != group.end(); ++cit)
-        {
-            if(current.contactPositions_.find(*cit) != current.contactPositions_.end())
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-
-    ContactComputationStatus ComputeStableContact(const hpp::rbprm::RbPrmFullBodyPtr_t& body,
-                              State& current,
-                              core::CollisionValidationPtr_t validation,
-                              const std::string& limbId,
-                              const hpp::rbprm::RbPrmLimbPtr_t& limb,
-                              model::ConfigurationIn_t rbconfiguration,
-                              model::ConfigurationOut_t configuration,
-                              const affMap_t& affordances,
-                              const std::map<std::string, std::vector<std::string> >& affFilters,
-                              const fcl::Vec3f& direction,
-                              fcl::Vec3f& position, fcl::Vec3f& normal, const double robustnessTreshold,
-                              bool contactIfFails = true, bool stableForOneContact = true,
-                              const fcl::Vec3f& acceleration = fcl::Vec3f(0,0,0),
-                              const sampling::heuristic evaluate = 0)
-    {
-        contact::ContactGenHelper contactGenHelper(body,current,current.configuration_,affordances,affFilters,robustnessTreshold,1,1,false,true,
-                                          direction,acceleration,contactIfFails,stableForOneContact);
-
-        ProjectionReport rep = contact::generate_contact(contactGenHelper,limbId,evaluate);
-        current = rep.result_;
-        configuration = rep.result_.configuration_;
-        hppDout(notice,"computeStableContact : configuration = "<<model::displayConfig(configuration));
-        if(rep.status_ != NO_CONTACT)
-        {
-            position = rep.result_.contactPositions_[limbId];
-            normal = rep.result_.contactNormals_[limbId];
-        }
-        if(rep.status_ == STABLE_CONTACT)
-            current.stable = true;
-        return rep.status_;
-    }
-
-    /*static int nbFAILSNEW = 0;
-    static int nbSUCCNEW = 0;*/
-
-    hpp::rbprm::State ComputeContacts(const hpp::rbprm::RbPrmFullBodyPtr_t& body,
-			model::ConfigurationIn_t configuration, const affMap_t& affordances,
-      const std::map<std::string, std::vector<std::string> >& affFilters, const fcl::Vec3f& direction,
-      const double robustnessTreshold,const fcl::Vec3f& acceleration)
-    {
-        const T_Limb& limbs = body->GetLimbs();
-        State result;
-        // save old configuration
-        core::ConfigurationIn_t save = body->device_->currentConfiguration();
-        result.configuration_ = configuration;
-        body->device_->currentConfiguration(configuration);
-        body->device_->computeForwardKinematics();
-        for(T_Limb::const_iterator lit = limbs.begin(); lit != limbs.end(); ++lit)
-        {
-            if(!ContactExistsWithinGroup(lit->second, body->limbGroups_ ,result))
-            {
-                                hpp::model::ObjectVector_t affs = contact::getAffObjectsForLimb (lit->first,
-                                    affordances, affFilters);
-
-                fcl::Vec3f normal, position;
-                ComputeStableContact(body,result,
-                                    body->limbcollisionValidations_.at(lit->first), lit->first,
-                                    lit->second, configuration, result.configuration_, affordances,affFilters,
-                                    direction, position, normal, robustnessTreshold, false, false, acceleration);
-            }
-            result.nbContacts = result.contactNormals_.size();
-        }
-        // reload previous configuration
-        body->device_->currentConfiguration(save);
-        return result;
-    }
-
-    hpp::rbprm::State ComputeContacts(const hpp::rbprm::State& previous,
-			const hpp::rbprm::RbPrmFullBodyPtr_t& body,
-			model::ConfigurationIn_t configuration,
-			const affMap_t& affordances,
-			const std::map<std::string, std::vector<std::string> >& affFilters,
-			const fcl::Vec3f& direction, bool& contactMaintained, bool& multipleBreaks,
-      const bool allowFailure, const double robustnessTreshold,
-      const fcl::Vec3f& acceleration)
-    {
-        // save old configuration
-        core::ConfigurationIn_t save = body->device_->currentConfiguration();
-        model::Device::Computation_t flag = body->device_->computationFlag ();
-        model::Device::Computation_t newflag = static_cast <model::Device::Computation_t> (model::Device::JOINT_POSITION);
-        // load new root position
-        body->device_->controlComputation (newflag);
-        body->device_->currentConfiguration(configuration);
-        body->device_->computeForwardKinematics ();
-        // try to maintain previous contacts
-        contact::ContactGenHelper cHelper(body,previous,configuration,affordances,affFilters,robustnessTreshold,1,1,false,
-                                          true,direction,acceleration,false,false);
-        contact::ContactReport rep = contact::oneStep(cHelper);
-        contactMaintained = rep.contactMaintained_;
-        multipleBreaks = rep.multipleBreaks_;
-
-
-        // copy extra dofs
-        if(rep.success_)
-        {
-            const model::size_type& extraDim = body->device_->extraConfigSpace().dimension();
-            rep.result_.configuration_.tail(extraDim) = configuration.tail(extraDim);
-        }
-        if(rep.repositionedInPlace_)
-            multipleBreaks = true;
-        /*if(!rep.success_ || rep.repositionedInPlace_)
-        {
-            std::cout << "Contact repositionning occured " << ++nbFAILSNEW << std::endl;
-            std::cout << "(successes) " << nbSUCCNEW << std::endl;
-        }
-        else
-        {
-            ++nbSUCCNEW;
-        }*/
-        body->device_->currentConfiguration(save);
-        body->device_->controlComputation (flag);
-        return rep.result_;
     }
   } // rbprm
 } //hpp

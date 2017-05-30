@@ -25,19 +25,19 @@ namespace hpp {
     RbPrmLimbPtr_t RbPrmLimb::create (const model::JointPtr_t limb, const std::string& effectorName, const fcl::Vec3f &offset,
                                       const fcl::Vec3f &normal,const double x, const double y,
                                       const std::size_t nbSamples, const hpp::rbprm::sampling::heuristic evaluate, const double resolution,
-                                      hpp::rbprm::ContactType contactType, const bool disableEffectorCollision)
+                                      hpp::rbprm::ContactType contactType, const bool disableEffectorCollision, const bool grasp)
     {
         RbPrmLimb* rbprmDevice = new RbPrmLimb(limb, effectorName, offset, normal, x, y, nbSamples,evaluate,
-                                               resolution, contactType, disableEffectorCollision);
+                                               resolution, contactType, disableEffectorCollision, grasp);
         RbPrmLimbPtr_t res (rbprmDevice);
         res->init (res);
         return res;
     }
 
     RbPrmLimbPtr_t RbPrmLimb::create (const model::DevicePtr_t device, std::ifstream& fileStream, const bool loadValues,
-                                      const hpp::rbprm::sampling::heuristic evaluate, const bool disableEffectorCollision)
+                                      const hpp::rbprm::sampling::heuristic evaluate, const bool disableEffectorCollision, const bool grasp)
     {
-        RbPrmLimb* rbprmDevice = new RbPrmLimb(device, fileStream, loadValues, evaluate, disableEffectorCollision);
+        RbPrmLimb* rbprmDevice = new RbPrmLimb(device, fileStream, loadValues, evaluate, disableEffectorCollision, grasp);
         RbPrmLimbPtr_t res (rbprmDevice);
         res->init (res);
         return res;
@@ -79,18 +79,20 @@ namespace hpp {
     RbPrmLimb::RbPrmLimb (const model::JointPtr_t& limb, const std::string& effectorName,
                           const fcl::Vec3f &offset, const fcl::Vec3f &normal, const double x, const double y, const std::size_t nbSamples,
                           const hpp::rbprm::sampling::heuristic evaluate, const double resolution, ContactType contactType,
-                          bool disableEndEffectorCollision)
+                          bool disableEndEffectorCollision, bool grasps)
         : limb_(limb)
         , effector_(GetEffector(limb, effectorName))
         , effectorDefaultRotation_(GetEffectorTransform(effector_))
         , offset_(effectorDefaultRotation_* offset)
         , normal_(effectorDefaultRotation_* normal)
+        //, normal_(normal)
         , x_(x)
         , y_(y)
         , contactType_(contactType)
         , evaluate_(evaluate)
         , sampleContainer_(limb, effector_->name(), nbSamples, offset, resolution)
         , disableEndEffectorCollision_(disableEndEffectorCollision)
+        , grasps_(grasps)
     {
         // NOTHING
     }
@@ -138,7 +140,7 @@ namespace hpp {
 
     hpp::rbprm::RbPrmLimb::RbPrmLimb (const model::DevicePtr_t device, std::ifstream& fileStream,
                         const bool loadValues, const hpp::rbprm::sampling::heuristic evaluate,
-                        bool disableEndEffectorCollision)
+                        bool disableEndEffectorCollision, bool grasps)
       : limb_(extractJoint(device,fileStream))
       , effector_(extractJoint(device,fileStream))
       , effectorDefaultRotation_(tools::io::readRotMatrixFCL(fileStream))
@@ -150,6 +152,7 @@ namespace hpp {
       , evaluate_(evaluate)
       , sampleContainer_(fileStream, loadValues)
       , disableEndEffectorCollision_(disableEndEffectorCollision)
+      , grasps_(grasps)
     {
       // NOTHING
     }

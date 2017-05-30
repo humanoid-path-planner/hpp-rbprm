@@ -135,7 +135,15 @@ typedef T_StateFrame::const_iterator CIT_StateFrame;
             const std::string& eff = *it;
             std::map<std::string, bool>::const_iterator cit = state.contacts_.find(eff);
             if(cit == state.contacts_.end() || !cit->second)
-                res.push_back(eff);
+            {
+                if( eff == std::string("hrp2_rleg_rom"))
+                {
+                    res.insert( res.begin(), eff );
+                }
+                {
+                    res.push_back(eff);
+                }
+            }
         }
         return res;
     }

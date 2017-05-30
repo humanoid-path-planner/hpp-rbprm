@@ -39,7 +39,7 @@
 #include "utils/algorithms.h"
 #include <hpp/core/path-projector.hh>
 #include <hpp/rbprm/planner/rbprm-roadmap.hh>
-#include <robust-equilibrium-lib/static_equilibrium.hh>
+#include <centroidal-dynamics-lib/centroidal_dynamics.hh>
 #include <hpp/rbprm/rbprm-path-validation.hh>
 #include <hpp/rbprm/rbprm-validation-report.hh>
 #include <hpp/rbprm/planner/parabola-path.hh>
@@ -60,13 +60,13 @@ namespace hpp {
     using core::ConfigurationPtr_t;
     using core::size_type;
 
-    typedef robust_equilibrium::MatrixXX MatrixXX;
-    typedef robust_equilibrium::Matrix6X Matrix6X;
-    typedef robust_equilibrium::Vector3 Vector3;
-    typedef robust_equilibrium::Matrix3 Matrix3;
-    typedef robust_equilibrium::Matrix63 Matrix63;
-    typedef robust_equilibrium::Vector6 Vector6;
-    typedef robust_equilibrium::VectorX VectorX;
+    typedef centroidal_dynamics::MatrixXX MatrixXX;
+    typedef centroidal_dynamics::Matrix6X Matrix6X;
+    typedef centroidal_dynamics::Vector3 Vector3;
+    typedef centroidal_dynamics::Matrix3 Matrix3;
+    typedef centroidal_dynamics::Matrix63 Matrix63;
+    typedef centroidal_dynamics::Vector6 Vector6;
+    typedef centroidal_dynamics::VectorX VectorX;
 
 
     DynamicPlannerPtr_t DynamicPlanner::createWithRoadmap

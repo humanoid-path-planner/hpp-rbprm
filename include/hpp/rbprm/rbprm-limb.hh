@@ -91,11 +91,13 @@ namespace hpp {
                                       const fcl::Vec3f &normal,const double x, const double y,
                                       const std::size_t nbSamples, const sampling::heuristic evaluate = 0,
                                       const double resolution = 0.1, ContactType contactType = _6_DOF,
-                                      bool disableEndEffectorCollision = false);
+                                      bool disableEndEffectorCollision = false,
+                                      bool grasps = false);
 
         static RbPrmLimbPtr_t create (const model::DevicePtr_t device, std::ifstream& fileStream, const bool loadValues = true,
                                       const hpp::rbprm::sampling::heuristic evaluate = 0,
-                                      bool disableEndEffectorCollision = false);
+                                      bool disableEndEffectorCollision = false,
+                                      bool grasps = false);
 
     public:
         ~RbPrmLimb();
@@ -115,6 +117,7 @@ namespace hpp {
         sampling::heuristic evaluate_;
         const sampling::SampleDB sampleContainer_;
         const bool disableEndEffectorCollision_;
+        const bool grasps_;
 
     protected:
 
@@ -122,11 +125,13 @@ namespace hpp {
                  const fcl::Vec3f &normal,const double x, const double y,
                  const std::size_t nbSamples, const sampling::heuristic evaluate,
                  const double resolution, ContactType contactType,
-                 bool disableEndEffectorCollision = false);
+                 bool disableEndEffectorCollision = false,
+                 bool grasps = false);
 
       RbPrmLimb (const model::DevicePtr_t device, std::ifstream& fileStream, const bool loadValues,
                  const hpp::rbprm::sampling::heuristic evaluate,
-                 bool disableEndEffectorCollision = false);
+                 bool disableEndEffectorCollision = false,
+                 bool grasps = false);
       ///
       /// \brief Initialization.
       ///

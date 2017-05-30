@@ -162,6 +162,32 @@ namespace hpp {
   }
 
 
+  template<typename T>
+  void RemoveNonLimbCollisionRec(const model::JointPtr_t joint, const std::vector<std::string>& keepers,
+                                 const model::ObjectVector_t &collisionObjects,
+                                 T& collisionValidation)
+  {
+      if(std::find(keepers.begin(), keepers.end(), joint->name()) != keepers.end()) return;
+      for(model::ObjectVector_t::const_iterator cit = collisionObjects.begin();
+          cit != collisionObjects.end(); ++cit)
+      {
+          try
+          {
+              collisionValidation.removeObstacleFromJoint(joint, *cit);
+          }
+          catch(const std::runtime_error& e)
+          {
+              std::cout << "WARNING: "<< e.what() << std::endl;
+              return;
+          }
+      }
+      for(std::size_t i=0; i<joint->numberChildJoints(); ++i)
+      {
+          RemoveNonLimbCollisionRec(joint->childJoint(i), keepers, collisionObjects, collisionValidation);
+      }
+  }
+
+
   template<typename K, typename V>
   void addToMap(std::map<K,V>& map, const K& key, const V& value)
   {

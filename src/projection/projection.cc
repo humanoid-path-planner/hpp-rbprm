@@ -87,7 +87,7 @@ ProjectionReport projectToRootPosition(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, 
                                            const hpp::rbprm::State& currentState)
 {
     ProjectionReport res;
-    core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(fullBody->device_,"proj", 0.001, 40);
+    core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(fullBody->device_,"proj", 0.00001, 40);
     CreateContactConstraints(fullBody, currentState, proj);
     CreateRootPosConstraint(fullBody, target, proj);
     model::Configuration_t configuration = currentState.configuration_;
@@ -116,19 +116,24 @@ bool not_a_limb(model::JointPtr_t cJoint, T_Joint limbs)
     return true;
 }
 
+void LockFromRootRec(model::JointPtr_t cJoint, const std::vector<model::JointPtr_t>& jointLimbs, model::ConfigurationIn_t targetRootConfiguration, core::ConfigProjectorPtr_t& projector)
+{
+    if(not_a_limb(cJoint, jointLimbs))
+    {
+        core::size_type rankInConfiguration = (cJoint->rankInConfiguration ());
+        projector->add(core::LockedJoint::create(cJoint,targetRootConfiguration.segment(rankInConfiguration, cJoint->configSize())));
+        //if (cJoint->numberChildJoints() !=1)
+        //    return;
+        for(int i =0; i< cJoint->numberChildJoints(); ++i)
+            LockFromRootRec(cJoint->childJoint(i), jointLimbs, targetRootConfiguration, projector);
+    }
+}
+
 void LockFromRoot(hpp::model::DevicePtr_t device, const rbprm::T_Limb& limbs, model::ConfigurationIn_t targetRootConfiguration, core::ConfigProjectorPtr_t& projector)
 {
     std::vector<model::JointPtr_t> jointLimbs = getJointsFromLimbs(limbs);
     model::JointPtr_t cJoint = device->rootJoint();
-    core::size_type rankInConfiguration;
-    while(not_a_limb(cJoint, jointLimbs))
-    {
-        rankInConfiguration = (cJoint->rankInConfiguration ());
-        projector->add(core::LockedJoint::create(cJoint,targetRootConfiguration.segment(rankInConfiguration, cJoint->configSize())));
-        if (cJoint->numberChildJoints() !=1)
-            return;
-        cJoint = cJoint->childJoint(0);
-    }
+    LockFromRootRec(cJoint, jointLimbs, targetRootConfiguration, projector);
 }
 
 
@@ -136,7 +141,7 @@ ProjectionReport projectToRootConfiguration(hpp::rbprm::RbPrmFullBodyPtr_t fullB
                                            const hpp::rbprm::State& currentState)
 {
     ProjectionReport res;
-    core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(fullBody->device_,"proj", 0.001, 40);
+    core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(fullBody->device_,"proj", 0.00001, 40);
     CreateContactConstraints(fullBody, currentState, proj);
     LockFromRoot(fullBody->device_, fullBody->GetLimbs(), conf, proj);
     model::Configuration_t configuration = currentState.configuration_;
@@ -188,7 +193,7 @@ std::vector<bool> setTranslationConstraints()
     }
     return res;
 }
-ProjectionReport projectEffector(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
+ProjectionReport projectEffector(hpp::core::ConfigProjectorPtr_t proj, const hpp::rbprm::RbPrmFullBodyPtr_t& body, const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
                           core::CollisionValidationPtr_t validation, model::ConfigurationOut_t configuration,
                           const fcl::Matrix3f& rotationTarget, const std::vector<bool> &rotationFilter, const fcl::Vec3f& positionTarget, const fcl::Vec3f& normal,
                           const hpp::rbprm::State& current)
@@ -198,9 +203,6 @@ ProjectionReport projectEffector(const hpp::rbprm::RbPrmFullBodyPtr_t& body, con
     rep.success_ = false;
     rep.result_ = current;
     // Add constraints to resolve Ik
-    core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 20);
-    // get current normal orientation
-    hpp::tools::LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
     fcl::Transform3f localFrame, globalFrame;
     globalFrame.setTranslation(positionTarget);
     proj->add(core::NumericalConstraint::create (constraints::Position::create("",body->device_,
@@ -249,7 +251,9 @@ ProjectionReport projectEffector(const hpp::rbprm::RbPrmFullBodyPtr_t& body, con
     }
 #ifdef PROFILE
     else
+        {
         watch.stop("collision");
+        }
 #endif
     }
 #ifdef PROFILE
@@ -259,22 +263,52 @@ ProjectionReport projectEffector(const hpp::rbprm::RbPrmFullBodyPtr_t& body, con
     return rep;
 }
 
-ProjectionReport projectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
-                   const sampling::OctreeReport& report, core::CollisionValidationPtr_t validation,
-                   model::ConfigurationOut_t configuration, const hpp::rbprm::State& current)
+fcl::Transform3f computeProjectionMatrix(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const hpp::rbprm::RbPrmLimbPtr_t& limb, const model::ConfigurationIn_t configuration,
+                                         const fcl::Vec3f& normal, const fcl::Vec3f& position)
 {
-    sampling::Load(*report.sample_, configuration);
     body->device_->currentConfiguration(configuration);
     body->device_->computeForwardKinematics();
-    const fcl::Vec3f& normal = report.normal_;
-    const fcl::Vec3f& position = report.contact_.pos;
     // the normal is given by the normal of the contacted object
     const fcl::Vec3f z = limb->effector_->currentTransformation().getRotation() * limb->normal_;
     const fcl::Matrix3f alignRotation = tools::GetRotationMatrix(z,normal);
     const fcl::Matrix3f rotation = alignRotation * limb->effector_->currentTransformation().getRotation();
     fcl::Vec3f posOffset = position - rotation * limb->offset_;
     posOffset = posOffset + normal * epsilon;
-    return projectEffector(body, limbId, limb, validation, configuration, rotation, setRotationConstraints(),posOffset, normal, current);
+    return fcl::Transform3f(rotation,posOffset);
+}
+
+ProjectionReport projectToObstacle(core::ConfigProjectorPtr_t proj, const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
+                                   core::CollisionValidationPtr_t validation, model::ConfigurationOut_t configuration, const hpp::rbprm::State& current,
+                                   const fcl::Vec3f& normal, const fcl::Vec3f& position)
+{
+    fcl::Transform3f pM = computeProjectionMatrix(body, limb, configuration, normal, position);
+    return projectEffector(proj, body, limbId, limb, validation, configuration, pM.getRotation(), setRotationConstraints(),pM.getTranslation(), normal, current);
+}
+
+ProjectionReport projectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
+                                         const sampling::OctreeReport& report, core::CollisionValidationPtr_t validation,
+                                         model::ConfigurationOut_t configuration, const hpp::rbprm::State& current)
+{
+    sampling::Load(*report.sample_, configuration);
+    const fcl::Vec3f& normal = report.normal_;
+    const fcl::Vec3f& position = report.contact_.pos;
+    core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 20);
+    // get current normal orientation
+    hpp::tools::LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
+    return projectToObstacle(proj, body, limbId, limb, validation, configuration, current, normal, position);
+}
+
+ProjectionReport projectStateToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
+                                        const hpp::rbprm::State& current, const fcl::Vec3f &normal, const fcl::Vec3f &position)
+{
+    hpp::rbprm::State state = current;
+    state.RemoveContact(limbId);
+    core::CollisionValidationPtr_t dummy = core::CollisionValidation::create(body->device_);
+    model::Configuration_t configuration = current.configuration_;
+    core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 20);
+    interpolation::addContactConstraints(body, body->device_,proj, state, state.fixedContacts(state));
+    // get current normal orientation
+    return projectToObstacle(proj, body, limbId, limb, dummy, configuration, current, normal, position);
 }
 
 } // namespace projection

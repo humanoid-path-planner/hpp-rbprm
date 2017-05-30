@@ -38,13 +38,7 @@ std::size_t ComputeLength(const model::JointPtr_t limb, const model::JointPtr_t 
 fcl::Vec3f ComputeEffectorPosition(const model::JointPtr_t limb, const model::JointPtr_t effector, const fcl::Vec3f& offset)
 {
     const fcl::Transform3f& transform = effector->currentTransformation();
-//std::cout << "transform effector " << transform << std::endl;
-    //return transform.getTranslation() + transform.getRotation() * offset ;
     fcl::Transform3f parentT = fcl::inverse(limb->parentJoint()->currentTransformation());
-/*std::cout << "transform parentT " << parentT << std::endl;
-std::cout << "effector offset " << offset << std::endl;
-std::cout << "translation +  offset " << transform.getTranslation() + offset << std::endl;
-std::cout << "res  " << (parentT * fcl::Transform3f(transform.getTranslation() + offset)).getTranslation() << std::endl;*/
     fcl::Vec3f tr (transform.getTranslation() + offset);
     return (parentT * tr).getTranslation();
 }

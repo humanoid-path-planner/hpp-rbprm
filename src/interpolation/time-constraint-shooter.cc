@@ -87,7 +87,8 @@ using namespace core;
             for(rbprm::CIT_Limb cit = freeLimbs_.begin(); cit != freeLimbs_.end(); ++cit)
             {
                 const rbprm::RbPrmLimbPtr_t limb = cit->second;
-                const sampling::Sample& sample = *(limb->sampleContainer_.samples_.begin() + (rand() % (int) (limb->sampleContainer_.samples_.size() -1)));
+                const int rand_int = (rand() % (int) (limb->sampleContainer_.samples_.size() -1));
+                const sampling::Sample& sample = *(limb->sampleContainer_.samples_.begin() + rand_int);
                 sampling::Load(sample,*config);
             }
         }

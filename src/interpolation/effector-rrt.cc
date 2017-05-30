@@ -14,7 +14,7 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-rbprm. If not, see <http://www.gnu.org/licenses/>.
 
-#include <hpp/rbprm/interpolation/com-rrt.hh>
+#include <hpp/rbprm/rbprm-fullbody.hh>
 #include <hpp/rbprm/interpolation/limb-rrt.hh>
 #include <hpp/rbprm/interpolation/spline/effector-rrt.hh>
 #include <hpp/rbprm/interpolation/com-rrt.hh>
@@ -24,6 +24,8 @@
 #include <hpp/core/basic-configuration-shooter.hh>
 #include <hpp/core/discretized-path-validation.hh>
 #include <hpp/constraints/position.hh>
+
+#include <spline/helpers/effector_spline.h>
 
 
 namespace hpp {
@@ -87,7 +89,8 @@ using namespace core;
         //create evaluation function
         constraints::PositionPtr_t position = createPositionMethod(device,fcl::Vec3f(), effector);
         // define arbitrary number of way points depending on length
-        std::size_t nbWayPoints = std::size_t(std::max(effectorDistance * 10, 3.));
+        //std::size_t nbWayPoints = std::size_t(std::max(effectorDistance * 10, 3.));
+        std::size_t nbWayPoints = 30;
         std::size_t dim = position->outputSize();
         if(!(nbWayPoints % 2)) nbWayPoints+=1;
         value_type pathIncrement = path->length() / nbWayPoints;
@@ -100,7 +103,7 @@ using namespace core;
             res.push_back(std::make_pair(i,GetEffectorPositionAt(path,position, t)));
         }
         res.push_back(std::make_pair(nbWayPoints-1,GetEffectorPositionAt(path,position,path->timeRange().second)));
-        if(IsLine(res) && effectorDistance > 0.03 )
+        /*if(IsLine(res) && effectorDistance > 0.03 )
         {
             //value_type height = effectorDistance < 0.1 ? 0.01 : std::max(nbWayPoints* 0.015, 0.02) ;
 //std::cout << "is line " << std::endl;
@@ -138,14 +141,43 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
                         ++inc_fac;
                 }
             }
-        }
+        }*/
         return res;
     }
+
+    std::string getEffectorLimb(const  State &startState, const State &nextState)
+    {
+        return nextState.contactCreations(startState).front();
+    }
+
+    fcl::Vec3f getNormal(const std::string& effector, const State &state, bool& found)
+    {
+        std::map<std::string, fcl::Vec3f>::const_iterator cit = state.contactNormals_.find(effector);
+        if(cit != state.contactNormals_.end())
+        {
+            found = true;
+            return cit->second;
+        }
+        else
+        {
+            found = false;
+            return fcl::Vec3f(0.,0.,1.);
+        }
+    }
+
+    double genHeight(const bool normalFound)
+    {
+        if(normalFound)
+            return 0.01;
+        else
+            return 0.;
+    }
+
 
     JointPtr_t getEffector(RbPrmFullBodyPtr_t fullbody,
                            const  State &startState, const State &nextState)
     {
-        std::string effectorVar = nextState.contactCreations(startState).front();
+        std::string effectorVar = getEffectorLimb(startState, nextState);
         return fullbody->device_->getJointByName(fullbody->GetLimbs().at(effectorVar)->effector_->name());
     }
 
@@ -155,7 +187,23 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         // estimate length of distance travelled
         value_type length = effectorDistance(startState, nextState);
         T_Waypoint wayPoints = getWayPoints(fullbody->device_, path, effector, length, isLine);
+        std::string effLimb = getEffectorLimb(startState,nextState);
+        bool found (false);
+        fcl::Vec3f n1 = getNormal(effLimb, startState, found);
+        double h1 = genHeight(found);
+        fcl::Vec3f n2 = getNormal(effLimb, nextState, found);
+        double h2 = genHeight(found);
+        std::cout << "AM I CALLED " << n1 << "\n" <<  n2 << "\n h1 " << h1 << "\n h2 " << h2 <<  std::endl;
+       /* exact_cubic_Ptr ptr = exact_cubic_Ptr(spline::helpers::effector_spline(
+                                                  wayPoints.begin(),
+                                                  wayPoints.end(),
+                                                  n1, n2,
+                                                  h1, h2,
+                                                  h1, h2));*/
+        //exact_cubic_Ptr ptr = exact_cubic_Ptr(new spline_deriv_constraint_t(wayPoints.begin(), wayPoints.end()));
         exact_cubic_Ptr ptr = exact_cubic_Ptr(new exact_cubic_t(wayPoints.begin(), wayPoints.end()));
+        isLine = true;
+        //exact_cubic_Ptr ptr = exact_cubic_Ptr(new exact_cubic_t(wayPoints.begin(), wayPoints.end()));
         return ptr;
     }
 

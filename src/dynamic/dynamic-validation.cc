@@ -117,7 +117,7 @@ namespace hpp {
 
     DynamicValidation::DynamicValidation (bool rectangularContact, double sizeFootX, double sizeFootY, double mass, double mu) :
       rectangularContact_(rectangularContact),sizeFootX_(sizeFootX),sizeFootY_(sizeFootY),mass_(mass),mu_(mu),
-      sEq_(new robust_equilibrium::StaticEquilibrium("dynamic_val", mass,4,robust_equilibrium::SOLVER_LP_QPOASES,true,10,false))
+      sEq_(new centroidal_dynamics::Equilibrium("dynamic_val", mass,4,centroidal_dynamics::SOLVER_LP_QPOASES,true,10,false))
     {
       hppDout(info,"Dynamic validation created with attribut : rectangular contact = "<<rectangularContact<<" size foot : "<<sizeFootX);
       hppDout(info,"mass = "<<mass<<"  mu = "<<mu);

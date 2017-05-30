@@ -30,7 +30,7 @@ SET(PROJECT_DESCRIPTION
 
 
 # Set to 1 for profiling
-#add_definitions(-DPROFILE)
+ # add_definitions(-DPROFILE)
 
 # Where to compile shared objects
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
@@ -64,8 +64,8 @@ SET(${PROJECT_NAME}_HEADERS
     include/hpp/rbprm/rbprm-device.hh
     include/hpp/rbprm/rbprm-fullbody.hh
     include/hpp/rbprm/rbprm-limb.hh
-		include/hpp/rbprm/projection/projection.hh
-		include/hpp/rbprm/contact_generation/contact_generation.hh
+                include/hpp/rbprm/projection/projection.hh
+                include/hpp/rbprm/reports.hh
 		include/hpp/rbprm/contact_generation/algorithm.hh
     include/hpp/rbprm/interpolation/rbprm-path-interpolation.hh
     include/hpp/rbprm/interpolation/time-constraint-helper.hh
@@ -80,6 +80,7 @@ SET(${PROJECT_NAME}_HEADERS
     include/hpp/rbprm/interpolation/time-constraint-path-validation.hh
     include/hpp/rbprm/interpolation/time-constraint-path.hh
     include/hpp/rbprm/interpolation/com-trajectory.hh
+    include/hpp/rbprm/interpolation/polynom-trajectory.hh
     include/hpp/rbprm/interpolation/time-dependant.hh
     include/hpp/rbprm/interpolation/interpolation-constraints.hh
     include/hpp/rbprm/interpolation/spline/effector-rrt.hh
@@ -100,11 +101,6 @@ SET(${PROJECT_NAME}_HEADERS
     include/hpp/rbprm/rbprm-profiler.hh
     include/utils/Stdafx.hh
     include/utils/stop-watch.hh
-    include/spline/curve_abc.h
-    include/spline/bezier_curve.h
-    include/spline/exact_cubic.h
-    include/spline/cubic_function.h
-    include/spline/MathDefs.h
 #    include/hpp/rbprm/planner/parabola-planner.hh
     include/hpp/rbprm/planner/dynamic-planner.hh
     include/hpp/rbprm/planner/steering-dynamic.hh

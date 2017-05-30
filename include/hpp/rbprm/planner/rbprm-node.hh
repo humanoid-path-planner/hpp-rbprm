@@ -3,7 +3,7 @@
 
 #include <hpp/core/node.hh>
 #include <hpp/rbprm/rbprm-validation-report.hh>
-#include <robust-equilibrium-lib/static_equilibrium.hh>
+#include <centroidal-dynamics-lib/centroidal_dynamics.hh>
 
 
 namespace hpp {
@@ -12,10 +12,10 @@ namespace hpp {
     HPP_PREDEF_CLASS (RbprmNode);
     typedef RbprmNode* RbprmNodePtr_t;
 
-    typedef robust_equilibrium::MatrixXX MatrixXX;
-    typedef robust_equilibrium::Matrix6X Matrix6X;
-    typedef robust_equilibrium::Matrix63 Matrix63;
-    typedef robust_equilibrium::Vector6 Vector6;
+    typedef centroidal_dynamics::MatrixXX MatrixXX;
+    typedef centroidal_dynamics::Matrix6X Matrix6X;
+    typedef centroidal_dynamics::Matrix63 Matrix63;
+    typedef centroidal_dynamics::Vector6 Vector6;
     class HPP_CORE_DLLAPI RbprmNode : public Node
     {
     public :

@@ -15,7 +15,9 @@
 // hpp-rbprm. If not, see <http://www.gnu.org/licenses/>.
 
 #include <hpp/rbprm/interpolation/rbprm-path-interpolation.hh>
+#include <hpp/rbprm/contact_generation/algorithm.hh>
 #include <hpp/model/configuration.hh>
+
 #ifdef PROFILE
     #include "hpp/rbprm/rbprm-profiler.hh"
 #endif
@@ -42,7 +44,7 @@ namespace hpp {
     // ========================================================================
 
 
-    core::Configuration_t RbPrmInterpolation ::configPosition(core::ConfigurationIn_t previous, const core::PathVectorConstPtr_t path, double i)
+    core::Configuration_t RbPrmInterpolation::configPosition(core::ConfigurationIn_t previous, const core::PathVectorConstPtr_t path, double i)
     {
         core::Configuration_t configuration = previous;
         size_t pathConfigSize = path->outputSize() - robot_->device_->extraConfigSpace().dimension();
@@ -63,10 +65,13 @@ namespace hpp {
         T_Configuration configs;
         const core::interval_t& range = path_->timeRange();
         configs.push_back(start_.configuration_);
-        for(double i = range.first + timeStep; i< range.second; i+= timeStep)
+		int j = 0;
+        //for(double i = range.first + timeStep; i< range.second; i+= timeStep)
+        for(double i = range.first; i< range.second; i+= timeStep, ++j)
         {
             configs.push_back(configPosition(configs.back(),path_,i));
         }
+        configs.push_back(configPosition(configs.back(),path_,range.second));
         return Interpolate(affordances, affFilters, configs, robustnessTreshold, timeStep, range.first, filterStates);
     }
 
@@ -80,9 +85,9 @@ namespace hpp {
         hppDout(notice,"acceleration index : "<<accIndex);
         model::value_type currentVal(initValue);
         rbprm::T_StateFrame states;
-        rbprm::T_StateFrame currentContactsStates;
         states.push_back(std::make_pair(currentVal, this->start_));
         std::size_t nbRecontacts = 0;
+        std::size_t repos = 0;
         bool allowFailure = true;
         Eigen::Vector3d dir,acc;
 #ifdef PROFILE
@@ -101,11 +106,16 @@ namespace hpp {
             direction.normalize(&nonZero);
             if(!nonZero) direction = fcl::Vec3f(0,0,1.);
             // TODO Direction 6d
-            bool sameAsPrevious(true);
-            bool multipleBreaks(false);
-            State newState = ComputeContacts(previous, robot_,configuration, affordances,affFilters,direction,
-                                             sameAsPrevious, multipleBreaks,allowFailure,robustnessTreshold,acc);
-            if(allowFailure && multipleBreaks)
+            hpp::rbprm::contact::ContactReport rep = contact::ComputeContacts(previous, robot_,configuration, affordances,affFilters,direction,
+                                             robustnessTreshold,acc);
+            State& newState = rep.result_;
+
+
+            const bool  sameAsPrevious = rep.success_ && rep.contactMaintained_;
+            const bool& multipleBreaks = rep.multipleBreaks_;
+            const bool& respositioned = rep.repositionedInPlace_;
+
+            if(allowFailure && (!rep.success_ || rep.multipleBreaks_))
             {
                 ++ nbFailures;
                 if(cit != configs.end() && (cit+1)!= configs.end())
@@ -115,6 +125,7 @@ namespace hpp {
                 currentVal+= timeStep;
 if (nbFailures > 1)
 {
+    std::cout << "failed " << std::endl;
 #ifdef PROFILE
     watch.stop("complete generation");
     watch.add_to_count("planner failed", 1);
@@ -125,9 +136,16 @@ if (nbFailures > 1)
     fout.close();
 #endif
     return FilterStates(states, filterStates);
+    //return states;
 }
             }
             if(multipleBreaks && !allowFailure)
+            {
+                ++nbRecontacts;
+                cit--;
+                currentVal-= timeStep;
+            }
+            else if(!multipleBreaks && respositioned)
             {
                 ++nbRecontacts;
                 cit--;
@@ -137,24 +155,41 @@ if (nbFailures > 1)
             {
                 nbRecontacts = 0;
             }
-
-            newState.nbContacts = newState.contactNormals_.size();
-            allowFailure = nbRecontacts < robot_->GetLimbs().size() + 6;
-
-            if(!sameAsPrevious){  // add the first state with this contacts
-              states.push_back(std::make_pair(currentVal, newState));
+            if(respositioned)
+            {
+                ++repos;
+                if (repos > 20)
+                {
+				std::cout<<"failed, too much repositionning"<<std::endl;
+				#ifdef PROFILE
+					watch.stop("complete generation");
+					watch.add_to_count("planner failed", 1);
+					std::ofstream fout;
+					fout.open("log.txt", std::fstream::out | std::fstream::app);
+					std::ostream* fp = &fout;
+					watch.report_count(*fp);
+					fout.close();
+				#endif
+                    return FilterStates(states, filterStates);
+                }
             }
+            if(sameAsPrevious && !multipleBreaks && !respositioned)
+                states.pop_back();
+            newState.nbContacts = newState.contactNormals_.size();
+            states.push_back(std::make_pair(currentVal, newState));
+            //allowFailure = nbRecontacts < robot_->GetLimbs().size();
+            allowFailure = nbRecontacts < 2;
         }
         states.push_back(std::make_pair(this->path_->timeRange().second, this->end_));
-        #ifdef PROFILE
-          watch.add_to_count("planner succeeded", 1);
-          watch.stop("complete generation");
-          std::ofstream fout;
-          fout.open("log.txt", std::fstream::out | std::fstream::app);
-          std::ostream* fp = &fout;
-          watch.report_all_and_count(2,*fp);
-          fout.close();
-        #endif
+#ifdef PROFILE
+        watch.add_to_count("planner succeeded", 1);
+        watch.stop("complete generation");
+        /*std::ofstream fout;
+        fout.open("log.txt", std::fstream::out | std::fstream::app);
+        std::ostream* fp = &fout;
+        watch.report_all_and_count(2,*fp);
+        fout.close();*/
+#endif
         return FilterStates(states, filterStates);
         //return states;
     }
@@ -260,6 +295,29 @@ if (nbFailures > 1)
             }
         }
         res.push_back(originStates.back());
+
+        cit = res.begin();
+        std::size_t idx = 0;
+        for(T_StateFrame::const_iterator cit2 = res.begin()+1; cit2 != res.end()-1; ++cit, ++cit2, ++idx)
+        {
+            const State prev = cit->second;
+            const State next = cit2->second;
+            std::vector<std::string> breaks = next.contactBreaks(prev);
+            std::vector<std::string> creations = next.contactCreations(prev);
+            if(breaks.size() > 1 || creations.size() > 1)
+            {
+                std::cout << "AFTER FILTER " << std::endl;
+                std::cout << "\t REMOVING CONTACT " << breaks.size() << std::endl;
+                for(std::vector<std::string>::const_iterator tf = breaks.begin(); tf != breaks.end(); ++tf)
+                    std::cout << "\t \t " << *tf << std::endl;
+                std::cout << "\t CREATING CONTACT " << creations.size() << std::endl;
+                for(std::vector<std::string>::const_iterator tf = creations.begin(); tf != creations.end(); ++tf)
+                    std::cout << "\t \t " << *tf << std::endl;
+
+                std::cout << "END AFTERAFTER FILTER  " << breaks.size() << std::endl;
+            }
+
+        }
         return res;
     }
 
@@ -270,6 +328,30 @@ if (nbFailures > 1)
 
     T_StateFrame FilterStates(const T_StateFrame& originStates, const bool deep)
     {
+        //make sure they re ok
+        T_StateFrame::const_iterator cit = originStates.begin();
+        std::size_t idx = 0;
+        for(T_StateFrame::const_iterator cit2 = originStates.begin()+1; cit2 != originStates.end()-1; ++cit, ++cit2, ++idx)
+        {
+            const State prev = cit->second;
+            const State next = cit2->second;
+            std::vector<std::string> breaks = next.contactBreaks(prev);
+            std::vector<std::string> creations = next.contactCreations(prev);
+            if(breaks.size() > 1 || creations.size() > 1)
+            {
+                std::cout << "BEFORE FILTER " << std::endl;
+                std::cout << "\t REMOVING CONTACT " << breaks.size() << std::endl;
+                for(std::vector<std::string>::const_iterator tf = breaks.begin(); tf != breaks.end(); ++tf)
+                    std::cout << "\t \t " << *tf << std::endl;
+                std::cout << "\t CREATING CONTACT " << creations.size() << std::endl;
+                for(std::vector<std::string>::const_iterator tf = creations.begin(); tf != creations.end(); ++tf)
+                    std::cout << "\t \t " << *tf<< std::endl;
+
+                std::cout << "END BEFORE FILTER  " << breaks.size() << std::endl;
+            }
+
+        }
+
         T_StateFrame res = originStates;
         if(deep)
         {

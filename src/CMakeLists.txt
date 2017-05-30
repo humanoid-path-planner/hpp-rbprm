@@ -28,6 +28,7 @@ SET(${LIBRARY_NAME}_SOURCES
 	rbprm-limb.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-limb.hh
         ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/time-dependant.hh
         ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/interpolation-constraints.hh
+        interpolation/interpolation-constraints.cc
         ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/time-constraint-helper.hh
         ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/time-constraint-helper.inl
         ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/time-constraint-utils.hh
@@ -38,6 +39,7 @@ SET(${LIBRARY_NAME}_SOURCES
         interpolation/com-rrt-shooter.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/com-rrt-shooter.hh
 				projection/projection.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/projection/projection.hh
 				contact_generation/contact_generation.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/contact_generation/contact_generation.hh
+        ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/reports.hh
 				contact_generation/algorithm.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/contact_generation/algorithm.hh
         ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/limb-rrt.hh
         interpolation/limb-rrt.cc
@@ -47,6 +49,7 @@ SET(${LIBRARY_NAME}_SOURCES
         ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/time-constraint-steering.hh
         interpolation/time-constraint-path.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/time-constraint-path.hh
         interpolation/com-trajectory.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/com-trajectory.hh
+        interpolation/polynom-trajectory.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/polynom-trajectory.hh
         rbprm-fullbody.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-fullbody.hh
         rbprm-state.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-state.hh
         sampling/sample.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/sampling/sample.hh
@@ -60,12 +63,6 @@ SET(${LIBRARY_NAME}_SOURCES
         utils/stop-watch.cc ${PROJECT_SOURCE_DIR}/include/utils/stop-watch.hh
         utils/algorithms.cc ${PROJECT_SOURCE_DIR}/include/utils/algorithms.h
         rbprm-profiler.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-profiler.hh
-        ${PROJECT_SOURCE_DIR}/include/spline/curve_abc.h
-        ${PROJECT_SOURCE_DIR}/include/spline/bezier_curve.h
-        ${PROJECT_SOURCE_DIR}/include/spline/exact_cubic.h
-        ${PROJECT_SOURCE_DIR}/include/spline/cubic_function.h
-        ${PROJECT_SOURCE_DIR}/include/spline/MathDefs.h
-        ${PROJECT_SOURCE_DIR}/include/utils/Stdafx.hh
 #        planner/parabola-planner.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/planner/parabola-planner.hh
         planner/steering-dynamic.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/planner/steering-dynamic.hh
         planner/steering-method-parabola.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/planner/steering-method-parabola.hh
@@ -84,8 +81,7 @@ ADD_LIBRARY(${LIBRARY_NAME}
   ${${LIBRARY_NAME}_SOURCES}
   )
 
-TARGET_LINK_LIBRARIES(${LIBRARY_NAME} robust-equilibrium-lib)
-TARGET_LINK_LIBRARIES(${LIBRARY_NAME} polytope)
+TARGET_LINK_LIBRARIES(${LIBRARY_NAME} centroidal-dynamics-lib)
 
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-core)
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-util)
@@ -93,6 +89,5 @@ PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-statistics)
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-constraints)
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-fcl)
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-model)
-
 
 INSTALL(TARGETS ${LIBRARY_NAME} DESTINATION lib)
