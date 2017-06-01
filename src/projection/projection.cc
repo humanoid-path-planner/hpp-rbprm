@@ -19,6 +19,9 @@
 #include <hpp/rbprm/projection/projection.hh>
 #include <hpp/rbprm/interpolation/interpolation-constraints.hh>
 #include <hpp/model/joint.hh>
+#include <hpp/constraints/relative-com.hh>
+#include <hpp/constraints/symbolic-calculus.hh>
+#include <hpp/constraints/symbolic-function.hh>
 
 #ifdef PROFILE
     #include "hpp/rbprm/rbprm-profiler.hh"
@@ -54,11 +57,10 @@ void CreateContactConstraints(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const hpp
 {
     model::DevicePtr_t device = fullBody->device_;
     std::vector<bool> cosntraintsR = setMaintainRotationConstraints();
-    std::queue<std::string> fixed = currentState.contactOrder_;
-    while(!fixed.empty())
+    std::vector<std::string> fixed = currentState.fixedContacts(currentState);
+    for(std::vector<std::string>::const_iterator cit = fixed.begin(); cit != fixed.end(); ++cit)
     {
-        const std::string effector = fixed.front();
-        fixed.pop();
+        const std::string& effector = *cit;
         RbPrmLimbPtr_t limb = fullBody->GetLimbs().at(effector);
         const fcl::Vec3f& ppos  = currentState.contactPositions_.at(effector);
         JointPtr_t effectorJoint = device->getJointByName(limb->effector_->name());
@@ -83,11 +85,31 @@ void CreateRootPosConstraint(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const fcl:
                                                           fullBody->device_->rootJoint(),fcl::Vec3f(0,0,0), target)));
 }
 
+typedef constraints::PointCom PointCom;
+typedef constraints::CalculusBaseAbstract<PointCom::ValueType_t, PointCom::JacobianType_t> s_t;
+typedef constraints::SymbolicFunction<s_t> PointComFunction;
+typedef constraints::SymbolicFunction<s_t>::Ptr_t PointComFunctionPtr_t;
+
+void CreateComPosConstraint(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const fcl::Vec3f& target, core::ConfigProjectorPtr_t proj)
+{
+    model::DevicePtr_t device = fullBody->device_;
+    core::ComparisonTypePtr_t equals = core::Equality::create ();
+    model::CenterOfMassComputationPtr_t comComp = model::CenterOfMassComputation::create (device);
+    comComp->add (device->rootJoint());
+    comComp->computeMass ();
+    PointComFunctionPtr_t comFunc = PointComFunction::create ("COM-walkgen",
+        device, PointCom::create (comComp));
+    NumericalConstraintPtr_t comEq = NumericalConstraint::create (comFunc, equals);
+    comEq->nonConstRightHandSide() = target;
+    proj->add(comEq);
+    proj->updateRightHandSide();
+}
+
 ProjectionReport projectToRootPosition(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const fcl::Vec3f& target,
                                            const hpp::rbprm::State& currentState)
 {
     ProjectionReport res;
-    core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(fullBody->device_,"proj", 0.00001, 40);
+    core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(fullBody->device_,"proj", 1e-4, 40);
     CreateContactConstraints(fullBody, currentState, proj);
     CreateRootPosConstraint(fullBody, target, proj);
     model::Configuration_t configuration = currentState.configuration_;
@@ -141,7 +163,7 @@ ProjectionReport projectToRootConfiguration(hpp::rbprm::RbPrmFullBodyPtr_t fullB
                                            const hpp::rbprm::State& currentState)
 {
     ProjectionReport res;
-    core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(fullBody->device_,"proj", 0.00001, 40);
+    core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(fullBody->device_,"proj", 1e-4, 40);
     CreateContactConstraints(fullBody, currentState, proj);
     LockFromRoot(fullBody->device_, fullBody->GetLimbs(), conf, proj);
     model::Configuration_t configuration = currentState.configuration_;
@@ -301,15 +323,80 @@ ProjectionReport projectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& b
 ProjectionReport projectStateToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
                                         const hpp::rbprm::State& current, const fcl::Vec3f &normal, const fcl::Vec3f &position)
 {
+   // core::CollisionValidationPtr_t dummy = core::CollisionValidation::create(body->device_);
+    return projectStateToObstacle(body, limbId, limb, current, normal, position, body->GetCollisionValidation());
+}
+
+ProjectionReport projectStateToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
+                                        const hpp::rbprm::State& current, const fcl::Vec3f &normal, const fcl::Vec3f &position, core::CollisionValidationPtr_t validation)
+{
     hpp::rbprm::State state = current;
     state.RemoveContact(limbId);
-    core::CollisionValidationPtr_t dummy = core::CollisionValidation::create(body->device_);
     model::Configuration_t configuration = current.configuration_;
     core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 20);
     interpolation::addContactConstraints(body, body->device_,proj, state, state.fixedContacts(state));
     // get current normal orientation
-    return projectToObstacle(proj, body, limbId, limb, dummy, configuration, current, normal, position);
+    return projectToObstacle(proj, body, limbId, limb, validation, configuration, current, normal, position);
 }
+
+
+ProjectionReport projectToComPosition(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const fcl::Vec3f& target,
+                                           const hpp::rbprm::State& currentState)
+{
+    ProjectionReport res;
+    core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(fullBody->device_,"proj", 1e-4, 40);
+    CreateContactConstraints(fullBody, currentState, proj);
+    CreateComPosConstraint(fullBody, target, proj);
+    model::Configuration_t configuration = currentState.configuration_;
+    res.success_ = proj->apply(configuration);
+    res.result_ = currentState;
+    res.result_.configuration_ = configuration;
+    return res;
+}
+
+std::vector<std::string> extractEffectorsName(const rbprm::T_Limb& limbs)
+{
+    std::vector<std::string> res;
+    for(rbprm::T_Limb::const_iterator cit = limbs.begin(); cit != limbs.end(); ++cit)
+        res.push_back(cit->first);
+    return res;
+}
+
+ProjectionReport projectToColFreeComPosition(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const fcl::Vec3f& target,
+                                           const hpp::rbprm::State& currentState)
+{
+    ProjectionReport res, tmp;
+    core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(fullBody->device_,"proj", 1e-4, 40);
+    CreateContactConstraints(fullBody, currentState, proj);
+    CreateComPosConstraint(fullBody, target, proj);
+    model::Configuration_t configuration = currentState.configuration_;
+    res.success_ = proj->apply(configuration);
+    res.result_ = currentState;
+    res.result_.configuration_ = configuration;
+    if(res.success_)
+    {
+        std::vector<std::string> effNames(extractEffectorsName(fullBody->GetLimbs()));
+        std::vector<std::string> freeLimbs = rbprm::freeEffectors(currentState,effNames.begin(), effNames.end() );
+        for(std::vector<std::string>::const_iterator cit = freeLimbs.begin(); cit != freeLimbs.end() && res.success_; ++cit)
+        {
+            tmp = projection::setCollisionFree(fullBody,fullBody->GetLimbCollisionValidation().at(*cit),*cit,res.result_);
+            if(!tmp.success_)
+                res.success_ = false;
+        }
+    }
+    if(res.success_)
+    {
+        res.success_ = proj->apply(configuration);
+        res.result_.configuration_ = configuration;
+        if(res.success_)
+        {
+            ValidationReportPtr_t report (ValidationReportPtr_t(new CollisionValidationReport));
+            res.success_ = fullBody->GetCollisionValidation()->validate(configuration,report);
+        }
+    }
+    return res;
+}
+
 
 } // namespace projection
 } // namespace rbprm

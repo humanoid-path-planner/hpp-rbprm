@@ -61,7 +61,7 @@ namespace interpolation {
           constraints::value_type unNormalized = (tR.second-tR.first)* normalized_input + tR.first;
           if(times_ten_)
           {
-              output = ref_->operator ()(unNormalized).head(dim_) * (10000) ;
+              output = ref_->operator ()(unNormalized).head(dim_); // * (10000) ;
           }
           else
           {
@@ -89,9 +89,9 @@ namespace interpolation {
         comComp->add (device->rootJoint());
         comComp->computeMass ();
         PointComFunctionPtr_t comFunc = PointComFunction::create ("COM-walkgen",
-            device, 10000 * PointCom::create (comComp));
+            device, /*10000 **/ PointCom::create (comComp));
         NumericalConstraintPtr_t comEq = NumericalConstraint::create (comFunc, equals);
-        comEq->nonConstRightHandSide() = initTarget * 10000;
+        comEq->nonConstRightHandSide() = initTarget; // * 10000;
         proj->add(comEq);
         proj->updateRightHandSide();
         helper.steeringMethod_->tds_.push_back(TimeDependant(comEq, boost::shared_ptr<VecRightSide<Reference> >(new VecRightSide<Reference> (ref, 3, true))));
