@@ -58,7 +58,7 @@ using namespace core;
             {
                 device->setDimensionExtraConfigSpace(device->extraConfigSpace().dimension()+1);
             }*/
-            core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(device,"proj", 0.001, 1000);
+            core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(device,"proj", 1e-4, 1000);
             core::Problem rootProblem(device);
             for(std::vector<std::string>::const_iterator cit = fixed.begin();
                 cit != fixed.end(); ++cit)

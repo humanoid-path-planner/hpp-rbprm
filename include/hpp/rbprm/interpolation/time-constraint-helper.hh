@@ -27,6 +27,8 @@
 # include <hpp/core/path.hh>
 # include <hpp/core/problem.hh>
 # include <hpp/core/config-projector.hh>
+# include <hpp/core/path-projector/progressive.hh>
+# include <hpp/core/weighed-distance.hh>
 
 # include <vector>
 # include <map>
@@ -44,6 +46,8 @@ namespace hpp {
     template<class Path_T, class ShooterFactory_T, typename ConstraintFactory_T>
     class HPP_CORE_DLLAPI TimeConstraintHelper
     {
+    typedef boost::shared_ptr <core::pathProjector::Progressive> ProgressivePtr_t;
+    typedef core::pathProjector::Progressive Progressive;
     public:
         /// \param fullbody robot considered for applying a planner. The associated
         /// Device will be cloned to avoid side effects during the planning,
@@ -55,7 +59,7 @@ namespace hpp {
                               const ConstraintFactory_T& constraintFactory,
                               core::ProblemPtr_t referenceProblem,
                               core::PathPtr_t refPath,
-                              const model::value_type error_treshold = 0.001)
+                              const model::value_type error_treshold = 0.0000001)
              : fullbody_(fullbody)
              , fullBodyDevice_(fullbody->device_->clone())
              , rootProblem_(fullBodyDevice_)
@@ -69,6 +73,9 @@ namespace hpp {
              rootProblem_.collisionObstacles(referenceProblem->collisionObstacles());
              steeringMethod_ = TimeConstraintSteering<Path_T>::create(&rootProblem_,fullBodyDevice_->configSize()-1);
              rootProblem_.steeringMethod(steeringMethod_);
+             core::WeighedDistancePtr_t distance (core::WeighedDistance::createFromProblem(&rootProblem_));
+             ProgressivePtr_t pProj = Progressive::create(distance, steeringMethod_, 0.06);
+             //rootProblem_.pathProjector(pProj);
          }
 
         ~TimeConstraintHelper(){}

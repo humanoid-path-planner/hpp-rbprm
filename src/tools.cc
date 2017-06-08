@@ -149,7 +149,7 @@ namespace hpp {
         const model::value_type theta = (cosIsNegative) ? (M_PI - angle) : angle;
         // theta is between 0 and M_PI/2.
         // sin(alpha*theta)/sin(theta) in 0 should be computed differently.
-        if (fabs (theta) > 1e-6)
+        if (fabs (theta) > 1e-4)
         {
             const model::value_type sintheta_inv = 1 / sin (theta);
             return (sin ((1-u)*theta) * sintheta_inv)  * q1 + invertor * (sin (u*theta) * sintheta_inv) * q2;

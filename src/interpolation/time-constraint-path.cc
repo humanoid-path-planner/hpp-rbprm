@@ -143,10 +143,13 @@ namespace hpp {
     {
       Configuration_t initc = initial();
       Configuration_t endc = end();
+      vector_t errr;
       updateConstraints(initc);
       if (constraints()) {
-        if (!constraints()->isSatisfied (initial())) {            
-//std::cout << "init conf " <<  initc << std::endl;
+        if (!constraints()->isSatisfied (initial(),errr)) {
+            device_->currentConfiguration(initc);
+            device_->computeForwardKinematics();
+std::cout << "init conf " <<  device_->positionCenterOfMass() << "\n error \n" << errr << std::endl;
 /*device_->currentConfiguration(initc);
 device_->computeForwardKinematics();
 std::cout << "rf_foot_joint  " << std::endl;

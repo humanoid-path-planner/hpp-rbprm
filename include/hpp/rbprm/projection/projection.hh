@@ -38,6 +38,22 @@ namespace projection{
 ProjectionReport HPP_RBPRM_DLLAPI projectToRootPosition(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const fcl::Vec3f& target,
                                            const hpp::rbprm::State& currentState);
 
+/// Project a configuration to a target COM position, while maintaining contact constraints.
+/// \param fullBody target Robot
+/// \param target, desired COM position
+/// \param currentState current state of the robot (configuration and contacts)
+/// \return projection report containing the state projected
+ProjectionReport HPP_RBPRM_DLLAPI projectToComPosition(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const fcl::Vec3f& target,
+                                           const hpp::rbprm::State& currentState);
+
+/// Project a configuration to a target COM position, while maintaining contact constraints.
+/// \param fullBody target Robot
+/// \param target, desired COM position
+/// \param currentState current state of the robot (configuration and contacts)
+/// \return projection report containing the state projected
+ProjectionReport HPP_RBPRM_DLLAPI projectToColFreeComPosition(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const fcl::Vec3f& target,
+                                           const hpp::rbprm::State& currentState);
+
 /// Project a configuration to a target root configuration, while maintaining contact constraints.
 /// If required, up to maxBrokenContacts can be broken in the process.
 /// root position is assumed to be at the 3 first dof.
@@ -57,6 +73,9 @@ ProjectionReport  HPP_RBPRM_DLLAPI setCollisionFree(hpp::rbprm::RbPrmFullBodyPtr
 
 ProjectionReport HPP_RBPRM_DLLAPI projectStateToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
                                                          const hpp::rbprm::State& current, const fcl::Vec3f &normal, const fcl::Vec3f &position);
+
+ProjectionReport HPP_RBPRM_DLLAPI projectStateToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
+                                                         const hpp::rbprm::State& current, const fcl::Vec3f &normal, const fcl::Vec3f &position, core::CollisionValidationPtr_t validation);
 
 ProjectionReport HPP_RBPRM_DLLAPI projectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
                                                  const sampling::OctreeReport& report, core::CollisionValidationPtr_t validation,
