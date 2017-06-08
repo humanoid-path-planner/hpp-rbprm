@@ -242,14 +242,17 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         EffectorRRTShooterFactory shooterFactory(reducedComPath);
         std::vector<model::JointPtr_t> constrainedJoint = getJointsByName(fullbody, constrainedJointPos);
         std::vector<model::JointPtr_t> constrainedLocked = getJointsByName(fullbody, constrainedLockedJoints);
+        hppDout(notice,"effectorRRT, contrained joint pose size : "<<constrainedJointPos.size());
+        hppDout(notice,"effectorRRT, contrained locked joint  size : "<<constrainedLockedJoints.size());
+
         SetEffectorRRTConstraints constraintFactory(comPath, refEffector, refPath, effector, constrainedJoint, constrainedLocked);
         T_StateFrame stateFrames;
         stateFrames.push_back(std::make_pair(comPath->timeRange().first, startState));
         stateFrames.push_back(std::make_pair(comPath->timeRange().second, nextState));
         return interpolateStatesFromPath<EffectorRRTHelper, EffectorRRTShooterFactory, SetEffectorRRTConstraints>
                 (fullbody, referenceProblem, shooterFactory, constraintFactory, comPath,
-                 stateFrames.begin(), stateFrames.begin()+1, numOptimizations % 10, keepExtraDof);
-                 //stateFrames.begin(), stateFrames.begin()+1, numOptimizations, keepExtraDof, 0.01);
+                 //stateFrames.begin(), stateFrames.begin()+1, numOptimizations % 10, keepExtraDof);
+                 stateFrames.begin(), stateFrames.begin()+1, numOptimizations, keepExtraDof, 0.01);
     }
 
     core::PathPtr_t effectorRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
