@@ -199,7 +199,8 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
                                                   wayPoints.end(),
                                                   n1, n2,
                                                   h1, h2,
-                                                  h1, h2));*/
+                                                  h1, h2));
+                                                  */
         //exact_cubic_Ptr ptr = exact_cubic_Ptr(new spline_deriv_constraint_t(wayPoints.begin(), wayPoints.end()));
         exact_cubic_Ptr ptr = exact_cubic_Ptr(new exact_cubic_t(wayPoints.begin(), wayPoints.end()));
         isLine = true;
