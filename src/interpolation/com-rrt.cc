@@ -22,7 +22,7 @@
 #include <hpp/core/bi-rrt-planner.hh>
 #include <hpp/core/basic-configuration-shooter.hh>
 #include <hpp/core/discretized-path-validation.hh>
-
+#include <hpp/model/configuration.hh>
 #ifdef PROFILE
 #include "hpp/rbprm/rbprm-profiler.hh"
 #endif
@@ -113,6 +113,7 @@ using namespace core;
         ComRRTShooterFactory unusedFactory(unusedPath);
         SetComRRTConstraints constraintFactory;
         ComRRTHelper helper(fullbody, unusedFactory, constraintFactory, referenceProblem,unusedPath, 0.001);
+        ConfigurationPtr_t refConfig = fullbody->referenceConfig();
         CreateContactConstraints<ComRRTHelper>(helper,model,model);
         CreateComConstraint<ComRRTHelper,core::PathPtr_t>(helper, helper.refPath_,targetCom);
         Configuration_t res(helper.fullBodyDevice_->configSize());
@@ -120,6 +121,14 @@ using namespace core;
         if(helper.proj_->apply(res))
         {
             success = true;
+            hppDout(notice,"projection successfull, trying to optimize : ");
+            CreatePosturalTaskConstraint<ComRRTHelper,ConfigurationPtr_t>(helper, refConfig);
+            helper.proj_->lastIsOptional(true);
+            helper.proj_->errorThreshold(1e-1);
+            bool opSuccess = helper.proj_->optimize(res);
+            hppDout(notice,"optimize successfull : "<<opSuccess);
+            hppDout(notice,"before : "<<model::displayConfig(res));
+            hppDout(notice,"after : "<<model::displayConfig(res));
         }
         else
         {

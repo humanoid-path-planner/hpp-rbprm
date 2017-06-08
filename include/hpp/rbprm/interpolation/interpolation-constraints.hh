@@ -27,7 +27,8 @@
 # include <hpp/constraints/relative-com.hh>
 # include <hpp/constraints/symbolic-calculus.hh>
 # include <hpp/constraints/symbolic-function.hh>
-
+# include <hpp/constraints/configuration-constraint.hh>
+# include <hpp/model/configuration.hh>
 namespace hpp {
 namespace rbprm {
 namespace interpolation {
@@ -95,6 +96,32 @@ namespace interpolation {
         proj->add(comEq);
         proj->updateRightHandSide();
         helper.steeringMethod_->tds_.push_back(TimeDependant(comEq, boost::shared_ptr<VecRightSide<Reference> >(new VecRightSide<Reference> (ref, 3, true))));
+    }
+
+    template<class Helper_T, typename Reference>
+    void CreatePosturalTaskConstraint(Helper_T& helper, const Reference &ref){
+      model::DevicePtr_t device = helper.rootProblem_.robot();
+      core::ComparisonTypePtr_t equals = core::Equality::create ();
+      core::ConfigProjectorPtr_t& proj = helper.proj_;
+      hppDout(notice,"create postural task, ref config = "<<model::displayConfig(*ref));
+      std::vector <bool> mask (device->configSize(),true);
+      // mask : 0 for the freeflyer and the extraDoFs :
+      for(size_t i = 0 ; i < 7 ; i++)
+        mask[i]=false;
+      for(size_t i = device->configSize()-1 ; i >= (device->configSize() - device->extraConfigSpace().dimension()) ; i-- )
+        mask[i]=false;
+
+      std::ostringstream oss;
+      for (size_type i=0; i < mask.size (); ++i) {
+        oss << mask [i] << ",";
+      }
+
+      hppDout(notice,"mask = "<<oss.str());
+      constraints::ConfigurationConstraintPtr_t postFunc = constraints::ConfigurationConstraint::create("Postural_Task",device,*ref,mask);
+      NumericalConstraintPtr_t posturalTask = NumericalConstraint::create (postFunc, equals);
+      proj->add(posturalTask,SizeIntervals_t (0),1);
+      proj->updateRightHandSide();
+    //  helper.steeringMethod_->tds_.push_back(TimeDependant(posturalTask, boost::shared_ptr<VecRightSide<Reference> >(new VecRightSide<Reference> (ref, 3, true))));
     }
 
     inline constraints::PositionPtr_t createPositionMethod(model::DevicePtr_t device, const fcl::Vec3f& initTarget, JointPtr_t effector)
