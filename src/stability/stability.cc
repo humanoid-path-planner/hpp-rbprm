@@ -216,7 +216,7 @@ const fcl::Vec3f comfcl = comcptr->com();*/
         {
             alg = EQUILIBRIUM_ALGORITHM_PP;
         }
-        sEq.setNewContacts(positions,normals,friction,alg,graspIndex);
+        sEq.setNewContacts(positions,normals,friction,alg);
         return com;
     }
 
