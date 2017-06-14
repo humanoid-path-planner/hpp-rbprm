@@ -36,7 +36,7 @@ using namespace core;
         {
             if(std::find(fixedContacts.begin(), fixedContacts.end(), cit->first) == fixedContacts.end())
             {
-                std::cout << "adding" << cit->first << std::endl;
+                //std::cout << "adding" << cit->first << std::endl;
                 //if(std::find(variations.begin(), variations.end(), cit->first) != variations.end())
                 {
                     res.insert(*cit);
