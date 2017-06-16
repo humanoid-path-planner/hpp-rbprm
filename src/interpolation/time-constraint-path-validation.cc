@@ -63,7 +63,7 @@ namespace hpp {
             q = path->operator ()(i/10. * length);
             double distance = (last_q.tail(dim) - q.tail(dim)).norm();
             last_q =q;
-            if(distance / totalDistance > 0.3)
+            if(distance / totalDistance > 0.2)
             {
                 validPart = path->extract(interval_t(path->timeRange().first, path->timeRange().first));
                 return false;
