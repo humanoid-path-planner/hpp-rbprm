@@ -318,8 +318,8 @@ namespace hpp{
 
       hppDout(info,"Amax after min : "<<alpha0);
       aMax = alpha0*direction;
-      if((aMax[2] < aMaxFixed_) && tryJump_)
-        aMax[2] = aMaxFixed_;
+      if((aMax[2] < aMaxFixed_Z_) && tryJump_)
+        aMax[2] = aMaxFixed_Z_;
       setAmax(aMax);
       hppDout(info,"Amax vector : "<<aMax_.transpose());
       //setVmax(2*Vector3::Ones(3)); //FIXME: read it from somewhere ?
