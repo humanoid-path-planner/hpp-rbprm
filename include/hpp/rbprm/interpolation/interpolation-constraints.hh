@@ -115,13 +115,23 @@ namespace interpolation {
       for (size_type i=0; i < mask.size (); ++i) {
         oss << mask [i] << ",";
       }
-
       hppDout(notice,"mask = "<<oss.str());
-      constraints::ConfigurationConstraintPtr_t postFunc = constraints::ConfigurationConstraint::create("Postural_Task",device,*ref,mask);
-      NumericalConstraintPtr_t posturalTask = NumericalConstraint::create (postFunc, equals);
+
+      Configuration_t weight(device->configSize());
+      // create a weight vector
+      for(size_t i = 0 ; i < device->configSize() ; ++i){
+        weight[i] = 1.;
+      }
+      // TODO : retrieve it from somewhere, store it in fullbody ?
+      // value here for hrp2, from Justin
+      weight[7]= 500.;
+      for(size_t i = 8 ; i <= 11 ; i++)
+        weight[i] = 100.;
+
+      constraints::ConfigurationConstraintPtr_t postFunc = constraints::ConfigurationConstraint::create("Postural_Task",device,*ref,weight,mask);
+      const NumericalConstraintPtr_t posturalTask = NumericalConstraint::create (postFunc, equals);
       proj->add(posturalTask,SizeIntervals_t (0),1);
       proj->updateRightHandSide();
-    //  helper.steeringMethod_->tds_.push_back(TimeDependant(posturalTask, boost::shared_ptr<VecRightSide<Reference> >(new VecRightSide<Reference> (ref, 3, true))));
     }
 
     inline constraints::PositionPtr_t createPositionMethod(model::DevicePtr_t device, const fcl::Vec3f& initTarget, JointPtr_t effector)
