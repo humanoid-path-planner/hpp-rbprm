@@ -116,19 +116,26 @@ using namespace core;
         ConfigurationPtr_t refConfig = fullbody->referenceConfig();
         CreateContactConstraints<ComRRTHelper>(helper,model,model);
         CreateComConstraint<ComRRTHelper,core::PathPtr_t>(helper, helper.refPath_,targetCom);
+
+        CreatePosturalTaskConstraint<ComRRTHelper,ConfigurationPtr_t>(helper, refConfig);
+        helper.proj_->lastIsOptional(true);
+        helper.proj_->numOptimize(100);
+        helper.proj_->lastAsCost(true);
+        helper.proj_->errorThreshold(1e-2);
+
         Configuration_t res(helper.fullBodyDevice_->configSize());
         res.head(model.configuration_.rows()) = model.configuration_;
         if(helper.proj_->apply(res))
         {
             success = true;
-            hppDout(notice,"projection successfull, trying to optimize : ");
+            /*hppDout(notice,"projection successfull, trying to optimize : ");
             CreatePosturalTaskConstraint<ComRRTHelper,ConfigurationPtr_t>(helper, refConfig);
             helper.proj_->lastIsOptional(true);
-            helper.proj_->errorThreshold(1e-1);
+            helper.proj_->errorThreshold(1e-3);
+            hppDout(notice,"before : "<<model::displayConfig(res));
             bool opSuccess = helper.proj_->optimize(res);
             hppDout(notice,"optimize successfull : "<<opSuccess);
-            hppDout(notice,"before : "<<model::displayConfig(res));
-            hppDout(notice,"after : "<<model::displayConfig(res));
+            hppDout(notice,"after : "<<model::displayConfig(res));*/
         }
         else
         {
