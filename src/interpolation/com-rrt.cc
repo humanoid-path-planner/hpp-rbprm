@@ -36,6 +36,12 @@ using namespace core;
     {
         CreateContactConstraints<ComRRTHelper>(helper, from, to);
         CreateComConstraint<ComRRTHelper,core::PathPtr_t>(helper, helper.refPath_);
+        ConfigurationPtr_t refConfig = helper.fullbody_->referenceConfig();
+        CreatePosturalTaskConstraint<ComRRTHelper,ConfigurationPtr_t>(helper, refConfig);
+        helper.proj_->lastIsOptional(true);
+        helper.proj_->numOptimize(10);
+        helper.proj_->lastAsCost(true);
+        helper.proj_->errorThreshold(1e-2);
     }
 
     core::PathPtr_t comRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
