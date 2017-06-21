@@ -147,6 +147,12 @@ using namespace core;
         {
             success = false;
         }
+        // copy extraDoF from original config :
+        hppDout(notice,"projectOnCom end : ");
+        hppDout(notice,"original config : "<<model::displayConfig(model.configuration_));
+        hppDout(notice,"project  config : "<<model::displayConfig(res));
+        res.segment((fullbody->device_->configSize() - fullbody->device_->extraConfigSpace().dimension()),fullbody->device_->extraConfigSpace().dimension()) = model.configuration_.tail(fullbody->device_->extraConfigSpace().dimension());
+        hppDout(notice,"project  config : "<<model::displayConfig(res.head(res.rows()-1)));
         return res.head(res.rows()-1);
     }
 
