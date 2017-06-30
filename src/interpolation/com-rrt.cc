@@ -36,12 +36,12 @@ using namespace core;
     {
         CreateContactConstraints<ComRRTHelper>(helper, from, to);
         CreateComConstraint<ComRRTHelper,core::PathPtr_t>(helper, helper.refPath_);
-        ConfigurationPtr_t refConfig = helper.fullbody_->referenceConfig();
+        /*ConfigurationPtr_t refConfig = helper.fullbody_->referenceConfig();
         CreatePosturalTaskConstraint<ComRRTHelper,ConfigurationPtr_t>(helper, refConfig);
         helper.proj_->lastIsOptional(true);
-        helper.proj_->numOptimize(10);
+        helper.proj_->numOptimize(100);
         helper.proj_->lastAsCost(true);
-        helper.proj_->errorThreshold(1e-2);
+        helper.proj_->errorThreshold(1e-3);*/
     }
 
     core::PathPtr_t comRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
@@ -127,7 +127,7 @@ using namespace core;
         helper.proj_->lastIsOptional(true);
         helper.proj_->numOptimize(100);
         helper.proj_->lastAsCost(true);
-        helper.proj_->errorThreshold(1e-2);
+        helper.proj_->errorThreshold(1e-3);
 
         Configuration_t res(helper.fullBodyDevice_->configSize());
         res.head(model.configuration_.rows()) = model.configuration_;

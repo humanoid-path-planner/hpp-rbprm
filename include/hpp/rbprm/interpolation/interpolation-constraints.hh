@@ -106,7 +106,7 @@ namespace interpolation {
       hppDout(notice,"create postural task, ref config = "<<model::displayConfig(*ref));
       std::vector <bool> mask (device->configSize(),true);
       // mask : 0 for the freeflyer and the extraDoFs :
-      for(size_t i = 0 ; i < 7 ; i++)
+      for(size_t i = 0 ; i < 3 ; i++)
         mask[i]=false;
       for(size_t i = device->configSize()-1 ; i >= (device->configSize() - device->extraConfigSpace().dimension()) ; i-- )
         mask[i]=false;
@@ -124,10 +124,13 @@ namespace interpolation {
       }
       // TODO : retrieve it from somewhere, store it in fullbody ?
       // value here for hrp2, from Justin
-      weight[7]= 500.;
+/*    weight[7]= 10.;
       for(size_t i = 8 ; i <= 11 ; i++)
-        weight[i] = 100.;
-
+        weight[i] = 50.;
+*/
+    /*  for(size_t i = 3 ; i < 7 ; i++)
+        weight[i] = 50.;
+        */
       constraints::ConfigurationConstraintPtr_t postFunc = constraints::ConfigurationConstraint::create("Postural_Task",device,*ref,weight,mask);
       const NumericalConstraintPtr_t posturalTask = NumericalConstraint::create (postFunc, equals);
       proj->add(posturalTask,SizeIntervals_t (0),1);
