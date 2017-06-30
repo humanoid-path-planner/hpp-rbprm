@@ -126,7 +126,7 @@ ContactComputationStatus ComputeStableContact(const hpp::rbprm::RbPrmFullBodyPtr
                           bool contactIfFails = true, bool stableForOneContact = true,
                           const sampling::heuristic evaluate = 0)
 {
-    contact::ContactGenHelper contactGenHelper(body,current,current.configuration_,affordances,affFilters,robustnessTreshold,1,1,false,false,
+    contact::ContactGenHelper contactGenHelper(body,current,current.configuration_,affordances,affFilters,robustnessTreshold,1,1,false,true,
                                       direction,fcl::Vec3f(0,0,0),contactIfFails,stableForOneContact);
 
     hpp::rbprm::projection::ProjectionReport rep = contact::generate_contact(contactGenHelper,limbId,evaluate);
@@ -164,7 +164,7 @@ hpp::rbprm::State ComputeContacts(const hpp::rbprm::RbPrmFullBodyPtr_t& body,
             ComputeStableContact(body,result,
                                 limbcollisionValidations.at(lit->first), lit->first,
                                 lit->second, configuration, result.configuration_, affordances,affFilters,
-                                direction, position, normal, robustnessTreshold, false, false);
+                                direction, position, normal, robustnessTreshold, true, true);
         }
         result.nbContacts = result.contactNormals_.size();
     }
