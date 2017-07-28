@@ -253,6 +253,7 @@ bool rbprm::sampling::GetCandidates(const SampleDB& sc, const fcl::Transform3f& 
                 const fcl::Vec3f& v3 = surface->vertices[tr[2]];
                 normal = (v2 - v1).cross(v3 - v1);
                 normal.normalize();
+                normal = obj->getTransform().getRotation()*normal;
                 Eigen::Vector3d eNormal(normal[0], normal[1], normal[2]);
                 OctreeReport report(&(*sit), contact, evaluate ? ((*evaluate)(*sit, eDir, eNormal)) :0, normal);
                 ++okay;
