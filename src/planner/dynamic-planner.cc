@@ -87,9 +87,12 @@ namespace hpp {
       qProj_ (new core::Configuration_t(problem.robot()->configSize())),
       roadmap_(boost::dynamic_pointer_cast<core::Roadmap>(core::RbprmRoadmap::create (problem.distance (),problem.robot()))),
       sm_(boost::dynamic_pointer_cast<SteeringMethodKinodynamic>(problem.steeringMethod())),
-      smParabola_(rbprm::SteeringMethodParabola::create((core::ProblemPtr_t(&problem))))
+      smParabola_(rbprm::SteeringMethodParabola::create((core::ProblemPtr_t(&problem)))),
+      rbprmPathValidation_(boost::dynamic_pointer_cast<RbPrmPathValidation>(problem.pathValidation()))
     {
           assert(sm_ && "steering method should be a kinodynamic steering method for this solver");
+          assert(rbprmPathValidation_ && "Path validation should be a RbPrmPathValidation class for this solver");
+
           try {
             boost::any value_x = problem.get<boost::any> (std::string("sizeFootX"));
             boost::any value_y = problem.get<boost::any> (std::string("sizeFootY"));
@@ -127,9 +130,12 @@ namespace hpp {
       qProj_ (new core::Configuration_t(problem.robot()->configSize())),
       roadmap_(boost::dynamic_pointer_cast<core::Roadmap>(core::RbprmRoadmap::create (problem.distance (),problem.robot()))),
       sm_(boost::dynamic_pointer_cast<SteeringMethodKinodynamic>(problem.steeringMethod())),
-      smParabola_(rbprm::SteeringMethodParabola::create((core::ProblemPtr_t(&problem))))
+      smParabola_(rbprm::SteeringMethodParabola::create((core::ProblemPtr_t(&problem)))),
+      rbprmPathValidation_(boost::dynamic_pointer_cast<RbPrmPathValidation>(problem.pathValidation()))
     {
       assert(sm_ && "steering method should be a kinodynamic steering method for this solver");
+      assert(rbprmPathValidation_ && "Path validation should be a RbPrmPathValidation class for this solver");
+
       try {
         boost::any value_x = problem.get<boost::any> (std::string("sizeFootX"));
         boost::any value_y = problem.get<boost::any> (std::string("sizeFootY"));
@@ -395,11 +401,10 @@ namespace hpp {
       core::ValidationReportPtr_t report;
       //randomnize the collision pair, in order to get a different surface of contact each time
       // (because only the first one in collision is considered by fcl and put in the report)
-      RbPrmPathValidationPtr_t rbprmPathValidation = boost::dynamic_pointer_cast<RbPrmPathValidation>(problem().pathValidation());
-      rbprmPathValidation->getValidator()->randomnizeCollisionPairs(); // FIXME : remove if we compute all collision pairs
-      rbprmPathValidation->getValidator()->computeAllContacts(true);
+      rbprmPathValidation_->getValidator()->randomnizeCollisionPairs(); // FIXME : remove if we compute all collision pairs
+      rbprmPathValidation_->getValidator()->computeAllContacts(true);
       problem().configValidations()->validate(*(x->configuration()),report);
-      rbprmPathValidation->getValidator()->computeAllContacts(false);
+      rbprmPathValidation_->getValidator()->computeAllContacts(false);
       computeGIWC(x,report);
     }
 

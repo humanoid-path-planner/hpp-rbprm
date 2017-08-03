@@ -22,6 +22,8 @@
 # include <hpp/core/bi-rrt-planner.hh>
 # include <hpp/rbprm/planner/rbprm-steering-kinodynamic.hh>
 # include <hpp/rbprm/planner/steering-method-parabola.hh>
+# include <hpp/rbprm/rbprm-path-validation.hh>
+
 namespace hpp {
 namespace rbprm {
 /// \addtogroup path_planning
@@ -100,6 +102,7 @@ private:
     const core::RoadmapPtr_t roadmap_;
     const SteeringMethodKinodynamicPtr_t sm_;
     const SteeringMethodParabolaPtr_t smParabola_;
+    const RbPrmPathValidationPtr_t rbprmPathValidation_;
     double sizeFootX_,sizeFootY_;
     bool rectangularContact_;
     bool tryJump_;
