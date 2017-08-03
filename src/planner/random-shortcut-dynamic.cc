@@ -18,23 +18,251 @@
 
 
 #include <hpp/rbprm/planner/random-shortcut-dynamic.hh>
+#include <limits>
+#include <deque>
+#include <cstdlib>
+#include <hpp/util/assertion.hh>
+#include <hpp/util/debug.hh>
+#include <hpp/core/distance.hh>
+#include <hpp/core/path-vector.hh>
+#include <hpp/core/problem.hh>
+#include <hpp/core/path-projector.hh>
+#include <hpp/core/kinodynamic-oriented-path.hh>
+#include <hpp/rbprm/planner/rbprm-node.hh>
+#include <hpp/core/path-validation.hh>
+#include <hpp/core/config-validations.hh>
 
 namespace hpp{
   namespace rbprm{
+    using core::PathVector;
     using core::PathVectorPtr_t;
+    using core::PathPtr_t;
     using core::Problem;
     using core::ConfigurationIn_t;
     using core::ConfigurationPtr_t;
+    using core::Configuration_t;
+    using model::value_type;
+    using core::DistancePtr_t;
+    using core::KinodynamicPathPtr_t;
+    using core::KinodynamicPath;
+    using core::KinodynamicOrientedPathPtr_t;
+    using core::KinodynamicOrientedPath;
+
+
+    RandomShortcutDynamicPtr_t
+    RandomShortcutDynamic::create (const Problem& problem)
+    {
+      RandomShortcutDynamic* ptr = new RandomShortcutDynamic (problem);
+      return RandomShortcutDynamicPtr_t (ptr);
+    }
+
+    RandomShortcutDynamic::RandomShortcutDynamic (const Problem& problem) :
+      RandomShortcut (problem),
+      sm_(boost::dynamic_pointer_cast<SteeringMethodKinodynamic>(problem.steeringMethod())),
+      rbprmPathValidation_(boost::dynamic_pointer_cast<RbPrmPathValidation>(problem.pathValidation()))
+    {
+      assert(sm_ && "Random-shortcut-dynamic must use a kinodynamic-steering-method");
+      assert(rbprmPathValidation_ && "Path validation should be a RbPrmPathValidation class for this solver");
+
+      // retrieve parameters from problem :
+      try {
+        boost::any value_x = problem.get<boost::any> (std::string("sizeFootX"));
+        boost::any value_y = problem.get<boost::any> (std::string("sizeFootY"));
+        sizeFootX_ = boost::any_cast<double>(value_x)/2.;
+        sizeFootY_ = boost::any_cast<double>(value_y)/2.;
+        rectangularContact_ = 1;
+      } catch (const std::exception& e) {
+        hppDout(warning,"Warning : size of foot not definied, use 0 (contact point)");
+        sizeFootX_ =0;
+        sizeFootY_ =0;
+        rectangularContact_ = 0;
+      }
+      try {
+        boost::any value = problem.get<boost::any> (std::string("tryJump"));
+        tryJump_ = boost::any_cast<bool>(value);
+      } catch (const std::exception& e) {
+        tryJump_=false;
+      }
+      hppDout(notice,"tryJump in random shortcut = "<<tryJump_);
+
+      try {
+        boost::any value = problem.get<boost::any> (std::string("friction"));
+        mu_ = boost::any_cast<double>(value);
+        hppDout(notice,"mu define in python : "<<mu_);
+      } catch (const std::exception& e) {
+        mu_= 0.5;
+        hppDout(notice,"mu not defined, take : "<<mu_<<" as default.");
+      }
+    }
+
+
+    // Compute the length of a vector of paths assuming that each element
+    // is optimal for the given distance.
+    template <bool reEstimateLength = false> struct PathLength {
+      static inline value_type run (const PathVectorPtr_t& path,
+                                    const DistancePtr_t& distance)
+      {
+        if (reEstimateLength) return path->length ();
+        else {
+          value_type result = 0;
+          for (std::size_t i=0; i<path->numberPaths (); ++i) {
+            const PathPtr_t& element (path->pathAtRank (i));
+            Configuration_t q1 = element->initial ();
+            Configuration_t q2 = element->end ();
+            result += (*distance) (q1, q2);
+          }
+          return result;
+        }
+      }
+    };
 
 
 
 
+    PathVectorPtr_t RandomShortcutDynamic::optimize (const PathVectorPtr_t& path)
+    {
+      using std::numeric_limits;
+      using std::make_pair;
+      bool finished = false;
+      value_type t0, t3;
+      const Configuration_t q0 = path->initial ();
+      const Configuration_t q3 = path->end ();
+      PathVectorPtr_t tmpPath = path;
+
+      // Maximal number of iterations without improvements
+      const std::size_t n = problem().getParameter<std::size_t>("PathOptimizersNumberOfLoops", 5);
+      std::size_t projectionError = n;
+      std::deque <value_type> length (n-1,
+                                      numeric_limits <value_type>::infinity ());
+      length.push_back (PathLength<>::run (tmpPath, problem ().distance ()));
+      PathVectorPtr_t result;
+      Configuration_t q1 (path->outputSize ()),
+          q2 (path->outputSize ());
+
+      while (!finished && projectionError != 0) {
+        t0 = tmpPath->timeRange ().first;
+        t3 = tmpPath->timeRange ().second;
+        value_type u2 = t0 + (t3 -t0) * rand ()/RAND_MAX;
+        value_type u1 = t0 + (t3 -t0) * rand ()/RAND_MAX;
+        value_type t1, t2;
+        if (u1 < u2) {t1 = u1; t2 = u2;} else {t1 = u2; t2 = u1;}
+        if (!(*tmpPath) (q1, t1)) {
+          hppDout (error, "Configuration at param " << t1 << " could not be "
+                   "projected");
+          projectionError--;
+          continue;
+        }
+        if (!(*tmpPath) (q2, t2)) {
+          hppDout (error, "Configuration at param " << t1 << " could not be "
+                   "projected");
+          projectionError--;
+          continue;
+        }
+        // Validate sub parts
+        bool valid [3];
+        PathPtr_t straight [3];
+        PathPtr_t oriented;
+        KinodynamicPathPtr_t castedPath;
+        bool orientedValid(false);
+        straight [0] = steer (q0, q1);
+        straight [1] = steer (q1, q2);
+        straight [2] = steer (q2, q3);
+        PathPtr_t proj [3];
+        for (unsigned i=0; i<3; ++i) {
+          PathPtr_t validPart;
+          core::PathValidationReportPtr_t report;
+          if (!straight [i]) valid[i] = false;
+          else {
+            if (problem().pathProjector()) {
+              valid[i] = problem().pathProjector()->apply(straight[i], proj[i]);
+              if (!valid[i]) continue;
+            } else proj[i] = straight[i];
+            valid [i] = problem ().pathValidation ()->validate(proj [i], false, validPart, report);
+            if(valid[i]){
+              castedPath = boost::dynamic_pointer_cast<KinodynamicPath>(straight[i]);
+              if(castedPath){
+                oriented = KinodynamicOrientedPath::createCopy(castedPath);
+                orientedValid = problem ().pathValidation ()->validate(oriented, false, validPart, report);
+                if(orientedValid)
+                  proj[i] = oriented;
+              }
+            }
+          }
+        }
+        // Replace valid parts
+        result = PathVector::create (path->outputSize (),
+                                     path->outputDerivativeSize ());
+        try {
+          if (valid [0])
+            result->appendPath (proj [0]);
+          else
+            result->concatenate (*(tmpPath->extract
+                                   (make_pair <value_type,value_type> (t0, t1))->
+                                   as <PathVector> ()));
+          if (valid [1])
+            result->appendPath (proj [1]);
+          else
+            result->concatenate (*(tmpPath->extract
+                                   (make_pair <value_type,value_type> (t1, t2))->
+                                   as <PathVector> ()));
+          if (valid [2])
+            result->appendPath (proj [2]);
+          else
+            result->concatenate (*(tmpPath->extract
+                                   (make_pair <value_type, value_type> (t2, t3))->
+                                   as <PathVector> ()));
+        } catch (const core::projection_error& e) {
+          hppDout (error, "Caught exception at with time " << t1 << " and " <<
+                   t2 << ": " << e.what ());
+          projectionError--;
+          result = tmpPath;
+          continue;
+        }
+        length.push_back (PathLength<>::run (result, problem ().distance ()));
+        length.pop_front ();
+        finished = (length [0] - length [n-1]) <= 1e-4 * length[n-1];
+        hppDout (info, "length = " << length [n-1]);
+        tmpPath = result;
+      }
+      hppDout (info, "RandomShortcutOriented:" << *result);
+      for (std::size_t i = 0; i < result->numberPaths (); ++i) {
+        if (result->pathAtRank(i)->constraints())
+          hppDout (info, "At rank " << i << ", constraints are " <<
+                   *result->pathAtRank(i)->constraints());
+        else
+          hppDout (info, "At rank " << i << ", no constraints");
+      }
+      return result;
+    } // optimize
 
 
+    PathPtr_t RandomShortcutDynamic::steer (ConfigurationIn_t q1,
+        ConfigurationIn_t q2) const
+    {
+      // according to optimize method : the path is always in the direction q1 -> q2
+      // first : create a node and fill all informations about contacts for the initial state (q1):
+      core::RbprmNodePtr_t x1(new core::RbprmNode (ConfigurationPtr_t (new Configuration_t(q1))));
+      core::ValidationReportPtr_t report;
+      rbprmPathValidation_->getValidator()->randomnizeCollisionPairs(); // FIXME : remove if we compute all collision pairs
+      rbprmPathValidation_->getValidator()->computeAllContacts(true);
+      problem().configValidations()->validate(q1,report);
+      rbprmPathValidation_->getValidator()->computeAllContacts(false);
+
+      x1->fillNodeMatrices(report,rectangularContact_,sizeFootX_,sizeFootY_,problem().robot()->mass(),mu_);
 
 
-
-
+      PathPtr_t dp = (*sm_)(x1,q2);
+      if (dp) {
+        if((dp->initial() != q1)  || (dp->end() != q2)){
+          return PathPtr_t ();
+        }
+        if (!problem().pathProjector()) return dp;
+        PathPtr_t pp;
+        if (problem().pathProjector()->apply (dp, pp))
+          return pp;
+      }
+      return PathPtr_t ();
+    }
 
 
 

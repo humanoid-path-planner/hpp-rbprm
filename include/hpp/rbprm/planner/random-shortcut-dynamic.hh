@@ -21,7 +21,9 @@
 #define HPP_RBPRM_RANDOM_SHORTCUT_DYNAMIC_HH
 
 #include <hpp/core/random-shortcut.hh>
-#include <hpp/rbprm/planner/steering-dynamic.hh>
+#include <hpp/rbprm/planner/rbprm-steering-kinodynamic.hh>
+#include <hpp/rbprm/rbprm-path-validation.hh>
+
 
 namespace hpp {
   namespace rbprm {
@@ -63,7 +65,11 @@ namespace hpp {
 
     private:
       const SteeringMethodKinodynamicPtr_t sm_;
-
+      const RbPrmPathValidationPtr_t rbprmPathValidation_;
+      double sizeFootX_,sizeFootY_;
+      bool rectangularContact_;
+      bool tryJump_;
+      double mu_;
     }; // class RandomShortcut
     /// \}
   } // namespace core
