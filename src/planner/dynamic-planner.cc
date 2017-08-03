@@ -462,7 +462,7 @@ namespace hpp {
           bool pathValid = pathValidation->validate (projPath, false, validPath,
                                                      report);
 
-          roadmap ()->addEdge (initNode, *itn, validPath);  // (TODO a supprimer)display the path no matter if it's successful or not
+         // roadmap ()->addEdge (initNode, *itn, validPath);  // (TODO a supprimer)display the path no matter if it's successful or not
 
           if (pathValid && validPath->timeRange ().second !=
               path->timeRange ().first) {
