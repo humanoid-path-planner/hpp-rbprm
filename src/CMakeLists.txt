@@ -64,7 +64,6 @@ SET(${LIBRARY_NAME}_SOURCES
         utils/algorithms.cc ${PROJECT_SOURCE_DIR}/include/utils/algorithms.h
         rbprm-profiler.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-profiler.hh
 #        planner/parabola-planner.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/planner/parabola-planner.hh
-        planner/steering-dynamic.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/planner/steering-dynamic.hh
         planner/steering-method-parabola.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/planner/steering-method-parabola.hh
         planner/parabola-path.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/planner/parabola-path.hh
         planner/timed-parabola-path.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/planner/timed-parabola-path.hh
@@ -73,6 +72,8 @@ SET(${LIBRARY_NAME}_SOURCES
         planner/rbprm-node.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/planner/rbprm-node.hh
         dynamic/dynamic-validation.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/dynamic/dynamic-validation.hh
         dynamic/dynamic-path-validation.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/dynamic/dynamic-path-validation.hh
+        planner/random-shortcut-dynamic.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/planner/random-shortcut-dynamic.hh
+
   )
 
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/src)
