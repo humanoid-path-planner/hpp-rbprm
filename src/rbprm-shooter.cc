@@ -198,7 +198,7 @@ namespace
      // seed = 1488288253; // detour  kino
       //seed = 1488449318; // downSLope (close to ground ... )
       //seed = 1492696043; // bug stairs
-      seed = 149277557 ; // stairs (work)
+      //seed = 149277557 ; // stairs (work)
       srand (seed);
       hppDout(notice,"&&&&&& SEED = "<<seed);
       std::cout<<"seed = "<<seed<<std::endl;

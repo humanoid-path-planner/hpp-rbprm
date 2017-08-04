@@ -304,12 +304,14 @@ namespace hpp{
       if(lpStatus==centroidal_dynamics::LP_STATUS_UNBOUNDED){
         hppDout(notice,"Primal LP problem is unbounded : "<<(lpStatus));
       }
-      if(lpStatus==centroidal_dynamics::LP_STATUS_OPTIMAL)
+      else if(lpStatus==centroidal_dynamics::LP_STATUS_OPTIMAL)
       {
         hppDout(notice,"Primal LP correctly solved: "<<(lpStatus));
       }
-      if(lpStatus==centroidal_dynamics::LP_STATUS_INFEASIBLE){
+      else if(lpStatus==centroidal_dynamics::LP_STATUS_INFEASIBLE){
         hppDout(notice,"Primal LP problem could not be solved: "<<(lpStatus));
+      }else{
+        hppDout(notice,"Unknown error in LP : "<<lpStatus);
       }
 
       hppDout(info,"Amax found : "<<alpha0);
