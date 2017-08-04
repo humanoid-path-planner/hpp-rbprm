@@ -260,7 +260,7 @@ namespace hpp{
                     const PathPtr_t& element (replaceVectorTmp->pathAtRank (i));
                     pv->appendPath(element);
                   }
-                  tmpResult[0] = pv;
+                  tmpResult[2] = pv;
                 }
               }
             } // else (last segment is a pathVector)
@@ -312,7 +312,7 @@ namespace hpp{
             hppDout(notice,"Last segment is oriented, try to adjust mid segment : ");
             // check if mid segment can be adjusted :
             if (valid[1]){
-              replaceTmp = steer(q[2],oriented[2]->initial());
+              replaceTmp = steer(q[1],oriented[2]->initial());
               if(replaceTmp){
                 replaceValid = problem ().pathValidation ()->validate(replaceTmp, false, validPart, report);
                 if (replaceValid){
@@ -336,7 +336,7 @@ namespace hpp{
                   pv->appendPath(replaceTmp);
                   hppDout(notice,"Mid segment is a path vector, successfully adjusted, replace both");
                   resultPaths[1] = pv;
-                  resultPaths[0] = oriented[0];
+                  resultPaths[2] = oriented[2];
                 }
               }
             } // mid segment is a pathVector
@@ -352,7 +352,7 @@ namespace hpp{
         for (unsigned i=0; i<3; ++i) {
           std::cout<<"i ="<<i<<std::endl;
           try {
-            if (valid [i])
+            if (valid [i] || orientedValid[i])
               result->appendPath (resultPaths [i]);
             else
               result->concatenate (resultPaths[i]->as <PathVector> ());
