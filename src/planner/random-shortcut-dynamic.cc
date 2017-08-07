@@ -130,7 +130,9 @@ namespace hpp{
       PathVectorPtr_t tmpPath = path;
 
       // Maximal number of iterations without improvements
-      const std::size_t n = problem().getParameter<std::size_t>("PathOptimizersNumberOfLoops", 5);
+      std::size_t n = problem().getParameter<std::size_t>("PathOptimizersNumberOfLoops", 5);
+      n = 100;
+      std::cout<<" number of loops : "<<n<<std::endl;
       std::size_t projectionError = n;
       std::deque <value_type> length (n-1,
                                       numeric_limits <value_type>::infinity ());
