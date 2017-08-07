@@ -355,7 +355,6 @@ namespace hpp{
                                      path->outputDerivativeSize ());
 
         for (unsigned i=0; i<3; ++i) {
-          std::cout<<"i ="<<i<<std::endl;
           try {
             if (valid [i] || orientedValid[i])
               result->appendPath (resultPaths [i]);
@@ -390,7 +389,7 @@ namespace hpp{
     PathPtr_t RandomShortcutDynamic::steer (ConfigurationIn_t q1,
                                             ConfigurationIn_t q2) const
     {
-      // according to optimize method : the path is always in the direction q1 -> q2
+      // according to optimize() method : the path is always in the direction q1 -> q2
       // first : create a node and fill all informations about contacts for the initial state (q1):
       core::RbprmNodePtr_t x1(new core::RbprmNode (ConfigurationPtr_t (new Configuration_t(q1))));
       core::ValidationReportPtr_t report;
@@ -401,7 +400,7 @@ namespace hpp{
 
       x1->fillNodeMatrices(report,rectangularContact_,sizeFootX_,sizeFootY_,problem().robot()->mass(),mu_);
 
-
+      // call steering method kinodynamic with the newly created node
       PathPtr_t dp = (*sm_)(x1,q2);
       if (dp) {
         if((dp->initial() != q1)  || (dp->end() != q2)){

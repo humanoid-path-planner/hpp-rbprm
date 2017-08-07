@@ -260,6 +260,14 @@ namespace hpp{
 */
       // ####################################
 
+      hppDout(notice,"Set bounds between : ");
+      if(reverse){
+        hppDout(notice,"target : "<<model::displayConfig(target));
+        hppDout(notice,"node   : "<<model::displayConfig(*(near->configuration())));
+      }else{
+        hppDout(notice,"node   : "<<model::displayConfig(*(near->configuration())));
+        hppDout(notice,"target : "<<model::displayConfig(target));
+      }
 
 
 
