@@ -176,8 +176,11 @@ namespace hpp{
           straight [i] = steer (q[i], q[i+1]);
           orientedValid[i]=false;
           if (!straight [i]) valid[i] = false;
-          else {
-            valid[i] = problem ().pathValidation ()->validate(straight [i], false, validPart, report);
+          else { // with kinodynamic path, we are not assured that a 'straight line' is shorter than the previously found path
+            valid[i] = (straight[i]->length() < PathLength<true>::run (tmpPath->extract(make_pair <value_type, value_type> (t[i], t[i+1]))->as <PathVector> (), problem ().distance ()));
+            if(valid[i])
+              valid[i] = problem ().pathValidation ()->validate(straight [i], false, validPart, report);
+
             if(valid[i]){
               resultPaths[i] = straight[i];
               castedPath = boost::dynamic_pointer_cast<KinodynamicPath>(straight[i]);
