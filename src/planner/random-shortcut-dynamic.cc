@@ -393,17 +393,23 @@ namespace hpp{
       // first : create a node and fill all informations about contacts for the initial state (q1):
       core::RbprmNodePtr_t x1(new core::RbprmNode (ConfigurationPtr_t (new Configuration_t(q1))));
       core::ValidationReportPtr_t report;
-      rbprmPathValidation_->getValidator()->randomnizeCollisionPairs(); // FIXME : remove if we compute all collision pairs
       rbprmPathValidation_->getValidator()->computeAllContacts(true);
       problem().configValidations()->validate(q1,report);
       rbprmPathValidation_->getValidator()->computeAllContacts(false);
-
+      hppDout(notice,"Random shortucut, fillNodeMatrices : ");
       x1->fillNodeMatrices(report,rectangularContact_,sizeFootX_,sizeFootY_,problem().robot()->mass(),mu_);
 
       // call steering method kinodynamic with the newly created node
+      hppDout(notice,"Random shortucut, steering method  : ");
       PathPtr_t dp = (*sm_)(x1,q2);
       if (dp) {
+        hppDout(notice,"Random shortucut, path exist ");
         if((dp->initial() != q1)  || (dp->end() != q2)){
+          hppDout(notice,"Path doesn't link the targets");
+          return PathPtr_t ();
+        }
+        if(dp->length() <= 0.001){
+          hppDout(notice,"Path length < epsilon");
           return PathPtr_t ();
         }
         if (!problem().pathProjector()) return dp;
