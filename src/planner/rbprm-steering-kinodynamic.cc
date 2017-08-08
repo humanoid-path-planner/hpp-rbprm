@@ -110,6 +110,7 @@ namespace hpp{
         return core::PathPtr_t();
       }
       for(size_t ijoint = 0 ; ijoint < 3 ; ijoint++){
+        t=epsilon;
         if(t1[ijoint] > 0){
           hppDout(info,"for joint "<<ijoint);
           t = t1[ijoint] + epsilon; // add an epsilon to get the value after the sign change
@@ -200,6 +201,7 @@ namespace hpp{
       }
       for(size_t ijoint = 0 ; ijoint < 3 ; ijoint++){
         hppDout(info,"for joint "<<ijoint);
+        t=-epsilon;
         if(t1[ijoint] > 0){
           t = t1[ijoint] - epsilon;
           (*kinoPath)(*q,t);
