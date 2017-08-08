@@ -162,193 +162,24 @@ namespace hpp{
           continue;
         }
         // Validate sub parts
-        bool replaceValid(false);
         bool valid [3];
-        bool orientedValid[3];
         PathPtr_t straight [3];
-        PathPtr_t oriented [3];
-        KinodynamicPathPtr_t castedPath;
         core::PathValidationReportPtr_t report;
         PathPtr_t validPart;
-        PathPtr_t resultPaths[3];
 
         for (unsigned i=0; i<3; ++i) {
           straight [i] = steer (q[i], q[i+1]);
-          orientedValid[i]=false;
           if (!straight [i]) valid[i] = false;
           else { // with kinodynamic path, we are not assured that a 'straight line' is shorter than the previously found path
             valid[i] = (straight[i]->length() < PathLength<true>::run (tmpPath->extract(make_pair <value_type, value_type> (t[i], t[i+1]))->as <PathVector> (), problem ().distance ()));
             if(valid[i])
               valid[i] = problem ().pathValidation ()->validate(straight [i], false, validPart, report);
-
-            if(valid[i]){
-              resultPaths[i] = straight[i];
-              castedPath = boost::dynamic_pointer_cast<KinodynamicPath>(straight[i]);
-              if(castedPath){
-                oriented[i] = KinodynamicOrientedPath::createCopy(castedPath);
-                orientedValid[i] = problem ().pathValidation ()->validate(oriented[i], false, validPart, report);
-              }
-            }
           }
-          if(!valid[i])
-            resultPaths[i] = tmpPath->extract(make_pair <value_type, value_type> (t[i], t[i+1]))->as <PathVector> ();
         }
         hppDout(notice,"t0 = "<<t[0]<<" ; t1 = "<<t[1]<<" ; t2 = "<<t[2]<<" ; t3 = "<<t[3]);
-        hppDout(notice,"first segment : oriented : "<<orientedValid[0] <<" ; valid : "<<valid[0]);
-        hppDout(notice,"mid segment   : oriented : "<<orientedValid[1] <<" ; valid : "<<valid[1]);
-        hppDout(notice,"last segment  : oriented : "<<orientedValid[2] <<" ; valid : "<<valid[2]);
-
-
-        // If we replace a path with an oriented path, we must adjust the initial and/or end config
-        // for the previous and/or next path to avoid discontinuitie in orientation :
-        PathPtr_t tmpResult[3];
-        PathVectorPtr_t replaceVectorTmp;
-        PathPtr_t replaceTmp;
-        replaceValid = false;
-        if(orientedValid[1]){ // start with the middle segment
-          hppDout(notice,"Mid segment oriented, try to adjust the first segment : ");
-          // check the previous segment :
-          if(orientedValid[0]){
-            tmpResult[0] = oriented[0];
-            replaceValid = true;
-          }else if (valid[0]){
-            replaceTmp = steer(q[0],oriented[1]->initial());
-            if(replaceTmp){
-              replaceValid = problem ().pathValidation ()->validate(replaceTmp, false, validPart, report);
-              if (replaceValid){
-                tmpResult[0] = replaceTmp;
-              }
-            }
-          }else{
-            replaceVectorTmp = tmpPath->extract(make_pair <value_type, value_type> (t[0], t[1]))->as <PathVector> ();
-            replaceTmp = replaceVectorTmp->pathAtRank(replaceVectorTmp->numberPaths ()-1); // extract last path
-            replaceTmp = steer(replaceTmp->initial(),oriented[1]->initial()); // change the orientation of the end of the last path
-            if(replaceTmp){
-              replaceValid = problem ().pathValidation ()->validate(replaceTmp, false, validPart, report);
-              if (replaceValid){ // create a new pathVector for the first segment with all the old path exept the last one replaced with the new orientation
-                PathVectorPtr_t pv = PathVector::create (replaceTmp->outputSize(),replaceTmp->outputDerivativeSize());
-                for (std::size_t i=0; i<replaceVectorTmp->numberPaths () - 1; ++i) {
-                  const PathPtr_t& element (replaceVectorTmp->pathAtRank (i));
-                  pv->appendPath(element);
-                }
-                pv->appendPath(replaceTmp);
-                tmpResult[0] = pv;
-              }
-            }
-          }// else : first segment is a pathvector
-          hppDout(notice,"First segment adjusted : "<<replaceValid);
-          if(replaceValid){
-            hppDout(notice,"Mid segment oriented, try to adjust the last segment : ");
-          // check the last segment
-            replaceValid = false;
-            if(orientedValid[2]){
-              tmpResult[2] = oriented[2];
-              replaceValid = true;
-            }else if (valid[2]){
-              replaceTmp = steer(oriented[1]->end(),q[3]);
-              if(replaceTmp){
-                replaceValid = problem ().pathValidation ()->validate(replaceTmp, false, validPart, report);
-                if (replaceValid){
-                  tmpResult[2] = replaceTmp;
-                }
-              }
-            }else{
-              replaceVectorTmp = tmpPath->extract(make_pair <value_type, value_type> (t[2], t[3]))->as <PathVector> ();
-              replaceTmp = replaceVectorTmp->pathAtRank(0); // extract first path
-              replaceTmp = steer(oriented[1]->end(),replaceTmp->end()); // change the orientation of the init of the first path
-              if(replaceTmp){
-                replaceValid = problem ().pathValidation ()->validate(replaceTmp, false, validPart, report);
-                if (replaceValid){ // create a new pathVector for the last segment with all the old path exept the first one replaced with the new orientation
-                  PathVectorPtr_t pv = PathVector::create (replaceTmp->outputSize(),replaceTmp->outputDerivativeSize());
-                  pv->appendPath(replaceTmp);
-                  for (std::size_t i=1; i<replaceVectorTmp->numberPaths (); ++i) {
-                    const PathPtr_t& element (replaceVectorTmp->pathAtRank (i));
-                    pv->appendPath(element);
-                  }
-                  tmpResult[2] = pv;
-                }
-              }
-            } // else (last segment is a pathVector)
-          }// if(replaceValid) : test for the last segment
-          hppDout(notice,"Last segment adjusted : "<<replaceValid);
-          if(replaceValid){ // mid segment is oriented and first and last segment were successfuly adjusted :
-            hppDout(notice,"Both segment successfully adjusted, replace the tmp values.");
-            resultPaths[1] = oriented[1];
-            resultPaths[0] = tmpResult[0];
-            resultPaths[2] = tmpResult[2];
-          }
-        }else{ // check if first or last segment are oriented and try to adjust middle segment :
-          if(orientedValid[0]){
-            hppDout(notice,"First segment is oriented, try to adjust mid segment : ");
-            // check if mid segment can be adjusted :
-            if (valid[1]){
-              replaceTmp = steer(oriented[0]->end(),q[2]);
-              if(replaceTmp){
-                replaceValid = problem ().pathValidation ()->validate(replaceTmp, false, validPart, report);
-                if (replaceValid){
-                  hppDout(notice,"Mid segment is valid, replace both");
-                  resultPaths[1] = replaceTmp;
-                  resultPaths[0] = oriented[0];
-                }
-              }
-            }else{
-              replaceVectorTmp = tmpPath->extract(make_pair <value_type, value_type> (t[1], t[2]))->as <PathVector> ();
-              replaceTmp = replaceVectorTmp->pathAtRank(0); // extract first path
-              replaceTmp = steer(oriented[0]->end(),replaceTmp->end()); // change the orientation of the init config of the first path
-              if(replaceTmp){
-                replaceValid = problem ().pathValidation ()->validate(replaceTmp, false, validPart, report);
-                if (replaceValid){ // create a new pathVector for the mid segment with all the old path exept the first one replaced with the new orientation
-                  PathVectorPtr_t pv = PathVector::create (replaceTmp->outputSize(),replaceTmp->outputDerivativeSize());
-                  pv->appendPath(replaceTmp);
-                  for (std::size_t i=1; i<replaceVectorTmp->numberPaths (); ++i) {
-                    const PathPtr_t& element (replaceVectorTmp->pathAtRank (i));
-                    pv->appendPath(element);
-                  }
-                  hppDout(notice,"Mid segment is a path vector, successfully adjusted, replace both");
-                  resultPaths[1] = pv;
-                  resultPaths[0] = oriented[0];
-                }
-              }
-            } // mid segment is a pathVector
-
-          } // if first segment is oriented
-
-          if(orientedValid[2]){
-            hppDout(notice,"Last segment is oriented, try to adjust mid segment : ");
-            // check if mid segment can be adjusted :
-            if (valid[1]){
-              replaceTmp = steer(q[1],oriented[2]->initial());
-              if(replaceTmp){
-                replaceValid = problem ().pathValidation ()->validate(replaceTmp, false, validPart, report);
-                if (replaceValid){
-                  hppDout(notice,"Mid segment is valid, replace both");
-                  resultPaths[1] = replaceTmp;
-                  resultPaths[2] = oriented[2];
-                }
-              }
-            }else{
-              replaceVectorTmp = tmpPath->extract(make_pair <value_type, value_type> (t[1], t[2]))->as <PathVector> ();
-              replaceTmp = replaceVectorTmp->pathAtRank(replaceVectorTmp->numberPaths() - 1 ); // extract last path
-              replaceTmp = steer(replaceTmp->initial(),oriented[2]->initial()); // change the orientation of the end config of the last path
-              if(replaceTmp){
-                replaceValid = problem ().pathValidation ()->validate(replaceTmp, false, validPart, report);
-                if (replaceValid){ // create a new pathVector for the mid segment with all the old path exept the last one replaced with the new orientation
-                  PathVectorPtr_t pv = PathVector::create (replaceTmp->outputSize(),replaceTmp->outputDerivativeSize());
-                  for (std::size_t i=0; i<replaceVectorTmp->numberPaths ()-1; ++i) {
-                    const PathPtr_t& element (replaceVectorTmp->pathAtRank (i));
-                    pv->appendPath(element);
-                  }
-                  pv->appendPath(replaceTmp);
-                  hppDout(notice,"Mid segment is a path vector, successfully adjusted, replace both");
-                  resultPaths[1] = pv;
-                  resultPaths[2] = oriented[2];
-                }
-              }
-            } // mid segment is a pathVector
-
-          } // if last segment is oriented
-        } // if mid segment was not oriented
-
+        hppDout(notice,"first segment : valid : "<<valid[0]);
+        hppDout(notice,"mid segment   : valid : "<<valid[1]);
+        hppDout(notice,"last segment  : valid : "<<valid[2]);
 
         // Replace valid parts
         result = PathVector::create (path->outputSize (),
@@ -356,10 +187,10 @@ namespace hpp{
 
         for (unsigned i=0; i<3; ++i) {
           try {
-            if (valid [i] || orientedValid[i])
-              result->appendPath (resultPaths [i]);
+            if (valid [i])
+              result->appendPath (straight[i]);
             else
-              result->concatenate (resultPaths[i]->as <PathVector> ());
+              result->concatenate (tmpPath->extract(make_pair <value_type, value_type> (t[i], t[i+1]))->as <PathVector> ());
           } catch (const core::projection_error& e) {
             hppDout (error, "Caught exception at with time " << t[i] << " and " <<
                                                                         t[i+1] << ": " << e.what ());
