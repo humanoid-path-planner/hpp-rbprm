@@ -89,6 +89,7 @@ namespace hpp{
       core::size_type configSize = problem_->robot()->configSize() - problem_->robot()->extraConfigSpace().dimension ();
 
       // check if acceleration is valid after each sign change :
+      core::vector_t t0 = kinoPath->getT0();
       core::vector_t t1 = kinoPath->getT1();
       core::vector_t tv = kinoPath->getTv();
       double t=0;
@@ -111,9 +112,21 @@ namespace hpp{
       }
       for(size_t ijoint = 0 ; ijoint < 3 ; ijoint++){
         t=epsilon;
+        if(t0[ijoint] > 0){
+          hppDout(info,"for joint "<<ijoint);
+          t = t0[ijoint] + epsilon; // add an epsilon to get the value after the sign change
+          (*kinoPath)(*q,t);
+          hppDout(info,"q(t="<<t<<") = "<<model::displayConfig(*q));
+          a = (*q).segment<3>(configSize+3);
+          hppDout(info,"a = "<<a);
+          aValid = sEq_->checkAdmissibleAcceleration(node->getH(),node->geth(),a);
+          hppDout(info,"a valid : "<<aValid);
+          if(!aValid && t < maxT)
+            maxT = t;
+        }
         if(t1[ijoint] > 0){
           hppDout(info,"for joint "<<ijoint);
-          t = t1[ijoint] + epsilon; // add an epsilon to get the value after the sign change
+          t += t1[ijoint]; // add an epsilon to get the value after the sign change
           (*kinoPath)(*q,t);
           hppDout(info,"q(t="<<t<<") = "<<model::displayConfig(*q));
           a = (*q).segment<3>(configSize+3);
@@ -177,9 +190,9 @@ namespace hpp{
       assert (path && "Error while casting path shared ptr"); // really usefull ? should never happen
       core::size_type configSize = problem_->robot()->configSize() - problem_->robot()->extraConfigSpace().dimension ();
       // check if acceleration is valid after each sign change :
+      core::vector_t t0 = kinoPath->getT0();
       core::vector_t t1 = kinoPath->getT1();
       core::vector_t tv = kinoPath->getTv();
-      core::vector_t t2 = kinoPath->getT2();
       double t=0;
       core::ConfigurationPtr_t q(new core::Configuration_t(problem_->robot()->configSize()));
       core::vector3_t a;
@@ -202,8 +215,20 @@ namespace hpp{
       for(size_t ijoint = 0 ; ijoint < 3 ; ijoint++){
         hppDout(info,"for joint "<<ijoint);
         t=-epsilon;
+        if(t0[ijoint] > 0){
+          hppDout(info,"for joint "<<ijoint);
+          t = t0[ijoint] - epsilon; // add an epsilon to get the value after the sign change
+          (*kinoPath)(*q,t);
+          hppDout(info,"q(t="<<t<<") = "<<model::displayConfig(*q));
+          a = (*q).segment<3>(configSize+3);
+          hppDout(info,"a = "<<a);
+          aValid = sEq_->checkAdmissibleAcceleration(node->getH(),node->geth(),a);
+          hppDout(info,"a valid : "<<aValid);
+          if(!aValid && t >minT)
+            minT = t;
+        }
         if(t1[ijoint] > 0){
-          t = t1[ijoint] - epsilon;
+          t += t1[ijoint];
           (*kinoPath)(*q,t);
           hppDout(info,"q(t="<<t<<") = "<<model::displayConfig(*q));
           a = (*q).segment<3>(configSize+3);
