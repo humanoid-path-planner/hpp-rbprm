@@ -57,10 +57,17 @@ namespace hpp {
       virtual core::PathVectorPtr_t optimize (const core::PathVectorPtr_t& path);
     protected:
       OrientedPathOptimizer (const core::Problem& problem);
+      bool checkReplaceOrientation(const size_t index,const size_t lastIndex, bool* replaceValid, bool* orientedValid, core::PathPtr_t* orientedPaths, core::PathPtr_t* resultPaths);
+
+      core::PathPtr_t steer (core::ConfigurationIn_t q1, core::ConfigurationIn_t q2) const;
 
     private:
+      const SteeringMethodKinodynamicPtr_t sm_;
       const RbPrmPathValidationPtr_t rbprmPathValidation_;
-
+      double sizeFootX_,sizeFootY_;
+      bool rectangularContact_;
+      bool tryJump_;
+      double mu_;
 
 
     };//class oriented-path-optimizer

@@ -245,8 +245,10 @@ namespace hpp{
         }
         if (!problem().pathProjector()) return dp;
         PathPtr_t pp;
-        if (problem().pathProjector()->apply (dp, pp))
+        if (problem().pathProjector()->apply (dp, pp)){
+          hppDout(notice,"Path projector exist in random-shortcut");
           return pp;
+        }
       }
       return PathPtr_t ();
     }
