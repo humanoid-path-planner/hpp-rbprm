@@ -35,6 +35,7 @@ namespace hpp{
     typedef centroidal_dynamics::VectorX VectorX;
 
     void RbprmNode::fillNodeMatrices(ValidationReportPtr_t report, bool rectangularContact, double sizeFootX, double sizeFootY, double m,double mu){
+      hppStartBenchmark(FILL_NODE_MATRICE);
       core::ConfigurationPtr_t q = configuration();
 
       core::RbprmValidationReportPtr_t rbReport = boost::dynamic_pointer_cast<core::RbprmValidationReport> (report);
@@ -292,6 +293,8 @@ namespace hpp{
       hppDout(notice,"list of all contacts = "<<ssContacts.str()<<"]");
       hppDout(notice,"list of all centers = "<<ssCenters.str()<<"]");
 
+      hppStopBenchmark(FILL_NODE_MATRICE);
+      hppDisplayBenchmark(FILL_NODE_MATRICE);
 
     }
 

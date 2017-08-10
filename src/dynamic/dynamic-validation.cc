@@ -20,7 +20,7 @@
 # include <hpp/util/debug.hh>
 # include <hpp/rbprm/planner/rbprm-node.hh>
 # include <hpp/model/configuration.hh>
-
+#include <hpp/util/timer.hh>
 
 namespace hpp {
   namespace rbprm {
@@ -36,14 +36,19 @@ namespace hpp {
 
     bool DynamicValidation::validate (const core::Configuration_t& config, core::ValidationReportPtr_t& validationReport){
       hppDout(notice,"Begin dynamic validation");
+     // hppStartBenchmark(DYNAMIC_VALIDATION);
       // test if the same number of ROM are in collision :
       core::RbprmValidationReportPtr_t rbReport = boost::dynamic_pointer_cast<core::RbprmValidationReport> (validationReport);
       if(!rbReport){
         hppDout(error,"error while casting the report");
+       // hppStopBenchmark(DYNAMIC_VALIDATION);
+        //hppDisplayBenchmark(DYNAMIC_VALIDATION);
         return false;
       }
       if(lastReport_->ROMReports.size() != rbReport->ROMReports.size()){
         hppDout(notice,"dynamic validation : rom report not the same size");
+       // hppStopBenchmark(DYNAMIC_VALIDATION);
+       // hppDisplayBenchmark(DYNAMIC_VALIDATION);
         return false;
       }else{
         hppDout(notice,"dynamic validation : rom report have the same size");
@@ -65,6 +70,8 @@ namespace hpp {
        // if !sameContact, compute new contacts infos and test acceleration
       if(sameContacts && initContacts_){
         hppDout(notice,"initial contacts still active");
+       // hppStopBenchmark(DYNAMIC_VALIDATION);
+       // hppDisplayBenchmark(DYNAMIC_VALIDATION);
         return true;
       }
       size_t configSize = config.size();
@@ -72,11 +79,15 @@ namespace hpp {
       if(sameContacts){ // new contacts already computed
         if(config.segment<3>(configSize-3) == lastAcc_){
           hppDout(notice,"this acceleration is already verified");
+        //  hppStopBenchmark(DYNAMIC_VALIDATION);
+        //  hppDisplayBenchmark(DYNAMIC_VALIDATION);
           return true;
         }else{ // new acceleration, check if valid
           lastAcc_ = config.segment<3>(configSize-3);
           bool aValid = sEq_->checkAdmissibleAcceleration(H_,h_,lastAcc_);
           hppDout(notice,"new acceleration : "<<lastAcc_.transpose()<<", valid = "<<aValid);
+        //  hppStopBenchmark(DYNAMIC_VALIDATION);
+        //  hppDisplayBenchmark(DYNAMIC_VALIDATION);
           return aValid;
         }
       }else{ // changes in contacts, recompute the matrices and check the acceleration :
@@ -95,6 +106,8 @@ namespace hpp {
         // test the acceleration
         bool aValid = sEq_->checkAdmissibleAcceleration(H_,h_,lastAcc_);
         hppDout(notice,"new acceleration : "<<lastAcc_.transpose()<<", valid = "<<aValid);
+       // hppStopBenchmark(DYNAMIC_VALIDATION);
+      //  hppDisplayBenchmark(DYNAMIC_VALIDATION);
         return aValid;
       }
 

@@ -31,6 +31,7 @@
 #include <hpp/rbprm/planner/rbprm-node.hh>
 #include <hpp/core/path-validation.hh>
 #include <hpp/core/config-validations.hh>
+#include <hpp/util/timer.hh>
 
 namespace hpp{
   namespace rbprm{
@@ -120,6 +121,7 @@ namespace hpp{
     PathVectorPtr_t RandomShortcutDynamic::optimize (const PathVectorPtr_t& path)
     {
       hppDout(notice,"!! Start optimize()");
+      hppStartBenchmark(RANDOM_SHORTCUT);
       using std::numeric_limits;
       using std::make_pair;
       bool finished = false;
@@ -213,6 +215,8 @@ namespace hpp{
         else
           hppDout (info, "At rank " << i << ", no constraints");
       }
+      hppStopBenchmark(RANDOM_SHORTCUT);
+      hppDisplayBenchmark(RANDOM_SHORTCUT);
       return result;
     } // optimize
 

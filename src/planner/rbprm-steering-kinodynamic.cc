@@ -60,7 +60,10 @@ namespace hpp{
                                          core::ConfigurationIn_t q2)
     {
       // get kinodynamic path from core::steeringMethod::Kinodynamic
+      hppStartBenchmark(FIND_A_MAX);
       core::RbprmNodePtr_t node =  setSteeringMethodBounds(x,q2,false);
+      hppStopBenchmark(FIND_A_MAX);
+      hppDisplayBenchmark(FIND_A_MAX);
       if(aMax_.norm() <= 0)
         return core::PathPtr_t();
       //return core::steeringMethod::Kinodynamic::impl_compute(*x->configuration(),q2);
@@ -89,6 +92,7 @@ namespace hpp{
       core::size_type configSize = problem_->robot()->configSize() - problem_->robot()->extraConfigSpace().dimension ();
 
       // check if acceleration is valid after each sign change :
+      hppStartBenchmark(INTERMEDIATE_ACCELERATION_CHECKS);
       core::vector_t t0 = kinoPath->getT0();
       core::vector_t t1 = kinoPath->getT1();
       core::vector_t tv = kinoPath->getTv();
@@ -160,16 +164,26 @@ namespace hpp{
       }
       totalTimeValidated_ += kinoPath->length();
       hppDout(notice,"totalTimeValidated = "<<totalTimeValidated_);
+      hppStopBenchmark(INTERMEDIATE_ACCELERATION_CHECKS);
+      hppDisplayBenchmark(INTERMEDIATE_ACCELERATION_CHECKS);
+
       return kinoPath;
     }
 
     // reverse (from q1 to x, but end() should always be x)
     core::PathPtr_t SteeringMethodKinodynamic::impl_compute (core::ConfigurationIn_t q1,core::NodePtr_t x)
     {
+      hppStartBenchmark(FIND_A_MAX);
       core::RbprmNodePtr_t node =  setSteeringMethodBounds(x,q1,true);
+      hppStopBenchmark(FIND_A_MAX);
+      hppDisplayBenchmark(FIND_A_MAX);
       if(aMax_.norm() <= 0)
         return core::PathPtr_t();
+      hppStartBenchmark(steering_kino);
       core::PathPtr_t path = core::steeringMethod::Kinodynamic::impl_compute(q1,*x->configuration());
+      hppStopBenchmark(steering_kino);
+      hppDisplayBenchmark(steering_kino);
+
       if(!path)
         return core::PathPtr_t();
       core::KinodynamicPathPtr_t kinoPath = boost::dynamic_pointer_cast<core::KinodynamicPath>(path);
@@ -185,7 +199,7 @@ namespace hpp{
         dirValid_++;
 
 
-
+      hppStartBenchmark(INTERMEDIATE_ACCELERATION_CHECKS);
       hppDout(notice,"TotaltimeComputed = "<<totalTimeComputed_);
       assert (path && "Error while casting path shared ptr"); // really usefull ? should never happen
       core::size_type configSize = problem_->robot()->configSize() - problem_->robot()->extraConfigSpace().dimension ();
@@ -261,6 +275,9 @@ namespace hpp{
       }
       totalTimeValidated_ += kinoPath->length();
       hppDout(notice,"totalTimeValidated = "<<totalTimeValidated_);
+      hppStopBenchmark(INTERMEDIATE_ACCELERATION_CHECKS);
+      hppDisplayBenchmark(INTERMEDIATE_ACCELERATION_CHECKS);
+
       return kinoPath;
     }
 

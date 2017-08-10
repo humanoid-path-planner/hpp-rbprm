@@ -26,6 +26,7 @@
 #include <hpp/core/collision-path-validation-report.hh>
 #include <hpp/util/debug.hh>
 #include <hpp/model/configuration.hh>
+#include <hpp/util/timer.hh>
 
 namespace hpp {
   namespace rbprm {
@@ -52,6 +53,7 @@ namespace hpp {
     /// validate with custom filter for the rom validation
     bool DynamicPathValidation::validate (const core::PathPtr_t& path, bool reverse, core::PathPtr_t& validPart, core::PathValidationReportPtr_t& validationReport,const std::vector<std::string>& filter){
       hppDout(notice,"dynamic path validation called with filters");
+      hppStartBenchmark(PATH_VALIDATION);
       core::ValidationReportPtr_t configReport;
       Configuration_t q;
       if(reverse)
@@ -89,9 +91,13 @@ namespace hpp {
         }
         if (valid) {
           validPart = path;
+          hppStopBenchmark(PATH_VALIDATION);
+          hppDisplayBenchmark(PATH_VALIDATION);
           return true;
         } else {
           validPart = path->extract (std::make_pair (lastValidTime, tmax));
+          hppStopBenchmark(PATH_VALIDATION);
+          hppDisplayBenchmark(PATH_VALIDATION);
           return false;
         }
       } else {
@@ -118,19 +124,25 @@ namespace hpp {
         }
         if (valid) {
           validPart = path;
+          hppStopBenchmark(PATH_VALIDATION);
+          hppDisplayBenchmark(PATH_VALIDATION);
           return true;
         } else {
           validPart = path->extract (std::make_pair (tmin, lastValidTime));
+          hppStopBenchmark(PATH_VALIDATION);
+          hppDisplayBenchmark(PATH_VALIDATION);
           return false;
         }
       }
+      hppStopBenchmark(PATH_VALIDATION);
+      hppDisplayBenchmark(PATH_VALIDATION);
     }
 
     bool DynamicPathValidation::validate (const core::PathPtr_t& path, bool reverse,  core::PathPtr_t& validPart,  core::PathValidationReportPtr_t& validationReport){
       hppDout(info,"dynamic path validation called");
       hppDout(info,"path begin : "<<path->timeRange ().first);
       hppDout(info,"path end : "<<path->timeRange ().second);
-
+      hppStartBenchmark(PATH_VALIDATION);
       core::ValidationReportPtr_t configReport;
       Configuration_t q (path->outputSize());
       if(reverse)
@@ -140,10 +152,15 @@ namespace hpp {
 
       hppDout(info,"q = "<<model::displayConfig(q));
       rbprmValidation_->validate(q,configReport);
+
+
       hppDout(info,"rbprmValidation called" );
       dynamicValidation_->setInitialReport(configReport);
       hppDout(info,"dynamic validation set initial report OK");
-      return core::DiscretizedPathValidation::validate(path,reverse,validPart,validationReport);
+      bool valid = core::DiscretizedPathValidation::validate(path,reverse,validPart,validationReport);
+      hppStopBenchmark(PATH_VALIDATION);
+      hppDisplayBenchmark(PATH_VALIDATION);
+      return valid;
     }
 
 

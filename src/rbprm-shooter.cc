@@ -23,6 +23,7 @@
 #include <hpp/core/collision-validation.hh>
 #include <Eigen/Geometry>
 #include <hpp/model/configuration.hh>
+#include <hpp/util/timer.hh>
 
 namespace hpp {
 using namespace core;
@@ -301,6 +302,7 @@ namespace
 hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
 {
     hppDout(notice,"!!! Random shoot");
+    HPP_DEFINE_TIMECOUNTER(SHOOT_COLLISION);
     JointVector_t jv = robot_->getJointVector ();
     ConfigurationPtr_t config (new Configuration_t (robot_->Device::currentConfiguration()));
     std::size_t limit = shootLimit_;
@@ -331,8 +333,10 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
         Vec3f lastDirection(0,0,1);
         while(!found && limitDis >0)
         {
+            HPP_START_TIMECOUNTER(SHOOT_COLLISION);
             bool valid = validator_->validateTrunk(*config, reportShPtr);
             found = valid && validator_->validateRoms(*config, filter_,reportShPtr);
+            HPP_STOP_TIMECOUNTER(SHOOT_COLLISION);
             CollisionValidationReport* report = static_cast<CollisionValidationReport*>(reportShPtr.get());
 
             if(valid &!found)
@@ -341,14 +345,22 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
                 for(; limitDis>0 && !found && valid ; --limitDis)
                 {
                     SampleRotation(eulerSo3_, config, jv);
+                    {
+                    HPP_START_TIMECOUNTER(SHOOT_COLLISION);
                     found = validator_->validate(*config, filter_);
+                    HPP_STOP_TIMECOUNTER(SHOOT_COLLISION);
+                    }
                     if(!found)
                     {
                         Translate(robot_, config, -lastDirection *
                                   0.2 * ((double) rand() / (RAND_MAX)));
                     }
+                    {
+                    HPP_START_TIMECOUNTER(SHOOT_COLLISION);
                     valid = validator_->validateTrunk(*config, reportShPtr);
                     found = valid && validator_->validateRoms(*config, filter_,reportShPtr);
+                    HPP_STOP_TIMECOUNTER(SHOOT_COLLISION);
+                    }
                 }
                 if(!found) break;
             }
@@ -393,6 +405,7 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
     }
     if (!found) std::cout << "no config found" << std::endl;
     hppDout(info,"shoot : "<<model::displayConfig(*config));
+    HPP_DISPLAY_TIMECOUNTER(SHOOT_COLLISION);
     return config;
 }
 

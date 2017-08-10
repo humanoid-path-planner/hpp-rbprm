@@ -29,7 +29,7 @@
 #include <hpp/core/problem.hh>
 #include <hpp/core/path-projector.hh>
 #include <hpp/core/config-validations.hh>
-
+#include <hpp/util/timer.hh>
 
 namespace hpp{
   namespace rbprm{
@@ -98,6 +98,7 @@ namespace hpp{
     PathVectorPtr_t OrientedPathOptimizer::optimize (const PathVectorPtr_t& path)
     {
       hppDout(notice,"!! Start optimize()");
+      hppStartBenchmark(ORIENTED_OPTIMIZER);
       using std::numeric_limits;
       using std::make_pair;
       PathPtr_t unusedValidPart;
@@ -149,6 +150,9 @@ namespace hpp{
       for(size_t i=0;i<numPaths;i++){
         result->appendPath(resultPaths[i]);
       }
+      hppStopBenchmark(ORIENTED_OPTIMIZER);
+      hppDisplayBenchmark(ORIENTED_OPTIMIZER);
+
       return result;
     }
 

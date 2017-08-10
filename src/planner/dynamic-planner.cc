@@ -264,7 +264,10 @@ namespace hpp {
           hppDout(notice,"q_new = "<<displayConfig(*q_new));
 
           // 3. compute a kinodynamic path between near and q_jump
+          hppStartBenchmark(EXTEND);
           kinoPath = extendInternal(qProj_,x_near,q_jump,reverse);
+          hppStopBenchmark(EXTEND);
+          hppDisplayBenchmark(EXTEND);
           if(kinoPath){
             hppDout(notice,"!! Kino path computed");
             kinoPathValid = pathValidation->validate (kinoPath, false, validPath, report);
@@ -310,21 +313,29 @@ namespace hpp {
       core::NodePtr_t near, reachedNodeFromStart;
       bool startComponentConnected(false), pathValidFromStart(false),pathValidFromEnd(false);
       ConfigurationPtr_t q_new;
+      hppStartBenchmark(SHOOT);
       ConfigurationPtr_t q_rand = configurationShooter_->shoot ();
       hppDout(info,"Random configuration : "<<displayConfig(*q_rand));
+      hppStopBenchmark(SHOOT);
+      hppDisplayBenchmark(SHOOT);
 
 
       // ######################## first , try to connect to start component #################### //
-
+      hppStartBenchmark(NEAREST);
       near = roadmap()->nearestNode (q_rand, startComponent_, distance);
+      hppStopBenchmark(NEAREST);
+      hppDisplayBenchmark(NEAREST);
+
       core::RbprmNodePtr_t castNode = static_cast<core::RbprmNodePtr_t>(near);
       if(castNode)
         hppDout(notice,"Node casted correctly");
       else
         hppDout(notice,"Impossible to cast node to rbprmNode");
 
-
+      hppStartBenchmark(EXTEND);
       path = extendInternal (qProj_, near, q_rand);
+      hppStopBenchmark(EXTEND);
+      hppDisplayBenchmark(EXTEND);
       if (path)
       {
         core::PathValidationReportPtr_t report;
@@ -351,8 +362,15 @@ namespace hpp {
            endComponents_.begin ();
            itcc != endComponents_.end (); ++itcc)
       {
+        hppStartBenchmark(NEAREST);
         near = roadmap()->nearestNode (q_rand, *itcc, distance,true);
+        hppStopBenchmark(NEAREST);
+        hppDisplayBenchmark(NEAREST);
+
+        hppStartBenchmark(EXTEND);
         path = extendInternal (qProj_, near, q_rand, true);
+        hppStopBenchmark(EXTEND);
+        hppDisplayBenchmark(EXTEND);
         if (path)
         {
           core::PathValidationReportPtr_t report;
@@ -379,7 +397,10 @@ namespace hpp {
 
               if(startComponentConnected)
               { // now try to connect both nodes (qnew -> qnewEnd)
+                hppStartBenchmark(EXTEND);
                 path = extendInternal (qProj_, reachedNodeFromStart, q_newEnd, false);
+                hppStopBenchmark(EXTEND);
+                hppDisplayBenchmark(EXTEND);
                 if(path && pathValidation->validate (path, false, validPath, report))
                 {
                   if(validPath->end() == *q_newEnd){
@@ -445,7 +466,10 @@ namespace hpp {
         core::ConfigurationPtr_t q1 ((initNode)->configuration ());
         core::ConfigurationPtr_t q2 ((*itn)->configuration ());
         assert (*q1 != *q2);
+        hppStartBenchmark(EXTEND);
         path = extendInternal(qProj_,initNode,q2);
+        hppStopBenchmark(EXTEND);
+        hppDisplayBenchmark(EXTEND);
         hppDout(notice,"try direction path, after extendInternal");
         if (!path) continue;
         hppDout(notice,"try direction path, after continue");
