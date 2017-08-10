@@ -106,8 +106,8 @@ namespace hpp{
       const size_t numPaths = path->numberPaths ();
       bool orientedValid[numPaths];
       bool replaceValid[numPaths];
-      PathPtr_t orientedPaths[numPaths];
-      PathPtr_t resultPaths[numPaths];
+      KinodynamicOrientedPathPtr_t orientedPaths[numPaths];
+      KinodynamicPathPtr_t resultPaths[numPaths];
       KinodynamicPathPtr_t castedPath;
       // iterate over all elements of path (all kinodynamicPath), convert them to orientedPath and test collision
       for (std::size_t i=0; i<numPaths; ++i) {
@@ -115,12 +115,13 @@ namespace hpp{
         const PathPtr_t& element (path->pathAtRank (i));
         castedPath = boost::dynamic_pointer_cast<KinodynamicPath>(element);
         if(castedPath){
+          resultPaths[i] = castedPath;
           orientedPaths[i] = core::KinodynamicOrientedPath::createCopy(castedPath);
           if(orientedPaths[i]){
             orientedValid[i] = rbprmPathValidation_->validate(orientedPaths[i], false, unusedValidPart, unusedReport);
           }
-        }
-        resultPaths[i] = element;
+        }else
+          hppDout(error,"paths inside path vector could not be casted to kinodyamic paths");
       }
       // then test if previous/next path can be adjusted to the new orientation
       for (size_t i=0;i<numPaths;i++){
@@ -133,8 +134,10 @@ namespace hpp{
       hppDout(notice,"orientedValid : "<<oss.str());
 
       for (size_t i=0;i<numPaths;i++){
-        if(!replaceValid[i])
+        if(!replaceValid[i]){
+          hppDout(notice,"init check for index : "<<i);
           replaceValid[i] = checkReplaceOrientation(i,numPaths,replaceValid,orientedValid,orientedPaths,resultPaths);
+        }
       }
 
       std::ostringstream oss2;
@@ -161,8 +164,8 @@ namespace hpp{
      * @param resultPaths
      * @return
      */
-    bool OrientedPathOptimizer::checkReplaceOrientation(const size_t index,const size_t lastIndex, bool* replaceValid, bool* orientedValid, PathPtr_t* orientedPaths, PathPtr_t* resultPaths){
-      PathPtr_t previousPath,nextPath;
+    bool OrientedPathOptimizer::checkReplaceOrientation(const size_t index,const size_t lastIndex, bool* replaceValid, bool* orientedValid, core::KinodynamicOrientedPathPtr_t* orientedPaths, core::KinodynamicPathPtr_t* resultPaths){
+      KinodynamicPathPtr_t previousPath,nextPath;
       bool previousValid(false);
       PathPtr_t unusedValidPart;
       core::PathValidationReportPtr_t unusedReport;
@@ -174,9 +177,11 @@ namespace hpp{
         if(orientedValid[index-1]&&replaceValid[index-1]){
           previousValid=true;
         }else{
-          previousPath = steer(resultPaths[index-1]->initial(),orientedPaths[index]->initial());
-          if(previousPath)
+          previousPath = KinodynamicPath::createCopy(resultPaths[index-1]);
+          if(previousPath){
+            previousPath->endConfig(orientedPaths[index]->initial());
             previousValid=rbprmPathValidation_->validate(previousPath, false, unusedValidPart, unusedReport);
+          }
         }
       }else{ // if first element of the pathvector : always valid
         previousValid = true;
@@ -187,12 +192,17 @@ namespace hpp{
 
       if(index<lastIndex-1){ // test if next element can be adjusted
         if(orientedValid[index+1]){ // make a recursive test for the next elements
+          replaceValid[index]=true; // needed for the recursive call to test the previous part
+          hppDout(notice,"iterative check of index "<<index);
           replaceValid[index] = checkReplaceOrientation(index+1,lastIndex,replaceValid,orientedValid,orientedPaths,resultPaths);
+          hppDout(notice,"end iterative check of index "<<index<<", replaceValid = "<<replaceValid[index]);
           nextPath = orientedPaths[index+1];
         }else{
-          nextPath = steer(orientedPaths[index]->initial(),resultPaths[index+1]->end());
-          if(nextPath)
+          nextPath = KinodynamicPath::createCopy(resultPaths[index+1]);
+          if(nextPath){
+            nextPath->initialConfig(orientedPaths[index]->end());
             replaceValid[index]=rbprmPathValidation_->validate(nextPath, false, unusedValidPart, unusedReport);
+          }
         }
       }else{ // if last element of the pathVector : always valid
         replaceValid[index] = true;
@@ -201,8 +211,10 @@ namespace hpp{
 
       if(replaceValid[index]){ // replace values in resultPaths
         resultPaths[index]=orientedPaths[index];
-        resultPaths[index-1]=previousPath;
-        resultPaths[index+1]=nextPath;
+        if(index>0)
+          resultPaths[index-1]=previousPath;
+        if(index<lastIndex-1)
+          resultPaths[index+1]=nextPath;
       }
 
 

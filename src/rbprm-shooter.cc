@@ -345,7 +345,7 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
                     if(!found)
                     {
                         Translate(robot_, config, -lastDirection *
-                                  0.1 * ((double) rand() / (RAND_MAX)));
+                                  0.2 * ((double) rand() / (RAND_MAX)));
                     }
                     valid = validator_->validateTrunk(*config, reportShPtr);
                     found = valid && validator_->validateRoms(*config, filter_,reportShPtr);
