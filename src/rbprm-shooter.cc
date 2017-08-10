@@ -328,7 +328,7 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
         // no obstacle is reachable
         ValidationReportPtr_t reportShPtr(new CollisionValidationReport);
         std::size_t limitDis = displacementLimit_;
-        Vec3f lastDirection(1,0,0);
+        Vec3f lastDirection(0,0,1);
         while(!found && limitDis >0)
         {
             bool valid = validator_->validateTrunk(*config, reportShPtr);
@@ -338,16 +338,17 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
             if(valid &!found)
             {
                 // try to rotate to reach rom
-                for(; limitDis>0 && !found; --limitDis)
+                for(; limitDis>0 && !found && valid ; --limitDis)
                 {
                     SampleRotation(eulerSo3_, config, jv);
                     found = validator_->validate(*config, filter_);
                     if(!found)
                     {
                         Translate(robot_, config, -lastDirection *
-                                  1 * ((double) rand() / (RAND_MAX)));
+                                  0.1 * ((double) rand() / (RAND_MAX)));
                     }
-                    found = validator_->validate(*config, filter_);
+                    valid = validator_->validateTrunk(*config, reportShPtr);
+                    found = valid && validator_->validateRoms(*config, filter_,reportShPtr);
                 }
                 if(!found) break;
             }
