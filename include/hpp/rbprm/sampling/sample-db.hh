@@ -126,7 +126,7 @@ namespace hpp {
     /// \return a set of OctreeReport with all the possible candidates for contact
     HPP_RBPRM_DLLAPI T_OctreeReport GetCandidates(const SampleDB& sc, const fcl::Transform3f& treeTrf,
                                             const hpp::model::CollisionObjectPtr_t& o2,
-                                            const fcl::Vec3f& direction, const heuristic evaluate = 0);
+                                            const fcl::Vec3f& direction, const HeuristicParam & params, const heuristic evaluate = 0);
 
     /// Given the current position of a robot, returns a set
     /// of candidate sample configurations for contact generation.
@@ -142,7 +142,7 @@ namespace hpp {
     /// \return true if at least one candidate was found
     HPP_RBPRM_DLLAPI bool GetCandidates(const SampleDB& sc, const fcl::Transform3f& treeTrf,
                                             const hpp::model::CollisionObjectPtr_t& o2,
-                                            const fcl::Vec3f& direction, T_OctreeReport& report, const heuristic evaluate = 0);
+                                            const fcl::Vec3f& direction, T_OctreeReport& report, const HeuristicParam & params, const heuristic evaluate = 0);
 
   } // namespace sampling
 } // namespace rbprm

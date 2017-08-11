@@ -26,36 +26,86 @@ using namespace hpp::rbprm::sampling;
 
 namespace
 {
+
+double dynamicHeuristic(const sampling::Sample & sample, const Eigen::Vector3d & /*direction*/, const Eigen::Vector3d & /*normal*/, const HeuristicParam & params)
+{
+    fcl::Vec3f effectorPosition = transform(sample.effectorPosition_, params.tfWorldRoot_.getTranslation(), params.tfWorldRoot_.getRotation());
+
+    std::map <std::string, fcl::Vec3f> contacts;
+    contacts.insert(params.contactPositions_.begin(), params.contactPositions_.end());
+    contacts.insert(std::make_pair(params.sampleLimbName_, effectorPosition));
+    removeNonGroundContacts(contacts, 0.25); // keep only ground contacts
+
+    double g(-9.80665);
+    double w2(params.comPosition_[2]/g); // w2 < 0
+    double w1x(-10*w2); // w1 > 0
+    double w1y(-10*w2); // w1 > 0
+
+    // We want : |w1*comSpeed| > |w2*comAcceleration|
+    if(params.comSpeed_[0] != 0)
+    {
+        while(std::abs(w1x*params.comSpeed_[0]) <= std::abs(w2*params.comAcceleration_[0]))
+        {
+            w1x *= 1.5;
+        }
+    }
+    if(params.comSpeed_[1] != 0)
+    {
+        while(std::abs(w1y*params.comSpeed_[1]) <= std::abs(w2*params.comAcceleration_[1]))
+        {
+            w1y *= 1.5;
+        }
+    }
+
+    double x_interest(params.comPosition_[0] + w1x*params.comSpeed_[0] + w2*params.comAcceleration_[0]);
+    double y_interest(params.comPosition_[1] + w1y*params.comSpeed_[1] + w2*params.comAcceleration_[1]);
+
+    Vec2D interest(x_interest, y_interest);
+
+    double result;
+    try
+    {
+        Vec2D wcentroid(weightedCentroidConvex2D(convexHull(computeSupportPolygon(contacts))));
+        result = Vec2D::euclideanDist(interest, wcentroid);
+    }
+    catch(const std::string & s)
+    {
+        std::cout << s << std::endl;
+        result = std::numeric_limits<double>::max();
+    }
+    return -result; // '-' because minimize a value is equivalent to maximimze its opposite
+}
+
 double EFORTHeuristic(const sampling::Sample& sample,
-                      const Eigen::Vector3d& direction, const Eigen::Vector3d& normal)
+                      const Eigen::Vector3d& direction, const Eigen::Vector3d& normal, const HeuristicParam & /*params*/)
 {
     double EFORT = -direction.transpose() * sample.jacobianProduct_.block<3,3>(0,0) * (-direction);
     return EFORT * Eigen::Vector3d::UnitZ().dot(normal);
 }
 
 double EFORTNormalHeuristic(const sampling::Sample& sample,
-                      const Eigen::Vector3d& direction, const Eigen::Vector3d& normal)
+                      const Eigen::Vector3d& direction, const Eigen::Vector3d& normal, const HeuristicParam & /*params*/)
 {
     double EFORT = -direction.transpose() * sample.jacobianProduct_.block<3,3>(0,0) * (-direction);
     return EFORT * direction.dot(normal);
 }
 
 double ManipulabilityHeuristic(const sampling::Sample& sample,
-                               const Eigen::Vector3d& /*direction*/, const Eigen::Vector3d& normal)
+                               const Eigen::Vector3d& /*direction*/, const Eigen::Vector3d& normal, const HeuristicParam & /*params*/)
 {
     if(Eigen::Vector3d::UnitZ().dot(normal) < 0.7) return -1;
     return sample.staticValue_ * 10000 * Eigen::Vector3d::UnitZ().dot(normal) * 100000  +  ((double)rand()) / ((double)(RAND_MAX));
 }
 
 double RandomHeuristic(const sampling::Sample& /*sample*/,
-                       const Eigen::Vector3d& /*direction*/, const Eigen::Vector3d& /*normal*/)
+                       const Eigen::Vector3d& /*direction*/, const Eigen::Vector3d& /*normal*/, const HeuristicParam & /*params*/)
 {
     return ((double)rand()) / ((double)(RAND_MAX));
 }
 
 
 double ForwardHeuristic(const sampling::Sample& sample,
-                      const Eigen::Vector3d& direction, const Eigen::Vector3d& normal)
+                      const Eigen::Vector3d& direction, const Eigen::Vector3d& normal, const HeuristicParam & /*params*/)
 {
     return sample.staticValue_ * 10000 * Eigen::Vector3d::UnitZ().dot(normal) * 100  + sample.effectorPosition_.dot(fcl::Vec3f(direction(0),direction(1),direction(2))) + ((double)rand()) / ((double)(RAND_MAX));
 }
@@ -63,13 +113,13 @@ double ForwardHeuristic(const sampling::Sample& sample,
 
 
 double BackwardHeuristic(const sampling::Sample& sample,
-                      const Eigen::Vector3d& direction, const Eigen::Vector3d& normal)
+                      const Eigen::Vector3d& direction, const Eigen::Vector3d& normal, const HeuristicParam & /*params*/)
 {
     return sample.staticValue_ * 10000 * Eigen::Vector3d::UnitZ().dot(normal) * 100  - sample.effectorPosition_.dot(fcl::Vec3f(direction(0),direction(1),direction(2))) + ((double)rand()) / ((double)(RAND_MAX));
 }
 
 double StaticHeuristic(const sampling::Sample& sample,
-                      const Eigen::Vector3d& /*direction*/, const Eigen::Vector3d& /*normal*/)
+                      const Eigen::Vector3d& /*direction*/, const Eigen::Vector3d& /*normal*/, const HeuristicParam & /*params*/)
 {
     /*hppDout(info,"sample : ");
     hppDout(info,"sample : "<<&sample);
@@ -86,7 +136,7 @@ double StaticHeuristic(const sampling::Sample& sample,
 
 
 double DistanceToLimitHeuristic(const sampling::Sample& sample,
-                      const Eigen::Vector3d& /*direction*/, const Eigen::Vector3d& /*normal*/)
+                      const Eigen::Vector3d& /*direction*/, const Eigen::Vector3d& /*normal*/, const HeuristicParam & /*params*/)
 {
     return sample.configuration_.norm();
 }
@@ -118,6 +168,7 @@ HeuristicFactory::HeuristicFactory()
     heuristics_.insert(std::make_pair("forward", &ForwardHeuristic));
     heuristics_.insert(std::make_pair("backward", &BackwardHeuristic));
     heuristics_.insert(std::make_pair("jointlimits", &DistanceToLimitHeuristic));
+    heuristics_.insert(std::make_pair("dynamic", &dynamicHeuristic));
 }
 
 HeuristicFactory::~HeuristicFactory(){}

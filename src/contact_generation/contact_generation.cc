@@ -336,7 +336,7 @@ ProjectionReport maintain_contacts(ContactGenHelper &contactGenHelper)
 
 
 sampling::T_OctreeReport CollideOctree(const ContactGenHelper &contactGenHelper, const std::string& limbName,
-                                                    RbPrmLimbPtr_t limb, const sampling::heuristic evaluate)
+                                                    RbPrmLimbPtr_t limb, const sampling::heuristic evaluate, const sampling::HeuristicParam & params)
 {
     fcl::Transform3f transform = limb->octreeRoot(); // get root transform from configuration
     hpp::model::ObjectVector_t affordances = getAffObjectsForLimb (limbName,contactGenHelper.affordances_, contactGenHelper.affFilters_);
@@ -353,9 +353,9 @@ sampling::T_OctreeReport CollideOctree(const ContactGenHelper &contactGenHelper,
         oit != affordances.end(); ++oit, ++i)
     {
         if(eval)
-            sampling::GetCandidates(limb->sampleContainer_, transform, *oit, contactGenHelper.direction_, reports[i], eval);
+            sampling::GetCandidates(limb->sampleContainer_, transform, *oit, contactGenHelper.direction_, reports[i], params, eval);
         else
-            sampling::GetCandidates(limb->sampleContainer_, transform, *oit, contactGenHelper.direction_, reports[i]);
+            sampling::GetCandidates(limb->sampleContainer_, transform, *oit, contactGenHelper.direction_, reports[i], params);
     }
     sampling::T_OctreeReport finalSet;
     // order samples according to EFORT
@@ -369,11 +369,11 @@ sampling::T_OctreeReport CollideOctree(const ContactGenHelper &contactGenHelper,
 
 hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, const std::string& limbId,
                         RbPrmLimbPtr_t limb, core::CollisionValidationPtr_t validation, bool& found_sample,
-                                     bool& unstableContact, const sampling::heuristic evaluate = 0)
+                                     bool& unstableContact, const sampling::HeuristicParam & params, const sampling::heuristic evaluate = 0)
 {
     State current = contactGenHelper.workingState_;
     current.stable = false;
-    sampling::T_OctreeReport finalSet = CollideOctree(contactGenHelper, limbId, limb, evaluate);
+    sampling::T_OctreeReport finalSet = CollideOctree(contactGenHelper, limbId, limb, evaluate, params);
     core::Configuration_t moreRobust, configuration;
     configuration = current.configuration_;
     double maxRob = -std::numeric_limits<double>::max();
@@ -432,7 +432,7 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
     return current;
 }
 
-ProjectionReport generate_contact(const ContactGenHelper &contactGenHelper, const std::string& limbName,
+ProjectionReport generate_contact(const ContactGenHelper &contactGenHelper, const std::string& limbName, const sampling::HeuristicParam & params,
                                   const sampling::heuristic evaluate)
 {
     ProjectionReport rep;
@@ -445,7 +445,7 @@ ProjectionReport generate_contact(const ContactGenHelper &contactGenHelper, cons
     // pick first sample which is collision free
     bool found_sample(false);
     bool unstableContact(false); //set to true in case no stable contact is found
-    rep.result_ = findValidCandidate(contactGenHelper,limbName,limb, validation, found_sample,unstableContact, evaluate);
+    rep.result_ = findValidCandidate(contactGenHelper,limbName,limb, validation, found_sample,unstableContact, params, evaluate);
     if(found_sample)
     {
         rep.status_ = STABLE_CONTACT;
@@ -501,9 +501,20 @@ ProjectionReport gen_contacts(ContactGenHelper &contactGenHelper)
         for(std::vector<std::string>::const_iterator cit = cState.second.begin();
             cit != cState.second.end(); ++cit)
         {
+
+            sampling::HeuristicParam params;
+            params.contactPositions_ = cState.first.contactPositions_;
+            contactGenHelper.fullBody_->device_->computeForwardKinematics();
+            params.comPosition_ = contactGenHelper.fullBody_->device_->positionCenterOfMass();
+            int cfgSize(cState.first.configuration_.rows());
+            params.comSpeed_ = fcl::Vec3f(cState.first.configuration_[cfgSize-6], cState.first.configuration_[cfgSize-5], cState.first.configuration_[cfgSize-4]);
+            params.comAcceleration_ = contactGenHelper.acceleration_;
+            params.sampleLimbName_ = *cit;
+            params.tfWorldRoot_ = contactGenHelper.fullBody_->device_->rootJoint()->currentTransformation();
+
             if(cit+1 == cState.second.end())
                 contactGenHelper.checkStabilityGenerate_ = checkStability;
-            rep = generate_contact(contactGenHelper,*cit);
+            rep = generate_contact(contactGenHelper,*cit, params);
             if(rep.success_)
             {
                 contactGenHelper.workingState_ = rep.result_;
@@ -542,7 +553,18 @@ projection::ProjectionReport repositionContacts(ContactGenHelper& helper)
         {
             result.RemoveContact(*cit);
             helper.workingState_ = result;
-            projection::ProjectionReport rep = contact::generate_contact(helper,*cit);
+
+            sampling::HeuristicParam params;
+            params.contactPositions_ = helper.workingState_.contactPositions_;
+            helper.fullBody_->device_->computeForwardKinematics();
+            params.comPosition_ = helper.fullBody_->device_->positionCenterOfMass();
+            int cfgSize(helper.workingState_.configuration_.rows());
+            params.comSpeed_ = fcl::Vec3f(helper.workingState_.configuration_[cfgSize-6], helper.workingState_.configuration_[cfgSize-5], helper.workingState_.configuration_[cfgSize-4]);
+            params.comAcceleration_ = helper.acceleration_;
+            params.sampleLimbName_ = *cit;
+            params.tfWorldRoot_ = helper.fullBody_->device_->rootJoint()->currentTransformation();
+
+            projection::ProjectionReport rep = contact::generate_contact(helper,*cit, params);
             if(rep.status_ == STABLE_CONTACT)
             {
                 nContactName = *cit;
