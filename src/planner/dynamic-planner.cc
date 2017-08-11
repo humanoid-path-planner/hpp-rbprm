@@ -340,17 +340,19 @@ namespace hpp {
       {
         core::PathValidationReportPtr_t report;
         pathValidFromStart = pathValidation->validate (path, false, validPath, report);
-        pathValidFromStart = pathValidFromStart && (validPath->end() == *q_rand);
+
         // Insert new path to q_near in roadmap
         if(validPath){
-          value_type t_final = validPath->timeRange ().second;
-          if (t_final != path->timeRange ().first)
+          if (validPath->timeRange ().second != path->timeRange ().first)
           {
+            pathValidFromStart = pathValidFromStart && (validPath->end() == *q_rand);
             startComponentConnected = true;
             q_new = ConfigurationPtr_t (new Configuration_t(validPath->end ()));
             reachedNodeFromStart = roadmap()->addNodeAndEdge(near, q_new, validPath);
             computeGIWC(reachedNodeFromStart);
             hppDout(info,"~~~~~~~~~~~~~~~~~~~~ New node added to start component : "<<displayConfig(*q_new));
+          }else{
+            pathValidFromStart=false;
           }
         }
       }
@@ -375,9 +377,10 @@ namespace hpp {
         {
           core::PathValidationReportPtr_t report;
           pathValidFromEnd = pathValidation->validate (path, true, validPath, report);
-          if(pathValidFromStart)
+          if(pathValidFromStart && validPath){
             pathValidFromEnd = pathValidFromEnd && (validPath->initial() == *q_new);
-          if(pathValidFromStart && startComponentConnected && pathValidFromEnd) // qrand was successfully connected to both trees
+          }
+          if(pathValidFromStart && pathValidFromEnd) // qrand was successfully connected to both trees
           {
             // we won, a path is found
             roadmap()->addEdge(reachedNodeFromStart, near, validPath);
