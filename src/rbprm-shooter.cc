@@ -110,6 +110,7 @@ namespace
             for(int i =0; i <3; ++i)
             {
                 joint->configuration()->uniformlySample (i, confso3);
+                joint = joint->numberChildJoints() > 0 ? joint->childJoint(0) : 0;
             }
             Eigen::Quaterniond qt = Eigen::AngleAxisd(confso3(0), Eigen::Vector3d::UnitZ())
               * Eigen::AngleAxisd(confso3(1), Eigen::Vector3d::UnitY())
