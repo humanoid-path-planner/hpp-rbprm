@@ -264,7 +264,7 @@ namespace
                 Triangle fcltri = model->tri_indices[i];
                 tri.p1 = colObj->getRotation() * model->vertices[fcltri[0]] + colObj->getTranslation();
                 tri.p2 = colObj->getRotation() * model->vertices[fcltri[1]] + colObj->getTranslation();
-                tri.p3 = colObj->getRotation() * model->vertices[fcltri[2]] + colObj->getTranslation();;
+                tri.p3 = colObj->getRotation() * model->vertices[fcltri[2]] + colObj->getTranslation();
                 double weight = TriangleArea(tri);
                 sum += weight;
                 weights_.push_back(weight);
@@ -346,22 +346,19 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
                 for(; limitDis>0 && !found && valid ; --limitDis)
                 {
                     SampleRotation(eulerSo3_, config, jv);
-                    {
                     HPP_START_TIMECOUNTER(SHOOT_COLLISION);
                     found = validator_->validate(*config, filter_);
                     HPP_STOP_TIMECOUNTER(SHOOT_COLLISION);
-                    }
                     if(!found)
                     {
                         Translate(robot_, config, -lastDirection *
                                   0.2 * ((double) rand() / (RAND_MAX)));
                     }
-                    {
                     HPP_START_TIMECOUNTER(SHOOT_COLLISION);
                     valid = validator_->validateTrunk(*config, reportShPtr);
                     found = valid && validator_->validateRoms(*config, filter_,reportShPtr);
+                    //found = validator_->validate(*config, filter_);
                     HPP_STOP_TIMECOUNTER(SHOOT_COLLISION);
-                    }
                 }
                 if(!found) break;
             }
