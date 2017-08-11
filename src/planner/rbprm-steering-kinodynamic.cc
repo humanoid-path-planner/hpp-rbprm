@@ -62,6 +62,8 @@ namespace hpp{
       // get kinodynamic path from core::steeringMethod::Kinodynamic
       hppStartBenchmark(FIND_A_MAX);
       core::RbprmNodePtr_t node =  setSteeringMethodBounds(x,q2,false);
+      if(!node)
+        return core::PathPtr_t();
       hppStopBenchmark(FIND_A_MAX);
       hppDisplayBenchmark(FIND_A_MAX);
       if(aMax_.norm() <= 0)
@@ -175,6 +177,8 @@ namespace hpp{
     {
       hppStartBenchmark(FIND_A_MAX);
       core::RbprmNodePtr_t node =  setSteeringMethodBounds(x,q1,true);
+      if(!node)
+        return core::PathPtr_t();
       hppStopBenchmark(FIND_A_MAX);
       hppDisplayBenchmark(FIND_A_MAX);
       if(aMax_.norm() <= 0)
@@ -284,9 +288,14 @@ namespace hpp{
     Vector3 SteeringMethodKinodynamic::computeDirection(const core::ConfigurationIn_t from, const core::ConfigurationIn_t to){
       setAmax(Vector3::Ones(3)*aMaxFixed_);
       core::PathPtr_t path = core::steeringMethod::Kinodynamic::impl_compute(from,to);
-      core::KinodynamicPathPtr_t kinoPath = boost::dynamic_pointer_cast<core::KinodynamicPath>(path);
-      Vector3 direction = kinoPath->getA1();
-      direction.normalize();
+      Vector3 direction;
+      if(path){
+        core::KinodynamicPathPtr_t kinoPath = boost::dynamic_pointer_cast<core::KinodynamicPath>(path);
+        direction = kinoPath->getA1();
+        direction.normalize();
+      }else{
+        direction = Vector3(0,0,0);
+      }
       lastDirection_=direction;
       return direction;
     }
@@ -346,6 +355,9 @@ namespace hpp{
 
 */
       direction = computeDirection(*(near->configuration()),target);
+      if(direction.norm() <= std::numeric_limits<double>::epsilon())
+        return core::RbprmNodePtr_t();
+
       hppDout(info, "direction  = "<<direction.transpose());
       hppDout(info,"vector = ["<<(*(near->configuration()))[0]<<","<<(*(near->configuration()))[1]<<","<<(*(near->configuration()))[2]<<","<<direction[0]<<","<<direction[1]<<","<<direction[2]<<",0]");
       hppDout(notice,"number of contacts :  "<<node->getNumberOfContacts());
