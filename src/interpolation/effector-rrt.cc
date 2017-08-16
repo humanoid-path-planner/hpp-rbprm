@@ -103,7 +103,7 @@ using namespace core;
             res.push_back(std::make_pair(i,GetEffectorPositionAt(path,position, t)));
         }
         res.push_back(std::make_pair(nbWayPoints-1,GetEffectorPositionAt(path,position,path->timeRange().second)));
-        /*if(IsLine(res) && effectorDistance > 0.03 )
+        if(IsLine(res) && effectorDistance > 0.03 )
         {
             //value_type height = effectorDistance < 0.1 ? 0.01 : std::max(nbWayPoints* 0.015, 0.02) ;
 //std::cout << "is line " << std::endl;
@@ -141,7 +141,7 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
                         ++inc_fac;
                 }
             }
-        }*/
+        }
         return res;
     }
 

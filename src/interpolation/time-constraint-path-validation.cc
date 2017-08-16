@@ -49,6 +49,26 @@ namespace hpp {
             validPart = path->extract(interval_t(path->timeRange().first, path->timeRange().first));
             return false;
         }
+        // to limit discontinuities, try to check that variation is not too important
+        Configuration_t init = path->initial();
+        Configuration_t end = path->end();
+        std::size_t dim =  init.rows() - 7;
+        double totalDistance = (end.tail(dim) - init.tail(dim)).norm();
+        double length = path->length();
+        //checking 10 points
+        Configuration_t last_q = init;
+        Configuration_t q = end;
+        for(double i = 1; i < 10; ++i)
+        {
+            q = path->operator ()(i/10. * length);
+            double distance = (last_q.tail(dim) - q.tail(dim)).norm();
+            last_q =q;
+            if(distance / totalDistance > 0.2)
+            {
+                validPart = path->extract(interval_t(path->timeRange().first, path->timeRange().first));
+                return false;
+            }
+        }
         return DiscretizedPathValidation::validate(path,reverse,validPart,validationReport);
     }
 

@@ -424,7 +424,7 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
         current.configuration_ = configuration;
         current.stable = true;
     }
-    if(unstableContact)
+    else if(unstableContact)
     {
         current.configuration_ = moreRobust;
         current.stable = false;
