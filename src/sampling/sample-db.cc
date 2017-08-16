@@ -219,7 +219,7 @@ SampleDB& hpp::rbprm::sampling::addValue(SampleDB& database, const std::string& 
 bool rbprm::sampling::GetCandidates(const SampleDB& sc, const fcl::Transform3f& treeTrf,
                                     const hpp::model::CollisionObjectPtr_t& o2,
                                     const fcl::Vec3f& direction, hpp::rbprm::sampling::T_OctreeReport &reports,
-                                    const heuristic evaluate)
+                                    const HeuristicParam & params, const heuristic evaluate)
 {
     fcl::CollisionRequest req(1000, true);
     fcl::CollisionResult cResult;
@@ -267,7 +267,7 @@ bool rbprm::sampling::GetCandidates(const SampleDB& sc, const fcl::Transform3f& 
                   hppDout(notice,"sample id "<<sit->id_);
                   hppDout(notice,"sample id OK");
                   */
-                  OctreeReport report(&(*sit), contact, evaluate ? ((*evaluate)(*sit, eDir, eNormal)) :0, eNormal);
+                  OctreeReport report(&(*sit), contact, evaluate ? ((*evaluate)(*sit, eDir, eNormal, params)) :0, eNormal);
                   ++okay;
                   reports.insert(report);
               }
@@ -281,10 +281,10 @@ bool rbprm::sampling::GetCandidates(const SampleDB& sc, const fcl::Transform3f& 
 
 rbprm::sampling::T_OctreeReport rbprm::sampling::GetCandidates(const SampleDB& sc, const fcl::Transform3f& treeTrf,
                                                                const hpp::model::CollisionObjectPtr_t& o2,
-                                                               const fcl::Vec3f& direction, const heuristic evaluate)
+                                                               const fcl::Vec3f& direction, const HeuristicParam & params, const heuristic evaluate)
 {
     rbprm::sampling::T_OctreeReport report;
-    GetCandidates(sc, treeTrf, o2, direction, report, evaluate);
+    GetCandidates(sc, treeTrf, o2, direction, report, params, evaluate);
     return report;
 }
 
