@@ -134,6 +134,7 @@ ContactComputationStatus ComputeStableContact(const hpp::rbprm::RbPrmFullBodyPtr
 
     sampling::HeuristicParam params;
     params.contactPositions_ = current.contactPositions_;
+    contactGenHelper.fullBody_->device_->currentConfiguration(contactGenHelper.workingState_.configuration_);
     contactGenHelper.fullBody_->device_->computeForwardKinematics();
     params.comPosition_ = contactGenHelper.fullBody_->device_->positionCenterOfMass();
     int cfgSize(contactGenHelper.workingState_.configuration_.rows());
@@ -141,8 +142,8 @@ ContactComputationStatus ComputeStableContact(const hpp::rbprm::RbPrmFullBodyPtr
     params.comAcceleration_ = contactGenHelper.acceleration_;
     params.sampleLimbName_ = limbId;
     params.tfWorldRoot_ = contactGenHelper.fullBody_->device_->rootJoint()->currentTransformation();
-
     hpp::rbprm::projection::ProjectionReport rep = contact::generate_contact(contactGenHelper,limbId,params,evaluate);
+
     current = rep.result_;
     configuration = rep.result_.configuration_;
     if(rep.status_ != NO_CONTACT)

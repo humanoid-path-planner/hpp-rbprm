@@ -441,7 +441,6 @@ ProjectionReport generate_contact(const ContactGenHelper &contactGenHelper, cons
     core::CollisionValidationPtr_t validation = contactGenHelper.fullBody_->GetLimbCollisionValidation().at(limbName);
     limb->limb_->robot()->currentConfiguration(contactGenHelper.workingState_.configuration_);
     limb->limb_->robot()->computeForwardKinematics ();
-
     // pick first sample which is collision free
     bool found_sample(false);
     bool unstableContact(false); //set to true in case no stable contact is found
@@ -504,6 +503,7 @@ ProjectionReport gen_contacts(ContactGenHelper &contactGenHelper)
 
             sampling::HeuristicParam params;
             params.contactPositions_ = cState.first.contactPositions_;
+            contactGenHelper.fullBody_->device_->currentConfiguration(cState.first.configuration_);
             contactGenHelper.fullBody_->device_->computeForwardKinematics();
             params.comPosition_ = contactGenHelper.fullBody_->device_->positionCenterOfMass();
             int cfgSize(cState.first.configuration_.rows());

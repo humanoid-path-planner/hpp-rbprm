@@ -38,18 +38,18 @@ double dynamicHeuristic(const sampling::Sample & sample, const Eigen::Vector3d &
 
     double g(-9.80665);
     double w2(params.comPosition_[2]/g); // w2 < 0
-    double w1x(-10*w2); // w1 > 0
-    double w1y(-10*w2); // w1 > 0
+    double w1x(-100.*w2); // w1 > 0
+    double w1y(-100.*w2); // w1 > 0
 
     // We want : |w1*comSpeed| > |w2*comAcceleration|
-    if(params.comSpeed_[0] != 0)
+    if(params.comSpeed_[0] != 0 && w2*params.comAcceleration_[0] !=0)
     {
         while(std::abs(w1x*params.comSpeed_[0]) <= std::abs(w2*params.comAcceleration_[0]))
         {
             w1x *= 1.5;
         }
     }
-    if(params.comSpeed_[1] != 0)
+    if(params.comSpeed_[1] != 0 && w2*params.comAcceleration_[0] !=0 )
     {
         while(std::abs(w1y*params.comSpeed_[1]) <= std::abs(w2*params.comAcceleration_[1]))
         {
@@ -73,6 +73,7 @@ double dynamicHeuristic(const sampling::Sample & sample, const Eigen::Vector3d &
         std::cout << s << std::endl;
         result = std::numeric_limits<double>::max();
     }
+
     return -result; // '-' because minimize a value is equivalent to maximimze its opposite
 }
 
