@@ -15,6 +15,7 @@
 // hpp-rbprm. If not, see <http://www.gnu.org/licenses/>.
 
 #include <hpp/rbprm/sampling/heuristic.hh>
+#include <hpp/model/configuration.hh>
 #include <time.h>
 
 #include <Eigen/Eigen>
@@ -30,7 +31,6 @@ namespace
 double dynamicHeuristic(const sampling::Sample & sample, const Eigen::Vector3d & /*direction*/, const Eigen::Vector3d & /*normal*/, const HeuristicParam & params)
 {
     fcl::Vec3f effectorPosition = transform(sample.effectorPosition_, params.tfWorldRoot_.getTranslation(), params.tfWorldRoot_.getRotation());
-
     std::map <std::string, fcl::Vec3f> contacts;
     contacts.insert(params.contactPositions_.begin(), params.contactPositions_.end());
     contacts.insert(std::make_pair(params.sampleLimbName_, effectorPosition));
@@ -108,7 +108,7 @@ double RandomHeuristic(const sampling::Sample& /*sample*/,
 double ForwardHeuristic(const sampling::Sample& sample,
                       const Eigen::Vector3d& direction, const Eigen::Vector3d& normal, const HeuristicParam & /*params*/)
 {
-    return sample.staticValue_ * 10000 * Eigen::Vector3d::UnitZ().dot(normal) * 100  + sample.effectorPosition_.dot(fcl::Vec3f(direction(0),direction(1),direction(2))) + ((double)rand()) / ((double)(RAND_MAX));
+    return sample.staticValue_ * 100 * Eigen::Vector3d::UnitZ().dot(normal) + 1000  * sample.effectorPosition_.dot(fcl::Vec3f(direction(0),direction(1),sample.effectorPosition_[2])) + ((double)rand()) / ((double)(RAND_MAX));
 }
 
 
@@ -116,7 +116,7 @@ double ForwardHeuristic(const sampling::Sample& sample,
 double BackwardHeuristic(const sampling::Sample& sample,
                       const Eigen::Vector3d& direction, const Eigen::Vector3d& normal, const HeuristicParam & /*params*/)
 {
-    return sample.staticValue_ * 10000 * Eigen::Vector3d::UnitZ().dot(normal) * 100  - sample.effectorPosition_.dot(fcl::Vec3f(direction(0),direction(1),direction(2))) + ((double)rand()) / ((double)(RAND_MAX));
+    return sample.staticValue_ * 10000 * Eigen::Vector3d::UnitZ().dot(normal) - 100  * sample.effectorPosition_.dot(fcl::Vec3f(direction(0),direction(1),direction(2))) + ((double)rand()) / ((double)(RAND_MAX));
 }
 
 double StaticHeuristic(const sampling::Sample& sample,
