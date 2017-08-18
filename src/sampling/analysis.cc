@@ -19,7 +19,7 @@
 #include <hpp/model/joint-configuration.hh>
 #include <hpp/model/joint.hh>
 #include <time.h>
-
+#include <hpp/model/configuration.hh>
 #include <Eigen/Eigen>
 #include <Eigen/SVD>
 
@@ -219,6 +219,34 @@ namespace
         distance = 1 - exp(-5*distance);
         return distance;
     }
+
+    double referenceConfiguration(rbprm::RbPrmFullBodyPtr_t fullBody , const SampleDB& /*sampleDB*/, const sampling::Sample& sample){
+      // find limb name
+      hppDout(notice,"reference config evaluate : ");
+      rbprm::T_Limb::const_iterator cit = fullBody->GetLimbs().begin();
+      for(; cit != fullBody->GetLimbs().end(); ++cit)
+      {
+          if(cit->second->limb_->rankInConfiguration() == sample.startRank_)
+              break;
+      }
+      if(cit == fullBody->GetLimbs().end())
+      {
+          throw std::runtime_error ("Impossible to match sample with a limb");
+      }
+      model::DevicePtr_t device = fullBody->device_;
+      model::Configuration_t conf(device->currentConfiguration());
+      sampling::Load(sample,conf); // retrieve the configuration of the sample (only for the concerned limb)
+      double distance = 0 ;
+      // build weight vector : 1 for DoF of the limb, 0 otherwise :
+      Configuration_t diff(device->numberDof());
+      hpp::model::difference (device, conf, *(fullBody->referenceConfig()), diff);
+      // the difference vector depend on the index in the velocity vector, not in the configuration
+      for (size_t i = cit->second->limb_->rankInVelocity() ; i <= cit->second->effector_->rankInVelocity() ; ++i)
+        distance += diff[i];
+
+      return distance;
+    }
+
 }
 
 
@@ -242,6 +270,8 @@ AnalysisFactory::AnalysisFactory(hpp::rbprm::RbPrmFullBodyPtr_t device)
 
     evaluate_.insert(std::make_pair("selfCollisionProbability", boost::bind(&selfCollisionProbability, boost::ref(device_), _1, _2)));
     evaluate_.insert(std::make_pair("jointLimitsDistance", boost::bind(&distanceToLimits, boost::ref(device_), _1, _2)));
+    evaluate_.insert(std::make_pair("ReferenceConfiguration", boost::bind(&referenceConfiguration, boost::ref(device_), _1, _2)));
+
 }
 
 AnalysisFactory::~AnalysisFactory(){}
