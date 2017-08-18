@@ -288,6 +288,8 @@ void writeSample(const Sample& sample, std::ostream& output)
     output << sample.staticValue_ << std::endl;
     writeVecFCL(sample.effectorPosition_,output);
     output << std::endl;
+    writeVecFCL(sample.effectorPositionInLimbFrame_,output);
+    output << std::endl;
     writeMatrix(sample.configuration_,output);
     output << std::endl;
     writeMatrix(sample.jacobian_,output);
@@ -321,7 +323,7 @@ Sample readSample(std::ifstream& myfile, std::string& line)
 {
     std::size_t id, length, startRank;
     double staticValue;
-    fcl::Vec3f effpos;
+    fcl::Vec3f effpos,effPosInLimbFrame;
     Eigen::VectorXd conf;
     Eigen::MatrixXd jav, ajcprod;
     id = StrToI(myfile);
@@ -329,10 +331,11 @@ Sample readSample(std::ifstream& myfile, std::string& line)
     startRank = StrToI(myfile);
     staticValue = StrToD(myfile);
     effpos = readVecFCL(myfile, line);
+    effPosInLimbFrame = readVecFCL(myfile, line);
     conf = readMatrix(myfile,line);
     jav = readMatrix(myfile,line);
     ajcprod = readMatrix(myfile,line);
-    return Sample(id, length, startRank, staticValue, effpos, conf,jav,ajcprod);
+    return Sample(id, length, startRank, staticValue, effpos,effPosInLimbFrame, conf,jav,ajcprod);
 }
 
 void readValue(T_Values& values, const std::size_t& size, std::ifstream& myfile, std::string& line)

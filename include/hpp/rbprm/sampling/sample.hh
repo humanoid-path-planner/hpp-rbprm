@@ -54,7 +54,7 @@ namespace hpp {
 
 
         Sample(const std::size_t id, const std::size_t length, const std::size_t startRank, const double staticValue,
-               const fcl::Vec3f& effectorPosition, const model::ConfigurationIn_t configuration, const Eigen::MatrixXd& jacobian,
+               const fcl::Vec3f& effectorPosition,const fcl::Vec3f& effectorPositionInLimbFrame, const model::ConfigurationIn_t configuration, const Eigen::MatrixXd& jacobian,
                const Eigen::Matrix <model::value_type, 6, 6>& jacobianProduct);
 
         /// Creates sample configuration for a limb, extracted from a complete robot configuration, passed as a parameter
@@ -73,6 +73,7 @@ namespace hpp {
       model::Configuration_t configuration_;
       /// Position relative to robot root (ie, robot base at 0 everywhere)
       fcl::Vec3f effectorPosition_;
+      fcl::Vec3f effectorPositionInLimbFrame_;
       Eigen::MatrixXd jacobian_;
       /// Product of the jacobian by its transpose
       Eigen::Matrix <model::value_type, 6, 6> jacobianProduct_;

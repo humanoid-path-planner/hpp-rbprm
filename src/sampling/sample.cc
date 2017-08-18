@@ -43,6 +43,24 @@ fcl::Vec3f ComputeEffectorPosition(const model::JointPtr_t limb, const model::Jo
     return (parentT * tr).getTranslation();
 }
 
+/**
+ * @brief ComputeEffectorPositionInLimbFrame compute the position of the end effector in the frame defined by the root (of the robot) orientation
+ * but with the origin at the root of the limb
+ * @param limb
+ * @param effector
+ * @param offset
+ * @return
+ */
+fcl::Vec3f ComputeEffectorPositionInLimbFrame(const model::JointPtr_t limb, const model::JointPtr_t effector, const fcl::Vec3f& offset)
+{
+    const fcl::Transform3f& transform = effector->currentTransformation();
+    fcl::Transform3f parentT = fcl::inverse(limb->parentJoint()->currentTransformation());
+    fcl::Vec3f tr (transform.getTranslation() + offset);
+    fcl::Transform3f limbT = fcl::inverse(limb->currentTransformation());
+    fcl::Vec3f trLimb ((parentT*(limbT.getTranslation())).getTranslation());
+    return (parentT * tr).getTranslation() - trLimb;
+}
+
 Eigen::MatrixXd Jacobian(const model::JointPtr_t limb, const model::JointPtr_t effector)
 {
     return effector->jacobian().block(0,limb->rankInVelocity(),6, effector->rankInVelocity() - limb->rankInVelocity() + effector->numberDof());
@@ -60,6 +78,7 @@ Sample::Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, c
     , length_ (ComputeLength(limb, effector))
     , configuration_ (limb->robot()->currentConfiguration().segment(startRank_, length_))
     , effectorPosition_(ComputeEffectorPosition(limb, effector,offset))
+    , effectorPositionInLimbFrame_(ComputeEffectorPositionInLimbFrame(limb,effector,offset))
     , jacobian_(Jacobian(limb, effector))
     , jacobianProduct_(jacobian_*jacobian_.transpose())
     , id_(id)
@@ -69,12 +88,13 @@ Sample::Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, c
 }
 
 Sample::Sample(const std::size_t id, const std::size_t length, const std::size_t startRank, const double staticValue,
-               const fcl::Vec3f& effectorPosition, const model::ConfigurationIn_t configuration, const Eigen::MatrixXd& jacobian,
+               const fcl::Vec3f& effectorPosition,const fcl::Vec3f& effectorPositionInLimbFrame, const model::ConfigurationIn_t configuration, const Eigen::MatrixXd& jacobian,
                const Eigen::Matrix <model::value_type, 6, 6>& jacobianProduct)
     : startRank_(startRank)
     , length_ (length)
     , configuration_ (configuration)
     , effectorPosition_(effectorPosition)
+    , effectorPositionInLimbFrame_(effectorPositionInLimbFrame)
     , jacobian_(jacobian)
     , jacobianProduct_(jacobianProduct)
     , id_(id)
@@ -88,6 +108,7 @@ Sample::Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, m
     , length_ (ComputeLength(limb, effector))
     , configuration_ (configuration)
     , effectorPosition_(ComputeEffectorPosition(limb,effector,offset))
+    , effectorPositionInLimbFrame_(ComputeEffectorPositionInLimbFrame(limb,effector,offset))
     , jacobian_(Jacobian(limb,effector))
     , jacobianProduct_(jacobian_*jacobian_.transpose())
     , id_(id)
@@ -102,6 +123,7 @@ Sample::Sample(const Sample &clone)
     , length_ (clone.length_)
     , configuration_ (clone.configuration_)
     , effectorPosition_(clone.effectorPosition_)
+    , effectorPositionInLimbFrame_(clone.effectorPositionInLimbFrame_)
     , jacobian_(clone.jacobian_)
     , jacobianProduct_(clone.jacobianProduct_)
     , id_(clone.id_)
