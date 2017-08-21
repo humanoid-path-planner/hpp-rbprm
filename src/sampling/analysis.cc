@@ -236,15 +236,18 @@ namespace
       model::DevicePtr_t device = fullBody->device_;
       model::Configuration_t conf(device->currentConfiguration());
       sampling::Load(sample,conf); // retrieve the configuration of the sample (only for the concerned limb)
-      double distance = 0 ;
-      // build weight vector : 1 for DoF of the limb, 0 otherwise :
+      double distance = 0;
       Configuration_t diff(device->numberDof());
       hpp::model::difference (device, conf, *(fullBody->referenceConfig()), diff);
       // the difference vector depend on the index in the velocity vector, not in the configuration
+      // we only sum for the index of the current limb
       for (size_t i = cit->second->limb_->rankInVelocity() ; i <= cit->second->effector_->rankInVelocity() ; ++i)
-        distance += diff[i];
+        distance += (diff[i]*diff[i]); // abs value because we don't want the real distance but only how different we are from the reference.
 
-      return distance;
+      // This is an heuristic and not a cost, a null distance is the best result
+      // TODO : replace hardcoded value with the real max
+      // but it increase computation time, and the values will be normalized after anyways ...
+      return 100-(sqrt(distance));
     }
 
 }
