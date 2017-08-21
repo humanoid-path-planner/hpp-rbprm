@@ -103,7 +103,7 @@ namespace interpolation {
       model::DevicePtr_t device = helper.rootProblem_.robot();
       core::ComparisonTypePtr_t equals = core::Equality::create ();
       core::ConfigProjectorPtr_t& proj = helper.proj_;
-      hppDout(notice,"create postural task, ref config = "<<model::displayConfig(*ref));
+      hppDout(notice,"create postural task, ref config = "<<model::displayConfig(ref));
       std::vector <bool> mask (device->numberDof(),false);
       Configuration_t weight(device->numberDof());
 
@@ -159,7 +159,7 @@ namespace interpolation {
         weight[i] = weight[i]/moy;
 
 
-      constraints::ConfigurationConstraintPtr_t postFunc = constraints::ConfigurationConstraint::create("Postural_Task",device,*ref,weight,mask);
+      constraints::ConfigurationConstraintPtr_t postFunc = constraints::ConfigurationConstraint::create("Postural_Task",device,ref,weight,mask);
       const NumericalConstraintPtr_t posturalTask = NumericalConstraint::create (postFunc, equals);
       proj->add(posturalTask,SizeIntervals_t (0),1);
       proj->updateRightHandSide();

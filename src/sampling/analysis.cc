@@ -238,7 +238,8 @@ namespace
       sampling::Load(sample,conf); // retrieve the configuration of the sample (only for the concerned limb)
       double distance = 0;
       Configuration_t diff(device->numberDof());
-      hpp::model::difference (device, conf, *(fullBody->referenceConfig()), diff);
+      hpp::model::difference (device, conf, fullBody->referenceConfig(), diff);
+
       // the difference vector depend on the index in the velocity vector, not in the configuration
       // we only sum for the index of the current limb
       for (size_t i = cit->second->limb_->rankInVelocity() ; i <= cit->second->effector_->rankInVelocity() ; ++i)

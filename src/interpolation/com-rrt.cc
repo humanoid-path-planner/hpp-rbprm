@@ -119,11 +119,11 @@ using namespace core;
         ComRRTShooterFactory unusedFactory(unusedPath);
         SetComRRTConstraints constraintFactory;
         ComRRTHelper helper(fullbody, unusedFactory, constraintFactory, referenceProblem,unusedPath, 0.001);
-        ConfigurationPtr_t refConfig = fullbody->referenceConfig();
+        Configuration_t refConfig = fullbody->referenceConfig();
         CreateContactConstraints<ComRRTHelper>(helper,model,model);
         CreateComConstraint<ComRRTHelper,core::PathPtr_t>(helper, helper.refPath_,targetCom);
 
-        CreatePosturalTaskConstraint<ComRRTHelper,ConfigurationPtr_t>(helper, refConfig);
+        CreatePosturalTaskConstraint<ComRRTHelper,Configuration_t>(helper, refConfig);
         helper.proj_->lastIsOptional(true);
         helper.proj_->numOptimize(100);
         helper.proj_->lastAsCost(true);

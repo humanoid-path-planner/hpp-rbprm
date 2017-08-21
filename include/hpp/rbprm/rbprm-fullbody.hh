@@ -115,8 +115,8 @@ namespace hpp {
         const bool staticStability(){return staticStability_;}
         const double getFriction(){return mu_;}
         void setFriction(double mu){mu_ = mu;}
-        const model::ConfigurationPtr_t referenceConfig(){return referenceConfig_;}
-        void referenceConfig(model::ConfigurationPtr_t referenceConfig){referenceConfig_=referenceConfig;}
+        const model::Configuration_t referenceConfig(){return referenceConfig_;}
+        void referenceConfig(model::Configuration_t referenceConfig){referenceConfig_=referenceConfig;}
 
     private:
         core::CollisionValidationPtr_t collisionValidation_;
@@ -126,7 +126,7 @@ namespace hpp {
         sampling::HeuristicFactory factory_;
         bool staticStability_;
         double mu_;
-        model::ConfigurationPtr_t referenceConfig_;
+        model::Configuration_t referenceConfig_;
 
     private:
         void AddLimbPrivate(rbprm::RbPrmLimbPtr_t limb, const std::string& id, const std::string& name,
