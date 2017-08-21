@@ -108,9 +108,6 @@ double RandomHeuristic(const sampling::Sample& /*sample*/,
 double ForwardHeuristic(const sampling::Sample& sample,
                       const Eigen::Vector3d& direction, const Eigen::Vector3d& normal, const HeuristicParam & /*params*/)
 {
-    /*hppDout(notice,"forward :");
-    hppDout(notice,"effector position   :"<<model::displayConfig(sample.effectorPosition_));
-    hppDout(notice,"effector limb frame :"<<model::displayConfig(sample.effectorPositionInLimbFrame_));*/
     return sample.staticValue_ * 100 * Eigen::Vector3d::UnitZ().dot(normal) + 1000  * sample.effectorPositionInLimbFrame_.dot(fcl::Vec3f(direction(0),direction(1),sample.effectorPositionInLimbFrame_[2])) + ((double)rand()) / ((double)(RAND_MAX));
 }
 
