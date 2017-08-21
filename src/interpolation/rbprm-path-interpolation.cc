@@ -173,10 +173,10 @@ if (nbFailures > 1)
                     return FilterStates(states, filterStates);
                 }
             }
-            if(sameAsPrevious && !multipleBreaks && !respositioned)
-                states.pop_back();
+
             newState.nbContacts = newState.contactNormals_.size();
-            states.push_back(std::make_pair(currentVal, newState));
+            if(!sameAsPrevious)
+              states.push_back(std::make_pair(currentVal, newState));
             //allowFailure = nbRecontacts < robot_->GetLimbs().size();
             allowFailure = nbRecontacts < 2;
         }
