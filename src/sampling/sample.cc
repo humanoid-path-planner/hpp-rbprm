@@ -56,8 +56,9 @@ fcl::Vec3f ComputeEffectorPositionInLimbFrame(const model::JointPtr_t limb, cons
     const fcl::Transform3f& transform = effector->currentTransformation();
     fcl::Transform3f parentT = fcl::inverse(limb->parentJoint()->currentTransformation());
     fcl::Vec3f tr (transform.getTranslation() + offset);
-    fcl::Transform3f limbT = fcl::inverse(limb->currentTransformation());
+    fcl::Transform3f limbT = limb->currentTransformation();
     fcl::Vec3f trLimb ((parentT*(limbT.getTranslation())).getTranslation());
+    hppDout(notice,"trLimb = "<<trLimb);
     return (parentT * tr).getTranslation() - trLimb;
 }
 
