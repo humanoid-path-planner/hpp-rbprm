@@ -198,8 +198,7 @@ SampleDB& hpp::rbprm::sampling::addValue(SampleDB& database, const std::string& 
             maxValue = std::max(maxValue, val);
             minValue = std::min(minValue, val);
             values.push_back(val);
-            if(isStaticValue)
-                it->staticValue_ = val;
+
         }
         database.valueBounds_.insert(std::make_pair(valueName, std::make_pair(minValue,maxValue)));
         // now normalize values
@@ -207,6 +206,10 @@ SampleDB& hpp::rbprm::sampling::addValue(SampleDB& database, const std::string& 
         for(T_Double::iterator it = values.begin(); it != values.end(); ++it)
         {
             *it = (max_min != 0) ? (*it - minValue) / max_min : 0;
+        }
+        if(isStaticValue){
+          for(size_t id = 0 ; id < database.samples_.size() ; id++)
+            database.samples_[id].staticValue_ = values[id];
         }
         database.values_.insert(std::make_pair(valueName, values));
         if(sortSamples)
