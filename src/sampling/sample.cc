@@ -17,7 +17,6 @@
 #include <hpp/rbprm/sampling/sample.hh>
 #include <hpp/model/joint.hh>
 #include <hpp/model/joint-configuration.hh>
-
 #include <Eigen/Eigen>
 
 using namespace hpp;
@@ -58,7 +57,6 @@ fcl::Vec3f ComputeEffectorPositionInLimbFrame(const model::JointPtr_t limb, cons
     fcl::Vec3f tr (transform.getTranslation() + offset);
     fcl::Transform3f limbT = limb->currentTransformation();
     fcl::Vec3f trLimb ((parentT*(limbT.getTranslation())).getTranslation());
-    hppDout(notice,"trLimb = "<<trLimb);
     return (parentT * tr).getTranslation() - trLimb;
 }
 
