@@ -43,7 +43,7 @@ fcl::Vec3f ComputeEffectorPosition(const model::JointPtr_t limb, const model::Jo
 }
 
 /**
- * @brief ComputeEffectorPositionInLimbFrame compute the position of the end effector in the frame defined by the root (of the robot) orientation
+ * @brief ComputeEffectorPositionInLimbFrame compute the position of the end effector in the frame defined by the world orientation
  * but with the origin at the root of the limb
  * @param limb
  * @param effector
@@ -52,12 +52,13 @@ fcl::Vec3f ComputeEffectorPosition(const model::JointPtr_t limb, const model::Jo
  */
 fcl::Vec3f ComputeEffectorPositionInLimbFrame(const model::JointPtr_t limb, const model::JointPtr_t effector, const fcl::Vec3f& offset)
 {
-    const fcl::Transform3f& transform = effector->currentTransformation();
-    fcl::Transform3f parentT = fcl::inverse(limb->parentJoint()->currentTransformation());
-    fcl::Vec3f tr (transform.getTranslation() + offset);
-    fcl::Transform3f limbT = limb->currentTransformation();
-    fcl::Vec3f trLimb ((parentT*(limbT.getTranslation())).getTranslation());
-    return (parentT * tr).getTranslation() - trLimb;
+    // we want to use the orientation expressed in the world frame, but with the origin in the limb's root :
+    fcl::Vec3f effTr = effector->currentTransformation().getTranslation();
+    fcl::Vec3f limbTr = limb->currentTransformation().getTranslation();
+/*    hppDout(notice,"effTr = "<<effTr);
+    hppDout(notice,"limbTr = "<<limbTr);
+    hppDout(notice,"res = "<<effTr-limbTr);*/
+    return effTr-limbTr;
 }
 
 Eigen::MatrixXd Jacobian(const model::JointPtr_t limb, const model::JointPtr_t effector)
