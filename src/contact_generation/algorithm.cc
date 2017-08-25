@@ -137,7 +137,7 @@ ContactComputationStatus ComputeStableContact(const hpp::rbprm::RbPrmFullBodyPtr
                           bool contactIfFails = true, bool stableForOneContact = true,
                           const sampling::heuristic evaluate = 0)
 {
-    contact::ContactGenHelper contactGenHelper(body,current,current.configuration_,affordances,affFilters,robustnessTreshold,1,1,false,false,
+    contact::ContactGenHelper contactGenHelper(body,current,current.configuration_,affordances,affFilters,robustnessTreshold,1,1,false,true,
                                       direction,acceleration,contactIfFails,stableForOneContact);
 
     sampling::HeuristicParam params;
