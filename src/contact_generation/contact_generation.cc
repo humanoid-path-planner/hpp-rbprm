@@ -503,7 +503,7 @@ ProjectionReport gen_contacts(ContactGenHelper &contactGenHelper)
         ContactState cState = candidates.front();
         candidates.pop();
         hppDout(notice,"generateContact, number of limbs to test   : "<<cState.second.size());
-        if(cState.second.empty() && checkStability){
+        if(cState.second.empty() && checkStability && (contactGenHelper.workingState_.nbContacts >= 2 || contactGenHelper.stableForOneContact_)){
           hppDout(notice,"List of free limbs empty in gen_contact, check stability for workingState with contact maintained");
           double robustness = stability::IsStable(contactGenHelper.fullBody_,contactGenHelper.workingState_, contactGenHelper.acceleration_);
           hppDout(notice,"stability rob = "<<robustness);
