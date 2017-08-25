@@ -496,15 +496,14 @@ ProjectionReport gen_contacts(ContactGenHelper &contactGenHelper)
     ProjectionReport rep;
     T_ContactState candidates = gen_contacts_combinatorial(contactGenHelper);
     hppDout(notice,"gen_contact candidates size : "<<candidates.size());
+    bool checkStability(contactGenHelper.checkStabilityGenerate_);
     while(!candidates.empty() && !rep.success_)
     {
         //retrieve latest state
         ContactState cState = candidates.front();
         candidates.pop();
-        bool checkStability(contactGenHelper.checkStabilityGenerate_);
-        contactGenHelper.checkStabilityGenerate_ = false; // stability not mandatory before last contact is created
         hppDout(notice,"generateContact, number of limbs to test   : "<<cState.second.size());
-        if(cState.second.empty()){
+        if(cState.second.empty() && checkStability){
           hppDout(notice,"List of free limbs empty in gen_contact, check stability for workingState with contact maintained");
           double robustness = stability::IsStable(contactGenHelper.fullBody_,contactGenHelper.workingState_, contactGenHelper.acceleration_);
           hppDout(notice,"stability rob = "<<robustness);
@@ -512,7 +511,7 @@ ProjectionReport gen_contacts(ContactGenHelper &contactGenHelper)
             contactGenHelper.workingState_.stable=true;
           }
         }
-        if(cState.second.empty() && contactGenHelper.workingState_.stable)
+        if(cState.second.empty() && (contactGenHelper.workingState_.stable || !checkStability))
         {
             if(contactGenHelper.workingState_.nbContacts >= 2)
             {
@@ -523,7 +522,7 @@ ProjectionReport gen_contacts(ContactGenHelper &contactGenHelper)
                 return rep;
             }
         }
-
+        contactGenHelper.checkStabilityGenerate_ = false; // stability not mandatory before last contact is created
         for(std::vector<std::string>::const_iterator cit = cState.second.begin();
             cit != cState.second.end(); ++cit)
         {
@@ -550,6 +549,7 @@ ProjectionReport gen_contacts(ContactGenHelper &contactGenHelper)
             //    break;
         }
     }
+    contactGenHelper.checkStabilityGenerate_=checkStability;
     return rep;
 }
 
