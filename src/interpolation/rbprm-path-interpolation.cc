@@ -80,6 +80,7 @@ namespace hpp {
                                                         const hpp::rbprm::T_Configuration &configs, const double robustnessTreshold,
                                                         const model::value_type timeStep, const model::value_type initValue, const bool filterStates)
     {
+        hppDout(notice,"Begin interpolate in path-interpolation, number of configs to test : "<<configs.size());
         int nbFailures = 0;
         size_t accIndex = robot_->device_->configSize() - robot_->device_->extraConfigSpace().dimension () + 3 ; // index of the start of the acceleration vector (of size 3), in the configuration vector
         hppDout(notice,"acceleration index : "<<accIndex);
@@ -100,12 +101,14 @@ namespace hpp {
             const State& previous = states.back().second;
             core::Configuration_t configuration = *cit;
             acc = configuration.segment<3>(accIndex);
-            dir = configuration.head<3>() - previous.configuration_.head<3>();
+            //dir = configuration.head<3>() - previous.configuration_.head<3>();
+            dir = configuration.segment<3>(accIndex-3);
             fcl::Vec3f direction(dir[0], dir[1], dir[2]);
             bool nonZero(false);
             direction.normalize(&nonZero);
             if(!nonZero) direction = fcl::Vec3f(0,0,1.);
             // TODO Direction 6d
+            hppDout(notice,"#call ComputeContact, looking for state "<<states.size());
             hpp::rbprm::contact::ContactReport rep = contact::ComputeContacts(previous, robot_,configuration, affordances,affFilters,direction,
                                              robustnessTreshold,acc);
             State& newState = rep.result_;
@@ -114,6 +117,7 @@ namespace hpp {
             const bool  sameAsPrevious = rep.success_ && rep.contactMaintained_;
             const bool& multipleBreaks = rep.multipleBreaks_;
             const bool& respositioned = rep.repositionedInPlace_;
+            hppDout(notice,"success : "<<rep.success_<<" ; sameAsPrevious : "<<sameAsPrevious<<" ; multipleBreak : "<<multipleBreaks<<" ; repositionned : "<<respositioned<<" ; allowFailure : "<<allowFailure<<" ; status :"<<rep.status_);
 
             if(allowFailure && (!rep.success_ || rep.multipleBreaks_))
             {
@@ -135,6 +139,7 @@ if (nbFailures > 1)
     watch.report_count(*fp);
     fout.close();
 #endif
+    hppDout(notice,"Abort interpolate, too much fails");
     return FilterStates(states, filterStates);
     //return states;
 }
@@ -170,13 +175,16 @@ if (nbFailures > 1)
 					watch.report_count(*fp);
 					fout.close();
 				#endif
+                    hppDout(notice,"Abort interpolate, too much repositionning");
                     return FilterStates(states, filterStates);
                 }
             }
 
             newState.nbContacts = newState.contactNormals_.size();
-            if(!sameAsPrevious)
+            if(!sameAsPrevious){
+              hppDout(notice,"new state added at index "<<states.size()<<" conf = "<<model::displayConfig(newState.configuration_));
               states.push_back(std::make_pair(currentVal, newState));
+            }
             //allowFailure = nbRecontacts < robot_->GetLimbs().size();
             allowFailure = nbRecontacts < 2;
         }

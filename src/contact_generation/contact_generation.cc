@@ -201,6 +201,7 @@ ProjectionReport maintain_contacts_stability(ContactGenHelper &contactGenHelper,
                                     contactGenHelper.candidates_,
                                     contactLength, contactGenHelper.acceleration_,
                                     contactGenHelper.robustnessTreshold_, currentRep);
+    hppDout(notice,"check stability maintain contact : "<<currentRep.result_.stable);
     return currentRep;
 }
 
@@ -320,6 +321,7 @@ ProjectionReport maintain_contacts(ContactGenHelper &contactGenHelper)
         State cState = candidates.front();
         candidates.pop();
         rep = projectToRootConfiguration(contactGenHelper.fullBody_,contactGenHelper.workingState_.configuration_,cState);
+        hppDout(notice,"maintain contacts, projection success : "<<rep.success_);
         if(rep.success_)
             rep = genColFree(contactGenHelper, rep);
         if(rep.success_)
@@ -329,6 +331,7 @@ ProjectionReport maintain_contacts(ContactGenHelper &contactGenHelper)
             rep.success_ = contactGenHelper.fullBody_->GetCollisionValidation()->validate(rep.result_.configuration_, valRep);
         }
     }
+    hppDout(notice,"maintain contact, check stability maintain : "<<contactGenHelper.checkStabilityMaintain_);
     if(rep.success_ && contactGenHelper.checkStabilityMaintain_)
         return maintain_contacts_stability(contactGenHelper, rep);
     return rep;
@@ -381,17 +384,24 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
     fcl::Vec3f position, normal;
     fcl::Matrix3f rotation;
     ProjectionReport rep ;
+    hppDout(notice,"in findValidCandidate for limb : "<<limbId);
+    hppDout(notice,"number of candidate : "<<finalSet.size());
     for(;!found_sample && it!=finalSet.end(); ++it)
     {
         const sampling::OctreeReport& bestReport = *it;
+        hppDout(notice,"heuristic value = "<<it->value_);
         /*ProjectionReport */rep = projectSampleToObstacle(contactGenHelper.fullBody_, limbId, limb, bestReport, validation, configuration, current);
+        hppDout(notice,"projection to obstacle success = "<<rep.success_);
         if(rep.success_)
         {
             double robustness = stability::IsStable(contactGenHelper.fullBody_,rep.result_, contactGenHelper.acceleration_);
+            hppDout(notice,"stability rob = "<<robustness);
+            hppDout(notice,"check stability generate : "<<contactGenHelper.checkStabilityGenerate_);
             if(    !contactGenHelper.checkStabilityGenerate_
                 || (rep.result_.nbContacts == 1 && !contactGenHelper.stableForOneContact_)
                 || robustness>=contactGenHelper.robustnessTreshold_)
             {
+                hppDout(notice,"stability OK, validate this sample.");
                 maxRob = std::max(robustness, maxRob);
                 position = limb->effector_->currentTransformation().getTranslation();
                 rotation = limb->effector_->currentTransformation().getRotation();
@@ -421,11 +431,13 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
     }
     if(found_sample)
     {
+        hppDout(notice,"Valid sample found, stable");
         current.configuration_ = configuration;
         current.stable = true;
     }
     else if(unstableContact)
     {
+        hppDout(notice,"No valid sample found, take an unstable one");
         current.configuration_ = moreRobust;
         current.stable = false;
     }
@@ -436,7 +448,7 @@ ProjectionReport generate_contact(const ContactGenHelper &contactGenHelper, cons
                                   const sampling::heuristic evaluate)
 {
     ProjectionReport rep;
-
+    hppDout(notice,"in generate_contact, check stability = "<<contactGenHelper.checkStabilityGenerate_);
     RbPrmLimbPtr_t limb = contactGenHelper.fullBody_->GetLimbs().at(limbName);
     core::CollisionValidationPtr_t validation = contactGenHelper.fullBody_->GetLimbCollisionValidation().at(limbName);
     limb->limb_->robot()->currentConfiguration(contactGenHelper.workingState_.configuration_);
@@ -447,6 +459,7 @@ ProjectionReport generate_contact(const ContactGenHelper &contactGenHelper, cons
     rep.result_ = findValidCandidate(contactGenHelper,limbName,limb, validation, found_sample,unstableContact, params, evaluate);
     if(found_sample)
     {
+        hppDout(notice,"found sample");
         rep.status_ = STABLE_CONTACT;
         rep.success_ = true;
 #ifdef PROFILE
@@ -456,6 +469,7 @@ ProjectionReport generate_contact(const ContactGenHelper &contactGenHelper, cons
     }
     else if(unstableContact)
     {
+        hppDout(notice,"unstable contact");
         rep.status_ = UNSTABLE_CONTACT;
         rep.success_ = !contactGenHelper.checkStabilityGenerate_;
 #ifdef PROFILE
@@ -465,6 +479,7 @@ ProjectionReport generate_contact(const ContactGenHelper &contactGenHelper, cons
     }
     else
     {
+        hppDout(notice,"set Collision Free");
         rep =  setCollisionFree(contactGenHelper.fullBody_,validation,limbName,rep.result_);
         rep.status_ = NO_CONTACT;
         rep.success_ = false;
@@ -480,6 +495,7 @@ ProjectionReport gen_contacts(ContactGenHelper &contactGenHelper)
 {
     ProjectionReport rep;
     T_ContactState candidates = gen_contacts_combinatorial(contactGenHelper);
+    hppDout(notice,"gen_contact candidates size : "<<candidates.size());
     while(!candidates.empty() && !rep.success_)
     {
         //retrieve latest state
@@ -491,16 +507,18 @@ ProjectionReport gen_contacts(ContactGenHelper &contactGenHelper)
         {
             if(contactGenHelper.workingState_.nbContacts > 2)
             {
+                hppDout(notice,"working state stable, contact maintained OK.");
                 rep.result_ = contactGenHelper.workingState_;
                 rep.status_ = NO_CONTACT;
                 rep.success_ = true;
                 return rep;
             }
         }
+
         for(std::vector<std::string>::const_iterator cit = cState.second.begin();
             cit != cState.second.end(); ++cit)
         {
-
+            hppDout(notice,"Try to generate contact for limb : "<<*cit);
             sampling::HeuristicParam params;
             params.contactPositions_ = cState.first.contactPositions_;
             contactGenHelper.fullBody_->device_->currentConfiguration(cState.first.configuration_);

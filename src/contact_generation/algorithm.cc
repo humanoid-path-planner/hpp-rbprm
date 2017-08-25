@@ -65,9 +65,15 @@ projection::ProjectionReport genContactFromOneMaintainCombinatorial(ContactGenHe
 {
     // retrieve the first feasible result of maintain combinatorial...
     projection::ProjectionReport rep = contact::maintain_contacts(helper);
+    hppDout(notice,"maintain contact, sucess = "<<rep.success_);
+    for(std::map<std::string,bool>::const_iterator cit = rep.result_.contacts_.begin();cit!=rep.result_.contacts_.end(); ++ cit)
+    {
+      hppDout(notice,"contact : "<<cit->first<<" = "<<cit->second);
+    }
     if(rep.success_)
     {
         // ... if found, then try to generate feasible contact for this combinatorial.
+        hppDout(notice,"maintain contact success, gen contact : ");
         helper.workingState_ = rep.result_;
         return gen_contacts(helper);
     }
@@ -88,9 +94,11 @@ ContactReport handleFailure(ContactGenHelper& helper)
 ContactReport oneStep(ContactGenHelper& helper)
 {
     projection::ProjectionReport rep;
+    hppDout(notice,"OneStep");
     do
         rep = genContactFromOneMaintainCombinatorial(helper);
     while(!rep.success_ && !helper.candidates_.empty());
+
     if(!rep.success_) // TODO only possible in quasi static
     {
         return handleFailure(helper);
