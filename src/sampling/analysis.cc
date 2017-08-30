@@ -238,11 +238,14 @@ namespace
 
       double distance = 0;
       Configuration_t diff(device->numberDof());
+      Configuration_t weight(6);
+      weight<<50,100,1,0.1,1,1; //TODO : retrive it from somewhere, hardcoded values for hrp2 legs (hight weight on leg z, low on knee)
       hpp::model::difference (device, conf, fullBody->referenceConfig(), diff);
       // the difference vector depend on the index in the velocity vector, not in the configuration
       // we only sum for the index of the current limb
+     // hppDout(notice,"ref config rank: "<<cit->second->limb_->rankInVelocity()<<" ; "<<cit->second->effector_->rankInVelocity());
       for (size_t i = cit->second->limb_->rankInVelocity() ; i <= cit->second->effector_->rankInVelocity() ; ++i){
-        distance += (diff[i]*diff[i]); // abs value because we don't want the real distance but only how different we are from the reference.
+        distance += (diff[i]*diff[i])*weight[i-cit->second->limb_->rankInVelocity()]; // abs value because we don't want the real distance but only how different we are from the reference.
       }
       // This is an heuristic and not a cost, a null distance is the best result
       // TODO : replace hardcoded value with the real max
