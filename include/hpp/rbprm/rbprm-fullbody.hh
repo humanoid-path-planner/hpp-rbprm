@@ -73,7 +73,7 @@ namespace hpp {
         /// \param resolution, resolution of the octree voxels. The samples generated are stored in an octree data
         /// \param disableEffectorCollision, whether collision detection should be disabled for end effector bones
         void AddLimb(const std::string& id, const std::string& name, const std::string& effectorName, const fcl::Vec3f &offset,
-                     const fcl::Vec3f &normal,const double x, const double y,
+                     const fcl::Vec3f &limbOffset, const fcl::Vec3f &normal,const double x, const double y,
                      const model::ObjectVector_t &collisionObjects,
                      const std::size_t nbSamples, const std::string& heuristic = "static", const double resolution = 0.03,
                      ContactType contactType = _6_DOF, const bool disableEffectorCollision = false,

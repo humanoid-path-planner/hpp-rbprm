@@ -117,14 +117,14 @@ namespace hpp {
     }
 
     void RbPrmFullBody::AddLimb(const std::string& id, const std::string& name, const std::string &effectorName,
-                                const fcl::Vec3f &offset,const fcl::Vec3f &normal, const double x,
+                                const fcl::Vec3f &offset, const fcl::Vec3f &limbOffset, const fcl::Vec3f &normal, const double x,
                                 const double y,
                                 const model::ObjectVector_t &collisionObjects, const std::size_t nbSamples, const std::string &heuristicName, const double resolution,
                                 ContactType contactType, const bool disableEffectorCollision,  const bool grasp)
     {
         std::map<std::string, const sampling::heuristic>::const_iterator hit = checkLimbData(id, limbs_,factory_,heuristicName);
         model::JointPtr_t joint = device_->getJointByName(name);
-        rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(joint, effectorName, offset,normal,x,y, nbSamples, hit->second, resolution,contactType, disableEffectorCollision, grasp);
+        rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(joint, effectorName, offset,limbOffset,normal,x,y, nbSamples, hit->second, resolution,contactType, disableEffectorCollision, grasp);
         AddLimbPrivate(limb, id, name,collisionObjects, disableEffectorCollision);
     }
 

@@ -76,6 +76,7 @@ namespace hpp {
         ///
         /// \param limb Joint instance that serves as a root for the limb
         /// \param offset position of the effector in joint coordinates relatively to the effector joint
+        /// \param limbOffset is the offset between the limb_ joint position and it's link
         /// \param unit normal vector of the contact point, expressed in the effector joint coordinates
         /// \param x width of the default support polygon of the effector
         /// \param y height of the default support polygon of the effector
@@ -88,7 +89,7 @@ namespace hpp {
         /// \param contactType Whether the contact is a surface contact (orientation matters) or a punctual contact
         /// \param disableEndEffectorCollision Whether the end effector bodies should be counted for collision detection
         static RbPrmLimbPtr_t create (const model::JointPtr_t limb, const std::string& effectorName, const fcl::Vec3f &offset,
-                                      const fcl::Vec3f &normal,const double x, const double y,
+                                      const fcl::Vec3f &limbOffset, const fcl::Vec3f &normal,const double x, const double y,
                                       const std::size_t nbSamples, const sampling::heuristic evaluate = 0,
                                       const double resolution = 0.1, ContactType contactType = _6_DOF,
                                       bool disableEndEffectorCollision = false,
@@ -110,6 +111,7 @@ namespace hpp {
         const model::JointPtr_t effector_;
         const fcl::Matrix3f effectorDefaultRotation_; // effector transform in rest pose
         const fcl::Vec3f offset_; // effector location
+        const fcl::Vec3f limbOffset_; // offset of between the limb_ joint position and it's link
         const fcl::Vec3f normal_; // effector normal for surface
         const double x_; // half width
         const double y_; // half length of contact surface
@@ -122,7 +124,7 @@ namespace hpp {
     protected:
 
       RbPrmLimb (const model::JointPtr_t& limb, const std::string& effectorName,  const fcl::Vec3f &offset,
-                 const fcl::Vec3f &normal,const double x, const double y,
+                 const fcl::Vec3f &limbOffset, const fcl::Vec3f &normal,const double x, const double y,
                  const std::size_t nbSamples, const sampling::heuristic evaluate,
                  const double resolution, ContactType contactType,
                  bool disableEndEffectorCollision = false,

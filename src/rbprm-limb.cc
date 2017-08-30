@@ -23,11 +23,11 @@ namespace hpp {
   namespace rbprm {
 
     RbPrmLimbPtr_t RbPrmLimb::create (const model::JointPtr_t limb, const std::string& effectorName, const fcl::Vec3f &offset,
-                                      const fcl::Vec3f &normal,const double x, const double y,
+                                      const fcl::Vec3f &limbOffset, const fcl::Vec3f &normal,const double x, const double y,
                                       const std::size_t nbSamples, const hpp::rbprm::sampling::heuristic evaluate, const double resolution,
                                       hpp::rbprm::ContactType contactType, const bool disableEffectorCollision, const bool grasp)
     {
-        RbPrmLimb* rbprmDevice = new RbPrmLimb(limb, effectorName, offset, normal, x, y, nbSamples,evaluate,
+        RbPrmLimb* rbprmDevice = new RbPrmLimb(limb, effectorName, offset,limbOffset, normal, x, y, nbSamples,evaluate,
                                                resolution, contactType, disableEffectorCollision, grasp);
         RbPrmLimbPtr_t res (rbprmDevice);
         res->init (res);
@@ -77,13 +77,14 @@ namespace hpp {
     }
 
     RbPrmLimb::RbPrmLimb (const model::JointPtr_t& limb, const std::string& effectorName,
-                          const fcl::Vec3f &offset, const fcl::Vec3f &normal, const double x, const double y, const std::size_t nbSamples,
+                          const fcl::Vec3f &offset, const fcl::Vec3f &limbOffset, const fcl::Vec3f &normal, const double x, const double y, const std::size_t nbSamples,
                           const hpp::rbprm::sampling::heuristic evaluate, const double resolution, ContactType contactType,
                           bool disableEndEffectorCollision, bool grasps)
         : limb_(limb)
         , effector_(GetEffector(limb, effectorName))
         , effectorDefaultRotation_(GetEffectorTransform(effector_))
         , offset_(effectorDefaultRotation_* offset)
+        , limbOffset_(limbOffset)
         , normal_(effectorDefaultRotation_* normal)
         //, normal_(normal)
         , x_(x)

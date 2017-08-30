@@ -37,10 +37,11 @@ hpp::rbprm::RbPrmFullBodyPtr_t initFullBodyDevice(const ObjectVector_t& collisio
 {
     DevicePtr_t device = initDevice();
     fcl::Vec3f offset(0,0,0);
+    fcl::Vec3f limbOffset(0,0,0);
     fcl::Vec3f normal(0,0,1);
     hpp::rbprm::RbPrmFullBodyPtr_t robot =
             RbPrmFullBody::create(device);
-    robot->AddLimb("1", "elbow", "", offset, normal, 0.1,0.1, collisionObjects, 1000, "EFORT", 0.1);
+    robot->AddLimb("1", "elbow", "", offset,limbOffset, normal, 0.1,0.1, collisionObjects, 1000, "EFORT", 0.1);
     return robot;
 }
 
