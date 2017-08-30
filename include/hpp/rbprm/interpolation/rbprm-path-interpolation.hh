@@ -95,6 +95,13 @@ namespace hpp {
     private:
         RbPrmFullBodyPtr_t robot_;
 
+        T_StateFrame FilterStates(const T_StateFrame& originStates, const bool deep);
+        T_StateFrame FilterStatesRec(const T_StateFrame& originStates);
+        void FilterRepositioning(const CIT_StateFrame& from, const CIT_StateFrame to, T_StateFrame& res);
+        T_StateFrame FilterRepositioning(const T_StateFrame& originStates);
+        StateFrame findBestRepositionState(T_StateFrame candidates,std::vector<std::string> limbsNames);
+
+
     protected:
       RbPrmInterpolation (const core::PathVectorConstPtr_t path, const RbPrmFullBodyPtr_t robot,const State& start, const State& end);
 
@@ -114,7 +121,6 @@ namespace hpp {
     /// \param originStates original state list
     /// \param deep if false, only matching configurations in sequence are removed
     /// \return A list of key states filtered
-    T_StateFrame FilterStates(const T_StateFrame& originStates, const bool deep);
 
     } // namespace interpolation
   } // namespace rbprm

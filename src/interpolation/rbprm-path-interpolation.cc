@@ -221,18 +221,73 @@ if (nbFailures > 1)
         return (v1.size() == v2.size()) && std::equal ( v1.begin(), v1.end(), v2.begin() );
     }
 
-    void FilterRepositioning(const CIT_StateFrame& from, const CIT_StateFrame to, T_StateFrame& res)
+    StateFrame RbPrmInterpolation::findBestRepositionState(T_StateFrame candidates,std::vector<std::string> limbsNames){
+      StateFrame bestState = candidates.back();
+      double bestScore = -std::numeric_limits<double>::infinity();
+      double currentScore;
+      fcl::Vec3f direction = candidates.back().second.configuration_.head<3>() - candidates.front().second.configuration_.head<3>();
+      // TODO : iterate over candidates and call the heuristic for limbsName. Then return the state with the best score (average of scores if more than one limbs)
+      for(CIT_StateFrame sit=candidates.begin() ; sit != candidates.end() ; ++sit){
+        currentScore=0;
+        for(std::vector<std::string>::const_iterator lit = limbsNames.begin() ; lit != limbsNames.end() ; ++lit){
+          RbPrmLimbPtr_t limb = robot_->GetLimbs().at(*lit);
+          sampling::Sample sample(limb->limb_, limb->effector_, sit->second.configuration_,  limb->offset_,limb->limbOffset_, 0);
+          currentScore += limb->evaluate_(sample,direction, sit->second.contactNormals_.at(*lit),sampling::HeuristicParam());
+        }
+        if(currentScore>bestScore){
+          bestScore=currentScore;
+          bestState = *sit;
+          hppDout(notice,"here, config = "<<model::displayConfig(bestState.second.configuration_));
+        }
+      }
+      hppDout(notice,"Filtering, looking for best candidate : best score = "<<bestScore);
+
+      return bestState;
+    }
+
+    void RbPrmInterpolation::FilterRepositioning(const CIT_StateFrame& from, const CIT_StateFrame to, T_StateFrame& res)
     {
         if(from == to) return;
-        const State& current    = (from)->second;
-        const State& current_m1 = (from-1)->second;
-        const State& current_p1 = (from+1)->second;
+        State current    = (from)->second;
+        State current_m1 = (from-1)->second;
+        State current_p1 = (from+1)->second;
         if(EqStringVec(current.contactBreaks(current_m1),
                        current_p1.contactBreaks(current_m1)) &&
            EqStringVec(current.contactCreations(current_m1),
                        current_p1.contactCreations(current)))
         {
             if(from+1 == to) return;
+            // Check if there is others state with the same contacts, and only add the one with the best score for the heuristic :
+            /*bool reposition(true);
+            size_t id = 2;
+            T_StateFrame repositionnedStates;
+            repositionnedStates.push_back(std::make_pair((from)->first, (from)->second));
+            repositionnedStates.push_back(std::make_pair((from+1)->first, (from+1)->second));
+            while(reposition && (from+id != to)){
+              current_m1=(from+id-1)->second;
+              current=(from+id)->second;
+              current_p1 = (from+id+1)->second;
+              if(EqStringVec(current.contactBreaks(current_m1),
+                             current_p1.contactBreaks(current_m1)) &&
+                 EqStringVec(current.contactCreations(current_m1),
+                             current_p1.contactCreations(current))){
+                repositionnedStates.push_back(std::make_pair((from+id)->first, (from+id)->second));
+                repositionnedStates.push_back(std::make_pair((from+id+1)->first, (from+id+1)->second));
+                id+=2;
+              }
+              else
+                reposition = false;
+
+            }
+            hppDout(notice,"repositionned contacts found : number of states = "<<repositionnedStates.size());
+            // iterate over respoitionnedStates and find the one with the best score with the heuristic (for the limb that move)
+
+            T_StateFrame repositionnedStates;
+            repositionnedStates.push_back(std::make_pair((from)->first, (from)->second));
+            repositionnedStates.push_back(std::make_pair((from+1)->first, (from+1)->second));
+            std::vector<std::string> limbsNames = current.contactCreations(current_m1);
+            StateFrame bestState = findBestRepositionState(repositionnedStates,limbsNames);
+            */
             res.push_back(std::make_pair((from+1)->first, (from+1)->second));
             FilterRepositioning(from+2, to, res);
         }
@@ -265,7 +320,7 @@ if (nbFailures > 1)
         }
     }
 
-    T_StateFrame FilterRepositioning(const T_StateFrame& originStates)
+    T_StateFrame RbPrmInterpolation::FilterRepositioning(const T_StateFrame& originStates)
     {
         if(originStates.size() < 3) return originStates;
         T_StateFrame res;
@@ -329,14 +384,17 @@ if (nbFailures > 1)
         return res;
     }
 
-    T_StateFrame FilterStatesRec(const T_StateFrame& originStates)
+    T_StateFrame RbPrmInterpolation::FilterStatesRec(const T_StateFrame& originStates)
     {
+        hppDout(notice,"FilterStatesRec");
         return FilterObsolete(FilterBreakCreate(FilterRepositioning(originStates)));
     }
 
-    T_StateFrame FilterStates(const T_StateFrame& originStates, const bool deep)
+    T_StateFrame RbPrmInterpolation::FilterStates(const T_StateFrame& originStates, const bool deep)
     {
         //make sure they re ok
+        hppDout(notice,"Begin filter states !");
+        hppDout(notice,"Number of state before filtering : "<<originStates.size());
         T_StateFrame::const_iterator cit = originStates.begin();
         std::size_t idx = 0;
         for(T_StateFrame::const_iterator cit2 = originStates.begin()+1; cit2 != originStates.end()-1; ++cit, ++cit2, ++idx)
@@ -347,6 +405,7 @@ if (nbFailures > 1)
             std::vector<std::string> creations = next.contactCreations(prev);
             if(breaks.size() > 1 || creations.size() > 1)
             {
+                hppDout(notice,"too many contact changes between the two states.");
                 std::cout << "BEFORE FILTER " << std::endl;
                 std::cout << "\t REMOVING CONTACT " << breaks.size() << std::endl;
                 for(std::vector<std::string>::const_iterator tf = breaks.begin(); tf != breaks.end(); ++tf)
@@ -359,17 +418,20 @@ if (nbFailures > 1)
             }
 
         }
-
+        hppDout(notice,"End of checks for too many contact changes, filter redunbdant states, size of list :  "<<originStates.size());
         T_StateFrame res = originStates;
         if(deep)
         {
             std::size_t previousSize;
             do
             {
+                hppDout(notice,"Begin iteration of filtering, size of res : "<<res.size());
                 previousSize = res.size();
                 res = FilterStatesRec(res);
+                hppDout(notice,"End iteration of filtering, size of res : "<<res.size());
             }
             while(res.size() != previousSize);
+            hppDout(notice,"End of filtering, final size : "<<res.size());
             return res;
         }
         else
