@@ -50,14 +50,20 @@ fcl::Vec3f ComputeEffectorPosition(const model::JointPtr_t limb, const model::Jo
  * @param offset
  * @return
  */
-fcl::Vec3f ComputeEffectorPositionInLimbFrame(const model::JointPtr_t limb, const model::JointPtr_t effector, const fcl::Vec3f& offset)
+fcl::Vec3f ComputeEffectorPositionInLimbFrame(const model::JointPtr_t limb, const model::JointPtr_t effector, const fcl::Vec3f& offset,const fcl::Vec3f&  limbOffset)
 {
     // we want to use the orientation expressed in the world frame, but with the origin in the limb's root :
-    fcl::Vec3f effTr = effector->currentTransformation().getTranslation();
-    fcl::Vec3f limbTr = limb->currentTransformation().getTranslation();
-/*    hppDout(notice,"effTr = "<<effTr);
-    hppDout(notice,"limbTr = "<<limbTr);
-    hppDout(notice,"res = "<<effTr-limbTr);*/
+   // hppDout(notice,"offset = "<<offset);
+   // hppDout(notice,"limbOffset = "<<limbOffset);
+    const fcl::Transform3f& transformLimb = limb->currentTransformation();
+    fcl::Transform3f transformOffset;
+    transformOffset.setTranslation(limbOffset);
+
+    fcl::Vec3f effTr = effector->currentTransformation().getTranslation() + offset;
+    fcl::Vec3f limbTr = (transformLimb*transformOffset).getTranslation();
+   // hppDout(notice,"effTr = "<<effTr);
+   // hppDout(notice,"limbTr = "<<limbTr);
+   // hppDout(notice,"res = "<<effTr-limbTr);
     return effTr-limbTr;
 }
 
@@ -73,12 +79,12 @@ double Manipulability(const Eigen::MatrixXd& product)
     return det > 0 ? sqrt(det) : 0;
 }
 
-Sample::Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, const fcl::Vec3f& offset, std::size_t id)
+Sample::Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, const fcl::Vec3f& offset,const fcl::Vec3f& limbOffset, std::size_t id)
     : startRank_(limb->rankInConfiguration())
     , length_ (ComputeLength(limb, effector))
     , configuration_ (limb->robot()->currentConfiguration().segment(startRank_, length_))
     , effectorPosition_(ComputeEffectorPosition(limb, effector,offset))
-    , effectorPositionInLimbFrame_(ComputeEffectorPositionInLimbFrame(limb,effector,offset))
+    , effectorPositionInLimbFrame_(ComputeEffectorPositionInLimbFrame(limb,effector,offset,limbOffset))
     , jacobian_(Jacobian(limb, effector))
     , jacobianProduct_(jacobian_*jacobian_.transpose())
     , id_(id)
@@ -103,12 +109,12 @@ Sample::Sample(const std::size_t id, const std::size_t length, const std::size_t
     // NOTHING
 }
 
-Sample::Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, model::ConfigurationIn_t configuration,  const fcl::Vec3f& offset, std::size_t id)
+Sample::Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, model::ConfigurationIn_t configuration,  const fcl::Vec3f& offset,const fcl::Vec3f& limbOffset, std::size_t id)
     : startRank_(limb->rankInConfiguration())
     , length_ (ComputeLength(limb, effector))
     , configuration_ (configuration)
     , effectorPosition_(ComputeEffectorPosition(limb,effector,offset))
-    , effectorPositionInLimbFrame_(ComputeEffectorPositionInLimbFrame(limb,effector,offset))
+    , effectorPositionInLimbFrame_(ComputeEffectorPositionInLimbFrame(limb,effector,offset,limbOffset))
     , jacobian_(Jacobian(limb,effector))
     , jacobianProduct_(jacobian_*jacobian_.transpose())
     , id_(id)
@@ -138,7 +144,7 @@ void hpp::rbprm::sampling::Load(const Sample& sample, ConfigurationOut_t configu
 }
 
 hpp::rbprm::sampling::SampleVector_t hpp::rbprm::sampling::GenerateSamples(const model::JointPtr_t model, const std::string& effector
-                                                         , const std::size_t nbSamples, const fcl::Vec3f& offset)
+                                                         , const std::size_t nbSamples, const fcl::Vec3f& offset,const fcl::Vec3f& limbOffset)
 {
     SampleVector_t result; result.reserve(nbSamples);
     model::DevicePtr_t device (model->robot()->clone());
@@ -158,7 +164,7 @@ hpp::rbprm::sampling::SampleVector_t hpp::rbprm::sampling::GenerateSamples(const
         }
         device->currentConfiguration (config);
         device->computeForwardKinematics();
-        result.push_back(Sample(clone, effectorClone, config.segment(startRank_, length_), offset, i));
+        result.push_back(Sample(clone, effectorClone, config.segment(startRank_, length_), offset,limbOffset, i));
     }
     return result;
 }

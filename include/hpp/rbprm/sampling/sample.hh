@@ -50,7 +50,7 @@ namespace hpp {
         /// \param effector joint to be considered as the effector of the limb
         /// \param offset location of the contact point of the effector, relatively to the effector joint
         /// \param id optional identifier for the sample
-        Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, const fcl::Vec3f& offset = fcl::Vec3f(0,0,0),  const std::size_t id =0);
+        Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, const fcl::Vec3f& offset = fcl::Vec3f(0,0,0),const fcl::Vec3f& limbOffset = fcl::Vec3f(0,0,0),  const std::size_t id =0);
 
 
         Sample(const std::size_t id, const std::size_t length, const std::size_t startRank, const double staticValue,
@@ -63,7 +63,7 @@ namespace hpp {
         /// \param effector joint to be considered as the effector of the limb
         /// \param offset location of the contact point of the effector, relatively to the effector joint
         /// \param id optional identifier for the sample
-        Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, model::ConfigurationIn_t configuration, const fcl::Vec3f& offset = fcl::Vec3f(0,0,0), const std::size_t id =0);
+        Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, model::ConfigurationIn_t configuration, const fcl::Vec3f& offset = fcl::Vec3f(0,0,0),const fcl::Vec3f& limbOffset = fcl::Vec3f(0,0,0), const std::size_t id =0);
         Sample(const Sample &clone);
        ~Sample(){}
 
@@ -95,8 +95,9 @@ namespace hpp {
     /// \param effector tag identifying the end effector of the limb
     /// \param nbSamples number of samples to be generated
     /// \param offset location of the contact point of the effector relatively to the effector joint origin
+    /// \param limbOffset offset betwwen the limb joint position and it's link
     /// \return a deque of sample configurations respecting joint limits.
-SampleVector_t GenerateSamples(const model::JointPtr_t limb,  const std::string& effector,  const std::size_t nbSamples,const fcl::Vec3f& offset = fcl::Vec3f(0,0,0));
+SampleVector_t GenerateSamples(const model::JointPtr_t limb,  const std::string& effector,  const std::size_t nbSamples,const fcl::Vec3f& offset = fcl::Vec3f(0,0,0),const fcl::Vec3f& limbOffset = fcl::Vec3f(0,0,0));
 
 /// Assigns the limb configuration associated with a sample to a robot configuration
 /// \param sample The limb configuration to load

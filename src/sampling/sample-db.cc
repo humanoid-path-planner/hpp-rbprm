@@ -143,9 +143,9 @@ namespace
 }
 
 SampleDB::SampleDB(const model::JointPtr_t limb, const std::string& effector,
-                   const std::size_t nbSamples, const fcl::Vec3f& offset, const double resolution, const T_evaluate& data,  const std::string& staticValue)
+                   const std::size_t nbSamples, const fcl::Vec3f& offset,const fcl::Vec3f& limbOffset, const double resolution, const T_evaluate& data,  const std::string& staticValue)
     : resolution_(resolution)
-    , samples_(GenerateSamples(limb, effector, nbSamples, offset))
+    , samples_(GenerateSamples(limb, effector, nbSamples, offset,limbOffset))
     , octomapTree_(generateOctree(samples_, resolution))
     , octree_(new fcl::OcTree(octomapTree_))
     , geometry_(boost::shared_ptr<fcl::CollisionGeometry>(octree_))

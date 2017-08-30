@@ -91,7 +91,7 @@ namespace hpp {
         , y_(y)
         , contactType_(contactType)
         , evaluate_(evaluate)
-        , sampleContainer_(limb, effector_->name(), nbSamples, offset, resolution)
+        , sampleContainer_(limb, effector_->name(), nbSamples, offset,limbOffset, resolution)
         , disableEndEffectorCollision_(disableEndEffectorCollision)
         , grasps_(grasps)
     {
