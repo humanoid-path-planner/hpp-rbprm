@@ -523,7 +523,7 @@ ProjectionReport gen_contacts(ContactGenHelper &contactGenHelper)
             {
                 hppDout(notice,"working state stable, contact maintained OK.");
                 rep.result_ = contactGenHelper.workingState_;
-                rep.status_ = NO_CONTACT;
+                rep.status_ = STABLE_CONTACT;
                 rep.success_ = true;
                 return rep;
             }
