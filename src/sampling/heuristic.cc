@@ -112,9 +112,21 @@ double ForwardHeuristic(const sampling::Sample& sample,
   hppDout(notice,"eff position = "<<sample.effectorPosition_);
   hppDout(notice,"limb frame   = "<<sample.effectorPositionInLimbFrame_);
   hppDout(notice,"direction    = "<<direction);*/
+    return sample.staticValue_ * 1000.  * Eigen::Vector3d::UnitZ().dot(normal) + 100. * sample.effectorPositionInLimbFrame_.dot(fcl::Vec3f(direction(0),direction(1),sample.effectorPositionInLimbFrame_[2])) + ((double)rand()) / ((double)(RAND_MAX));
+}
 
-
-    return sample.staticValue_ * 1000.  * Eigen::Vector3d::UnitZ().dot(normal) + 1000. * sample.effectorPositionInLimbFrame_.dot(fcl::Vec3f(direction(0),direction(1),sample.effectorPositionInLimbFrame_[2])) + ((double)rand()) / ((double)(RAND_MAX));
+double DynamicWalkHeuristic(const sampling::Sample& sample,
+                      const Eigen::Vector3d& direction, const Eigen::Vector3d& normal, const HeuristicParam & params)
+{
+ /*   //hppDout(notice,"static value : "<<sample.staticValue_);
+  hppDout(notice,"eff position = "<<sample.effectorPosition_);
+  hppDout(notice,"limb frame   = "<<sample.effectorPositionInLimbFrame_);
+  hppDout(notice,"direction    = "<<direction);*/
+    fcl::Vec3f pos(sample.effectorPositionInLimbFrame_);
+    pos[2] = direction[2]; // FIXME : replace this by a projection on the surface plan ( we know the normal)
+    pos = pos.normalize();
+    return sample.staticValue_ * 1000.  * Eigen::Vector3d::UnitZ().dot(normal) + 100. * pos.dot(direction)
+        + 1. * pos.dot(fcl::Vec3f(params.comAcceleration_[0],params.comAcceleration_[1],direction[2])) + ((double)rand()) / ((double)(RAND_MAX));
 }
 
 
@@ -173,6 +185,7 @@ HeuristicFactory::HeuristicFactory()
     heuristics_.insert(std::make_pair("manipulability", &ManipulabilityHeuristic));
     heuristics_.insert(std::make_pair("random", &RandomHeuristic));
     heuristics_.insert(std::make_pair("forward", &ForwardHeuristic));
+    heuristics_.insert(std::make_pair("dynamicWalk", &DynamicWalkHeuristic));
     heuristics_.insert(std::make_pair("backward", &BackwardHeuristic));
     heuristics_.insert(std::make_pair("jointlimits", &DistanceToLimitHeuristic));
     heuristics_.insert(std::make_pair("dynamic", &dynamicHeuristic));
