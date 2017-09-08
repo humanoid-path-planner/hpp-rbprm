@@ -287,6 +287,7 @@ namespace hpp{
 
     Vector3 SteeringMethodKinodynamic::computeDirection(const core::ConfigurationIn_t from, const core::ConfigurationIn_t to){
       setAmax(Vector3::Ones(3)*aMaxFixed_);
+      hppDout(notice,"Compute direction ");
       core::PathPtr_t path = core::steeringMethod::Kinodynamic::impl_compute(from,to);
       Vector3 direction;
       if(path){

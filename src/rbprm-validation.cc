@@ -43,7 +43,7 @@ namespace
         result.insert(std::make_pair(cit->first, hpp::rbprm::RbPrmRomValidation::create(cit->second, cfit->second)));
       }
       else
-      {
+      { // no affordance filter defined for this ROM, assume it can collide with all the objects
         result.insert(std::make_pair(cit->first, hpp::rbprm::RbPrmRomValidation::create(cit->second)));
       }
     }

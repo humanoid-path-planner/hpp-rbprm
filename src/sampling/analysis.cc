@@ -250,6 +250,10 @@ namespace
       // This is an heuristic and not a cost, a null distance is the best result
       // TODO : replace hardcoded value with the real max
       // but it increase computation time, and the values will be normalized after anyways ..
+      hppDout(notice,"distance to ref = "<<sqrt(distance));
+      if(sqrt(distance)>=100){
+        hppDout(notice,"WARNING : max distance to config not big enough");
+      }
       return 100-(sqrt(distance));
     }
 

@@ -282,6 +282,7 @@ namespace
                 (*wit) = previousWeight;
             }
         }
+        hppDout(notice,"number of triangle for the shooter : "<<triangles_.size());
     }
 
   const RbPrmShooter::T_TriangleNormal &RbPrmShooter::RandomPointIntriangle() const

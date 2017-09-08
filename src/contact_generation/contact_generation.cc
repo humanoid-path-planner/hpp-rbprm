@@ -19,6 +19,7 @@
 #include <hpp/rbprm/contact_generation/contact_generation.hh>
 #include <hpp/rbprm/stability/stability.hh>
 #include <hpp/rbprm/tools.hh>
+#include <hpp/model/configuration.hh>
 #ifdef PROFILE
     #include "hpp/rbprm/rbprm-profiler.hh"
 #endif
@@ -246,9 +247,10 @@ ProjectionReport genColFree(ContactGenHelper &contactGenHelper, ProjectionReport
     std::vector<std::string> effNames(extractEffectorsName(contactGenHelper.fullBody_->GetLimbs()));
     std::vector<std::string> freeLimbs = rbprm::freeEffectors(currentRep.result_,effNames.begin(), effNames.end() );
     freeLimbs = sortLimbs(contactGenHelper.workingState_, freeLimbs);
-    for(std::vector<std::string>::const_iterator cit = freeLimbs.begin(); cit != freeLimbs.end() && res.success_; ++cit)
+    for(std::vector<std::string>::const_iterator cit = freeLimbs.begin(); cit != freeLimbs.end() && res.success_; ++cit){
         res = projection::setCollisionFree(contactGenHelper.fullBody_,contactGenHelper.fullBody_->GetLimbCollisionValidation().at(*cit),*cit,res.result_);
-
+        hppDout(notice,"free limb in maintain contact : "<<*cit);
+    }
     return res;
 }
 
@@ -329,6 +331,10 @@ ProjectionReport maintain_contacts(ContactGenHelper &contactGenHelper)
             //collision validation
             hpp::core::ValidationReportPtr_t valRep (new hpp::core::CollisionValidationReport);
             rep.success_ = contactGenHelper.fullBody_->GetCollisionValidation()->validate(rep.result_.configuration_, valRep);
+            hppDout(notice,"maintain contact collision for config : "<<model::displayConfig(rep.result_.configuration_));
+            hppDout(notice,"valide  : "<<rep.success_);
+            if(!rep.success_)
+              hppDout(notice,"report = "<<*valRep);
         }
     }
     hppDout(notice,"maintain contact, check stability maintain : "<<contactGenHelper.checkStabilityMaintain_);
@@ -459,7 +465,7 @@ ProjectionReport generate_contact(const ContactGenHelper &contactGenHelper, cons
     rep.result_ = findValidCandidate(contactGenHelper,limbName,limb, validation, found_sample,unstableContact, params, evaluate);
     if(found_sample)
     {
-        hppDout(notice,"found sample");
+        hppDout(notice,"found sample : "<<model::displayConfig(rep.result_.configuration_));
         rep.status_ = STABLE_CONTACT;
         rep.success_ = true;
 #ifdef PROFILE

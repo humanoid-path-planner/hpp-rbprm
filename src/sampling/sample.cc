@@ -61,10 +61,10 @@ fcl::Vec3f ComputeEffectorPositionInLimbFrame(const model::JointPtr_t limb, cons
 
     fcl::Vec3f effTr = effector->currentTransformation().getTranslation() + offset;
     fcl::Vec3f limbTr = (transformLimb*transformOffset).getTranslation();
-   // hppDout(notice,"effTr = "<<effTr);
-   // hppDout(notice,"limbTr = "<<limbTr);
-   // hppDout(notice,"res = "<<effTr-limbTr);
-    return effTr-limbTr;
+  /*  hppDout(notice,"effTr = "<<effTr);
+    hppDout(notice,"limbTr = "<<limbTr);
+    hppDout(notice,"res = "<<effTr-limbTr);*/
+    return (effTr-limbTr);
 }
 
 Eigen::MatrixXd Jacobian(const model::JointPtr_t limb, const model::JointPtr_t effector)

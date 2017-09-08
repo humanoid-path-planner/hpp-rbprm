@@ -183,6 +183,7 @@ ProjectionReport setCollisionFree(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const
     for(sampling::SampleVector_t::const_iterator cit = limb->sampleContainer_.samples_.begin();
         cit != limb->sampleContainer_.samples_.end(); ++cit)
     {
+        hppDout(notice,"Set collision free : static value = "<<cit->staticValue_);
         hpp::core::ValidationReportPtr_t valRep (new hpp::core::CollisionValidationReport);
         if(validation->validate(configuration, valRep) )
         {

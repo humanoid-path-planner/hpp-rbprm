@@ -22,7 +22,7 @@
 #include <hpp/rbprm/tools.hh>
 # include <hpp/rbprm/rbprm-state.hh>
 # include <hpp/rbprm/rbprm-fullbody.hh>
-
+# include <hpp/model/configuration.hh>
 
 
 namespace hpp {
@@ -70,6 +70,7 @@ projection::ProjectionReport genContactFromOneMaintainCombinatorial(ContactGenHe
     {
       hppDout(notice,"contact : "<<cit->first<<" = "<<cit->second);
     }
+    hppDout(notice,"genContact, after maintain : config : "<<model::displayConfig(rep.result_.configuration_));
     if(rep.success_)
     {
         // ... if found, then try to generate feasible contact for this combinatorial.
@@ -98,9 +99,9 @@ ContactReport oneStep(ContactGenHelper& helper)
     do
         rep = genContactFromOneMaintainCombinatorial(helper);
     while(!rep.success_ && !helper.candidates_.empty());
-
     if(!rep.success_) // TODO only possible in quasi static
     {
+        hppDout(notice,"Fail in oneStep, try repositionning");
         return handleFailure(helper);
     }
     return generateContactReport(rep,helper);

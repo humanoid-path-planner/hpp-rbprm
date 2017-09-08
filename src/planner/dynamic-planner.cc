@@ -92,6 +92,7 @@ namespace hpp {
     {
           assert(sm_ && "steering method should be a kinodynamic steering method for this solver");
           assert(rbprmPathValidation_ && "Path validation should be a RbPrmPathValidation class for this solver");
+          hppDout(notice,"number of affordances objects : "<<problem.collisionObstacles().size());
 
           try {
             boost::any value_x = problem.get<boost::any> (std::string("sizeFootX"));
@@ -136,6 +137,7 @@ namespace hpp {
       assert(sm_ && "steering method should be a kinodynamic steering method for this solver");
       assert(rbprmPathValidation_ && "Path validation should be a RbPrmPathValidation class for this solver");
 
+      hppDout(notice,"number of affordances objects : "<<problem.collisionObstacles().size());
       try {
         boost::any value_x = problem.get<boost::any> (std::string("sizeFootX"));
         boost::any value_y = problem.get<boost::any> (std::string("sizeFootY"));

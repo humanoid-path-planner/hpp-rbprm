@@ -65,11 +65,13 @@ namespace hpp {
         T_Configuration configs;
         const core::interval_t& range = path_->timeRange();
         configs.push_back(start_.configuration_);
-		int j = 0;
+        hppDout(notice,"config start = "<<model::displayConfig(start_.configuration_));
+        int j = 0;
         //for(double i = range.first + timeStep; i< range.second; i+= timeStep)
         for(double i = range.first; i< range.second; i+= timeStep, ++j)
         {
             configs.push_back(configPosition(configs.back(),path_,i));
+            hppDout(notice,"config added = "<<model::displayConfig(configs.back()));
         }
         configs.push_back(configPosition(configs.back(),path_,range.second));
         return Interpolate(affordances, affFilters, configs, robustnessTreshold, timeStep, range.first, filterStates);
