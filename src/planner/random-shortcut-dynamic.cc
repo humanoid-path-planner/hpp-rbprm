@@ -145,12 +145,16 @@ namespace hpp{
 
       q[1] = q1;
       q[2] = q2;
+      double minBetweenPoint = std::min(1.,tmpPath->length()*0.2);
+      hppDout(notice,"minBetweenPoints = "<<minBetweenPoint);
       while (!finished && projectionError != 0) {
         t[0] = tmpPath->timeRange ().first;
         t[3] = tmpPath->timeRange ().second;
-        value_type u2 = t[0] + (t[3] -t[0]) * rand ()/RAND_MAX;
-        value_type u1 = t[0] + (t[3] -t[0]) * rand ()/RAND_MAX;
-        if (u1 < u2) {t[1] = u1; t[2] = u2;} else {t[1] = u2; t[2] = u1;}
+        do{ // avoid to sample point too close of eachother, FIXME : remove hardcoded value of 1 and find a way to compute it (a percentage of total time ?)
+          value_type u2 = t[0]+minBetweenPoint + (t[3] -t[0]-2*minBetweenPoint) * rand ()/RAND_MAX;
+          value_type u1 = t[0]+minBetweenPoint + (t[3] -t[0]-2*minBetweenPoint) * rand ()/RAND_MAX;
+          if (u1 < u2) {t[1] = u1; t[2] = u2;} else {t[1] = u2; t[2] = u1;}
+        }while (((t[1]-t[0])<minBetweenPoint) || ((t[3]-t[2])<minBetweenPoint) || t[2]-t[1] < minBetweenPoint);
         if (!(*tmpPath) (q[1], t[1])) {
           hppDout (error, "Configuration at param " << t[1] << " could not be "
                                                                "projected");
