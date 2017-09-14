@@ -95,6 +95,17 @@ namespace hpp {
                       const std::string& heuristicName, const bool loadValues, const bool disableEffectorCollision = false,
                      const bool grasp = false);
 
+        ///
+        /// \brief AddNonContactingLimb add a limb not used for contact generation
+        /// \param id: user defined id for the limb. Must be unique.
+        /// The id is used if several contact points are defined for the same limb (ex: the knee and the foot)
+        /// \param name: name of the joint corresponding to the root of the limb.
+        /// \param effectorName name of the joint to be considered as the effector of the limb
+        /// \param collisionObjects objects to be considered for collisions with the limb. TODO remove
+        /// \param nbSamples number of samples to generate for the limb
+        void AddNonContactingLimb(const std::string& id, const std::string& name, const std::string &effectorName,
+                                    const model::ObjectVector_t &collisionObjects, const std::size_t nbSamples);
+
         /// Add a new heuristic for biasing sample candidate selection
         ///
         /// \param name: name used to identify the heuristic
@@ -107,6 +118,8 @@ namespace hpp {
 
     public:
         const rbprm::T_Limb& GetLimbs() {return limbs_;}
+        const rbprm::RbPrmLimbPtr_t GetLimb(std::string name,bool onlyWithContact=false);
+        const rbprm::T_Limb& GetNonContactingLimbs() {return nonContactingLimbs_;}
         const T_LimbGroup& GetGroups() {return limbGroups_;}
         const core::CollisionValidationPtr_t& GetCollisionValidation() {return collisionValidation_;}
         const std::map<std::string, core::CollisionValidationPtr_t>& GetLimbCollisionValidation() {return limbcollisionValidations_;}
@@ -122,6 +135,7 @@ namespace hpp {
         core::CollisionValidationPtr_t collisionValidation_;
         std::map<std::string, core::CollisionValidationPtr_t> limbcollisionValidations_;
         rbprm::T_Limb limbs_;
+        rbprm::T_Limb nonContactingLimbs_;  // this is the list of limbs that are not used during contact generation.
         T_LimbGroup limbGroups_;
         sampling::HeuristicFactory factory_;
         bool staticStability_;
@@ -130,7 +144,7 @@ namespace hpp {
 
     private:
         void AddLimbPrivate(rbprm::RbPrmLimbPtr_t limb, const std::string& id, const std::string& name,
-                            const model::ObjectVector_t &collisionObjects, const bool disableEffectorCollision);
+                            const model::ObjectVector_t &collisionObjects, const bool disableEffectorCollision, const bool nonContactingLimb=false);
 
     protected:
       RbPrmFullBody (const model::DevicePtr_t &device);

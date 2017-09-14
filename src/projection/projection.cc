@@ -179,7 +179,7 @@ ProjectionReport setCollisionFree(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const
     ProjectionReport res;
     res.result_ = currentState;
     model::Configuration_t configuration = currentState.configuration_;
-    RbPrmLimbPtr_t limb = fullBody->GetLimbs().at(limbName);
+    RbPrmLimbPtr_t limb = fullBody->GetLimb(limbName);
     for(sampling::SampleVector_t::const_iterator cit = limb->sampleContainer_.samples_.begin();
         cit != limb->sampleContainer_.samples_.end(); ++cit)
     {

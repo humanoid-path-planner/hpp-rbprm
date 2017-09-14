@@ -64,14 +64,20 @@ namespace hpp {
 
 
     void RbPrmFullBody::AddLimbPrivate(rbprm::RbPrmLimbPtr_t limb, const std::string& id, const std::string& name,
-                        const model::ObjectVector_t &collisionObjects, const bool disableEffectorCollision)
+                        const model::ObjectVector_t &collisionObjects, const bool disableEffectorCollision,const bool nonContactingLimb)
     {
         core::CollisionValidationPtr_t limbcollisionValidation_ = core::CollisionValidation::create(this->device_);
+        rbprm::T_Limb limbs;
+        if(nonContactingLimb)
+          limbs=nonContactingLimbs_;
+        else
+          limbs=limbs_;
+
         // adding collision validation
         for(model::ObjectVector_t::const_iterator cit = collisionObjects.begin();
             cit != collisionObjects.end(); ++cit)
         {
-            if(limbs_.empty())
+            if(limbs.empty())
             {
                 collisionValidation_->addObstacle(*cit);
             }
@@ -83,11 +89,15 @@ namespace hpp {
                 hpp::tools::RemoveEffectorCollision<core::CollisionValidation>((*limbcollisionValidation_.get()), limb->effector_, *cit);
             }
         }
-        limbs_.insert(std::make_pair(id, limb));
+        if(nonContactingLimb)
+          nonContactingLimbs_.insert(std::make_pair(id, limb));
+        else
+          limbs_.insert(std::make_pair(id, limb));
         tools::RemoveNonLimbCollisionRec<core::CollisionValidation>(device_->rootJoint(),name,collisionObjects,*limbcollisionValidation_.get());
         hpp::core::RelativeMotion::matrix_type m = hpp::core::RelativeMotion::matrix(device_);
         limbcollisionValidation_->filterCollisionPairs(m);
         collisionValidation_->filterCollisionPairs(m);
+        hppDout(notice,"insert limb validation with id = "<<id);
         limbcollisionValidations_.insert(std::make_pair(id, limbcollisionValidation_));
         // insert limb to root group
         T_LimbGroup::iterator cit = limbGroups_.find(name);
@@ -128,6 +138,15 @@ namespace hpp {
         AddLimbPrivate(limb, id, name,collisionObjects, disableEffectorCollision);
     }
 
+    void RbPrmFullBody::AddNonContactingLimb(const std::string& id, const std::string& name, const std::string &effectorName,
+                                const model::ObjectVector_t &collisionObjects, const std::size_t nbSamples)
+    {
+        std::map<std::string, const sampling::heuristic>::const_iterator hit = checkLimbData(id, nonContactingLimbs_,factory_,"static");
+        model::JointPtr_t joint = device_->getJointByName(name);
+        rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(joint, effectorName, fcl::Vec3f(0,0,0),fcl::Vec3f(0,0,0),fcl::Vec3f(0,0,1),0,0  , nbSamples, hit->second,0.03);
+        AddLimbPrivate(limb, id, name,collisionObjects, false,true);
+    }
+
     void RbPrmFullBody::AddLimb(const std::string& database, const std::string& id,
                                 const model::ObjectVector_t &collisionObjects,
                                 const std::string& heuristicName,
@@ -142,6 +161,25 @@ namespace hpp {
         myfile.close();
         AddLimbPrivate(limb, id, limb->limb_->name(),collisionObjects, disableEffectorCollision);
     }
+
+    const rbprm::RbPrmLimbPtr_t RbPrmFullBody::GetLimb(std::string name,bool onlyWithContact){
+      T_Limb::const_iterator lit = GetLimbs().find(std::string(name));
+      if(lit == GetLimbs().end())
+      {
+          if(onlyWithContact){
+            std::string err("No limb " + std::string(name) + " was defined for robot" + device_->name());
+            throw std::runtime_error (err.c_str());
+          }
+          lit = GetNonContactingLimbs().find(std::string(name));
+          if(lit == GetNonContactingLimbs().end())
+          {
+            std::string err("No limb " + std::string(name) + " was defined for robot" + device_->name());
+            throw std::runtime_error (err.c_str());
+          }
+      }
+      return lit->second;
+    }
+
 
     void RbPrmFullBody::init(const RbPrmFullBodyWkPtr_t& weakPtr)
     {

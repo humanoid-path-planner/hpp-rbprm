@@ -198,40 +198,45 @@ namespace
         else return distanceRec(conf, lastJoint, currentJoint->childJoint(0),currentDistance);
     }
 
-    double distanceToLimits(rbprm::RbPrmFullBodyPtr_t fullBody , const SampleDB& /*sampleDB*/, const sampling::Sample& sample)
-    {
-        // find limb name
-        rbprm::T_Limb::const_iterator cit = fullBody->GetLimbs().begin();
-        for(; cit != fullBody->GetLimbs().end(); ++cit)
+    rbprm::RbPrmLimbPtr_t getLimbFromStartRank(size_t startRank,rbprm::RbPrmFullBodyPtr_t fullBody  ){
+      rbprm::T_Limb::const_iterator cit = fullBody->GetLimbs().begin();
+      for(; cit != fullBody->GetLimbs().end(); ++cit)
+      {
+          if(cit->second->limb_->rankInConfiguration() == startRank)
+              break;
+      }
+      if(cit == fullBody->GetLimbs().end())
+      {
+        for(cit = fullBody->GetNonContactingLimbs().begin(); cit != fullBody->GetNonContactingLimbs().end(); ++cit)
         {
-            if(cit->second->limb_->rankInConfiguration() == sample.startRank_)
+            if(cit->second->limb_->rankInConfiguration() == startRank)
                 break;
         }
-        if(cit == fullBody->GetLimbs().end())
+        if(cit == fullBody->GetNonContactingLimbs().end())
         {
             throw std::runtime_error ("Impossible to match sample with a limb");
         }
+      }
+      return cit->second;
+    }
+
+
+    double distanceToLimits(rbprm::RbPrmFullBodyPtr_t fullBody , const SampleDB& /*sampleDB*/, const sampling::Sample& sample)
+    {
+        // find limb name
+       rbprm::RbPrmLimbPtr_t limb = getLimbFromStartRank(sample.startRank_,fullBody);
         model::DevicePtr_t device = fullBody->device_;
         model::Configuration_t conf(device->currentConfiguration());
         double distance = 1; //std::numeric_limits<double>::max();
         sampling::Load(sample,conf);
-        distanceRec(conf, cit->second->effector_->name(), cit->second->limb_, distance);
+        distanceRec(conf, limb->effector_->name(), limb->limb_, distance);
         distance = 1 - exp(-5*distance);
         return distance;
     }
 
     double referenceConfiguration(rbprm::RbPrmFullBodyPtr_t fullBody , const SampleDB& /*sampleDB*/, const sampling::Sample& sample){
       // find limb name
-      rbprm::T_Limb::const_iterator cit = fullBody->GetLimbs().begin();
-      for(; cit != fullBody->GetLimbs().end(); ++cit)
-      {
-          if(cit->second->limb_->rankInConfiguration() == sample.startRank_)
-              break;
-      }
-      if(cit == fullBody->GetLimbs().end())
-      {
-          throw std::runtime_error ("Impossible to match sample with a limb");
-      }
+      rbprm::RbPrmLimbPtr_t limb = getLimbFromStartRank(sample.startRank_,fullBody);
       model::DevicePtr_t device = fullBody->device_;
       model::Configuration_t conf(device->currentConfiguration());
       sampling::Load(sample,conf); // retrieve the configuration of the sample (only for the concerned limb)
@@ -244,8 +249,8 @@ namespace
       // the difference vector depend on the index in the velocity vector, not in the configuration
       // we only sum for the index of the current limb
      // hppDout(notice,"ref config rank: "<<cit->second->limb_->rankInVelocity()<<" ; "<<cit->second->effector_->rankInVelocity());
-      for (size_t i = cit->second->limb_->rankInVelocity() ; i <= cit->second->effector_->rankInVelocity() ; ++i){
-        distance += (diff[i]*diff[i])*weight[i-cit->second->limb_->rankInVelocity()]; // abs value because we don't want the real distance but only how different we are from the reference.
+      for (size_t i = limb->limb_->rankInVelocity() ; i <= limb->effector_->rankInVelocity() ; ++i){
+        distance += (diff[i]*diff[i])*weight[i-limb->limb_->rankInVelocity()]; // abs value because we don't want the real distance but only how different we are from the reference.
       }
       // This is an heuristic and not a cost, a null distance is the best result
       // TODO : replace hardcoded value with the real max
