@@ -230,6 +230,7 @@ bool rbprm::sampling::GetCandidates(const SampleDB& sc, const fcl::Transform3f& 
     fcl::collide(sc.geometry_.get(), treeTrf, obj->collisionGeometry().get(), obj->getTransform(), req, cResult);
     sampling::T_VoxelSampleId::const_iterator voxelIt;
     Eigen::Vector3d eDir(direction[0], direction[1], direction[2]);
+    eDir.normalize();
     std::vector<long int> visited;
     int totalSamples = 0;
     int okay = 0;
@@ -257,7 +258,7 @@ bool rbprm::sampling::GetCandidates(const SampleDB& sc, const fcl::Transform3f& 
                   const fcl::Vec3f& v3 = surface->vertices[tr[2]];
                   normal = (v2 - v1).cross(v3 - v1);
                   normal.normalize();
-                  Eigen::Vector3d eNormal(normal[0], normal[1], normal[2]);;
+                  Eigen::Vector3d eNormal(normal[0], normal[1], normal[2]);
                   OctreeReport report(&(*sit), contact, evaluate ? ((*evaluate)(*sit, eDir, eNormal, params)) :0, eNormal);
                   ++okay;
                   reports.insert(report);
