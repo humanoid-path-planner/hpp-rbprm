@@ -251,6 +251,14 @@ ProjectionReport genColFree(ContactGenHelper &contactGenHelper, ProjectionReport
         res = projection::setCollisionFree(contactGenHelper.fullBody_,contactGenHelper.fullBody_->GetLimbCollisionValidation().at(*cit),*cit,res.result_);
         hppDout(notice,"free limb in maintain contact : "<<*cit);
     }
+    // gen collision free configuration for the limbs not used for contact in last :
+    hppDout(notice,"size of val map = "<<contactGenHelper.fullBody_->GetLimbCollisionValidation().size());
+    std::vector<std::string> effNotContactingNames(extractEffectorsName(contactGenHelper.fullBody_->GetNonContactingLimbs()));
+    for(std::vector<std::string>::const_iterator cit = effNotContactingNames.begin(); cit != effNotContactingNames.end() && res.success_; ++cit){
+        hppDout(notice,"for limb name = "<<*cit);
+        res = projection::setCollisionFree(contactGenHelper.fullBody_,contactGenHelper.fullBody_->GetLimbCollisionValidation().at(*cit),*cit,res.result_);
+        hppDout(notice,"free limb not used for contact in maintain contact : "<<*cit);
+    }
     return res;
 }
 
