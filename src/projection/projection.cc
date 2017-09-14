@@ -315,11 +315,21 @@ ProjectionReport projectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& b
 {
     sampling::Load(*report.sample_, configuration);
     const fcl::Vec3f& normal = report.normal_;
-    const fcl::Vec3f& position = report.contact_.pos;
+    fcl::Transform3f rootT = body->device_->rootJoint()->currentTransformation();
+    rootT.setQuatRotation(fcl::Quaternion3f(configuration[3],configuration[4],configuration[5],configuration[6])); // FIXME : Why root transform never take the rotation ??
+    hppDout(notice,"root transform in projection : "<<rootT);
+    //compute the orthogonal projection of the end effector on the plan :
+   // const fcl::Vec3f& pEndEff = (fcl::Transform3f(report.sample_->effectorPosition_)*rootT).getTranslation();
+    const fcl::Vec3f& pEndEff = (rootT.transform(report.sample_->effectorPosition_));
+
+    const fcl::Vec3f& pos = pEndEff-(normal.dot(pEndEff-report.contact_.pos))*normal;
+    hppDout(notice,"p end effector relative   : "<<report.sample_->effectorPosition_);
+    hppDout(notice,"p end effector absolute   : "<<pEndEff);
+    hppDout(notice,"p end effector projecte   : "<<pos);
+
     core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 20);
-    // get current normal orientation
     hpp::tools::LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
-    return projectToObstacle(proj, body, limbId, limb, validation, configuration, current, normal, position);
+    return projectToObstacle(proj, body, limbId, limb, validation, configuration, current, normal, pos);
 }
 
 ProjectionReport projectStateToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
