@@ -189,6 +189,7 @@ ProjectionReport setCollisionFree(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const
         {
             res.result_.configuration_ = configuration;
             res.success_ = true;
+            hppDout(notice,"Found collision free conf !");
             return res;
         }
         // load after to test current configuraiton (so miss the last configuration but that s probably okay..)

@@ -420,6 +420,17 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
                 position = limb->effector_->currentTransformation().getTranslation();
                 rotation = limb->effector_->currentTransformation().getRotation();
                 normal = rep.result_.contactNormals_.at(limbId);
+              /*   // DEBUGING PURPOSE : call again evaluate on the sample found
+                hppDout(notice,"found sample, evaluate : "); // remove
+                Eigen::Vector3d eDir(contactGenHelper.direction_[0], contactGenHelper.direction_[1], contactGenHelper.direction_[2]); // remove
+                eDir.normalize();       // remove
+                hppDout(notice,"sample = "<<(*(bestReport.sample_)).startRank_); // remove
+                sampling::heuristic eval =  evaluate == 0 ? limb->evaluate_ : evaluate;// remove
+                (*eval)(*(bestReport.sample_), eDir, normal, params); // TODO : comment when not debugging
+                core::Configuration_t confBefore= current.configuration_; // remove
+                sampling::Load(*(bestReport.sample_),confBefore); //remove
+                hppDout(notice,"config before projection : r(["<<model::displayConfig(confBefore)<<"])"); //remove
+               */
                 found_sample = true;
             }
             // if no stable candidate is found, select best contact

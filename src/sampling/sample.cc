@@ -54,11 +54,10 @@ fcl::Vec3f ComputeEffectorPositionInLimbFrame(const model::JointPtr_t limb, cons
 {
     // we want to use the orientation expressed in the world frame, but with the origin in the limb's root :
    // hppDout(notice,"offset = "<<offset);
-   // hppDout(notice,"limbOffset = "<<limbOffset);
+  //  hppDout(notice,"limbOffset = "<<limbOffset);
     const fcl::Transform3f& transformLimb = limb->currentTransformation();
     fcl::Transform3f transformOffset;
     transformOffset.setTranslation(limbOffset);
-
     fcl::Vec3f effTr = effector->currentTransformation().getTranslation() + offset;
     fcl::Vec3f limbTr = (transformLimb*transformOffset).getTranslation();
   /*  hppDout(notice,"effTr = "<<effTr);
