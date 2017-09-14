@@ -118,51 +118,49 @@ double ForwardHeuristic(const sampling::Sample& sample,
 double DynamicWalkHeuristic(const sampling::Sample& sample,
                       const Eigen::Vector3d& direction, const Eigen::Vector3d& normal, const HeuristicParam & params)
 {
-    //hppDout(notice,"static value : "<<sample.staticValue_);
   fcl::Vec3f dir(direction);
   fcl::Vec3f pos(sample.effectorPositionInLimbFrame_);
   fcl::Vec3f n(normal);
+  double weight = 1000.;
   n.normalize();
-  dir[2]=0;
+  dir[2]=0; // FIXME : replace this by a projection on the surface plan ( we know the normal)
   dir = dir.normalize();
-
-
-  hppDout(notice,"limb frame   vlb = ["<<sample.configuration_[0]<<","<<sample.configuration_[1]<<","<<sample.configuration_[2]<<","<<pos[0]<<","<<pos[1]<<","<<0<<" ]");
+  //hppDout(notice,"limb frame   vlb = ["<<sample.configuration_[0]<<","<<sample.configuration_[1]<<","<<sample.configuration_[2]<<","<<pos[0]<<","<<pos[1]<<","<<0<<" ]");
   pos = (params.tfWorldRoot_.getRotation()*(pos));
   pos[2] = 0; // FIXME : replace this by a projection on the surface plan ( we know the normal)
   pos = pos.normalize();
-  hppDout(notice,"root transform : "<<params.tfWorldRoot_);
-
+  //hppDout(notice,"root transform : "<<params.tfWorldRoot_);
   fcl::Vec3f limbRoot = sample.effectorPosition_-sample.effectorPositionInLimbFrame_;
-  double weight = 1000.;
-  hppDout(notice,"limb origin : "<<limbRoot);
+  //hppDout(notice,"limb origin : "<<limbRoot);
+
   // compute signed angle between dir and pos
   double angle = atan2((dir.cross(pos)).dot(n),dir.dot(pos));
   if(limbRoot[1]>0.){ // the current limb is on the left of the root
-    hppDout(notice,"left limb");
+    //hppDout(notice,"left limb");
     // test if the pos vector is on the right of the dir vector
     if(angle<0){
       weight=100.;
       dir = - dir;
-      hppDout(notice,"pos vector is on the wrong side of dir");
+      //hppDout(notice,"pos vector is on the wrong side of dir");
     }
   }else{// the current limb is on the right of the root
-    hppDout(notice,"right limb");
+    //hppDout(notice,"right limb");
     // test if the pos vector is on the left of the dir vector
     if(angle>0){
       weight=100.;
       dir = - dir;
-      hppDout(notice,"pos vector is on the wrong side of dir");
+      //hppDout(notice,"pos vector is on the wrong side of dir");
     }
   }
 
-  hppDout(notice,"eff position = "<<sample.effectorPosition_);
+ /* hppDout(notice,"eff position = "<<sample.effectorPosition_);
   hppDout(notice,"limb frame   vl = ["<<sample.configuration_[0]<<","<<sample.configuration_[1]<<","<<sample.configuration_[2]<<","<<pos[0]<<","<<pos[1]<<","<<pos[2]<<" ]");
   hppDout(notice,"direction   vd = ["<<sample.configuration_[0]<<","<<sample.configuration_[1]<<","<<sample.configuration_[2]<<","<<dir[0]<<","<<dir[1]<<","<<dir[2]<<" ]");
   hppDout(notice,"value of dot product = "<<pos.dot(dir));
-  hppDout(notice,"static value = "<<sample.staticValue_);
+  hppDout(notice,"static value = "<<sample.staticValue_);*/
+
     return sample.staticValue_ * 100.  * Eigen::Vector3d::UnitZ().dot(normal) + weight * pos.dot(dir)
-        /*+ 1. * pos.dot(fcl::Vec3f(params.comAcceleration_[0],params.comAcceleration_[1],direction[2])) + ((double)rand()) / ((double)(RAND_MAX))*/;
+        + 1. * pos.dot(fcl::Vec3f(params.comAcceleration_[0],params.comAcceleration_[1],direction[2])) + ((double)rand()) / ((double)(RAND_MAX));
 }
 
 
@@ -214,6 +212,7 @@ HeuristicFactory::HeuristicFactory()
     //seed = 1493208163 ; // stairs static contacts
     //seed = 1504012308; // slalom static
     //seed = 1504099153; // slalom dynamic
+    seed = 1505206177 ; // walk bauzil (bof)
     std::cout<<"seed HEURISTIC = "<<seed<<std::endl;
     srand ( seed);
     hppDout(notice,"SEED for heuristic = "<<seed);
