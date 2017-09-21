@@ -152,7 +152,7 @@ namespace hpp {
       }
       try {
         boost::any value = problem.get<boost::any> (std::string("tryJump"));
-        tryJump_ = boost::any_cast<bool>(value);
+        tryJump_ = (bool)boost::any_cast<double>(value);
       } catch (const std::exception& e) {
         tryJump_=false;
       }
