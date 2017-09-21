@@ -237,7 +237,6 @@ namespace hpp{
       rbprmPathValidation_->getValidator()->computeAllContacts(false);
       hppDout(notice,"Random shortucut, fillNodeMatrices : ");
       x1->fillNodeMatrices(report,rectangularContact_,sizeFootX_,sizeFootY_,problem().robot()->mass(),mu_);
-
       // call steering method kinodynamic with the newly created node
       hppDout(notice,"Random shortucut, steering method  : ");
       PathPtr_t dp = (*sm_)(x1,q2);

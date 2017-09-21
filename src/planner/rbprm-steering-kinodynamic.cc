@@ -327,7 +327,7 @@ namespace hpp{
 
       double alpha0=1.; // main variable of our LP problem
       Vector3 direction;
-/*   Vector3 toP,fromP,dPosition;
+ /*     Vector3 toP,fromP,dPosition;
       Vector3 toV,fromV,dVelocity;
       const model::size_type indexECS =problem_->robot()->configSize() - problem_->robot()->extraConfigSpace().dimension (); // ecs index
 
@@ -353,9 +353,10 @@ namespace hpp{
       //direction = dPosition + dVelocity;
       direction = dPosition;
       direction.normalize();
-
 */
+
       direction = computeDirection(*(near->configuration()),target);
+
       if(direction.norm() <= std::numeric_limits<double>::epsilon())
         return core::RbprmNodePtr_t();
 
@@ -385,6 +386,12 @@ namespace hpp{
 
       hppDout(info,"Amax after min : "<<alpha0);
       aMax = alpha0*direction;
+      //BENCH ONLY : #############
+    /* aMax[0]=aMaxFixed_;
+      aMax[1]=aMaxFixed_;
+      aMax[2]=aMaxFixed_;
+*/
+      // #########################
       if((aMax[2] < aMaxFixed_Z_) && tryJump_)
         aMax[2] = aMaxFixed_Z_;
       setAmax(aMax);
