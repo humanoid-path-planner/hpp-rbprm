@@ -128,7 +128,7 @@ double DynamicWalkHeuristic(const sampling::Sample& sample,
   //hppDout(notice,"limb frame   vlb = ["<<sample.configuration_[0]<<","<<sample.configuration_[1]<<","<<sample.configuration_[2]<<","<<pos[0]<<","<<pos[1]<<","<<0<<" ]");
   pos = (params.tfWorldRoot_.getRotation()*(pos));
   pos[2] = 0; // FIXME : replace this by a projection on the surface plan ( we know the normal)
-  pos = pos.normalize();
+  //pos = pos.normalize();
   //hppDout(notice,"root transform : "<<params.tfWorldRoot_);
   fcl::Vec3f limbRoot = sample.effectorPosition_-sample.effectorPositionInLimbFrame_;
   //hppDout(notice,"limb origin : "<<limbRoot);
@@ -139,7 +139,7 @@ double DynamicWalkHeuristic(const sampling::Sample& sample,
     //hppDout(notice,"left limb");
     // test if the pos vector is on the right of the dir vector
     if(angle<0){
-      weight=100.;
+      weight/=10.;
       dir = - dir;
       //hppDout(notice,"pos vector is on the wrong side of dir");
     }
@@ -147,7 +147,7 @@ double DynamicWalkHeuristic(const sampling::Sample& sample,
     //hppDout(notice,"right limb");
     // test if the pos vector is on the left of the dir vector
     if(angle>0){
-      weight=100.;
+      weight/=10.;
       dir = - dir;
       //hppDout(notice,"pos vector is on the wrong side of dir");
     }
@@ -159,7 +159,7 @@ double DynamicWalkHeuristic(const sampling::Sample& sample,
   hppDout(notice,"value of dot product = "<<pos.dot(dir));
   hppDout(notice,"static value = "<<sample.staticValue_);*/
 
-    return sample.staticValue_ * 100.  * Eigen::Vector3d::UnitZ().dot(normal) + weight * pos.dot(dir)
+    return sample.staticValue_ * 10000.  * Eigen::Vector3d::UnitZ().dot(normal) + weight * pos.dot(dir)
         + 1. * pos.dot(fcl::Vec3f(params.comAcceleration_[0],params.comAcceleration_[1],direction[2])) + ((double)rand()) / ((double)(RAND_MAX));
 }
 
