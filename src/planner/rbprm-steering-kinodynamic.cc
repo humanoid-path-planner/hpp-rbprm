@@ -53,6 +53,7 @@ namespace hpp{
                                          core::ConfigurationIn_t q2) const
     {
       hppDout(notice,"Old prototype called !!!");
+      std::cout<<"derecated prototype of steering method called"<<std::endl;
       return core::steeringMethod::Kinodynamic::impl_compute(q1,q2);
     }
 

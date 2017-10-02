@@ -415,7 +415,7 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
                 || (rep.result_.nbContacts == 1 && !contactGenHelper.stableForOneContact_)
                 || robustness>=contactGenHelper.robustnessTreshold_)
             {
-                hppDout(notice,"stability OK, validate this sample.");
+                hppDout(notice,"stability OK (or one contact only), validate this sample.");
                 maxRob = std::max(robustness, maxRob);
                 position = limb->effector_->currentTransformation().getTranslation();
                 rotation = limb->effector_->currentTransformation().getRotation();
@@ -437,6 +437,7 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
             // anyway
             else if((robustness > maxRob) && contactGenHelper.contactIfFails_)
             {
+                hppDout(notice,"unstable contact, but the most robust yet.");
                 moreRobust = configuration;
                 maxRob = robustness;
                 position = limb->effector_->currentTransformation().getTranslation();

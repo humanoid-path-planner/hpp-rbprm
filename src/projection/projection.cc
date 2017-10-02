@@ -315,12 +315,14 @@ ProjectionReport projectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& b
 {
     sampling::Load(*report.sample_, configuration);
     const fcl::Vec3f& normal = report.normal_;
+   // hppDout(notice,"contact normal = "<<normal);
     fcl::Transform3f rootT = body->device_->rootJoint()->currentTransformation();
     rootT.setQuatRotation(fcl::Quaternion3f(configuration[3],configuration[4],configuration[5],configuration[6])); // FIXME : Why root transform never take the rotation ??
     //compute the orthogonal projection of the end effector on the plan :
     const fcl::Vec3f& pEndEff = (rootT.transform(report.sample_->effectorPosition_)); // compute absolute position (in world frame)
     const fcl::Vec3f& pos = pEndEff-(normal.dot(pEndEff-report.contact_.pos))*normal; // orthogonal projection on the obstacle surface
-
+  //  hppDout(notice,"pEndEff = "<<pEndEff);
+   // hppDout(notice,"pos = "<<pos);
     core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 20);
     hpp::tools::LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
     return projectToObstacle(proj, body, limbId, limb, validation, configuration, current, normal, pos);
