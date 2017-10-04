@@ -379,6 +379,8 @@ ProjectionReport projectToColFreeComPosition(hpp::rbprm::RbPrmFullBodyPtr_t full
     res.success_ = proj->apply(configuration);
     res.result_ = currentState;
     res.result_.configuration_ = configuration;
+    hppDout(notice,"Project to col free, first projection done : "<<res.success_);
+    hppDout(notice,"projected state : "<<model::displayConfig(configuration));
     if(res.success_)
     {
         std::vector<std::string> effNames(extractEffectorsName(fullBody->GetLimbs()));
@@ -390,6 +392,7 @@ ProjectionReport projectToColFreeComPosition(hpp::rbprm::RbPrmFullBodyPtr_t full
                 res.success_ = false;
         }
     }
+    hppDout(notice,"project to col free, set coll free success = "<<res.success_);
     if(res.success_)
     {
         res.success_ = proj->apply(configuration);
@@ -398,6 +401,11 @@ ProjectionReport projectToColFreeComPosition(hpp::rbprm::RbPrmFullBodyPtr_t full
         {
             ValidationReportPtr_t report (ValidationReportPtr_t(new CollisionValidationReport));
             res.success_ = fullBody->GetCollisionValidation()->validate(configuration,report);
+            hppDout(notice,"project to col free, collision test : "<<res.success_);
+            if(!res.success_){
+              CollisionValidationReportPtr_t repCast = boost::dynamic_pointer_cast<CollisionValidationReport>(report);
+              hppDout(notice,"collision between "<<repCast->object1->name()<<" and "<<repCast->object2->name());
+            }
         }
     }
     return res;
