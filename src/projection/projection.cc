@@ -180,8 +180,10 @@ ProjectionReport setCollisionFree(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const
     res.result_ = currentState;
     model::Configuration_t configuration = currentState.configuration_;
     RbPrmLimbPtr_t limb = fullBody->GetLimb(limbName);
-    for(sampling::SampleVector_t::const_iterator cit = limb->sampleContainer_.samples_.begin();
-        cit != limb->sampleContainer_.samples_.end(); ++cit)
+    sampling::T_Sample samples(limb->sampleContainer_.samples_);
+    sampling::sample_greater sort;
+    std::sort(samples.begin(),samples.end(),sort);
+    for(sampling::SampleVector_t::const_iterator cit = samples.begin();cit != samples.end(); ++cit)
     {
         hppDout(notice,"Set collision free : static value = "<<cit->staticValue_);
         hpp::core::ValidationReportPtr_t valRep (new hpp::core::CollisionValidationReport);
