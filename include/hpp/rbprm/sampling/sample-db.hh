@@ -88,11 +88,11 @@ namespace hpp {
          SampleDB(const model::JointPtr_t limb, const std::string& effector, const std::size_t nbSamples,
                   const fcl::Vec3f& offset= fcl::Vec3f(0,0,0),const fcl::Vec3f& limbOffset= fcl::Vec3f(0,0,0), const double resolution = 0.1, const T_evaluate& data = T_evaluate(), const std::string& staticValue ="");
         ~SampleDB();
-
+/*
     private:
          SampleDB(const SampleDB&);
          const SampleDB& operator=(const SampleDB&);
-
+*/
     public:
         double resolution_;
         T_Sample samples_;

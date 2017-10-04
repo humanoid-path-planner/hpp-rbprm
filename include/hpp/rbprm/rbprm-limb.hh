@@ -117,7 +117,7 @@ namespace hpp {
         const double y_; // half length of contact surface
         const ContactType contactType_;
         sampling::heuristic evaluate_;
-        const sampling::SampleDB sampleContainer_;
+        sampling::SampleDB sampleContainer_;
         const bool disableEndEffectorCollision_;
         const bool grasps_;
 
