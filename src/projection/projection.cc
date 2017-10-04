@@ -174,15 +174,17 @@ ProjectionReport projectToRootConfiguration(hpp::rbprm::RbPrmFullBodyPtr_t fullB
 }
 
 ProjectionReport setCollisionFree(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const core::CollisionValidationPtr_t& validation ,
-                                  const std::string& limbName,const hpp::rbprm::State& currentState)
+                                  const std::string& limbName,const hpp::rbprm::State& currentState,bool sort)
 {
     ProjectionReport res;
     res.result_ = currentState;
     model::Configuration_t configuration = currentState.configuration_;
     RbPrmLimbPtr_t limb = fullBody->GetLimb(limbName);
     sampling::T_Sample samples(limb->sampleContainer_.samples_);
-    sampling::sample_greater sort;
-    std::sort(samples.begin(),samples.end(),sort);
+    if(sort){
+        sampling::sample_greater sortAlgo;
+        std::sort(samples.begin(),samples.end(),sortAlgo);
+    }
     for(sampling::SampleVector_t::const_iterator cit = samples.begin();cit != samples.end(); ++cit)
     {
         hppDout(notice,"Set collision free : static value = "<<cit->staticValue_);
