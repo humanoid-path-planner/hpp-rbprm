@@ -179,6 +179,15 @@ ProjectionReport setCollisionFree(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const
     ProjectionReport res;
     res.result_ = currentState;
     model::Configuration_t configuration = currentState.configuration_;
+    hpp::core::ValidationReportPtr_t valRep (new hpp::core::CollisionValidationReport);
+    if(validation->validate(configuration, valRep) )
+    {
+        res.result_.configuration_ = configuration;
+        res.success_ = true;
+        hppDout(notice,"Found collision free conf : current configuration was already valid !");
+        return res;
+    }
+
     RbPrmLimbPtr_t limb = fullBody->GetLimb(limbName);
     sampling::T_Sample samples(limb->sampleContainer_.samples_);
     if(sort){
@@ -187,8 +196,8 @@ ProjectionReport setCollisionFree(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const
     }
     for(sampling::SampleVector_t::const_iterator cit = samples.begin();cit != samples.end(); ++cit)
     {
+        sampling::Load(*cit, configuration);
         hppDout(notice,"Set collision free : static value = "<<cit->staticValue_);
-        hpp::core::ValidationReportPtr_t valRep (new hpp::core::CollisionValidationReport);
         if(validation->validate(configuration, valRep) )
         {
             res.result_.configuration_ = configuration;
@@ -196,8 +205,6 @@ ProjectionReport setCollisionFree(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const
             hppDout(notice,"Found collision free conf !");
             return res;
         }
-        // load after to test current configuraiton (so miss the last configuration but that s probably okay..)
-        sampling::Load(*cit, configuration);
     }
     return res;
 }
