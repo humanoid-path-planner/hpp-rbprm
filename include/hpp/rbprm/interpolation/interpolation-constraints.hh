@@ -135,18 +135,15 @@ namespace interpolation {
         weight[i] = 1.;
 
       // root's orientation
-    /*  for(size_t i = 3 ; i < 6 ; i++){
+      for(size_t i = 3 ; i < 6 ; i++){
         weight[i] = 50.;
       }
 
       for(size_t i = 3 ; i <= 9 ; i++){
         mask[i] = true;
-      }*/
-
-
-      for(size_t i = 7 ; i <= 9 ; i++){
-        mask[i] = true;
       }
+    //  mask[5] = false; // z root rotation ????
+
 
 
 
