@@ -213,6 +213,10 @@ HeuristicFactory::HeuristicFactory()
     //seed = 1504012308; // slalom static
     //seed = 1504099153; // slalom dynamic
    // seed = 1505997146 ; // bauzil walk
+  //  seed = 1507215254; // bauzil 2
+//    seed = 1507302685; // darpa
+ //  seed = 1507304085;
+ //   seed = 1507307011;
     std::cout<<"seed HEURISTIC = "<<seed<<std::endl;
     srand ( seed);
     hppDout(notice,"SEED for heuristic = "<<seed);
