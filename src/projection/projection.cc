@@ -400,6 +400,7 @@ ProjectionReport projectToColFreeComPosition(hpp::rbprm::RbPrmFullBodyPtr_t full
         std::vector<std::string> freeLimbs = rbprm::freeEffectors(currentState,effNames.begin(), effNames.end() );
         for(std::vector<std::string>::const_iterator cit = freeLimbs.begin(); cit != freeLimbs.end() && res.success_; ++cit)
         {
+            hppDout(notice,"free effector in projection : "<<*cit);
             tmp = projection::setCollisionFree(fullBody,fullBody->GetLimbCollisionValidation().at(*cit),*cit,res.result_);
             if(!tmp.success_)
                 res.success_ = false;

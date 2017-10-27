@@ -170,7 +170,7 @@ std::cout <<  device_->getJointByName("lh_foot_joint")->currentTransformation().
         updateConstraints(endc);
         if (constraints() && !constraints()->isSatisfied (end())) {
 //std::cout << "end conf " <<  initc << std::endl;
-          hppDout (error,"End configuration of path does not satisfy the constraints"<< end().transpose ());
+          hppDout (error,"End configuration of path does not satisfy the constraints"<< model::displayConfig(end()));
           throw projection_error ("End configuration of path does not satisfy "
               "the constraints");
         }
