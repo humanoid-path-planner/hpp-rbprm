@@ -71,11 +71,21 @@ bool push_if_new(T_State& states, const State currentState)
     return true;
 }
 
+void reverse(std::queue<std::string> &queue){
+    std::string temp(queue.front());
+    queue.pop();
+    if(!queue.empty())
+        reverse(queue);
+    queue.push(temp);
+}
+
 void maintain_contacts_combinatorial_rec(const hpp::rbprm::State& currentState, const std::size_t  depth,
                                          const std::size_t maxBrokenContacts, T_DepthState& res)
 {
     if (!push_if_new(res[depth], currentState) || depth>=maxBrokenContacts) return;
     std::queue<std::string> contactOrder = currentState.contactOrder_;
+// TEST CODE : reverse order of the queue :
+    reverse(contactOrder);
     int size = contactOrder.size(); int i = 0;
     while(!contactOrder.empty() && size != i)
     {
