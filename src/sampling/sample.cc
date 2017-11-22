@@ -153,7 +153,11 @@ hpp::rbprm::sampling::SampleVector_t hpp::rbprm::sampling::GenerateSamples(const
     JointPtr_t effectorClone = device->getJointByName(effector);
     std::size_t startRank_(model->rankInConfiguration());
     std::size_t length_ (ComputeLength(model, effectorClone));
-    for(std::size_t i = 0; i< nbSamples; ++i)
+    Configuration_t configRef(43);
+    configRef<<0, 0, 0.648702, 1.0, 0.0 , 0.0, 0.0,0.0, 0.0, 0.0, 0.0,0.261799388,  0.174532925, 0.0, -0.523598776, 0.0, 0.0, 0.17,0.261799388, -0.174532925, 0.0, -0.523598776, 0.0, 0.0, 0.17,0.0, 0.0, -0.453785606, 0.872664626, -0.41887902, 0.0,0.0, 0.0, -0.453785606, 0.872664626, -0.41887902, 0.0,0,0,0,0,0,0;
+    hppDout(notice,"TEST REF CONFIG IN LIMB DB : "<<model::displayConfig(configRef));
+    result.push_back(Sample(clone,effectorClone,configRef.segment(startRank_,length_),offset,limbOffset,0));
+    for(std::size_t i = 1; i< nbSamples; ++i)
     {
         clone->configuration ()->uniformlySample (clone->rankInConfiguration (), config);
         Joint* current = clone;
