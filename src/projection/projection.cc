@@ -105,6 +105,72 @@ void CreateComPosConstraint(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const fcl::
     proj->updateRightHandSide();
 }
 
+void CreatePosturalTaskConstraint(hpp::rbprm::RbPrmFullBodyPtr_t fullBody,core::ConfigProjectorPtr_t proj){
+  core::ComparisonTypePtr_t equals = core::Equality::create ();
+  hppDout(notice,"create postural task, in projection.cc, ref config = "<<model::displayConfig(fullBody->referenceConfig()));
+  std::vector <bool> mask (fullBody->device_->numberDof(),false);
+  Configuration_t weight(fullBody->device_->numberDof());
+
+  // mask : 0 for the freeflyer and the extraDoFs :
+  for(size_t i = 0 ; i < 3 ; i++){
+    mask[i]=false;
+  }
+  for(size_t i = fullBody->device_->numberDof()-7 ; i < fullBody->device_->numberDof() ; i++){
+    mask[i]=false;
+  }
+
+
+
+
+  // create a weight vector
+  for(size_t i = 0 ; i < fullBody->device_->numberDof() ; ++i){
+    weight[i] = 1.;
+  }
+  // TODO : retrieve it from somewhere, store it in fullbody ?
+  // value here for hrp2, from Justin
+  // : chest
+  weight[6]= 10.;
+  //head :
+  for(size_t i = 7 ; i <= 9 ; i++)
+    weight[i] = 1.;
+
+  // root's orientation
+  for(size_t i = 3 ; i < 6 ; i++){
+    weight[i] = 50.;
+  }
+
+  for(size_t i = 3 ; i <= 9 ; i++){
+    mask[i] = true;
+  }
+  mask[5] = false; // z root rotation ????
+
+
+  // normalize weight array :
+  double moy =0;
+  int num_active = 0;
+  for (size_t i = 0 ; i < weight.size() ; i++){
+    if(mask[i]){
+      moy += weight[i];
+      num_active++;
+    }
+  }
+  moy = moy/num_active;
+  for (size_t i = 0 ; i < weight.size() ; i++)
+    weight[i] = weight[i]/moy;
+
+
+  std::ostringstream oss;
+  for (size_type i=0; i < mask.size (); ++i){
+    oss << mask [i] << ",";
+  }
+  hppDout(notice,"mask = "<<oss.str());
+
+  constraints::ConfigurationConstraintPtr_t postFunc = constraints::ConfigurationConstraint::create("Postural_Task",fullBody->device_,fullBody->referenceConfig(),weight,mask);
+  const NumericalConstraintPtr_t posturalTask = NumericalConstraint::create (postFunc, equals);
+  proj->add(posturalTask,SizeIntervals_t (0),1);
+  proj->updateRightHandSide();
+}
+
 ProjectionReport projectToRootPosition(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const fcl::Vec3f& target,
                                            const hpp::rbprm::State& currentState)
 {
@@ -363,9 +429,15 @@ ProjectionReport projectToComPosition(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, c
                                            const hpp::rbprm::State& currentState)
 {
     ProjectionReport res;
-    core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(fullBody->device_,"proj", 1e-4, 40);
+    core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(fullBody->device_,"proj", 1e-3, 1000);
     CreateContactConstraints(fullBody, currentState, proj);
     CreateComPosConstraint(fullBody, target, proj);
+    CreatePosturalTaskConstraint(fullBody,proj);
+    proj->lastIsOptional(true);
+    proj->numOptimize(100);
+    proj->lastAsCost(true);
+    proj->errorThreshold(1e-3);
+
     model::Configuration_t configuration = currentState.configuration_;
     res.success_ = proj->apply(configuration);
     res.result_ = currentState;
@@ -388,6 +460,12 @@ ProjectionReport projectToColFreeComPosition(hpp::rbprm::RbPrmFullBodyPtr_t full
     core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(fullBody->device_,"proj", 1e-3, 1000);
     CreateContactConstraints(fullBody, currentState, proj);
     CreateComPosConstraint(fullBody, target, proj);
+    CreatePosturalTaskConstraint(fullBody,proj);
+    proj->lastIsOptional(true);
+    proj->numOptimize(100);
+    proj->lastAsCost(true);
+    proj->errorThreshold(1e-3);
+
     model::Configuration_t configuration = currentState.configuration_;
     res.success_ = proj->apply(configuration);
     res.result_ = currentState;
