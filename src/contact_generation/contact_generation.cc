@@ -341,7 +341,11 @@ ProjectionReport maintain_contacts(ContactGenHelper &contactGenHelper)
         State cState = candidates.front();
         candidates.pop();
         rep = projectToRootConfiguration(contactGenHelper.fullBody_,contactGenHelper.workingState_.configuration_,cState);
-        hppDout(notice,"maintain contacts, projection success : "<<rep.success_);
+        hppDout(notice,"maintain contacts, projection success : "<<rep.success_<<" for contacts : ");
+        for(std::map<std::string,bool>::const_iterator cit = cState.contacts_.begin();cit!=cState.contacts_.end(); ++ cit)
+        {
+          hppDout(notice,"limb : "<<cit->first<<", contact = "<<cit->second);
+        }
         if(rep.success_)
             rep = genColFree(contactGenHelper, rep);
         if(rep.success_)
