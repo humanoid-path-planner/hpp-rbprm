@@ -121,37 +121,47 @@ double DynamicWalkHeuristic(const sampling::Sample& sample,
   fcl::Vec3f dir(direction);
   fcl::Vec3f pos(sample.effectorPositionInLimbFrame_);
   fcl::Vec3f n(normal);
-  double weight = 1000.;
   n.normalize();
-  dir[2]=0; // FIXME : replace this by a projection on the surface plan ( we know the normal)
-  dir = dir.normalize();
-  //hppDout(notice,"limb frame   vlb = ["<<sample.configuration_[0]<<","<<sample.configuration_[1]<<","<<sample.configuration_[2]<<","<<pos[0]<<","<<pos[1]<<","<<0<<" ]");
-  pos = (params.tfWorldRoot_.getRotation()*(pos));
-  pos[2] = 0; // FIXME : replace this by a projection on the surface plan ( we know the normal)
-  //pos = pos.normalize();
-  //hppDout(notice,"root transform : "<<params.tfWorldRoot_);
-  fcl::Vec3f limbRoot = sample.effectorPosition_-sample.effectorPositionInLimbFrame_;
-  //hppDout(notice,"limb origin : "<<limbRoot);
+  double weightDir,weightStatic;
+  weightStatic=1000.;
 
-  // compute signed angle between dir and pos
-  double angle = atan2((dir.cross(pos)).dot(n),dir.dot(pos));
-  if(limbRoot[1]>0.){ // the current limb is on the left of the root
-    //hppDout(notice,"left limb");
-    // test if the pos vector is on the right of the dir vector
-    if(angle<0){
-      weight/=10.;
-      dir = - dir;
-      //hppDout(notice,"pos vector is on the wrong side of dir");
-    }
-  }else{// the current limb is on the right of the root
-    //hppDout(notice,"right limb");
-    // test if the pos vector is on the left of the dir vector
-    if(angle>0){
-      weight/=10.;
-      dir = - dir;
-      //hppDout(notice,"pos vector is on the wrong side of dir");
-    }
+  if(direction.norm() == 0 || std::isnan(direction.norm())){ // test for null vector, functions called before this one can try to normalize direction resulting in NaN
+      weightDir=0;
+      dir=fcl::Vec3f(0,0,1);
   }
+  else{
+      weightDir=1000.;
+      weightStatic=weightStatic*Eigen::Vector3d::UnitZ().dot(normal);
+      dir[2]=0; // FIXME : replace this by a projection on the surface plan ( we know the normal)
+      dir = dir.normalize();
+      //hppDout(notice,"limb frame   vlb = ["<<sample.configuration_[0]<<","<<sample.configuration_[1]<<","<<sample.configuration_[2]<<","<<pos[0]<<","<<pos[1]<<","<<0<<" ]");
+      pos = (params.tfWorldRoot_.getRotation()*(pos));
+      pos[2] = 0; // FIXME : replace this by a projection on the surface plan ( we know the normal)
+      //pos = pos.normalize();
+      //hppDout(notice,"root transform : "<<params.tfWorldRoot_);
+      fcl::Vec3f limbRoot = sample.effectorPosition_-sample.effectorPositionInLimbFrame_;
+      //hppDout(notice,"limb origin : "<<limbRoot);
+
+      // compute signed angle between dir and pos
+      double angle = atan2((dir.cross(pos)).dot(n),dir.dot(pos));
+      if(limbRoot[1]>0.){ // the current limb is on the left of the root
+        //hppDout(notice,"left limb");
+        // test if the pos vector is on the right of the dir vector
+        if(angle<0){
+          weightDir/=10.;
+          dir = - dir;
+          //hppDout(notice,"pos vector is on the wrong side of dir");
+        }
+      }else{// the current limb is on the right of the root
+        //hppDout(notice,"right limb");
+        // test if the pos vector is on the left of the dir vector
+        if(angle>0){
+          weightDir/=10.;
+          dir = - dir;
+          //hppDout(notice,"pos vector is on the wrong side of dir");
+        }
+      }
+  }// if dir not null
 
  /* hppDout(notice,"eff position = "<<sample.effectorPosition_);
   hppDout(notice,"limb frame   vl = ["<<sample.configuration_[0]<<","<<sample.configuration_[1]<<","<<sample.configuration_[2]<<","<<pos[0]<<","<<pos[1]<<","<<pos[2]<<" ]");
@@ -159,8 +169,8 @@ double DynamicWalkHeuristic(const sampling::Sample& sample,
   hppDout(notice,"value of dot product = "<<pos.dot(dir));
   hppDout(notice,"static value = "<<sample.staticValue_);*/
 
-    return sample.staticValue_ * 10000.  * Eigen::Vector3d::UnitZ().dot(normal) + weight * pos.dot(dir)
-        + 1. * pos.dot(fcl::Vec3f(params.comAcceleration_[0],params.comAcceleration_[1],direction[2])) + ((double)rand()) / ((double)(RAND_MAX));
+    return weightStatic*sample.staticValue_  + weightDir * pos.dot(dir)
+        + 1. * pos.dot(fcl::Vec3f(params.comAcceleration_[0],params.comAcceleration_[1],dir[2])) + ((double)rand()) / ((double)(RAND_MAX));
 }
 
 
