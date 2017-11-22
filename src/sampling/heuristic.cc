@@ -222,11 +222,14 @@ HeuristicFactory::HeuristicFactory()
     //seed = 1493208163 ; // stairs static contacts
     //seed = 1504012308; // slalom static
     //seed = 1504099153; // slalom dynamic
-   // seed = 1505997146 ; // bauzil walk
+  //  seed = 1505997146 ; // bauzil walk
   //  seed = 1507215254; // bauzil 2
 //    seed = 1507302685; // darpa
+ //   seed = 1510137769; // walk bauzil 2
  //  seed = 1507304085;
  //   seed = 1507307011;
+  //  seed = 1510645311 ; // darpa line 1 repositionning // step = 0.05
+  //  seed = 1510645700 ; // darpa line // step = 0.1
     std::cout<<"seed HEURISTIC = "<<seed<<std::endl;
     srand ( seed);
     hppDout(notice,"SEED for heuristic = "<<seed);
