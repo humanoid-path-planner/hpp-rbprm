@@ -17,6 +17,7 @@
 #include <hpp/rbprm/sampling/sample.hh>
 #include <hpp/model/joint.hh>
 #include <hpp/model/joint-configuration.hh>
+#include <hpp/model/configuration.hh>
 #include <Eigen/Eigen>
 
 using namespace hpp;

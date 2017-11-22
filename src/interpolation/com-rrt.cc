@@ -36,10 +36,12 @@ using namespace core;
     {
         CreateContactConstraints<ComRRTHelper>(helper, from, to);
         CreateComConstraint<ComRRTHelper,core::PathPtr_t>(helper, helper.refPath_);
-        /*ConfigurationPtr_t refConfig = helper.fullbody_->referenceConfig();
-        CreatePosturalTaskConstraint<ComRRTHelper,ConfigurationPtr_t>(helper, refConfig);
+        // add postural task to respect the constraint during all the motion but greatly increase computation time
+        // FIXME : can lead to discontinuities ...
+      /*  Configuration_t refConfig = helper.fullbody_->referenceConfig();
+        CreatePosturalTaskConstraint<ComRRTHelper,Configuration_t>(helper, refConfig);
         helper.proj_->lastIsOptional(true);
-        helper.proj_->numOptimize(100);
+        helper.proj_->numOptimize(500);
         helper.proj_->lastAsCost(true);
         helper.proj_->errorThreshold(1e-3);*/
     }
@@ -119,10 +121,10 @@ using namespace core;
         ComRRTShooterFactory unusedFactory(unusedPath);
         SetComRRTConstraints constraintFactory;
         ComRRTHelper helper(fullbody, unusedFactory, constraintFactory, referenceProblem,unusedPath, 0.001);
-        Configuration_t refConfig = fullbody->referenceConfig();
         CreateContactConstraints<ComRRTHelper>(helper,model,model);
         CreateComConstraint<ComRRTHelper,core::PathPtr_t>(helper, helper.refPath_,targetCom);
 
+        Configuration_t refConfig = fullbody->referenceConfig();
         CreatePosturalTaskConstraint<ComRRTHelper,Configuration_t>(helper, refConfig);
         helper.proj_->lastIsOptional(true);
         helper.proj_->numOptimize(100);
