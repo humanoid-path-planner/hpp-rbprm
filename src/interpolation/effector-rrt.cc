@@ -289,6 +289,11 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         }
     }
 
+    vector_t EndEffectorPath::operator ()(double t) const{
+        return GetEffectorPositionAt(fullBodyPath_,positionConstraint_,t);
+    }
+
+
   }// namespace interpolation
   }// namespace rbprm
 }// namespace hpp

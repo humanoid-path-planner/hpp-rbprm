@@ -88,6 +88,22 @@ namespace interpolation {
     };
 
 
+    struct EndEffectorPath
+    {
+        EndEffectorPath(const DevicePtr_t device,const JointPtr_t effector,const PathPtr_t path):
+            device_(device),effector_(effector),fullBodyPath_(path),positionConstraint_(createPositionMethod(device,fcl::Vec3f(), effector))
+        {}
+        vector_t operator()(double t) const;
+
+        const core::DevicePtr_t device_;
+        const JointPtr_t effector_;
+        const core::PathPtr_t fullBodyPath_;
+        constraints::PositionPtr_t positionConstraint_;
+
+    };
+
+
+
     } // namespace interpolation
   } // namespace rbprm
 } // namespace hpp
