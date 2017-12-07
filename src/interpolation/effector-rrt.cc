@@ -37,6 +37,7 @@ using namespace core;
     typedef std::vector<Waypoint, Eigen::aligned_allocator<Waypoint > > T_Waypoint;
     typedef T_Waypoint::iterator  IT_Waypoint;
     typedef T_Waypoint::const_iterator CIT_Waypoint;
+    typedef Eigen::Matrix <value_type, 3, 1>   Vector3;
 
     const value_type epsilon = std::numeric_limits<value_type>::epsilon();
 
@@ -291,7 +292,8 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
 
     vector_t EndEffectorPath::operator ()(double t) const{
         double u = fullBodyPath_->timeRange().first + t*fullBodyPath_->length(); // t is between 0 and 1
-        return GetEffectorPositionAt(fullBodyPath_,positionConstraint_,u);
+        vector_t res = GetEffectorPositionAt(fullBodyPath_,positionConstraint_,u);
+        return Vector3(res);
     }
 
 
