@@ -95,13 +95,13 @@ public:
     /// \param path path to copy
     /// \param constraints the path is subject to
     static BezierPathPtr_t createCopy
-  (const BezierPathPtr_t& path, const core::ConstraintSetPtr_t& constraints)
+    (const BezierPathPtr_t& path, const core::ConstraintSetPtr_t& constraints)
     {
-  BezierPath* ptr = new BezierPath (*path, constraints);
-  BezierPathPtr_t shPtr (ptr);
-  ptr->initCopy (shPtr);
-      ptr->checkPath ();
-  return shPtr;
+        BezierPath* ptr = new BezierPath (*path, constraints);
+        BezierPathPtr_t shPtr (ptr);
+        ptr->initCopy (shPtr);
+        ptr->checkPath ();
+        return shPtr;
     }
 
 
@@ -120,7 +120,7 @@ public:
     /// \precond *this should not have constraints.
     virtual core::PathPtr_t copy (const core::ConstraintSetPtr_t& constraints) const
     {
-  return createCopy (weak_.lock (), constraints);
+        return createCopy (weak_.lock (), constraints);
     }
 
 
@@ -137,6 +137,15 @@ public:
     }
 
 
+    core::Configuration_t operator () (const core::value_type& t) const
+    {
+        core::Configuration_t result (outputSize ());
+        impl_compute (result, t);
+        if (constraints()) {
+            constraints()->apply (result);
+        }
+        return result;
+    }
 
 
 protected :
@@ -169,7 +178,7 @@ protected :
 
     /// Copy constructor with constraints
     BezierPath (const BezierPath& path,
-          const core::ConstraintSetPtr_t& constraints);
+                const core::ConstraintSetPtr_t& constraints);
 
 
     void init (BezierPathPtr_t self)
@@ -187,10 +196,12 @@ protected :
 
     virtual bool impl_compute (core::ConfigurationOut_t result,
                                core::value_type param) const;
-    /// Virtual implementation of derivative
-    virtual void impl_derivative (core::vectorOut_t result, const value_type& t,
-                                  core::size_type order) const;
 
+    /*
+    /// Virtual implementation of derivative
+    virtual void impl_derivative (core::vectorOut_t result, const core::value_type& t,
+                                  core::size_type order) const;
+     */
 
 
 private:

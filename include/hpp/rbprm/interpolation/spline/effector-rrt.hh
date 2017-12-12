@@ -74,7 +74,7 @@ namespace interpolation {
 
     struct SetEffectorRRTConstraints
     {
-        SetEffectorRRTConstraints(const core::PathPtr_t refCom, const bezier_Ptr refEff, const core::PathPtr_t refFullbody, const model::JointPtr_t  effector,
+        SetEffectorRRTConstraints(const core::PathPtr_t refCom, const core::PathPtr_t refEff, const core::PathPtr_t refFullbody, const model::JointPtr_t  effector,
                                   const std::vector<model::JointPtr_t >& constrainedJointPos,const std::vector<model::JointPtr_t >& constrainedLockedJoints):
             refCom_(refCom), refFullbody_(refFullbody), refEff_ (refEff), effector_(effector),
             constrainedJointPos_(constrainedJointPos), constrainedLockedJoints_(constrainedLockedJoints) {}
@@ -82,7 +82,7 @@ namespace interpolation {
         void operator ()(EffectorRRTHelper& helper, const State& from, const State& to) const;
         const core::PathPtr_t   refCom_;
         const core::PathPtr_t   refFullbody_;
-        const bezier_Ptr   refEff_;
+        const core::PathPtr_t   refEff_;
         const model::JointPtr_t effector_;
         const std::vector<model::JointPtr_t > constrainedJointPos_;
         const std::vector<model::JointPtr_t > constrainedLockedJoints_;

@@ -272,6 +272,9 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         ss.seekp(-1,ss.cur); ss << ']';
         hppDout(notice,"Waypoint for reference end effector : ");
         hppDout(notice,ss.str());
+
+        BezierPathPtr_t refEffectorPath = BezierPath::create(fullbody->device_,refEffector,core::interval_t(0.,fullBodyComPath->length()));
+
         //return fullBodyComPath;//TEST
         EffectorRRTShooterFactory shooterFactory(reducedComPath);
         std::vector<model::JointPtr_t> constrainedJoint = getJointsByName(fullbody, constrainedJointPos);
@@ -279,7 +282,7 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         hppDout(notice,"effectorRRT, contrained joint pose size : "<<constrainedJointPos.size());
         hppDout(notice,"effectorRRT, contrained locked joint  size : "<<constrainedLockedJoints.size());
 
-        SetEffectorRRTConstraints constraintFactory(comPath, refEffector, refPath, effector, constrainedJoint, constrainedLocked);
+        SetEffectorRRTConstraints constraintFactory(comPath, refEffectorPath, refPath, effector, constrainedJoint, constrainedLocked);
         T_StateFrame stateFrames;
         stateFrames.push_back(std::make_pair(comPath->timeRange().first, startState));
         stateFrames.push_back(std::make_pair(comPath->timeRange().second, nextState));
@@ -311,7 +314,7 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
     {
         CreateContactConstraints<EffectorRRTHelper>(helper, from, to);
         CreateComConstraint<EffectorRRTHelper,core::PathPtr_t >(helper, refCom_);
-        CreateEffectorConstraint<EffectorRRTHelper, const bezier_Ptr >(helper, refEff_, effector_);
+        CreateEffectorConstraint<EffectorRRTHelper,core::PathPtr_t >(helper, refEff_, effector_);
         if(refFullbody_)
         {
             for(std::vector<model::JointPtr_t>::const_iterator cit = constrainedJointPos_.begin();
