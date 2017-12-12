@@ -69,11 +69,12 @@ namespace interpolation {
 
     typedef spline::exact_cubic<double, double, 3, true, Eigen::Matrix<value_type, 3, 1> > exact_cubic_t;
     typedef spline::spline_deriv_constraint<double, double, 3, true, Eigen::Matrix<value_type, 3, 1> > spline_deriv_constraint_t;
-    typedef boost::shared_ptr<exact_cubic_t> exact_cubic_Ptr;
+    typedef boost::shared_ptr<exact_cubic_t> exact_cubic_Ptr;    
+
 
     struct SetEffectorRRTConstraints
     {
-        SetEffectorRRTConstraints(const core::PathPtr_t refCom, const exact_cubic_Ptr refEff, const core::PathPtr_t refFullbody, const model::JointPtr_t  effector,
+        SetEffectorRRTConstraints(const core::PathPtr_t refCom, const bezier_Ptr refEff, const core::PathPtr_t refFullbody, const model::JointPtr_t  effector,
                                   const std::vector<model::JointPtr_t >& constrainedJointPos,const std::vector<model::JointPtr_t >& constrainedLockedJoints):
             refCom_(refCom), refFullbody_(refFullbody), refEff_ (refEff), effector_(effector),
             constrainedJointPos_(constrainedJointPos), constrainedLockedJoints_(constrainedLockedJoints) {}
@@ -81,7 +82,7 @@ namespace interpolation {
         void operator ()(EffectorRRTHelper& helper, const State& from, const State& to) const;
         const core::PathPtr_t   refCom_;
         const core::PathPtr_t   refFullbody_;
-        const exact_cubic_Ptr   refEff_;
+        const bezier_Ptr   refEff_;
         const model::JointPtr_t effector_;
         const std::vector<model::JointPtr_t > constrainedJointPos_;
         const std::vector<model::JointPtr_t > constrainedLockedJoints_;

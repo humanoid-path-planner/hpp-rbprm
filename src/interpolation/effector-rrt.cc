@@ -24,9 +24,10 @@
 #include <hpp/core/basic-configuration-shooter.hh>
 #include <hpp/core/discretized-path-validation.hh>
 #include <hpp/constraints/position.hh>
+#include <bezier-com-traj/solve_end_effector.hh>
 
 #include <spline/helpers/effector_spline.h>
-
+#include <spline/bezier_curve.h>
 
 namespace hpp {
 using namespace core;
@@ -38,7 +39,6 @@ using namespace core;
     typedef T_Waypoint::iterator  IT_Waypoint;
     typedef T_Waypoint::const_iterator CIT_Waypoint;
     typedef Eigen::Matrix <value_type, 3, 1>   Vector3;
-
     const value_type epsilon = std::numeric_limits<value_type>::epsilon();
 
 
@@ -227,20 +227,52 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
     {
         core::PathPtr_t fullBodyComPath = comRRT(fullbody, referenceProblem, comPath, startState, nextState, numOptimizations, true);
         //removing extra dof
+       // return fullBodyComPath;//TEST
         core::SizeInterval_t interval(0, fullBodyComPath->initial().rows()-1);
         core::SizeIntervals_t intervals;
         intervals.push_back(interval);
         core::PathPtr_t reducedComPath = core::SubchainPath::create(fullBodyComPath,intervals);
-
         if(effectorDistance(startState, nextState) < 0.03)
             return fullBodyComPath;
         JointPtr_t effector =  getEffector(fullbody, startState, nextState);
-        bool isLine(false);
-        exact_cubic_Ptr refEffector = splineFromEffectorTraj(fullbody, effector, reducedComPath, startState, nextState, isLine);
-        if(!isLine)
-        {
+        //exact_cubic_Ptr refEffector = splineFromEffectorTraj(fullbody, effector, reducedComPath, startState, nextState, isLine);
+        // compute bezier curve that follow the rrt path and that respect the constraints :
+        EndEffectorPath endEffPath(fullbody->device_,effector,fullBodyComPath);
+        bezier_com_traj::ProblemData pData;
+        pData.c0_=endEffPath(0);
+        pData.c1_=endEffPath(1);
+        pData.dc0_=Vector3(0,0,0.1);
+        pData.dc1_=Vector3(0,0,-0.1);
+        pData.ddc0_=Vector3(0,0,0);
+        pData.ddc1_=Vector3(0,0,0);
+
+        hppDout(notice,"CREATE BEZIER for constraints : ");
+        hppDout(notice,"c0   = "<<pData.c0_.transpose());
+        hppDout(notice,"dc0  = "<<pData.dc0_.transpose());
+        hppDout(notice,"ddc0 = "<<pData.ddc0_.transpose());
+        hppDout(notice,"c1   = "<<pData.c1_.transpose());
+        hppDout(notice,"dc1  = "<<pData.dc1_.transpose());
+        hppDout(notice,"ddc1 = "<<pData.ddc1_.transpose());
+
+        hppDout(notice,"Distance traveled by the end effector : "<<(pData.c1_-pData.c0_).norm());
+        hppDout(notice,"Time = "<<fullBodyComPath->length());
+
+        bezier_com_traj::ResultDataCOMTraj res = bezier_com_traj::solveEndEffector<EndEffectorPath>(pData,endEffPath,fullBodyComPath->length(),0);
+        if(!res.success_){
+            hppDout(warning,"[WARNING] qp solver failed to compute bezier curve !!");
             return fullBodyComPath;
         }
+        bezier_Ptr refEffector=bezier_Ptr(new bezier_t(res.c_of_t_));
+        bezier_t::t_point_t wps = refEffector->waypoints();
+        std::ostringstream ss;
+        ss<<"[";
+        for(bezier_t::cit_point_t wpit = wps.begin() ; wpit != wps.end() ; ++wpit){
+            ss<<"["<<(*wpit)[0]<<","<<(*wpit)[1]<<","<<(*wpit)[2]<<"],";
+        }
+        ss.seekp(-1,ss.cur); ss << ']';
+        hppDout(notice,"Waypoint for reference end effector : ");
+        hppDout(notice,ss.str());
+        //return fullBodyComPath;//TEST
         EffectorRRTShooterFactory shooterFactory(reducedComPath);
         std::vector<model::JointPtr_t> constrainedJoint = getJointsByName(fullbody, constrainedJointPos);
         std::vector<model::JointPtr_t> constrainedLocked = getJointsByName(fullbody, constrainedLockedJoints);
@@ -254,7 +286,7 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         return interpolateStatesFromPath<EffectorRRTHelper, EffectorRRTShooterFactory, SetEffectorRRTConstraints>
                 (fullbody, referenceProblem, shooterFactory, constraintFactory, comPath,
                  //stateFrames.begin(), stateFrames.begin()+1, numOptimizations % 10, keepExtraDof);
-                 stateFrames.begin(), stateFrames.begin()+1, numOptimizations, keepExtraDof, 0.01);
+                 stateFrames.begin(), stateFrames.begin()+1, /*numOptimizations TEST*/0, keepExtraDof, 0.0001);
     }
 
     core::PathPtr_t effectorRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
@@ -279,7 +311,7 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
     {
         CreateContactConstraints<EffectorRRTHelper>(helper, from, to);
         CreateComConstraint<EffectorRRTHelper,core::PathPtr_t >(helper, refCom_);
-        CreateEffectorConstraint<EffectorRRTHelper, const exact_cubic_Ptr >(helper, refEff_, effector_);
+        CreateEffectorConstraint<EffectorRRTHelper, const bezier_Ptr >(helper, refEff_, effector_);
         if(refFullbody_)
         {
             for(std::vector<model::JointPtr_t>::const_iterator cit = constrainedJointPos_.begin();

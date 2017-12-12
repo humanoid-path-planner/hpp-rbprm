@@ -149,7 +149,7 @@ namespace hpp {
         if (!constraints()->isSatisfied (initial(),errr)) {
             device_->currentConfiguration(initc);
             device_->computeForwardKinematics();
-std::cout << "init conf " <<  device_->positionCenterOfMass() << "\n error \n" << errr << std::endl;
+//std::cout << "init conf " <<  device_->positionCenterOfMass() << "\n error \n" << errr << std::endl;
 /*device_->currentConfiguration(initc);
 device_->computeForwardKinematics();
 std::cout << "rf_foot_joint  " << std::endl;
