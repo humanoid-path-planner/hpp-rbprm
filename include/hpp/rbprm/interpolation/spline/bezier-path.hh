@@ -1,0 +1,4 @@
+#ifndef BEZIERPATH_HH
+#define BEZIERPATH_HH
+
+#endif // BEZIERPATH_HH

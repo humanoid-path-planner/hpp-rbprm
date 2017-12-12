@@ -43,6 +43,8 @@ SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
  ADD_REQUIRED_DEPENDENCY("hpp-constraints >= 3")
  ADD_REQUIRED_DEPENDENCY("hpp-model >= 3")
  ADD_REQUIRED_DEPENDENCY("hpp-model-urdf >= 3")
+ ADD_REQUIRED_DEPENDENCY("bezier-com-traj")
+ ADD_REQUIRED_DEPENDENCY("centroidal-dynamics-lib")
 
 FIND_PACKAGE( OpenMP REQUIRED)
 find_package(Boost)
