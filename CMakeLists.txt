@@ -87,6 +87,7 @@ SET(${PROJECT_NAME}_HEADERS
     include/hpp/rbprm/interpolation/time-dependant.hh
     include/hpp/rbprm/interpolation/interpolation-constraints.hh
     include/hpp/rbprm/interpolation/spline/effector-rrt.hh
+    include/hpp/rbprm/interpolation/spline/bezier-path.hh
     include/hpp/rbprm/rbprm-shooter.hh
     include/hpp/rbprm/rbprm-state.hh
     include/hpp/rbprm/rbprm-validation.hh

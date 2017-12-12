@@ -31,10 +31,10 @@
 # include <hpp/core/path.hh>
 # include <hpp/core/problem.hh>
 # include <hpp/core/config-projector.hh>
+# include <hpp/rbprm/interpolation/spline/bezier-path.hh>
 # include <spline/exact_cubic.h>
 # include <spline/bezier_curve.h>
 # include <spline/spline_deriv_constraint.h>
-
 # include <vector>
 # include <map>
 
