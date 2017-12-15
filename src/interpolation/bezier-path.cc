@@ -34,16 +34,18 @@ namespace hpp {
   using core::interval_t;
 
 
-  BezierPath::BezierPath (const DevicePtr_t& /*robot*/, const bezier_Ptr& curve,interval_t timeRange):
-      parent_t(timeRange,3,3),curve_(curve)
+  BezierPath::BezierPath (const DevicePtr_t& robot, const bezier_Ptr& curve, core::ConfigurationIn_t init, core::ConfigurationIn_t end, interval_t timeRange):
+      parent_t(timeRange,robot->configSize(),robot->numberDof()),device_(robot),curve_(curve),initial_(init),end_(end)
   {
     assert(timeRange.first>=curve_->min() && "The time range is outside the curve definition");
     assert(timeRange.second<=curve_->max() && "The time range is outside the curve definition");
   }
 
 
-  BezierPath::BezierPath (const DevicePtr_t& robot, bezier_t::cit_point_t   wpBegin,bezier_t::cit_point_t wpEnd,interval_t timeRange):
-      parent_t(timeRange,3,3),curve_(bezier_Ptr(new bezier_t(wpBegin,wpEnd,timeRange.second-timeRange.first)))
+  BezierPath::BezierPath (const core::DevicePtr_t&  robot, std::vector<bezier_t::point_t>::const_iterator wpBegin, std::vector<bezier_t::point_t>::const_iterator wpEnd,
+                          core::ConfigurationIn_t init,
+                          core::ConfigurationIn_t end, core::interval_t timeRange):
+      parent_t(timeRange,robot->configSize(),robot->numberDof()),device_(robot),curve_(bezier_Ptr(new bezier_t(wpBegin,wpEnd,timeRange.second-timeRange.first))),initial_(init),end_(end)
   {
     assert (timeRange.first == 0 && "Bezier path cannot be created from waypoint with initiale time different from 0");
   }
@@ -70,7 +72,12 @@ namespace hpp {
           result =  end();
           return true;
       }
-      result = (*curve_)(t);
+      value_type u = timeRange().first + t/(timeRange ().second-timeRange().first);
+      if (timeRange ().second == 0)
+        u = 0;
+      model::interpolate (device_, initial_, end_, u, result);
+
+      result.head<3>() = (*curve_)(t);
       return true;
   }
 

@@ -39,7 +39,7 @@ typedef boost::shared_ptr <const BezierPath> BezierPathConstPtr_t;
 /// Bezier curve representation between two configurations
 ///
 /// This class only implement the bezier curve of dimension 3, need to template the dimension of the points
-///
+/// Use the Bezier curve for the translation of the root and standard linear interpolation for the other DoF
 
 class BezierPath : public core::Path
 {
@@ -55,9 +55,11 @@ public:
     /// \param timeRange : the time definition of the curve.
     static BezierPathPtr_t create (const core::DevicePtr_t& device,
                                    const bezier_Ptr& curve,
+                                   core::ConfigurationIn_t init,
+                                   core::ConfigurationIn_t end,
                                    core::interval_t timeRange)
     {
-        BezierPath* ptr = new BezierPath (device, curve, timeRange);
+        BezierPath* ptr = new BezierPath (device, curve,init,end, timeRange);
         BezierPathPtr_t shPtr (ptr);
         ptr->init (shPtr);
         ptr->checkPath ();
@@ -69,11 +71,11 @@ public:
     /// \param wpBegin iterator to the first waypoint
     /// \param wpEnd iterator to the last wp
     /// \param length Distance between the configurations.
-    static BezierPathPtr_t create (const core::DevicePtr_t& device,
-                                   bezier_t::cit_point_t   wpBegin,bezier_t::cit_point_t wpEnd,
-                                   core::interval_t timeRange)
+    static BezierPathPtr_t create (const core::DevicePtr_t& device,std::vector<bezier_t::point_t>::const_iterator wpBegin,std::vector<bezier_t::point_t>::const_iterator wpEnd,
+                                   core::ConfigurationIn_t init,
+                                   core::ConfigurationIn_t end,core::interval_t timeRange)
     {
-        BezierPath* ptr = new BezierPath (device, wpBegin,wpEnd, timeRange);
+        BezierPath* ptr = new BezierPath (device, wpBegin,wpEnd,init,end, timeRange);
         BezierPathPtr_t shPtr (ptr);
         ptr->init (shPtr);
         ptr->checkPath ();
@@ -166,10 +168,14 @@ protected :
     }
 
     ///constructor with curve
-    BezierPath (const core::DevicePtr_t& robot, const bezier_Ptr& curve,core::interval_t timeRange);
+    BezierPath (const core::DevicePtr_t& robot, const bezier_Ptr& curve,
+                core::ConfigurationIn_t init,
+                core::ConfigurationIn_t end,core::interval_t timeRange);
 
     ///constructor with waypoints
-    BezierPath (const core::DevicePtr_t& robot, bezier_t::cit_point_t   wpBegin,bezier_t::cit_point_t wpEnd,core::interval_t timeRange);
+    BezierPath (const core::DevicePtr_t& robot, std::vector<bezier_t::point_t>::const_iterator wpBegin, std::vector<bezier_t::point_t>::const_iterator wpEnd,
+                core::ConfigurationIn_t init,
+                core::ConfigurationIn_t end, core::interval_t timeRange);
 
 
     /// Copy constructor
@@ -205,7 +211,10 @@ protected :
 
 
 private:
+    model::DevicePtr_t device_;
     bezier_Ptr curve_;
+    core::Configuration_t initial_;
+    core::Configuration_t end_;
     BezierPathWkPtr_t weak_;
 
 };//class Bezier Path
