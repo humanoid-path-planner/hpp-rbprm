@@ -369,6 +369,12 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         hppDout(notice,"Waypoint for reference end effector : ");
         hppDout(notice,ss.str());
 
+        hppDout(notice,"configurations of the path : ");
+        hppDout(notice,"init    : "<<model::displayConfig(initConfig));
+        hppDout(notice,"takeoff : "<<model::displayConfig(takeoffConfig));
+        hppDout(notice,"landing : "<<model::displayConfig(landingConfig));
+        hppDout(notice,"end     : "<<model::displayConfig(endConfig));
+
         BezierPathPtr_t refEffectorMid = BezierPath::create(endEffectorDevice,refEffector,takeoffConfig,landingConfig,core::interval_t(0.,timeMid));
 
         // merge the 3 curves :
@@ -384,7 +390,7 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         hppDout(notice,"effectorRRT, contrained joint pose size : "<<constrainedJointPos.size());
         hppDout(notice,"effectorRRT, contrained locked joint  size : "<<constrainedLockedJoints.size());
 
-        SetEffectorRRTConstraints constraintFactory(comPath, refEffectorPath, refPath, effector, constrainedJoint, constrainedLocked);
+        SetEffectorRRTConstraints constraintFactory(comPath, refEffectorPath, refPath, effector,endEffectorDevice, constrainedJoint, constrainedLocked);
         T_StateFrame stateFrames;
         stateFrames.push_back(std::make_pair(comPath->timeRange().first, startState));
         stateFrames.push_back(std::make_pair(comPath->timeRange().second, nextState));
@@ -432,6 +438,11 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
                 hppDout(notice,"Constrained joint pose : "<<(*cit)->name());
                 Create6DEffectorConstraint<EffectorRRTHelper, core::PathPtr_t  >(helper, refFullbody_, *cit);
             }
+        }
+        if(endEffectorDevice_){
+            hppDout(notice,"EndEffectorDevice provided, add orientation constraint for the end effector ");
+            CreateOrientationConstraint<EffectorRRTHelper, core::PathPtr_t  >(helper,endEffectorDevice_, refEff_, effector_);
+
         }
     }
 

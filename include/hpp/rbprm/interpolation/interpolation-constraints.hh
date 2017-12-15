@@ -47,6 +47,9 @@ namespace interpolation {
     template<class Helper_T, typename Reference>
     void Create6DEffectorConstraint(Helper_T& helper, const Reference& ref,  const JointPtr_t effectorJoint, const fcl::Transform3f& initTarget=fcl::Transform3f());
 
+    template<class Helper_T, typename Reference>
+    void CreateOrientationConstraint(Helper_T& helper, const core::DevicePtr_t device, const Reference &ref,  const JointPtr_t effector, const fcl::Transform3f& initTarget=fcl::Transform3f());
+
     // Implementation
 
     template<class Reference>
@@ -252,6 +255,20 @@ namespace interpolation {
                 (new funEvaluator<Reference, constraints::OrientationPtr_t>(ref, orCons));
         helper.steeringMethod_->tds_.push_back(
                     TimeDependant(effEq, orEv));
+    }
+
+    template<class Helper_T, typename Reference>
+    void CreateOrientationConstraint(Helper_T& helper, const core::DevicePtr_t device, const Reference &ref,  const JointPtr_t effectorJoint, const fcl::Transform3f& initTarget){
+        core::ComparisonTypePtr_t equals = core::Equality::create ();
+        core::ConfigProjectorPtr_t& proj = helper.proj_;
+        // Carefull : this is not the same device as the one in fullBody, this is the endEffectorDevice (freeflyer that represent the foot)
+        constraints::OrientationPtr_t orCons = createOrientationMethod(device,initTarget, device->rootJoint()->childJoint(0));
+        NumericalConstraintPtr_t effEq = core::NumericalConstraint::create (orCons, equals);
+        proj->add(effEq);
+        proj->updateRightHandSide();
+        boost::shared_ptr<funEvaluator<Reference, constraints::OrientationPtr_t> > orEv
+                (new funEvaluator<Reference, constraints::OrientationPtr_t>(ref, orCons));
+        helper.steeringMethod_->tds_.push_back(TimeDependant(effEq, orEv));
     }
 
 
