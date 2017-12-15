@@ -180,11 +180,13 @@ namespace
             core::RandomShortcutPtr_t rs = core::RandomShortcut::create(helper.rootProblem_);
             for(std::size_t j=0; j<numOptimizations;++j)
             {
+                hppDout(notice,"Optimize random shortucut, iter : "<<j);
                 partialPath = rs->optimize(partialPath);
             }
             core::pathOptimization::PartialShortcutPtr_t rs2 = core::pathOptimization::PartialShortcut::create(helper.rootProblem_);
             for(std::size_t j=0; j<numOptimizations;++j)
             {
+                hppDout(notice,"Optimize partial shortcut, iter : "<<j);
                 partialPath = rs2->optimize(partialPath);
             }
             return partialPath;

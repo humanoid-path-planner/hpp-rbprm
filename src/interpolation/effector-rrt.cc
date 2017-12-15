@@ -391,7 +391,7 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         return interpolateStatesFromPath<EffectorRRTHelper, EffectorRRTShooterFactory, SetEffectorRRTConstraints>
                 (fullbody, referenceProblem, shooterFactory, constraintFactory, comPath,
                  //stateFrames.begin(), stateFrames.begin()+1, numOptimizations % 10, keepExtraDof);
-                 stateFrames.begin(), stateFrames.begin()+1, /*numOptimizations TEST*/0, keepExtraDof, 0.0001);
+                 stateFrames.begin(), stateFrames.begin()+1, numOptimizations, keepExtraDof, 0.0001);
     }
 
     core::PathPtr_t effectorRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
@@ -417,11 +417,19 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         CreateContactConstraints<EffectorRRTHelper>(helper, from, to);
         CreateComConstraint<EffectorRRTHelper,core::PathPtr_t >(helper, refCom_);
         CreateEffectorConstraint<EffectorRRTHelper,core::PathPtr_t >(helper, refEff_, effector_);
+       /* Configuration_t refConfig = helper.fullbody_->referenceConfig();
+        CreatePosturalTaskConstraint<EffectorRRTHelper,Configuration_t>(helper, refConfig);
+        helper.proj_->lastIsOptional(true);
+        helper.proj_->numOptimize(500);
+        helper.proj_->lastAsCost(true);
+        helper.proj_->errorThreshold(1e-3);*/
         if(refFullbody_)
         {
+            hppDout(notice,"Ref fullBody provided, create 6D effector constraint : ");
             for(std::vector<model::JointPtr_t>::const_iterator cit = constrainedJointPos_.begin();
                 cit != constrainedJointPos_.end(); ++cit)
             {
+                hppDout(notice,"Constrained joint pose : "<<(*cit)->name());
                 Create6DEffectorConstraint<EffectorRRTHelper, core::PathPtr_t  >(helper, refFullbody_, *cit);
             }
         }
