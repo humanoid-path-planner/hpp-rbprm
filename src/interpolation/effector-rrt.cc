@@ -77,6 +77,25 @@ using namespace core;
         return true;
     }
 
+    Transform3f getEffectorTransformAt(core::DevicePtr_t device,const JointPtr_t effector,const core::PathPtr_t path,const value_type time){
+        Configuration_t result(path->outputSize());
+        (*path)(result,time);
+        device->currentConfiguration(result);
+        device->computeForwardKinematics();
+        Transform3f transform = effector->currentTransformation();
+        return transform;
+    }
+
+    void getEffectorConfigAt(core::DevicePtr_t device,const JointPtr_t effector,const core::PathPtr_t path,const value_type time,ConfigurationOut_t result ){
+        Transform3f transform = getEffectorTransformAt(device,effector,path,time);
+        result.head<3>() = transform.getTranslation();
+        fcl::Quaternion3f quat = transform.getQuatRotation();
+        result[3] = quat.getW();
+        result[4] = quat.getX();
+        result[5] = quat.getY();
+        result[6] = quat.getZ();
+    }
+
     vector_t GetEffectorPositionAt(core::PathPtr_t path, constraints::PositionPtr_t position, const value_type time)
     {
         vector_t result (position->outputSize());
@@ -227,7 +246,6 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
     {
         core::PathPtr_t fullBodyComPath = comRRT(fullbody, referenceProblem, comPath, startState, nextState, numOptimizations, true);
         //removing extra dof
-       // return fullBodyComPath;//TEST
         core::SizeInterval_t interval(0, fullBodyComPath->initial().rows()-1);
         core::SizeIntervals_t intervals;
         intervals.push_back(interval);
@@ -235,29 +253,107 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         if(effectorDistance(startState, nextState) < 0.03)
             return fullBodyComPath;
         JointPtr_t effector =  getEffector(fullbody, startState, nextState);
-        //exact_cubic_Ptr refEffector = splineFromEffectorTraj(fullbody, effector, reducedComPath, startState, nextState, isLine);
-        // compute bezier curve that follow the rrt path and that respect the constraints :
         EndEffectorPath endEffPath(fullbody->device_,effector,fullBodyComPath);
-        bezier_com_traj::ProblemData pData;
-        pData.c0_=endEffPath(0);
-        pData.c1_=endEffPath(1);
-        pData.dc0_=Vector3(0,0,0.1);
-        pData.dc1_=Vector3(0,0,-0.1);
-        pData.ddc0_=Vector3(0,0,0);
-        pData.ddc1_=Vector3(0,0,0);
+        // create a 'device' object for the end effector (freeflyer 6D). Needed for the path and the orientation constraint
+        DevicePtr_t endEffectorDevice = Device::create("endEffector");
+        JointPtr_t transJoint = new JointTranslation <3> (Transform3f());
+        JointPtr_t so3Joint = new JointSO3(Transform3f());
+        endEffectorDevice->rootJoint(transJoint);
+        transJoint->addChildJoint (so3Joint);
+        Configuration_t initConfig(endEffectorDevice->configSize()),endConfig(endEffectorDevice->configSize());
+        getEffectorConfigAt(fullbody->device_,effector,fullBodyComPath,0,initConfig);
+        getEffectorConfigAt(fullbody->device_,effector,fullBodyComPath,fullBodyComPath->length(),endConfig);
+        Configuration_t takeoffConfig(initConfig),landingConfig(endConfig);
+        // compute initial takeoff phase for the end effector :
+        bezier_com_traj::ProblemData pDataTakeoff;
+        pDataTakeoff.c0_=endEffPath(0);
+        pDataTakeoff.c1_=endEffPath(0);
+        pDataTakeoff.c1_[2]+=0.02; // TODO : replace with 0.05*normal, how can we retrieve the normal here ?
+        pDataTakeoff.dc0_=Vector3::Zero();
+        pDataTakeoff.ddc0_=Vector3::Zero();
+        pDataTakeoff.dc1_=Vector3(0,0,0.2); // TODO replace with value * normal
+        pDataTakeoff.ddc1_=Vector3::Zero();
+        takeoffConfig.head<3>()=pDataTakeoff.c1_;
+        hppDout(notice,"CREATE BEZIER for constraints : ");
+        hppDout(notice,"c0   = "<<pDataTakeoff.c0_.transpose());
+        hppDout(notice,"dc0  = "<<pDataTakeoff.dc0_.transpose());
+        hppDout(notice,"ddc0 = "<<pDataTakeoff.ddc0_.transpose());
+        hppDout(notice,"c1   = "<<pDataTakeoff.c1_.transpose());
+        hppDout(notice,"dc1  = "<<pDataTakeoff.dc1_.transpose());
+        hppDout(notice,"ddc1 = "<<pDataTakeoff.ddc1_.transpose());
+        double timeTakeoff = 0.2; //TODO ??
+        std::vector<bezier_t::point_t> pts;
+        hppDout(notice,"Compute waypoints for takeOff phase : ");
+        pts = bezier_com_traj::computeConstantWaypoints(pDataTakeoff,timeTakeoff,5);
+        hppDout(notice,"Done.");
+        std::ostringstream ssTakeoff;
+        ssTakeoff<<"[";
+        for(std::vector<bezier_t::point_t>::const_iterator wpit = pts.begin(); wpit != pts.end() ; ++wpit){
+            ssTakeoff<<"["<<(*wpit)[0]<<","<<(*wpit)[1]<<","<<(*wpit)[2]<<"],";
+        }
+        ssTakeoff.seekp(-1,ssTakeoff.cur); ssTakeoff << ']';
+        hppDout(notice,"Waypoint for reference end effector takeoff : ");
+        hppDout(notice,ssTakeoff.str());
+        bezier_t curve(pts.begin(),pts.end(),timeTakeoff);
+        hppDout(notice,"Curve created, degree : "<<curve.degree_);
+        BezierPathPtr_t refEffectorTakeoff = BezierPath::create(endEffectorDevice,pts.begin(),pts.end(),initConfig,takeoffConfig,core::interval_t(0.,timeTakeoff));
+        hppDout(notice,"Path Bezier created");
+
+
+        // compute final landing phase for the end effector :
+        bezier_com_traj::ProblemData pDataLanding;
+        pDataLanding.c0_=endEffPath(1);
+        pDataLanding.c1_=endEffPath(1);
+        pDataLanding.c0_[2]+=0.02; // TODO : replace with 0.05*normal, how can we retrieve the normal here ?
+        pDataLanding.dc1_=Vector3::Zero();
+        pDataLanding.ddc1_=Vector3::Zero();
+        pDataLanding.dc0_=Vector3(0,0,-0.2); // TODO replace with value * normal
+        pDataLanding.ddc0_=Vector3::Zero();
+        landingConfig.head<3>()=pDataLanding.c0_;
+        hppDout(notice,"CREATE BEZIER for constraints : ");
+        hppDout(notice,"c0   = "<<pDataLanding.c0_.transpose());
+        hppDout(notice,"dc0  = "<<pDataLanding.dc0_.transpose());
+        hppDout(notice,"ddc0 = "<<pDataLanding.ddc0_.transpose());
+        hppDout(notice,"c1   = "<<pDataLanding.c1_.transpose());
+        hppDout(notice,"dc1  = "<<pDataLanding.dc1_.transpose());
+        hppDout(notice,"ddc1 = "<<pDataLanding.ddc1_.transpose());
+        double timeLanding = 0.2; //TODO ??
+        hppDout(notice,"Compute waypoints for landing phase : ");
+        pts = bezier_com_traj::computeConstantWaypoints(pDataLanding,timeLanding,5);
+        hppDout(notice,"Done.");
+        BezierPathPtr_t refEffectorLanding = BezierPath::create(endEffectorDevice,pts.begin(),pts.end(),landingConfig,endConfig,core::interval_t(0.,timeLanding));
+        std::ostringstream ssLanding;
+        ssLanding<<"[";
+        for(std::vector<bezier_t::point_t>::const_iterator wpit = pts.begin(); wpit != pts.end() ; ++wpit){
+            ssLanding<<"["<<(*wpit)[0]<<","<<(*wpit)[1]<<","<<(*wpit)[2]<<"],";
+        }
+        ssLanding.seekp(-1,ssLanding.cur); ssLanding << ']';
+        hppDout(notice,"Waypoint for reference end effector landing : ");
+        hppDout(notice,ssLanding.str());
+
+
+        // compute bezier curve that follow the rrt path and that respect the constraints :
+        bezier_com_traj::ProblemData pDataMid;
+        pDataMid.c0_=pDataTakeoff.c1_;
+        pDataMid.c1_=pDataLanding.c0_;
+        pDataMid.dc0_=pDataTakeoff.dc1_;
+        pDataMid.dc1_=pDataLanding.dc0_;
+        pDataMid.ddc0_=pDataTakeoff.ddc1_;
+        pDataMid.ddc1_=pDataLanding.ddc0_;
+        double timeMid = fullBodyComPath->length() - timeLanding - timeTakeoff;
 
         hppDout(notice,"CREATE BEZIER for constraints : ");
-        hppDout(notice,"c0   = "<<pData.c0_.transpose());
-        hppDout(notice,"dc0  = "<<pData.dc0_.transpose());
-        hppDout(notice,"ddc0 = "<<pData.ddc0_.transpose());
-        hppDout(notice,"c1   = "<<pData.c1_.transpose());
-        hppDout(notice,"dc1  = "<<pData.dc1_.transpose());
-        hppDout(notice,"ddc1 = "<<pData.ddc1_.transpose());
+        hppDout(notice,"c0   = "<<pDataMid.c0_.transpose());
+        hppDout(notice,"dc0  = "<<pDataMid.dc0_.transpose());
+        hppDout(notice,"ddc0 = "<<pDataMid.ddc0_.transpose());
+        hppDout(notice,"c1   = "<<pDataMid.c1_.transpose());
+        hppDout(notice,"dc1  = "<<pDataMid.dc1_.transpose());
+        hppDout(notice,"ddc1 = "<<pDataMid.ddc1_.transpose());
 
-        hppDout(notice,"Distance traveled by the end effector : "<<(pData.c1_-pData.c0_).norm());
-        hppDout(notice,"Time = "<<fullBodyComPath->length());
-
-        bezier_com_traj::ResultDataCOMTraj res = bezier_com_traj::solveEndEffector<EndEffectorPath>(pData,endEffPath,fullBodyComPath->length(),0);
+        hppDout(notice,"Distance traveled by the end effector : "<<(pDataMid.c1_-pDataMid.c0_).norm());
+        hppDout(notice,"Distance : "<<(pDataMid.c1_-pDataMid.c0_).transpose());
+        hppDout(notice,"Time = "<<timeMid);
+        bezier_com_traj::ResultDataCOMTraj res = bezier_com_traj::solveEndEffector<EndEffectorPath>(pDataMid,endEffPath,timeMid,0.);
         if(!res.success_){
             hppDout(warning,"[WARNING] qp solver failed to compute bezier curve !!");
             return fullBodyComPath;
@@ -273,7 +369,13 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         hppDout(notice,"Waypoint for reference end effector : ");
         hppDout(notice,ss.str());
 
-        BezierPathPtr_t refEffectorPath = BezierPath::create(fullbody->device_,refEffector,core::interval_t(0.,fullBodyComPath->length()));
+        BezierPathPtr_t refEffectorMid = BezierPath::create(endEffectorDevice,refEffector,takeoffConfig,landingConfig,core::interval_t(0.,timeMid));
+
+        // merge the 3 curves :
+        PathVectorPtr_t refEffectorPath  = PathVector::create (refEffectorMid->outputSize (),refEffectorMid->outputDerivativeSize ());
+        refEffectorPath->appendPath(refEffectorTakeoff);
+        refEffectorPath->appendPath(refEffectorMid);
+        refEffectorPath->appendPath(refEffectorLanding);
 
         //return fullBodyComPath;//TEST
         EffectorRRTShooterFactory shooterFactory(reducedComPath);
