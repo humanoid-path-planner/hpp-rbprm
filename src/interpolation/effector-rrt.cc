@@ -80,27 +80,30 @@ using namespace core;
     Transform3f getEffectorTransformAt(core::DevicePtr_t device,const JointPtr_t effector,const core::PathPtr_t path,const value_type time){
         Configuration_t result(path->outputSize());
         (*path)(result,time);
+        hppDout(notice,"result in getEffectorTransform : "<<model::displayConfig(result));
         device->currentConfiguration(result);
         device->computeForwardKinematics();
         Transform3f transform = effector->currentTransformation();
         return transform;
     }
 
-    void getEffectorConfigAt(core::DevicePtr_t device,const JointPtr_t effector,const core::PathPtr_t path,const value_type time,ConfigurationOut_t result ){
-        Transform3f transform = getEffectorTransformAt(device,effector,path,time);
-        result.head<3>() = transform.getTranslation();
-        fcl::Quaternion3f quat = transform.getQuatRotation();
-        result[3] = quat.getW();
-        result[4] = quat.getX();
-        result[5] = quat.getY();
-        result[6] = quat.getZ();
-    }
+
 
     vector_t GetEffectorPositionAt(core::PathPtr_t path, constraints::PositionPtr_t position, const value_type time)
     {
         vector_t result (position->outputSize());
         position->operator ()(result, path->operator ()(time));
         return result;
+    }
+
+    void getEffectorConfigAt(core::DevicePtr_t device,const JointPtr_t effector,const core::PathPtr_t path,const value_type time,ConfigurationOut_t result ){
+        Transform3f transform = getEffectorTransformAt(device,effector,path,time);
+        result.head<3>() = transform.getTranslation();
+        result [3] = transform.getQuatRotation () [0];
+        result [4] = transform.getQuatRotation () [1];
+        result [5] = transform.getQuatRotation () [2];
+        result [6] = transform.getQuatRotation () [3];
+
     }
 
     T_Waypoint getWayPoints(model::DevicePtr_t device, core::PathPtr_t path,
@@ -262,6 +265,8 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         transJoint->addChildJoint (so3Joint);
         Configuration_t initConfig(endEffectorDevice->configSize()),endConfig(endEffectorDevice->configSize());
         getEffectorConfigAt(fullbody->device_,effector,fullBodyComPath,0,initConfig);
+        hppDout(notice,"fb com path init = "<<model::displayConfig((*fullBodyComPath)(0.)));
+        hppDout(notice,"start state conf = "<<model::displayConfig(startState.configuration_));
         getEffectorConfigAt(fullbody->device_,effector,fullBodyComPath,fullBodyComPath->length(),endConfig);
         Configuration_t takeoffConfig(initConfig),landingConfig(endConfig);
         // compute initial takeoff phase for the end effector :
@@ -439,10 +444,9 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
                 Create6DEffectorConstraint<EffectorRRTHelper, core::PathPtr_t  >(helper, refFullbody_, *cit);
             }
         }
-        if(endEffectorDevice_){
+        if(true){
             hppDout(notice,"EndEffectorDevice provided, add orientation constraint for the end effector ");
-            CreateOrientationConstraint<EffectorRRTHelper, core::PathPtr_t  >(helper,endEffectorDevice_, refEff_, effector_);
-
+            CreateOrientationConstraint<EffectorRRTHelper, core::PathPtr_t  >(helper,refEff_ , effector_,endEffectorDevice_);
         }
     }
 

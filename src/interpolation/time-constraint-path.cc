@@ -163,7 +163,7 @@ std::cout <<  device_->getJointByName("rh_foot_joint")->currentTransformation().
 
 std::cout << "lh_foot_joint  " << std::endl;
 std::cout <<  device_->getJointByName("lh_foot_joint")->currentTransformation().getTranslation() << std::endl;*/
-          hppDout (error,"Initial configuration of path does not satisfy the constraints" << initial().transpose ());
+          hppDout (error,"Initial configuration of path does not satisfy the constraints" << model::displayConfig(initial()));
           throw projection_error ("Initial configuration of path does not satisfy "
               "the constraints");
         }
