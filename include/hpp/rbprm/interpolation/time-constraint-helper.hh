@@ -72,10 +72,9 @@ namespace hpp {
              proj_ = core::ConfigProjector::create(rootProblem_.robot(),"proj", error_treshold, 1000);
              rootProblem_.collisionObstacles(referenceProblem->collisionObstacles());
              steeringMethod_ = TimeConstraintSteering<Path_T>::create(&rootProblem_,fullBodyDevice_->configSize()-1);
-             rootProblem_.steeringMethod(steeringMethod_);
-             core::WeighedDistancePtr_t distance (core::WeighedDistance::createFromProblem(&rootProblem_));
-             ProgressivePtr_t pProj = Progressive::create(distance, steeringMethod_, 0.06);
-             //rootProblem_.pathProjector(pProj);
+             rootProblem_.steeringMethod(steeringMethod_);             
+             ProgressivePtr_t pProj = Progressive::create(rootProblem_.distance(), steeringMethod_, 0.06);
+            // rootProblem_.pathProjector(pProj);
          }
 
         ~TimeConstraintHelper(){}

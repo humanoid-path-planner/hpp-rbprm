@@ -243,7 +243,7 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
 
     core::PathPtr_t effectorRRTFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
                            const State &startState, const State &nextState,
-                           const std::size_t numOptimizations, const bool keepExtraDof,
+                           const std::size_t numOptimizations, const bool keepExtraDof, const std::size_t pathId,
                            const PathPtr_t refPath, const std::vector<std::string>& constrainedJointPos,
                            const std::vector<std::string>& constrainedLockedJoints)
     {
@@ -253,7 +253,7 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         core::SizeIntervals_t intervals;
         intervals.push_back(interval);
         core::PathPtr_t reducedComPath = core::SubchainPath::create(fullBodyComPath,intervals);
-        if(effectorDistance(startState, nextState) < 0.03)
+        if(effectorDistance(startState, nextState) < 0.03) // end effectors does not move, return the comRRT path
             return fullBodyComPath;
         JointPtr_t effector =  getEffector(fullbody, startState, nextState);
         EndEffectorPath endEffPath(fullbody->device_,effector,fullBodyComPath);
@@ -408,19 +408,19 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
     core::PathPtr_t effectorRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
                            const  State &startState, const State &nextState,
                            const  std::size_t numOptimizations,
-                           const bool keepExtraDof)
+                           const bool keepExtraDof, const std::size_t pathId)
     {
         const std::vector<std::string> dum, dum2;
-        return effectorRRTFromPath(fullbody, referenceProblem, comPath, startState, nextState, numOptimizations, keepExtraDof, core::PathPtr_t(), dum, dum2);
+        return effectorRRTFromPath(fullbody, referenceProblem, comPath, startState, nextState, numOptimizations, keepExtraDof,pathId, core::PathPtr_t(), dum, dum2);
     }
 
 
     core::PathPtr_t effectorRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
                            const  State &startState, const State &nextState,
                            const  std::size_t numOptimizations,
-                           const bool keepExtraDof, const std::vector<std::string>& constrainedJointPos, const std::vector<std::string>& constrainedLockedJoints)
+                           const bool keepExtraDof,const std::size_t pathId, const std::vector<std::string>& constrainedJointPos, const std::vector<std::string>& constrainedLockedJoints)
     {
-        return effectorRRTFromPath(fullbody, referenceProblem, comPath, startState, nextState, numOptimizations, keepExtraDof, core::PathPtr_t(), constrainedJointPos, constrainedLockedJoints);
+        return effectorRRTFromPath(fullbody, referenceProblem, comPath, startState, nextState, numOptimizations, keepExtraDof,pathId, core::PathPtr_t(), constrainedJointPos, constrainedLockedJoints);
     }
 
     void SetEffectorRRTConstraints::operator ()(EffectorRRTHelper& helper, const State& from, const State& to) const

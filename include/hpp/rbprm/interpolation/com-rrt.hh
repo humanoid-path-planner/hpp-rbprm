@@ -50,7 +50,7 @@ namespace hpp {
     core::PathPtr_t comRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
                            const State &startState, const State &nextState,
                            const  std::size_t numOptimizations,
-                           const bool keepExtraDof=false);
+                           const bool keepExtraDof=false,const size_t pathId=-1);
 
     core::PathPtr_t comRRTFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
                 const PathPtr_t guidePath, const CIT_StateFrame &startState, const CIT_StateFrame &endState,

@@ -49,20 +49,35 @@ namespace interpolation {
     core::PathPtr_t effectorRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
                                 const  State &startState, const State &nextState,
                                 const  std::size_t numOptimizations,
-                                const bool keepExtraDof);
+                                const bool keepExtraDof,const  std::size_t pathId = -1);
 
     core::PathPtr_t effectorRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
                                 const  State &startState, const State &nextState,
                                 const  std::size_t numOptimizations,
-                                const bool keepExtraDof,
+                                const bool keepExtraDof,const std::size_t pathId = -1,
                                 const std::vector<std::string>& constrainedJointPos = std::vector<std::string>(),
                                 const std::vector<std::string>& constrainedLockedJoints = std::vector<std::string>());
 
 
+    /**
+     * @brief effectorRRTFromPath Call comRRT to compute a whole body path between two states, then compute an end-effector's trajectory with  a bezier curve that fit the initial path found by the rrt, and recompute the whole body trajectory that follow the end effector constraint
+     * @param fullbody
+     * @param referenceProblem
+     * @param comPath reference path for the center of mass
+     * @param startState
+     * @param nextState
+     * @param numOptimizations
+     * @param keepExtraDof if false, remove the additionnal extraDoF introduced by comRRT
+     * @param pathId the Id of the returned path in the problem-solver. Usef to match with the end-effector path indice stored in fullBody
+     * @param refFullBodyPath
+     * @param constrainedJointPos
+     * @param constrainedLockedJoints
+     * @return
+     */
     core::PathPtr_t effectorRRTFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
                                         const  State &startState, const State &nextState,
                                         const  std::size_t numOptimizations,
-                                        const bool keepExtraDof,
+                                        const bool keepExtraDof, const std::size_t pathId,
                                         const PathPtr_t refFullBodyPath,
                                         const std::vector<std::string>& constrainedJointPos = std::vector<std::string>(),
                                         const std::vector<std::string>& constrainedLockedJoints = std::vector<std::string>());
