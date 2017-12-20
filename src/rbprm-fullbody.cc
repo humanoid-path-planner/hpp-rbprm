@@ -180,6 +180,39 @@ namespace hpp {
       return lit->second;
     }
 
+    bool RbPrmFullBody::addEffectorTrajectory(const size_t pathId, const std::string& effectorName, const bezier_Ptr &trajectory){
+        bool success;
+        if (effectorsTrajectoriesMaps_.find(pathId) == effectorsTrajectoriesMaps_.end()){
+            // no map for this index, create a new one with the pair (name,path)
+            EffectorTrajectoriesMap_t map;
+            map.insert(std::make_pair(effectorName,trajectory));
+            success = effectorsTrajectoriesMaps_.insert(std::make_pair(pathId,map)).second;
+        }else{
+            // there is already a trajectory at this index, we add the trajectory for this effector to the map
+            success = effectorsTrajectoriesMaps_.at(pathId).insert(std::make_pair(effectorName,trajectory)).second;
+        }
+        return success;
+    }
+
+    bool RbPrmFullBody::getEffectorsTrajectories(const size_t pathId,EffectorTrajectoriesMap_t& result){
+        if (effectorsTrajectoriesMaps_.find(pathId) == effectorsTrajectoriesMaps_.end())
+            return false;
+        result = effectorsTrajectoriesMaps_.at(pathId);
+        return true;
+    }
+
+    bool RbPrmFullBody::getEffectorTrajectory(const size_t pathId, const std::string& effectorName, bezier_Ptr &result){
+        if (effectorsTrajectoriesMaps_.find(pathId) == effectorsTrajectoriesMaps_.end())
+            return false;
+        EffectorTrajectoriesMap_t map = effectorsTrajectoriesMaps_.at(pathId);
+        if (map.find(effectorName) == map.end())
+            return false;
+        result = map.at(effectorName);
+        return true;
+    }
+
+
+
 
     void RbPrmFullBody::init(const RbPrmFullBodyWkPtr_t& weakPtr)
     {
@@ -192,6 +225,7 @@ namespace hpp {
         , staticStability_(true)
         , mu_(0.5)
         , referenceConfig_(device->currentConfiguration())
+        , effectorsTrajectoriesMaps_()
         , weakPtr_()
     {
         // NOTHING

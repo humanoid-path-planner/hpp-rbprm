@@ -26,7 +26,7 @@
 #include <hpp/core/collision-validation.hh>
 #include <hpp/rbprm/sampling/heuristic.hh>
 #include <hpp/rbprm/reports.hh>
-
+#include <hpp/rbprm/interpolation/spline/bezier-path.hh>
 #include  <vector>
 
 namespace hpp {
@@ -42,6 +42,7 @@ namespace hpp {
     class RbPrmFullBody;
     typedef boost::shared_ptr <RbPrmFullBody> RbPrmFullBodyPtr_t;
 		typedef std::map<std::string, std::vector<model::CollisionObjectPtr_t> > affMap_t;
+        typedef std::map<std::string,bezier_Ptr> EffectorTrajectoriesMap_t;
 
     class HPP_RBPRM_DLLAPI RbPrmFullBody
     {
@@ -130,6 +131,9 @@ namespace hpp {
         void setFriction(double mu){mu_ = mu;}
         const model::Configuration_t referenceConfig(){return referenceConfig_;}
         void referenceConfig(model::Configuration_t referenceConfig){referenceConfig_=referenceConfig;}
+        bool addEffectorTrajectory(const size_t pathId,const std::string& effectorName,const bezier_Ptr& trajectory);
+        bool getEffectorsTrajectories(const size_t pathId,EffectorTrajectoriesMap_t& result);
+        bool getEffectorTrajectory(const size_t pathId,const std::string& effectorName,bezier_Ptr& result);
 
     private:
         core::CollisionValidationPtr_t collisionValidation_;
@@ -141,7 +145,7 @@ namespace hpp {
         bool staticStability_;
         double mu_;
         model::Configuration_t referenceConfig_;
-
+        std::map<size_t,EffectorTrajectoriesMap_t> effectorsTrajectoriesMaps_; // the map link the pathIndex (the same as in the wholeBody paths in problem solver) to a map of trajectories for each effectors.
     private:
         void AddLimbPrivate(rbprm::RbPrmLimbPtr_t limb, const std::string& id, const std::string& name,
                             const model::ObjectVector_t &collisionObjects, const bool disableEffectorCollision, const bool nonContactingLimb=false);
