@@ -390,6 +390,13 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         refEffectorPath->appendPath(refEffectorMid);
         refEffectorPath->appendPath(refEffectorLanding);
 
+        // save the endEffector trajectory in the map :
+        if(pathId>=0){
+            hppDout(notice,"Add trajectory for path = "<<pathId<<" and effector = "<<effector->name());
+            bool successMap = fullbody->addEffectorTrajectory(pathId,effector->name(),refEffector); // TODO merge the 3 bezier in one bezier ???
+            hppDout(notice,"success = "<<successMap);
+ ;       } // FIXME : using pathId this way assume that the path returned by this method will be the next added in problemSolver. As there is no access to problemSolver here, it's the best workaround.
+
         //return fullBodyComPath;//TEST
         EffectorRRTShooterFactory shooterFactory(reducedComPath);
         std::vector<model::JointPtr_t> constrainedJoint = getJointsByName(fullbody, constrainedJointPos);
@@ -401,6 +408,8 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         T_StateFrame stateFrames;
         stateFrames.push_back(std::make_pair(comPath->timeRange().first, startState));
         stateFrames.push_back(std::make_pair(comPath->timeRange().second, nextState));
+
+        // TODO : test if the projection is successful and loop with changing the weight and the number of free waypoint until it's successful
         return interpolateStatesFromPath<EffectorRRTHelper, EffectorRRTShooterFactory, SetEffectorRRTConstraints>
                 (fullbody, referenceProblem, shooterFactory, constraintFactory, comPath,
                  //stateFrames.begin(), stateFrames.begin()+1, numOptimizations % 10, keepExtraDof);
