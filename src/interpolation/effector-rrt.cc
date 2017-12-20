@@ -270,13 +270,15 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         getEffectorConfigAt(fullbody->device_,effector,fullBodyComPath,fullBodyComPath->length(),endConfig);
         Configuration_t takeoffConfig(initConfig),landingConfig(endConfig);
         // compute initial takeoff phase for the end effector :
+        const double posOffset = 0.02;
+        const double velOffset = 0.15;
         bezier_com_traj::ProblemData pDataTakeoff;
         pDataTakeoff.c0_=endEffPath(0);
         pDataTakeoff.c1_=endEffPath(0);
-        pDataTakeoff.c1_[2]+=0.02; // TODO : replace with 0.05*normal, how can we retrieve the normal here ?
+        pDataTakeoff.c1_[2]+=posOffset; // TODO : replace with value*normal, how can we retrieve the normal here ?
         pDataTakeoff.dc0_=Vector3::Zero();
         pDataTakeoff.ddc0_=Vector3::Zero();
-        pDataTakeoff.dc1_=Vector3(0,0,0.2); // TODO replace with value * normal
+        pDataTakeoff.dc1_=Vector3(0,0,velOffset); // TODO replace with value * normal
         pDataTakeoff.ddc1_=Vector3::Zero();
         takeoffConfig.head<3>()=pDataTakeoff.c1_;
         hppDout(notice,"CREATE BEZIER for constraints : ");
@@ -286,7 +288,7 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         hppDout(notice,"c1   = "<<pDataTakeoff.c1_.transpose());
         hppDout(notice,"dc1  = "<<pDataTakeoff.dc1_.transpose());
         hppDout(notice,"ddc1 = "<<pDataTakeoff.ddc1_.transpose());
-        double timeTakeoff = 0.2; //TODO ??
+        double timeTakeoff = 0.1; //TODO ??
         std::vector<bezier_t::point_t> pts;
         hppDout(notice,"Compute waypoints for takeOff phase : ");
         pts = bezier_com_traj::computeConstantWaypoints(pDataTakeoff,timeTakeoff,5);
@@ -309,10 +311,10 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         bezier_com_traj::ProblemData pDataLanding;
         pDataLanding.c0_=endEffPath(1);
         pDataLanding.c1_=endEffPath(1);
-        pDataLanding.c0_[2]+=0.02; // TODO : replace with 0.05*normal, how can we retrieve the normal here ?
+        pDataLanding.c0_[2]+=posOffset; // TODO : replace with value*normal, how can we retrieve the normal here ?
         pDataLanding.dc1_=Vector3::Zero();
         pDataLanding.ddc1_=Vector3::Zero();
-        pDataLanding.dc0_=Vector3(0,0,-0.2); // TODO replace with value * normal
+        pDataLanding.dc0_=Vector3(0,0,-velOffset); // TODO replace with value * normal
         pDataLanding.ddc0_=Vector3::Zero();
         landingConfig.head<3>()=pDataLanding.c0_;
         hppDout(notice,"CREATE BEZIER for constraints : ");
@@ -322,7 +324,7 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         hppDout(notice,"c1   = "<<pDataLanding.c1_.transpose());
         hppDout(notice,"dc1  = "<<pDataLanding.dc1_.transpose());
         hppDout(notice,"ddc1 = "<<pDataLanding.ddc1_.transpose());
-        double timeLanding = 0.2; //TODO ??
+        double timeLanding = 0.1; //TODO ??
         hppDout(notice,"Compute waypoints for landing phase : ");
         pts = bezier_com_traj::computeConstantWaypoints(pDataLanding,timeLanding,5);
         hppDout(notice,"Done.");
@@ -428,12 +430,7 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         CreateContactConstraints<EffectorRRTHelper>(helper, from, to);
         CreateComConstraint<EffectorRRTHelper,core::PathPtr_t >(helper, refCom_);
         CreateEffectorConstraint<EffectorRRTHelper,core::PathPtr_t >(helper, refEff_, effector_);
-       /* Configuration_t refConfig = helper.fullbody_->referenceConfig();
-        CreatePosturalTaskConstraint<EffectorRRTHelper,Configuration_t>(helper, refConfig);
-        helper.proj_->lastIsOptional(true);
-        helper.proj_->numOptimize(500);
-        helper.proj_->lastAsCost(true);
-        helper.proj_->errorThreshold(1e-3);*/
+
         if(refFullbody_)
         {
             hppDout(notice,"Ref fullBody provided, create 6D effector constraint : ");
@@ -444,10 +441,18 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
                 Create6DEffectorConstraint<EffectorRRTHelper, core::PathPtr_t  >(helper, refFullbody_, *cit);
             }
         }
-        if(true){
+        if(endEffectorDevice_){
             hppDout(notice,"EndEffectorDevice provided, add orientation constraint for the end effector ");
             CreateOrientationConstraint<EffectorRRTHelper, core::PathPtr_t  >(helper,refEff_ , effector_,endEffectorDevice_);
         }
+
+    /*    Configuration_t refConfig = helper.fullbody_->referenceConfig();
+        CreatePosturalTaskConstraint<EffectorRRTHelper,Configuration_t>(helper, refConfig);
+        helper.proj_->lastIsOptional(true);
+        helper.proj_->numOptimize(500);
+        helper.proj_->lastAsCost(true);
+        helper.proj_->errorThreshold(1e-3);*/
+
     }
 
     vector_t EndEffectorPath::operator ()(double t) const{

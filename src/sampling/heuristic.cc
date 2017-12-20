@@ -227,7 +227,8 @@ HeuristicFactory::HeuristicFactory()
 //    seed = 1507302685; // darpa
 //    seed = 1510137769; // walk bauzil 2
 //   seed = 1511447706; // walk bauzil small steps
-    seed = 1513330208; // walk straight line with weight static = 10 000 dit = 100
+  //  seed = 1513330208; // walk straight line with weight static = 10 000 dit = 100
+   seed = 1513588852; // walk straight line with weight static = 10 000 dit = 100
   //  seed = 1510645311 ; // darpa line 1 repositionning // step = 0.05
   //  seed = 1510645700 ; // darpa line // step = 0.1
     std::cout<<"seed HEURISTIC = "<<seed<<std::endl;
