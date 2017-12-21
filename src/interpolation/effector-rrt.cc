@@ -365,8 +365,8 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
             hppDout(warning,"[WARNING] qp solver failed to compute bezier curve !!");
             return fullBodyComPath;
         }
-        bezier_Ptr refEffector=bezier_Ptr(new bezier_t(res.c_of_t_));
-        bezier_t::t_point_t wps = refEffector->waypoints();
+        bezier_Ptr refEffectorMidBezier=bezier_Ptr(new bezier_t(res.c_of_t_));
+        bezier_t::t_point_t wps = refEffectorMidBezier->waypoints();
         std::ostringstream ss;
         ss<<"[";
         for(bezier_t::cit_point_t wpit = wps.begin() ; wpit != wps.end() ; ++wpit){
@@ -382,7 +382,7 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         hppDout(notice,"landing : "<<model::displayConfig(landingConfig));
         hppDout(notice,"end     : "<<model::displayConfig(endConfig));
 
-        BezierPathPtr_t refEffectorMid = BezierPath::create(endEffectorDevice,refEffector,takeoffConfig,landingConfig,core::interval_t(0.,timeMid));
+        BezierPathPtr_t refEffectorMid = BezierPath::create(endEffectorDevice,refEffectorMidBezier,takeoffConfig,landingConfig,core::interval_t(0.,timeMid));
 
         // merge the 3 curves :
         PathVectorPtr_t refEffectorPath  = PathVector::create (refEffectorMid->outputSize (),refEffectorMid->outputDerivativeSize ());
@@ -392,8 +392,12 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
 
         // save the endEffector trajectory in the map :
         if(pathId>=0){
-            hppDout(notice,"Add trajectory for path = "<<pathId<<" and effector = "<<effector->name());
-            bool successMap = fullbody->addEffectorTrajectory(pathId,effector->name(),refEffector); // TODO merge the 3 bezier in one bezier ???
+            hppDout(notice,"Add trajectories for path = "<<pathId<<" and effector = "<<effector->name());
+            std::vector<bezier_Ptr> allRefEffector;
+            allRefEffector.push_back(refEffectorTakeoff->getBezier());
+            allRefEffector.push_back(refEffectorMidBezier);
+            allRefEffector.push_back(refEffectorLanding->getBezier());
+            bool successMap = fullbody->addEffectorTrajectory(pathId,effector->name(),allRefEffector);
             hppDout(notice,"success = "<<successMap);
  ;       } // FIXME : using pathId this way assume that the path returned by this method will be the next added in problemSolver. As there is no access to problemSolver here, it's the best workaround.
 

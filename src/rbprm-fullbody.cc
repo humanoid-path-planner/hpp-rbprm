@@ -180,16 +180,42 @@ namespace hpp {
       return lit->second;
     }
 
+    bool RbPrmFullBody::addEffectorTrajectory(const size_t pathId,const std::string& effectorName,const std::vector<bezier_Ptr>& trajectories){
+        bool success;
+        if (effectorsTrajectoriesMaps_.find(pathId) == effectorsTrajectoriesMaps_.end()){
+            // no map for this index, create a new one with the pair (name,path)
+            EffectorTrajectoriesMap_t map;
+            map.insert(std::make_pair(effectorName,trajectories));
+            success = effectorsTrajectoriesMaps_.insert(std::make_pair(pathId,map)).second;
+        }else{
+            // there is already a trajectory at this index, we add the trajectory for this effector to the map
+            success = effectorsTrajectoriesMaps_.at(pathId).insert(std::make_pair(effectorName,trajectories)).second;
+        }
+        return success;
+    }
+
+
     bool RbPrmFullBody::addEffectorTrajectory(const size_t pathId, const std::string& effectorName, const bezier_Ptr &trajectory){
         bool success;
         if (effectorsTrajectoriesMaps_.find(pathId) == effectorsTrajectoriesMaps_.end()){
             // no map for this index, create a new one with the pair (name,path)
             EffectorTrajectoriesMap_t map;
-            map.insert(std::make_pair(effectorName,trajectory));
+            std::vector<bezier_Ptr> vec; vec.push_back(trajectory);
+            map.insert(std::make_pair(effectorName,vec));
             success = effectorsTrajectoriesMaps_.insert(std::make_pair(pathId,map)).second;
         }else{
-            // there is already a trajectory at this index, we add the trajectory for this effector to the map
-            success = effectorsTrajectoriesMaps_.at(pathId).insert(std::make_pair(effectorName,trajectory)).second;
+            // there is already a trajectory at this index, we check if there is already one for the given effector name :
+            if(effectorsTrajectoriesMaps_.at(pathId).find(effectorName) == effectorsTrajectoriesMaps_.at(pathId).end()){
+                // there is no trajectory for this effector name, we create a vector with the trajectory and add it
+                std::vector<bezier_Ptr> vector;
+                vector.push_back(trajectory);
+                success = effectorsTrajectoriesMaps_.at(pathId).insert(std::make_pair(effectorName,vector)).second;
+            }else{
+                // there is already a trajectory with this effector, we add the new one to the vector
+                effectorsTrajectoriesMaps_.at(pathId).at(effectorName).push_back(trajectory);
+                success = true ; // ??
+            }
+
         }
         return success;
     }
@@ -201,7 +227,7 @@ namespace hpp {
         return true;
     }
 
-    bool RbPrmFullBody::getEffectorTrajectory(const size_t pathId, const std::string& effectorName, bezier_Ptr &result){
+    bool RbPrmFullBody::getEffectorTrajectory(const size_t pathId, const std::string& effectorName, std::vector<bezier_Ptr> &result){
         if (effectorsTrajectoriesMaps_.find(pathId) == effectorsTrajectoriesMaps_.end())
             return false;
         EffectorTrajectoriesMap_t map = effectorsTrajectoriesMaps_.at(pathId);

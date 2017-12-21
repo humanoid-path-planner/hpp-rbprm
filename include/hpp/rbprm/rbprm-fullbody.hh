@@ -42,7 +42,7 @@ namespace hpp {
     class RbPrmFullBody;
     typedef boost::shared_ptr <RbPrmFullBody> RbPrmFullBodyPtr_t;
 		typedef std::map<std::string, std::vector<model::CollisionObjectPtr_t> > affMap_t;
-        typedef std::map<std::string,bezier_Ptr> EffectorTrajectoriesMap_t;
+        typedef std::map<std::string,std::vector<bezier_Ptr> > EffectorTrajectoriesMap_t;
 
     class HPP_RBPRM_DLLAPI RbPrmFullBody
     {
@@ -132,8 +132,9 @@ namespace hpp {
         const model::Configuration_t referenceConfig(){return referenceConfig_;}
         void referenceConfig(model::Configuration_t referenceConfig){referenceConfig_=referenceConfig;}
         bool addEffectorTrajectory(const size_t pathId,const std::string& effectorName,const bezier_Ptr& trajectory);
+        bool addEffectorTrajectory(const size_t pathId, const std::string& effectorName, const std::vector<bezier_Ptr>& trajectories);
         bool getEffectorsTrajectories(const size_t pathId,EffectorTrajectoriesMap_t& result);
-        bool getEffectorTrajectory(const size_t pathId,const std::string& effectorName,bezier_Ptr& result);
+        bool getEffectorTrajectory(const size_t pathId,const std::string& effectorName,std::vector<bezier_Ptr>& result);
 
     private:
         core::CollisionValidationPtr_t collisionValidation_;
