@@ -150,6 +150,16 @@ public:
     }
 
 
+    bezier_Ptr getBezier(){
+        return curve_;
+    }
+
+    bezier_t::t_point_t getWaypoints(){
+        return curve_->waypoints();
+    }
+
+
+
 protected :
     /// Print path in a stream
     virtual std::ostream& print (std::ostream &os) const
