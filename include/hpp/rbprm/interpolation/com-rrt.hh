@@ -47,12 +47,17 @@ namespace hpp {
         void operator ()(ComRRTHelper& helper, const State& from, const State& to) const;
     };
 
+    core::PathPtr_t comRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemSolverPtr_t problemSolver, const PathPtr_t comPath,
+                           const State &startState, const State &nextState,
+                           const  std::size_t numOptimizations,
+                           const bool keepExtraDof=false); // needed because of the definition of t_rrt struct, but problemSolver is not used
+
     core::PathPtr_t comRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
                            const State &startState, const State &nextState,
                            const  std::size_t numOptimizations,
-                           const bool keepExtraDof=false,const size_t pathId=-1);
+                           const bool keepExtraDof=false);
 
-    core::PathPtr_t comRRTFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
+    core::PathPtr_t comRRTFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemSolverPtr_t problemSolver, const PathPtr_t comPath,
                 const PathPtr_t guidePath, const CIT_StateFrame &startState, const CIT_StateFrame &endState,
                 const  std::size_t numOptimizations);
 

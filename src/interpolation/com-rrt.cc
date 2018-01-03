@@ -23,6 +23,7 @@
 #include <hpp/core/basic-configuration-shooter.hh>
 #include <hpp/core/discretized-path-validation.hh>
 #include <hpp/model/configuration.hh>
+#include <hpp/core/problem-solver.hh>
 #ifdef PROFILE
 #include "hpp/rbprm/rbprm-profiler.hh"
 #endif
@@ -46,10 +47,18 @@ using namespace core;
         helper.proj_->errorThreshold(1e-3);*/
     }
 
-    core::PathPtr_t comRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
+    core::PathPtr_t comRRT(RbPrmFullBodyPtr_t fullbody, ProblemSolverPtr_t problemSolver, const PathPtr_t comPath,
                            const  State &startState, const State &nextState,
                            const  std::size_t numOptimizations,
-                           const bool keepExtraDof, const size_t /*pathId*/)
+                           const bool keepExtraDof){
+
+        return comRRT(fullbody,problemSolver->problem(),comPath,startState,nextState,numOptimizations,keepExtraDof);
+    }
+
+    core::PathPtr_t comRRT(RbPrmFullBodyPtr_t fullbody, ProblemPtr_t referenceProblem, const PathPtr_t comPath,
+                           const  State &startState, const State &nextState,
+                           const  std::size_t numOptimizations,
+                           const bool keepExtraDof)
     {
         //check whether there is a contact variations
         std::vector<std::string> variations = nextState.allVariations(startState, extractEffectorsName(fullbody->GetLimbs()));
@@ -105,14 +114,14 @@ using namespace core;
         return resPath;
     }
 
-    core::PathPtr_t comRRTFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
+    core::PathPtr_t comRRTFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemSolverPtr_t problemSolver, const PathPtr_t comPath,
                            const PathPtr_t guidePath, const CIT_StateFrame &startState, const CIT_StateFrame &endState,
                            const  std::size_t numOptimizations)
     {
         ComRRTShooterFactory shooterFactory(guidePath);
         SetComRRTConstraints constraintFactory;
         return interpolateStatesFromPath<ComRRTHelper, ComRRTShooterFactory, SetComRRTConstraints>
-                (fullbody, referenceProblem, shooterFactory, constraintFactory, comPath, startState, endState, numOptimizations);
+                (fullbody, problemSolver->problem(), shooterFactory, constraintFactory, comPath, startState, endState, numOptimizations);
     }
 
     core::Configuration_t projectOnCom(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const State& model, const fcl::Vec3f& targetCom, bool &success)

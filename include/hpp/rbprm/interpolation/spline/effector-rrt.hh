@@ -46,15 +46,15 @@ namespace interpolation {
 
     typedef TimeConstraintHelper<TimeConstraintPath,EffectorRRTShooterFactory, SetEffectorRRTConstraints> EffectorRRTHelper;
 
-    core::PathPtr_t effectorRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
+    core::PathPtr_t effectorRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemSolverPtr_t problemSolver, const PathPtr_t comPath,
                                 const  State &startState, const State &nextState,
                                 const  std::size_t numOptimizations,
-                                const bool keepExtraDof,const  std::size_t pathId = -1);
+                                const bool keepExtraDof);
 
-    core::PathPtr_t effectorRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
+    core::PathPtr_t effectorRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemSolverPtr_t problemSolver, const PathPtr_t comPath,
                                 const  State &startState, const State &nextState,
                                 const  std::size_t numOptimizations,
-                                const bool keepExtraDof,const std::size_t pathId = -1,
+                                const bool keepExtraDof,
                                 const std::vector<std::string>& constrainedJointPos = std::vector<std::string>(),
                                 const std::vector<std::string>& constrainedLockedJoints = std::vector<std::string>());
 
@@ -74,10 +74,10 @@ namespace interpolation {
      * @param constrainedLockedJoints
      * @return
      */
-    core::PathPtr_t effectorRRTFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
+    core::PathPtr_t effectorRRTFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemSolverPtr_t problemSolver, const PathPtr_t comPath,
                                         const  State &startState, const State &nextState,
                                         const  std::size_t numOptimizations,
-                                        const bool keepExtraDof, const std::size_t pathId,
+                                        const bool keepExtraDof,
                                         const PathPtr_t refFullBodyPath,
                                         const std::vector<std::string>& constrainedJointPos = std::vector<std::string>(),
                                         const std::vector<std::string>& constrainedLockedJoints = std::vector<std::string>());
