@@ -348,7 +348,7 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         pDataMid.dc1_=pDataLanding.dc0_;
         pDataMid.ddc0_=pDataTakeoff.ddc1_;
         pDataMid.ddc1_=pDataLanding.ddc0_;
-        double timeMid = fullBodyComPath->length() - timeLanding - timeTakeoff;
+        double timeMid = comPath->length() - timeLanding - timeTakeoff;
 
         hppDout(notice,"CREATE BEZIER for constraints : ");
         hppDout(notice,"c0   = "<<pDataMid.c0_.transpose());
