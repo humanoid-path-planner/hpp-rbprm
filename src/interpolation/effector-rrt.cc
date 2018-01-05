@@ -270,9 +270,28 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         hppDout(notice,"start state conf = "<<model::displayConfig(startState.configuration_));
         getEffectorConfigAt(fullbody->device_,effector,fullBodyComPath,fullBodyComPath->length(),endConfig);
         Configuration_t takeoffConfig(initConfig),landingConfig(endConfig);
-        // compute initial takeoff phase for the end effector :
-        const double posOffset = 0.02;
-        const double velOffset = 0.15;
+
+        // ## compute initial takeoff phase for the end effector :
+
+        /*double a_max_predefined = 0.5 ; // amax for predefined phases
+        a_max_predefined /= 1.5 ; // approx because the acceleration is bezier curve and not a bang-bang
+        const double timeTakeoff = 0.2;
+        const double timeLanding = timeTakeoff;
+        const double posOffset = timeTakeoff*timeTakeoff*a_max_predefined/2.; // need to choose v, p and t  such that they can be reached together without changing the sign of acceleration. ie, v = a*t and p = a*t^2 /2 for a given 'a'.
+        const double velOffset = timeTakeoff*a_max_predefined; //  Equation here only valids if v0 = 0
+        */
+        const double timeTakeoff = 0.2;
+        const double timeLanding = timeTakeoff;
+        const double timeMid = comPath->length() - timeLanding - timeTakeoff;
+
+        //const double posOffset = 0.01; // this is the minimum offset, the max along the curve will be higher.
+        const double p_max = 0.04; // offset for the higher point in the curve
+        const double posOffset = (p_max/(1+(timeMid/(2*timeTakeoff))));
+        const double a_max_predefined = posOffset*2./(timeTakeoff*timeTakeoff);
+        const double velOffset = timeTakeoff*a_max_predefined;
+
+
+        hppDout(notice," pos offset = "<<posOffset<< "  ; vel offset = "<<velOffset);
         bezier_com_traj::ProblemData pDataTakeoff;
         pDataTakeoff.c0_=endEffPath(0);
         pDataTakeoff.c1_=endEffPath(0);
@@ -289,11 +308,24 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         hppDout(notice,"c1   = "<<pDataTakeoff.c1_.transpose());
         hppDout(notice,"dc1  = "<<pDataTakeoff.dc1_.transpose());
         hppDout(notice,"ddc1 = "<<pDataTakeoff.ddc1_.transpose());
-        double timeTakeoff = 0.1; //TODO ??
-        std::vector<bezier_t::point_t> pts;
         hppDout(notice,"Compute waypoints for takeOff phase : ");
+        std::vector<bezier_t::point_t> pts;
         pts = bezier_com_traj::computeConstantWaypoints(pDataTakeoff,timeTakeoff,5);
+        BezierPathPtr_t refEffectorTakeoff = BezierPath::create(endEffectorDevice,pts.begin(),pts.end(),initConfig,takeoffConfig,core::interval_t(0.,timeTakeoff));
+        hppDout(notice,"Path Bezier created");
+        /*
+         bezier_t::t_point_t pts;
+         bezier_com_traj::ResultDataCOMTraj res_takeoff = bezier_com_traj::solveEndEffector<EndEffectorPath>(pDataTakeoff,endEffPath,timeTakeoff,0.);
+        if(!res_takeoff.success_){
+            hppDout(warning,"[WARNING] qp solver failed to compute takeoff bezier curve !!");
+            return fullBodyComPath;
+        }
         hppDout(notice,"Done.");
+        bezier_Ptr refEffectorTakeoffBezier=bezier_Ptr(new bezier_t(res_takeoff.c_of_t_));
+        pts = refEffectorTakeoffBezier->waypoints();
+         BezierPathPtr_t refEffectorTakeoff = BezierPath::create(endEffectorDevice,refEffectorTakeoffBezier,initConfig,takeoffConfig,core::interval_t(0.,timeTakeoff));
+        hppDout(notice,"Path Bezier created");
+        */
         std::ostringstream ssTakeoff;
         ssTakeoff<<"[";
         for(std::vector<bezier_t::point_t>::const_iterator wpit = pts.begin(); wpit != pts.end() ; ++wpit){
@@ -302,13 +334,9 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         ssTakeoff.seekp(-1,ssTakeoff.cur); ssTakeoff << ']';
         hppDout(notice,"Waypoint for reference end effector takeoff : ");
         hppDout(notice,ssTakeoff.str());
-        bezier_t curve(pts.begin(),pts.end(),timeTakeoff);
-        hppDout(notice,"Curve created, degree : "<<curve.degree_);
-        BezierPathPtr_t refEffectorTakeoff = BezierPath::create(endEffectorDevice,pts.begin(),pts.end(),initConfig,takeoffConfig,core::interval_t(0.,timeTakeoff));
-        hppDout(notice,"Path Bezier created");
 
 
-        // compute final landing phase for the end effector :
+        // ## compute final landing phase for the end effector :
         bezier_com_traj::ProblemData pDataLanding;
         pDataLanding.c0_=endEffPath(1);
         pDataLanding.c1_=endEffPath(1);
@@ -325,11 +353,21 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         hppDout(notice,"c1   = "<<pDataLanding.c1_.transpose());
         hppDout(notice,"dc1  = "<<pDataLanding.dc1_.transpose());
         hppDout(notice,"ddc1 = "<<pDataLanding.ddc1_.transpose());
-        double timeLanding = 0.1; //TODO ??
         hppDout(notice,"Compute waypoints for landing phase : ");
         pts = bezier_com_traj::computeConstantWaypoints(pDataLanding,timeLanding,5);
-        hppDout(notice,"Done.");
         BezierPathPtr_t refEffectorLanding = BezierPath::create(endEffectorDevice,pts.begin(),pts.end(),landingConfig,endConfig,core::interval_t(0.,timeLanding));
+        hppDout(notice,"Path Bezier created");
+        /*bezier_com_traj::ResultDataCOMTraj res_landing = bezier_com_traj::solveEndEffector<EndEffectorPath>(pDataLanding,endEffPath,timeLanding,0.);
+        if(!res_landing.success_){
+            hppDout(warning,"[WARNING] qp solver failed to compute landing bezier curve !!");
+            return fullBodyComPath;
+        }
+        bezier_Ptr refEffectorLandingBezier=bezier_Ptr(new bezier_t(res_landing.c_of_t_));
+        pts = refEffectorLandingBezier->waypoints();
+        hppDout(notice,"Done.");
+        BezierPathPtr_t refEffectorLanding =        BezierPath::create(endEffectorDevice,refEffectorLandingBezier,landingConfig,endConfig,core::interval_t(0.,timeLanding));
+        hppDout(notice,"Path Bezier created");
+        */
         std::ostringstream ssLanding;
         ssLanding<<"[";
         for(std::vector<bezier_t::point_t>::const_iterator wpit = pts.begin(); wpit != pts.end() ; ++wpit){
@@ -340,7 +378,9 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         hppDout(notice,ssLanding.str());
 
 
-        // compute bezier curve that follow the rrt path and that respect the constraints :
+
+
+        // ## compute bezier curve that follow the rrt path and that respect the constraints :
         bezier_com_traj::ProblemData pDataMid;
         pDataMid.c0_=pDataTakeoff.c1_;
         pDataMid.c1_=pDataLanding.c0_;
@@ -348,7 +388,6 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         pDataMid.dc1_=pDataLanding.dc0_;
         pDataMid.ddc0_=pDataTakeoff.ddc1_;
         pDataMid.ddc1_=pDataLanding.ddc0_;
-        double timeMid = comPath->length() - timeLanding - timeTakeoff;
 
         hppDout(notice,"CREATE BEZIER for constraints : ");
         hppDout(notice,"c0   = "<<pDataMid.c0_.transpose());
