@@ -286,7 +286,10 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
 
         //const double posOffset = 0.01; // this is the minimum offset, the max along the curve will be higher.
         const double p_max = 0.04; // offset for the higher point in the curve
-        const double posOffset = (p_max/(1+(timeMid/(2*timeTakeoff))));
+        const double p_min = 0.008; // min offset at the end of the predefined trajectory
+        double posOffset = (p_max/(1+(timeMid/(2*timeTakeoff))));
+        if (posOffset<p_min)
+            posOffset = p_min;
         const double a_max_predefined = posOffset*2./(timeTakeoff*timeTakeoff);
         const double velOffset = timeTakeoff*a_max_predefined;
 
