@@ -241,6 +241,78 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         return res;
     }
 
+
+    /**
+     * @brief buildPredefinedPath
+     * @param normal contact normal
+     * @param config init or goal configuration (see init param)
+     * @param posOffset
+     * @param velOffset
+     * @param init if true : c0 is initial position else, c0 is final position
+     * @param offsetConfig return the goal or init configuration
+     * @return the path
+     */
+    BezierPathPtr_t buildPredefinedPath(const DevicePtr_t& endEffectorDevice,const Vector3& normal,const Configuration_t& config,double posOffset, double velOffset,double time,bool init, Configuration_t& offsetConfig,bezier_com_traj::ProblemData& pData){
+        Vector3 c(config.head<3>());
+        pData.c0_=c;
+        pData.c1_=c;
+        if(init)
+            pData.c1_+=posOffset*normal;
+        else
+            pData.c0_+=posOffset*normal;
+        if(init){
+            pData.dc0_=Vector3::Zero();
+            pData.dc1_=normal*velOffset; // TODO replace with value * normal
+        }else{
+            pData.dc1_=Vector3::Zero();
+            pData.dc0_=normal*velOffset; // TODO replace with value * normal
+        }
+        pData.ddc0_=Vector3::Zero();
+        pData.ddc1_=Vector3::Zero();
+
+        offsetConfig.head<3>()=pData.c1_;
+        hppDout(notice,"CREATE BEZIER for constraints : ");
+        hppDout(notice,"c0   = "<<pData.c0_.transpose());
+        hppDout(notice,"dc0  = "<<pData.dc0_.transpose());
+        hppDout(notice,"ddc0 = "<<pData.ddc0_.transpose());
+        hppDout(notice,"c1   = "<<pData.c1_.transpose());
+        hppDout(notice,"dc1  = "<<pData.dc1_.transpose());
+        hppDout(notice,"ddc1 = "<<pData.ddc1_.transpose());
+        hppDout(notice,"Compute waypoints for takeOff phase : ");
+        std::vector<bezier_t::point_t> pts;
+        pts = bezier_com_traj::computeConstantWaypoints(pData,time,5);
+        BezierPathPtr_t refEffector;
+        if (init)
+            refEffector= BezierPath::create(endEffectorDevice,pts.begin(),pts.end(),config,offsetConfig,core::interval_t(0.,time));
+        else
+            refEffector= BezierPath::create(endEffectorDevice,pts.begin(),pts.end(),offsetConfig,config,core::interval_t(0.,time));
+
+        hppDout(notice,"Path Bezier created");
+        /*
+         bezier_t::t_point_t pts;
+         bezier_com_traj::ResultDataCOMTraj res_takeoff = bezier_com_traj::solveEndEffector<EndEffectorPath>(pDataTakeoff,endEffPath,timeTakeoff,0.);
+        if(!res_takeoff.success_){
+            hppDout(warning,"[WARNING] qp solver failed to compute takeoff bezier curve !!");
+            return fullBodyComPath;
+        }
+        hppDout(notice,"Done.");
+        bezier_Ptr refEffectorTakeoffBezier=bezier_Ptr(new bezier_t(res_takeoff.c_of_t_));
+        pts = refEffectorTakeoffBezier->waypoints();
+         BezierPathPtr_t refEffectorTakeoff = BezierPath::create(endEffectorDevice,refEffectorTakeoffBezier,initConfig,takeoffConfig,core::interval_t(0.,timeTakeoff));
+        hppDout(notice,"Path Bezier created");
+        */
+        std::ostringstream ss;
+        ss<<"[";
+        for(std::vector<bezier_t::point_t>::const_iterator wpit = pts.begin(); wpit != pts.end() ; ++wpit){
+            ss<<"["<<(*wpit)[0]<<","<<(*wpit)[1]<<","<<(*wpit)[2]<<"],";
+        }
+        ss.seekp(-1,ss.cur); ss << ']';
+        hppDout(notice,"Waypoint for reference end effector predefined path ( init = "<<init<<") :");
+        hppDout(notice,ss.str());
+        return refEffector;
+    }
+
+
     core::PathPtr_t effectorRRTFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemSolverPtr_t problemSolver, const PathPtr_t comPath,
                            const State &startState, const State &nextState,
                            const std::size_t numOptimizations, const bool keepExtraDof,
@@ -293,92 +365,12 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         const double a_max_predefined = posOffset*2./(timeTakeoff*timeTakeoff);
         const double velOffset = timeTakeoff*a_max_predefined;
 
-
         hppDout(notice," pos offset = "<<posOffset<< "  ; vel offset = "<<velOffset);
-        bezier_com_traj::ProblemData pDataTakeoff;
-        pDataTakeoff.c0_=endEffPath(0);
-        pDataTakeoff.c1_=endEffPath(0);
-        pDataTakeoff.c1_[2]+=posOffset; // TODO : replace with value*normal, how can we retrieve the normal here ?
-        pDataTakeoff.dc0_=Vector3::Zero();
-        pDataTakeoff.ddc0_=Vector3::Zero();
-        pDataTakeoff.dc1_=Vector3(0,0,velOffset); // TODO replace with value * normal
-        pDataTakeoff.ddc1_=Vector3::Zero();
-        takeoffConfig.head<3>()=pDataTakeoff.c1_;
-        hppDout(notice,"CREATE BEZIER for constraints : ");
-        hppDout(notice,"c0   = "<<pDataTakeoff.c0_.transpose());
-        hppDout(notice,"dc0  = "<<pDataTakeoff.dc0_.transpose());
-        hppDout(notice,"ddc0 = "<<pDataTakeoff.ddc0_.transpose());
-        hppDout(notice,"c1   = "<<pDataTakeoff.c1_.transpose());
-        hppDout(notice,"dc1  = "<<pDataTakeoff.dc1_.transpose());
-        hppDout(notice,"ddc1 = "<<pDataTakeoff.ddc1_.transpose());
-        hppDout(notice,"Compute waypoints for takeOff phase : ");
-        std::vector<bezier_t::point_t> pts;
-        pts = bezier_com_traj::computeConstantWaypoints(pDataTakeoff,timeTakeoff,5);
-        BezierPathPtr_t refEffectorTakeoff = BezierPath::create(endEffectorDevice,pts.begin(),pts.end(),initConfig,takeoffConfig,core::interval_t(0.,timeTakeoff));
-        hppDout(notice,"Path Bezier created");
-        /*
-         bezier_t::t_point_t pts;
-         bezier_com_traj::ResultDataCOMTraj res_takeoff = bezier_com_traj::solveEndEffector<EndEffectorPath>(pDataTakeoff,endEffPath,timeTakeoff,0.);
-        if(!res_takeoff.success_){
-            hppDout(warning,"[WARNING] qp solver failed to compute takeoff bezier curve !!");
-            return fullBodyComPath;
-        }
-        hppDout(notice,"Done.");
-        bezier_Ptr refEffectorTakeoffBezier=bezier_Ptr(new bezier_t(res_takeoff.c_of_t_));
-        pts = refEffectorTakeoffBezier->waypoints();
-         BezierPathPtr_t refEffectorTakeoff = BezierPath::create(endEffectorDevice,refEffectorTakeoffBezier,initConfig,takeoffConfig,core::interval_t(0.,timeTakeoff));
-        hppDout(notice,"Path Bezier created");
-        */
-        std::ostringstream ssTakeoff;
-        ssTakeoff<<"[";
-        for(std::vector<bezier_t::point_t>::const_iterator wpit = pts.begin(); wpit != pts.end() ; ++wpit){
-            ssTakeoff<<"["<<(*wpit)[0]<<","<<(*wpit)[1]<<","<<(*wpit)[2]<<"],";
-        }
-        ssTakeoff.seekp(-1,ssTakeoff.cur); ssTakeoff << ']';
-        hppDout(notice,"Waypoint for reference end effector takeoff : ");
-        hppDout(notice,ssTakeoff.str());
 
-
-        // ## compute final landing phase for the end effector :
-        bezier_com_traj::ProblemData pDataLanding;
-        pDataLanding.c0_=endEffPath(1);
-        pDataLanding.c1_=endEffPath(1);
-        pDataLanding.c0_[2]+=posOffset; // TODO : replace with value*normal, how can we retrieve the normal here ?
-        pDataLanding.dc1_=Vector3::Zero();
-        pDataLanding.ddc1_=Vector3::Zero();
-        pDataLanding.dc0_=Vector3(0,0,-velOffset); // TODO replace with value * normal
-        pDataLanding.ddc0_=Vector3::Zero();
-        landingConfig.head<3>()=pDataLanding.c0_;
-        hppDout(notice,"CREATE BEZIER for constraints : ");
-        hppDout(notice,"c0   = "<<pDataLanding.c0_.transpose());
-        hppDout(notice,"dc0  = "<<pDataLanding.dc0_.transpose());
-        hppDout(notice,"ddc0 = "<<pDataLanding.ddc0_.transpose());
-        hppDout(notice,"c1   = "<<pDataLanding.c1_.transpose());
-        hppDout(notice,"dc1  = "<<pDataLanding.dc1_.transpose());
-        hppDout(notice,"ddc1 = "<<pDataLanding.ddc1_.transpose());
-        hppDout(notice,"Compute waypoints for landing phase : ");
-        pts = bezier_com_traj::computeConstantWaypoints(pDataLanding,timeLanding,5);
-        BezierPathPtr_t refEffectorLanding = BezierPath::create(endEffectorDevice,pts.begin(),pts.end(),landingConfig,endConfig,core::interval_t(0.,timeLanding));
-        hppDout(notice,"Path Bezier created");
-        /*bezier_com_traj::ResultDataCOMTraj res_landing = bezier_com_traj::solveEndEffector<EndEffectorPath>(pDataLanding,endEffPath,timeLanding,0.);
-        if(!res_landing.success_){
-            hppDout(warning,"[WARNING] qp solver failed to compute landing bezier curve !!");
-            return fullBodyComPath;
-        }
-        bezier_Ptr refEffectorLandingBezier=bezier_Ptr(new bezier_t(res_landing.c_of_t_));
-        pts = refEffectorLandingBezier->waypoints();
-        hppDout(notice,"Done.");
-        BezierPathPtr_t refEffectorLanding =        BezierPath::create(endEffectorDevice,refEffectorLandingBezier,landingConfig,endConfig,core::interval_t(0.,timeLanding));
-        hppDout(notice,"Path Bezier created");
-        */
-        std::ostringstream ssLanding;
-        ssLanding<<"[";
-        for(std::vector<bezier_t::point_t>::const_iterator wpit = pts.begin(); wpit != pts.end() ; ++wpit){
-            ssLanding<<"["<<(*wpit)[0]<<","<<(*wpit)[1]<<","<<(*wpit)[2]<<"],";
-        }
-        ssLanding.seekp(-1,ssLanding.cur); ssLanding << ']';
-        hppDout(notice,"Waypoint for reference end effector landing : ");
-        hppDout(notice,ssLanding.str());
+        bezier_com_traj::ProblemData pDataLanding,pDataTakeoff;
+        BezierPathPtr_t refEffectorTakeoff = buildPredefinedPath(endEffectorDevice,Vector3(0,0,1),initConfig,posOffset,velOffset,timeTakeoff,true,takeoffConfig,pDataTakeoff);
+        BezierPathPtr_t refEffectorLanding =
+buildPredefinedPath(endEffectorDevice,Vector3(0,0,1),endConfig,posOffset,-velOffset,timeLanding,false,landingConfig,pDataLanding);
 
 
 
@@ -462,10 +454,13 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         stateFrames.push_back(std::make_pair(comPath->timeRange().second, nextState));
 
         // TODO : test if the projection is successful and loop with changing the weight and the number of free waypoint until it's successful
-        return interpolateStatesFromPath<EffectorRRTHelper, EffectorRRTShooterFactory, SetEffectorRRTConstraints>
+        PathPtr_t interpolatedPath = interpolateStatesFromPath<EffectorRRTHelper, EffectorRRTShooterFactory, SetEffectorRRTConstraints>
                 (fullbody, referenceProblem, shooterFactory, constraintFactory, comPath,
                  //stateFrames.begin(), stateFrames.begin()+1, numOptimizations % 10, keepExtraDof);
                  stateFrames.begin(), stateFrames.begin()+1, numOptimizations, keepExtraDof, 0.0001);
+
+
+        return interpolatedPath;
     }
 
     core::PathPtr_t effectorRRT(RbPrmFullBodyPtr_t fullbody, ProblemSolverPtr_t problemSolver, const PathPtr_t comPath,
