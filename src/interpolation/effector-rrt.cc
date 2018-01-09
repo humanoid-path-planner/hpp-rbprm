@@ -434,38 +434,45 @@ buildPredefinedPath(endEffectorDevice,Vector3(0,0,1),endConfig,posOffset,-velOff
         // ## call solver :
         double weightRRT = 0.;
         bool success_rrt = false;
-        bezier_Ptr refEffectorMidBezier;
-        PathVectorPtr_t refEffectorPath  = computeBezierPath(endEffectorDevice,pDataMid,endEffPath,timeMid,weightRRT,refEffectorTakeoff, refEffectorLanding,refEffectorMidBezier );
-        if(!refEffectorPath){
-            hppDout(notice,"Error whil computing Bezier path");
-            return fullBodyComPath;
-        }
-
-
-        // ## compute whole body motion that follow the reference
-        EffectorRRTShooterFactory shooterFactory(reducedComPath);
-        std::vector<model::JointPtr_t> constrainedJoint = getJointsByName(fullbody, constrainedJointPos);
-        std::vector<model::JointPtr_t> constrainedLocked = getJointsByName(fullbody, constrainedLockedJoints);
-        hppDout(notice,"effectorRRT, contrained joint pose size : "<<constrainedJointPos.size());
-        hppDout(notice,"effectorRRT, contrained locked joint  size : "<<constrainedLockedJoints.size());
-
-        SetEffectorRRTConstraints constraintFactory(comPath, refEffectorPath, refPath, effector,endEffectorDevice, constrainedJoint, constrainedLocked);
-        T_StateFrame stateFrames;
-        stateFrames.push_back(std::make_pair(comPath->timeRange().first, startState));
-        stateFrames.push_back(std::make_pair(comPath->timeRange().second, nextState));
         PathPtr_t interpolatedPath;
+        bezier_Ptr refEffectorMidBezier;
+        PathVectorPtr_t refEffectorPath;
+        const size_t maxIterationRRT = 50; //FIXME : adjust value for more complexe environnement
+        while(!success_rrt && weightRRT <1){
+            refEffectorPath  = computeBezierPath(endEffectorDevice,pDataMid,endEffPath,timeMid,weightRRT,refEffectorTakeoff, refEffectorLanding,refEffectorMidBezier );
+            if(!refEffectorPath){
+                hppDout(notice,"Error whil computing Bezier path");
+                return fullBodyComPath;
+            }
 
-        try{
-            interpolatedPath = interpolateStatesFromPath<EffectorRRTHelper, EffectorRRTShooterFactory, SetEffectorRRTConstraints>
-                    (fullbody, referenceProblem, shooterFactory, constraintFactory, comPath,
-                     //stateFrames.begin(), stateFrames.begin()+1, numOptimizations % 10, keepExtraDof);
-                     stateFrames.begin(), stateFrames.begin()+1, numOptimizations, keepExtraDof, 0.001,2); // last parameter : max iterations allowed for the planner
-            if(interpolatedPath)
-                success_rrt = true;
-        } catch(std::runtime_error e){
-            hppDout(notice,"InterpolateStateFromPath failed for weightDistance = "<<weightRRT);
-            hppDout(notice,"Error = "<<e.what());
-        }
+
+            // ## compute whole body motion that follow the reference
+            EffectorRRTShooterFactory shooterFactory(reducedComPath);
+            std::vector<model::JointPtr_t> constrainedJoint = getJointsByName(fullbody, constrainedJointPos);
+            std::vector<model::JointPtr_t> constrainedLocked = getJointsByName(fullbody, constrainedLockedJoints);
+            hppDout(notice,"effectorRRT, contrained joint pose size : "<<constrainedJointPos.size());
+            hppDout(notice,"effectorRRT, contrained locked joint  size : "<<constrainedLockedJoints.size());
+
+            SetEffectorRRTConstraints constraintFactory(comPath, refEffectorPath, refPath, effector,endEffectorDevice, constrainedJoint, constrainedLocked);
+            T_StateFrame stateFrames;
+            stateFrames.push_back(std::make_pair(comPath->timeRange().first, startState));
+            stateFrames.push_back(std::make_pair(comPath->timeRange().second, nextState));
+
+            try{
+                interpolatedPath = interpolateStatesFromPath<EffectorRRTHelper, EffectorRRTShooterFactory, SetEffectorRRTConstraints>
+                        (fullbody, referenceProblem, shooterFactory, constraintFactory, comPath,
+                         //stateFrames.begin(), stateFrames.begin()+1, numOptimizations % 10, keepExtraDof);
+                         stateFrames.begin(), stateFrames.begin()+1, numOptimizations, keepExtraDof, 0.001,maxIterationRRT);
+                if(interpolatedPath){
+                    success_rrt = true;
+                    hppDout(notice,"InterpolateStateFromPath success for weightDistance = "<<weightRRT);
+                }
+            } catch(std::runtime_error e){
+                hppDout(notice,"InterpolateStateFromPath failed for weightDistance = "<<weightRRT);
+                hppDout(notice,"Error = "<<e.what());
+            }
+            weightRRT +=0.2;
+        } // TODO : if this still fail, add another free waypoint to the bezier optimisation problem.
 
 
 
