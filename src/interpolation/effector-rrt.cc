@@ -313,6 +313,41 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
     }
 
 
+    PathVectorPtr_t computeBezierPath(const DevicePtr_t& endEffectorDevice,const ProblemData& pDataMid,const EndEffectorPath& endEffPath,double timeMid,double weightRRT, const BezierPathPtr_t& refEffectorTakeoff, const BezierPathPtr_t& refEffectorLanding,bezier_Ptr& refEffectorMidBezier ){
+        bezier_com_traj::ResultDataCOMTraj res = bezier_com_traj::solveEndEffector<EndEffectorPath>(pDataMid,endEffPath,timeMid,weightRRT);
+        if(!res.success_){
+            hppDout(warning,"[WARNING] qp solver failed to compute bezier curve !!");
+            return PathVectorPtr_t();
+        }
+        refEffectorMidBezier=bezier_Ptr(new bezier_t(res.c_of_t_));
+        bezier_t::t_point_t wps = refEffectorMidBezier->waypoints();
+        std::ostringstream ss;
+        ss<<"[";
+        for(bezier_t::cit_point_t wpit = wps.begin() ; wpit != wps.end() ; ++wpit){
+            ss<<"["<<(*wpit)[0]<<","<<(*wpit)[1]<<","<<(*wpit)[2]<<"],";
+        }
+        ss.seekp(-1,ss.cur); ss << ']';
+        hppDout(notice,"Waypoint for reference end effector : ");
+        hppDout(notice,ss.str());
+
+        hppDout(notice,"configurations of the path : ");
+        hppDout(notice,"init    : "<<model::displayConfig(refEffectorTakeoff->initial()));
+        hppDout(notice,"takeoff : "<<model::displayConfig(refEffectorTakeoff->end()));
+        hppDout(notice,"landing : "<<model::displayConfig(refEffectorLanding->initial()));
+        hppDout(notice,"end     : "<<model::displayConfig(refEffectorLanding->end()));
+
+        BezierPathPtr_t refEffectorMid =
+BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->end(),refEffectorLanding->initial(), core::interval_t(0.,timeMid));
+
+        // merge the 3 curves :
+        PathVectorPtr_t refEffectorPath  = PathVector::create (refEffectorMid->outputSize (),refEffectorMid->outputDerivativeSize ());
+        refEffectorPath->appendPath(refEffectorTakeoff);
+        refEffectorPath->appendPath(refEffectorMid);
+        refEffectorPath->appendPath(refEffectorLanding);
+        return refEffectorPath;
+    }
+
+
     core::PathPtr_t effectorRRTFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemSolverPtr_t problemSolver, const PathPtr_t comPath,
                            const State &startState, const State &nextState,
                            const std::size_t numOptimizations, const bool keepExtraDof,
@@ -395,36 +430,38 @@ buildPredefinedPath(endEffectorDevice,Vector3(0,0,1),endConfig,posOffset,-velOff
         hppDout(notice,"Distance traveled by the end effector : "<<(pDataMid.c1_-pDataMid.c0_).norm());
         hppDout(notice,"Distance : "<<(pDataMid.c1_-pDataMid.c0_).transpose());
         hppDout(notice,"Time = "<<timeMid);
-        bezier_com_traj::ResultDataCOMTraj res = bezier_com_traj::solveEndEffector<EndEffectorPath>(pDataMid,endEffPath,timeMid,0.);
-        if(!res.success_){
-            hppDout(warning,"[WARNING] qp solver failed to compute bezier curve !!");
+
+        // ## call solver :
+        double weightRRT = 0.;
+        bezier_Ptr refEffectorMidBezier;
+        PathVectorPtr_t refEffectorPath  = computeBezierPath(endEffectorDevice,pDataMid,endEffPath,timeMid,weightRRT,refEffectorTakeoff, refEffectorLanding,refEffectorMidBezier );
+        if(!refEffectorPath){
+            hppDout(notice,"Error whil computing Bezier path");
             return fullBodyComPath;
         }
-        bezier_Ptr refEffectorMidBezier=bezier_Ptr(new bezier_t(res.c_of_t_));
-        bezier_t::t_point_t wps = refEffectorMidBezier->waypoints();
-        std::ostringstream ss;
-        ss<<"[";
-        for(bezier_t::cit_point_t wpit = wps.begin() ; wpit != wps.end() ; ++wpit){
-            ss<<"["<<(*wpit)[0]<<","<<(*wpit)[1]<<","<<(*wpit)[2]<<"],";
-        }
-        ss.seekp(-1,ss.cur); ss << ']';
-        hppDout(notice,"Waypoint for reference end effector : ");
-        hppDout(notice,ss.str());
 
-        hppDout(notice,"configurations of the path : ");
-        hppDout(notice,"init    : "<<model::displayConfig(initConfig));
-        hppDout(notice,"takeoff : "<<model::displayConfig(takeoffConfig));
-        hppDout(notice,"landing : "<<model::displayConfig(landingConfig));
-        hppDout(notice,"end     : "<<model::displayConfig(endConfig));
 
-        BezierPathPtr_t refEffectorMid = BezierPath::create(endEffectorDevice,refEffectorMidBezier,takeoffConfig,landingConfig,core::interval_t(0.,timeMid));
+        // ## compute whole body motion that follow the reference
+        EffectorRRTShooterFactory shooterFactory(reducedComPath);
+        std::vector<model::JointPtr_t> constrainedJoint = getJointsByName(fullbody, constrainedJointPos);
+        std::vector<model::JointPtr_t> constrainedLocked = getJointsByName(fullbody, constrainedLockedJoints);
+        hppDout(notice,"effectorRRT, contrained joint pose size : "<<constrainedJointPos.size());
+        hppDout(notice,"effectorRRT, contrained locked joint  size : "<<constrainedLockedJoints.size());
 
-        // merge the 3 curves :
-        PathVectorPtr_t refEffectorPath  = PathVector::create (refEffectorMid->outputSize (),refEffectorMid->outputDerivativeSize ());
-        refEffectorPath->appendPath(refEffectorTakeoff);
-        refEffectorPath->appendPath(refEffectorMid);
-        refEffectorPath->appendPath(refEffectorLanding);
+        SetEffectorRRTConstraints constraintFactory(comPath, refEffectorPath, refPath, effector,endEffectorDevice, constrainedJoint, constrainedLocked);
+        T_StateFrame stateFrames;
+        stateFrames.push_back(std::make_pair(comPath->timeRange().first, startState));
+        stateFrames.push_back(std::make_pair(comPath->timeRange().second, nextState));
 
+        PathPtr_t interpolatedPath = interpolateStatesFromPath<EffectorRRTHelper, EffectorRRTShooterFactory, SetEffectorRRTConstraints>
+                (fullbody, referenceProblem, shooterFactory, constraintFactory, comPath,
+                 //stateFrames.begin(), stateFrames.begin()+1, numOptimizations % 10, keepExtraDof);
+                 stateFrames.begin(), stateFrames.begin()+1, numOptimizations, keepExtraDof, 0.0001);
+
+        // TODO : test if the projection is successful and loop with changing the weight and the number of free waypoint until it's successful
+
+
+        // ## save the path
         problemSolver->addPath(refEffectorPath); // add end effector path to the problemSolver
 
         // save the endEffector trajectory in the map :
@@ -439,25 +476,6 @@ buildPredefinedPath(endEffectorDevice,Vector3(0,0,1),endConfig,posOffset,-velOff
         hppDout(notice,"success = "<<successMap);
         }
         // FIXME : using pathId = problemSolver->paths().size()  this way assume that the path returned by this method will be the next added in problemSolver. As there is no access to problemSolver here, it's the best workaround.
-
-
-        //return fullBodyComPath;//TEST
-        EffectorRRTShooterFactory shooterFactory(reducedComPath);
-        std::vector<model::JointPtr_t> constrainedJoint = getJointsByName(fullbody, constrainedJointPos);
-        std::vector<model::JointPtr_t> constrainedLocked = getJointsByName(fullbody, constrainedLockedJoints);
-        hppDout(notice,"effectorRRT, contrained joint pose size : "<<constrainedJointPos.size());
-        hppDout(notice,"effectorRRT, contrained locked joint  size : "<<constrainedLockedJoints.size());
-
-        SetEffectorRRTConstraints constraintFactory(comPath, refEffectorPath, refPath, effector,endEffectorDevice, constrainedJoint, constrainedLocked);
-        T_StateFrame stateFrames;
-        stateFrames.push_back(std::make_pair(comPath->timeRange().first, startState));
-        stateFrames.push_back(std::make_pair(comPath->timeRange().second, nextState));
-
-        // TODO : test if the projection is successful and loop with changing the weight and the number of free waypoint until it's successful
-        PathPtr_t interpolatedPath = interpolateStatesFromPath<EffectorRRTHelper, EffectorRRTShooterFactory, SetEffectorRRTConstraints>
-                (fullbody, referenceProblem, shooterFactory, constraintFactory, comPath,
-                 //stateFrames.begin(), stateFrames.begin()+1, numOptimizations % 10, keepExtraDof);
-                 stateFrames.begin(), stateFrames.begin()+1, numOptimizations, keepExtraDof, 0.0001);
 
 
         return interpolatedPath;
