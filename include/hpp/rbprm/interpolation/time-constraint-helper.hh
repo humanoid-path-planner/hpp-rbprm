@@ -83,7 +83,7 @@ namespace hpp {
          void SetConfigShooter(const State& from, const State& to);
          void InitConstraints();
          void SetContactConstraints(const State& from, const State& to);
-         core::PathVectorPtr_t Run(const State& from, const State& to);
+         core::PathVectorPtr_t Run(const State& from, const State& to, size_t maxIterations=0);
 
     public:
          RbPrmFullBodyPtr_t fullbody_;

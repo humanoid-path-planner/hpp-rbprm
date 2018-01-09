@@ -26,6 +26,7 @@
 #include <hpp/core/steering-method-straight.hh>
 #include <hpp/core/problem-target/goal-configurations.hh>
 #include <hpp/core/bi-rrt-planner.hh>
+#include <hpp/core/roadmap.hh>
 #include <hpp/core/random-shortcut.hh>
 #include <hpp/core/path-optimization/partial-shortcut.hh>
 #include <hpp/core/constraint-set.hh>
@@ -134,7 +135,7 @@ namespace
 }
 
     template<class Path_T, class Shooter_T, typename ConstraintFactory_T>
-    PathVectorPtr_t TimeConstraintHelper<Path_T, Shooter_T, ConstraintFactory_T>::Run(const State &from, const State &to)
+    PathVectorPtr_t TimeConstraintHelper<Path_T, Shooter_T, ConstraintFactory_T>::Run(const State &from, const State &to, size_t maxIterations)
     {
         PathVectorPtr_t res;
         SetPathValidation(*this);
@@ -166,7 +167,12 @@ namespace
         rootProblem_.target (target);
         rootProblem_.addGoalConfig(end);
         InitConstraints();
+        if(maxIterations>0)
+            planner->maxIterations(maxIterations);
+        boost::posix_time::ptime timeStart(boost::posix_time::microsec_clock::universal_time());
         res = planner->solve();
+        hppDout(notice,"TimeConstraintHelper::Run : solved in "<<((boost::posix_time::microsec_clock::universal_time() - timeStart).total_milliseconds())<<" ms");
+        hppDout(notice,"With a roadmap of "<<planner->roadmap()->nodes().size()<<" nodes");
         rootProblem_.resetGoalConfigs();
         return res;
     }
