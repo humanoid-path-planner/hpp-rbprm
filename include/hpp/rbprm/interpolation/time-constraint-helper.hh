@@ -83,7 +83,7 @@ namespace hpp {
          void SetConfigShooter(const State& from, const State& to);
          void InitConstraints();
          void SetContactConstraints(const State& from, const State& to);
-         core::PathVectorPtr_t Run(const State& from, const State& to, size_t maxIterations=0);
+         core::PathVectorPtr_t Run(const State& from, const State& to, const size_t maxIterations=0);
 
     public:
          RbPrmFullBodyPtr_t fullbody_;
@@ -123,6 +123,7 @@ namespace hpp {
     /// \param iterator to the initial State
     /// \param to iterator to the final State
     /// \param numOptimizations Number of iterations of the shortcut algorithm to apply between each states
+    /// \param maxIterations : the maximal number of iterations allowed for the path-planner to solve the problem, 0 = no limitations
     /// \return the resulting path vector, concatenation of all the interpolation paths between the State
     template<class Helper_T, class ShooterFactory_T, typename ConstraintFactory_T,  typename StateConstIterator>
     core::PathPtr_t HPP_RBPRM_DLLAPI interpolateStates(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
@@ -132,7 +133,8 @@ namespace hpp {
                                                              const StateConstIterator& endState,
                                                              const std::size_t numOptimizations = 10,
                                                              const bool keepExtraDof = false,
-                                                             const model::value_type error_treshold = 0.001);
+                                                             const model::value_type error_treshold = 0.001,
+                                                             const size_t maxIterations = 0);
 
     /// Runs the LimbRRT to create a kinematic, continuous,
     /// collision free path between an ordered State contrainer (Between each consecutive state, only one effector
@@ -158,6 +160,7 @@ namespace hpp {
     /// \param iterator to the initial State with its associated keyFrame in the path
     /// \param to iterator to the final State with its associated keyFrame in the path
     /// \param numOptimizations Number of iterations of the shortcut algorithm to apply between each states
+    /// \param maxIterations : the maximal number of iterations allowed for the path-planner to solve the problem, 0 = no limitations
     /// \return the resulting path vector, concatenation of all the interpolation paths between the State
     template<class Helper_T, class ShooterFactory_T, typename ConstraintFactory_T>
     core::PathPtr_t HPP_RBPRM_DLLAPI interpolateStatesFromPath(RbPrmFullBodyPtr_t fullbody,
@@ -169,7 +172,8 @@ namespace hpp {
                                                              const CIT_StateFrame& endState,
                                                              const std::size_t numOptimizations = 10,
                                                              const bool keepExtraDof = false,
-                                                             const model::value_type error_treshold = 0.001);
+                                                             const model::value_type error_treshold = 0.001,
+                                                             const size_t maxIterations = 0);
 
     /*typedef core::PathPtr_t (*interpolate_states)(rbprm::RbPrmFullBodyPtr_t, core::ProblemPtr_t,const rbprm::CIT_State&,
                                                        const rbprm::CIT_State&,const std::size_t);

@@ -135,7 +135,7 @@ namespace
 }
 
     template<class Path_T, class Shooter_T, typename ConstraintFactory_T>
-    PathVectorPtr_t TimeConstraintHelper<Path_T, Shooter_T, ConstraintFactory_T>::Run(const State &from, const State &to, size_t maxIterations)
+    PathVectorPtr_t TimeConstraintHelper<Path_T, Shooter_T, ConstraintFactory_T>::Run(const State &from, const State &to,const size_t maxIterations)
     {
         PathVectorPtr_t res;
         SetPathValidation(*this);
@@ -279,7 +279,7 @@ namespace
                                               const PathGetter_T& pathGetter,
                                               const StateIterator_T &startState, const StateIterator_T &endState,
                                               const std::size_t numOptimizations, const bool keepExtraDof=false,
-                                              const model::value_type error_treshold = 0.001)
+                                              const model::value_type error_treshold = 0.001, const size_t maxIterations = 0)
     {
         PathVectorPtr_t res[100];
         bool valid[100];
@@ -295,7 +295,7 @@ namespace
             b = (startState+i+1);
             Helper_T helper(fullbody, shooterFactory, constraintFactory, referenceProblem, pathGetter(a,b),error_treshold);
             helper.SetConstraints(get(a), get(b));
-            PathVectorPtr_t partialPath = helper.Run(get(a), get(b));
+            PathVectorPtr_t partialPath = helper.Run(get(a), get(b),maxIterations);
             if(partialPath)
             {
                 res[i] = optimize(helper,partialPath, numOptimizations);
@@ -317,11 +317,12 @@ namespace
                                         const CIT_StateFrame &startState, const CIT_StateFrame &endState,
                                         const std::size_t numOptimizations,
                                         const bool keepExtraDof,
-                                        const value_type error_treshold)
+                                        const value_type error_treshold,
+                                        const size_t maxIterations)
     {
         ExtractPath extractPath(refPath);
         return interpolateStatesFromPathGetter<Helper_T, CIT_StateFrame, ShooterFactory_T, ConstraintFactory_T, ExtractPath>
-                (fullbody,referenceProblem, shooterFactory, constraintFactory, extractPath,startState,endState,numOptimizations,keepExtraDof, error_treshold);
+                (fullbody,referenceProblem, shooterFactory, constraintFactory, extractPath,startState,endState,numOptimizations,keepExtraDof, error_treshold,maxIterations);
     }
 
 
@@ -330,12 +331,13 @@ namespace
                                 const ShooterFactory_T& shooterFactory, const ConstraintFactory_T& constraintFactory,
                                 const StateConstIterator &startState, const StateConstIterator &endState,
                                 const std::size_t numOptimizations, const bool keepExtraDof,
-                                const value_type error_treshold )
+                                const value_type error_treshold,
+                                const size_t maxIterations)
     {        
         GenPath genPath(*referenceProblem);
         return interpolateStatesFromPathGetter<Helper_T, StateConstIterator, ShooterFactory_T, ConstraintFactory_T, GenPath>
                 (fullbody,referenceProblem, shooterFactory, constraintFactory,
-                 genPath,startState,endState,numOptimizations,keepExtraDof, error_treshold);
+                 genPath,startState,endState,numOptimizations,keepExtraDof, error_treshold,maxIterations);
     }
 
   }// namespace interpolation

@@ -456,7 +456,7 @@ buildPredefinedPath(endEffectorDevice,Vector3(0,0,1),endConfig,posOffset,-velOff
         PathPtr_t interpolatedPath = interpolateStatesFromPath<EffectorRRTHelper, EffectorRRTShooterFactory, SetEffectorRRTConstraints>
                 (fullbody, referenceProblem, shooterFactory, constraintFactory, comPath,
                  //stateFrames.begin(), stateFrames.begin()+1, numOptimizations % 10, keepExtraDof);
-                 stateFrames.begin(), stateFrames.begin()+1, numOptimizations, keepExtraDof, 0.0001);
+                 stateFrames.begin(), stateFrames.begin()+1, numOptimizations, keepExtraDof, 0.001,2); // last parameter : max iterations allowed for the planner
 
         // TODO : test if the projection is successful and loop with changing the weight and the number of free waypoint until it's successful
 
