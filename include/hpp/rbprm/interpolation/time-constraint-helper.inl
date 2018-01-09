@@ -170,9 +170,15 @@ namespace
         if(maxIterations>0)
             planner->maxIterations(maxIterations);
         boost::posix_time::ptime timeStart(boost::posix_time::microsec_clock::universal_time());
-        res = planner->solve();
-        hppDout(notice,"TimeConstraintHelper::Run : solved in "<<((boost::posix_time::microsec_clock::universal_time() - timeStart).total_milliseconds())<<" ms");
-        hppDout(notice,"With a roadmap of "<<planner->roadmap()->nodes().size()<<" nodes");
+        try{
+            res = planner->solve();
+            hppDout(notice,"TimeConstraintHelper : solved in "<<((boost::posix_time::microsec_clock::universal_time() - timeStart).total_milliseconds())<<" ms");
+            hppDout(notice,"With a roadmap of "<<planner->roadmap()->nodes().size()<<" nodes");
+        }catch (std::runtime_error e){
+            hppDout(notice,"TimeConstraintHelper : planner returned an error : "<<e.what());
+            res = PathVectorPtr_t();
+        }
+
         rootProblem_.resetGoalConfigs();
         return res;
     }
@@ -303,6 +309,7 @@ namespace
             }
             else
             {
+                hppDout(notice,"InterpolateStates : helper.run returned an empty path");
                 valid[i] = false;
             }
         }

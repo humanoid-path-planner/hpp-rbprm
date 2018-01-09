@@ -433,6 +433,7 @@ buildPredefinedPath(endEffectorDevice,Vector3(0,0,1),endConfig,posOffset,-velOff
 
         // ## call solver :
         double weightRRT = 0.;
+        bool success_rrt = false;
         bezier_Ptr refEffectorMidBezier;
         PathVectorPtr_t refEffectorPath  = computeBezierPath(endEffectorDevice,pDataMid,endEffPath,timeMid,weightRRT,refEffectorTakeoff, refEffectorLanding,refEffectorMidBezier );
         if(!refEffectorPath){
@@ -452,33 +453,45 @@ buildPredefinedPath(endEffectorDevice,Vector3(0,0,1),endConfig,posOffset,-velOff
         T_StateFrame stateFrames;
         stateFrames.push_back(std::make_pair(comPath->timeRange().first, startState));
         stateFrames.push_back(std::make_pair(comPath->timeRange().second, nextState));
+        PathPtr_t interpolatedPath;
 
-        PathPtr_t interpolatedPath = interpolateStatesFromPath<EffectorRRTHelper, EffectorRRTShooterFactory, SetEffectorRRTConstraints>
-                (fullbody, referenceProblem, shooterFactory, constraintFactory, comPath,
-                 //stateFrames.begin(), stateFrames.begin()+1, numOptimizations % 10, keepExtraDof);
-                 stateFrames.begin(), stateFrames.begin()+1, numOptimizations, keepExtraDof, 0.001,2); // last parameter : max iterations allowed for the planner
-
-        // TODO : test if the projection is successful and loop with changing the weight and the number of free waypoint until it's successful
-
-
-        // ## save the path
-        problemSolver->addPath(refEffectorPath); // add end effector path to the problemSolver
-
-        // save the endEffector trajectory in the map :
-        {
-        size_t pathId = problemSolver->paths().size();
-        hppDout(notice,"Add trajectories for path = "<<pathId<<" and effector = "<<effector->name());
-        std::vector<bezier_Ptr> allRefEffector;
-        allRefEffector.push_back(refEffectorTakeoff->getBezier());
-        allRefEffector.push_back(refEffectorMidBezier);
-        allRefEffector.push_back(refEffectorLanding->getBezier());
-        bool successMap = fullbody->addEffectorTrajectory(pathId,effector->name(),allRefEffector);
-        hppDout(notice,"success = "<<successMap);
+        try{
+            interpolatedPath = interpolateStatesFromPath<EffectorRRTHelper, EffectorRRTShooterFactory, SetEffectorRRTConstraints>
+                    (fullbody, referenceProblem, shooterFactory, constraintFactory, comPath,
+                     //stateFrames.begin(), stateFrames.begin()+1, numOptimizations % 10, keepExtraDof);
+                     stateFrames.begin(), stateFrames.begin()+1, numOptimizations, keepExtraDof, 0.001,2); // last parameter : max iterations allowed for the planner
+            if(interpolatedPath)
+                success_rrt = true;
+        } catch(std::runtime_error e){
+            hppDout(notice,"InterpolateStateFromPath failed for weightDistance = "<<weightRRT);
+            hppDout(notice,"Error = "<<e.what());
         }
-        // FIXME : using pathId = problemSolver->paths().size()  this way assume that the path returned by this method will be the next added in problemSolver. As there is no access to problemSolver here, it's the best workaround.
 
 
-        return interpolatedPath;
+
+
+        if (success_rrt){
+            // ## save the path
+            problemSolver->addPath(refEffectorPath); // add end effector path to the problemSolver
+
+            // save the endEffector trajectory in the map :
+            {
+            size_t pathId = problemSolver->paths().size();
+            hppDout(notice,"Add trajectories for path = "<<pathId<<" and effector = "<<effector->name());
+            std::vector<bezier_Ptr> allRefEffector;
+            allRefEffector.push_back(refEffectorTakeoff->getBezier());
+            allRefEffector.push_back(refEffectorMidBezier);
+            allRefEffector.push_back(refEffectorLanding->getBezier());
+            bool successMap = fullbody->addEffectorTrajectory(pathId,effector->name(),allRefEffector);
+            hppDout(notice,"success = "<<successMap);
+            }
+            // FIXME : using pathId = problemSolver->paths().size()  this way assume that the path returned by this method will be the next added in problemSolver. As there is no access to problemSolver here, it's the best workaround.
+            return interpolatedPath;
+        }else{
+            return PathPtr_t();
+        }
+
+
     }
 
     core::PathPtr_t effectorRRT(RbPrmFullBodyPtr_t fullbody, ProblemSolverPtr_t problemSolver, const PathPtr_t comPath,
