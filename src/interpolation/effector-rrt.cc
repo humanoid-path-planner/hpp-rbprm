@@ -380,6 +380,10 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
 
         // ## compute initial takeoff phase for the end effector :
 
+        const double timeDelay = 0.02; //(percentage of the total) this is the time during the 'single support' phase where the feet don't move. It is needed to allow a safe mass transfer without exiting the flexibility.
+        const double totalTime = comPath->length()*(1-2*timeDelay);
+        const double ratioTimeTakeOff=0.075;// percentage of the total time
+
         /*double a_max_predefined = 0.5 ; // amax for predefined phases
         a_max_predefined /= 1.5 ; // approx because the acceleration is bezier curve and not a bang-bang
         const double timeTakeoff = 0.2;
@@ -387,13 +391,14 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
         const double posOffset = timeTakeoff*timeTakeoff*a_max_predefined/2.; // need to choose v, p and t  such that they can be reached together without changing the sign of acceleration. ie, v = a*t and p = a*t^2 /2 for a given 'a'.
         const double velOffset = timeTakeoff*a_max_predefined; //  Equation here only valids if v0 = 0
         */
-        const double timeTakeoff = 0.2;
+
+        const double timeTakeoff = totalTime*ratioTimeTakeOff; // percentage of the total time
         const double timeLanding = timeTakeoff;
-        const double timeMid = comPath->length() - timeLanding - timeTakeoff;
+        const double timeMid = totalTime*(1-2*ratioTimeTakeOff);
 
         //const double posOffset = 0.01; // this is the minimum offset, the max along the curve will be higher.
         const double p_max = 0.04; // offset for the higher point in the curve
-        const double p_min = 0.008; // min offset at the end of the predefined trajectory
+        const double p_min = 0.01; // min offset at the end of the predefined trajectory
         double posOffset = (p_max/(1+(timeMid/(2*timeTakeoff))));
         if (posOffset<p_min)
             posOffset = p_min;
