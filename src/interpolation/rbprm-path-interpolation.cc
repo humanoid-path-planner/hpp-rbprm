@@ -17,7 +17,9 @@
 #include <hpp/rbprm/interpolation/rbprm-path-interpolation.hh>
 #include <hpp/rbprm/contact_generation/algorithm.hh>
 #include <hpp/model/configuration.hh>
-
+#include <hpp/rbprm/projection/projection.hh>
+#include <hpp/core/config-projector.hh>
+#include <hpp/rbprm/interpolation/interpolation-constraints.hh>
 #ifdef PROFILE
     #include "hpp/rbprm/rbprm-profiler.hh"
 #endif
@@ -75,6 +77,39 @@ namespace hpp {
         }
         configs.push_back(configPosition(configs.back(),path_,range.second));
         return Interpolate(affordances, affFilters, configs, robustnessTreshold, timeStep, range.first, filterStates);
+    }
+
+    rbprm::T_StateFrame RbPrmInterpolation::addGoalConfig(const rbprm::T_StateFrame& states){
+        hppDout(notice,"AddGoalConfig, size of state list : "<<states.size());
+        rbprm::T_StateFrame results(states.begin(),states.end()-1); // copy input states exept the last one
+        State lastState = states.back().second;
+        std::vector<std::string> variations(results.back().second.contactVariations(lastState));
+        assert (variations.size() <=1 && "Two adjacents states should have only one contact variation");
+        std::string limbId(variations[0]);
+        // try to create a state with all the contact from 'lastState' expcet for the limb 'variation[0]' which should be in the same position as in 'end_'
+        State midState(lastState);
+        midState.RemoveContact(limbId);
+        hppDout(notice,"Try to replace contact for limb : "<<limbId);
+        model::Configuration_t configuration = midState.configuration_;
+        core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(robot_->device_,"proj", 1e-4, 100);
+        interpolation::addContactConstraints(robot_, robot_->device_,proj, midState, midState.fixedContacts(midState));
+        std::vector<bool> rotationMask;
+        for(std::size_t i =0; i <3; ++i)
+        {
+            rotationMask.push_back(true);
+        }
+        projection::ProjectionReport projReport = projection::projectEffector(proj,robot_,limbId,robot_->GetLimb(limbId),robot_->GetCollisionValidation(),configuration,end_.contactRotation_.at(limbId),rotationMask,end_.contactPositions_.at(limbId),end_.contactNormals_.at(limbId),midState);
+        // If projection was successful, we replace lastState with midState and then add end_ in the list
+        if(projReport.success_){
+            hppDout(notice,"projection of contact successful");
+            results.push_back(std::make_pair(states.back().first,projReport.result_));
+        }else{
+        // If the projection was not successful, we keep lastState in the list and produce one intermediate state of each contact transition
+            //TODO
+        }
+
+        results.push_back(std::make_pair(path_->timeRange().second,end_));
+        return results;
     }
 
     rbprm::T_StateFrame RbPrmInterpolation::Interpolate(const affMap_t& affordances,
@@ -190,7 +225,7 @@ if (nbFailures > 1)
             //allowFailure = nbRecontacts < robot_->GetLimbs().size();
             allowFailure = nbRecontacts < 2;
         }
-        states.push_back(std::make_pair(this->path_->timeRange().second, this->end_));
+        //states.push_back(std::make_pair(this->path_->timeRange().second, this->end_));
 #ifdef PROFILE
         watch.add_to_count("planner succeeded", 1);
         watch.stop("complete generation");
@@ -200,8 +235,9 @@ if (nbFailures > 1)
         watch.report_all_and_count(2,*fp);
         fout.close();*/
 #endif
-        return FilterStates(states, filterStates);
-        //return states;
+        states = FilterStates(states, filterStates);
+        states = addGoalConfig(states);
+        return states;
     }
 
     void RbPrmInterpolation::init(const RbPrmInterpolationWkPtr_t& weakPtr)

@@ -380,7 +380,7 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
 
         // ## compute initial takeoff phase for the end effector :
 
-        //const double timeDelay = 0.02; //(percentage of the total) this is the time during the 'single support' phase where the feet don't move. It is needed to allow a safe mass transfer without exiting the flexibility.
+        const double timeDelay = 0.02; //(percentage of the total) this is the time during the 'single support' phase where the feet don't move. It is needed to allow a safe mass transfer without exiting the flexibility.
         const double totalTime = comPath->length()*(1-2*timeDelay);
         const double ratioTimeTakeOff=0.1;// percentage of the total time // was 0.1
 
