@@ -380,9 +380,9 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
 
         // ## compute initial takeoff phase for the end effector :
 
-        const double timeDelay = 0.02; //(percentage of the total) this is the time during the 'single support' phase where the feet don't move. It is needed to allow a safe mass transfer without exiting the flexibility.
+        //const double timeDelay = 0.02; //(percentage of the total) this is the time during the 'single support' phase where the feet don't move. It is needed to allow a safe mass transfer without exiting the flexibility.
         const double totalTime = comPath->length()*(1-2*timeDelay);
-        const double ratioTimeTakeOff=0.075;// percentage of the total time
+        const double ratioTimeTakeOff=0.1;// percentage of the total time // was 0.1
 
         /*double a_max_predefined = 0.5 ; // amax for predefined phases
         a_max_predefined /= 1.5 ; // approx because the acceleration is bezier curve and not a bang-bang
@@ -397,8 +397,8 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
         const double timeMid = totalTime*(1-2*ratioTimeTakeOff);
 
         //const double posOffset = 0.01; // this is the minimum offset, the max along the curve will be higher.
-        const double p_max = 0.04; // offset for the higher point in the curve
-        const double p_min = 0.01; // min offset at the end of the predefined trajectory
+        const double p_max = 0.03; // offset for the higher point in the curve
+        const double p_min = 0.002; // min offset at the end of the predefined trajectory
         double posOffset = (p_max/(1+(timeMid/(2*timeTakeoff))));
         if (posOffset<p_min)
             posOffset = p_min;
