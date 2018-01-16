@@ -443,7 +443,7 @@ buildPredefinedPath(endEffectorDevice,Vector3(0,0,1),endConfig,posOffset,-velOff
         bezier_Ptr refEffectorMidBezier;
         PathVectorPtr_t refEffectorPath;
         const size_t maxIterationRRT = 50; //FIXME : adjust value for more complexe environnement
-        while(!success_rrt && weightRRT <1){
+        while(!success_rrt && weightRRT <=1){
             refEffectorPath  = computeBezierPath(endEffectorDevice,pDataMid,endEffPath,timeMid,weightRRT,refEffectorTakeoff, refEffectorLanding,refEffectorMidBezier );
             if(!refEffectorPath){
                 hppDout(notice,"Error whil computing Bezier path");
@@ -500,7 +500,8 @@ buildPredefinedPath(endEffectorDevice,Vector3(0,0,1),endConfig,posOffset,-velOff
             // FIXME : using pathId = problemSolver->paths().size()  this way assume that the path returned by this method will be the next added in problemSolver. As there is no access to problemSolver here, it's the best workaround.
             return interpolatedPath;
         }else{
-            return PathPtr_t();
+            hppDout(notice,"Effector RRT failed to produce a bezier curve, return rrt path.");
+            return fullBodyComPath;
         }
 
 
