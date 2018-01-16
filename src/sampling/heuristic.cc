@@ -123,7 +123,7 @@ double DynamicWalkHeuristic(const sampling::Sample& sample,
   fcl::Vec3f n(normal);
   n.normalize();
   double weightDir,weightStatic;
-  weightStatic=10000.;
+  weightStatic=100.;
 
   if(direction.norm() == 0 || std::isnan(direction.norm())){ // test for null vector, functions called before this one can try to normalize direction resulting in NaN
       weightDir=0;
@@ -225,12 +225,14 @@ HeuristicFactory::HeuristicFactory()
   //  seed = 1505997146 ; // bauzil walk
   //  seed = 1507215254; // bauzil 2
 //    seed = 1507302685; // darpa
-//    seed = 1510137769; // walk bauzil 2
-//   seed = 1511447706; // walk bauzil small steps
+    // seed = 1510137769; // walk bauzil 2
+   //  seed = 1511447706; // walk bauzil small steps
   //  seed = 1513330208; // walk straight line with weight static = 10 000 dit = 100
-   seed = 1513588852; // walk straight line with weight static = 10 000 dit = 100
+  // seed = 1513588852; // walk straight line (tested on robot)
   //  seed = 1510645311 ; // darpa line 1 repositionning // step = 0.05
   //  seed = 1510645700 ; // darpa line // step = 0.1
+  //  seed = 1516093154; // walk bauzil v=0.3, bof
+    seed = 1516107025;// walk bauzil v=0.2
     std::cout<<"seed HEURISTIC = "<<seed<<std::endl;
     srand ( seed);
     hppDout(notice,"SEED for heuristic = "<<seed);

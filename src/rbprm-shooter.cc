@@ -204,8 +204,8 @@ namespace
       //seed = 1502899400; // slalom hrp2 (v = 1 ; a = 5 )
      // seed = 1503410641; // slalom hrp2 (v = 0.3 ; a = 0.5 ) (not a lot of clearance)
      // seed = 1504775033; // bug random shortcut bauzil
-     // seed = 1504793163; // walk bauzil OK
-      seed = 1505996568 ; //bauzil walk
+    //  seed = 1505996568 ; //bauzil walk OK v = 0.3
+        seed = 1516106467; // walk bauzil v = 0.2
     //  seed = 1507292219 ; // darpa test
       srand (seed);
       hppDout(notice,"&&&&&& SEED = "<<seed);
