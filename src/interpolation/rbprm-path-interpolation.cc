@@ -218,10 +218,15 @@ if (nbFailures > 1)
             }
 
             newState.nbContacts = newState.contactNormals_.size();
-            if(!sameAsPrevious){
-              hppDout(notice,"new state added at index "<<states.size()<<" conf = r(["<<model::displayConfig(newState.configuration_)<<"])");
-              states.push_back(std::make_pair(currentVal, newState));
+            if(sameAsPrevious){
+                states.pop_back();
             }
+            else{
+              hppDout(notice,"new state added at index "<<states.size()-1<<" conf = r(["<<model::displayConfig(states.back().second.configuration_)<<"])");
+               hppDout(notice,"First configuration for state "<<states.size()<<" : r(["<<model::displayConfig(newState.configuration_)<<"])");
+            }
+            states.push_back(std::make_pair(currentVal, newState));
+
             //allowFailure = nbRecontacts < robot_->GetLimbs().size();
             allowFailure = nbRecontacts < 2;
         }
