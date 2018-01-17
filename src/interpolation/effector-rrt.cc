@@ -436,6 +436,8 @@ buildPredefinedPath(endEffectorDevice,Vector3(0,0,1),endConfig,posOffset,-velOff
         hppDout(notice,"Distance : "<<(pDataMid.c1_-pDataMid.c0_).transpose());
         hppDout(notice,"Time = "<<timeMid);
 
+        endEffPath.setOffset(pDataMid.c0_ - endEffPath(0));
+
         // ## call solver :
         double weightRRT = 0.;
         bool success_rrt = false;
@@ -558,7 +560,7 @@ buildPredefinedPath(endEffectorDevice,Vector3(0,0,1),endConfig,posOffset,-velOff
     vector_t EndEffectorPath::operator ()(double t) const{
         double u = fullBodyPath_->timeRange().first + t*fullBodyPath_->length(); // t is between 0 and 1
         vector_t res = GetEffectorPositionAt(fullBodyPath_,positionConstraint_,u);
-        return Vector3(res);
+        return Vector3(res+offset_);
     }
 
 

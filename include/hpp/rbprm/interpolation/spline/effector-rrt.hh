@@ -107,16 +107,19 @@ namespace interpolation {
 
     struct EndEffectorPath
     {
-        EndEffectorPath(const DevicePtr_t device,const JointPtr_t effector,const PathPtr_t path):
-            device_(device),effector_(effector),fullBodyPath_(path),positionConstraint_(createPositionMethod(device,fcl::Vec3f(), effector))
+        EndEffectorPath(const DevicePtr_t device,const JointPtr_t effector,const PathPtr_t path,const fcl::Vec3f& offset = fcl::Vec3f(0,0,0)):
+            device_(device),effector_(effector),fullBodyPath_(path),positionConstraint_(createPositionMethod(device,fcl::Vec3f(), effector)),offset_(offset)
         {}
         vector_t operator()(double t) const;
+        void setOffset(const fcl::Vec3f& offset){
+            hppDout(notice,"End effector path, offset = "<<offset);
+            offset_ = offset;}
 
         const core::DevicePtr_t device_;
         const JointPtr_t effector_;
         const core::PathPtr_t fullBodyPath_;
         constraints::PositionPtr_t positionConstraint_;
-
+        fcl::Vec3f offset_;
     };
 
 
