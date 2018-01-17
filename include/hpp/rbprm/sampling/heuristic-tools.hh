@@ -2,6 +2,7 @@
 #define HPP_HEURISTIC_TOOLS_HH
 
 #include <hpp/model/device.hh> // way to get the includes of fcl, ...
+#include <hpp/core/path.hh>
 #include <map>
 
 namespace hpp{
@@ -17,6 +18,8 @@ namespace sampling{
         fcl::Vec3f comAcceleration_; // The CoM acceleration
         std::string sampleLimbName_; // The name of the considered sample
         fcl::Transform3f tfWorldRoot_; // The transform between the world coordinate system and the root of the robot
+        core::PathConstPtr_t comPath_; // path followed by the CoM (found by planning)
+        double currentPathId_; // current id inside comPath (comPath(currentPathId) == comPosition
 
         HeuristicParam() {}
         HeuristicParam(const std::map<std::string, fcl::Vec3f> & cp, const fcl::Vec3f & comPos, const fcl::Vec3f & comSp, const fcl::Vec3f & comAcc,

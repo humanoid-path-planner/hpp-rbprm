@@ -487,7 +487,7 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
     return current;
 }
 
-ProjectionReport generate_contact(const ContactGenHelper &contactGenHelper, const std::string& limbName, const sampling::HeuristicParam & params,
+ProjectionReport generate_contact(const ContactGenHelper &contactGenHelper, const std::string& limbName, sampling::HeuristicParam & params,
                                   const sampling::heuristic evaluate)
 {
     ProjectionReport rep;
@@ -499,6 +499,8 @@ ProjectionReport generate_contact(const ContactGenHelper &contactGenHelper, cons
     // pick first sample which is collision free
     bool found_sample(false);
     bool unstableContact(false); //set to true in case no stable contact is found
+    params.comPath_=contactGenHelper.comPath_;
+    params.currentPathId_ = contactGenHelper.currentPathId_;
     rep.result_ = findValidCandidate(contactGenHelper,limbName,limb, validation, found_sample,unstableContact, params, evaluate);
     if(found_sample)
     {

@@ -105,7 +105,7 @@ projection::ProjectionReport maintain_contacts(ContactGenHelper& contactGenHelpe
 /// \param ContactGenHelper parametrization of the planner
 /// \param limb the limb to create a contact with
 /// \return the best candidate wrt the priority in the list and the contact order
-projection::ProjectionReport generate_contact(const ContactGenHelper& contactGenHelper, const std::string& limb, const sampling::HeuristicParam & params,
+projection::ProjectionReport generate_contact(const ContactGenHelper& contactGenHelper, const std::string& limb, sampling::HeuristicParam &params,
                                               const sampling::heuristic evaluate = 0);
 
 /// Given a combinatorial of possible contacts, generate
