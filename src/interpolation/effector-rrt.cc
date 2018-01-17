@@ -444,13 +444,14 @@ buildPredefinedPath(endEffectorDevice,Vector3(0,0,1),endConfig,posOffset,-velOff
         PathPtr_t interpolatedPath;
         bezier_Ptr refEffectorMidBezier;
         PathVectorPtr_t refEffectorPath;
-        const size_t maxIterationRRT = 50; //FIXME : adjust value for more complexe environnement
+        const size_t maxIterationRRT = 500; //FIXME : adjust value for more complexe environnement
         while(!success_rrt && weightRRT <=1){
             refEffectorPath  = computeBezierPath(endEffectorDevice,pDataMid,endEffPath,timeMid,weightRRT,refEffectorTakeoff, refEffectorLanding,refEffectorMidBezier );
             if(!refEffectorPath){
                 hppDout(notice,"Error whil computing Bezier path");
                 return fullBodyComPath;
             }
+
 
 
             // ## compute whole body motion that follow the reference
@@ -478,9 +479,8 @@ buildPredefinedPath(endEffectorDevice,Vector3(0,0,1),endConfig,posOffset,-velOff
                 hppDout(notice,"InterpolateStateFromPath failed for weightDistance = "<<weightRRT);
                 hppDout(notice,"Error = "<<e.what());
             }
-            weightRRT +=0.2;
+            weightRRT +=0.25;
         } // TODO : if this still fail, add another free waypoint to the bezier optimisation problem.
-
 
 
 
