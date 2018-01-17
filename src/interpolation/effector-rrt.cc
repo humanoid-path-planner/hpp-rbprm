@@ -470,7 +470,7 @@ buildPredefinedPath(endEffectorDevice,Vector3(0,0,1),endConfig,posOffset,-velOff
                 interpolatedPath = interpolateStatesFromPath<EffectorRRTHelper, EffectorRRTShooterFactory, SetEffectorRRTConstraints>
                         (fullbody, referenceProblem, shooterFactory, constraintFactory, comPath,
                          //stateFrames.begin(), stateFrames.begin()+1, numOptimizations % 10, keepExtraDof);
-                         stateFrames.begin(), stateFrames.begin()+1, numOptimizations, keepExtraDof, 0.001,maxIterationRRT);
+                         stateFrames.begin(), stateFrames.begin()+1, /*numOptimizations this should be different from the numOptimization used by comRRT*/ 1 , keepExtraDof, 0.001,maxIterationRRT);
                 if(interpolatedPath){
                     success_rrt = true;
                     hppDout(notice,"InterpolateStateFromPath success for weightDistance = "<<weightRRT);
