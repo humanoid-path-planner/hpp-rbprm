@@ -20,6 +20,7 @@
 #include <hpp/rbprm/stability/stability.hh>
 #include <hpp/rbprm/tools.hh>
 #include <hpp/model/configuration.hh>
+#include <hpp/rbprm/sampling/heuristic-tools.hh>
 #ifdef PROFILE
     #include "hpp/rbprm/rbprm-profiler.hh"
 #endif

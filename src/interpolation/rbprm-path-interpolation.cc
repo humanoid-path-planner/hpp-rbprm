@@ -20,6 +20,7 @@
 #include <hpp/rbprm/projection/projection.hh>
 #include <hpp/core/config-projector.hh>
 #include <hpp/rbprm/interpolation/interpolation-constraints.hh>
+#include <hpp/rbprm/sampling/heuristic-tools.hh>
 #ifdef PROFILE
     #include "hpp/rbprm/rbprm-profiler.hh"
 #endif

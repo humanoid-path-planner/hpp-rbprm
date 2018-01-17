@@ -15,6 +15,7 @@
 // hpp-rbprm. If not, see <http://www.gnu.org/licenses/>.
 
 #include <hpp/rbprm/sampling/heuristic.hh>
+#include <hpp/rbprm/sampling/heuristic-tools.hh>
 #include <hpp/model/configuration.hh>
 #include <time.h>
 

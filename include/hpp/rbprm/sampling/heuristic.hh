@@ -20,7 +20,6 @@
 # define HPP_HEURISTIC_HH
 
 #include <hpp/rbprm/sampling/sample.hh>
-#include <hpp/rbprm/sampling/heuristic-tools.hh>
 
 #include <map>
 
@@ -29,6 +28,8 @@ namespace hpp {
 
   namespace rbprm {
   namespace sampling{
+
+  struct HeuristicParam;
 
 
   /// Defines a heuristic method to sort samples
