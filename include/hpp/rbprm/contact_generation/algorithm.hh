@@ -69,13 +69,17 @@ hpp::rbprm::State HPP_RBPRM_DLLAPI ComputeContacts(
 ///  types are to be used in generating contacts for each limb.
 /// \param direction An estimation of the direction of motion of the character.
 /// \param robustnessTreshold minimum value of the static equilibrium robustness criterion required to accept the configuration (0 by default).
+/// \param acceleration acceleration on the CoM estimated by the planning
+/// \param comPath : path found by the planning
+/// \param currentPathId : timing inside comPath such that comPath(currentPathId) == configuration (for the freeflyer DOFs)
 /// \return a State describing the computed contact configuration, with relevant contact information and balance information.
 hpp::rbprm::contact::ContactReport HPP_RBPRM_DLLAPI ComputeContacts(
         const hpp::rbprm::State& previous, const hpp::rbprm::RbPrmFullBodyPtr_t& body,
         model::ConfigurationIn_t configuration,
             const affMap_t& affordances,
         const std::map<std::string, std::vector<std::string> >& affFilters, const fcl::Vec3f& direction,
-  const double robustnessTreshold = 0,const fcl::Vec3f& acceleration = fcl::Vec3f(0,0,0));
+  const double robustnessTreshold = 0,const fcl::Vec3f& acceleration = fcl::Vec3f(0,0,0),
+        const core::PathConstPtr_t& comPath = core::PathPtr_t(),const double currentPathId=0);
 
 
     } // namespace contact

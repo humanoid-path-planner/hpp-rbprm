@@ -38,7 +38,7 @@ ContactGenHelper::ContactGenHelper(RbPrmFullBodyPtr_t fb, const State& ps, model
                                     const fcl::Vec3f& direction,
                                     const fcl::Vec3f& acceleration,
                                     const bool contactIfFails,
-                                    const bool stableForOneContact)
+                                    const bool stableForOneContact, const core::PathConstPtr_t &comPath, const double currentPathId)
 : fullBody_(fb)
 , previousState_(ps)
 , checkStabilityMaintain_(checkStabilityMaintain)
@@ -53,6 +53,8 @@ ContactGenHelper::ContactGenHelper(RbPrmFullBodyPtr_t fb, const State& ps, model
 , affFilters_(affFilters)
 , workingState_(previousState_)
 , checkStabilityGenerate_(checkStabilityGenerate)
+, comPath_(comPath)
+, currentPathId_(currentPathId)
 {
     workingState_.configuration_ = configuration;
     workingState_.stable = false;

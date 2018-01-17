@@ -22,7 +22,6 @@
 # include <hpp/rbprm/rbprm-state.hh>
 # include <hpp/rbprm/rbprm-fullbody.hh>
 # include <hpp/rbprm/projection/projection.hh>
-
 # include <queue>
 
 namespace hpp {
@@ -47,7 +46,9 @@ struct ContactGenHelper
                       const fcl::Vec3f& direction = fcl::Vec3f(0,0,1),
                       const fcl::Vec3f& acceleration = fcl::Vec3f(0,0,0),
                       const bool contactIfFails = false,
-                      const bool stableForOneContact = false);
+                      const bool stableForOneContact = false,
+                      const core::PathConstPtr_t& comPath=core::PathConstPtr_t(),
+                      const double currentPathId=0);
     ~ContactGenHelper(){}
     hpp::rbprm::RbPrmFullBodyPtr_t fullBody_;
     const hpp::rbprm::State previousState_;
@@ -64,6 +65,9 @@ struct ContactGenHelper
     hpp::rbprm::State workingState_;
     bool checkStabilityGenerate_;
     Q_State candidates_;
+    const core::PathConstPtr_t comPath_;
+    const double currentPathId_;
+
 };
 
 

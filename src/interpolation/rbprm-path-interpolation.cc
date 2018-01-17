@@ -128,6 +128,7 @@ namespace hpp {
         std::size_t repos = 0;
         bool allowFailure = true;
         Eigen::Vector3d dir,acc;
+        const PathConstPtr_t comPath = boost::dynamic_pointer_cast<const core::Path>(path_);
 #ifdef PROFILE
     RbPrmProfiler& watch = getRbPrmProfiler();
     watch.reset_all();
@@ -146,8 +147,7 @@ namespace hpp {
             if(!nonZero) direction = fcl::Vec3f(0,0,1.);
             // TODO Direction 6d
             hppDout(notice,"#call ComputeContact, looking for state "<<states.size());
-            hpp::rbprm::contact::ContactReport rep = contact::ComputeContacts(previous, robot_,configuration, affordances,affFilters,direction,
-                                             robustnessTreshold,acc);
+            hpp::rbprm::contact::ContactReport rep = contact::ComputeContacts(previous, robot_,configuration, affordances,affFilters,direction,robustnessTreshold,acc,comPath,currentVal);
             State& newState = rep.result_;
 
 
