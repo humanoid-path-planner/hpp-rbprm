@@ -20,6 +20,7 @@ namespace sampling{
         fcl::Transform3f tfWorldRoot_; // The transform between the world coordinate system and the root of the robot
         core::PathConstPtr_t comPath_; // path followed by the CoM (found by planning)
         double currentPathId_; // current id inside comPath (comPath(currentPathId) == comPosition
+        fcl::Vec3f limbReferenceOffset_; // offset between position of the root and position of the end effector in the reference config
 
         HeuristicParam() {}
         HeuristicParam(const std::map<std::string, fcl::Vec3f> & cp, const fcl::Vec3f & comPos, const fcl::Vec3f & comSp, const fcl::Vec3f & comAcc,

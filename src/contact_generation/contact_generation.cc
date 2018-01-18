@@ -501,6 +501,7 @@ ProjectionReport generate_contact(const ContactGenHelper &contactGenHelper, cons
     bool unstableContact(false); //set to true in case no stable contact is found
     params.comPath_=contactGenHelper.comPath_;
     params.currentPathId_ = contactGenHelper.currentPathId_;
+    params.limbReferenceOffset_ = limb->effectorReferencePosition_;
     rep.result_ = findValidCandidate(contactGenHelper,limbName,limb, validation, found_sample,unstableContact, params, evaluate);
     if(found_sample)
     {
