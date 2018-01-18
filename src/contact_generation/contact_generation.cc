@@ -422,6 +422,7 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
         const sampling::OctreeReport& bestReport = *it;
         hppDout(notice,"heuristic value = "<<it->value_);
         /*ProjectionReport */rep = projectSampleToObstacle(contactGenHelper.fullBody_, limbId, limb, bestReport, validation, configuration, current);
+        hppDout(notice,"config : r(["<<model::displayConfig(configuration)<<"])");
         hppDout(notice,"projection to obstacle success = "<<rep.success_);
         if(rep.success_)
         {

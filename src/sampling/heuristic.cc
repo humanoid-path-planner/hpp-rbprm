@@ -271,7 +271,7 @@ HeuristicFactory::HeuristicFactory()
   //  seed = 1510645311 ; // darpa line 1 repositionning // step = 0.05
   //  seed = 1510645700 ; // darpa line // step = 0.1
   //  seed = 1516093154; // walk bauzil v=0.3, bof
-    seed = 1516107025;// walk bauzil v=0.2
+   // seed = 1516107025;// walk bauzil v=0.2
     std::cout<<"seed HEURISTIC = "<<seed<<std::endl;
     srand ( seed);
     hppDout(notice,"SEED for heuristic = "<<seed);
