@@ -175,6 +175,44 @@ double DynamicWalkHeuristic(const sampling::Sample& sample,
 }
 
 
+double fixedStepHeuristic(const sampling::Sample& sample,
+                      const Eigen::Vector3d& direction, const Eigen::Vector3d& normal, const HeuristicParam & params,const double t_step){
+    if(! params.comPath_){
+        hppDout(notice,"In heuristic : comPath was not provided, use default heuristic");
+        return DynamicWalkHeuristic(sample,direction,normal,params);
+    }
+    hppDout(notice,"FixedStep heuristic : comPath exist");
+    bool success;
+    // Compute the 'ideal' contact position in t_step
+    Configuration_t q_target = (*params.comPath_)(params.currentPathId_+t_step,success).head<7>();
+    Transform3f tRootTarget;
+    tRootTarget.setTranslation(fcl::Vec3f(q_target.head<3>()));
+    fcl::Quaternion3f quatRoot(q_target[3],q_target[4],q_target[5],q_target[6]);
+    tRootTarget.setQuatRotation(quatRoot);
+    hppDout(notice,"heuristic : tRootTarget = "<<tRootTarget);
+    fcl::Vec3f pTarget = (tRootTarget * params.limbReferenceOffset_).getTranslation();
+    hppDout(notice,"heuristic : pTarget = ["<<pTarget[0]<<","<<pTarget[1]<<","<<pTarget[2]<<"]");
+    // FIXME : we could factorize all of the above and only do it once for each position of the CoM. But this require to know t_step in contact_generation::generate_contact ...
+    fcl::Vec3f pSample = (params.tfWorldRoot_ * sample.effectorPosition_).getTranslation();
+    return (10.-(pSample-pTarget).squaredNorm()); // 10 - because it's an heuristic and not a cost
+}
+
+
+double fixedStep1Heuristic(const sampling::Sample& sample,
+                      const Eigen::Vector3d& direction, const Eigen::Vector3d& normal, const HeuristicParam & params){
+    return fixedStepHeuristic(sample,direction,normal,params,1.);
+}
+
+double fixedStep08Heuristic(const sampling::Sample& sample,
+                      const Eigen::Vector3d& direction, const Eigen::Vector3d& normal, const HeuristicParam & params){
+    return fixedStepHeuristic(sample,direction,normal,params,0.8);
+}
+
+double fixedStep06Heuristic(const sampling::Sample& sample,
+                      const Eigen::Vector3d& direction, const Eigen::Vector3d& normal, const HeuristicParam & params){
+    return fixedStepHeuristic(sample,direction,normal,params,0.6);
+}
+
 
 double BackwardHeuristic(const sampling::Sample& sample,
                       const Eigen::Vector3d& direction, const Eigen::Vector3d& normal, const HeuristicParam & /*params*/)
@@ -247,6 +285,9 @@ HeuristicFactory::HeuristicFactory()
     heuristics_.insert(std::make_pair("backward", &BackwardHeuristic));
     heuristics_.insert(std::make_pair("jointlimits", &DistanceToLimitHeuristic));
     heuristics_.insert(std::make_pair("dynamic", &dynamicHeuristic));
+    heuristics_.insert(std::make_pair("fixedStep1", &fixedStep1Heuristic));
+    heuristics_.insert(std::make_pair("fixedStep08", &fixedStep08Heuristic));
+    heuristics_.insert(std::make_pair("fixedStep06", &fixedStep06Heuristic));
 }
 
 HeuristicFactory::~HeuristicFactory(){}
