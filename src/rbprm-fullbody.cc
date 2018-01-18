@@ -237,6 +237,30 @@ namespace hpp {
         return true;
     }
 
+    void RbPrmFullBody::referenceConfig(model::Configuration_t referenceConfig)
+    {
+        referenceConfig_=referenceConfig;
+        //create transform of the freeflyer in the world frame :
+        fcl::Transform3f tRoot;
+        fcl::Transform3f tJoint_world,tJoint_robot;
+        tRoot.setTranslation(fcl::Vec3f(referenceConfig.head<3>()));
+        fcl::Quaternion3f quatRoot(referenceConfig[3],referenceConfig[4],referenceConfig[5],referenceConfig[6]);
+        tRoot.setQuatRotation(quatRoot);
+        hppDout(notice,"reference root transform : "<<tRoot);
+        // retrieve transform of each effector joint
+        device_->currentConfiguration(referenceConfig);
+        device_->computeForwardKinematics();
+        if (limbs_.empty())
+            hppDout(warning,"No limbs found when setting reference configuration, you should add the limbs before setting the reference.");
+        for(CIT_Limb lit = limbs_.begin() ; lit != limbs_.end() ; ++lit){
+            tJoint_world = lit->second->effector_->currentTransformation();
+            hppDout(notice,"tJoint of "<<lit->first<<" : "<<tJoint_world);
+            tJoint_robot = tRoot.inverseTimes(tJoint_world);
+            hppDout(notice,"tJoint relative : "<<tJoint_robot);
+            lit->second->effectorReferencePosition_ = tJoint_robot.getTranslation();
+        }
+    }
+
 
 
 

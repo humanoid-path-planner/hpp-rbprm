@@ -120,6 +120,7 @@ namespace hpp {
         sampling::SampleDB sampleContainer_;
         const bool disableEndEffectorCollision_;
         const bool grasps_;
+        fcl::Vec3f effectorReferencePosition_;
 
     protected:
 

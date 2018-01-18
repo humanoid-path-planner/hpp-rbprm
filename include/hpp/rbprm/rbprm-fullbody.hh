@@ -130,7 +130,7 @@ namespace hpp {
         const double getFriction(){return mu_;}
         void setFriction(double mu){mu_ = mu;}
         const model::Configuration_t referenceConfig(){return referenceConfig_;}
-        void referenceConfig(model::Configuration_t referenceConfig){referenceConfig_=referenceConfig;}
+        void referenceConfig(model::Configuration_t referenceConfig);
         bool addEffectorTrajectory(const size_t pathId,const std::string& effectorName,const bezier_Ptr& trajectory);
         bool addEffectorTrajectory(const size_t pathId, const std::string& effectorName, const std::vector<bezier_Ptr>& trajectories);
         bool getEffectorsTrajectories(const size_t pathId,EffectorTrajectoriesMap_t& result);
