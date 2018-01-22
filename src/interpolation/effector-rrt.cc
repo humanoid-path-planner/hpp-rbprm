@@ -353,14 +353,17 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
     }
 
     void computePredefConstants(double dist_translation,double p_max,double p_min,double t_total,double &t_predef, double &posOffset, double &velOffset,double &a_max_predefined ){
-        const double jerk = 15;
+        double timeMid= t_total - (2*t_predef);
+        //const double jerk_mid = ((1./6.)*(1/8.)*timeMid*timeMid*timeMid);
+        //const double jerk = p_max / ((0.5*t_predef*(timeMid*timeMid/4.)) + (0.25*t_predef*t_predef*timeMid) + ((1./6.)*t_predef*t_predef*t_predef) - (2.*t_predef/timeMid));
+        const double jerk = 1.5*p_max / (((1./6.)*t_predef*t_predef*t_predef) + ((1./6.)*t_predef*t_predef*timeMid) + ((1./24.)*t_predef*timeMid*timeMid));
+       // const double jerk = 15.;
         a_max_predefined = jerk * t_predef;
         velOffset = 0.5 * jerk * t_predef * t_predef;
         posOffset = (1./6.) * jerk * t_predef * t_predef * t_predef;
+        hppDout(notice,"pos offset = "<<posOffset<<" ; jerk = "<<jerk<<" ; acc = "<<a_max_predefined<<" ; vel = "<<velOffset);
 
-       /* double a_approx = a_max_predefined*(2./3.);
-        velOffset = a_approx * t_predef;
-        posOffset = 0.5 * a_approx * t_predef * t_predef;*/
+
      }
 
 
@@ -465,7 +468,7 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
         const double p_max = 0.03; // offset for the higher point in the curve
         const double p_min = 0.002; // min offset at the end of the predefined trajectory
         double posOffset,velOffset,a_max_predefined;
-        a_max_predefined = 1.;
+        a_max_predefined = 1.5;
 
 
         computePredefConstants(dist_translation,p_max,p_min,totalTime,timeTakeoff,posOffset,velOffset,a_max_predefined);
