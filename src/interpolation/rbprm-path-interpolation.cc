@@ -226,8 +226,11 @@ if (nbFailures > 1)
               hppDout(notice,"new state added at index "<<states.size()-1<<" conf = r(["<<model::displayConfig(states.back().second.configuration_)<<"])");
                hppDout(notice,"First configuration for state "<<states.size()<<" : r(["<<model::displayConfig(newState.configuration_)<<"])");
             }
-            states.push_back(std::make_pair(currentVal, newState));
-
+            if(states.empty()){ // initial state, we keep the initial configuration but update the timing
+                states.push_back(std::make_pair(currentVal, this->start_));
+            }else{
+                states.push_back(std::make_pair(currentVal, newState));
+            }
             //allowFailure = nbRecontacts < robot_->GetLimbs().size();
             allowFailure = nbRecontacts < 2;
         }

@@ -252,7 +252,7 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
      * @param offsetConfig return the goal or init configuration
      * @return the path
      */
-    BezierPathPtr_t buildPredefinedPath(const DevicePtr_t& endEffectorDevice,const Vector3& normal,const Configuration_t& config,double posOffset, double velOffset,double time,bool init, Configuration_t& offsetConfig,bezier_com_traj::ProblemData& pData){
+    BezierPathPtr_t buildPredefinedPath(const DevicePtr_t& endEffectorDevice,const Vector3& normal,const Configuration_t& config,double posOffset, double velOffset,double time,bool init, Configuration_t& offsetConfig,bezier_com_traj::ProblemData& pData,double aOffset = 0){
         Vector3 c(config.head<3>());
         pData.c0_=c;
         pData.c1_=c;
@@ -267,8 +267,13 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
             pData.dc1_=Vector3::Zero();
             pData.dc0_=normal*velOffset; // TODO replace with value * normal
         }
-        pData.ddc0_=Vector3::Zero();
-        pData.ddc1_=Vector3::Zero();
+        if(init){
+            pData.ddc0_=Vector3::Zero();
+            pData.ddc1_=normal*aOffset;
+        }else{
+            pData.ddc1_=Vector3::Zero();
+            pData.ddc0_=normal*aOffset;
+        }
 
         offsetConfig.head<3>()=pData.c1_;
         hppDout(notice,"CREATE BEZIER for constraints : ");
@@ -280,7 +285,7 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         hppDout(notice,"ddc1 = "<<pData.ddc1_.transpose());
         hppDout(notice,"Compute waypoints for takeOff phase : ");
         std::vector<bezier_t::point_t> pts;
-        pts = bezier_com_traj::computeConstantWaypoints(pData,time,5);
+        pts = bezier_com_traj::computeConstantWaypoints(pData,time,7);
         BezierPathPtr_t refEffector;
         if (init)
             refEffector= BezierPath::create(endEffectorDevice,pts.begin(),pts.end(),config,offsetConfig,core::interval_t(0.,time));
@@ -347,6 +352,64 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
         return refEffectorPath;
     }
 
+    void computePredefConstants(double dist_translation,double p_max,double p_min,double t_total,double &t_predef, double &posOffset, double &velOffset,double &a_max_predefined ){
+        const double jerk = 15;
+        a_max_predefined = jerk * t_predef;
+        velOffset = 0.5 * jerk * t_predef * t_predef;
+        posOffset = (1./6.) * jerk * t_predef * t_predef * t_predef;
+
+       /* double a_approx = a_max_predefined*(2./3.);
+        velOffset = a_approx * t_predef;
+        posOffset = 0.5 * a_approx * t_predef * t_predef;*/
+     }
+
+
+    /*void computePredefConstants(double dist_translation,double p_max,double p_min,double t_total,double &t_predef, double &posOffset, double &velOffset,double &a_max_predefined ){
+        double timeMid= t_total - (2*t_predef);
+        posOffset = (p_max/(1+(timeMid/(2*t_predef))));
+        if (posOffset<p_min)
+            posOffset = p_min;
+        a_max_predefined = posOffset*2./(t_predef*t_predef);
+        const double a_max_translation  = dist_translation*8 /(timeMid*timeMid);
+        hppDout(notice,"A_max predefined = "<<a_max_predefined<<" ; translation : "<<a_max_translation);
+
+        if(a_max_predefined>a_max_translation){ // we should increase the time allowed to the predefined curve, such that the two acceleration are equals
+            hppDout(notice,"a_z sup a_translation, need to increase time_predef");
+//            const double a = 8*dist_translation - 4*p_max;
+//            const double b = -4*dist_translation*t_total + 4 * t_total * p_max;
+//            const double c = - t_total*t_total * p_max;
+//            const double delta = b*b - 4 * a * c;
+//            const double x1 = (-b - sqrt(delta))/(2*a);
+//            const double x2 = (-b + sqrt(delta))/(2*a);
+//            double x = 0;
+//            hppDout(notice,"x1 = "<<x1<<" ; x2 = "<<x2);
+//            if((x1 < t_predef) || (x1 > t_total/2)){
+//                hppDout(notice,"x1 invalid");
+//            }else{
+//                x = x1;
+//            }
+//            if((x2 < t_predef) || (x2 > t_total/2)){
+//                hppDout(notice,"x2 invalid");
+//            }else{
+//                x = std::max(x,x2);
+//            }
+//            if (x > 0)
+//                t_predef = x;
+
+            t_predef *= 2.;
+            hppDout(notice,"new t_predef : "<<t_predef);
+            timeMid= t_total - (2*t_predef);
+            posOffset = (p_max/(1+(timeMid/(2*t_predef))));
+            if (posOffset<p_min)
+                posOffset = p_min;
+            a_max_predefined = posOffset*2./(t_predef*t_predef);
+
+        }
+        velOffset = t_predef*a_max_predefined;
+       // a_max_predefined *= 1.5;
+        hppDout(notice," pos offset = "<<posOffset<< "  ; vel offset = "<<velOffset);
+    }
+*/
 
     core::PathPtr_t effectorRRTFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemSolverPtr_t problemSolver, const PathPtr_t comPath,
                            const State &startState, const State &nextState,
@@ -380,9 +443,14 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
 
         // ## compute initial takeoff phase for the end effector :
 
-        const double timeDelay = 0.02; //(percentage of the total) this is the time during the 'single support' phase where the feet don't move. It is needed to allow a safe mass transfer without exiting the flexibility.
+        Vector3 c0(initConfig.head<3>());
+        Vector3 c1(endConfig.head<3>());
+        c0[2]=0; // replace with normal instead of z axis
+        c1[2]=0;
+        const double dist_translation = (c1-c0).norm();
+        const double timeDelay = 0.03; //(percentage of the total) this is the time during the 'single support' phase where the feet don't move. It is needed to allow a safe mass transfer without exiting the flexibility.
         const double totalTime = comPath->length()*(1-2*timeDelay);
-        const double ratioTimeTakeOff=0.1;// percentage of the total time // was 0.1
+        //const double ratioTimeTakeOff=0.1;// percentage of the total time // was 0.1
 
         /*double a_max_predefined = 0.5 ; // amax for predefined phases
         a_max_predefined /= 1.5 ; // approx because the acceleration is bezier curve and not a bang-bang
@@ -392,27 +460,25 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
         const double velOffset = timeTakeoff*a_max_predefined; //  Equation here only valids if v0 = 0
         */
 
-        const double timeTakeoff = totalTime*ratioTimeTakeOff; // percentage of the total time
-        const double timeLanding = timeTakeoff;
-        const double timeMid = totalTime*(1-2*ratioTimeTakeOff);
-
-        //const double posOffset = 0.01; // this is the minimum offset, the max along the curve will be higher.
+       // const double timeTakeoff = totalTime*ratioTimeTakeOff; // percentage of the total time
+        double timeTakeoff = 0.1; // it's a minimum time, it can be increased
         const double p_max = 0.03; // offset for the higher point in the curve
         const double p_min = 0.002; // min offset at the end of the predefined trajectory
-        double posOffset = (p_max/(1+(timeMid/(2*timeTakeoff))));
-        if (posOffset<p_min)
-            posOffset = p_min;
-        const double a_max_predefined = posOffset*2./(timeTakeoff*timeTakeoff);
-        const double velOffset = timeTakeoff*a_max_predefined;
+        double posOffset,velOffset,a_max_predefined;
+        a_max_predefined = 1.;
 
-        hppDout(notice," pos offset = "<<posOffset<< "  ; vel offset = "<<velOffset);
+
+        computePredefConstants(dist_translation,p_max,p_min,totalTime,timeTakeoff,posOffset,velOffset,a_max_predefined);
+
+
+        const double timeLanding = timeTakeoff;
+        const double timeMid = totalTime-2*timeTakeoff;
+
 
         bezier_com_traj::ProblemData pDataLanding,pDataTakeoff;
-        BezierPathPtr_t refEffectorTakeoff = buildPredefinedPath(endEffectorDevice,Vector3(0,0,1),initConfig,posOffset,velOffset,timeTakeoff,true,takeoffConfig,pDataTakeoff);
+        BezierPathPtr_t refEffectorTakeoff = buildPredefinedPath(endEffectorDevice,Vector3(0,0,1),initConfig,posOffset,velOffset,timeTakeoff,true,takeoffConfig,pDataTakeoff,a_max_predefined);
         BezierPathPtr_t refEffectorLanding =
-buildPredefinedPath(endEffectorDevice,Vector3(0,0,1),endConfig,posOffset,-velOffset,timeLanding,false,landingConfig,pDataLanding);
-
-
+buildPredefinedPath(endEffectorDevice,Vector3(0,0,1),endConfig,posOffset,-velOffset,timeLanding,false,landingConfig,pDataLanding,a_max_predefined);
 
 
         // ## compute bezier curve that follow the rrt path and that respect the constraints :
@@ -483,6 +549,7 @@ buildPredefinedPath(endEffectorDevice,Vector3(0,0,1),endConfig,posOffset,-velOff
         } // TODO : if this still fail, add another free waypoint to the bezier optimisation problem.
 
 
+        success_rrt = true;
 
         if (success_rrt){
             // ## save the path
