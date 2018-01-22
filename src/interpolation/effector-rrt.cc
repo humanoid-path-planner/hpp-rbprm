@@ -356,9 +356,20 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
         double timeMid= t_total - (2*t_predef);
         //const double jerk_mid = ((1./6.)*(1/8.)*timeMid*timeMid*timeMid);
         //const double jerk = p_max / ((0.5*t_predef*(timeMid*timeMid/4.)) + (0.25*t_predef*t_predef*timeMid) + ((1./6.)*t_predef*t_predef*t_predef) - (2.*t_predef/timeMid));
-        const double jerk = 1.5*p_max / (((1./6.)*t_predef*t_predef*t_predef) + ((1./6.)*t_predef*t_predef*timeMid) + ((1./24.)*t_predef*timeMid*timeMid));
+        double jerk = 1.5*p_max / (((1./6.)*t_predef*t_predef*t_predef) + ((1./6.)*t_predef*t_predef*timeMid) + ((1./24.)*t_predef*timeMid*timeMid));
        // const double jerk = 15.;
         a_max_predefined = jerk * t_predef;
+
+
+        const double a_max_translation  = dist_translation*8 /(timeMid*timeMid);
+        hppDout(notice,"A_max predefined = "<<a_max_predefined<<" ; translation : "<<a_max_translation);
+        if(a_max_predefined>a_max_translation && timeMid > (2*t_predef)){ // we should increase the time allowed to the predefined curve, such that the two acceleration are equals
+            hppDout(notice,"a_z sup a_translation, need to increase time_predef");
+            t_predef *=2;
+            timeMid= t_total - (2*t_predef);
+            jerk = 1.5*p_max / (((1./6.)*t_predef*t_predef*t_predef) + ((1./6.)*t_predef*t_predef*timeMid) + ((1./24.)*t_predef*timeMid*timeMid));
+            a_max_predefined = jerk * t_predef;
+        }
         velOffset = 0.5 * jerk * t_predef * t_predef;
         posOffset = (1./6.) * jerk * t_predef * t_predef * t_predef;
         hppDout(notice,"pos offset = "<<posOffset<<" ; jerk = "<<jerk<<" ; acc = "<<a_max_predefined<<" ; vel = "<<velOffset);
@@ -455,20 +466,14 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
         const double totalTime = comPath->length()*(1-2*timeDelay);
         //const double ratioTimeTakeOff=0.1;// percentage of the total time // was 0.1
 
-        /*double a_max_predefined = 0.5 ; // amax for predefined phases
-        a_max_predefined /= 1.5 ; // approx because the acceleration is bezier curve and not a bang-bang
-        const double timeTakeoff = 0.2;
-        const double timeLanding = timeTakeoff;
-        const double posOffset = timeTakeoff*timeTakeoff*a_max_predefined/2.; // need to choose v, p and t  such that they can be reached together without changing the sign of acceleration. ie, v = a*t and p = a*t^2 /2 for a given 'a'.
-        const double velOffset = timeTakeoff*a_max_predefined; //  Equation here only valids if v0 = 0
-        */
+
 
        // const double timeTakeoff = totalTime*ratioTimeTakeOff; // percentage of the total time
         double timeTakeoff = 0.1; // it's a minimum time, it can be increased
         const double p_max = 0.03; // offset for the higher point in the curve
         const double p_min = 0.002; // min offset at the end of the predefined trajectory
         double posOffset,velOffset,a_max_predefined;
-        a_max_predefined = 1.5;
+        //a_max_predefined = 1.5;
 
 
         computePredefConstants(dist_translation,p_max,p_min,totalTime,timeTakeoff,posOffset,velOffset,a_max_predefined);
