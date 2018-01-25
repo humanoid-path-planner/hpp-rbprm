@@ -70,6 +70,7 @@ SET(${PROJECT_NAME}_HEADERS
     include/hpp/rbprm/reports.hh
     include/hpp/rbprm/contact_generation/algorithm.hh
     include/hpp/rbprm/contact_generation/contact_generation.hh
+    include/hpp/rbprm/contact_generation/reachability.hh
     include/hpp/rbprm/contact_generation/kinematics_constraints.hh
     include/hpp/rbprm/interpolation/rbprm-path-interpolation.hh
     include/hpp/rbprm/interpolation/time-constraint-helper.hh

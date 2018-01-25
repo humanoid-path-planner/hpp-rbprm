@@ -43,6 +43,7 @@ SET(${LIBRARY_NAME}_SOURCES
 				contact_generation/kinematics_constraints.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/contact_generation/kinematics_constraints.hh
         ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/reports.hh
 				contact_generation/algorithm.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/contact_generation/algorithm.hh
+				contact_generation/reachability.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/contact_generation/reachability.hh
         ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/limb-rrt.hh
         interpolation/limb-rrt.cc
         ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/com-rrt.hh
