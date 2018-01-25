@@ -42,15 +42,16 @@ VectorX triangleNormalTransform(const model::urdf::Parser::PolyhedronPtrType& ob
 std::pair<MatrixXX, MatrixXX> loadConstraintsFromObj(const std::string& fileName){
     hppDout(notice,"Load constraints for filename : "<<fileName);
 
-    /*std::ifstream f(fileName.c_str());
-    if(!f.good()){
-        hppDout(warning,"Unable to load kinematic constraints from obj, file doesn't exist : "<<fileName);
-        return std::pair<MatrixXX, VectorX>();
-    }*/
+
     model::urdf::Parser parser("anchor",model::DevicePtr_t());
     model::urdf::Parser::PolyhedronPtrType  polyhedron (new model::urdf::Parser::PolyhedronType);
     // name is stored in link->name
+    try{
     parser.loadPolyhedronFromResource (fileName, ::urdf::Vector3(1,1,1), polyhedron);
+    }catch (std::runtime_error e){
+        hppDout(warning,"Unable to load kinematics constraints : "<<e.what());
+        return std::pair<MatrixXX, MatrixXX>();
+    }
 
     // iterate over all faces : for each faces add a line in A : normal and a value in b : position of a vertice.dot(normal)
     size_t numFaces = polyhedron->num_tris;
