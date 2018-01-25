@@ -6,6 +6,7 @@
 
 namespace hpp {
   namespace rbprm {
+    namespace reachability{
 
 VectorX triangleNormal(const model::urdf::Parser::PolyhedronPtrType& obj, size_t index)
 {
@@ -101,7 +102,7 @@ std::pair<MatrixXX, VectorX> computeAllKinematicsInequalities(const RbPrmFullBod
 }
 
 
-std::pair<MatrixXX, VectorX> getInequalitiesAtTransform(const std::pair<MatrixXX, MatrixXX>& NV, fcl::Transform3f transform){
+std::pair<MatrixXX, VectorX> getInequalitiesAtTransform(const std::pair<MatrixXX, MatrixXX>& NV,const fcl::Transform3f& transform){
     size_t numIneq = NV.first.rows();
     MatrixXX A(numIneq,3);
     VectorX b(numIneq);
@@ -118,11 +119,11 @@ std::pair<MatrixXX, VectorX> getInequalitiesAtTransform(const std::pair<MatrixXX
     return std::make_pair(A,b);
 }
 
-bool verifyKinematicConstraints(const std::pair<MatrixXX, MatrixXX>& NV, fcl::Transform3f transform, fcl::Vec3f point){
+bool verifyKinematicConstraints(const std::pair<MatrixXX, MatrixXX>& NV, const fcl::Transform3f &transform, const fcl::Vec3f &point){
     return verifyKinematicConstraints(getInequalitiesAtTransform(NV,transform),point);
 }
 
-bool verifyKinematicConstraints(const std::pair<MatrixXX, VectorX>& Ab, fcl::Vec3f point){
+bool verifyKinematicConstraints(const std::pair<MatrixXX, VectorX>& Ab, const fcl::Vec3f &point){
     hppDout(notice,"verify kinematic constraints : point = "<<point);
     for(size_t i = 0 ; i < Ab.second.size() ; ++i){
         hppDout(notice,"for i = "<<i);
@@ -143,4 +144,4 @@ bool verifyKinematicConstraints(const State& state, fcl::Vec3f point){
 
 }
 }
-
+}

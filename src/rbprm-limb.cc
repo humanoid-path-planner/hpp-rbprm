@@ -95,7 +95,7 @@ namespace hpp {
         , disableEndEffectorCollision_(disableEndEffectorCollision)
         , grasps_(grasps)
         , effectorReferencePosition_()
-        , kinematicConstraints_(loadConstraintsFromObj("package://hpp-rbprm-corba/com_inequalities/"+limb_->name()+"_com_constraints.obj"))
+        , kinematicConstraints_(reachability::loadConstraintsFromObj("package://hpp-rbprm-corba/com_inequalities/"+limb_->name()+"_com_constraints.obj"))
     {
         // NOTHING
     }
@@ -157,7 +157,7 @@ namespace hpp {
       , disableEndEffectorCollision_(disableEndEffectorCollision)
       , grasps_(grasps)
       , effectorReferencePosition_()
-      , kinematicConstraints_(loadConstraintsFromObj("package://hpp-rbprm-corba/com_inequalities/"+limb_->name()+"_com_constraints.obj"))
+      , kinematicConstraints_(reachability::loadConstraintsFromObj("package://hpp-rbprm-corba/com_inequalities/"+limb_->name()+"_com_constraints.obj"))
     {
       // NOTHING
     }
