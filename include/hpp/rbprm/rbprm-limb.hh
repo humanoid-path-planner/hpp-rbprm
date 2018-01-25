@@ -124,7 +124,7 @@ namespace hpp {
         const bool disableEndEffectorCollision_;
         const bool grasps_;
         fcl::Vec3f effectorReferencePosition_;
-        std::pair<MatrixXX, VectorX> kinematicConstraints_;
+        std::pair<MatrixXX, MatrixXX> kinematicConstraints_;
 
     protected:
 

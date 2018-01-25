@@ -8,11 +8,14 @@ namespace hpp {
 
 
 
-std::pair<MatrixXX, VectorX> loadConstraintsFromObj(const std::string& fileName);
+std::pair<MatrixXX, MatrixXX> loadConstraintsFromObj(const std::string& fileName);
 
-std::pair<MatrixXX, VectorX> applyTransformToConstraints(const std::pair<MatrixXX, VectorX>& Ab, fcl::Transform3f transform);
+std::pair<MatrixXX, VectorX> getInequalitiesAtTransform(const std::pair<MatrixXX, MatrixXX>& NV, fcl::Transform3f transform);
 
 bool verifyKinematicConstraints(const std::pair<MatrixXX, VectorX>& Ab, fcl::Vec3f point);
+
+bool verifyKinematicConstraints(const std::pair<MatrixXX, MatrixXX>& NV, fcl::Transform3f transform, fcl::Vec3f point);
+
 
 bool verifyKinematicConstraints(const State& state, fcl::Vec3f point);
 
