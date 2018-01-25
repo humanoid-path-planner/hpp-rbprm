@@ -40,6 +40,7 @@ SET(${LIBRARY_NAME}_SOURCES
         interpolation/com-rrt-shooter.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/com-rrt-shooter.hh
 				projection/projection.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/projection/projection.hh
 				contact_generation/contact_generation.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/contact_generation/contact_generation.hh
+				contact_generation/kinematics_constraints.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/contact_generation/kinematics_constraints.hh
         ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/reports.hh
 				contact_generation/algorithm.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/contact_generation/algorithm.hh
         ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/limb-rrt.hh
