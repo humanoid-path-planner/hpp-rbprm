@@ -1,7 +1,7 @@
 # include <hpp/rbprm/contact_generation/kinematics_constraints.hh>
-# include  <hpp/rbprm/rbprm-device.hh>
+# include <hpp/rbprm/rbprm-device.hh>
 # include <hpp/model/urdf/parser.hh>
-# include <urdf/model.h>
+# include <hpp/rbprm/rbprm-fullbody.hh>
 
 
 namespace hpp {
@@ -76,6 +76,29 @@ std::pair<MatrixXX, MatrixXX> loadConstraintsFromObj(const std::string& fileName
 }
 
 
+std::pair<MatrixXX, VectorX> computeAllKinematicsInequalities(const RbPrmFullBodyPtr_t& fullBody,const model::ConfigurationPtr_t& configuration){
+    fullBody->device_->currentConfiguration(*configuration);
+    fullBody->device_->computeForwardKinematics();
+    // first loop to compute size required :
+    size_t numIneq = 0;
+    for(CIT_Limb lit = fullBody->GetLimbs().begin() ; lit != fullBody->GetLimbs().end() ; ++lit){
+        numIneq += lit->second->kinematicConstraints_.first.rows();
+    }
+    MatrixXX A(numIneq,3);
+    VectorX b(numIneq);
+    std::pair<MatrixXX,VectorX> Ab_limb;
+    size_t currentId = 0;
+    for(CIT_Limb lit = fullBody->GetLimbs().begin() ; lit != fullBody->GetLimbs().end() ; ++lit){
+        if(lit->second->kinematicConstraints_.first.size()>0){
+            Ab_limb = getInequalitiesAtTransform(lit->second->kinematicConstraints_,lit->second->effector_->currentTransformation());
+            A.block(currentId,0,Ab_limb.first.rows(),3) = Ab_limb.first;
+            b.segment(currentId,Ab_limb.first.rows()) = Ab_limb.second;
+            currentId += Ab_limb.first.rows();
+        }
+    }
+
+    return std::make_pair(A,b);
+}
 
 
 std::pair<MatrixXX, VectorX> getInequalitiesAtTransform(const std::pair<MatrixXX, MatrixXX>& NV, fcl::Transform3f transform){
