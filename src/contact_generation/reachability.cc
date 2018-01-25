@@ -1,6 +1,9 @@
 #include <hpp/rbprm/contact_generation/reachability.hh>
 #include <bezier-com-traj/solve.hh>
 #include <bezier-com-traj/common_solve_methods.hh>
+#include <hpp/rbprm/rbprm-fullbody.hh>
+#include <hpp/rbprm/stability/stability.hh>
+
 namespace hpp {
   namespace rbprm {
    namespace reachability{
@@ -58,6 +61,8 @@ std::pair<MatrixXX, MatrixXX> computeStabilityConstraints(const centroidal_dynam
     H.rowwise().normalize();
     int dimH = (int)(H.rows());
     hppDout(notice,"Dim H rows : "<<dimH<<" ; col : "<<H.cols());
+    hppDout(notice,"H = "<<H);
+    hppDout(notice,"h = "<<h);
     MatrixXX mH = contactPhase.m_mass * H;
 
     // constraints : mH g^  x <= h + mHg
@@ -67,6 +72,13 @@ std::pair<MatrixXX, MatrixXX> computeStabilityConstraints(const centroidal_dynam
     b = h+mH.block<3,3>(0,0)*g;
 
     return std::make_pair(A,b);
+}
+
+std::pair<MatrixXX, MatrixXX> computeStabilityConstraints(const RbPrmFullBodyPtr_t& fullbody,rbprm::State& state){
+    centroidal_dynamics::Equilibrium contactPhase(stability::initLibrary(fullbody));
+    centroidal_dynamics::EquilibriumAlgorithm alg = centroidal_dynamics::EQUILIBRIUM_ALGORITHM_DLP;
+    stability::setupLibrary(fullbody,state,contactPhase,alg);
+    return computeStabilityConstraints(contactPhase);
 }
 
 
