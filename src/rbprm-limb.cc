@@ -18,7 +18,7 @@
 #include <hpp/rbprm/sampling/sample-db.hh>
 #include <hpp/model/joint.hh>
 #include <hpp/rbprm/tools.hh>
-
+#include <hpp/rbprm/contact_generation/kinematics_constraints.hh>
 namespace hpp {
   namespace rbprm {
 
@@ -94,6 +94,8 @@ namespace hpp {
         , sampleContainer_(limb, effector_->name(), nbSamples, offset,limbOffset, resolution)
         , disableEndEffectorCollision_(disableEndEffectorCollision)
         , grasps_(grasps)
+        , effectorReferencePosition_()
+        , kinematicConstraints_(loadConstraintsFromObj("package://hpp-rbprm-corba/com_inequalities/"+limb_->name()+"_com_constraints.obj"))
     {
         // NOTHING
     }
@@ -154,6 +156,8 @@ namespace hpp {
       , sampleContainer_(fileStream, loadValues)
       , disableEndEffectorCollision_(disableEndEffectorCollision)
       , grasps_(grasps)
+      , effectorReferencePosition_()
+      , kinematicConstraints_(loadConstraintsFromObj("package://hpp-rbprm-corba/com_inequalities/"+limb_->name()+"_com_constraints.obj"))
     {
       // NOTHING
     }

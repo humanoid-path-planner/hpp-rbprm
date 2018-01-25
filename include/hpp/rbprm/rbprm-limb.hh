@@ -44,6 +44,9 @@ namespace hpp {
     typedef boost::shared_ptr <RbPrmLimb> RbPrmLimbPtr_t;
     typedef std::map<std::string, const rbprm::RbPrmLimbPtr_t > T_Limb;
     typedef T_Limb::const_iterator CIT_Limb;
+    typedef Eigen::Matrix <model::value_type, Eigen::Dynamic, Eigen::Dynamic> MatrixXX;
+    typedef Eigen::Matrix <model::value_type, Eigen::Dynamic, 1>              VectorX;
+
 
     class HPP_RBPRM_DLLAPI RbPrmLimb
     {
@@ -121,6 +124,7 @@ namespace hpp {
         const bool disableEndEffectorCollision_;
         const bool grasps_;
         fcl::Vec3f effectorReferencePosition_;
+        std::pair<MatrixXX, VectorX> kinematicConstraints_;
 
     protected:
 
