@@ -143,7 +143,7 @@ namespace stability{
 
 
     centroidal_dynamics::Vector3 setupLibrary(const RbPrmFullBodyPtr_t fullbody, State& state, Equilibrium& sEq, EquilibriumAlgorithm& alg,
-                                             core::value_type friction = 0.6)
+                                             core::value_type friction )
     {
         friction = fullbody->getFriction();
         const rbprm::T_Limb& limbs = fullbody->GetLimbs();
