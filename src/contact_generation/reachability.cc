@@ -12,7 +12,7 @@ namespace hpp {
    using centroidal_dynamics::Matrix3;
 
 
-std::pair<MatrixXX, MatrixXX> stackConstraints(const std::pair<MatrixXX, MatrixXX>& Ab,const std::pair<MatrixXX, MatrixXX>& Cd){
+std::pair<MatrixXX, VectorX> stackConstraints(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX, VectorX>& Cd){
     size_t numIneq = Ab.first.rows() + Cd.first.rows();
     MatrixXX M(numIneq,3);
     VectorX  n(numIneq);
@@ -28,13 +28,13 @@ std::pair<MatrixXX, MatrixXX> stackConstraints(const std::pair<MatrixXX, MatrixX
  * @param c0 target point (the point that we want to be the closest from)
  * @return the matrices H and g that express the cost
  */
-std::pair<MatrixXX, MatrixXX> computeDistanceCost(const fcl::Vec3f& c0){
+std::pair<MatrixXX, VectorX> computeDistanceCost(const fcl::Vec3f& c0){
     MatrixXX H = Matrix3::Identity();
     VectorX g = -c0;
     return std::make_pair(H,g);
 }
 
-bool intersectionExist(const std::pair<MatrixXX, MatrixXX>& Ab, const fcl::Vec3f& c0,const fcl::Vec3f& c1, fcl::Vec3f c_out){
+bool intersectionExist(const std::pair<MatrixXX, VectorX> &Ab, const fcl::Vec3f& c0, const fcl::Vec3f& c1, fcl::Vec3f c_out){
     fcl::Vec3f init = c0+c1/2.;
 
     hppDout(notice,"Call solveur solveIntersection");
@@ -47,7 +47,7 @@ bool intersectionExist(const std::pair<MatrixXX, MatrixXX>& Ab, const fcl::Vec3f
 }
 
 
-std::pair<MatrixXX, MatrixXX> computeStabilityConstraints(const centroidal_dynamics::Equilibrium& contactPhase, const fcl::Vec3f &int_point){
+std::pair<MatrixXX, VectorX> computeStabilityConstraints(const centroidal_dynamics::Equilibrium& contactPhase, const fcl::Vec3f &int_point){
     MatrixXX A;
     VectorX b;
     // gravity vector
@@ -75,7 +75,7 @@ std::pair<MatrixXX, MatrixXX> computeStabilityConstraints(const centroidal_dynam
     return std::make_pair(A,b);
 }
 
-std::pair<MatrixXX, MatrixXX> computeStabilityConstraints(const RbPrmFullBodyPtr_t& fullbody,rbprm::State& state){
+std::pair<MatrixXX, VectorX> computeStabilityConstraints(const RbPrmFullBodyPtr_t& fullbody,rbprm::State& state){
     centroidal_dynamics::Equilibrium contactPhase(stability::initLibrary(fullbody));
     centroidal_dynamics::EquilibriumAlgorithm alg = centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP;
     stability::setupLibrary(fullbody,state,contactPhase,alg);

@@ -15,13 +15,15 @@ namespace hpp {
     namespace reachability{
 
 
-std::pair<MatrixXX, MatrixXX> stackConstraints(const std::pair<MatrixXX, MatrixXX>& Ab,const std::pair<MatrixXX, MatrixXX>& Cd);
+std::pair<MatrixXX, VectorX> stackConstraints(const std::pair<MatrixXX, VectorX> &Ab, const std::pair<MatrixXX, VectorX> &Cd);
 
-bool intersectionExist(const std::pair<MatrixXX, MatrixXX>& Ab, const fcl::Vec3f& c0,const fcl::Vec3f& c1, fcl::Vec3f c_out);
+bool intersectionExist(const std::pair<MatrixXX, VectorX>& Ab, const fcl::Vec3f& c0,const fcl::Vec3f& c1, fcl::Vec3f c_out);
 
-std::pair<MatrixXX, MatrixXX> computeStabilityConstraints(const centroidal_dynamics::Equilibrium& contactPhase,const fcl::Vec3f& int_point = fcl::Vec3f(0,0,0));
+std::pair<MatrixXX, VectorX> computeStabilityConstraints(const centroidal_dynamics::Equilibrium& contactPhase,const fcl::Vec3f& int_point = fcl::Vec3f(0,0,0));
 
-std::pair<MatrixXX, MatrixXX> computeStabilityConstraints(const RbPrmFullBodyPtr_t& fullbody, State &state);
+std::pair<MatrixXX, VectorX> computeStabilityConstraints(const RbPrmFullBodyPtr_t& fullbody, State &state);
+
+
 
 }
 }
