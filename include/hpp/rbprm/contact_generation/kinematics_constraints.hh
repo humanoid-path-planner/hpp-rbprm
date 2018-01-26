@@ -4,6 +4,7 @@
 #include <hpp/rbprm/rbprm-limb.hh>
 #include <hpp/rbprm/rbprm-state.hh>
 #include <hpp/model/configuration.hh>
+#include <hpp/rbprm/rbprm-state.hh>
 namespace hpp {
   namespace rbprm {
 
@@ -17,7 +18,9 @@ namespace hpp {
 
 std::pair<MatrixXX, MatrixXX> loadConstraintsFromObj(const std::string& fileName);
 
-std::pair<MatrixXX, VectorX> computeAllKinematicsInequalities(const RbPrmFullBodyPtr_t& fullBody,const model::ConfigurationPtr_t& configuration);
+std::pair<MatrixXX, VectorX> computeAllKinematicsConstraints(const RbPrmFullBodyPtr_t& fullBody,const model::ConfigurationPtr_t& configuration);
+
+std::pair<MatrixXX, VectorX> computeKinematicsConstraints(const RbPrmFullBodyPtr_t& fullBody, const State& state);
 
 std::pair<MatrixXX, VectorX> getInequalitiesAtTransform(const std::pair<MatrixXX, MatrixXX>& NV, const fcl::Transform3f& transform);
 

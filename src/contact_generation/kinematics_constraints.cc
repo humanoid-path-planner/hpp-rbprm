@@ -77,7 +77,7 @@ std::pair<MatrixXX, MatrixXX> loadConstraintsFromObj(const std::string& fileName
 }
 
 
-std::pair<MatrixXX, VectorX> computeAllKinematicsInequalities(const RbPrmFullBodyPtr_t& fullBody,const model::ConfigurationPtr_t& configuration){
+std::pair<MatrixXX, VectorX> computeAllKinematicsConstraints(const RbPrmFullBodyPtr_t& fullBody,const model::ConfigurationPtr_t& configuration){
     fullBody->device_->currentConfiguration(*configuration);
     fullBody->device_->computeForwardKinematics();
     // first loop to compute size required :
@@ -98,6 +98,36 @@ std::pair<MatrixXX, VectorX> computeAllKinematicsInequalities(const RbPrmFullBod
         }
     }
 
+    return std::make_pair(A,b);
+}
+
+std::pair<MatrixXX, VectorX> computeKinematicsConstraints(const RbPrmFullBodyPtr_t& fullBody, const State& state){
+    fullBody->device_->currentConfiguration(state.configuration_);
+    fullBody->device_->computeForwardKinematics();
+    hppDout(notice,"Compute kinematics constraints :");
+    // first loop to compute size required :
+    size_t numIneq = 0;
+    for(std::map<std::string,bool>::const_iterator cit = state.contacts_.begin();cit!=state.contacts_.end(); ++ cit){
+        if(cit->second){ // limb with name cit->first is in contact
+            numIneq += fullBody->GetLimb(cit->first)->kinematicConstraints_.first.rows();
+            hppDout(notice,"Limb : "<<cit->first<<" is in contact.");
+        }
+    }
+    MatrixXX A(numIneq,3);
+    VectorX b(numIneq);
+    std::pair<MatrixXX,VectorX> Ab_limb;
+    size_t currentId = 0;
+    RbPrmLimbPtr_t limb;
+    for(std::map<std::string,bool>::const_iterator cit = state.contacts_.begin();cit!=state.contacts_.end(); ++ cit){
+        if(cit->second){ // limb with name cit->first is in contact
+            limb = fullBody->GetLimb(cit->first);
+            Ab_limb = getInequalitiesAtTransform(limb->kinematicConstraints_,limb->effector_->currentTransformation());
+            A.block(currentId,0,Ab_limb.first.rows(),3) = Ab_limb.first;
+            b.segment(currentId,Ab_limb.first.rows()) = Ab_limb.second;
+            currentId += Ab_limb.first.rows();
+        }
+    }
+    hppDout(notice,"End of kinematics constraints, A size : ("<<A.rows()<<","<<A.cols());
     return std::make_pair(A,b);
 }
 
