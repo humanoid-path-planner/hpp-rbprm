@@ -44,7 +44,7 @@ std::pair<MatrixXX, VectorX> computeDistanceCost(const fcl::Vec3f& c0){
 }
 
 bool intersectionExist(const std::pair<MatrixXX, VectorX> &Ab, const fcl::Vec3f& c0, const fcl::Vec3f& c1, fcl::Vec3f c_out){
-    fcl::Vec3f init = c0+c1/2.;
+    fcl::Vec3f init = (c0+c1)/2.;
 
     hppDout(notice,"Call solveur solveIntersection");
     hppDout(notice,"init = "<<init);
