@@ -56,7 +56,7 @@ std::pair<MatrixXX, VectorX> computeStabilityConstraintsForState(const RbPrmFull
 
 std::pair<MatrixXX, VectorX> computeConstraintsForState(const RbPrmFullBodyPtr_t& fullbody, State &state);
 
-Result isReachable(const RbPrmFullBodyPtr_t& fullbody,const State &previous, State& next);
+Result isReachable(const RbPrmFullBodyPtr_t& fullbody,State &previous, State& next);
 
 }
 }

@@ -84,7 +84,7 @@ std::pair<MatrixXX, VectorX> computeStabilityConstraints(const centroidal_dynami
     return std::make_pair(A,b);
 }
 
-std::pair<MatrixXX, VectorX> computeStabilityConstraints(const RbPrmFullBodyPtr_t& fullbody, State &state){
+std::pair<MatrixXX, VectorX> computeStabilityConstraintsForState(const RbPrmFullBodyPtr_t& fullbody, State &state){
     centroidal_dynamics::Equilibrium contactPhase(stability::initLibrary(fullbody));
     centroidal_dynamics::EquilibriumAlgorithm alg = centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP;
     stability::setupLibrary(fullbody,state,contactPhase,alg);
