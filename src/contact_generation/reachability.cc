@@ -47,7 +47,7 @@ bool intersectionExist(const std::pair<MatrixXX, MatrixXX>& Ab, const fcl::Vec3f
 }
 
 
-std::pair<MatrixXX, MatrixXX> computeStabilityConstraints(const centroidal_dynamics::Equilibrium& contactPhase){
+std::pair<MatrixXX, MatrixXX> computeStabilityConstraints(const centroidal_dynamics::Equilibrium& contactPhase, const fcl::Vec3f &int_point){
     MatrixXX A;
     VectorX b;
     // gravity vector
@@ -61,22 +61,23 @@ std::pair<MatrixXX, MatrixXX> computeStabilityConstraints(const centroidal_dynam
     H.rowwise().normalize();
     int dimH = (int)(H.rows());
     hppDout(notice,"Dim H rows : "<<dimH<<" ; col : "<<H.cols());
-    hppDout(notice,"H = "<<H);
-    hppDout(notice,"h = "<<h);
-    MatrixXX mH = contactPhase.m_mass * H;
 
-    // constraints : mH g^  x <= h + mHg
+    MatrixXX mH = contactPhase.m_mass * H;
+    // constraints : mH[:,3:6] g^  x <= h + mH[:,0:3]g
     // A = mH g^
     // b = h + mHg
-    A = mH.block<3,3>(3,0) * gSkew;
-    b = h+mH.block<3,3>(0,0)*g;
-
+    A = mH.block(0,3,dimH,3) * gSkew;
+    b = h+mH.block(0,0,dimH,3)*g;
+    hppDout(notice,"Stability constraints matrices : ");
+    hppDout(notice,"Interior point : \n"<<int_point);
+    hppDout(notice,"A = \n"<<A);
+    hppDout(notice,"b = \n"<<b);
     return std::make_pair(A,b);
 }
 
 std::pair<MatrixXX, MatrixXX> computeStabilityConstraints(const RbPrmFullBodyPtr_t& fullbody,rbprm::State& state){
     centroidal_dynamics::Equilibrium contactPhase(stability::initLibrary(fullbody));
-    centroidal_dynamics::EquilibriumAlgorithm alg = centroidal_dynamics::EQUILIBRIUM_ALGORITHM_DLP;
+    centroidal_dynamics::EquilibriumAlgorithm alg = centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP;
     stability::setupLibrary(fullbody,state,contactPhase,alg);
     return computeStabilityConstraints(contactPhase);
 }

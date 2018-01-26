@@ -266,6 +266,7 @@ const fcl::Vec3f comfcl = comcptr->com();*/
     watch.start("test balance");
 #endif
         centroidal_dynamics::EquilibriumAlgorithm alg = algorithm;
+        //centroidal_dynamics::EquilibriumAlgorithm alg= centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP;
         if(acc.norm() == 0){
           hppDout(notice,"isStable ? called with acc = 0");
           hppDout(notice,"configuration in state = "<<model::displayConfig(state.configuration_));
@@ -313,6 +314,14 @@ const fcl::Vec3f comfcl = comcptr->com();*/
             return -std::numeric_limits<double>::max();
         }
         hppDout(notice,"isStable LP successfully solved : robustness = "<<res);
+    /*    centroidal_dynamics::MatrixXX Hrow; VectorX h;
+        staticEquilibrium.getPolytopeInequalities(Hrow,h);
+        MatrixXX H = -Hrow;
+        H.rowwise().normalize();
+        int dimH = (int)(H.rows());
+        hppDout(notice,"Dim H rows : "<<dimH<<" ; col : "<<H.cols());
+        hppDout(notice,"H = "<<H);
+        hppDout(notice,"h = "<<h);*/
         return res ;
     }
 }
