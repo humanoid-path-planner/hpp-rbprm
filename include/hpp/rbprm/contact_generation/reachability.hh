@@ -20,6 +20,8 @@ namespace hpp {
         UNABLE_TO_COMPUTE,
         TOO_MANY_CONTACTS_VARIATION,
         NO_CONTACT_VARIATION,
+        CONTACT_BREAK_FAILED,
+        CONTACT_CREATION_FAILED,
         REACHABLE
     };
 

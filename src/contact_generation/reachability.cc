@@ -100,10 +100,24 @@ Result isReachableIntermediate(const RbPrmFullBodyPtr_t& fullbody,State &previou
     hppDout(notice,"isReachableIntermadiate :");
     std::vector<std::string> contactsNames = next.contactVariations(previous);
     hppDout(notice,"Contact variations : "<<contactsNames);
-
-
-
-    return Result();
+    Result resBreak,resCreate;
+    Result res;
+    resBreak  = isReachable(fullbody,previous,intermediate);
+    resCreate = isReachable(fullbody,intermediate,next);
+    hppDout(notice,"isReachableIntermediate : ");
+    hppDout(notice,"resBreak status    : "<<resBreak.status);
+    hppDout(notice,"resCreation status : "<<resCreate.status);
+    if(resBreak.status == REACHABLE && resCreate.status == REACHABLE){
+        res.status=REACHABLE;
+        res.x = (resBreak.x + resCreate.x)/2.;
+    }else if(resBreak.status == UNREACHABLE && resCreate.status == UNREACHABLE){
+        res.status=UNREACHABLE;
+    }else if (resBreak.status != REACHABLE){
+        res.status=CONTACT_BREAK_FAILED;
+    }else if (resCreate.status != REACHABLE){
+        res.status=CONTACT_CREATION_FAILED;
+    }
+    return res;
 }
 
 Result isReachable(const RbPrmFullBodyPtr_t& fullbody,State &previous, State& next){
