@@ -11,6 +11,13 @@ namespace hpp {
    using centroidal_dynamics::Vector3;
    using centroidal_dynamics::Matrix3;
 
+   // helper method used to print vectors of string
+   std::ostream& operator<<(std::ostream& os, const std::vector<std::string>& vect){
+       for(std::vector<std::string>::const_iterator sit = vect.begin() ; sit != vect.end() ; ++sit){
+           os << *sit << " ; ";
+       }
+       return os;
+   }
 
 
 
@@ -44,7 +51,7 @@ bool intersectionExist(const std::pair<MatrixXX, VectorX> &Ab, const fcl::Vec3f&
     bezier_com_traj::ResultData res = bezier_com_traj::solveIntersection(Ab,computeDistanceCost(c0),init);
     c_out = res.x;
     hppDout(notice,"success Solveur solveIntersection = "<<res.success_);
-    hppDout(notice,"com = "<<c_out);
+    hppDout(notice,"x = ["<<c_out[0]<<","<<c_out[1]<<","<<c_out[2]<<"]");
     return res.success_;
 }
 
@@ -85,12 +92,17 @@ std::pair<MatrixXX, VectorX> computeStabilityConstraints(const RbPrmFullBodyPtr_
 }
 
 std::pair<MatrixXX, VectorX> computeConstraintsForState(const RbPrmFullBodyPtr_t& fullbody, State &state){
-    return stackConstraints(computeKinematicsConstraintsForState(fullbody,state),computeStabilityConstraints(fullbody,state));
+    return stackConstraints(computeKinematicsConstraintsForState(fullbody,state),computeStabilityConstraintsForState(fullbody,state));
 }
 
 Result isReachableIntermediate(const RbPrmFullBodyPtr_t& fullbody,State &previous,State &intermediate, State& next){
-
     //TODO
+    hppDout(notice,"isReachableIntermadiate :");
+    std::vector<std::string> contactsNames = next.contactVariations(previous);
+    hppDout(notice,"Contact variations : "<<contactsNames);
+
+
+
     return Result();
 }
 
@@ -99,6 +111,8 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody,State &previous, State& ne
     next.contactBreaks(previous,contactsBreak);
     next.contactCreations(previous,contactsCreation);
     hppDout(notice,"IsReachable called : ");
+    hppDout(notice,"Contacts break : "<<contactsBreak);
+    hppDout(notice,"contacts creation : "<<contactsCreation);
     if(contactsCreation.size() <= 0 && contactsBreak.size() <= 0){
         hppDout(notice,"No contact variation, abort.");
         return Result(NO_CONTACT_VARIATION);
@@ -125,14 +139,23 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody,State &previous, State& ne
     bool success;
     Result res;
     std::pair<MatrixXX,VectorX> Ab;
-    // there is only one contact creation OR (exclusive) break between the two states :
+    // there is only one contact creation OR (exclusive) break between the two states
+    // test C_p \inter C_n (ie : A_p \inter K_p \inter A_n \inter K_n), with simplifications du to relations between the constraints :
     if(contactsBreak.size() > 0){ // next have one less contact than previous
         hppDout(notice,"Contact break between previous and next state");
-        std::pair<MatrixXX,VectorX> C_n   = computeConstraintsForState(fullbody,next);
-        std::pair<MatrixXX,VectorX> K_p_m = computeKinematicsConstraintsForLimb(fullbody,previous,contactsBreak[0]); // kinematic constraint only for the moving contact for state previous
-        Ab = stackConstraints(C_n,K_p_m);
+        // A_n \inside A_p, thus  A_p is redunbdant
+        // K_p \inside K_n, thus  K_n is redunbdant
+        // So, we only need to test A_n \inter K_p
+        //TODO : K_p can be given as parameter to avoid re-computation
+        std::pair<MatrixXX,VectorX> A_n = computeStabilityConstraintsForState(fullbody,next);
+        std::pair<MatrixXX,VectorX> K_p = computeKinematicsConstraintsForState(fullbody,previous);
+        Ab = stackConstraints(A_n,K_p);
     }else{// next have one more contact than previous
         hppDout(notice,"Contact creation between previous and next");
+        // A_p \inside A_n, thus A_n is redunbdant
+        // K_n \inside K_p ; and K_n = K_p \inter K_n^m (where K_n^m is the kinematic constraint for the moving limb at state n)
+        // we use K_n^m, because C_p can be given as parameter to avoid re-computation
+        // So, we only need to test C_n \inter K_p_m
         std::pair<MatrixXX,VectorX> C_p   = computeConstraintsForState(fullbody,previous);
         std::pair<MatrixXX,VectorX> K_n_m = computeKinematicsConstraintsForLimb(fullbody,previous,contactsCreation[0]); // kinematic constraint only for the moving contact for state previous
         Ab = stackConstraints(C_p,K_n_m);
