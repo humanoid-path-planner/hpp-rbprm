@@ -101,7 +101,7 @@ std::pair<MatrixXX, VectorX> computeAllKinematicsConstraints(const RbPrmFullBody
     return std::make_pair(A,b);
 }
 
-std::pair<MatrixXX, VectorX> computeKinematicsConstraints(const RbPrmFullBodyPtr_t& fullBody, const State& state){
+std::pair<MatrixXX, VectorX> computeKinematicsConstraintsForState(const RbPrmFullBodyPtr_t& fullBody, const State& state){
     fullBody->device_->currentConfiguration(state.configuration_);
     fullBody->device_->computeForwardKinematics();
     hppDout(notice,"Compute kinematics constraints :");
@@ -129,6 +129,24 @@ std::pair<MatrixXX, VectorX> computeKinematicsConstraints(const RbPrmFullBodyPtr
     }
     hppDout(notice,"End of kinematics constraints, A size : ("<<A.rows()<<","<<A.cols());
     return std::make_pair(A,b);
+}
+
+std::pair<MatrixXX, VectorX> computeKinematicsConstraintsForLimb(const RbPrmFullBodyPtr_t& fullBody, const State& state,const std::string& limbName){
+    fullBody->device_->currentConfiguration(state.configuration_);
+    fullBody->device_->computeForwardKinematics();
+    hppDout(notice,"Compute kinematics constraints for limb :"<<limbName);
+    // first loop to compute size required :
+    if(state.contacts_.find(limbName) == state.contacts_.end()){
+        hppDout(warning,"No Limbs in contact found with name :"<<limbName);
+        return std::pair<MatrixXX, VectorX>();
+    }
+    if(!state.contacts_.at(limbName)){
+        hppDout(warning,"Limb "<<limbName<<" is not in contact for current state");
+        return std::pair<MatrixXX, VectorX>();
+    }
+
+    RbPrmLimbPtr_t limb = fullBody->GetLimb(limbName);
+    return getInequalitiesAtTransform(limb->kinematicConstraints_,limb->effector_->currentTransformation());
 }
 
 
@@ -167,8 +185,8 @@ bool verifyKinematicConstraints(const std::pair<MatrixXX, VectorX>& Ab, const fc
     return true;
 }
 
-bool verifyKinematicConstraints(const State& state, fcl::Vec3f point){
-    return true;
+bool verifyKinematicConstraints(const RbPrmFullBodyPtr_t& fullbody,const State& state, fcl::Vec3f point){
+    return verifyKinematicConstraints(computeKinematicsConstraintsForState(fullbody,state),point);
 }
 
 

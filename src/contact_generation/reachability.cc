@@ -3,13 +3,15 @@
 #include <bezier-com-traj/common_solve_methods.hh>
 #include <hpp/rbprm/rbprm-fullbody.hh>
 #include <hpp/rbprm/stability/stability.hh>
-
+#include <hpp/rbprm/contact_generation/kinematics_constraints.hh>
 namespace hpp {
   namespace rbprm {
    namespace reachability{
 
    using centroidal_dynamics::Vector3;
    using centroidal_dynamics::Matrix3;
+
+
 
 
 std::pair<MatrixXX, VectorX> stackConstraints(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX, VectorX>& Cd){
@@ -75,13 +77,77 @@ std::pair<MatrixXX, VectorX> computeStabilityConstraints(const centroidal_dynami
     return std::make_pair(A,b);
 }
 
-std::pair<MatrixXX, VectorX> computeStabilityConstraints(const RbPrmFullBodyPtr_t& fullbody,rbprm::State& state){
+std::pair<MatrixXX, VectorX> computeStabilityConstraints(const RbPrmFullBodyPtr_t& fullbody, State &state){
     centroidal_dynamics::Equilibrium contactPhase(stability::initLibrary(fullbody));
     centroidal_dynamics::EquilibriumAlgorithm alg = centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP;
     stability::setupLibrary(fullbody,state,contactPhase,alg);
     return computeStabilityConstraints(contactPhase);
 }
 
+std::pair<MatrixXX, VectorX> computeConstraintsForState(const RbPrmFullBodyPtr_t& fullbody, State &state){
+    return stackConstraints(computeKinematicsConstraintsForState(fullbody,state),computeStabilityConstraints(fullbody,state));
+}
+
+Result isReachableIntermediate(const RbPrmFullBodyPtr_t& fullbody,State &previous,State &intermediate, State& next){
+
+    //TODO
+    return Result();
+}
+
+Result isReachable(const RbPrmFullBodyPtr_t& fullbody,State &previous, State& next){
+    std::vector<std::string> contactsCreation, contactsBreak;
+    next.contactBreaks(previous,contactsBreak);
+    next.contactCreations(previous,contactsCreation);
+    hppDout(notice,"IsReachable called : ");
+    if(contactsCreation.size() <= 0 && contactsBreak.size() <= 0){
+        hppDout(notice,"No contact variation, abort.");
+        return Result(NO_CONTACT_VARIATION);
+    }
+
+    if(contactsCreation.size() >1 || contactsBreak.size() > 1){
+        hppDout(notice,"Too many contact variation, abort.");
+        return Result(TOO_MANY_CONTACTS_VARIATION);
+    }
+
+    if(contactsBreak.size() == 1 && contactsCreation.size() == 1){
+        if(next.contactVariations(previous).size() == 1){ // there is 1 contact repositionning between previous and next
+            // we need to create the intermediate state, and call is reachable for the 3 states.
+            State intermediate(previous);
+            intermediate.RemoveContact(contactsBreak[0]);
+            hppDout(notice,"Contact repositionning between the 2 states, create intermediate state and call isReachable");
+            return isReachableIntermediate(fullbody,previous,intermediate,next);
+        }else{
+            hppDout(notice,"Contact break and creation are different. You need to call isReachable with 2 adjacent states");
+            return Result(TOO_MANY_CONTACTS_VARIATION);
+        }
+    }
+
+    bool success;
+    Result res;
+    std::pair<MatrixXX,VectorX> Ab;
+    // there is only one contact creation OR (exclusive) break between the two states :
+    if(contactsBreak.size() > 0){ // next have one less contact than previous
+        hppDout(notice,"Contact break between previous and next state");
+        std::pair<MatrixXX,VectorX> C_n   = computeConstraintsForState(fullbody,next);
+        std::pair<MatrixXX,VectorX> K_p_m = computeKinematicsConstraintsForLimb(fullbody,previous,contactsBreak[0]); // kinematic constraint only for the moving contact for state previous
+        Ab = stackConstraints(C_n,K_p_m);
+    }else{// next have one more contact than previous
+        hppDout(notice,"Contact creation between previous and next");
+        std::pair<MatrixXX,VectorX> C_p   = computeConstraintsForState(fullbody,previous);
+        std::pair<MatrixXX,VectorX> K_n_m = computeKinematicsConstraintsForLimb(fullbody,previous,contactsCreation[0]); // kinematic constraint only for the moving contact for state previous
+        Ab = stackConstraints(C_p,K_n_m);
+    }
+
+
+    fcl::Vec3f x;
+    success = intersectionExist(Ab,previous.com_,next.com_,x);
+    if(success)
+        res.status=REACHABLE;
+    else
+        res.status=UNREACHABLE;
+    res.x = x;
+    return res;
+}
 
 }
 }
