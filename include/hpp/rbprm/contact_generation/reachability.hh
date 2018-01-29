@@ -4,6 +4,8 @@
 #include <hpp/rbprm/rbprm-limb.hh>
 #include <centroidal-dynamics-lib/centroidal_dynamics.hh>
 #include <hpp/rbprm/rbprm-state.hh>
+#include <hpp/rbprm/contact_generation/kinematics_constraints.hh>
+
 namespace hpp {
   namespace rbprm {
 
@@ -41,6 +43,8 @@ namespace hpp {
             status(status),
             x(x)
             {}
+
+        bool success(){return status == REACHABLE;}
 
         Status status;
         fcl::Vec3f x;

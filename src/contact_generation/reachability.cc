@@ -3,7 +3,6 @@
 #include <bezier-com-traj/common_solve_methods.hh>
 #include <hpp/rbprm/rbprm-fullbody.hh>
 #include <hpp/rbprm/stability/stability.hh>
-#include <hpp/rbprm/contact_generation/kinematics_constraints.hh>
 namespace hpp {
   namespace rbprm {
    namespace reachability{
@@ -107,14 +106,14 @@ Result isReachableIntermediate(const RbPrmFullBodyPtr_t& fullbody,State &previou
     hppDout(notice,"isReachableIntermediate : ");
     hppDout(notice,"resBreak status    : "<<resBreak.status);
     hppDout(notice,"resCreation status : "<<resCreate.status);
-    if(resBreak.status == REACHABLE && resCreate.status == REACHABLE){
+    if(resBreak.success() && resCreate.success()){
         res.status=REACHABLE;
         res.x = (resBreak.x + resCreate.x)/2.;
     }else if(resBreak.status == UNREACHABLE && resCreate.status == UNREACHABLE){
         res.status=UNREACHABLE;
-    }else if (resBreak.status != REACHABLE){
+    }else if ( ! resBreak.success()){
         res.status=CONTACT_BREAK_FAILED;
-    }else if (resCreate.status != REACHABLE){
+    }else if ( ! resCreate.success()){
         res.status=CONTACT_CREATION_FAILED;
     }
     return res;
