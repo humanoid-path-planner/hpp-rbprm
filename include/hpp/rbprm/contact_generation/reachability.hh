@@ -31,28 +31,32 @@ namespace hpp {
 
         Result():
             status(UNABLE_TO_COMPUTE),
-            x(fcl::Vec3f())
+            x(fcl::Vec3f()),
+            constraints_()
             {}
 
         Result(Status status):
             status(status),
-            x(fcl::Vec3f())
+            x(fcl::Vec3f()),
+            constraints_()
             {}
 
         Result(Status status, fcl::Vec3f x):
             status(status),
-            x(x)
+            x(x),
+            constraints_()
             {}
 
         bool success(){return status == REACHABLE;}
 
         Status status;
         fcl::Vec3f x;
+        std::pair<MatrixXX, VectorX> constraints_;
     };
 
 std::pair<MatrixXX, VectorX> stackConstraints(const std::pair<MatrixXX, VectorX> &Ab, const std::pair<MatrixXX, VectorX> &Cd);
 
-bool intersectionExist(const std::pair<MatrixXX, VectorX>& Ab, const fcl::Vec3f& c0,const fcl::Vec3f& c1, fcl::Vec3f c_out);
+bool intersectionExist(const std::pair<MatrixXX, VectorX>& Ab, const fcl::Vec3f& c0, const fcl::Vec3f& c1, fcl::Vec3f &c_out);
 
 std::pair<MatrixXX, VectorX> computeStabilityConstraints(const centroidal_dynamics::Equilibrium& contactPhase,const fcl::Vec3f& int_point = fcl::Vec3f(0,0,0));
 

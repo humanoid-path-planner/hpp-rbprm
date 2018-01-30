@@ -42,7 +42,7 @@ std::pair<MatrixXX, VectorX> computeDistanceCost(const fcl::Vec3f& c0){
     return std::make_pair(H,g);
 }
 
-bool intersectionExist(const std::pair<MatrixXX, VectorX> &Ab, const fcl::Vec3f& c0, const fcl::Vec3f& c1, fcl::Vec3f c_out){
+bool intersectionExist(const std::pair<MatrixXX, VectorX> &Ab, const fcl::Vec3f& c0, const fcl::Vec3f& c1, fcl::Vec3f& c_out){
     fcl::Vec3f init = (c0+c1)/2.;
 
     hppDout(notice,"Call solveur solveIntersection");
@@ -119,7 +119,7 @@ Result isReachableIntermediate(const RbPrmFullBodyPtr_t& fullbody,State &previou
     return res;
 }
 
-Result isReachable(const RbPrmFullBodyPtr_t& fullbody,State &previous, State& next){
+Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& next){
     std::vector<std::string> contactsCreation, contactsBreak;
     next.contactBreaks(previous,contactsBreak);
     next.contactCreations(previous,contactsCreation);
