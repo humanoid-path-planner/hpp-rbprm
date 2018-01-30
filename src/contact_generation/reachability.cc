@@ -250,8 +250,8 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
         hppDout(notice,"Kinematics constraint for state i+1 :");
         printQHull(K_n,x,"kinematics.txt");
     }
-
-
+    hppDout(notice,"Intersection of constraints :");
+    printQHull(Ab,x,"constraints.txt");
 
     return res;
 }
