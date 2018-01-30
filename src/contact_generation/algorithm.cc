@@ -185,6 +185,7 @@ hpp::rbprm::State ComputeContacts(const hpp::rbprm::RbPrmFullBodyPtr_t& body,
     {
         if(!ContactExistsWithinGroup(lit->second, limbGroups ,result))
         {
+            hppDout(notice,"ComputeContacts, call computeStable contact for limb : "<<lit->first);
             fcl::Vec3f normal, position;
             ComputeStableContact(body,result,
                                 limbcollisionValidations.at(lit->first), lit->first,
