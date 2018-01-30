@@ -3,6 +3,8 @@
 #include <bezier-com-traj/common_solve_methods.hh>
 #include <hpp/rbprm/rbprm-fullbody.hh>
 #include <hpp/rbprm/stability/stability.hh>
+#include <iostream>
+#include <fstream>
 namespace hpp {
   namespace rbprm {
    namespace reachability{
@@ -18,6 +20,41 @@ namespace hpp {
        return os;
    }
 
+   void printQHullFile(const std::pair<MatrixXX, VectorX>& Ab,fcl::Vec3f intPoint,const std::string& fileName){
+        std::ofstream file;
+        using std::endl;
+        std::string path("/home/pfernbac/Documents/com_ineq_test/");
+        path.append(fileName);
+        hppDout(notice,"print to file : "<<path);
+        file.open(path.c_str(),std::ios::out | std::ios::trunc);
+        file<<"3 1"<<endl;
+        file<<"\t "<<intPoint[0]<<"\t"<<intPoint[1]<<"\t"<<intPoint[2]<<endl;
+        file<<"4"<<endl;
+        file<<Ab.first.rows()<<endl;
+        for(size_t i = 0 ; i < Ab.first.rows() ; ++i){
+            file<<"\t"<<Ab.first(i,0)<<"\t"<<Ab.first(i,1)<<"\t"<<Ab.first(i,2)<<"\t"<<-Ab.second[i]-0.001<<endl;
+        }
+        file.close();
+   }
+
+
+   // Method to print (in hppDout) the inequalities express as halfspace, in a format readable by qHull
+   // use qHalf FP | qConvex Ft      to use them
+   void printQHull(const std::pair<MatrixXX, VectorX>& Ab,fcl::Vec3f intPoint = fcl::Vec3f::Zero(),const std::string& fileName=std::string()){
+        using std::endl;
+        std::stringstream ss;
+        //ss<<"qHull Output : use qhalf FP | qconvex Ft "<<endl;
+        ss<<"3 1"<<endl;
+        ss<<"\t "<<intPoint[0]<<"\t"<<intPoint[1]<<"\t"<<intPoint[2]<<endl;
+        ss<<"4"<<endl;
+        ss<<Ab.first.rows()<<endl;
+        for(size_t i = 0 ; i < Ab.first.rows() ; ++i){
+            ss<<"\t"<<Ab.first(i,0)<<"\t"<<Ab.first(i,1)<<"\t"<<Ab.first(i,2)<<"\t"<<-Ab.second[i]-0.001<<endl;
+        }
+        hppDout(notice,ss.str());
+        if(!fileName.empty())
+            printQHullFile(Ab,intPoint,fileName);
+   }
 
 
 std::pair<MatrixXX, VectorX> stackConstraints(const std::pair<MatrixXX, VectorX>& Ab,const std::pair<MatrixXX, VectorX>& Cd){
@@ -76,10 +113,12 @@ std::pair<MatrixXX, VectorX> computeStabilityConstraints(const centroidal_dynami
     // b = h + mHg
     A = mH.block(0,3,dimH,3) * gSkew;
     b = h+mH.block(0,0,dimH,3)*g;
-    hppDout(notice,"Stability constraints matrices : ");
+   /* hppDout(notice,"Stability constraints matrices : ");
     hppDout(notice,"Interior point : \n"<<int_point);
     hppDout(notice,"A = \n"<<A);
-    hppDout(notice,"b = \n"<<b);
+    hppDout(notice,"b = \n"<<b);*/
+    hppDout(notice,"Stability constraints qHull : ");
+    printQHull(std::make_pair(A,b),int_point);
     return std::make_pair(A,b);
 }
 
@@ -87,7 +126,7 @@ std::pair<MatrixXX, VectorX> computeStabilityConstraintsForState(const RbPrmFull
     centroidal_dynamics::Equilibrium contactPhase(stability::initLibrary(fullbody));
     centroidal_dynamics::EquilibriumAlgorithm alg = centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP;
     stability::setupLibrary(fullbody,state,contactPhase,alg);
-    return computeStabilityConstraints(contactPhase);
+    return computeStabilityConstraints(contactPhase,state.contactPositions_.at(state.contactOrder_.front()));
 }
 
 std::pair<MatrixXX, VectorX> computeConstraintsForState(const RbPrmFullBodyPtr_t& fullbody, State &state){
@@ -101,14 +140,23 @@ Result isReachableIntermediate(const RbPrmFullBodyPtr_t& fullbody,State &previou
     hppDout(notice,"Contact variations : "<<contactsNames);
     Result resBreak,resCreate;
     Result res;
+    std::pair<MatrixXX,VectorX> Ab,Cd;
     resBreak  = isReachable(fullbody,previous,intermediate);
     resCreate = isReachable(fullbody,intermediate,next);
     hppDout(notice,"isReachableIntermediate : ");
     hppDout(notice,"resBreak status    : "<<resBreak.status);
     hppDout(notice,"resCreation status : "<<resCreate.status);
+    hppDout(notice,"constraint for contact break : ");
+    printQHull(resBreak.constraints_,resBreak.x,"constraints_break.txt");
+    hppDout(notice,"constraint for contact creation : ");
+    printQHull(resCreate.constraints_,resCreate.x,"constraints_create.txt");
+
     if(resBreak.success() && resCreate.success()){
         res.status=REACHABLE;
         res.x = (resBreak.x + resCreate.x)/2.;
+        // only for test, it take time to compute :
+        hppDout(notice,"constraint for intersection : ");
+        printQHull(stackConstraints(resBreak.constraints_,resCreate.constraints_),res.x,"constraints.txt");
     }else if(resBreak.status == UNREACHABLE && resCreate.status == UNREACHABLE){
         res.status=UNREACHABLE;
     }else if ( ! resBreak.success()){
@@ -151,7 +199,7 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
 
     bool success;
     Result res;
-    std::pair<MatrixXX,VectorX> Ab;
+    std::pair<MatrixXX,VectorX> Ab,K_p,K_n,A_p,A_n;
     // there is only one contact creation OR (exclusive) break between the two states
     // test C_p \inter C_n (ie : A_p \inter K_p \inter A_n \inter K_n), with simplifications du to relations between the constraints :
     if(contactsBreak.size() > 0){ // next have one less contact than previous
@@ -160,8 +208,12 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
         // K_p \inside K_n, thus  K_n is redunbdant
         // So, we only need to test A_n \inter K_p
         //TODO : K_p can be given as parameter to avoid re-computation
-        std::pair<MatrixXX,VectorX> A_n = computeStabilityConstraintsForState(fullbody,next);
-        std::pair<MatrixXX,VectorX> K_p = computeKinematicsConstraintsForState(fullbody,previous);
+        //std::pair<MatrixXX,VectorX> A_n = computeStabilityConstraintsForState(fullbody,next);
+        //std::pair<MatrixXX,VectorX> K_p = computeKinematicsConstraintsForState(fullbody,previous);
+        //Ab = stackConstraints(A_n,K_p);
+        // develloped computation, needed to display the differents constraints :
+        A_n = computeStabilityConstraintsForState(fullbody,next);
+        K_p = computeKinematicsConstraintsForState(fullbody,previous);
         Ab = stackConstraints(A_n,K_p);
     }else{// next have one more contact than previous
         hppDout(notice,"Contact creation between previous and next");
@@ -169,9 +221,13 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
         // K_n \inside K_p ; and K_n = K_p \inter K_n^m (where K_n^m is the kinematic constraint for the moving limb at state n)
         // we use K_n^m, because C_p can be given as parameter to avoid re-computation
         // So, we only need to test C_n \inter K_p_m
-        std::pair<MatrixXX,VectorX> C_p   = computeConstraintsForState(fullbody,previous);
-        std::pair<MatrixXX,VectorX> K_n_m = computeKinematicsConstraintsForLimb(fullbody,previous,contactsCreation[0]); // kinematic constraint only for the moving contact for state previous
-        Ab = stackConstraints(C_p,K_n_m);
+        //std::pair<MatrixXX,VectorX> C_p   = computeConstraintsForState(fullbody,previous);
+        //std::pair<MatrixXX,VectorX> K_n_m = computeKinematicsConstraintsForLimb(fullbody,previous,contactsCreation[0]); // kinematic constraint only for the moving contact for state previous
+        //Ab = stackConstraints(C_p,K_n_m);
+        A_p = computeStabilityConstraintsForState(fullbody,previous);
+        //K_p = computeKinematicsConstraintsForState(fullbody,previous);
+        K_n = computeKinematicsConstraintsForState(fullbody,next);
+        Ab = stackConstraints(A_p,K_n);
     }
 
 
@@ -182,6 +238,21 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
     else
         res.status=UNREACHABLE;
     res.x = x;
+    res.constraints_=Ab;
+    if(contactsBreak.size() > 0){
+        hppDout(notice,"Stability constraint for state i+1 :");
+        printQHull(A_n,x,"stability.txt");
+        hppDout(notice,"Kinematics constraint for state i :");
+        printQHull(K_p,x,"kinematics.txt");
+    }else{
+        hppDout(notice,"Stability constraint for state i :");
+        printQHull(A_p,x,"stability.txt");
+        hppDout(notice,"Kinematics constraint for state i+1 :");
+        printQHull(K_n,x,"kinematics.txt");
+    }
+
+
+
     return res;
 }
 
