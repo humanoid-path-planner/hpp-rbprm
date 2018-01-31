@@ -5,6 +5,8 @@
 #include <hpp/rbprm/stability/stability.hh>
 #include <iostream>
 #include <fstream>
+#include <hpp/util/timer.hh>
+
 namespace hpp {
   namespace rbprm {
    namespace reachability{
@@ -124,10 +126,13 @@ std::pair<MatrixXX, VectorX> computeStabilityConstraints(const centroidal_dynami
 }
 
 std::pair<MatrixXX, VectorX> computeStabilityConstraintsForState(const RbPrmFullBodyPtr_t& fullbody, State &state){
+    hppStartBenchmark(REACHABLE_CALL_CENTROIDAL);
     centroidal_dynamics::Equilibrium contactPhase(stability::initLibrary(fullbody));
     centroidal_dynamics::EquilibriumAlgorithm alg = centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP;
     stability::setupLibrary(fullbody,state,contactPhase,alg);
-    return computeStabilityConstraints(contactPhase,state.contactPositions_.at(state.contactOrder_.front()));
+    hppStopBenchmark(REACHABLE_CALL_CENTROIDAL);
+    hppDisplayBenchmark(REACHABLE_CALL_CENTROIDAL);
+    return computeStabilityConstraints(contactPhase,state.contactPositions_.at(state.contactOrder_.front()),state.configuration_.tail<3>());
 }
 
 std::pair<MatrixXX, VectorX> computeConstraintsForState(const RbPrmFullBodyPtr_t& fullbody, State &state){
@@ -169,6 +174,7 @@ Result isReachableIntermediate(const RbPrmFullBodyPtr_t& fullbody,State &previou
 }
 
 Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& next){
+    hppStartBenchmark(IS_REACHABLE);
     std::vector<std::string> contactsCreation, contactsBreak;
     next.contactBreaks(previous,contactsBreak);
     next.contactCreations(previous,contactsCreation);
@@ -213,9 +219,18 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
         //std::pair<MatrixXX,VectorX> K_p = computeKinematicsConstraintsForState(fullbody,previous);
         //Ab = stackConstraints(A_n,K_p);
         // develloped computation, needed to display the differents constraints :
+        hppStartBenchmark(REACHABLE_STABILITY);
         A_n = computeStabilityConstraintsForState(fullbody,next);
+        hppStopBenchmark(REACHABLE_STABILITY);
+        hppDisplayBenchmark(REACHABLE_STABILITY);
+        hppStartBenchmark(REACHABLE_KINEMATIC);
         K_p = computeKinematicsConstraintsForState(fullbody,previous);
+        hppStopBenchmark(REACHABLE_KINEMATIC);
+        hppDisplayBenchmark(REACHABLE_KINEMATIC);
+        hppStartBenchmark(REACHABLE_STACK);
         Ab = stackConstraints(A_n,K_p);
+        hppStopBenchmark(REACHABLE_STACK);
+        hppDisplayBenchmark(REACHABLE_STACK);
     }else{// next have one more contact than previous
         hppDout(notice,"Contact creation between previous and next");
         // A_p \inside A_n, thus A_n is redunbdant
@@ -225,21 +240,36 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
         //std::pair<MatrixXX,VectorX> C_p   = computeConstraintsForState(fullbody,previous);
         //std::pair<MatrixXX,VectorX> K_n_m = computeKinematicsConstraintsForLimb(fullbody,previous,contactsCreation[0]); // kinematic constraint only for the moving contact for state previous
         //Ab = stackConstraints(C_p,K_n_m);
+        hppStartBenchmark(REACHABLE_STABILITY);
         A_p = computeStabilityConstraintsForState(fullbody,previous);
+        hppStopBenchmark(REACHABLE_STABILITY);
+        hppDisplayBenchmark(REACHABLE_STABILITY);
         //K_p = computeKinematicsConstraintsForState(fullbody,previous);
+        hppStartBenchmark(REACHABLE_KINEMATIC);
         K_n = computeKinematicsConstraintsForState(fullbody,next);
+        hppStopBenchmark(REACHABLE_KINEMATIC);
+        hppDisplayBenchmark(REACHABLE_KINEMATIC);
+        hppStartBenchmark(REACHABLE_STACK);
         Ab = stackConstraints(A_p,K_n);
+        hppStopBenchmark(REACHABLE_STACK);
+        hppDisplayBenchmark(REACHABLE_STACK);
     }
 
 
     fcl::Vec3f x;
+    hppStartBenchmark(QP_REACHABLE);
     success = intersectionExist(Ab,previous.com_,next.com_,x);
+    hppStopBenchmark(QP_REACHABLE);
+    hppDisplayBenchmark(QP_REACHABLE);
     if(success)
         res.status=REACHABLE;
     else
         res.status=UNREACHABLE;
     res.x = x;
     res.constraints_=Ab;
+    hppStopBenchmark(IS_REACHABLE);
+    hppDisplayBenchmark(IS_REACHABLE);
+
     if(contactsBreak.size() > 0){
         hppDout(notice,"Stability constraint for state i+1 :");
         printQHull(A_n,x,"stability.txt");
