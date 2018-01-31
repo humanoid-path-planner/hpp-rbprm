@@ -30,7 +30,8 @@ enum HPP_RBPRM_DLLAPI ContactComputationStatus
 {
   NO_CONTACT = 0,
   STABLE_CONTACT = 1,
-  UNSTABLE_CONTACT = 2
+  UNSTABLE_CONTACT = 2,
+  REACHABLE_CONTACT =3
 };
 
 namespace projection{
