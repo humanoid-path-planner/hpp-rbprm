@@ -129,14 +129,18 @@ std::pair<MatrixXX, VectorX> computeStabilityConstraints(const centroidal_dynami
     return std::make_pair(A,b);
 }
 
-std::pair<MatrixXX, VectorX> computeStabilityConstraintsForState(const RbPrmFullBodyPtr_t& fullbody, State &state,const fcl::Vec3f& acc){
+centroidal_dynamics::Equilibrium computeContactConeForState(const RbPrmFullBodyPtr_t& fullbody, State &state){
     hppStartBenchmark(REACHABLE_CALL_CENTROIDAL);
-    centroidal_dynamics::Equilibrium contactPhase(stability::initLibrary(fullbody));
+    centroidal_dynamics::Equilibrium contactCone(stability::initLibrary(fullbody));
     centroidal_dynamics::EquilibriumAlgorithm alg = centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP;
-    stability::setupLibrary(fullbody,state,contactPhase,alg);
+    stability::setupLibrary(fullbody,state,contactCone,alg);
     hppStopBenchmark(REACHABLE_CALL_CENTROIDAL);
     hppDisplayBenchmark(REACHABLE_CALL_CENTROIDAL);
-    return computeStabilityConstraints(contactPhase,state.contactPositions_.at(state.contactOrder_.front()),
+    return contactCone;
+}
+
+std::pair<MatrixXX, VectorX> computeStabilityConstraintsForState(const RbPrmFullBodyPtr_t& fullbody, State &state,const fcl::Vec3f& acc){
+    return computeStabilityConstraints(computeContactConeForState(fullbody,state),state.contactPositions_.at(state.contactOrder_.front()),
                                        acc.isZero() ? state.configuration_.tail<3>() : acc);
 }
 
@@ -288,6 +292,14 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
     }
     hppDout(notice,"Intersection of constraints :");
     printQHull(Ab,x,"constraints.txt");
+
+    return res;
+}
+
+Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody,State &previous, State& next){
+    Result res;
+    //TODO : build ProblemData from states object and call solveOneStep()
+
 
     return res;
 }
