@@ -92,13 +92,14 @@ bool intersectionExist(const std::pair<MatrixXX, VectorX> &Ab, const fcl::Vec3f&
 }
 
 
-std::pair<MatrixXX, VectorX> computeStabilityConstraints(const centroidal_dynamics::Equilibrium& contactPhase, const fcl::Vec3f &int_point){
+std::pair<MatrixXX, VectorX> computeStabilityConstraints(const centroidal_dynamics::Equilibrium& contactPhase, const fcl::Vec3f &int_point, const fcl::Vec3f &acc){
     MatrixXX A;
     VectorX b;
     // gravity vector
     hppDout(notice,"Compute stability constraints");
     const Vector3& g = contactPhase.m_gravity;
     const Matrix3 gSkew = bezier_com_traj::skew(g);
+    const Matrix3 accSkew = bezier_com_traj::skew(acc);
     // compute GIWC
     centroidal_dynamics::MatrixXX Hrow; VectorX h;
     contactPhase.getPolytopeInequalities(Hrow,h);
@@ -111,8 +112,8 @@ std::pair<MatrixXX, VectorX> computeStabilityConstraints(const centroidal_dynami
     // constraints : mH[:,3:6] g^  x <= h + mH[:,0:3]g
     // A = mH g^
     // b = h + mHg
-    A = mH.block(0,3,dimH,3) * gSkew;
-    b = h+mH.block(0,0,dimH,3)*g;
+    A = mH.block(0,3,dimH,3) * (gSkew - accSkew);
+    b = h+mH.block(0,0,dimH,3)*(g - acc);
    /* hppDout(notice,"Stability constraints matrices : ");
     hppDout(notice,"Interior point : \n"<<int_point);
     hppDout(notice,"A = \n"<<A);
