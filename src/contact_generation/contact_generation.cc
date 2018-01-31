@@ -362,6 +362,14 @@ ProjectionReport maintain_contacts(ContactGenHelper &contactGenHelper)
             if(!rep.success_)
               hppDout(notice,"report = "<<*valRep);
         }
+        if(rep.success_){
+            reachability::Result resReachability = reachability::isReachable(contactGenHelper.fullBody_,contactGenHelper.workingState_,rep.result_);
+            rep.success_ = resReachability.success();
+            hppDout(notice,"Reachability test for maintain contact : succes = "<<rep.success_);
+            rep.status_ = rep.success_ ? REACHABLE_CONTACT : STABLE_CONTACT;
+            if (!rep.success_)
+                hppDout(notice,"NOT REACHABLE in maintain contact");
+        }
     }
     hppDout(notice,"maintain contact, check stability maintain : "<<contactGenHelper.checkStabilityMaintain_);
     if(rep.success_ && contactGenHelper.checkStabilityMaintain_)
@@ -527,7 +535,8 @@ ProjectionReport generate_contact(const ContactGenHelper &contactGenHelper, cons
     if(found_sample || found_stable)
     {
         hppDout(notice,"found sample : "<<model::displayConfig(rep.result_.configuration_));
-        hppDout(notice,"Reachable = "<<found_sample);
+        if(!found_sample)
+            hppDout(notice,"NOT REACHABLE in generate_contact");
         rep.status_ = found_sample ? REACHABLE_CONTACT : STABLE_CONTACT;
         rep.success_ = true;
 #ifdef PROFILE
