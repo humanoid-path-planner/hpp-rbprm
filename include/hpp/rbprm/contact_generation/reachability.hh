@@ -47,7 +47,7 @@ namespace hpp {
             constraints_()
             {}
 
-        bool success(){return status == REACHABLE;}
+        bool success(){return (status == REACHABLE) || (status == NO_CONTACT_VARIATION);}
 
         Status status;
         fcl::Vec3f x;
