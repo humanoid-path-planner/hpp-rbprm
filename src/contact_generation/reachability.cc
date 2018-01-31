@@ -22,7 +22,7 @@ namespace hpp {
        return os;
    }
 
-   void printQHullFile(const std::pair<MatrixXX, VectorX>& Ab,fcl::Vec3f intPoint,const std::string& fileName){
+   void printQHullFile(const std::pair<MatrixXX, VectorX>& Ab,fcl::Vec3f intPoint,const std::string& fileName,bool clipZ = false){
         std::ofstream file;
         using std::endl;
         std::string path("/home/pfernbac/Documents/com_ineq_test/");
@@ -32,9 +32,13 @@ namespace hpp {
         file<<"3 1"<<endl;
         file<<"\t "<<intPoint[0]<<"\t"<<intPoint[1]<<"\t"<<intPoint[2]<<endl;
         file<<"4"<<endl;
-        file<<Ab.first.rows()<<endl;
+        clipZ ? file<<Ab.first.rows()+2<<endl : file<<Ab.first.rows()<<endl;
         for(size_t i = 0 ; i < Ab.first.rows() ; ++i){
             file<<"\t"<<Ab.first(i,0)<<"\t"<<Ab.first(i,1)<<"\t"<<Ab.first(i,2)<<"\t"<<-Ab.second[i]-0.001<<endl;
+        }
+        if(clipZ){
+            file<<"\t"<<0<<"\t"<<0<<"\t"<<1.<<"\t"<<-3.<<endl;
+            file<<"\t"<<0<<"\t"<<0<<"\t"<<-1.<<"\t"<<-1.<<endl;
         }
         file.close();
    }
@@ -42,20 +46,19 @@ namespace hpp {
 
    // Method to print (in hppDout) the inequalities express as halfspace, in a format readable by qHull
    // use qHalf FP | qConvex Ft      to use them
-   void printQHull(const std::pair<MatrixXX, VectorX>& Ab,fcl::Vec3f intPoint = fcl::Vec3f::Zero(),const std::string& fileName=std::string()){
+   void printQHull(const std::pair<MatrixXX, VectorX>& Ab,fcl::Vec3f intPoint = fcl::Vec3f::Zero(),const std::string& fileName=std::string(),bool clipZ = false){
         using std::endl;
         std::stringstream ss;
         //ss<<"qHull Output : use qhalf FP | qconvex Ft "<<endl;
         ss<<"3 1"<<endl;
         ss<<"\t "<<intPoint[0]<<"\t"<<intPoint[1]<<"\t"<<intPoint[2]<<endl;
         ss<<"4"<<endl;
-        ss<<Ab.first.rows()<<endl;
         for(size_t i = 0 ; i < Ab.first.rows() ; ++i){
             ss<<"\t"<<Ab.first(i,0)<<"\t"<<Ab.first(i,1)<<"\t"<<Ab.first(i,2)<<"\t"<<-Ab.second[i]-0.001<<endl;
         }
         hppDout(notice,ss.str());
         if(!fileName.empty())
-            printQHullFile(Ab,intPoint,fileName);
+            printQHullFile(Ab,intPoint,fileName,clipZ);
    }
 
 
@@ -99,6 +102,7 @@ std::pair<MatrixXX, VectorX> computeStabilityConstraints(const centroidal_dynami
     VectorX b;
     // gravity vector
     hppDout(notice,"Compute stability constraints");
+    hppDout(notice,"With acceleration = "<<acc);
     const Vector3& g = contactPhase.m_gravity;
     const Matrix3 gSkew = bezier_com_traj::skew(g);
     const Matrix3 accSkew = bezier_com_traj::skew(acc);
@@ -272,12 +276,12 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
 
     if(contactsBreak.size() > 0){
         hppDout(notice,"Stability constraint for state i+1 :");
-        printQHull(A_n,x,"stability.txt");
+        printQHull(A_n,x,"stability.txt",true);
         hppDout(notice,"Kinematics constraint for state i :");
         printQHull(K_p,x,"kinematics.txt");
     }else{
         hppDout(notice,"Stability constraint for state i :");
-        printQHull(A_p,x,"stability.txt");
+        printQHull(A_p,x,"stability.txt",true);
         hppDout(notice,"Kinematics constraint for state i+1 :");
         printQHull(K_n,x,"kinematics.txt");
     }
