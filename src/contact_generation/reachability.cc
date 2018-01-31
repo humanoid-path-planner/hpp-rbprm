@@ -129,14 +129,15 @@ std::pair<MatrixXX, VectorX> computeStabilityConstraints(const centroidal_dynami
     return std::make_pair(A,b);
 }
 
-std::pair<MatrixXX, VectorX> computeStabilityConstraintsForState(const RbPrmFullBodyPtr_t& fullbody, State &state){
+std::pair<MatrixXX, VectorX> computeStabilityConstraintsForState(const RbPrmFullBodyPtr_t& fullbody, State &state,const fcl::Vec3f& acc){
     hppStartBenchmark(REACHABLE_CALL_CENTROIDAL);
     centroidal_dynamics::Equilibrium contactPhase(stability::initLibrary(fullbody));
     centroidal_dynamics::EquilibriumAlgorithm alg = centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP;
     stability::setupLibrary(fullbody,state,contactPhase,alg);
     hppStopBenchmark(REACHABLE_CALL_CENTROIDAL);
     hppDisplayBenchmark(REACHABLE_CALL_CENTROIDAL);
-    return computeStabilityConstraints(contactPhase,state.contactPositions_.at(state.contactOrder_.front()),state.configuration_.tail<3>());
+    return computeStabilityConstraints(contactPhase,state.contactPositions_.at(state.contactOrder_.front()),
+                                       acc.isZero() ? state.configuration_.tail<3>() : acc);
 }
 
 std::pair<MatrixXX, VectorX> computeConstraintsForState(const RbPrmFullBodyPtr_t& fullbody, State &state){
@@ -177,7 +178,7 @@ Result isReachableIntermediate(const RbPrmFullBodyPtr_t& fullbody,State &previou
     return res;
 }
 
-Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& next){
+Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& next,const fcl::Vec3f& acc){
     hppStartBenchmark(IS_REACHABLE);
     std::vector<std::string> contactsCreation, contactsBreak;
     next.contactBreaks(previous,contactsBreak);
@@ -224,7 +225,7 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
         //Ab = stackConstraints(A_n,K_p);
         // develloped computation, needed to display the differents constraints :
         hppStartBenchmark(REACHABLE_STABILITY);
-        A_n = computeStabilityConstraintsForState(fullbody,next);
+        A_n = computeStabilityConstraintsForState(fullbody,next,acc);
         hppStopBenchmark(REACHABLE_STABILITY);
         hppDisplayBenchmark(REACHABLE_STABILITY);
         hppStartBenchmark(REACHABLE_KINEMATIC);
@@ -245,7 +246,7 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
         //std::pair<MatrixXX,VectorX> K_n_m = computeKinematicsConstraintsForLimb(fullbody,previous,contactsCreation[0]); // kinematic constraint only for the moving contact for state previous
         //Ab = stackConstraints(C_p,K_n_m);
         hppStartBenchmark(REACHABLE_STABILITY);
-        A_p = computeStabilityConstraintsForState(fullbody,previous);
+        A_p = computeStabilityConstraintsForState(fullbody,previous,acc);
         hppStopBenchmark(REACHABLE_STABILITY);
         hppDisplayBenchmark(REACHABLE_STABILITY);
         //K_p = computeKinematicsConstraintsForState(fullbody,previous);
