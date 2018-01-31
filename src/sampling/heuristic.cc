@@ -124,7 +124,7 @@ double DynamicWalkHeuristic(const sampling::Sample& sample,
   fcl::Vec3f n(normal);
   n.normalize();
   double weightDir,weightStatic;
-  weightStatic=10000.;
+  weightStatic=100.;
 
   if(direction.norm() == 0 || std::isnan(direction.norm())){ // test for null vector, functions called before this one can try to normalize direction resulting in NaN
       weightDir=0;
