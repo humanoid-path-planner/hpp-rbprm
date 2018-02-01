@@ -16,19 +16,19 @@ namespace hpp {
 
 
 
-std::pair<MatrixXX, MatrixXX> loadConstraintsFromObj(const std::string& fileName);
+std::pair<MatrixX3, MatrixX3> loadConstraintsFromObj(const std::string& fileName);
 
-std::pair<MatrixXX, VectorX> computeAllKinematicsConstraints(const RbPrmFullBodyPtr_t& fullBody,const model::ConfigurationPtr_t& configuration);
+std::pair<MatrixX3, VectorX> computeAllKinematicsConstraints(const RbPrmFullBodyPtr_t& fullBody,const model::ConfigurationPtr_t& configuration);
 
-std::pair<MatrixXX, VectorX> computeKinematicsConstraintsForState(const RbPrmFullBodyPtr_t& fullBody, const State& state);
+std::pair<MatrixX3, VectorX> computeKinematicsConstraintsForState(const RbPrmFullBodyPtr_t& fullBody, const State& state);
 
-std::pair<MatrixXX, VectorX> computeKinematicsConstraintsForLimb(const RbPrmFullBodyPtr_t& fullBody, const State& state,const std::string& limbName);
+std::pair<MatrixX3, VectorX> computeKinematicsConstraintsForLimb(const RbPrmFullBodyPtr_t& fullBody, const State& state,const std::string& limbName);
 
-std::pair<MatrixXX, VectorX> getInequalitiesAtTransform(const std::pair<MatrixXX, MatrixXX>& NV, const fcl::Transform3f& transform);
+std::pair<MatrixX3, VectorX> getInequalitiesAtTransform(const std::pair<MatrixX3, MatrixX3>& NV, const fcl::Transform3f& transform);
 
-bool verifyKinematicConstraints(const std::pair<MatrixXX, VectorX>& Ab, const fcl::Vec3f& point);
+bool verifyKinematicConstraints(const std::pair<MatrixX3, VectorX>& Ab, const fcl::Vec3f& point);
 
-bool verifyKinematicConstraints(const std::pair<MatrixXX, MatrixXX>& NV, const fcl::Transform3f& transform, const fcl::Vec3f& point);
+bool verifyKinematicConstraints(const std::pair<MatrixX3, MatrixX3>& NV, const fcl::Transform3f& transform, const fcl::Vec3f& point);
 
 
 bool verifyKinematicConstraints(const RbPrmFullBodyPtr_t& fullbody,const State& state, fcl::Vec3f point);

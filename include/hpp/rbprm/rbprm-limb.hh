@@ -45,6 +45,7 @@ namespace hpp {
     typedef std::map<std::string, const rbprm::RbPrmLimbPtr_t > T_Limb;
     typedef T_Limb::const_iterator CIT_Limb;
     typedef Eigen::Matrix <model::value_type, Eigen::Dynamic, Eigen::Dynamic> MatrixXX;
+    typedef Eigen::Matrix <model::value_type, Eigen::Dynamic, 3>              MatrixX3;
     typedef Eigen::Matrix <model::value_type, Eigen::Dynamic, 1>              VectorX;
 
 
