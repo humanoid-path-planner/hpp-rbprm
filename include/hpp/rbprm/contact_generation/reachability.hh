@@ -5,7 +5,7 @@
 #include <centroidal-dynamics-lib/centroidal_dynamics.hh>
 #include <hpp/rbprm/rbprm-state.hh>
 #include <hpp/rbprm/contact_generation/kinematics_constraints.hh>
-
+#include <hpp/core/path.hh>
 namespace hpp {
   namespace rbprm {
 
@@ -32,26 +32,39 @@ namespace hpp {
         Result():
             status(UNABLE_TO_COMPUTE),
             x(fcl::Vec3f()),
-            constraints_()
+            constraints_(),
+            path_()
             {}
 
         Result(Status status):
             status(status),
             x(fcl::Vec3f()),
-            constraints_()
+            constraints_(),
+            path_()
             {}
 
         Result(Status status, fcl::Vec3f x):
             status(status),
             x(x),
-            constraints_()
+            constraints_(),
+            path_()
             {}
 
         bool success(){return (status == REACHABLE) || (status == NO_CONTACT_VARIATION);}
 
+        bool pathExist(){
+            if(path_){
+                if (path_->length() > 0){
+                    return true;
+                }
+            }
+            return false;
+        }
+
         Status status;
         fcl::Vec3f x;
         std::pair<MatrixXX, VectorX> constraints_;
+        core::PathPtr_t path_;
     };
 
 std::pair<MatrixXX, VectorX> stackConstraints(const std::pair<MatrixXX, VectorX> &Ab, const std::pair<MatrixXX, VectorX> &Cd);

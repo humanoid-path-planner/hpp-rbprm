@@ -298,7 +298,105 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
 
 Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody,State &previous, State& next){
     Result res;
-    //TODO : build ProblemData from states object and call solveOneStep()
+    std::vector<std::string> contactsCreation, contactsBreak;
+    next.contactBreaks(previous,contactsBreak);
+    next.contactCreations(previous,contactsCreation);
+    hppDout(notice,"IsReachableDynamic called : ");
+    hppDout(notice,"Contacts break : "<<contactsBreak);
+    hppDout(notice,"contacts creation : "<<contactsCreation);
+    if(contactsCreation.size() <= 0 && contactsBreak.size() <= 0){
+        hppDout(notice,"No contact variation, abort.");
+        return Result(NO_CONTACT_VARIATION);
+    }
+    if ((contactsBreak.size() + contactsCreation.size()) > 2 || contactsBreak.size()>1 || contactsCreation.size()>1){
+        hppDout(notice,"More than 2 contact change");
+        return Result(TOO_MANY_CONTACTS_VARIATION);
+    }
+    if (contactsBreak.size() == 0){
+        hppDout(notice,"Only contact creation. State Next have more contact than state Previous");
+        if(previous.nbContacts <=1){
+            hppDout(notice,"Previous is in single support. Unable to compute"); // FIXME : maybe compute in quasiStatic
+            return Result(UNABLE_TO_COMPUTE);
+        }
+    }
+    if (contactsCreation.size() == 0){
+        hppDout(notice,"Only contact break. State Next have less contact than state Previous");
+        if(next.nbContacts <=1){
+            hppDout(notice,"Next is in single support. Unable to compute"); // FIXME : maybe compute in quasiStatic
+            return Result(UNABLE_TO_COMPUTE);
+        }
+    }
+
+    // build ProblemData from states object and call solveOneStep()
+    bezier_com_traj::ProblemData pData;
+    pData.c0_ = previous.com_;
+    pData.c1_ = next.com_;
+    size_t id_velocity = fullbody->device_->configSize() - fullbody->device_->extraConfigSpace().dimension();
+    pData.dc0_ = previous.configuration_.segment<3>(id_velocity);
+    pData.dc1_ = next.configuration_.segment<3>(id_velocity);
+    pData.ddc0_ = previous.configuration_.segment<3>(id_velocity+3); // unused for now
+    pData.ddc1_ = next.configuration_.segment<3>(id_velocity+3);
+    // build contactPhases :
+    bezier_com_traj::ContactData previousData,nextData,midData;
+    std::pair<MatrixX3,VectorX> Ab = computeKinematicsConstraintsForState(fullbody,previous);
+    previousData.Kin_ = Ab.first;
+    previousData.kin_ = Ab.second;
+    centroidal_dynamics::Equilibrium conePrevious = computeContactConeForState(fullbody,previous);
+    previousData.contactPhase_ = &conePrevious;
+    Ab = computeKinematicsConstraintsForState(fullbody,next);
+    nextData.Kin_ = Ab.first;
+    nextData.kin_ = Ab.second;
+    centroidal_dynamics::Equilibrium coneNext = computeContactConeForState(fullbody,next);
+    nextData.contactPhase_ = &coneNext;
+    State mid(previous); // build intermediate state
+    mid.RemoveContact(contactsBreak[0]);
+    Ab = computeKinematicsConstraintsForState(fullbody,mid);
+    midData.Kin_ = Ab.first;
+    midData.kin_ = Ab.second;
+    centroidal_dynamics::Equilibrium coneMid = computeContactConeForState(fullbody,mid);
+    midData.contactPhase_ = &coneMid;
+
+    pData.contacts_.push_back(previousData);
+    if(contactsBreak.size() == 1 && contactsCreation.size() == 1){
+        hppDout(notice,"Contact break AND creation, create intermediate state");
+        pData.contacts_.push_back(midData);
+    }
+    pData.contacts_.push_back(nextData);
+
+    // build timing vector, it should be a multiple of the timeStep
+    // TODO : retrieve timing found by planning ?? how ?? (pass it as argument or store it inside the states ?)
+    // hardcoded value for now : 0.2 s double support, 0.8s single support
+    std::vector<double> Ts;
+    double t_total;
+    if(contactsBreak.size() == 1 && contactsCreation.size() == 1){
+        hppDout(notice,"Contact break and creation, timing : 0.2 ; 0.8 ; 0.2");
+        Ts.push_back(0.2);
+        Ts.push_back(0.8);
+        Ts.push_back(0.2);
+        t_total = 1.2;
+    }else {
+        hppDout(notice,"Only 2 phases, timing : 0.8 ; 0.2");
+        Ts.push_back(0.8);
+        Ts.push_back(0.2);
+        t_total = 1.;
+    }
+
+    // call solveur :
+    hppDout(notice,"Call solveOneStep");
+    bezier_com_traj::ResultDataCOMTraj resBezier; //= bezier_com_traj::solveOnestep(pData,Ts,0.05);
+    //wrap the result :
+    if(resBezier.success_){
+        hppDout(notice,"REACHABLE");
+        res.status = REACHABLE;
+        bezier_Ptr bezierCurve=bezier_Ptr(new bezier_t(resBezier.c_of_t_));
+        res.path_ = BezierPath::create(fullbody->device_,bezierCurve,previous.configuration_,next.configuration_, core::interval_t(0.,t_total));
+        hppDout(notice,"position of the waypoint : "<<resBezier.x.transpose());
+    }else{
+        hppDout(notice,"UNREACHABLE");
+        res.status = UNREACHABLE;
+    }
+
+
 
 
     return res;
