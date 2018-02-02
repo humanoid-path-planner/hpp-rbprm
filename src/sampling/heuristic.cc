@@ -273,6 +273,7 @@ HeuristicFactory::HeuristicFactory()
   //  seed = 1516093154; // walk bauzil v=0.3, bof
    // seed = 1516107025;// walk bauzil v=0.2
     //seed = 1516278938; // walk bauzil ; v=0.2 ; a=0.1 ; heuristic = fixedStep06
+    seed = 1517496129 ; //walk test
     std::cout<<"seed HEURISTIC = "<<seed<<std::endl;
     srand ( seed);
     hppDout(notice,"SEED for heuristic = "<<seed);

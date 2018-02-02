@@ -131,7 +131,7 @@ std::pair<MatrixXX, VectorX> computeStabilityConstraints(const centroidal_dynami
 
 centroidal_dynamics::Equilibrium computeContactConeForState(const RbPrmFullBodyPtr_t& fullbody, State &state){
     hppStartBenchmark(REACHABLE_CALL_CENTROIDAL);
-    centroidal_dynamics::Equilibrium contactCone(stability::initLibrary(fullbody));
+    centroidal_dynamics::Equilibrium contactCone(fullbody->device_->name(), fullbody->device_->mass(),4,centroidal_dynamics::SOLVER_LP_QPOASES,true,10,false);
     centroidal_dynamics::EquilibriumAlgorithm alg = centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP;
     stability::setupLibrary(fullbody,state,contactCone,alg);
     hppStopBenchmark(REACHABLE_CALL_CENTROIDAL);
@@ -336,6 +336,14 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody,State &previous, St
     pData.dc1_ = next.configuration_.segment<3>(id_velocity);
     pData.ddc0_ = previous.configuration_.segment<3>(id_velocity+3); // unused for now
     pData.ddc1_ = next.configuration_.segment<3>(id_velocity+3);
+    hppDout(notice,"Build pData : ");
+    hppDout(notice,"c0 = "<<pData.c0_.transpose());
+    hppDout(notice,"c1 = "<<pData.c1_.transpose());
+    hppDout(notice,"dc0 = "<<pData.dc0_.transpose());
+    hppDout(notice,"dc1 = "<<pData.dc1_.transpose());
+    hppDout(notice,"ddc0 = "<<pData.ddc0_.transpose());
+    hppDout(notice,"ddc1 = "<<pData.ddc1_.transpose());
+
     // build contactPhases :
     bezier_com_traj::ContactData previousData,nextData,midData;
     std::pair<MatrixX3,VectorX> Ab = computeKinematicsConstraintsForState(fullbody,previous);
@@ -369,21 +377,37 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody,State &previous, St
     std::vector<double> Ts;
     double t_total;
     if(contactsBreak.size() == 1 && contactsCreation.size() == 1){
-        hppDout(notice,"Contact break and creation, timing : 0.2 ; 0.8 ; 0.2");
-        Ts.push_back(0.2);
-        Ts.push_back(0.8);
-        Ts.push_back(0.2);
-        t_total = 1.2;
+        hppDout(notice,"Contact break and creation, timing : 0.6 ; 0.8 ; 0.6");
+        Ts.push_back(0.3);
+        Ts.push_back(0.3);
+        Ts.push_back(0.3);
+        t_total = 0.9;
     }else {
-        hppDout(notice,"Only 2 phases, timing : 0.8 ; 0.2");
+        hppDout(notice,"Only 2 phases, timing : 0.8 ; 0.62");
         Ts.push_back(0.8);
-        Ts.push_back(0.2);
+        Ts.push_back(0.6);
         t_total = 1.;
     }
 
+    // compute initial guess :
+    //average of all contact point for the state with the less contacts, z = average of the CoM heigh between previous and next
+    State lessContacts;
+    if(contactsBreak.size()==1 && contactsCreation.size()==1)
+        lessContacts = mid;
+    else if (contactsBreak.size()==1)
+        lessContacts = next;
+    else if (contactsCreation.size() == 1)
+        lessContacts = previous;
+    fcl::Vec3f init_guess = fcl::Vec3f::Zero();
+    for(std::map<std::string, fcl::Vec3f>::const_iterator cit = lessContacts.contactPositions_.begin() ; cit != lessContacts.contactPositions_.end() ; ++cit){
+        init_guess += cit->second;
+    }
+    init_guess /= lessContacts.contactPositions_.size();
+    init_guess[2] = (previous.com_[2] + next.com_[2])/2.;
+
     // call solveur :
     hppDout(notice,"Call solveOneStep");
-    bezier_com_traj::ResultDataCOMTraj resBezier; //= bezier_com_traj::solveOnestep(pData,Ts,0.05);
+    bezier_com_traj::ResultDataCOMTraj resBezier = bezier_com_traj::solveOnestep(pData,Ts,0.1,init_guess);
     //wrap the result :
     if(resBezier.success_){
         hppDout(notice,"REACHABLE");
@@ -395,9 +419,6 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody,State &previous, St
         hppDout(notice,"UNREACHABLE");
         res.status = UNREACHABLE;
     }
-
-
-
 
     return res;
 }
