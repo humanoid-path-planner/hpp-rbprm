@@ -371,23 +371,25 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     }
     pData.contacts_.push_back(nextData);
 
-    // build timing vector, it should be a multiple of the timeStep
-    // TODO : retrieve timing found by planning ?? how ?? (pass it as argument or store it inside the states ?)
-    // hardcoded value for now : 0.2 s double support, 0.8s single support
-    std::vector<double> Ts;
-    double t_total;
-    if(contactsBreak.size() == 1 && contactsCreation.size() == 1){
-        hppDout(notice,"Contact break and creation, timing : 0.6 ; 0.8 ; 0.6");
-        Ts.push_back(0.3);
-        Ts.push_back(0.3);
-        Ts.push_back(0.3);
-        t_total = 0.9;
-    }else {
-        hppDout(notice,"Only 2 phases, timing : 0.8 ; 0.62");
-        Ts.push_back(0.8);
-        Ts.push_back(0.6);
-        t_total = 1.;
+
+    double t_total=0;
+    if(timings.size() != pData.contacts_.size()){
+        // build timing vector, it should be a multiple of the timeStep
+        // TODO : retrieve timing found by planning ?? how ?? (pass it as argument or store it inside the states ?)
+        // hardcoded value for now : 0.2 s double support, 0.8s single support
+        if(contactsBreak.size() == 1 && contactsCreation.size() == 1){
+            hppDout(notice,"Contact break and creation, timing : 0.6 ; 0.8 ; 0.6");
+            timings.push_back(1.);
+            timings.push_back(1.);
+            timings.push_back(1.);
+        }else {
+            hppDout(notice,"Only 2 phases, timing : 0.8 ; 0.62");
+            timings.push_back(0.8);
+            timings.push_back(0.6);
+        }
     }
+    for(size_t i = 0 ; i < timings.size() ; ++i)
+        t_total += timings[i];
 
     // compute initial guess :
     //average of all contact point for the state with the less contacts, z = average of the CoM heigh between previous and next
@@ -407,7 +409,7 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
 
     // call solveur :
     hppDout(notice,"Call solveOneStep");
-    bezier_com_traj::ResultDataCOMTraj resBezier = bezier_com_traj::solveOnestep(pData,Ts,0.1,init_guess);
+    bezier_com_traj::ResultDataCOMTraj resBezier = bezier_com_traj::solveOnestep(pData,timings,timeStep,init_guess);
     //wrap the result :
     if(resBezier.success_){
         hppDout(notice,"REACHABLE");
