@@ -329,24 +329,6 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
 
     // build ProblemData from states object and call solveOneStep()
     bezier_com_traj::ProblemData pData;
-    pData.c0_ = previous.com_;
-    pData.c1_ = next.com_;
-    size_t id_velocity = fullbody->device_->configSize() - fullbody->device_->extraConfigSpace().dimension();
-    pData.dc0_ = previous.configuration_.segment<3>(id_velocity);
-    pData.dc1_ = next.configuration_.segment<3>(id_velocity);
-    //pData.ddc0_ = previous.configuration_.segment<3>(id_velocity+3); // unused for now
-    //pData.ddc1_ = next.configuration_.segment<3>(id_velocity+3);
-   // pData.dc0_ = fcl::Vec3f::Zero();
-   // pData.dc1_ = fcl::Vec3f::Zero();
-    pData.ddc0_ = fcl::Vec3f::Zero();
-    pData.ddc1_ = fcl::Vec3f::Zero();
-    hppDout(notice,"Build pData : ");
-    hppDout(notice,"c0 = "<<pData.c0_.transpose());
-    hppDout(notice,"c1 = "<<pData.c1_.transpose());
-    hppDout(notice,"dc0 = "<<pData.dc0_.transpose());
-    hppDout(notice,"dc1 = "<<pData.dc1_.transpose());
-    hppDout(notice,"ddc0 = "<<pData.ddc0_.transpose());
-    hppDout(notice,"ddc1 = "<<pData.ddc1_.transpose());
 
     // build contactPhases :
     bezier_com_traj::ContactData previousData,nextData,midData;
@@ -374,6 +356,26 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
         pData.contacts_.push_back(midData);
     }
     pData.contacts_.push_back(nextData);
+
+    // set init/goal values :
+    pData.c0_ = previous.com_;
+    pData.c1_ = next.com_;
+    size_t id_velocity = fullbody->device_->configSize() - fullbody->device_->extraConfigSpace().dimension();
+    pData.dc0_ = previous.configuration_.segment<3>(id_velocity);
+    pData.dc1_ = next.configuration_.segment<3>(id_velocity);
+    //pData.ddc0_ = previous.configuration_.segment<3>(id_velocity+3); // unused for now
+    //pData.ddc1_ = next.configuration_.segment<3>(id_velocity+3);
+    pData.dc0_ = fcl::Vec3f::Zero();
+   // pData.dc1_ = fcl::Vec3f::Zero();
+    pData.ddc0_ = fcl::Vec3f::Zero();
+    pData.ddc1_ = fcl::Vec3f::Zero();
+    hppDout(notice,"Build pData : ");
+    hppDout(notice,"c0 = "<<pData.c0_.transpose());
+    hppDout(notice,"c1 = "<<pData.c1_.transpose());
+    hppDout(notice,"dc0 = "<<pData.dc0_.transpose());
+    hppDout(notice,"dc1 = "<<pData.dc1_.transpose());
+    hppDout(notice,"ddc0 = "<<pData.ddc0_.transpose());
+    hppDout(notice,"ddc1 = "<<pData.ddc1_.transpose());
 
 
     double t_total=0;
