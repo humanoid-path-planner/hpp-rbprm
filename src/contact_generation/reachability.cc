@@ -334,8 +334,12 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     size_t id_velocity = fullbody->device_->configSize() - fullbody->device_->extraConfigSpace().dimension();
     pData.dc0_ = previous.configuration_.segment<3>(id_velocity);
     pData.dc1_ = next.configuration_.segment<3>(id_velocity);
-    pData.ddc0_ = previous.configuration_.segment<3>(id_velocity+3); // unused for now
-    pData.ddc1_ = next.configuration_.segment<3>(id_velocity+3);
+    //pData.ddc0_ = previous.configuration_.segment<3>(id_velocity+3); // unused for now
+    //pData.ddc1_ = next.configuration_.segment<3>(id_velocity+3);
+   // pData.dc0_ = fcl::Vec3f::Zero();
+   // pData.dc1_ = fcl::Vec3f::Zero();
+    pData.ddc0_ = fcl::Vec3f::Zero();
+    pData.ddc1_ = fcl::Vec3f::Zero();
     hppDout(notice,"Build pData : ");
     hppDout(notice,"c0 = "<<pData.c0_.transpose());
     hppDout(notice,"c1 = "<<pData.c1_.transpose());
