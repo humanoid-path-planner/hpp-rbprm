@@ -296,7 +296,7 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
     return res;
 }
 
-Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody,State &previous, State& next){
+Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& next, std::vector<double> timings, double timeStep){
     Result res;
     std::vector<std::string> contactsCreation, contactsBreak;
     next.contactBreaks(previous,contactsBreak);
