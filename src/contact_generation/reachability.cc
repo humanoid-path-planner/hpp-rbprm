@@ -302,6 +302,9 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     next.contactBreaks(previous,contactsBreak);
     next.contactCreations(previous,contactsCreation);
     hppDout(notice,"IsReachableDynamic called : ");
+    hppDout(notice,"Between configuration : "<<model::displayConfig(previous.configuration_));
+    hppDout(notice,"and     configuration : "<<model::displayConfig(next.configuration_));
+
     hppDout(notice,"Contacts break : "<<contactsBreak);
     hppDout(notice,"contacts creation : "<<contactsCreation);
     if(contactsCreation.size() <= 0 && contactsBreak.size() <= 0){
@@ -422,8 +425,8 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
         res.status = REACHABLE;
         bezier_Ptr bezierCurve=bezier_Ptr(new bezier_t(resBezier.c_of_t_));
         // replace extra dof in next.configuration to fit the final velocity and acceleration found :
-        next.configuration_.segment<3>(id_velocity) = resBezier.dc1_;
-        next.configuration_.segment<3>(id_velocity+3) = resBezier.ddc1_;
+      //  next.configuration_.segment<3>(id_velocity) = resBezier.dc1_;
+      //  next.configuration_.segment<3>(id_velocity+3) = resBezier.ddc1_;
         hppDout(notice,"new final configuration : "<<model::displayConfig(next.configuration_));
         res.path_ = BezierPath::create(fullbody->device_,bezierCurve,previous.configuration_,next.configuration_, core::interval_t(0.,t_total));
         hppDout(notice,"position of the waypoint : "<<resBezier.x.transpose());
