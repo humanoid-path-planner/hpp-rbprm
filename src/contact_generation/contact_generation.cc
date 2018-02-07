@@ -456,8 +456,8 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
                     resReachability = reachability::isReachableDynamic(contactGenHelper.fullBody_,previous,rep.result_);
                 }
                 if(resReachability.success()){// reachable
-                    position = limb->effector_->currentTransformation().getTranslation();
-                    rotation = limb->effector_->currentTransformation().getRotation();
+                    position = rep.result_.contactPositions_.at(limbId);
+                    rotation = rep.result_.contactRotation_.at(limbId);
                     normal = rep.result_.contactNormals_.at(limbId);
                     found_sample = true;
                     //TODO : save path (if not quasistatic)??
@@ -468,8 +468,8 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
 // if no reachable state are found, we keep the first stable configuration found (ie. the one with the best heuristic score)
                         bestUnreachable = configuration;
                         found_stable = true;
-                        position = limb->effector_->currentTransformation().getTranslation();
-                        rotation = limb->effector_->currentTransformation().getRotation();
+                        position = rep.result_.contactPositions_.at(limbId);
+                        rotation = rep.result_.contactRotation_.at(limbId);
                         normal = rep.result_.contactNormals_.at(limbId);
                     }
                   /*   // DEBUGING PURPOSE : call again evaluate on the sample found
@@ -492,8 +492,8 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
                 hppDout(notice,"unstable contact, but the most robust yet.");
                 moreRobust = configuration;
                 maxRob = robustness;
-                position = limb->effector_->currentTransformation().getTranslation();
-                rotation = limb->effector_->currentTransformation().getRotation();
+                position = rep.result_.contactPositions_.at(limbId);
+                rotation = rep.result_.contactRotation_.at(limbId);
                 normal = rep.result_.contactNormals_.at(limbId);
                 unstableContact = true;
             }
