@@ -161,9 +161,9 @@ std::pair<MatrixX3, VectorX> getInequalitiesAtTransform(const std::pair<MatrixX3
         A.block<1,3>(i,0) = n;
         b[i] = v.dot(n);
     }
-    hppDout(notice,"Transform : "<<transform);
-    hppDout(notice,"A : "<<A);
-    hppDout(notice,"b : "<<b);
+   // hppDout(notice,"Transform : "<<transform);
+  //  hppDout(notice,"A : "<<A);
+  //  hppDout(notice,"b : "<<b);
     return std::make_pair(A,b);
 }
 

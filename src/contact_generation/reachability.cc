@@ -387,12 +387,12 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
         // TODO : retrieve timing found by planning ?? how ?? (pass it as argument or store it inside the states ?)
         // hardcoded value for now : 0.2 s double support, 0.8s single support
         if(contactsBreak.size() == 1 && contactsCreation.size() == 1){
-            hppDout(notice,"Contact break and creation, timing : 0.6 ; 0.8 ; 0.6");
+            hppDout(notice,"Contact break and creation, timing : 1 ; 1 ; 1");
             timings.push_back(1.);
             timings.push_back(1.);
             timings.push_back(1.);
         }else {
-            hppDout(notice,"Only 2 phases, timing : 0.8 ; 0.62");
+            hppDout(notice,"Only 2 phases, timing : 0.8 ; 0.6");
             timings.push_back(0.8);
             timings.push_back(0.6);
         }
