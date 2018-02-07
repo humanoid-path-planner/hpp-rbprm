@@ -57,6 +57,7 @@ ContactGenHelper::ContactGenHelper(RbPrmFullBodyPtr_t fb, const State& ps, model
 , checkStabilityGenerate_(checkStabilityGenerate)
 , comPath_(comPath)
 , currentPathId_(currentPathId)
+, quasiStatic_(false)
 {
     workingState_.configuration_ = configuration;
     workingState_.stable = false;
@@ -363,12 +364,14 @@ ProjectionReport maintain_contacts(ContactGenHelper &contactGenHelper)
               hppDout(notice,"report = "<<*valRep);
         }
         if(rep.success_){
-            reachability::Result resReachability = reachability::isReachable(contactGenHelper.fullBody_,contactGenHelper.workingState_,rep.result_);
-            rep.success_ = resReachability.success();
-            hppDout(notice,"Reachability test for maintain contact : succes = "<<rep.success_);
-            rep.status_ = rep.success_ ? REACHABLE_CONTACT : STABLE_CONTACT;
-            if (!rep.success_)
-                hppDout(notice,"NOT REACHABLE in maintain contact");
+            if(contactGenHelper.quasiStatic_){
+                reachability::Result resReachability = reachability::isReachable(contactGenHelper.fullBody_,contactGenHelper.workingState_,rep.result_);
+                rep.success_ = resReachability.success();
+                hppDout(notice,"Reachability test for maintain contact : succes = "<<rep.success_);
+                rep.status_ = rep.success_ ? REACHABLE_CONTACT : STABLE_CONTACT;
+                if (!rep.success_)
+                    hppDout(notice,"NOT REACHABLE in maintain contact");
+            }
         }
     }
     hppDout(notice,"maintain contact, check stability maintain : "<<contactGenHelper.checkStabilityMaintain_);
@@ -416,7 +419,8 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
 {
     State current = contactGenHelper.workingState_;
     current.stable = false;
-    State previous(current); // state before new contact creation
+    State intermediateState(current); // state before new contact creation
+    State previous(contactGenHelper.previousState_); // previous state, before contact break
     sampling::T_OctreeReport finalSet = CollideOctree(contactGenHelper, limbId, limb, evaluate, params);
     core::Configuration_t moreRobust, bestUnreachable,configuration;
     configuration = current.configuration_;
@@ -445,12 +449,18 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
                 || robustness>=contactGenHelper.robustnessTreshold_)
             {
                 hppDout(notice,"stability OK (or one contact only), test reachability : ");
-                reachability::Result resReachability = reachability::isReachable(contactGenHelper.fullBody_,previous,rep.result_);
+                reachability::Result resReachability;
+                if(contactGenHelper.quasiStatic_){
+                    resReachability = reachability::isReachable(contactGenHelper.fullBody_,intermediateState,rep.result_);
+                }else{
+                    resReachability = reachability::isReachableDynamic(contactGenHelper.fullBody_,previous,rep.result_);
+                }
                 if(resReachability.success()){// reachable
                     position = limb->effector_->currentTransformation().getTranslation();
                     rotation = limb->effector_->currentTransformation().getRotation();
                     normal = rep.result_.contactNormals_.at(limbId);
                     found_sample = true;
+                    //TODO : save path (if not quasistatic)??
                 }else{
                     hppDout(notice,"NOT REACHABLE");
                     if(!found_stable){

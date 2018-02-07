@@ -67,6 +67,7 @@ struct ContactGenHelper
     Q_State candidates_;
     const core::PathConstPtr_t comPath_;
     const double currentPathId_;
+    const bool quasiStatic_;
 
 };
 
