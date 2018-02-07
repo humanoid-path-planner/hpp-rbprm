@@ -340,11 +340,6 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     previousData.kin_ = Ab.second;
     centroidal_dynamics::Equilibrium conePrevious = computeContactConeForState(fullbody,previous);
     previousData.contactPhase_ = &conePrevious;
-    Ab = computeKinematicsConstraintsForState(fullbody,next);
-    nextData.Kin_ = Ab.first;
-    nextData.kin_ = Ab.second;
-    centroidal_dynamics::Equilibrium coneNext = computeContactConeForState(fullbody,next);
-    nextData.contactPhase_ = &coneNext;
     State mid(previous); // build intermediate state
     mid.RemoveContact(contactsBreak[0]);
     Ab = computeKinematicsConstraintsForState(fullbody,mid);
@@ -352,6 +347,11 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     midData.kin_ = Ab.second;
     centroidal_dynamics::Equilibrium coneMid = computeContactConeForState(fullbody,mid);
     midData.contactPhase_ = &coneMid;
+    Ab = computeKinematicsConstraintsForState(fullbody,next);
+    nextData.Kin_ = Ab.first;
+    nextData.kin_ = Ab.second;
+    centroidal_dynamics::Equilibrium coneNext = computeContactConeForState(fullbody,next);
+    nextData.contactPhase_ = &coneNext;
 
     pData.contacts_.push_back(previousData);
     if(contactsBreak.size() == 1 && contactsCreation.size() == 1){
