@@ -60,17 +60,17 @@ std::pair<MatrixX3, MatrixX3> loadConstraintsFromObj(const std::string& fileName
     MatrixX3 V(numFaces,3);
     VectorX n,v;
     for (size_t fId = 0 ; fId < numFaces ; ++fId){
-        hppDout(notice,"For face : "<<fId);
+        //hppDout(notice,"For face : "<<fId);
         n = triangleNormal(polyhedron,fId);
         v = polyhedron->vertices[polyhedron->tri_indices[fId][0]];
-        hppDout(notice,"normal : "<<n.transpose());
-        hppDout(notice,"vertice: "<<v.transpose());
+        //hppDout(notice,"normal : "<<n.transpose());
+        //hppDout(notice,"vertice: "<<v.transpose());
         N.block<1,3>(fId,0) = n;
         V.block<1,3>(fId,0) = v;
     }
     hppDout(notice,"End of loading kinematic constraints : ");
-    hppDout(notice,"N : "<<N);
-    hppDout(notice,"v : "<<V);
+    //hppDout(notice,"N : "<<N);
+    //hppDout(notice,"v : "<<V);
 
 
     return std::make_pair(N,V);
@@ -127,7 +127,7 @@ std::pair<MatrixX3, VectorX> computeKinematicsConstraintsForState(const RbPrmFul
             currentId += Ab_limb.first.rows();
         }
     }
-    hppDout(notice,"End of kinematics constraints, A size : ("<<A.rows()<<","<<A.cols());
+    hppDout(notice,"End of kinematics constraints, A size : ("<<A.rows()<<","<<A.cols()<<")");
     return std::make_pair(A,b);
 }
 

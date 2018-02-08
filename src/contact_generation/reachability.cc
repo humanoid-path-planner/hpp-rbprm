@@ -56,7 +56,7 @@ namespace hpp {
         for(size_t i = 0 ; i < Ab.first.rows() ; ++i){
             ss<<"\t"<<Ab.first(i,0)<<"\t"<<Ab.first(i,1)<<"\t"<<Ab.first(i,2)<<"\t"<<-Ab.second[i]-0.001<<endl;
         }
-        hppDout(notice,ss.str());
+        //hppDout(notice,ss.str());
         if(!fileName.empty())
             printQHullFile(Ab,intPoint,fileName,clipZ);
    }
@@ -109,11 +109,12 @@ std::pair<MatrixXX, VectorX> computeStabilityConstraints(const centroidal_dynami
     // compute GIWC
     centroidal_dynamics::MatrixXX Hrow; VectorX h;
     contactPhase.getPolytopeInequalities(Hrow,h);
+   // hppDout(notice,"Hrow : \n"<<Hrow);
     MatrixXX H = -Hrow;
     H.rowwise().normalize();
     int dimH = (int)(H.rows());
     hppDout(notice,"Dim H rows : "<<dimH<<" ; col : "<<H.cols());
-
+   // hppDout(notice,"H : \n"<<H);
     MatrixXX mH = contactPhase.m_mass * H;
     // constraints : mH[:,3:6] g^  x <= h + mH[:,0:3]g
     // A = mH g^
@@ -188,6 +189,8 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
     next.contactBreaks(previous,contactsBreak);
     next.contactCreations(previous,contactsCreation);
     hppDout(notice,"IsReachable called : ");
+    hppDout(notice,"contact for previous : "<<previous.nbContacts);
+    hppDout(notice,"contact for next     : "<<next.nbContacts);
     hppDout(notice,"Contacts break : "<<contactsBreak);
     hppDout(notice,"contacts creation : "<<contactsCreation);
     if(contactsCreation.size() <= 0 && contactsBreak.size() <= 0){

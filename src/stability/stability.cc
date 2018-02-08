@@ -221,6 +221,9 @@ const fcl::Vec3f comfcl = comcptr->com();*/
         {
             alg = EQUILIBRIUM_ALGORITHM_PP;
         }
+        hppDout(notice,"Setup cone contacts : ");
+        hppDout(notice,"position : \n"<<positions);
+        hppDout(notice,"normal : \n"<<normals);
         sEq.setNewContacts(positions,normals,friction,alg);
         return com;
     }
