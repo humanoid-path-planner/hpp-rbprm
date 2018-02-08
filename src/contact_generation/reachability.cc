@@ -273,10 +273,14 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
     success = intersectionExist(Ab,previous.com_,next.com_,x);
     hppStopBenchmark(QP_REACHABLE);
     hppDisplayBenchmark(QP_REACHABLE);
-    if(success)
+    if(success){
         res.status=REACHABLE;
-    else
+        hppDout(notice,"REACHABLE");
+    }
+    else{
         res.status=UNREACHABLE;
+        hppDout(notice,"UNREACHABLE");
+    }
     res.x = x;
     res.constraints_=Ab;
     hppStopBenchmark(IS_REACHABLE);
