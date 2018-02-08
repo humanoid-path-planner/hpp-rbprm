@@ -365,7 +365,7 @@ ProjectionReport maintain_contacts(ContactGenHelper &contactGenHelper)
               hppDout(notice,"report = "<<*valRep);
         }
         if(rep.success_){
-            if(contactGenHelper.quasiStatic_){
+            if(contactGenHelper.quasiStatic_ && contactGenHelper.testReachability_){
                 reachability::Result resReachability = reachability::isReachable(contactGenHelper.fullBody_,contactGenHelper.workingState_,rep.result_);
                 rep.success_ = resReachability.success();
                 hppDout(notice,"Reachability test for maintain contact : succes = "<<rep.success_);
