@@ -58,7 +58,8 @@ ContactGenHelper::ContactGenHelper(RbPrmFullBodyPtr_t fb, const State& ps, model
 , comPath_(comPath)
 , currentPathId_(currentPathId)
 , quasiStatic_(true)
-, testReachability_(true)
+, testReachability_(false)
+, maximiseContacts_(true)
 {
     workingState_.configuration_ = configuration;
     workingState_.stable = false;
@@ -298,18 +299,23 @@ void stringCombinatorialRec(std::vector<std::vector<std::string> >& res, const s
 }
 
 
-std::vector<std::vector<std::string> > stringCombinatorial(const std::vector<std::string>& candidates, const std::size_t maxDepth)
+std::vector<std::vector<std::string> > stringCombinatorial(const std::vector<std::string>& candidates, const std::size_t maxDepth,const bool maximiseContacts = false)
 {
     std::vector<std::vector<std::string> > res;
     std::vector<std::string> tmp;
     res.push_back(tmp);
     stringCombinatorialRec(res, candidates, maxDepth);
+    if(maximiseContacts){
+        // put first element (no contact creation) at the end
+        res.erase(res.begin());
+        res.push_back(tmp);
+    }
     return res;
 }
 
-void gen_contacts_combinatorial_rec(const std::vector<std::string>& freeEffectors, const State& previous, T_ContactState& res, const std::size_t maxCreatedContacts)
+void gen_contacts_combinatorial_rec(const std::vector<std::string>& freeEffectors, const State& previous, T_ContactState& res, const std::size_t maxCreatedContacts,const bool maximiseContact = false)
 {
-    std::vector<std::vector<std::string> > allNewStates = stringCombinatorial(freeEffectors, maxCreatedContacts);
+    std::vector<std::vector<std::string> > allNewStates = stringCombinatorial(freeEffectors, maxCreatedContacts,maximiseContact);
     for(std::vector<std::vector<std::string> >::const_iterator cit = allNewStates.begin(); cit!=allNewStates.end();++cit)
     {
         ContactState contactState; contactState.first = previous; contactState.second = *cit;
@@ -317,10 +323,10 @@ void gen_contacts_combinatorial_rec(const std::vector<std::string>& freeEffector
     }
 }
 
-T_ContactState gen_contacts_combinatorial(const std::vector<std::string>& freeEffectors, const State& previous, const std::size_t maxCreatedContacts)
+T_ContactState gen_contacts_combinatorial(const std::vector<std::string>& freeEffectors, const State& previous, const std::size_t maxCreatedContacts,const bool maximiseContacts)
 {
     T_ContactState res;;
-    gen_contacts_combinatorial_rec(freeEffectors, previous, res, maxCreatedContacts);
+    gen_contacts_combinatorial_rec(freeEffectors, previous, res, maxCreatedContacts,maximiseContacts);
     return res;
 }
 
@@ -329,7 +335,8 @@ T_ContactState gen_contacts_combinatorial(ContactGenHelper& contactGenHelper)
     State& cState = contactGenHelper.workingState_;
     std::vector<std::string> effNames(extractEffectorsName(contactGenHelper.fullBody_->GetLimbs()));
     const std::vector<std::string> freeLimbs = rbprm::freeEffectors(cState,effNames.begin(), effNames.end() );
-    return gen_contacts_combinatorial(freeLimbs, cState, contactGenHelper.maxContactCreations_);
+    hppDout(notice,"in gen contact, number of free limbs : "<<freeLimbs.size());
+    return gen_contacts_combinatorial(freeLimbs, cState, contactGenHelper.maxContactCreations_,contactGenHelper.maximiseContacts_);
 }
 
 

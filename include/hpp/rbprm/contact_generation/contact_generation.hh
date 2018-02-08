@@ -69,6 +69,7 @@ struct ContactGenHelper
     const double currentPathId_;
     const bool quasiStatic_;
     const bool testReachability_;
+    const bool maximiseContacts_;
 
 
 };
@@ -94,7 +95,7 @@ Q_State maintain_contacts_combinatorial(const hpp::rbprm::State& currentState, c
 /// \param maxCreatedContacts max number of contacts that can be created in the process
 /// \return a QUEUE of contact states candidates for maintenance, ordered by number of contacts broken
 /// and priority in the list wrt the contact order
-T_ContactState gen_contacts_combinatorial(const std::vector<std::string>& freeEffectors, const State& previous, const std::size_t maxCreatedContacts);
+T_ContactState gen_contacts_combinatorial(const std::vector<std::string>& freeEffectors, const State& previous, const std::size_t maxCreatedContacts, const bool maximiseContacts=false);
 
 /// Given a combinatorial of possible contacts, generate
 /// the first "valid" configuration, that is the first kinematic
