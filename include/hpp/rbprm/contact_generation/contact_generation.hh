@@ -68,6 +68,8 @@ struct ContactGenHelper
     const core::PathConstPtr_t comPath_;
     const double currentPathId_;
     const bool quasiStatic_;
+    const bool testReachability_;
+
 
 };
 

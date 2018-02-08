@@ -57,7 +57,8 @@ ContactGenHelper::ContactGenHelper(RbPrmFullBodyPtr_t fb, const State& ps, model
 , checkStabilityGenerate_(checkStabilityGenerate)
 , comPath_(comPath)
 , currentPathId_(currentPathId)
-, quasiStatic_(false)
+, quasiStatic_(true)
+, testReachability_(true)
 {
     workingState_.configuration_ = configuration;
     workingState_.stable = false;
@@ -429,6 +430,8 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
     fcl::Vec3f position, normal;
     fcl::Matrix3f rotation;
     ProjectionReport rep ;
+    double robustness;
+    bool isReachable;
     hppDout(notice,"in findValidCandidate for limb : "<<limbId);
     hppDout(notice,"number of candidate : "<<finalSet.size());
     for(;!found_sample && it!=finalSet.end(); ++it)
@@ -441,61 +444,71 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
         hppDout(notice,"projection to obstacle success = "<<rep.success_);
         if(rep.success_)
         {
-            double robustness = stability::IsStable(contactGenHelper.fullBody_,rep.result_, contactGenHelper.acceleration_);
-            hppDout(notice,"stability rob = "<<robustness);
-            hppDout(notice,"check stability generate : "<<contactGenHelper.checkStabilityGenerate_);
-            if(    !contactGenHelper.checkStabilityGenerate_
-                || (rep.result_.nbContacts == 1 && !contactGenHelper.stableForOneContact_)
-                || robustness>=contactGenHelper.robustnessTreshold_)
-            {
-                hppDout(notice,"stability OK (or one contact only), test reachability : ");
-                reachability::Result resReachability;
-                if(contactGenHelper.quasiStatic_){
-                    resReachability = reachability::isReachable(contactGenHelper.fullBody_,intermediateState,rep.result_);
-                }else{
-                    resReachability = reachability::isReachableDynamic(contactGenHelper.fullBody_,previous,rep.result_);
-                }
-                if(resReachability.success()){// reachable
-                    position = rep.result_.contactPositions_.at(limbId);
-                    rotation = rep.result_.contactRotation_.at(limbId);
-                    normal = rep.result_.contactNormals_.at(limbId);
-                    found_sample = true;
-                    //TODO : save path (if not quasistatic)??
-                }else{
-                    hppDout(notice,"NOT REACHABLE");
-                    if(!found_stable){
-                        maxRob = std::max(robustness, maxRob);
-// if no reachable state are found, we keep the first stable configuration found (ie. the one with the best heuristic score)
-                        bestUnreachable = configuration;
-                        found_stable = true;
-                        position = rep.result_.contactPositions_.at(limbId);
-                        rotation = rep.result_.contactRotation_.at(limbId);
-                        normal = rep.result_.contactNormals_.at(limbId);
-                    }
-                  /*   // DEBUGING PURPOSE : call again evaluate on the sample found
-                    hppDout(notice,"found sample, evaluate : "); // remove
-                    Eigen::Vector3d eDir(contactGenHelper.direction_[0], contactGenHelper.direction_[1], contactGenHelper.direction_[2]); // remove
-                    eDir.normalize();       // remove
-                    hppDout(notice,"sample = "<<(*(bestReport.sample_)).startRank_); // remove
-                    sampling::heuristic eval =  evaluate == 0 ? limb->evaluate_ : evaluate;// remove
-                    (*eval)(*(bestReport.sample_), eDir, normal, params); // TODO : comment when not debugging
-                    core::Configuration_t confBefore= current.configuration_; // remove
-                    sampling::Load(*(bestReport.sample_),confBefore); //remove
-                    hppDout(notice,"config before projection : r(["<<model::displayConfig(confBefore)<<"])"); //remove
-                   */
-                }
-            }
-            // if no stable candidate is found, select best contact
-            // anyway
-            else if((robustness > maxRob) && contactGenHelper.contactIfFails_)
-            {
-                hppDout(notice,"unstable contact, but the most robust yet.");
-                moreRobust = configuration;
-                maxRob = robustness;
+            if(  !contactGenHelper.checkStabilityGenerate_ || (rep.result_.nbContacts == 1 && !contactGenHelper.stableForOneContact_)){ // only check projection, success !
+                hppDout(notice,"Don't check stability : one contact or not the last contact");
                 position = rep.result_.contactPositions_.at(limbId);
                 rotation = rep.result_.contactRotation_.at(limbId);
                 normal = rep.result_.contactNormals_.at(limbId);
-                unstableContact = true;
+                found_sample = true;
+            }else{ // check stability and reachability
+                robustness = stability::IsStable(contactGenHelper.fullBody_,rep.result_, contactGenHelper.acceleration_);
+                hppDout(notice,"stability rob = "<<robustness);
+                if( robustness>=contactGenHelper.robustnessTreshold_)
+                {
+                    hppDout(notice,"stability OK, test reachability : ");
+                    if(contactGenHelper.testReachability_){
+                        reachability::Result resReachability;
+                        if(contactGenHelper.quasiStatic_){
+                            resReachability = reachability::isReachable(contactGenHelper.fullBody_,intermediateState,rep.result_);
+                        }else{
+                            resReachability = reachability::isReachableDynamic(contactGenHelper.fullBody_,previous,rep.result_);
+                        }
+                        isReachable = resReachability.success();
+                    }else{
+                        isReachable = true;
+                    }
+                    if(isReachable){// reachable
+                        position = rep.result_.contactPositions_.at(limbId);
+                        rotation = rep.result_.contactRotation_.at(limbId);
+                        normal = rep.result_.contactNormals_.at(limbId);
+                        found_sample = true;
+                        //TODO : save path (if not quasistatic)??
+                    }else{
+                        hppDout(notice,"NOT REACHABLE");
+                        if(!found_stable){
+                            maxRob = std::max(robustness, maxRob);
+    // if no reachable state are found, we keep the first stable configuration found (ie. the one with the best heuristic score)
+                            bestUnreachable = configuration;
+                            found_stable = true;
+                            position = rep.result_.contactPositions_.at(limbId);
+                            rotation = rep.result_.contactRotation_.at(limbId);
+                            normal = rep.result_.contactNormals_.at(limbId);
+                        }
+                      /*   // DEBUGING PURPOSE : call again evaluate on the sample found
+                        hppDout(notice,"found sample, evaluate : "); // remove
+                        Eigen::Vector3d eDir(contactGenHelper.direction_[0], contactGenHelper.direction_[1], contactGenHelper.direction_[2]); // remove
+                        eDir.normalize();       // remove
+                        hppDout(notice,"sample = "<<(*(bestReport.sample_)).startRank_); // remove
+                        sampling::heuristic eval =  evaluate == 0 ? limb->evaluate_ : evaluate;// remove
+                        (*eval)(*(bestReport.sample_), eDir, normal, params); // TODO : comment when not debugging
+                        core::Configuration_t confBefore= current.configuration_; // remove
+                        sampling::Load(*(bestReport.sample_),confBefore); //remove
+                        hppDout(notice,"config before projection : r(["<<model::displayConfig(confBefore)<<"])"); //remove
+                       */
+                    }
+                }
+                // if no stable candidate is found, select best contact
+                // anyway
+                else if((robustness > maxRob) && contactGenHelper.contactIfFails_)
+                {
+                    hppDout(notice,"unstable contact, but the most robust yet.");
+                    moreRobust = configuration;
+                    maxRob = robustness;
+                    position = rep.result_.contactPositions_.at(limbId);
+                    rotation = rep.result_.contactRotation_.at(limbId);
+                    normal = rep.result_.contactNormals_.at(limbId);
+                    unstableContact = true;
+                }
             }
         }
     }
