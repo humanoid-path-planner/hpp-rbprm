@@ -307,8 +307,7 @@ std::vector<std::vector<std::string> > stringCombinatorial(const std::vector<std
     stringCombinatorialRec(res, candidates, maxDepth);
     if(maximiseContacts){
         // put first element (no contact creation) at the end
-        res.erase(res.begin());
-        res.push_back(tmp);
+        std::rotate( res.begin(), res.begin() + 1, res.end() );
     }
     return res;
 }
