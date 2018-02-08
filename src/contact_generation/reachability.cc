@@ -305,6 +305,11 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     hppDout(notice,"Between configuration : "<<model::displayConfig(previous.configuration_));
     hppDout(notice,"and     configuration : "<<model::displayConfig(next.configuration_));
 
+    if(previous.configuration_.head<3>() == next.configuration_.head<3>()){
+        hppDout(notice,"Same root position, unable to compute");
+        return Result(SAME_ROOT_POSITION);
+    }
+
     hppDout(notice,"Contacts break : "<<contactsBreak);
     hppDout(notice,"contacts creation : "<<contactsCreation);
     if(contactsCreation.size() <= 0 && contactsBreak.size() <= 0){

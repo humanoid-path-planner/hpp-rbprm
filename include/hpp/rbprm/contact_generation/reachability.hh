@@ -20,6 +20,7 @@ namespace hpp {
     enum Status{
         UNREACHABLE,
         UNABLE_TO_COMPUTE,
+        SAME_ROOT_POSITION,
         TOO_MANY_CONTACTS_VARIATION,
         NO_CONTACT_VARIATION,
         CONTACT_BREAK_FAILED,
@@ -50,7 +51,7 @@ namespace hpp {
             path_()
             {}
 
-        bool success(){return (status == REACHABLE) || (status == NO_CONTACT_VARIATION);}
+        bool success(){return (status == REACHABLE) || (status == NO_CONTACT_VARIATION) || (status == SAME_ROOT_POSITION);}
 
         bool pathExist(){
             if(path_){
