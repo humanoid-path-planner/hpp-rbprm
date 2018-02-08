@@ -136,10 +136,10 @@ ContactComputationStatus ComputeStableContact(const hpp::rbprm::RbPrmFullBodyPtr
                           fcl::Vec3f& position, fcl::Vec3f& normal, const double robustnessTreshold,
                           const fcl::Vec3f& acceleration = fcl::Vec3f(0,0,0),
                           bool contactIfFails = true, bool stableForOneContact = true,
+                          bool checkStabilityGenerate = true,
                           const sampling::heuristic evaluate = 0)
 {
-    contact::ContactGenHelper contactGenHelper(body,current,current.configuration_,affordances,affFilters,robustnessTreshold,1,1,false,true,
-                                      direction,acceleration,contactIfFails,stableForOneContact);
+    contact::ContactGenHelper contactGenHelper(body,current,current.configuration_,affordances,affFilters,robustnessTreshold,1,1,false,checkStabilityGenerate,direction,acceleration,contactIfFails,stableForOneContact);
 
     sampling::HeuristicParam params;
     params.contactPositions_ = current.contactPositions_;
@@ -181,16 +181,20 @@ hpp::rbprm::State ComputeContacts(const hpp::rbprm::RbPrmFullBodyPtr_t& body,
     result.configuration_ = configuration;
     body->device_->currentConfiguration(configuration);
     body->device_->computeForwardKinematics();
-    for(T_Limb::const_iterator lit = limbs.begin(); lit != limbs.end(); ++lit)
+    bool checkStabilityGenerate(false);
+    size_t id = 0;
+    for(T_Limb::const_iterator lit = limbs.begin(); lit != limbs.end(); ++lit,++id)
     {
         if(!ContactExistsWithinGroup(lit->second, limbGroups ,result))
         {
             hppDout(notice,"ComputeContacts, call computeStable contact for limb : "<<lit->first);
             fcl::Vec3f normal, position;
+            if(id == (limbs.size()-1))
+                checkStabilityGenerate = true; // we only check stability for the last contact
             ComputeStableContact(body,result,
                                 limbcollisionValidations.at(lit->first), lit->first,
                                 lit->second, configuration, result.configuration_, affordances,affFilters,
-                                direction, position, normal, robustnessTreshold,acceleration, false, false);
+                                direction, position, normal, robustnessTreshold,acceleration, false, false,checkStabilityGenerate);
         }
         result.nbContacts = result.contactNormals_.size();
     }
