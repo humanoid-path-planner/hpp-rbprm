@@ -288,19 +288,36 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
     hppStopBenchmark(IS_REACHABLE);
     hppDisplayBenchmark(IS_REACHABLE);
 
+    // compute interior point to display with qHull (only required for display and debug)
+    Vector3 int_pt_kin;
+    fcl::Vec3f int_pt_stab;
+    if(res.success()){
+        int_pt_stab = x;
+        int_pt_kin = x;
+    }
+    else{
+        if(contactsBreak.size() > 0){
+            int_pt_kin = previous.com_;
+            intersectionExist(A_n,previous.com_,next.com_,int_pt_stab);
+        }else{
+            int_pt_kin = next.com_;
+            intersectionExist(A_p,previous.com_,next.com_,int_pt_stab);
+        }
+    }
+
     if(contactsBreak.size() > 0){
         hppDout(notice,"Stability constraint for state i+1 :");
-        printQHull(A_n,x,"stability.txt",true);
+        printQHull(A_n,int_pt_stab,"stability.txt",true);
         hppDout(notice,"Kinematics constraint for state i :");
-        printQHull(K_p,x,"kinematics.txt");
+        printQHull(K_p,int_pt_kin,"kinematics.txt");
     }else{
         hppDout(notice,"Stability constraint for state i :");
-        printQHull(A_p,x,"stability.txt",true);
+        printQHull(A_p,int_pt_stab,"stability.txt",true);
         hppDout(notice,"Kinematics constraint for state i+1 :");
-        printQHull(K_n,x,"kinematics.txt");
+        printQHull(K_n,int_pt_kin,"kinematics.txt");
     }
     hppDout(notice,"Intersection of constraints :");
-    printQHull(Ab,x,"constraints.txt");
+    printQHull(Ab,int_pt_kin,"constraints.txt");
 
     return res;
 }
