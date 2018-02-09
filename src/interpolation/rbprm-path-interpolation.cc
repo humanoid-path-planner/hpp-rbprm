@@ -138,7 +138,8 @@ namespace hpp {
         for(CIT_Configuration cit = configs.begin()+1; cit != configs.end(); ++cit, currentVal+= timeStep)
         {
             const State& previous = states.back().second;
-            core::Configuration_t configuration = *cit;
+            core::Configuration_t configuration = previous.configuration_;
+            configuration.head<7>() = (*cit).head<7>();
             acc = configuration.segment<3>(accIndex);
             //dir = configuration.head<3>() - previous.configuration_.head<3>();
             dir = configuration.segment<3>(accIndex-3);
