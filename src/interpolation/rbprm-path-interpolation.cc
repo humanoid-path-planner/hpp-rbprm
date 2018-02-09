@@ -74,7 +74,7 @@ namespace hpp {
         for(double i = range.first+timeStep; i< range.second; i+= timeStep, ++j)
         {
             configs.push_back(configPosition(configs.back(),path_,i));
-            hppDout(notice,"config added = "<<model::displayConfig(configs.back()));
+            //hppDout(notice,"config added = "<<model::displayConfig(configs.back()));
         }
         configs.push_back(configPosition(configs.back(),path_,range.second));
         return Interpolate(affordances, affFilters, configs, robustnessTreshold, timeStep, range.first, filterStates);
@@ -147,7 +147,7 @@ namespace hpp {
             direction.normalize(&nonZero);
             if(!nonZero) direction = fcl::Vec3f(0,0,1.);
             // TODO Direction 6d
-            hppDout(notice,"#call ComputeContact, looking for state "<<states.size());
+            hppDout(notice,"#call ComputeContact, looking for state "<<states.size()-1);
             hpp::rbprm::contact::ContactReport rep = contact::ComputeContacts(previous, robot_,configuration, affordances,affFilters,direction,robustnessTreshold,acc,comPath,currentVal);
             State& newState = rep.result_;
 

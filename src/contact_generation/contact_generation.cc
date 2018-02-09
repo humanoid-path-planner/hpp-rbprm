@@ -365,7 +365,7 @@ ProjectionReport maintain_contacts(ContactGenHelper &contactGenHelper)
             //collision validation
             hpp::core::ValidationReportPtr_t valRep (new hpp::core::CollisionValidationReport);
             rep.success_ = contactGenHelper.fullBody_->GetCollisionValidation()->validate(rep.result_.configuration_, valRep);
-            hppDout(notice,"maintain contact collision for config : "<<model::displayConfig(rep.result_.configuration_));
+            hppDout(notice,"maintain contact collision for config : r(["<<model::displayConfig(rep.result_.configuration_)<<"])");
             hppDout(notice,"valide  : "<<rep.success_);
             if(!rep.success_)
               hppDout(notice,"report = "<<*valRep);
@@ -525,6 +525,9 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
         current.contactPositions_[limbId] = position;
         current.contactRotation_[limbId] = rotation;
         current.contactOrder_.push(limbId);
+        hppDout(notice,"In find valid candidate, for limb : "<<limbId);
+        hppDout(notice,"position : "<<position);
+        hppDout(notice,"normal   : "<<normal);
     }
     if(found_sample)
     {
@@ -602,6 +605,7 @@ ProjectionReport gen_contacts(ContactGenHelper &contactGenHelper)
     ProjectionReport rep;
     T_ContactState candidates = gen_contacts_combinatorial(contactGenHelper);
     hppDout(notice,"gen_contact candidates size : "<<candidates.size());
+    hppDout(notice,"working state config : r(["<<model::displayConfig(contactGenHelper.workingState_.configuration_)<<"])");
     bool checkStability(contactGenHelper.checkStabilityGenerate_);
     while(!candidates.empty() && !rep.success_)
     {

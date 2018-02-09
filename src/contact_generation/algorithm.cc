@@ -64,11 +64,14 @@ ContactReport generateContactReport(const projection::ProjectionReport& parent, 
 projection::ProjectionReport genContactFromOneMaintainCombinatorial(ContactGenHelper& helper)
 {
     // retrieve the first feasible result of maintain combinatorial...
+    hppDout(notice,"Try to maintain contact for configuration : r(["<<model::displayConfig(helper.workingState_.configuration_)<<"])");
     projection::ProjectionReport rep = contact::maintain_contacts(helper);
-    hppDout(notice,"maintain contact, sucess = "<<rep.success_);
+    hppDout(notice,"maintain contact, success = "<<rep.success_);
     for(std::map<std::string,bool>::const_iterator cit = rep.result_.contacts_.begin();cit!=rep.result_.contacts_.end(); ++ cit)
     {
-      hppDout(notice,"contact : "<<cit->first<<" = "<<cit->second);
+      hppDout(notice,"contact  : "<<cit->first<<" = "<<cit->second);
+      hppDout(notice,"position : "<<rep.result_.contactPositions_.at(cit->first));
+      hppDout(notice,"normal   : "<<rep.result_.contactNormals_.at(cit->first));
     }
     hppDout(notice,"genContact, after maintain : config : "<<model::displayConfig(rep.result_.configuration_));
     if(rep.success_)
@@ -161,6 +164,9 @@ ContactComputationStatus ComputeStableContact(const hpp::rbprm::RbPrmFullBodyPtr
     {
         position = rep.result_.contactPositions_[limbId];
         normal = rep.result_.contactNormals_[limbId];
+        hppDout(notice,"Create contact for limb "<<limbId);
+        hppDout(notice,"position : "<<position);
+        hppDout(notice,"normal : "<<normal);
     }
     if(rep.status_ == STABLE_CONTACT)
         current.stable = true;
@@ -177,6 +183,7 @@ hpp::rbprm::State ComputeContacts(const hpp::rbprm::RbPrmFullBodyPtr_t& body,
     const std::map<std::string, core::CollisionValidationPtr_t>& limbcollisionValidations = body->GetLimbCollisionValidation();
     State result;
     // save old configuration
+    hppDout(notice,"Begin compute contact, without previous state.");
     core::ConfigurationIn_t save = body->device_->currentConfiguration();
     result.configuration_ = configuration;
     body->device_->currentConfiguration(configuration);
@@ -218,6 +225,7 @@ hpp::rbprm::contact::ContactReport ComputeContacts(const hpp::rbprm::State& prev
     body->device_->currentConfiguration(configuration);
     body->device_->computeForwardKinematics ();
     // try to maintain previous contacts
+    hppDout(notice,"Compute contact, previous state : r(["<<model::displayConfig(previous.configuration_)<<"])");
     contact::ContactGenHelper cHelper(body,previous,configuration,affordances,affFilters,robustnessTreshold,1,1,false,
                                       true,direction,acceleration,false,false,comPath,currentPathId);
     contact::ContactReport rep = contact::oneStep(cHelper);

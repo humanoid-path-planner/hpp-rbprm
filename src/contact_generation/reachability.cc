@@ -193,6 +193,8 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
     hppDout(notice,"contact for next     : "<<next.nbContacts);
     hppDout(notice,"Contacts break : "<<contactsBreak);
     hppDout(notice,"contacts creation : "<<contactsCreation);
+
+
     if(contactsCreation.size() <= 0 && contactsBreak.size() <= 0){
         hppDout(notice,"No contact variation, abort.");
         return Result(NO_CONTACT_VARIATION);
