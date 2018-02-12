@@ -414,25 +414,6 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     hppDout(notice,"ddc1 = "<<pData.ddc1_.transpose());
 
 
-    double t_total=0;
-    if(timings.size() != pData.contacts_.size()){
-        // build timing vector, it should be a multiple of the timeStep
-        // TODO : retrieve timing found by planning ?? how ?? (pass it as argument or store it inside the states ?)
-        // hardcoded value for now : 0.2 s double support, 0.8s single support
-        if(contactsBreak.size() == 1 && contactsCreation.size() == 1){
-            hppDout(notice,"Contact break and creation, timing : 1 ; 1 ; 1");
-            timings.push_back(1.);
-            timings.push_back(1.);
-            timings.push_back(1.);
-        }else {
-            hppDout(notice,"Only 2 phases, timing : 0.8 ; 0.6");
-            timings.push_back(0.8);
-            timings.push_back(0.6);
-        }
-    }
-    for(size_t i = 0 ; i < timings.size() ; ++i)
-        t_total += timings[i];
-
     // compute initial guess :
     //average of all contact point for the state with the less contacts, z = average of the CoM heigh between previous and next
     State lessContacts;
@@ -449,25 +430,78 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     init_guess /= lessContacts.contactPositions_.size();
     init_guess[2] = (previous.com_[2] + next.com_[2])/2.;
 
-    // call solveur :
-    hppDout(notice,"Call solveOneStep");
-    bezier_com_traj::ResultDataCOMTraj resBezier = bezier_com_traj::solveOnestep(pData,timings,timeStep,init_guess);
-    //wrap the result :
-    if(resBezier.success_){
-        hppDout(notice,"REACHABLE");
-        res.status = REACHABLE;
-        bezier_Ptr bezierCurve=bezier_Ptr(new bezier_t(resBezier.c_of_t_));
-        // replace extra dof in next.configuration to fit the final velocity and acceleration found :
-      //  next.configuration_.segment<3>(id_velocity) = resBezier.dc1_;
-      //  next.configuration_.segment<3>(id_velocity+3) = resBezier.ddc1_;
-        hppDout(notice,"new final configuration : "<<model::displayConfig(next.configuration_));
-        res.path_ = BezierPath::create(fullbody->device_,bezierCurve,previous.configuration_,next.configuration_, core::interval_t(0.,t_total));
-        hppDout(notice,"position of the waypoint : "<<resBezier.x.transpose());
+
+
+
+    MatrixXX timings_matrix; // contain the timings of the first 3 phases, the total time and the discretization step
+    if(timings.size() != pData.contacts_.size()){
+        // build timing vector, it should be a multiple of the timeStep
+        // TODO : retrieve timing found by planning ?? how ?? (pass it as argument or store it inside the states ?)
+        // hardcoded value for now : 0.2 s double support, 0.8s single support
+        if(contactsBreak.size() == 1 && contactsCreation.size() == 1){
+            hppDout(notice,"Contact break and creation. Use hardcoded timing matrice");
+            timings_matrix = MatrixXX(8,5);
+            timings_matrix << 1.,1.,1.,3.,0.1,
+                            0.4,0.6,0.4,1.4,0.1,
+                            0.6,0.4,0.6,1.6,0.1,
+                            0.6,0.6,0.6,1.8,0.1,
+                            0.2,0.2,0.2,0.6,0.1,
+                            1.,1.,1.,3.,0.2,
+                            1.6,1.6,1.6,4.8,0.2,
+                            2.,1.,2.,5.,0.2,
+                            2.,1.,2.,5.,0.5,
+                            2.,2.,2.,5.,0.5;
+        }else{
+            hppDout(notice,"Only two phases, not implemented yet.");
+            return Result(UNABLE_TO_COMPUTE);
+        }
     }else{
-        hppDout(notice,"UNREACHABLE");
-        res.status = UNREACHABLE;
+        hppDout(notice,"Timing vector is provided");
+        if(timings.size() == 3){
+            timings_matrix = MatrixXX(1,5);
+            timings_matrix(0,0) = timings[0];
+            timings_matrix(0,1) = timings[1];
+            timings_matrix(0,2) = timings[2];
+            timings_matrix(0,3) = timings[0] + timings[1] + timings[2];
+            timings_matrix(0,4) = timeStep;
+        }else{
+            hppDout(notice,"Timing vector is not of length 3.");
+            return Result(UNABLE_TO_COMPUTE);
+        }
+
     }
 
+
+    // loop over all possible timings :
+    size_t id_t=0;
+    bool success(false);
+    bezier_com_traj::ResultDataCOMTraj resBezier;
+    while(!success && (id_t < timings_matrix.rows())){
+        // call solveur :
+        hppDout(notice,"Call solveOneStep");
+        resBezier = bezier_com_traj::solveOnestep(pData,timings_matrix.block<1,3>(id_t,0),timings_matrix(id_t,4),init_guess);
+        //wrap the result :
+        if(resBezier.success_){
+            hppDout(notice,"REACHABLE");
+            res.status = REACHABLE;
+            bezier_Ptr bezierCurve=bezier_Ptr(new bezier_t(resBezier.c_of_t_));
+            // replace extra dof in next.configuration to fit the final velocity and acceleration found :
+          //  next.configuration_.segment<3>(id_velocity) = resBezier.dc1_;
+          //  next.configuration_.segment<3>(id_velocity+3) = resBezier.ddc1_;
+            hppDout(notice,"new final configuration : "<<model::displayConfig(next.configuration_));
+            res.path_ = BezierPath::create(fullbody->device_,bezierCurve,previous.configuration_,next.configuration_, core::interval_t(0.,timings_matrix(id_t,3)));
+            hppDout(notice,"position of the waypoint : "<<resBezier.x.transpose());
+            hppDout(notice,"With timings : "<< timings_matrix.block(id_t,0,0,3));
+            success = true;
+        }else{
+            hppDout(notice,"UNREACHABLE");
+            res.status = UNREACHABLE;
+        }
+        id_t++;
+    }
+    if(!resBezier.success_){
+        hppDout(notice,"No valid timings found, always UNREACHABLE");
+    }
     return res;
 }
 
