@@ -179,6 +179,7 @@ Result isReachableIntermediate(const RbPrmFullBodyPtr_t& fullbody,State &previou
     if(resBreak.success() && resCreate.success()){
         res.status=REACHABLE;
         res.x = (resBreak.x + resCreate.x)/2.;
+        hppDout(notice,"reachable intermediate success, x = "<<res.x);
         // only for test, it take time to compute :
         #if QHULL
         hppDout(notice,"constraint for intersection : ");
@@ -376,11 +377,19 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     if(contactsBreak.size() > 0){
         mid.RemoveContact(contactsBreak[0]);
     }
+
     hppDout(notice,"Try quasi-static reachability : ");
     Result quasiStaticResult = isReachableIntermediate(fullbody,previous,mid,next);
     if(quasiStaticResult.success()){
         hppDout(notice,"REACHABLE in quasi-static");
         quasiStaticResult.status=QUASI_STATIC;
+        // build a Bezier curve of order 2 :
+        std::vector<Vector3> wps;
+        wps.push_back(previous.com_);
+        wps.push_back(quasiStaticResult.x);
+        wps.push_back(next.com_);
+        bezier_Ptr bezierCurve=bezier_Ptr(new bezier_t(wps.begin(),wps.end(),1.));
+        quasiStaticResult.path_ = BezierPath::create(fullbody->device_,bezierCurve,previous.configuration_,next.configuration_, core::interval_t(0.,1));
         return quasiStaticResult;
     }else{
         hppDout(notice,"UNREACHABLE in quasi-static");
