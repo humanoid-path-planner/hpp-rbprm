@@ -525,6 +525,10 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     if(!resBezier.success_){
         hppDout(notice,"No valid timings found, always UNREACHABLE");
     }
+
+    if(res.success() && !quasiStaticResult.success()){
+        hppDout(notice,"ONLY REACHABLE IN DYNAMIC !!!");
+    }
     return res;
 }
 
