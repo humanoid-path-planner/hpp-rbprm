@@ -371,6 +371,22 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
         }
     }
 
+    // build intermediate state :
+    State mid(previous); // build intermediate state
+    if(contactsBreak.size() > 0){
+        mid.RemoveContact(contactsBreak[0]);
+    }
+    hppDout(notice,"Try quasi-static reachability : ");
+    Result quasiStaticResult = isReachableIntermediate(fullbody,previous,mid,next);
+    if(quasiStaticResult.success()){
+        hppDout(notice,"REACHABLE in quasi-static");
+        quasiStaticResult.status=QUASI_STATIC;
+        return quasiStaticResult;
+    }else{
+        hppDout(notice,"UNREACHABLE in quasi-static");
+    }
+
+
     // build ProblemData from states object and call solveOneStep()
     bezier_com_traj::ProblemData pData;
     // build contactPhases :
@@ -380,9 +396,7 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     previousData.kin_ = Ab.second;
     centroidal_dynamics::Equilibrium conePrevious = computeContactConeForState(fullbody,previous);
     previousData.contactPhase_ = &conePrevious;
-    State mid(previous); // build intermediate state
     if(contactsBreak.size() > 0){
-        mid.RemoveContact(contactsBreak[0]);
         Ab = computeKinematicsConstraintsForState(fullbody,mid);
         midData.Kin_ = Ab.first;
         midData.kin_ = Ab.second;
