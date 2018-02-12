@@ -25,6 +25,7 @@ namespace hpp {
         NO_CONTACT_VARIATION,
         CONTACT_BREAK_FAILED,
         CONTACT_CREATION_FAILED,
+        QUASI_STATIC,
         REACHABLE
     };
 
@@ -51,7 +52,7 @@ namespace hpp {
             path_()
             {}
 
-        bool success(){return (status == REACHABLE) || (status == NO_CONTACT_VARIATION) || (status == SAME_ROOT_POSITION);}
+        bool success(){return (status == REACHABLE) || (status == NO_CONTACT_VARIATION) || (status == SAME_ROOT_POSITION) || status == QUASI_STATIC;}
 
         bool pathExist(){
             if(path_){
@@ -67,6 +68,7 @@ namespace hpp {
         std::pair<MatrixXX, VectorX> constraints_;
         core::PathPtr_t path_;
     };
+
 
 std::pair<MatrixXX, VectorX> stackConstraints(const std::pair<MatrixXX, VectorX> &Ab, const std::pair<MatrixXX, VectorX> &Cd);
 
