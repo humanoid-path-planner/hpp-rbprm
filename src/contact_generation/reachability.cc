@@ -14,6 +14,8 @@ namespace hpp {
    using centroidal_dynamics::Vector3;
    using centroidal_dynamics::Matrix3;
 
+
+
    // helper method used to print vectors of string
    std::ostream& operator<<(std::ostream& os, const std::vector<std::string>& vect){
        for(std::vector<std::string>::const_iterator sit = vect.begin() ; sit != vect.end() ; ++sit){
@@ -188,7 +190,7 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
     std::vector<std::string> contactsCreation, contactsBreak;
     next.contactBreaks(previous,contactsBreak);
     next.contactCreations(previous,contactsCreation);
-    hppDout(notice,"IsReachable called : ");
+    hppDout(notice,"IsReachable called : for configuration :  r(["<<model::displayConfig(previous.configuration_)<<"])");
     hppDout(notice,"contact for previous : "<<previous.nbContacts);
     hppDout(notice,"contact for next     : "<<next.nbContacts);
     hppDout(notice,"Contacts break : "<<contactsBreak);
@@ -199,12 +201,10 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
         hppDout(notice,"No contact variation, abort.");
         return Result(NO_CONTACT_VARIATION);
     }
-
     if(contactsCreation.size() >1 || contactsBreak.size() > 1){
         hppDout(notice,"Too many contact variation, abort.");
         return Result(TOO_MANY_CONTACTS_VARIATION);
     }
-
     if(contactsBreak.size() == 1 && contactsCreation.size() == 1){
         if(next.contactVariations(previous).size() == 1){ // there is 1 contact repositionning between previous and next
             // we need to create the intermediate state, and call is reachable for the 3 states.
@@ -330,12 +330,10 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     hppDout(notice,"IsReachableDynamic called : ");
     hppDout(notice,"Between configuration : "<<model::displayConfig(previous.configuration_));
     hppDout(notice,"and     configuration : "<<model::displayConfig(next.configuration_));
-
     if(previous.configuration_.head<3>() == next.configuration_.head<3>()){
         hppDout(notice,"Same root position, unable to compute");
         return Result(SAME_ROOT_POSITION);
     }
-
     hppDout(notice,"Contacts break : "<<contactsBreak);
     hppDout(notice,"contacts creation : "<<contactsCreation);
     if(contactsCreation.size() <= 0 && contactsBreak.size() <= 0){
@@ -363,7 +361,6 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
 
     // build ProblemData from states object and call solveOneStep()
     bezier_com_traj::ProblemData pData;
-
     // build contactPhases :
     bezier_com_traj::ContactData previousData,nextData,midData;
     std::pair<MatrixX3,VectorX> Ab = computeKinematicsConstraintsForState(fullbody,previous);
