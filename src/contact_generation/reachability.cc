@@ -7,6 +7,10 @@
 #include <fstream>
 #include <hpp/util/timer.hh>
 
+#ifndef QHULL
+#define QHULL 0
+#endif
+
 namespace hpp {
   namespace rbprm {
    namespace reachability{
@@ -127,8 +131,10 @@ std::pair<MatrixXX, VectorX> computeStabilityConstraints(const centroidal_dynami
     hppDout(notice,"Interior point : \n"<<int_point);
     hppDout(notice,"A = \n"<<A);
     hppDout(notice,"b = \n"<<b);*/
-    hppDout(notice,"Stability constraints qHull : ");
-    printQHull(std::make_pair(A,b),int_point);
+    #if QHULL
+        hppDout(notice,"Stability constraints qHull : ");
+        printQHull(std::make_pair(A,b),int_point);
+    #endif
     return std::make_pair(A,b);
 }
 
@@ -164,17 +170,20 @@ Result isReachableIntermediate(const RbPrmFullBodyPtr_t& fullbody,State &previou
     hppDout(notice,"isReachableIntermediate : ");
     hppDout(notice,"resBreak status    : "<<resBreak.status);
     hppDout(notice,"resCreation status : "<<resCreate.status);
+    #if QHULL
     hppDout(notice,"constraint for contact break : ");
     printQHull(resBreak.constraints_,resBreak.x,"constraints_break.txt");
     hppDout(notice,"constraint for contact creation : ");
     printQHull(resCreate.constraints_,resCreate.x,"constraints_create.txt");
-
+    #endif
     if(resBreak.success() && resCreate.success()){
         res.status=REACHABLE;
         res.x = (resBreak.x + resCreate.x)/2.;
         // only for test, it take time to compute :
+        #if QHULL
         hppDout(notice,"constraint for intersection : ");
         printQHull(stackConstraints(resBreak.constraints_,resCreate.constraints_),res.x,"constraints.txt");
+        #endif
     }else if(resBreak.status == UNREACHABLE && resCreate.status == UNREACHABLE){
         res.status=UNREACHABLE;
     }else if ( ! resBreak.success()){
@@ -289,6 +298,7 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
     hppDisplayBenchmark(IS_REACHABLE);
 
     // compute interior point to display with qHull (only required for display and debug)
+    #if QHULL
     Vector3 int_pt_kin;
     fcl::Vec3f int_pt_stab;
     if(res.success()){
@@ -318,6 +328,7 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
     }
     hppDout(notice,"Intersection of constraints :");
     printQHull(Ab,int_pt_kin,"constraints.txt");
+    #endif
 
     return res;
 }
@@ -330,6 +341,7 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     hppDout(notice,"IsReachableDynamic called : ");
     hppDout(notice,"Between configuration : "<<model::displayConfig(previous.configuration_));
     hppDout(notice,"and     configuration : "<<model::displayConfig(next.configuration_));
+
     if(previous.configuration_.head<3>() == next.configuration_.head<3>()){
         hppDout(notice,"Same root position, unable to compute");
         return Result(SAME_ROOT_POSITION);
