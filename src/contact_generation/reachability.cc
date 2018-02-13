@@ -523,7 +523,7 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     while(!success && !no_timings_left){
         // call solveur :
         hppDout(notice,"Call solveOneStep");
-        resBezier = bezier_com_traj::solveOnestep(pData,timings_matrix.block<1,3>(id_t,0),timings_matrix(id_t,4),init_guess);
+        resBezier = bezier_com_traj::solveOnestep(pData,current_timings,init_guess,3,1.); // feasability treshold : 0.1 work
         //wrap the result :
         if(resBezier.success_){
             hppDout(notice,"REACHABLE");
