@@ -465,14 +465,18 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
 
 
 
-    MatrixXX timings_matrix; // contain the timings of the first 3 phases, the total time and the discretization step
+   // MatrixXX timings_matrix; // contain the timings of the first 3 phases, the total time and the discretization step
+    VectorX current_timings(3);
+    VectorX times;
+    double total_time = 0;
+    bool timing_provided(false);
     if(timings.size() != pData.contacts_.size()){
         // build timing vector, it should be a multiple of the timeStep
         // TODO : retrieve timing found by planning ?? how ?? (pass it as argument or store it inside the states ?)
         // hardcoded value for now : 0.2 s double support, 0.8s single support
         if(contactsBreak.size() == 1 && contactsCreation.size() == 1){
             hppDout(notice,"Contact break and creation. Use hardcoded timing matrice");
-            timings_matrix = MatrixXX(8,5);
+            /*timings_matrix = MatrixXX(10,5);
             timings_matrix << 1.,1.,1.,3.,0.1,
                             0.4,0.6,0.4,1.4,0.1,
                             0.6,0.4,0.6,1.6,0.1,
@@ -483,6 +487,9 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
                             2.,1.,2.,5.,0.2,
                             2.,1.,2.,5.,0.5,
                             2.,2.,2.,5.,0.5;
+                            */
+            current_timings<<0.2,0.2,0.2;
+            total_time = 0.6;
         }else{
             hppDout(notice,"Only two phases, not implemented yet.");
             return Result(UNABLE_TO_COMPUTE);
@@ -490,12 +497,17 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     }else{
         hppDout(notice,"Timing vector is provided");
         if(timings.size() == 3){
-            timings_matrix = MatrixXX(1,5);
+            /*timings_matrix = MatrixXX(1,5);
             timings_matrix(0,0) = timings[0];
             timings_matrix(0,1) = timings[1];
             timings_matrix(0,2) = timings[2];
             timings_matrix(0,3) = timings[0] + timings[1] + timings[2];
-            timings_matrix(0,4) = timeStep;
+            timings_matrix(0,4) = timeStep;*/
+            current_timings[0] = timings[0];
+            current_timings[1] = timings[1];
+            current_timings[2] = timings[2];
+            total_time = timings[0] + timings[1] + timings[2];
+            timing_provided = true;
         }else{
             hppDout(notice,"Timing vector is not of length 3.");
             return Result(UNABLE_TO_COMPUTE);
@@ -505,10 +517,10 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
 
 
     // loop over all possible timings :
-    size_t id_t=0;
     bool success(false);
+    bool no_timings_left(false);
     bezier_com_traj::ResultDataCOMTraj resBezier;
-    while(!success && (id_t < timings_matrix.rows())){
+    while(!success && !no_timings_left){
         // call solveur :
         hppDout(notice,"Call solveOneStep");
         resBezier = bezier_com_traj::solveOnestep(pData,timings_matrix.block<1,3>(id_t,0),timings_matrix(id_t,4),init_guess);
@@ -521,21 +533,40 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
           //  next.configuration_.segment<3>(id_velocity) = resBezier.dc1_;
           //  next.configuration_.segment<3>(id_velocity+3) = resBezier.ddc1_;
             hppDout(notice,"new final configuration : "<<model::displayConfig(next.configuration_));
-            res.path_ = BezierPath::create(fullbody->device_,bezierCurve,previous.configuration_,next.configuration_, core::interval_t(0.,timings_matrix(id_t,3)));
+            res.path_ = BezierPath::create(fullbody->device_,bezierCurve,previous.configuration_,next.configuration_, core::interval_t(0.,total_time));
             hppDout(notice,"position of the waypoint : "<<resBezier.x.transpose());
-            hppDout(notice,"With timings : "<< timings_matrix.block(id_t,0,0,3));
+            hppDout(notice,"With timings : "<< current_timings);
             success = true;
         }else{
             hppDout(notice,"UNREACHABLE");
             res.status = UNREACHABLE;
         }
-        id_t++;
+
+        // build the new timing vector :
+        if(!timing_provided){
+            current_timings[0] +=0.2;
+            if(current_timings[0] > 3.){
+                current_timings[0] = 0.2;
+                current_timings[1] += 0.2;
+                if(current_timings[1] > 3.){
+                    current_timings[1] = 0.2;
+                    current_timings[2] += 0.2;
+                    if(current_timings[2] > 3.){
+                        no_timings_left = true;
+                    }
+                }
+            }
+            total_time = current_timings[0] + current_timings[1] + current_timings[2];
+            hppDout(notice,"Try with timings : "<<current_timings.transpose());
+        }else{
+            no_timings_left = true;
+        }
     }
     if(!resBezier.success_){
         hppDout(notice,"No valid timings found, always UNREACHABLE");
     }
 
-    if(res.success() && !quasiStaticResult.success()){
+    if(res.success()){
         hppDout(notice,"ONLY REACHABLE IN DYNAMIC !!!");
     }
     return res;
