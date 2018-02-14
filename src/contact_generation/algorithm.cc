@@ -143,7 +143,7 @@ ContactComputationStatus ComputeStableContact(const hpp::rbprm::RbPrmFullBodyPtr
                           const sampling::heuristic evaluate = 0)
 {
     contact::ContactGenHelper contactGenHelper(body,current,current.configuration_,affordances,affFilters,robustnessTreshold,1,1,false,checkStabilityGenerate,direction,acceleration,contactIfFails,stableForOneContact);
-
+    contactGenHelper.testReachability_= false; // because this method is only called without previous states
     sampling::HeuristicParam params;
     params.contactPositions_ = current.contactPositions_;
     contactGenHelper.fullBody_->device_->currentConfiguration(contactGenHelper.workingState_.configuration_);
