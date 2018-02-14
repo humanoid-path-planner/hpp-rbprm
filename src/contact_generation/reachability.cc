@@ -334,7 +334,7 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
     return res;
 }
 
-Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& next, std::vector<double> timings, double timeStep){
+Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& next, std::vector<double> timings, double /*timeStep*/){
     Result res;
     std::vector<std::string> contactsCreation, contactsBreak;
     next.contactBreaks(previous,contactsBreak);
@@ -377,6 +377,7 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     if(contactsBreak.size() > 0){
         mid.RemoveContact(contactsBreak[0]);
     }
+
 
     hppDout(notice,"Try quasi-static reachability : ");
     Result quasiStaticResult = isReachableIntermediate(fullbody,previous,mid,next);
@@ -454,6 +455,8 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     else if (contactsBreak.size()==1)
         lessContacts = next;
     else if (contactsCreation.size() == 1)
+        lessContacts = previous;
+    else
         lessContacts = previous;
     fcl::Vec3f init_guess = fcl::Vec3f::Zero();
     for(std::map<std::string, fcl::Vec3f>::const_iterator cit = lessContacts.contactPositions_.begin() ; cit != lessContacts.contactPositions_.end() ; ++cit){
@@ -569,6 +572,29 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     if(res.success()){
         hppDout(notice,"ONLY REACHABLE IN DYNAMIC !!!");
     }
+
+
+
+    // test : compare to 0step :
+    // only work with 2 phases !!
+    /*
+    hppDout(notice,"Compare with 0Step : ");
+    hppDout(notice," time = "<<total_time);
+    bezier_com_traj::ProblemData pData0;
+    pData0.c0_ = pData.c0_;
+    pData0.c1_ = pData.c1_;
+    pData0.dc0_ = pData.dc0_;
+    pData0.dc1_ = pData.dc1_;
+    pData0.ddc0_ = pData.ddc0_;
+    pData0.ddc1_ = pData.ddc1_;
+    pData0.contacts_.push_back(previousData);
+    std::vector<double> Ts;
+    Ts.push_back(total_time);
+    double timeStep0 = total_time/6.;
+    bezier_com_traj::ResultDataCOMTraj res0 = bezier_com_traj::solve0step(pData0,Ts,timeStep0);
+    hppDout(notice,"success 0 step : "<<res0.success_);
+    hppDout(notice,"x 0 step : "<<res0.x.transpose());
+    */
     return res;
 }
 
