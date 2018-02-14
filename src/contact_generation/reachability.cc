@@ -469,10 +469,12 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
 
 
    // MatrixXX timings_matrix; // contain the timings of the first 3 phases, the total time and the discretization step
-    VectorX current_timings(3);
+    VectorX current_timings;
     VectorX times;
     double total_time = 0;
+    double time_increment = 0.5;
     bool timing_provided(false);
+    hppDout(notice," timings provided size :  "<<timings.size());
     if(timings.size() != pData.contacts_.size()){
         // build timing vector, it should be a multiple of the timeStep
         // TODO : retrieve timing found by planning ?? how ?? (pass it as argument or store it inside the states ?)
@@ -491,31 +493,29 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
                             2.,1.,2.,5.,0.5,
                             2.,2.,2.,5.,0.5;
                             */
+            current_timings = VectorX(3);
             current_timings<<0.2,0.2,0.2;
             total_time = 0.6;
         }else{
-            hppDout(notice,"Only two phases, not implemented yet.");
-            return Result(UNABLE_TO_COMPUTE);
+            hppDout(notice,"Only two phases.");
+            current_timings = VectorX(2);
+            current_timings<<1.,1.;
+            total_time = 2.;
         }
     }else{
         hppDout(notice,"Timing vector is provided");
-        if(timings.size() == 3){
-            /*timings_matrix = MatrixXX(1,5);
-            timings_matrix(0,0) = timings[0];
-            timings_matrix(0,1) = timings[1];
-            timings_matrix(0,2) = timings[2];
-            timings_matrix(0,3) = timings[0] + timings[1] + timings[2];
-            timings_matrix(0,4) = timeStep;*/
-            current_timings[0] = timings[0];
-            current_timings[1] = timings[1];
-            current_timings[2] = timings[2];
-            total_time = timings[0] + timings[1] + timings[2];
-            timing_provided = true;
-        }else{
-            hppDout(notice,"Timing vector is not of length 3.");
-            return Result(UNABLE_TO_COMPUTE);
+        /*timings_matrix = MatrixXX(1,5);
+        timings_matrix(0,0) = timings[0];
+        timings_matrix(0,1) = timings[1];
+        timings_matrix(0,2) = timings[2];
+        timings_matrix(0,3) = timings[0] + timings[1] + timings[2];
+        timings_matrix(0,4) = timeStep;*/
+        current_timings = VectorX(timings.size());
+        for(size_t i = 0 ; i < timings.size() ; ++i){
+            current_timings[i] = timings[i];
+            total_time += timings[i];
         }
-
+        timing_provided = true;
     }
 
 
@@ -547,14 +547,18 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
 
         // build the new timing vector :
         if(!timing_provided){
-            current_timings[0] +=0.2;
+            current_timings[0] +=time_increment;
             if(current_timings[0] > 3.){
                 current_timings[0] = 0.2;
-                current_timings[1] += 0.2;
+                current_timings[1] += time_increment;
                 if(current_timings[1] > 3.){
-                    current_timings[1] = 0.2;
-                    current_timings[2] += 0.2;
-                    if(current_timings[2] > 3.){
+                    if(current_timings.size() == 3){
+                        current_timings[1] = 0.2;
+                        current_timings[2] += time_increment;
+                        if(current_timings[2] > 3.){
+                            no_timings_left = true;
+                        }
+                    }else{
                         no_timings_left = true;
                     }
                 }
