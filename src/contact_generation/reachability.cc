@@ -282,6 +282,8 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
     }
 
 
+
+
     fcl::Vec3f x;
     hppStartBenchmark(QP_REACHABLE);
     success = intersectionExist(Ab,previous.com_,next.com_,x);

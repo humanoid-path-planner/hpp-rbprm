@@ -57,8 +57,8 @@ ContactGenHelper::ContactGenHelper(RbPrmFullBodyPtr_t fb, const State& ps, model
 , checkStabilityGenerate_(checkStabilityGenerate)
 , comPath_(comPath)
 , currentPathId_(currentPathId)
-, quasiStatic_(true)
-, testReachability_(false)
+, quasiStatic_(false)
+, testReachability_(true)
 , maximiseContacts_(true)
 {
     workingState_.configuration_ = configuration;
@@ -341,6 +341,7 @@ T_ContactState gen_contacts_combinatorial(ContactGenHelper& contactGenHelper)
 
 ProjectionReport maintain_contacts(ContactGenHelper &contactGenHelper)
 {
+
     ProjectionReport rep;
     Q_State& candidates = contactGenHelper.candidates_;
     if(candidates.empty())
