@@ -138,6 +138,7 @@ namespace hpp {
         model::value_type currentVal(initValue);
         rbprm::T_StateFrame states;
         states.push_back(std::make_pair(currentVal, this->start_));
+        Configuration_t lastConfig(this->start_.configuration_);
         std::size_t nbRecontacts = 0;
         std::size_t repos = 0;
         bool allowFailure = true;
@@ -151,7 +152,7 @@ namespace hpp {
         for(CIT_Configuration cit = configs.begin()+1; cit != configs.end(); ++cit, currentVal+= timeStep)
         {
             const State& previous = states.back().second;
-            core::Configuration_t configuration = loadPreviousConfiguration(robot_->device_,previous.configuration_,*cit);
+            core::Configuration_t configuration = loadPreviousConfiguration(robot_->device_,lastConfig,*cit);
             acc = configuration.segment<3>(accIndex);
             //dir = configuration.head<3>() - previous.configuration_.head<3>();
             dir = configuration.segment<3>(accIndex-3);
@@ -232,6 +233,8 @@ if (nbFailures > 1)
             }
 
             newState.nbContacts = newState.contactNormals_.size();
+            /*
+            // code to add the last valid config for each state :
             if(sameAsPrevious){
                 states.pop_back();
             }
@@ -244,8 +247,18 @@ if (nbFailures > 1)
             }else{
                 states.push_back(std::make_pair(currentVal, newState));
             }
+            */
+
+            // code to add the first valid config of each states :
+            if(!sameAsPrevious){
+                states.push_back(std::make_pair(currentVal, newState));
+                hppDout(notice,"new state added at index "<<states.size()-1<<" conf = r(["<<model::displayConfig(states.back().second.configuration_)<<"])");
+            }else{
+                hppDout(notice,"Same as previous, new config = r(["<<model::displayConfig(newState.configuration_)<<"])");
+            }
             //allowFailure = nbRecontacts < robot_->GetLimbs().size();
             allowFailure = nbRecontacts < 2;
+            lastConfig = newState.configuration_;
         }
         //states.push_back(std::make_pair(this->path_->timeRange().second, this->end_));
 #ifdef PROFILE
