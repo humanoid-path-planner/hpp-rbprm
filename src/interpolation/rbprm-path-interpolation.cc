@@ -113,6 +113,19 @@ namespace hpp {
         return results;
     }
 
+    /**
+     * @brief loadPreviousConfiguration take the root and extra dof config from config, and the whole body from previous
+     * @param previous take the whole body configuration of the configuration
+     * @param config take the root and extra dof configuration of this configuration
+     * @return
+     */
+    core::Configuration_t loadPreviousConfiguration(const DevicePtr_t& device,const core::Configuration_t& previous,const core::Configuration_t& config){
+        core::Configuration_t res(previous);
+        res.head<7>() = config.head<7>();
+        res.tail(device->extraConfigSpace().dimension()) = config.tail(device->extraConfigSpace().dimension()) ;
+        return res;
+    }
+
     rbprm::T_StateFrame RbPrmInterpolation::Interpolate(const affMap_t& affordances,
                                                         const std::map<std::string, std::vector<std::string> >& affFilters,
                                                         const hpp::rbprm::T_Configuration &configs, const double robustnessTreshold,
@@ -138,8 +151,7 @@ namespace hpp {
         for(CIT_Configuration cit = configs.begin()+1; cit != configs.end(); ++cit, currentVal+= timeStep)
         {
             const State& previous = states.back().second;
-            core::Configuration_t configuration = previous.configuration_;
-            configuration.head<7>() = (*cit).head<7>();
+            core::Configuration_t configuration = loadPreviousConfiguration(robot_->device_,previous.configuration_,*cit);
             acc = configuration.segment<3>(accIndex);
             //dir = configuration.head<3>() - previous.configuration_.head<3>();
             dir = configuration.segment<3>(accIndex-3);
