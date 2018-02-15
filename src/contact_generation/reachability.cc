@@ -8,7 +8,7 @@
 #include <hpp/util/timer.hh>
 
 #ifndef QHULL
-#define QHULL 0
+#define QHULL 1
 #endif
 
 namespace hpp {
@@ -206,11 +206,13 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
     hppDout(notice,"Contacts break : "<<contactsBreak);
     hppDout(notice,"contacts creation : "<<contactsCreation);
 
-
+    #if QHULL == 0
     if(contactsCreation.size() <= 0 && contactsBreak.size() <= 0){
         hppDout(notice,"No contact variation, abort.");
         return Result(NO_CONTACT_VARIATION);
     }
+    #endif
+
     if(contactsCreation.size() >1 || contactsBreak.size() > 1){
         hppDout(notice,"Too many contact variation, abort.");
         return Result(TOO_MANY_CONTACTS_VARIATION);
