@@ -82,7 +82,7 @@ std::pair<MatrixXX, VectorX> computeConstraintsForState(const RbPrmFullBodyPtr_t
 
 Result isReachable(const RbPrmFullBodyPtr_t& fullbody,State &previous, State& next,const fcl::Vec3f& acc = fcl::Vec3f::Zero());
 
-Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody,State &previous, State& next,std::vector<double> timings = std::vector<double>(), double timeStep=0.1);
+Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& next, bool tryQuasiStatic = true, std::vector<double> timings = std::vector<double>(), int numPointsPerPhases = 3, double feasabilityTreshold = 1e-3);
 
 
 

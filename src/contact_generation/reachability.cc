@@ -329,12 +329,17 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
     }
     hppDout(notice,"Intersection of constraints :");
     printQHull(Ab,int_pt_kin,"constraints.txt");
+
+    if(contactsCreation.size() <= 0 && contactsBreak.size() <= 0){
+        hppDout(notice,"No contact variation, abort.");
+        return Result(NO_CONTACT_VARIATION);
+    }
     #endif
 
     return res;
 }
 
-Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& next, std::vector<double> timings, double /*timeStep*/){
+Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& next,bool tryQuasiStatic, std::vector<double> timings, int numPointsPerPhases,double feasabilityTreshold){
     Result res;
     std::vector<std::string> contactsCreation, contactsBreak;
     next.contactBreaks(previous,contactsBreak);
@@ -379,21 +384,23 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     }
 
 
-    hppDout(notice,"Try quasi-static reachability : ");
-    Result quasiStaticResult = isReachableIntermediate(fullbody,previous,mid,next);
-    if(quasiStaticResult.success()){
-        hppDout(notice,"REACHABLE in quasi-static");
-        quasiStaticResult.status=QUASI_STATIC;
-        // build a Bezier curve of order 2 :
-        std::vector<Vector3> wps;
-        wps.push_back(previous.com_);
-        wps.push_back(quasiStaticResult.x);
-        wps.push_back(next.com_);
-        bezier_Ptr bezierCurve=bezier_Ptr(new bezier_t(wps.begin(),wps.end(),1.));
-        quasiStaticResult.path_ = BezierPath::create(fullbody->device_,bezierCurve,previous.configuration_,next.configuration_, core::interval_t(0.,1));
-        return quasiStaticResult;
-    }else{
-        hppDout(notice,"UNREACHABLE in quasi-static");
+    if(tryQuasiStatic){
+        hppDout(notice,"Try quasi-static reachability : ");
+        Result quasiStaticResult = isReachableIntermediate(fullbody,previous,mid,next);
+        if(quasiStaticResult.success()){
+            hppDout(notice,"REACHABLE in quasi-static");
+            quasiStaticResult.status=QUASI_STATIC;
+            // build a Bezier curve of order 2 :
+            std::vector<Vector3> wps;
+            wps.push_back(previous.com_);
+            wps.push_back(quasiStaticResult.x);
+            wps.push_back(next.com_);
+            bezier_Ptr bezierCurve=bezier_Ptr(new bezier_t(wps.begin(),wps.end(),1.));
+            quasiStaticResult.path_ = BezierPath::create(fullbody->device_,bezierCurve,previous.configuration_,next.configuration_, core::interval_t(0.,1));
+            return quasiStaticResult;
+        }else{
+            hppDout(notice,"UNREACHABLE in quasi-static");
+        }
     }
 
 
@@ -573,7 +580,7 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
         hppDout(notice,"No valid timings found, always UNREACHABLE");
     }
 
-    if(res.success()){
+    if(res.success() && tryQuasiStatic){
         hppDout(notice,"ONLY REACHABLE IN DYNAMIC !!!");
     }
 
