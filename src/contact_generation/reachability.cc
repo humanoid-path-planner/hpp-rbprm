@@ -483,7 +483,7 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     VectorX current_timings;
     VectorX times;
     double total_time = 0;
-    double time_increment = 0.2;
+    double time_increment = 0.05;
     bool timing_provided(false);
     hppDout(notice," timings provided size :  "<<timings.size());
     if(timings.size() != pData.contacts_.size()){
@@ -507,8 +507,8 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
             current_timings = VectorX(3);
             //current_timings<<0.6,0.4,0.6;
             //total_time = 1.6;
-            current_timings<<0.2,0.2,0.2;
-            total_time = 0.6;
+            current_timings<<0.05,0.05,0.05;
+            total_time = 0.15;
         }else{
             hppDout(notice,"Only two phases.");
             current_timings = VectorX(2);
@@ -562,11 +562,11 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
         if(!timing_provided){
             current_timings[0] +=time_increment;
             if(current_timings[0] > 2.){
-                current_timings[0] = 0.2;
+                current_timings[0] = 0.05;
                 current_timings[1] += time_increment;
                 if(current_timings[1] > 2.){
                     if(current_timings.size() == 3){
-                        current_timings[1] = 0.2;
+                        current_timings[1] = 0.05;
                         current_timings[2] += time_increment;
                         if(current_timings[2] > 2.){
                             no_timings_left = true;
