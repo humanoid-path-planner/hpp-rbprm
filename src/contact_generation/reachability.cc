@@ -481,7 +481,7 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     VectorX current_timings;
     VectorX times;
     double total_time = 0;
-    double time_increment = 0.5;
+    double time_increment = 0.2;
     bool timing_provided(false);
     hppDout(notice," timings provided size :  "<<timings.size());
     if(timings.size() != pData.contacts_.size()){
@@ -503,6 +503,8 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
                             2.,2.,2.,5.,0.5;
                             */
             current_timings = VectorX(3);
+            //current_timings<<0.6,0.4,0.6;
+            //total_time = 1.6;
             current_timings<<0.2,0.2,0.2;
             total_time = 0.6;
         }else{
@@ -534,37 +536,37 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     bezier_com_traj::ResultDataCOMTraj resBezier;
     while(!success && !no_timings_left){
         // call solveur :
+        hppDout(notice,"Try with timings : "<<current_timings.transpose());
         hppDout(notice,"Call solveOneStep");
-        resBezier = bezier_com_traj::solveOnestep(pData,current_timings,init_guess,3,1.); // feasability treshold : 0.1 work
+        resBezier = bezier_com_traj::solveOnestep(pData,current_timings,init_guess,numPointsPerPhases,feasabilityTreshold);
         //wrap the result :
         if(resBezier.success_){
             hppDout(notice,"REACHABLE");
             res.status = REACHABLE;
             bezier_Ptr bezierCurve=bezier_Ptr(new bezier_t(resBezier.c_of_t_));
             // replace extra dof in next.configuration to fit the final velocity and acceleration found :
-          //  next.configuration_.segment<3>(id_velocity) = resBezier.dc1_;
-          //  next.configuration_.segment<3>(id_velocity+3) = resBezier.ddc1_;
+            next.configuration_.segment<3>(id_velocity) = resBezier.dc1_;
+            next.configuration_.segment<3>(id_velocity+3) = resBezier.ddc1_;
             hppDout(notice,"new final configuration : "<<model::displayConfig(next.configuration_));
             res.path_ = BezierPath::create(fullbody->device_,bezierCurve,previous.configuration_,next.configuration_, core::interval_t(0.,total_time));
             hppDout(notice,"position of the waypoint : "<<resBezier.x.transpose());
-            hppDout(notice,"With timings : "<< current_timings);
+            hppDout(notice,"With timings : "<< current_timings.transpose());
             success = true;
         }else{
             hppDout(notice,"UNREACHABLE");
             res.status = UNREACHABLE;
         }
-
         // build the new timing vector :
         if(!timing_provided){
             current_timings[0] +=time_increment;
-            if(current_timings[0] > 3.){
+            if(current_timings[0] > 2.){
                 current_timings[0] = 0.2;
                 current_timings[1] += time_increment;
-                if(current_timings[1] > 3.){
+                if(current_timings[1] > 2.){
                     if(current_timings.size() == 3){
                         current_timings[1] = 0.2;
                         current_timings[2] += time_increment;
-                        if(current_timings[2] > 3.){
+                        if(current_timings[2] > 2.){
                             no_timings_left = true;
                         }
                     }else{
@@ -573,7 +575,6 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
                 }
             }
             total_time = current_timings[0] + current_timings[1] + current_timings[2];
-            hppDout(notice,"Try with timings : "<<current_timings.transpose());
         }else{
             no_timings_left = true;
         }
