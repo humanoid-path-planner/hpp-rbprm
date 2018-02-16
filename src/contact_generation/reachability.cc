@@ -8,11 +8,15 @@
 #include <hpp/util/timer.hh>
 
 #ifndef QHULL
-#define QHULL 0
+#define QHULL 1
 #endif
 
 #ifndef STAT_TIMINGS
 #define STAT_TIMINGS 0
+#endif
+
+#ifndef FULL_TIME_SAMPLING
+#define FULL_TIME_SAMPLING 0
 #endif
 
 namespace hpp {
@@ -507,37 +511,58 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     VectorX current_timings;
     VectorX times;
     double total_time = 0;
-    double time_increment = 0.05;
+    double time_increment = 0.1;
+    MatrixXX timings_matrix;
     bool timing_provided(false);
+    int t_id = 1;
     hppDout(notice," timings provided size :  "<<timings.size());
     if(timings.size() != pData.contacts_.size()){
-        // build timing vector, it should be a multiple of the timeStep
+        // build timing vector
         // TODO : retrieve timing found by planning ?? how ?? (pass it as argument or store it inside the states ?)
-        // hardcoded value for now : 0.2 s double support, 0.8s single support
         if(contactsBreak.size() == 1 && contactsCreation.size() == 1){
             hppDout(notice,"Contact break and creation. Use hardcoded timing matrice");
-            /*timings_matrix = MatrixXX(10,5);
-            timings_matrix << 1.,1.,1.,3.,0.1,
-                            0.4,0.6,0.4,1.4,0.1,
-                            0.6,0.4,0.6,1.6,0.1,
-                            0.6,0.6,0.6,1.8,0.1,
-                            0.2,0.2,0.2,0.6,0.1,
-                            1.,1.,1.,3.,0.2,
-                            1.6,1.6,1.6,4.8,0.2,
-                            2.,1.,2.,5.,0.2,
-                            2.,1.,2.,5.,0.5,
-                            2.,2.,2.,5.,0.5;
-                            */
-            current_timings = VectorX(3);
-            //current_timings<<0.6,0.4,0.6;
+
+            #if FULL_TIME_SAMPLING
+            //current_timings = VectorX(3);
+            //current_timings<<0.6,0.4,0.6; //hrp2
             //total_time = 1.6;
-            current_timings<<0.05,0.05,0.05;
-            total_time = 0.15;
+            current_timings<<0.05,0.05,0.05; // hyq
+            #else
+            timings_matrix = MatrixXX(26,3);
+            timings_matrix << 0.15 , 0.05 , 0.15, // hyq planches
+                                0.3, 0.05, 0.3,
+                                0.2, 0.05, 0.2,
+                                0.15, 0.05, 0.3,
+                                0.3 , 0.05, 0.15,
+                                0.2, 0.1, 0.2,
+                                0.3, 0.1, 0.3,
+                                0.5, 0.1, 0.5,  // hyq flat :
+                                1  , 0.1, 1,
+                                1  , 0.1, 0.5,
+                                0.5, 0.1, 1 ,
+                                1  , 0.2, 1,
+                                1  , 0.2, 0.5,
+                                0.5, 0.2, 1 ,
+                                1  , 0.4, 1,
+                                1  , 0.4, 0.5,
+                                0.5, 0.4, 1 ,
+                                1  , 0.6, 1,
+                                1  , 0.6, 0.5,
+                                0.5, 0.6, 1 ,
+                                1  , 0.05, 1,
+                                1  , 0.05, 0.5,
+                                0.5, 0.05, 1 ,
+                                1.5, 0.1, 1.5,
+                                1.5, 0.2, 1.5,
+                                1.5, 0.5, 1.5;
+            current_timings = timings_matrix.block<1,3>(0,0);
+            #endif
+            total_time = current_timings[0] + current_timings[1] + current_timings[2];
         }else{
             hppDout(notice,"Only two phases.");
-            current_timings = VectorX(2);
-            current_timings<<1.,1.;
-            total_time = 2.;
+            //current_timings = VectorX(2);
+            //current_timings<<1.,1.;
+            //total_time = 2.;
         }
     }else{
         hppDout(notice,"Timing vector is provided");
@@ -591,7 +616,9 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
         printTimingFile(file,current_timings,res.success(),quasiStaticSucces);
         #endif
         // build the new timing vector :
+
         if(!timing_provided){
+            #if FULL_TIME_SAMPLING
             current_timings[0] +=time_increment;
             if(current_timings[0] > 2.){
                 current_timings[0] = 0.05;
@@ -608,6 +635,12 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
                     }
                 }
             }
+            #else
+            current_timings = timings_matrix.block<1,3>(t_id,0);
+            t_id ++;
+            if(t_id == timings_matrix.rows())
+                no_timings_left = true;
+            #endif
             total_time = current_timings[0] + current_timings[1] + current_timings[2];
         }else{
             no_timings_left = true;
