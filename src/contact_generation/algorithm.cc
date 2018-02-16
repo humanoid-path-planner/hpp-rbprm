@@ -168,7 +168,7 @@ ContactComputationStatus ComputeStableContact(const hpp::rbprm::RbPrmFullBodyPtr
         hppDout(notice,"position : "<<position);
         hppDout(notice,"normal : "<<normal);
     }
-    if(rep.status_ == STABLE_CONTACT)
+    if(rep.status_ == STABLE_CONTACT || REACHABLE_CONTACT)
         current.stable = true;
     return rep.status_;
 }

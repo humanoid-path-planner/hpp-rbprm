@@ -60,6 +60,7 @@ ContactGenHelper::ContactGenHelper(RbPrmFullBodyPtr_t fb, const State& ps, model
 , quasiStatic_(false)
 , testReachability_(true)
 , maximiseContacts_(true)
+, accept_unreachable_(false)
 {
     workingState_.configuration_ = configuration;
     workingState_.stable = false;
@@ -565,27 +566,39 @@ ProjectionReport generate_contact(const ContactGenHelper &contactGenHelper, cons
     params.currentPathId_ = contactGenHelper.currentPathId_;
     params.limbReferenceOffset_ = limb->effectorReferencePosition_;
     rep.result_ = findValidCandidate(contactGenHelper,limbName,limb, validation, found_sample,found_stable,unstableContact, params, evaluate);
-    if(found_sample || found_stable)
-    {
-        hppDout(notice,"found sample : "<<model::displayConfig(rep.result_.configuration_));
-        if(!found_sample)
-            hppDout(notice,"NOT REACHABLE in generate_contact");
-        rep.status_ = found_sample ? REACHABLE_CONTACT : STABLE_CONTACT;
+
+    if(found_sample){
+        hppDout(notice,"found reachable sample : "<<model::displayConfig(rep.result_.configuration_));
+        rep.status_ =  REACHABLE_CONTACT;
         rep.success_ = true;
-#ifdef PROFILE
-  RbPrmProfiler& watch = getRbPrmProfiler();
-  watch.add_to_count("contact", 1);
-#endif
+        #ifdef PROFILE
+          RbPrmProfiler& watch = getRbPrmProfiler();
+          watch.add_to_count("reachable contact", 1);
+        #endif
+    }
+    else if(found_stable)
+    {
+        hppDout(notice,"NOT REACHABLE in generate_contact");
+        hppDout(notice,"found stable sample : "<<model::displayConfig(rep.result_.configuration_));
+        rep.status_ = STABLE_CONTACT;
+        if(contactGenHelper.accept_unreachable_)
+            rep.success_ = true;
+        else
+            rep.success_ = false;
+        #ifdef PROFILE
+          RbPrmProfiler& watch = getRbPrmProfiler();
+          watch.add_to_count("unreachable stable contact", 1);
+        #endif
     }
     else if(unstableContact)
     {
         hppDout(notice,"unstable contact");
         rep.status_ = UNSTABLE_CONTACT;
         rep.success_ = !contactGenHelper.checkStabilityGenerate_;
-#ifdef PROFILE
-  RbPrmProfiler& watch = getRbPrmProfiler();
-  watch.add_to_count("unstable contact", 1);
-#endif
+        #ifdef PROFILE
+          RbPrmProfiler& watch = getRbPrmProfiler();
+          watch.add_to_count("unstable contact", 1);
+        #endif
     }
     else
     {

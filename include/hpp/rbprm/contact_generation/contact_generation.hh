@@ -70,7 +70,7 @@ struct ContactGenHelper
     const bool quasiStatic_;
     bool testReachability_;
     const bool maximiseContacts_;
-
+    const bool accept_unreachable_;
 
 };
 
