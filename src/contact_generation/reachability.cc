@@ -11,6 +11,10 @@
 #define QHULL 0
 #endif
 
+#ifndef STAT_TIMINGS
+#define STAT_TIMINGS 0
+#endif
+
 namespace hpp {
   namespace rbprm {
    namespace reachability{
@@ -393,11 +397,13 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     }
 
 
+    #if STAT_TIMINGS
     // outputs timings results in file :
     std::ofstream file;
-    std::string path("/home/pfernbac/Documents/com_ineq_test/timings_hyq_flat.txt");
+    std::string path("/home/pfernbac/Documents/com_ineq_test/timings_hyq_planches_v02.txt");
     hppDout(notice,"print to file : "<<path);
-    file.open(path.c_str(),std::ios::out | std::ios::ate);
+    file.open(path.c_str(),std::ios_base::app);
+    #endif
     bool quasiStaticSucces(false);
 
 
@@ -416,7 +422,9 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
             bezier_Ptr bezierCurve=bezier_Ptr(new bezier_t(wps.begin(),wps.end(),1.));
             quasiStaticResult.path_ = BezierPath::create(fullbody->device_,bezierCurve,previous.configuration_,next.configuration_, core::interval_t(0.,1));
             quasiStaticSucces = true;
-            //return quasiStaticResult;
+            #if !STAT_TIMINGS
+            return quasiStaticResult;
+            #endif
         }else{
             hppDout(notice,"UNREACHABLE in quasi-static");
             //return Result(REACHABLE); // testing
@@ -552,7 +560,11 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     bool success(false);
     bool no_timings_left(false);
     bezier_com_traj::ResultDataCOMTraj resBezier;
-    while(/*!success &&*/ !no_timings_left){
+    #if STAT_TIMINGS
+    while(!no_timings_left){
+    #else
+    while(!success && !no_timings_left){
+    #endif
         // call solveur :
         hppDout(notice,"Try with timings : "<<current_timings.transpose());
         hppDout(notice,"Call solveOneStep");
@@ -574,15 +586,17 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
             hppDout(notice,"UNREACHABLE");
             res.status = UNREACHABLE;
         }
+        #if STAT_TIMINGS
         // print result in file :
         printTimingFile(file,current_timings,res.success(),quasiStaticSucces);
+        #endif
         // build the new timing vector :
         if(!timing_provided){
             current_timings[0] +=time_increment;
-            if(current_timings[0] > 1.5){
+            if(current_timings[0] > 2.){
                 current_timings[0] = 0.05;
                 current_timings[1] += time_increment;
-                if(current_timings[1] > 1.5){
+                if(current_timings[1] > 2.){
                     if(current_timings.size() == 3){
                         current_timings[1] = 0.05;
                         current_timings[2] += time_increment;
@@ -600,8 +614,11 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
         }
     }
 
+    #if STAT_TIMINGS
     file.close();
     return Result(REACHABLE);
+    #endif
+
     if(!success){
         hppDout(notice,"No valid timings found, always UNREACHABLE");
     }
