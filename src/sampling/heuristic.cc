@@ -273,10 +273,17 @@ HeuristicFactory::HeuristicFactory()
   //  seed = 1516093154; // walk bauzil v=0.3, bof
    // seed = 1516107025;// walk bauzil v=0.2
     //seed = 1516278938; // walk bauzil ; v=0.2 ; a=0.1 ; heuristic = fixedStep06
-    seed = 1517496129 ; //walk test
+    //seed = 1517496129 ; //walk test
+   // seed = 1517496129 ; // test intersection hyq sideWall (pictures)
+    //seed = 1518458850; // sidewall intersection, feasability treshold = 0.1
+    //seed = 1518716775; // walk hyq
     std::cout<<"seed HEURISTIC = "<<seed<<std::endl;
     srand ( seed);
     hppDout(notice,"SEED for heuristic = "<<seed);
+    std::ofstream fout;
+    fout.open("/home/pfernbac/Documents/com_ineq_test/log_success.log",std::fstream::app);
+    fout<<"seed = "<<seed<<std::endl;
+    fout.close();
     heuristics_.insert(std::make_pair("static", &StaticHeuristic));
     heuristics_.insert(std::make_pair("EFORT", &EFORTHeuristic));
     heuristics_.insert(std::make_pair("EFORT_Normal", &EFORTNormalHeuristic));

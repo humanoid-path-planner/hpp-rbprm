@@ -213,8 +213,10 @@ comcptr->add(fullbody->device_->getJointByName("romeo/base_joint_xyz"));
 comcptr->computeMass();
 comcptr->compute();
 const fcl::Vec3f comfcl = comcptr->com();*/
+        hppDout(notice,"Setup library, old CoM : "<<state.com_);
         const fcl::Vec3f comfcl = fullbody->device_->positionCenterOfMass();
         state.com_ = comfcl;
+        hppDout(notice,"Setup library, new CoM : "<<state.com_);
         for(int i=0; i< 3; ++i) com(i)=comfcl[i];
         fullbody->device_->currentConfiguration(save);
         if(graspIndex >-1 && alg !=  EQUILIBRIUM_ALGORITHM_PP)

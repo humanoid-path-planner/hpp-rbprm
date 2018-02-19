@@ -404,9 +404,10 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     #if STAT_TIMINGS
     // outputs timings results in file :
     std::ofstream file;
-    std::string path("/home/pfernbac/Documents/com_ineq_test/timings_hyq_planches_v02.txt");
+    std::string path("/home/pfernbac/Documents/com_ineq_test/timings_logs.log");
     hppDout(notice,"print to file : "<<path);
     file.open(path.c_str(),std::ios_base::app);
+    file<<"# new pair of states"<<std::endl;
     #endif
     bool quasiStaticSucces(false);
 
@@ -511,7 +512,7 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     VectorX current_timings;
     VectorX times;
     double total_time = 0;
-    double time_increment = 0.1;
+    double time_increment = 0.05;
     MatrixXX timings_matrix;
     bool timing_provided(false);
     int t_id = 1;
@@ -599,6 +600,10 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
             hppDout(notice,"REACHABLE");
             res.status = REACHABLE;
             bezier_Ptr bezierCurve=bezier_Ptr(new bezier_t(resBezier.c_of_t_));
+            hppDout(notice,"Resulting bezier curve have timing : "<<bezierCurve->max());
+            for(bezier_t::cit_point_t wpit = bezierCurve->waypoints().begin() ; wpit != bezierCurve->waypoints().end() ; ++wpit){
+                hppDout(notice,"with waypoint : "<<(*wpit).transpose());
+            }
             // replace extra dof in next.configuration to fit the final velocity and acceleration found :
             next.configuration_.segment<3>(id_velocity) = resBezier.dc1_;
             next.configuration_.segment<3>(id_velocity+3) = resBezier.ddc1_;
@@ -606,6 +611,8 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
             res.path_ = BezierPath::create(fullbody->device_,bezierCurve,previous.configuration_,next.configuration_, core::interval_t(0.,total_time));
             hppDout(notice,"position of the waypoint : "<<resBezier.x.transpose());
             hppDout(notice,"With timings : "<< current_timings.transpose());
+            hppDout(notice,"total time = "<<total_time);
+            hppDout(notice,"new final velocity : "<<resBezier.dc1_.transpose());
             success = true;
         }else{
             hppDout(notice,"UNREACHABLE");
