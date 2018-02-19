@@ -524,12 +524,12 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
             hppDout(notice,"Contact break and creation. Use hardcoded timing matrice");
 
             #if FULL_TIME_SAMPLING
-            //current_timings = VectorX(3);
+            current_timings = VectorX(3);
             //current_timings<<0.6,0.4,0.6; //hrp2
             //total_time = 1.6;
             current_timings<<0.05,0.05,0.05; // hyq
             #else
-            timings_matrix = MatrixXX(26,3);
+            timings_matrix = MatrixXX(33,3);
             timings_matrix << 0.15 , 0.05 , 0.15, // hyq planches
                                 0.3, 0.05, 0.3,
                                 0.2, 0.05, 0.2,
@@ -555,7 +555,16 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
                                 0.5, 0.05, 1 ,
                                 1.5, 0.1, 1.5,
                                 1.5, 0.2, 1.5,
-                                1.5, 0.5, 1.5;
+                                1.5, 0.5, 1.5,
+                    // timing found with Steve's script :
+                                0.25,0.1,0.25,
+                                1.6,0.5,0.6,
+                                1.9,0.65,0.8,
+                                1.6,0.5,0.65,
+                                1.7,0.5,0.7,
+            // vnc
+                                0.6,0.05,0.05,
+                                0.65,0.05,0.05;
             current_timings = timings_matrix.block<1,3>(0,0);
             #endif
             total_time = current_timings[0] + current_timings[1] + current_timings[2];
