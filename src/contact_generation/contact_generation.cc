@@ -59,7 +59,7 @@ ContactGenHelper::ContactGenHelper(RbPrmFullBodyPtr_t fb, const State& ps, model
 , currentPathId_(currentPathId)
 , quasiStatic_(false)
 , testReachability_(true)
-, maximiseContacts_(true)
+, maximiseContacts_(false)
 , accept_unreachable_(false)
 {
     workingState_.configuration_ = configuration;
