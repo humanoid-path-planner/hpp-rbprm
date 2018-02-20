@@ -88,7 +88,6 @@ using namespace core;
     }
 
 
-
     vector_t GetEffectorPositionAt(core::PathPtr_t path, constraints::PositionPtr_t position, const value_type time)
     {
         vector_t result (position->outputSize());

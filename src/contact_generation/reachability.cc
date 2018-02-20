@@ -157,6 +157,8 @@ centroidal_dynamics::Equilibrium computeContactConeForState(const RbPrmFullBodyP
 }
 
 std::pair<MatrixXX, VectorX> computeStabilityConstraintsForState(const RbPrmFullBodyPtr_t& fullbody, State &state,const fcl::Vec3f& acc){
+    hppDout(notice,"contact order : ");
+    hppDout(notice,"  "<<state.contactOrder_.front());
     return computeStabilityConstraints(computeContactConeForState(fullbody,state),state.contactPositions_.at(state.contactOrder_.front()),
                                        acc.isZero() ? state.configuration_.tail<3>() : acc);
 }
