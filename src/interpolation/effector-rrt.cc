@@ -106,6 +106,17 @@ using namespace core;
 
     }
 
+    void getEffectorConfigForConfig(core::DevicePtr_t device,const JointPtr_t effector,const Configuration_t fullBodyConfig,ConfigurationOut_t result ){
+        device->currentConfiguration(fullBodyConfig);
+        device->computeForwardKinematics();
+        Transform3f transform = effector->currentTransformation();
+        result.head<3>() = transform.getTranslation();
+        result [3] = transform.getQuatRotation () [0];
+        result [4] = transform.getQuatRotation () [1];
+        result [5] = transform.getQuatRotation () [2];
+        result [6] = transform.getQuatRotation () [3];
+    }
+
     T_Waypoint getWayPoints(model::DevicePtr_t device, core::PathPtr_t path,
                          const JointPtr_t effector, const value_type effectorDistance, bool& isLine)
     {
@@ -425,6 +436,112 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
     }
 */
 
+    core::PathPtr_t generateEndEffectorBezier(RbPrmFullBodyPtr_t fullbody, core::ProblemSolverPtr_t problemSolver, const PathPtr_t comPath,
+    const State &startState, const State &nextState){
+        JointPtr_t effector =  getEffector(fullbody, startState, nextState);
+        std::string effectorName = getEffectorLimb(startState,nextState);
+        EndEffectorPath endEffPath(fullbody->device_,effector,comPath);
+        // create a 'device' object for the end effector (freeflyer 6D). Needed for the path and the orientation constraint
+        DevicePtr_t endEffectorDevice = Device::create("endEffector");
+        JointPtr_t transJoint = new JointTranslation <3> (Transform3f());
+        JointPtr_t so3Joint = new JointSO3(Transform3f());
+        endEffectorDevice->rootJoint(transJoint);
+        transJoint->addChildJoint (so3Joint);
+        Configuration_t initConfig(endEffectorDevice->configSize()),endConfig(endEffectorDevice->configSize());
+        getEffectorConfigForConfig(fullbody->device_,effector,startState.configuration_,initConfig);
+        hppDout(notice,"start state conf = "<<model::displayConfig(startState.configuration_));
+        getEffectorConfigForConfig(fullbody->device_,effector,nextState.configuration_,endConfig);
+        Configuration_t takeoffConfig(initConfig),landingConfig(endConfig);
+
+        // ## compute initial takeoff phase for the end effector :
+
+        Vector3 c0(initConfig.head<3>());
+        Vector3 c1(endConfig.head<3>());
+        c0[2]=0; // replace with normal instead of z axis
+        c1[2]=0;
+        const double dist_translation = (c1-c0).norm();
+        const double timeDelay = 0.; //(percentage of the total) this is the time during the 'single support' phase where the feet don't move. It is needed to allow a safe mass transfer without exiting the flexibility.
+        const double totalTime = comPath->length()*(1-2*timeDelay);
+        //const double ratioTimeTakeOff=0.1;// percentage of the total time // was 0.1
+
+
+
+       // const double timeTakeoff = totalTime*ratioTimeTakeOff; // percentage of the total time
+        double timeTakeoff = 0.1; // it's a minimum time, it can be increased
+        const double p_max = 0.03; // offset for the higher point in the curve
+        const double p_min = 0.002; // min offset at the end of the predefined trajectory
+        double posOffset,velOffset,a_max_predefined;
+        //a_max_predefined = 1.5;
+
+
+        computePredefConstants(dist_translation,p_max,p_min,totalTime,timeTakeoff,posOffset,velOffset,a_max_predefined);
+
+
+        const double timeLanding = timeTakeoff;
+        const double timeMid = totalTime-2*timeTakeoff;
+
+        hppDout(notice,"Effector-rrt, moving effector name : "<<effectorName);
+        hppDout(notice,"previous normal : "<<startState.contactNormals_.at(effectorName));
+        hppDout(notice,"next normal : "<<nextState.contactNormals_.at(effectorName));
+
+        bezier_com_traj::ProblemData pDataLanding,pDataTakeoff;
+        BezierPathPtr_t refEffectorTakeoff = buildPredefinedPath(endEffectorDevice,startState.contactNormals_.at(effectorName),initConfig,posOffset,velOffset,timeTakeoff,true,takeoffConfig,pDataTakeoff,a_max_predefined);
+        BezierPathPtr_t refEffectorLanding =
+buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName),endConfig,posOffset,-velOffset,timeLanding,false,landingConfig,pDataLanding,a_max_predefined);
+
+
+        // ## compute bezier curve that follow the rrt path and that respect the constraints :
+        bezier_com_traj::ProblemData pDataMid;
+        pDataMid.c0_=pDataTakeoff.c1_;
+        pDataMid.c1_=pDataLanding.c0_;
+        pDataMid.dc0_=pDataTakeoff.dc1_;
+        pDataMid.dc1_=pDataLanding.dc0_;
+        pDataMid.ddc0_=pDataTakeoff.ddc1_;
+        pDataMid.ddc1_=pDataLanding.ddc0_;
+
+        hppDout(notice,"CREATE BEZIER for constraints : ");
+        hppDout(notice,"c0   = "<<pDataMid.c0_.transpose());
+        hppDout(notice,"dc0  = "<<pDataMid.dc0_.transpose());
+        hppDout(notice,"ddc0 = "<<pDataMid.ddc0_.transpose());
+        hppDout(notice,"c1   = "<<pDataMid.c1_.transpose());
+        hppDout(notice,"dc1  = "<<pDataMid.dc1_.transpose());
+        hppDout(notice,"ddc1 = "<<pDataMid.ddc1_.transpose());
+
+        hppDout(notice,"Distance traveled by the end effector : "<<(pDataMid.c1_-pDataMid.c0_).norm());
+        hppDout(notice,"Distance : "<<(pDataMid.c1_-pDataMid.c0_).transpose());
+        hppDout(notice,"Time = "<<timeMid);
+
+        endEffPath.setOffset(pDataMid.c0_ - endEffPath(0));
+
+        // ## call solver :
+        bezier_Ptr refEffectorMidBezier;
+        PathVectorPtr_t refEffectorPath;
+        refEffectorPath  = computeBezierPath(endEffectorDevice,pDataMid,endEffPath,timeMid,0.,refEffectorTakeoff, refEffectorLanding,refEffectorMidBezier );
+        if(!refEffectorPath){
+            hppDout(notice,"Error whil computing Bezier path");
+            return PathPtr_t();
+        }else{
+            // ## save the path
+            problemSolver->addPath(refEffectorPath); // add end effector path to the problemSolver
+
+            // save the endEffector trajectory in the map :
+            {
+            size_t pathId = problemSolver->paths().size()-1;
+            hppDout(notice,"Add trajectories for path = "<<pathId<<" and effector = "<<effector->name());
+            std::vector<bezier_Ptr> allRefEffector;
+            allRefEffector.push_back(refEffectorTakeoff->getBezier());
+            allRefEffector.push_back(refEffectorMidBezier);
+            allRefEffector.push_back(refEffectorLanding->getBezier());
+            bool successMap = fullbody->addEffectorTrajectory(pathId,effector->name(),allRefEffector);
+            hppDout(notice,"success add bezier to map = "<<successMap);
+            }
+            // FIXME : using pathId = problemSolver->paths().size()  this way assume that the path returned by this method will be the next added in problemSolver. As there is no access to problemSolver here, it's the best workaround.
+            return refEffectorPath;
+        }
+    }
+
+
+
     core::PathPtr_t effectorRRTFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemSolverPtr_t problemSolver, const PathPtr_t comPath,
                            const State &startState, const State &nextState,
                            const std::size_t numOptimizations, const bool keepExtraDof,
@@ -441,6 +558,7 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
         if(effectorDistance(startState, nextState) < 0.03) // end effectors does not move, return the comRRT path
             return fullBodyComPath;
         JointPtr_t effector =  getEffector(fullbody, startState, nextState);
+        std::string effectorName = getEffectorLimb(startState,nextState);
         EndEffectorPath endEffPath(fullbody->device_,effector,fullBodyComPath);
         // create a 'device' object for the end effector (freeflyer 6D). Needed for the path and the orientation constraint
         DevicePtr_t endEffectorDevice = Device::create("endEffector");

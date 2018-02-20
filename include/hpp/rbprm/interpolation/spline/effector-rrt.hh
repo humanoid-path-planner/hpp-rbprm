@@ -58,6 +58,8 @@ namespace interpolation {
                                 const std::vector<std::string>& constrainedJointPos = std::vector<std::string>(),
                                 const std::vector<std::string>& constrainedLockedJoints = std::vector<std::string>());
 
+    core::PathPtr_t generateEndEffectorBezier(RbPrmFullBodyPtr_t fullbody, core::ProblemSolverPtr_t problemSolver, const PathPtr_t comPath,
+    const State &startState, const State &nextState);
 
     /**
      * @brief effectorRRTFromPath Call comRRT to compute a whole body path between two states, then compute an end-effector's trajectory with  a bezier curve that fit the initial path found by the rrt, and recompute the whole body trajectory that follow the end effector constraint
