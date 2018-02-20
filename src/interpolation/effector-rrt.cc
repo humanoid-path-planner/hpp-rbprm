@@ -600,11 +600,14 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
         const double timeLanding = timeTakeoff;
         const double timeMid = totalTime-2*timeTakeoff;
 
+        hppDout(notice,"Effector-rrt, moving effector name : "<<effectorName);
+        hppDout(notice,"previous normal : "<<startState.contactNormals_.at(effectorName));
+        hppDout(notice,"next normal : "<<nextState.contactNormals_.at(effectorName));
 
         bezier_com_traj::ProblemData pDataLanding,pDataTakeoff;
-        BezierPathPtr_t refEffectorTakeoff = buildPredefinedPath(endEffectorDevice,Vector3(0,0,1),initConfig,posOffset,velOffset,timeTakeoff,true,takeoffConfig,pDataTakeoff,a_max_predefined);
+        BezierPathPtr_t refEffectorTakeoff = buildPredefinedPath(endEffectorDevice,startState.contactNormals_.at(effectorName),initConfig,posOffset,velOffset,timeTakeoff,true,takeoffConfig,pDataTakeoff,a_max_predefined);
         BezierPathPtr_t refEffectorLanding =
-buildPredefinedPath(endEffectorDevice,Vector3(0,0,1),endConfig,posOffset,-velOffset,timeLanding,false,landingConfig,pDataLanding,a_max_predefined);
+buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName),endConfig,posOffset,-velOffset,timeLanding,false,landingConfig,pDataLanding,a_max_predefined);
 
 
         // ## compute bezier curve that follow the rrt path and that respect the constraints :
