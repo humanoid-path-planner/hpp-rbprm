@@ -639,7 +639,7 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
         PathPtr_t interpolatedPath;
         bezier_Ptr refEffectorMidBezier;
         PathVectorPtr_t refEffectorPath;
-        const size_t maxIterationRRT = 500; //FIXME : adjust value for more complexe environnement
+        const size_t maxIterationRRT = 100; //FIXME : adjust value for more complexe environnement
         while(!success_rrt && weightRRT <=1){
             refEffectorPath  = computeBezierPath(endEffectorDevice,pDataMid,endEffPath,timeMid,weightRRT,refEffectorTakeoff, refEffectorLanding,refEffectorMidBezier );
             if(!refEffectorPath){
@@ -674,6 +674,9 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
                 hppDout(notice,"InterpolateStateFromPath failed for weightDistance = "<<weightRRT);
                 hppDout(notice,"Error = "<<e.what());
             }
+            success_rrt = true; //FIXME for testing purpose : always return the first path computed
+            if(!interpolatedPath)//FIXME for testing purpose : always return the first path computed
+               interpolatedPath = refEffectorPath; //FIXME for testing purpose : always return the first path computed
             weightRRT +=0.25;
         } // TODO : if this still fail, add another free waypoint to the bezier optimisation problem.
 
