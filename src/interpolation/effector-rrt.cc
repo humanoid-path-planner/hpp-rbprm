@@ -512,7 +512,7 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
         hppDout(notice,"Distance : "<<(pDataMid.c1_-pDataMid.c0_).transpose());
         hppDout(notice,"Time = "<<timeMid);
 
-        endEffPath.setOffset(pDataMid.c0_ - endEffPath(0));
+        //endEffPath.setOffset(pDataMid.c0_ - endEffPath(0));
 
         // ## call solver :
         bezier_Ptr refEffectorMidBezier;
@@ -568,10 +568,10 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
         endEffectorDevice->rootJoint(transJoint);
         transJoint->addChildJoint (so3Joint);
         Configuration_t initConfig(endEffectorDevice->configSize()),endConfig(endEffectorDevice->configSize());
-        getEffectorConfigAt(fullbody->device_,effector,fullBodyComPath,0,initConfig);
+        getEffectorConfigForConfig(fullbody->device_,effector,startState.configuration_,initConfig);
         hppDout(notice,"fb com path init = "<<model::displayConfig((*fullBodyComPath)(0.)));
         hppDout(notice,"start state conf = "<<model::displayConfig(startState.configuration_));
-        getEffectorConfigAt(fullbody->device_,effector,fullBodyComPath,fullBodyComPath->length(),endConfig);
+        getEffectorConfigForConfig(fullbody->device_,effector,nextState.configuration_,endConfig);
         Configuration_t takeoffConfig(initConfig),landingConfig(endConfig);
 
         // ## compute initial takeoff phase for the end effector :
@@ -588,9 +588,15 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
 
 
        // const double timeTakeoff = totalTime*ratioTimeTakeOff; // percentage of the total time
-        double timeTakeoff = 0.1; // it's a minimum time, it can be increased
+        double timeTakeoff = 0.01; // it's a minimum time, it can be increased //Hyq
         const double p_max = 0.03; // offset for the higher point in the curve
         const double p_min = 0.002; // min offset at the end of the predefined trajectory
+
+        // values for hrp2 :
+        /*double timeTakeoff = 0.1; // it's a minimum time, it can be increased //HRP2
+        const double p_max = 0.03; // offset for the higher point in the curve
+        const double p_min = 0.002; // min offset at the end of the predefined trajectory
+        */
         double posOffset,velOffset,a_max_predefined;
         //a_max_predefined = 1.5;
 
@@ -632,7 +638,7 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
         hppDout(notice,"Distance : "<<(pDataMid.c1_-pDataMid.c0_).transpose());
         hppDout(notice,"Time = "<<timeMid);
 
-        endEffPath.setOffset(pDataMid.c0_ - endEffPath(0));
+       // endEffPath.setOffset(pDataMid.c0_ - endEffPath(0)); FIXME : bug with com_path = bezier ???
 
         // ## call solver :
         double weightRRT = 0.;
