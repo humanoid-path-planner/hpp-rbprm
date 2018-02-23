@@ -275,8 +275,13 @@ HeuristicFactory::HeuristicFactory()
     //seed = 1516278938; // walk bauzil ; v=0.2 ; a=0.1 ; heuristic = fixedStep06
     //seed = 1517496129 ; //walk test
    // seed = 1517496129 ; // test intersection hyq sideWall (pictures)
-    //seed = 1518458850; // sidewall intersection, feasability treshold = 0.1
+   // seed = 1518458850; // sidewall intersection, feasability treshold = 0.1
     //seed = 1518716775; // walk hyq
+    //seed = 1519148173; // double step on stairs
+    //seed = 1519209574 ; // stairs muscod work
+    seed = 1518867071 ; // sidewall v = 0.2
+    //seed = 1518867071 ; // last stat_muscod_qp test
+
     std::cout<<"seed HEURISTIC = "<<seed<<std::endl;
     srand ( seed);
     hppDout(notice,"SEED for heuristic = "<<seed);
