@@ -393,7 +393,7 @@ namespace hpp{
       aMax[2]=aMaxFixed_;
 */
       // #########################
-      if((aMax[2] < aMaxFixed_Z_) && tryJump_)
+      if((aMax[2] < aMaxFixed_Z_))
         aMax[2] = aMaxFixed_Z_;
       setAmax(aMax);
       hppDout(info,"Amax vector : "<<aMax_.transpose());
