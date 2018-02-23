@@ -300,7 +300,7 @@ namespace
             StateIterator_T a, b;
             a = (startState+i);
             b = (startState+i+1);
-            Helper_T helper(fullbody, shooterFactory, constraintFactory, referenceProblem, pathGetter(a,b),error_treshold);
+            Helper_T helper(fullbody, shooterFactory, constraintFactory, referenceProblem, pathGetter(a,b),error_treshold); // 0.1 : error
             helper.SetConstraints(get(a), get(b));
             PathVectorPtr_t partialPath = helper.Run(get(a), get(b),maxIterations);
             if(partialPath)

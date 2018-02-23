@@ -91,6 +91,8 @@ using namespace core;
     vector_t GetEffectorPositionAt(core::PathPtr_t path, constraints::PositionPtr_t position, const value_type time)
     {
         vector_t result (position->outputSize());
+        hppDout(notice,"getEffectorPositionAt : output size : "<<position->outputSize());
+        hppDout(notice,"getEffectorPositionAt : path size : "<<path->outputSize());
         position->operator ()(result, path->operator ()(time));
         return result;
     }

@@ -418,7 +418,7 @@ ProjectionReport projectStateToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& bo
     hpp::rbprm::State state = current;
     state.RemoveContact(limbId);
     model::Configuration_t configuration = current.configuration_;
-    core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 20);
+    core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 100);
     interpolation::addContactConstraints(body, body->device_,proj, state, state.fixedContacts(state));
     // get current normal orientation
     return projectToObstacle(proj, body, limbId, limb, validation, configuration, current, normal, position);
@@ -432,12 +432,12 @@ ProjectionReport projectToComPosition(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, c
     core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(fullBody->device_,"proj", 1e-3, 1000);
     CreateContactConstraints(fullBody, currentState, proj);
     CreateComPosConstraint(fullBody, target, proj);
-    CreatePosturalTaskConstraint(fullBody,proj);
+    /*CreatePosturalTaskConstraint(fullBody,proj);
     proj->lastIsOptional(true);
     proj->numOptimize(100);
     proj->lastAsCost(true);
     proj->errorThreshold(1e-3);
-
+*/
     model::Configuration_t configuration = currentState.configuration_;
     res.success_ = proj->apply(configuration);
     res.result_ = currentState;
@@ -460,12 +460,12 @@ ProjectionReport projectToColFreeComPosition(hpp::rbprm::RbPrmFullBodyPtr_t full
     core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(fullBody->device_,"proj", 1e-3, 1000);
     CreateContactConstraints(fullBody, currentState, proj);
     CreateComPosConstraint(fullBody, target, proj);
-    CreatePosturalTaskConstraint(fullBody,proj);
+    /*CreatePosturalTaskConstraint(fullBody,proj);
     proj->lastIsOptional(true);
     proj->numOptimize(100);
     proj->lastAsCost(true);
     proj->errorThreshold(1e-3);
-
+*/
     model::Configuration_t configuration = currentState.configuration_;
     res.success_ = proj->apply(configuration);
     res.result_ = currentState;
