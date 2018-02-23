@@ -514,7 +514,9 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     VectorX current_timings;
     VectorX times;
     double total_time = 0;
-    double time_increment = 0.05;
+    const double time_increment = 0.05;
+    const double min_SS = 0.5;
+    const double min_DS = 0.3;
     MatrixXX timings_matrix;
     bool timing_provided(false);
     int t_id = 1;
@@ -529,20 +531,12 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
             current_timings = VectorX(3);
             //current_timings<<0.6,0.4,0.6; //hrp2
             //total_time = 1.6;
-            current_timings<<0.05,0.05,0.05; // hyq
+            current_timings<<min_DS,min_SS,min_DS; // hrp2
             #else
-            timings_matrix = MatrixXX(33,3);
-            timings_matrix << 0.15 , 0.05 , 0.15, // hyq planches
-                                0.3, 0.05, 0.3,
-                                0.2, 0.05, 0.2,
-                                0.15, 0.05, 0.3,
-                                0.3 , 0.05, 0.15,
-                                0.2, 0.1, 0.2,
-                                0.3, 0.1, 0.3,
-                                0.5, 0.1, 0.5,  // hyq flat :
-                                1  , 0.1, 1,
-                                1  , 0.1, 0.5,
-                                0.5, 0.1, 1 ,
+            timings_matrix = MatrixXX(34,3);
+            timings_matrix <<
+                              1.65, 0.2, 0.65, // found with script
+                        // hyq flat
                                 1  , 0.2, 1,
                                 1  , 0.2, 0.5,
                                 0.5, 0.2, 1 ,
@@ -558,12 +552,24 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
                                 1.5, 0.1, 1.5,
                                 1.5, 0.2, 1.5,
                                 1.5, 0.5, 1.5,
+                                1  , 0.1, 1,
+                                  1  , 0.1, 0.5,
+                                  0.5, 0.1, 1 ,
                     // timing found with Steve's script :
                                 0.25,0.1,0.25,
                                 1.6,0.5,0.6,
                                 1.9,0.65,0.8,
                                 1.6,0.5,0.65,
                                 1.7,0.5,0.7,
+                                0.15 , 0.05 , 0.15,
+                            // hyq planches
+                              0.2, 0.05, 0.2,
+                              0.15, 0.05, 0.3,
+                              0.3 , 0.05, 0.15,
+                              0.3, 0.05, 0.3,
+                              0.2, 0.05, 0.2,
+                              0.15, 0.05, 0.3,
+                              0.3 , 0.05, 0.15,
             // vnc
                                 0.6,0.05,0.05,
                                 0.65,0.05,0.05;
@@ -644,11 +650,11 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
             #if FULL_TIME_SAMPLING
             current_timings[0] +=time_increment;
             if(current_timings[0] > 2.){
-                current_timings[0] = 0.05;
+                current_timings[0] = min_DS;
                 current_timings[1] += time_increment;
                 if(current_timings[1] > 2.){
                     if(current_timings.size() == 3){
-                        current_timings[1] = 0.05;
+                        current_timings[1] = min_SS;
                         current_timings[2] += time_increment;
                         if(current_timings[2] > 2.){
                             no_timings_left = true;
