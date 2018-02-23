@@ -272,12 +272,15 @@ const fcl::Vec3f comfcl = comcptr->com();*/
 #endif
         centroidal_dynamics::EquilibriumAlgorithm alg = algorithm;
         //centroidal_dynamics::EquilibriumAlgorithm alg= centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP;
-        if(acc.norm() == 0){
-          hppDout(notice,"isStable ? called with acc = 0");
-          hppDout(notice,"configuration in state = "<<model::displayConfig(state.configuration_));
-          core::size_type configSize = fullbody->device_->configSize() - fullbody->device_->extraConfigSpace().dimension ();
-          acc = state.configuration_.segment<3>(configSize+3);
-          hppDout(notice,"new acceleration = "<<acc);
+        if(fullbody->device_->extraConfigSpace().dimension() >= 6 )
+        {
+            if(acc.norm() == 0){
+              hppDout(notice,"isStable ? called with acc = 0");
+              hppDout(notice,"configuration in state = "<<model::displayConfig(state.configuration_));
+              core::size_type configSize = fullbody->device_->configSize() - fullbody->device_->extraConfigSpace().dimension ();
+              acc = state.configuration_.segment<3>(configSize+3);
+              hppDout(notice,"new acceleration = "<<acc);
+            }
         }
         Equilibrium staticEquilibrium(initLibrary(fullbody));
         centroidal_dynamics::Vector3 com = setupLibrary(fullbody,state,staticEquilibrium,alg);
