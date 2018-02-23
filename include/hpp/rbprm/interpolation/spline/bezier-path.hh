@@ -129,14 +129,10 @@ public:
 
 
     /// Get the initial configuration
-    virtual core::Configuration_t initial () const{
-        return (*curve_)(timeRange().first);
-    }
+    virtual core::Configuration_t initial () const;
 
     /// Get the final configuration
-    virtual core::Configuration_t end () const {
-        return (*curve_)(timeRange().second);
-    }
+    virtual core::Configuration_t end () const ;
 
 
     core::Configuration_t operator () (const core::value_type& t) const

@@ -52,14 +52,36 @@ namespace hpp {
 
 
   BezierPath::BezierPath (const BezierPath& path) :
-    parent_t (path),curve_(path.curve_)
+    parent_t (path),device_(path.device_),curve_(path.curve_),initial_(path.initial_),end_(path.end_)
     {}
 
   BezierPath::BezierPath (const BezierPath& path,
         const core::ConstraintSetPtr_t& constraints):
-      parent_t (path,constraints),curve_(path.curve_)
+      parent_t (path,constraints),device_(path.device_),curve_(path.curve_),initial_(path.initial_),end_(path.end_)
 
   {}
+
+  /// Get the initial configuration
+  core::Configuration_t BezierPath::initial () const{
+      core::Configuration_t result(device_->configSize());
+      core::value_type u = curve_->min() + timeRange_.first/(curve_->max() - curve_->min());
+      if(u<0.) // may happen because of float precision
+          u=0.;
+      model::interpolate (device_, initial_, end_, u, result);
+      result.head<3>() = (*curve_)(timeRange_.first);
+      return result;
+  }
+
+  /// Get the final configuration
+  core::Configuration_t BezierPath::end () const {
+      core::Configuration_t result(device_->configSize());
+      core::value_type u = curve_->min() + timeRange_.second/(curve_->max() - curve_->min());
+      if(u>1.)// may happen because of float precision
+          u=1.;
+      model::interpolate (device_, initial_, end_, u, result);
+      result.head<3>() = (*curve_)(timeRange_.second);
+      return result;
+  }
 
   bool BezierPath::impl_compute(ConfigurationOut_t result,value_type t) const{
       if(t<timeRange().first){
@@ -72,7 +94,7 @@ namespace hpp {
           result =  end();
           return true;
       }
-      value_type u = timeRange().first + t/(timeRange ().second-timeRange().first);
+      value_type u = curve_->min() + t/(curve_->max() - curve_->min());
       if (timeRange ().second == 0)
         u = 0;
       model::interpolate (device_, initial_, end_, u, result);
