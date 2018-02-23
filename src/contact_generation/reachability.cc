@@ -478,8 +478,8 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     pData.ddc1_ = next.configuration_.segment<3>(id_velocity+3);
     //pData.dc0_ = fcl::Vec3f::Zero();
     //pData.dc1_ = fcl::Vec3f::Zero();
-    //pData.ddc0_ = fcl::Vec3f::Zero();
-    //pData.ddc1_ = fcl::Vec3f::Zero();
+    pData.ddc0_ = fcl::Vec3f::Zero();
+    pData.ddc1_ = fcl::Vec3f::Zero();
     hppDout(notice,"Build pData : ");
     hppDout(notice,"c0 = "<<pData.c0_.transpose());
     hppDout(notice,"c1 = "<<pData.c1_.transpose());
