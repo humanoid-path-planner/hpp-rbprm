@@ -67,6 +67,8 @@ namespace hpp {
         fcl::Vec3f x;
         std::pair<MatrixXX, VectorX> constraints_;
         core::PathPtr_t path_;
+        VectorX timings_;
+        std::vector<core::PathPtr_t> pathPerPhases_;
     };
 
 

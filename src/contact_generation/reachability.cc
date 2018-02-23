@@ -624,6 +624,11 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
             hppDout(notice,"With timings : "<< current_timings.transpose());
             hppDout(notice,"total time = "<<total_time);
             hppDout(notice,"new final velocity : "<<resBezier.dc1_.transpose());
+            res.timings_ = current_timings;
+            res.pathPerPhases_.push_back(BezierPath::create(fullbody->device_,bezierCurve,previous.configuration_,next.configuration_, core::interval_t(0.,current_timings[0])));
+            res.pathPerPhases_.push_back(BezierPath::create(fullbody->device_,bezierCurve,previous.configuration_,next.configuration_, core::interval_t(current_timings[0],current_timings[0]+current_timings[1])));
+            if(current_timings.size() > 2)
+                res.pathPerPhases_.push_back(BezierPath::create(fullbody->device_,bezierCurve,previous.configuration_,next.configuration_, core::interval_t(current_timings[0]+current_timings[1],total_time)));
             success = true;
         }else{
             hppDout(notice,"UNREACHABLE");
