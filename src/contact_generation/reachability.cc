@@ -16,7 +16,7 @@
 #endif
 
 #ifndef FULL_TIME_SAMPLING
-#define FULL_TIME_SAMPLING 1
+#define FULL_TIME_SAMPLING 0
 #endif
 
 namespace hpp {
@@ -39,7 +39,7 @@ namespace hpp {
    void printQHullFile(const std::pair<MatrixXX, VectorX>& Ab,fcl::Vec3f intPoint,const std::string& fileName,bool clipZ = false){
         std::ofstream file;
         using std::endl;
-        std::string path("/home/pfernbac/Documents/com_ineq_test/");
+        std::string path("/local/fernbac/bench_iros18/constraints_obj/");
         path.append(fileName);
         hppDout(notice,"print to file : "<<path);
         file.open(path.c_str(),std::ios::out | std::ios::trunc);
@@ -48,7 +48,7 @@ namespace hpp {
         file<<"4"<<endl;
         clipZ ? file<<Ab.first.rows()+2<<endl : file<<Ab.first.rows()<<endl;
         for(size_t i = 0 ; i < Ab.first.rows() ; ++i){
-            file<<"\t"<<Ab.first(i,0)<<"\t"<<Ab.first(i,1)<<"\t"<<Ab.first(i,2)<<"\t"<<-Ab.second[i]-0.001<<endl;
+            file<<"\t"<<Ab.first(i,0)<<"\t"<<Ab.first(i,1)<<"\t"<<Ab.first(i,2)<<"\t"<<-Ab.second[i]-0.005<<endl;
         }
         if(clipZ){
             file<<"\t"<<0<<"\t"<<0<<"\t"<<1.<<"\t"<<-3.<<endl;

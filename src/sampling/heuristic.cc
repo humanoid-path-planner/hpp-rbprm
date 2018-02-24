@@ -279,8 +279,8 @@ HeuristicFactory::HeuristicFactory()
     //seed = 1518716775; // walk hyq
     //seed = 1519148173; // double step on stairs
     //seed = 1519209574 ; // stairs muscod work
-    seed = 1518867071 ; // sidewall v = 0.2
-    //seed = 1518867071 ; // last stat_muscod_qp test
+   // seed = 1518867071 ; // sidewall v = 0.2
+    seed = 1519488948 ; // stairs fail
 
     std::cout<<"seed HEURISTIC = "<<seed<<std::endl;
     srand ( seed);

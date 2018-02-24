@@ -58,9 +58,9 @@ ContactGenHelper::ContactGenHelper(RbPrmFullBodyPtr_t fb, const State& ps, model
 , comPath_(comPath)
 , currentPathId_(currentPathId)
 , quasiStatic_(false)
-, testReachability_(true)
-, maximiseContacts_(true)
-, accept_unreachable_(false)
+, testReachability_(false)
+, maximiseContacts_(false)
+, accept_unreachable_(true)
 {
     workingState_.configuration_ = configuration;
     workingState_.stable = false;
