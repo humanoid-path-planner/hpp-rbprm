@@ -8,7 +8,7 @@
 #include <hpp/util/timer.hh>
 
 #ifndef QHULL
-#define QHULL 1
+#define QHULL 0
 #endif
 
 #ifndef STAT_TIMINGS
@@ -533,7 +533,7 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
             //total_time = 1.6;
             current_timings<<min_DS,min_SS,min_DS; // hrp2
             #else
-            timings_matrix = MatrixXX(34,3);
+            timings_matrix = MatrixXX(17,3);
             timings_matrix <<
                               1.65, 0.2, 0.65, // found with script
                         // hyq flat
@@ -546,33 +546,33 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
                                 1  , 0.6, 1,
                                 1  , 0.6, 0.5,
                                 0.5, 0.6, 1 ,
-                                1  , 0.05, 1,
-                                1  , 0.05, 0.5,
-                                0.5, 0.05, 1 ,
-                                1.5, 0.1, 1.5,
+                            //    1  , 0.05, 1,
+                             //   1  , 0.05, 0.5,
+                             //   0.5, 0.05, 1 ,
+                            //    1.5, 0.1, 1.5,
                                 1.5, 0.2, 1.5,
                                 1.5, 0.5, 1.5,
-                                1  , 0.1, 1,
-                                  1  , 0.1, 0.5,
-                                  0.5, 0.1, 1 ,
+                           //     1  , 0.1, 1,
+                            //      1  , 0.1, 0.5,
+                             //     0.5, 0.1, 1 ,
                     // timing found with Steve's script :
-                                0.25,0.1,0.25,
-                                1.6,0.5,0.6,
+                                0.25,0.1,0.25, // script good
+                                1.6,0.5,0.6, // script good
                                 1.9,0.65,0.8,
                                 1.6,0.5,0.65,
-                                1.7,0.5,0.7,
-                                0.15 , 0.05 , 0.15,
+                                1.7,0.5,0.7;
+                            //    0.15 , 0.05 , 0.15,
                             // hyq planches
-                              0.2, 0.05, 0.2,
-                              0.15, 0.05, 0.3,
-                              0.3 , 0.05, 0.15,
-                              0.3, 0.05, 0.3,
-                              0.2, 0.05, 0.2,
-                              0.15, 0.05, 0.3,
-                              0.3 , 0.05, 0.15,
+                           //   0.2, 0.05, 0.2,
+                           //   0.15, 0.05, 0.3,
+                           //   0.3 , 0.05, 0.15,
+                           //   0.3, 0.05, 0.3,
+                           //   0.2, 0.05, 0.2,
+                           //   0.15, 0.05, 0.3,
+                           //   0.3 , 0.05, 0.15,
             // vnc
-                                0.6,0.05,0.05,
-                                0.65,0.05,0.05;
+                           //     0.6,0.05,0.05,
+                           //     0.65,0.05,0.05;
             current_timings = timings_matrix.block<1,3>(0,0);
             #endif
             total_time = current_timings[0] + current_timings[1] + current_timings[2];
@@ -688,6 +688,8 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     if(success && tryQuasiStatic){
         hppDout(notice,"ONLY REACHABLE IN DYNAMIC !!!");
     }
+    hppDout(notice,"Between configuration : r(["<<model::displayConfig(previous.configuration_)<<"])");
+    hppDout(notice,"and     configuration : r(["<<model::displayConfig(next.configuration_)<<"])");
 
 
 
