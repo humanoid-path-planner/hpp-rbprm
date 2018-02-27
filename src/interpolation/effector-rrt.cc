@@ -468,11 +468,20 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
 
 
        // const double timeTakeoff = totalTime*ratioTimeTakeOff; // percentage of the total time
-        double timeTakeoff = 0.1; // it's a minimum time, it can be increased
-        const double p_max = 0.03; // offset for the higher point in the curve
-        const double p_min = 0.002; // min offset at the end of the predefined trajectory
+        double timeTakeoff; // it's a minimum time, it can be increased
+        double p_max ; // offset for the higher point in the curve
+        double p_min; // min offset at the end of the predefined trajectory
         double posOffset,velOffset,a_max_predefined;
         //a_max_predefined = 1.5;
+        if(effectorName == "hrp2_rleg_rom" || effectorName == "hrp2_lleg_rom"){
+            timeTakeoff = 0.1;
+            p_max = 0.1;
+            p_min = 0.05;
+        }else{
+            timeTakeoff = 0.07;
+            p_max = 0.05;
+            p_min = 0.01;
+        }
 
 
         computePredefConstants(dist_translation,p_max,p_min,totalTime,timeTakeoff,posOffset,velOffset,a_max_predefined);

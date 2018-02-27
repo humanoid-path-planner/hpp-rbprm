@@ -208,9 +208,9 @@ namespace
       //  seed = 1516106467; // walk bauzil v = 0.2
     //  seed = 1507292219 ; // darpa test
      // seed = 1517318451 ; //stairs reduceSize
-      //seed = 1518874734 ; // stairs test transition
+      seed = 1518874734 ; // stairs test transition
       //seed = 1519050403 ; //platform hrp2
-      seed = 1519487130 ; // stair no ramp
+     // seed = 1519487130 ; // stair no ramp
       srand (seed);
       hppDout(notice,"&&&&&& SEED = "<<seed);
       std::cout<<"seed = "<<seed<<std::endl;
