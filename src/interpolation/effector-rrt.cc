@@ -474,9 +474,12 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
         double posOffset,velOffset,a_max_predefined;
         //a_max_predefined = 1.5;
         if(effectorName == "hrp2_rleg_rom" || effectorName == "hrp2_lleg_rom"){
+           // timeTakeoff = 0.1;
+           // p_max = 0.1;
+           // p_min = 0.05;
             timeTakeoff = 0.1;
-            p_max = 0.1;
-            p_min = 0.05;
+            p_max = 0.05;
+            p_min = 0.01;
         }else{
             timeTakeoff = 0.07;
             p_max = 0.05;

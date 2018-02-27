@@ -16,7 +16,7 @@
 #endif
 
 #ifndef FULL_TIME_SAMPLING
-#define FULL_TIME_SAMPLING 0
+#define FULL_TIME_SAMPLING 1
 #endif
 
 namespace hpp {
@@ -518,8 +518,8 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     VectorX times;
     double total_time = 0;
     const double time_increment = 0.05;
-    const double min_SS = 0.5;
-    const double min_DS = 0.3;
+    const double min_SS = 0.2;
+    const double min_DS = 0.1;
     MatrixXX timings_matrix;
     bool timing_provided(false);
     int t_id = 1;
@@ -559,8 +559,9 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
                                 1.6,0.5,0.65,
                                 1.7,0.5,0.7;
             */
-            timings_matrix = MatrixXX(34,3);
+            timings_matrix = MatrixXX(35,3);
             timings_matrix <<
+                              0.3,0.6,0.3,
                               1.65, 0.2, 0.65, // found with script
                         // hyq flat
                                 1  , 0.2, 1,
