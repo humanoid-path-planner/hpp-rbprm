@@ -16,7 +16,7 @@
 #endif
 
 #ifndef FULL_TIME_SAMPLING
-#define FULL_TIME_SAMPLING 1
+#define FULL_TIME_SAMPLING 0
 #endif
 
 namespace hpp {
@@ -536,29 +536,17 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
             //total_time = 1.6;
             current_timings<<min_DS,min_SS,min_DS; // hrp2
             #else
-            /*
-            timings_matrix = MatrixXX(17,3);
+
+            timings_matrix = MatrixXX(4,3);
             timings_matrix <<
                               1.65, 0.2, 0.65, // found with script
-                        // hyq flat
-                                1  , 0.2, 1,
-                                1  , 0.2, 0.5,
-                                0.5, 0.2, 1 ,
-                                1  , 0.4, 1,
-                                1  , 0.4, 0.5,
-                                0.5, 0.4, 1 ,
-                                1  , 0.6, 1,
-                                1  , 0.6, 0.5,
-                                0.5, 0.6, 1 ,
-                                1.5, 0.2, 1.5,
-                                1.5, 0.5, 1.5,
-                    // timing found with Steve's script :
+                                0.15, 0.05, 0.3,
                                 0.25,0.1,0.25, // script good
-                                1.6,0.5,0.6, // script good
-                                1.9,0.65,0.8,
-                                1.6,0.5,0.65,
-                                1.7,0.5,0.7;
-            */
+                               0.3 , 0.05, 0.15;
+                        // hyq flat
+
+
+/*
             timings_matrix = MatrixXX(35,3);
             timings_matrix <<
                               0.3,0.6,0.3,
@@ -592,7 +580,7 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
                             // hyq planches
                               0.2, 0.05, 0.2,
                               0.15, 0.05, 0.3,
-                             0.3 , 0.05, 0.15,
+                              0.3 , 0.05, 0.15,
                               0.3, 0.05, 0.3,
                               0.2, 0.05, 0.2,
                               0.15, 0.05, 0.3,
@@ -600,6 +588,7 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
             // vnc
                                0.6,0.05,0.05,
                                 0.65,0.05,0.05;
+*/
             current_timings = timings_matrix.block<1,3>(0,0);
             #endif
             total_time = current_timings[0] + current_timings[1] + current_timings[2];
