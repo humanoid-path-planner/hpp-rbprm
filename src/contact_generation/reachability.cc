@@ -16,7 +16,7 @@
 #endif
 
 #ifndef FULL_TIME_SAMPLING
-#define FULL_TIME_SAMPLING 0
+#define FULL_TIME_SAMPLING 1
 #endif
 
 namespace hpp {
@@ -627,7 +627,11 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
         // call solveur :
         hppDout(notice,"Try with timings : "<<current_timings.transpose());
         hppDout(notice,"Call solveOneStep");
+        hppStartBenchmark(SOLVE_TRANSITION_ONE_STEP);
         resBezier = bezier_com_traj::solveOnestep(pData,current_timings,init_guess,numPointsPerPhases,feasabilityTreshold);
+        hppStopBenchmark(SOLVE_TRANSITION_ONE_STEP);
+        hppDisplayBenchmark(SOLVE_TRANSITION_ONE_STEP);
+
         //wrap the result :
         if(resBezier.success_){
             hppDout(notice,"REACHABLE");
