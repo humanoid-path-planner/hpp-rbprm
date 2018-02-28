@@ -299,6 +299,7 @@ ProjectionReport projectEffector(hpp::core::ConfigProjectorPtr_t proj, const hpp
                           const fcl::Matrix3f& rotationTarget, const std::vector<bool> &rotationFilter, const fcl::Vec3f& positionTarget, const fcl::Vec3f& normal,
                           const hpp::rbprm::State& current)
 {
+    hppDout(notice,"Project effector : ");
     ProjectionReport rep;
     // Add constraints to resolve Ik
     rep.success_ = false;
@@ -325,6 +326,7 @@ ProjectionReport projectEffector(hpp::core::ConfigProjectorPtr_t proj, const hpp
 #endif
     if(proj->apply(configuration))
     {
+        hppDout(notice,"apply contact constraints");
 #ifdef PROFILE
         watch.stop("ik");
 #endif
@@ -335,6 +337,7 @@ ProjectionReport projectEffector(hpp::core::ConfigProjectorPtr_t proj, const hpp
         hpp::core::ValidationReportPtr_t valRep (new hpp::core::CollisionValidationReport);
         if(validation->validate(configuration, valRep))
     {
+        hppDout(notice,"No collision !");
 #ifdef PROFILE
         watch.stop("collision");
 #endif
@@ -349,18 +352,21 @@ ProjectionReport projectEffector(hpp::core::ConfigProjectorPtr_t proj, const hpp
         ++tmp.nbContacts;
         rep.success_ = true;
         rep.result_ = tmp;
-    }
-#ifdef PROFILE
-    else
+        }else
         {
-        watch.stop("collision");
+            #ifdef PROFILE
+            watch.stop("collision");
+            #endif
+            hppDout(notice,"state in collison after projection, report : "<<*valRep);
+            hppDout(notice,"state in collision : r(["<<model::displayConfig(configuration)<<"])");
         }
-#endif
-    }
-#ifdef PROFILE
-    else
+    }else{
+        #ifdef PROFILE
         watch.stop("ik");
-#endif
+        #endif
+        hppDout(notice,"unable to apply contact constraints");
+
+    }
     return rep;
 }
 
