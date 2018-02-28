@@ -494,13 +494,24 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
         const double timeMid = totalTime-2*timeTakeoff;
 
         hppDout(notice,"Effector-rrt, moving effector name : "<<effectorName);
-        hppDout(notice,"previous normal : "<<startState.contactNormals_.at(effectorName));
-        hppDout(notice,"next normal : "<<nextState.contactNormals_.at(effectorName));
+        Vector3 startNormal,nextNormal;
+        if(startState.contactNormals_.find(effectorName) == startState.contactNormals_.end()){
+            startNormal = Vector3(0,0,1);
+        }else{
+            startNormal = startState.contactNormals_.at(effectorName);
+            hppDout(notice,"previous normal : "<<startNormal);
+        }
+        if(nextState.contactNormals_.find(effectorName) == nextState.contactNormals_.end()){
+            nextNormal = Vector3(0,0,1);
+        }else{
+            nextNormal = nextState.contactNormals_.at(effectorName);
+            hppDout(notice,"previous normal : "<<nextNormal);
+        }
 
         bezier_com_traj::ProblemData pDataLanding,pDataTakeoff;
-        BezierPathPtr_t refEffectorTakeoff = buildPredefinedPath(endEffectorDevice,startState.contactNormals_.at(effectorName),initConfig,posOffset,velOffset,timeTakeoff,true,takeoffConfig,pDataTakeoff,a_max_predefined);
+        BezierPathPtr_t refEffectorTakeoff = buildPredefinedPath(endEffectorDevice,startNormal,initConfig,posOffset,velOffset,timeTakeoff,true,takeoffConfig,pDataTakeoff,a_max_predefined);
         BezierPathPtr_t refEffectorLanding =
-buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName),endConfig,posOffset,-velOffset,timeLanding,false,landingConfig,pDataLanding,a_max_predefined);
+buildPredefinedPath(endEffectorDevice,nextNormal,endConfig,posOffset,-velOffset,timeLanding,false,landingConfig,pDataLanding,a_max_predefined);
 
 
         // ## compute bezier curve that follow the rrt path and that respect the constraints :
