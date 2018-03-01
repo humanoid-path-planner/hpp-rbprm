@@ -479,8 +479,8 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     pData.dc1_ = next.configuration_.segment<3>(id_velocity);
     pData.ddc0_ = previous.configuration_.segment<3>(id_velocity+3); // unused for now
     pData.ddc1_ = next.configuration_.segment<3>(id_velocity+3);
-    pData.dc0_ = fcl::Vec3f::Zero();
-    pData.dc1_ = fcl::Vec3f::Zero();
+    //pData.dc0_ = fcl::Vec3f::Zero();
+    //pData.dc1_ = fcl::Vec3f::Zero();
     pData.ddc0_ = fcl::Vec3f::Zero();
     pData.ddc1_ = fcl::Vec3f::Zero();
     hppDout(notice,"Build pData : ");
@@ -538,15 +538,21 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
             #else
 
             timings_matrix = MatrixXX(4,3);
-            timings_matrix <<
+  /*          timings_matrix <<
                               1.65, 0.2, 0.65, // found with script
                                 0.15, 0.05, 0.3,
                                 0.25,0.1,0.25, // script good
                                0.3 , 0.05, 0.15;
                         // hyq flat
+*/
+           /* timings_matrix <<
+                                         1, 0.6, 1, // found with script
+                                            1.5, 0.6, 1,
+                                            0.8,0.6,0.8, // script good
+                                          0.8 , 0.7, 0.8;
+                                    // hyq flat
+*/
 
-
-/*
             timings_matrix = MatrixXX(35,3);
             timings_matrix <<
                               0.3,0.6,0.3,
@@ -588,7 +594,7 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
             // vnc
                                0.6,0.05,0.05,
                                 0.65,0.05,0.05;
-*/
+
             current_timings = timings_matrix.block<1,3>(0,0);
             #endif
             total_time = current_timings[0] + current_timings[1] + current_timings[2];
@@ -669,10 +675,10 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
         if(!timing_provided){
             #if FULL_TIME_SAMPLING
             current_timings[0] +=time_increment;
-            if(current_timings[0] > 2.){
+            if(current_timings[0] > 1.5){
                 current_timings[0] = min_DS;
                 current_timings[1] += time_increment;
-                if(current_timings[1] > 2.){
+                if(current_timings[1] > 1.5){
                     if(current_timings.size() == 3){
                         current_timings[1] = min_SS;
                         current_timings[2] += time_increment;

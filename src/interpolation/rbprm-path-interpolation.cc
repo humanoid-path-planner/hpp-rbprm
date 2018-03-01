@@ -182,7 +182,7 @@ namespace hpp {
 if (nbFailures > 1)
 {
     std::ofstream fout;
-    fout.open("/home/pfernbac/Documents/com_ineq_test/log_success.log",std::fstream::app);
+    fout.open("/local/fernbac/bench_iros18/success/log_success.log",std::fstream::app);
     fout<<"failed."<<std::endl;
     fout.close();
 
@@ -223,7 +223,7 @@ if (nbFailures > 1)
                 if (repos > 20)
                 {
                 std::ofstream fout;
-                fout.open("/home/pfernbac/Documents/com_ineq_test/log_success.log",std::fstream::app);
+                fout.open("/local/fernbac/bench_iros18/success/log_success.log",std::fstream::app);
                 fout<<"failed, too much repositionning"<<std::endl;
                 fout.close();
 				std::cout<<"failed, too much repositionning"<<std::endl;
@@ -280,7 +280,7 @@ if (nbFailures > 1)
         fout.close();*/
 #endif
         std::ofstream fout;
-        fout.open("/home/pfernbac/Documents/com_ineq_test/log_success.log",std::fstream::app);
+        fout.open("/local/fernbac/bench_iros18/success/log_success.log",std::fstream::app);
         fout<<"Planner succeeded"<<std::endl;
         fout.close();
         states = FilterStates(states, filterStates);

@@ -281,7 +281,7 @@ HeuristicFactory::HeuristicFactory()
     //seed = 1519209574 ; // stairs muscod work
    // seed = 1518867071 ; // sidewall v = 0.2
     //seed = 1519488948 ; // stairs fail
-    seed = 1519638309 ; // new hyq sideWall v0
+   // seed = 1519638309 ; // new hyq sideWall v0
    // seed = 1519663861 ; // hyq sideWall, vplanning, screen traj
    // seed = 1519655157 ; // stairs w/ ramp screen actuels
 
@@ -289,7 +289,7 @@ HeuristicFactory::HeuristicFactory()
     srand ( seed);
     hppDout(notice,"SEED for heuristic = "<<seed);
     std::ofstream fout;
-    fout.open("/home/pfernbac/Documents/com_ineq_test/log_success.log",std::fstream::app);
+    fout.open("/local/fernbac/bench_iros18/success/log_success.log",std::fstream::app);
     fout<<"seed = "<<seed<<std::endl;
     fout.close();
     heuristics_.insert(std::make_pair("static", &StaticHeuristic));
