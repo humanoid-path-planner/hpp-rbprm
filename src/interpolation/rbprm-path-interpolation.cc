@@ -181,11 +181,12 @@ namespace hpp {
                 currentVal+= timeStep;
 if (nbFailures > 1)
 {
+    /*
     std::ofstream fout;
     fout.open("/local/fernbac/bench_iros18/success/log_success.log",std::fstream::app);
     fout<<"failed."<<std::endl;
     fout.close();
-
+    */
     std::cout << "failed " << std::endl;
 #ifdef PROFILE
     watch.stop("complete generation");
@@ -222,10 +223,11 @@ if (nbFailures > 1)
                 ++repos;
                 if (repos > 20)
                 {
-                std::ofstream fout;
+                /*std::ofstream fout;
                 fout.open("/local/fernbac/bench_iros18/success/log_success.log",std::fstream::app);
                 fout<<"failed, too much repositionning"<<std::endl;
                 fout.close();
+                */
 				std::cout<<"failed, too much repositionning"<<std::endl;
 				#ifdef PROFILE
 					watch.stop("complete generation");
@@ -279,10 +281,12 @@ if (nbFailures > 1)
         watch.report_all_and_count(2,*fp);
         fout.close();*/
 #endif
+        /*
         std::ofstream fout;
         fout.open("/local/fernbac/bench_iros18/success/log_success.log",std::fstream::app);
         fout<<"Planner succeeded"<<std::endl;
         fout.close();
+        */
         states = FilterStates(states, filterStates);
         states = addGoalConfig(states);
         return states;

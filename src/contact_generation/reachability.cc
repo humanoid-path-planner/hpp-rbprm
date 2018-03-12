@@ -16,7 +16,7 @@
 #endif
 
 #ifndef FULL_TIME_SAMPLING
-#define FULL_TIME_SAMPLING 1
+#define FULL_TIME_SAMPLING 0
 #endif
 
 namespace hpp {

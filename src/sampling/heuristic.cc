@@ -261,13 +261,13 @@ HeuristicFactory::HeuristicFactory()
     //seed = 1493208163 ; // stairs static contacts
     //seed = 1504012308; // slalom static
     //seed = 1504099153; // slalom dynamic
-  //  seed = 1505997146 ; // bauzil walk
-  //  seed = 1507215254; // bauzil 2
-//    seed = 1507302685; // darpa
-    // seed = 1510137769; // walk bauzil 2
-   //  seed = 1511447706; // walk bauzil small steps
+    //seed = 1505997146 ; // bauzil walk
+    //seed = 1507215254; // bauzil 2
+    //seed = 1507302685; // darpa
+    //seed = 1510137769; // walk bauzil 2
+   // seed = 1511447706; // walk bauzil small steps
   //  seed = 1513330208; // walk straight line with weight static = 10 000 dit = 100
-  // seed = 1513588852; // walk straight line (tested on robot)
+  //  seed = 1513588852; // walk straight line (tested on robot)
   //  seed = 1510645311 ; // darpa line 1 repositionning // step = 0.05
   //  seed = 1510645700 ; // darpa line // step = 0.1
   //  seed = 1516093154; // walk bauzil v=0.3, bof
@@ -286,12 +286,12 @@ HeuristicFactory::HeuristicFactory()
    // seed = 1519655157 ; // stairs w/ ramp screen actuels
 
     std::cout<<"seed HEURISTIC = "<<seed<<std::endl;
-    srand ( seed);
+    srand (seed);
     hppDout(notice,"SEED for heuristic = "<<seed);
-    std::ofstream fout;
+    /*std::ofstream fout;
     fout.open("/local/fernbac/bench_iros18/success/log_success.log",std::fstream::app);
     fout<<"seed = "<<seed<<std::endl;
-    fout.close();
+    fout.close();*/
     heuristics_.insert(std::make_pair("static", &StaticHeuristic));
     heuristics_.insert(std::make_pair("EFORT", &EFORTHeuristic));
     heuristics_.insert(std::make_pair("EFORT_Normal", &EFORTNormalHeuristic));
