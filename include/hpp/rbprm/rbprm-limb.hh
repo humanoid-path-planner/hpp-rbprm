@@ -47,6 +47,7 @@ namespace hpp {
     typedef Eigen::Matrix <model::value_type, Eigen::Dynamic, Eigen::Dynamic> MatrixXX;
     typedef Eigen::Matrix <model::value_type, Eigen::Dynamic, 3>              MatrixX3;
     typedef Eigen::Matrix <model::value_type, Eigen::Dynamic, 1>              VectorX;
+    typedef Eigen::Matrix <model::value_type, 3, 1>                           Vector3;
 
 
     class HPP_RBPRM_DLLAPI RbPrmLimb
@@ -97,7 +98,9 @@ namespace hpp {
                                       const std::size_t nbSamples, const sampling::heuristic evaluate = 0,
                                       const double resolution = 0.1, ContactType contactType = _6_DOF,
                                       bool disableEndEffectorCollision = false,
-                                      bool grasps = false);
+                                      bool grasps = false,
+                                      const std::string& kinematicsConstraintsPath = std::string(),
+                                      const double kinematicConstraintsMinDistance = 0.);
 
         static RbPrmLimbPtr_t create (const model::DevicePtr_t device, std::ifstream& fileStream, const bool loadValues = true,
                                       const hpp::rbprm::sampling::heuristic evaluate = 0,
@@ -134,7 +137,9 @@ namespace hpp {
                  const std::size_t nbSamples, const sampling::heuristic evaluate,
                  const double resolution, ContactType contactType,
                  bool disableEndEffectorCollision = false,
-                 bool grasps = false);
+                 bool grasps = false,
+                 const std::string& kinematicsConstraintsPath = std::string(),
+                 const double kinematicConstraintsMinDistance = 0.);
 
       RbPrmLimb (const model::DevicePtr_t device, std::ifstream& fileStream, const bool loadValues,
                  const hpp::rbprm::sampling::heuristic evaluate,

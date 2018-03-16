@@ -15,8 +15,13 @@ namespace hpp {
   namespace reachability{
 
 
-
-std::pair<MatrixX3, MatrixX3> loadConstraintsFromObj(const std::string& fileName);
+  /**
+ * @brief loadConstraintsFromObj load the obj file and compute a list of normal and vertex position from it
+ * @param fileName
+ * @param minDistance if > 0 : add an additionnal plane of normal (0,0,1) and origin (0,0,minDistance)
+ * @return
+ */
+std::pair<MatrixX3, MatrixX3> loadConstraintsFromObj(const std::string& fileName, double minDistance = 0.);
 
 std::pair<MatrixX3, VectorX> computeAllKinematicsConstraints(const RbPrmFullBodyPtr_t& fullBody,const model::ConfigurationPtr_t& configuration);
 

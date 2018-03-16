@@ -40,7 +40,7 @@ VectorX triangleNormalTransform(const model::urdf::Parser::PolyhedronPtrType& ob
     return normal.normalized();
 }
 
-std::pair<MatrixX3, MatrixX3> loadConstraintsFromObj(const std::string& fileName){
+std::pair<MatrixX3, MatrixX3> loadConstraintsFromObj(const std::string& fileName, double minDistance){
     hppDout(notice,"Load constraints for filename : "<<fileName);
 
 
@@ -56,8 +56,15 @@ std::pair<MatrixX3, MatrixX3> loadConstraintsFromObj(const std::string& fileName
 
     // iterate over all faces : for each faces add a line in A : normal and a value in b : position of a vertice.dot(normal)
     size_t numFaces = polyhedron->num_tris;
-    MatrixX3 N(numFaces,3);
-    MatrixX3 V(numFaces,3);
+    size_t numIneq = numFaces;
+    if(minDistance > 0){
+        numIneq++;
+    }
+    MatrixX3 N(numIneq,3);
+    MatrixX3 V(numIneq,3);
+
+
+
     VectorX n,v;
     for (size_t fId = 0 ; fId < numFaces ; ++fId){
         //hppDout(notice,"For face : "<<fId);
@@ -68,9 +75,15 @@ std::pair<MatrixX3, MatrixX3> loadConstraintsFromObj(const std::string& fileName
         N.block<1,3>(fId,0) = n;
         V.block<1,3>(fId,0) = v;
     }
+
+    if(minDistance > 0){
+        N.block<1,3>(numIneq-1,0) = Vector3(0,0,-1);
+        V.block<1,3>(numIneq-1,0) = Vector3(0,0,minDistance);
+    }
     hppDout(notice,"End of loading kinematic constraints : ");
     //hppDout(notice,"N : "<<N);
     //hppDout(notice,"v : "<<V);
+
 
 
     return std::make_pair(N,V);

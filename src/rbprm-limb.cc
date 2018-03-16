@@ -25,10 +25,12 @@ namespace hpp {
     RbPrmLimbPtr_t RbPrmLimb::create (const model::JointPtr_t limb, const std::string& effectorName, const fcl::Vec3f &offset,
                                       const fcl::Vec3f &limbOffset, const fcl::Vec3f &normal,const double x, const double y,
                                       const std::size_t nbSamples, const hpp::rbprm::sampling::heuristic evaluate, const double resolution,
-                                      hpp::rbprm::ContactType contactType, const bool disableEffectorCollision, const bool grasp)
+                                      hpp::rbprm::ContactType contactType, const bool disableEffectorCollision, const bool grasp,
+                                      const std::string& kinematicsConstraintsPath,
+                                      const double kinematicConstraintsMinDistance)
     {
         RbPrmLimb* rbprmDevice = new RbPrmLimb(limb, effectorName, offset,limbOffset, normal, x, y, nbSamples,evaluate,
-                                               resolution, contactType, disableEffectorCollision, grasp);
+                                               resolution, contactType, disableEffectorCollision, grasp,kinematicsConstraintsPath,kinematicConstraintsMinDistance);
         RbPrmLimbPtr_t res (rbprmDevice);
         res->init (res);
         return res;
@@ -79,7 +81,8 @@ namespace hpp {
     RbPrmLimb::RbPrmLimb (const model::JointPtr_t& limb, const std::string& effectorName,
                           const fcl::Vec3f &offset, const fcl::Vec3f &limbOffset, const fcl::Vec3f &normal, const double x, const double y, const std::size_t nbSamples,
                           const hpp::rbprm::sampling::heuristic evaluate, const double resolution, ContactType contactType,
-                          bool disableEndEffectorCollision, bool grasps)
+                          bool disableEndEffectorCollision, bool grasps,
+                            const std::string &kinematicsConstraintsPath , const double kinematicConstraintsMinDistance)
         : limb_(limb)
         , effector_(GetEffector(limb, effectorName))
         , effectorDefaultRotation_(GetEffectorTransform(effector_))
@@ -95,7 +98,7 @@ namespace hpp {
         , disableEndEffectorCollision_(disableEndEffectorCollision)
         , grasps_(grasps)
         , effectorReferencePosition_()
-        , kinematicConstraints_(reachability::loadConstraintsFromObj("package://hpp-rbprm-corba/com_inequalities/"+limb_->name()+"_com_constraints.obj"))
+        , kinematicConstraints_(reachability::loadConstraintsFromObj(kinematicsConstraintsPath.empty() ? ("package://hpp-rbprm-corba/com_inequalities/"+limb_->name()+"_com_constraints.obj") : kinematicsConstraintsPath,kinematicConstraintsMinDistance))
     {
         // NOTHING
     }
