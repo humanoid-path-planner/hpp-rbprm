@@ -54,14 +54,14 @@ fcl::Vec3f ComputeEffectorPosition(const model::JointPtr_t limb, const model::Jo
 fcl::Vec3f ComputeEffectorPositionInLimbFrame(const model::JointPtr_t limb, const model::JointPtr_t effector, const fcl::Vec3f& offset,const fcl::Vec3f&  limbOffset)
 {
     // we want to use the orientation expressed in the world frame, but with the origin in the limb's root :
-   // hppDout(notice,"offset = "<<offset);
-  //  hppDout(notice,"limbOffset = "<<limbOffset);
+    //hppDout(notice,"offset = "<<offset);
+    //hppDout(notice,"limbOffset = "<<limbOffset);
     const fcl::Transform3f& transformLimb = limb->currentTransformation();
     fcl::Transform3f transformOffset;
     transformOffset.setTranslation(limbOffset);
     fcl::Vec3f effTr = effector->currentTransformation().getTranslation() + offset;
     fcl::Vec3f limbTr = (transformLimb*transformOffset).getTranslation();
-  /*  hppDout(notice,"effTr = "<<effTr);
+   /* hppDout(notice,"effTr = "<<effTr);
     hppDout(notice,"limbTr = "<<limbTr);
     hppDout(notice,"res = "<<effTr-limbTr);*/
     return (effTr-limbTr);
@@ -153,8 +153,7 @@ hpp::rbprm::sampling::SampleVector_t hpp::rbprm::sampling::GenerateSamples(const
     JointPtr_t effectorClone = device->getJointByName(effector);
     std::size_t startRank_(model->rankInConfiguration());
     std::size_t length_ (ComputeLength(model, effectorClone));
-    Configuration_t configRef(43);
-    configRef<<0, 0, 0.648702, 1.0, 0.0 , 0.0, 0.0,0.0, 0.0, 0.0, 0.0,0.261799388,  0.174532925, 0.0, -0.523598776, 0.0, 0.0, 0.17,0.261799388, -0.174532925, 0.0, -0.523598776, 0.0, 0.0, 0.17,0.0, 0.0, -0.453785606, 0.872664626, -0.41887902, 0.0,0.0, 0.0, -0.453785606, 0.872664626, -0.41887902, 0.0,0,0,0,0,0,0;
+    Configuration_t configRef(model->robot()->q0());
     hppDout(notice,"TEST REF CONFIG IN LIMB DB : "<<model::displayConfig(configRef));
     result.push_back(Sample(clone,effectorClone,configRef.segment(startRank_,length_),offset,limbOffset,0));
     for(std::size_t i = 1; i< nbSamples; ++i)

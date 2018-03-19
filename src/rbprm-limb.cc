@@ -78,6 +78,25 @@ namespace hpp {
         return rot.transpose();
     }
 
+    fcl::Vec3f computeEffectorReferencePosition(const model::JointPtr_t& limb, const std::string& effectorName){
+        core::DevicePtr_t device = limb->robot();
+        core::Configuration_t referenceConfig = device->q0();
+        fcl::Transform3f tRoot;
+        fcl::Transform3f tJoint_world,tJoint_robot;
+        tRoot.setTranslation(fcl::Vec3f(referenceConfig.head<3>()));
+        fcl::Quaternion3f quatRoot(referenceConfig[3],referenceConfig[4],referenceConfig[5],referenceConfig[6]);
+        tRoot.setQuatRotation(quatRoot);
+        hppDout(notice,"Create limb, reference root transform : "<<tRoot);
+        // retrieve transform of each effector joint
+        device->currentConfiguration(referenceConfig);
+        device->computeForwardKinematics();
+        tJoint_world = GetEffector(limb, effectorName)->currentTransformation();
+        hppDout(notice,"tJoint of "<<limb->name()<<" : "<<tJoint_world);
+        tJoint_robot = tRoot.inverseTimes(tJoint_world);
+        hppDout(notice,"tJoint relative : "<<tJoint_robot);
+        return tJoint_robot.getTranslation();
+    }
+
     RbPrmLimb::RbPrmLimb (const model::JointPtr_t& limb, const std::string& effectorName,
                           const fcl::Vec3f &offset, const fcl::Vec3f &limbOffset, const fcl::Vec3f &normal, const double x, const double y, const std::size_t nbSamples,
                           const hpp::rbprm::sampling::heuristic evaluate, const double resolution, ContactType contactType,
@@ -97,7 +116,7 @@ namespace hpp {
         , sampleContainer_(limb, effector_->name(), nbSamples, offset,limbOffset, resolution)
         , disableEndEffectorCollision_(disableEndEffectorCollision)
         , grasps_(grasps)
-        , effectorReferencePosition_()
+        , effectorReferencePosition_(computeEffectorReferencePosition(limb,effectorName))
         , kinematicConstraints_(reachability::loadConstraintsFromObj(kinematicsConstraintsPath.empty() ? ("package://hpp-rbprm-corba/com_inequalities/"+limb_->name()+"_com_constraints.obj") : kinematicsConstraintsPath,kinematicConstraintsMinDistance))
     {
         // NOTHING

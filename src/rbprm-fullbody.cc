@@ -240,7 +240,7 @@ namespace hpp {
 
     void RbPrmFullBody::referenceConfig(model::Configuration_t referenceConfig)
     {
-        referenceConfig_=referenceConfig;
+        device_->q0(referenceConfig);
         //create transform of the freeflyer in the world frame :
         fcl::Transform3f tRoot;
         fcl::Transform3f tJoint_world,tJoint_robot;
@@ -252,7 +252,7 @@ namespace hpp {
         device_->currentConfiguration(referenceConfig);
         device_->computeForwardKinematics();
         if (limbs_.empty())
-            hppDout(warning,"No limbs found when setting reference configuration, you should add the limbs before setting the reference.");
+            hppDout(warning,"No limbs found when setting reference configuration.");
         for(CIT_Limb lit = limbs_.begin() ; lit != limbs_.end() ; ++lit){
             tJoint_world = lit->second->effector_->currentTransformation();
             hppDout(notice,"tJoint of "<<lit->first<<" : "<<tJoint_world);
@@ -275,7 +275,6 @@ namespace hpp {
         , collisionValidation_(core::CollisionValidation::create(device))
         , staticStability_(true)
         , mu_(0.5)
-        , referenceConfig_(device->currentConfiguration())
         , effectorsTrajectoriesMaps_()
         , weakPtr_()
     {
