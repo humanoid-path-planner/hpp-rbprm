@@ -79,7 +79,7 @@ hpp::rbprm::contact::ContactReport HPP_RBPRM_DLLAPI ComputeContacts(
             const affMap_t& affordances,
         const std::map<std::string, std::vector<std::string> >& affFilters, const fcl::Vec3f& direction,
   const double robustnessTreshold = 0,const fcl::Vec3f& acceleration = fcl::Vec3f(0,0,0),
-        const core::PathConstPtr_t& comPath = core::PathPtr_t(),const double currentPathId=0);
+        const core::PathConstPtr_t& comPath = core::PathPtr_t(),const double currentPathId=0,const bool testReachability=true, const bool quasiStatic=false);
 
 
     } // namespace contact

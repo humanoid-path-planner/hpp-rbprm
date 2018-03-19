@@ -31,9 +31,9 @@ namespace hpp {
 
     RbPrmInterpolationPtr_t RbPrmInterpolation::create (const hpp::rbprm::RbPrmFullBodyPtr_t robot,
                                                         const hpp::rbprm::State &start, const hpp::rbprm::State &end,
-                                                        const core::PathVectorConstPtr_t path)
+                                                        const core::PathVectorConstPtr_t path, const bool testReachability, const bool quasiStatic)
     {
-        RbPrmInterpolation* rbprmDevice = new RbPrmInterpolation(path, robot, start, end);
+        RbPrmInterpolation* rbprmDevice = new RbPrmInterpolation(path, robot, start, end, testReachability,quasiStatic);
         RbPrmInterpolationPtr_t res (rbprmDevice);
         res->init (res);
         return res;
@@ -162,7 +162,7 @@ namespace hpp {
             if(!nonZero) direction = fcl::Vec3f(0,0,1.);
             // TODO Direction 6d
             hppDout(notice,"#call ComputeContact, looking for state "<<states.size()-1);
-            hpp::rbprm::contact::ContactReport rep = contact::ComputeContacts(previous, robot_,configuration, affordances,affFilters,direction,robustnessTreshold,acc,comPath,currentVal);
+            hpp::rbprm::contact::ContactReport rep = contact::ComputeContacts(previous, robot_,configuration, affordances,affFilters,direction,robustnessTreshold,acc,comPath,currentVal,testReachability_,quasiStatic_);
             State& newState = rep.result_;
 
 
@@ -297,10 +297,12 @@ if (nbFailures > 1)
         weakPtr_ = weakPtr;
     }
 
-    RbPrmInterpolation::RbPrmInterpolation (const core::PathVectorConstPtr_t path, const hpp::rbprm::RbPrmFullBodyPtr_t robot, const hpp::rbprm::State &start, const hpp::rbprm::State &end)
+    RbPrmInterpolation::RbPrmInterpolation (const core::PathVectorConstPtr_t path, const hpp::rbprm::RbPrmFullBodyPtr_t robot, const hpp::rbprm::State &start, const hpp::rbprm::State &end, const bool testReachability, const bool quasiStatic)
         : path_(path)
         , start_(start)
         , end_(end)
+        , testReachability_(testReachability)
+        , quasiStatic_(quasiStatic)
         , robot_(robot)
     {
         // TODO

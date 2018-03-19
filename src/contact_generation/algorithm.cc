@@ -214,7 +214,7 @@ hpp::rbprm::contact::ContactReport ComputeContacts(const hpp::rbprm::State& prev
         const hpp::rbprm::RbPrmFullBodyPtr_t& body,
         model::ConfigurationIn_t configuration, const affMap_t& affordances,
         const std::map<std::string, std::vector<std::string> >& affFilters,
-        const fcl::Vec3f& direction, const double robustnessTreshold, const fcl::Vec3f& acceleration, const core::PathConstPtr_t& comPath, const double currentPathId)
+        const fcl::Vec3f& direction, const double robustnessTreshold, const fcl::Vec3f& acceleration, const core::PathConstPtr_t& comPath, const double currentPathId, const bool testReachability, const bool quasiStatic)
 {
     // save old configuration
     core::ConfigurationIn_t save = body->device_->currentConfiguration();
@@ -228,6 +228,8 @@ hpp::rbprm::contact::ContactReport ComputeContacts(const hpp::rbprm::State& prev
     hppDout(notice,"Compute contact, previous state : r(["<<model::displayConfig(previous.configuration_)<<"])");
     contact::ContactGenHelper cHelper(body,previous,configuration,affordances,affFilters,robustnessTreshold,1,1,false,
                                       true,direction,acceleration,false,false,comPath,currentPathId);
+    cHelper.testReachability_ = testReachability;
+    cHelper.quasiStatic_ = quasiStatic;
     contact::ContactReport rep = contact::oneStep(cHelper);
 
     // copy extra dofs

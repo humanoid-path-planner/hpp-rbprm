@@ -50,7 +50,7 @@ namespace hpp {
         /// \param end the end full body configuration of the problem
         /// \return a pointer to the created RbPrmInterpolation instance
         static RbPrmInterpolationPtr_t create (const RbPrmFullBodyPtr_t robot, const State& start, const State& end,
-                                               const core::PathVectorConstPtr_t path = core::PathVectorConstPtr_t());
+                                               const core::PathVectorConstPtr_t path = core::PathVectorConstPtr_t(), const bool testReachability = true, const bool quasiStatic = false);
 
     public:
         ~RbPrmInterpolation();
@@ -98,6 +98,9 @@ namespace hpp {
         const core::PathVectorConstPtr_t path_;
         const State start_;
         const State end_;
+        bool testReachability_; // decide if we use the reachability criterion during interpolation
+        bool quasiStatic_; // decide if we use the criterion only in quasi-static
+
 
     private:
         RbPrmFullBodyPtr_t robot_;
@@ -110,7 +113,7 @@ namespace hpp {
 
 
     protected:
-      RbPrmInterpolation (const core::PathVectorConstPtr_t path, const RbPrmFullBodyPtr_t robot,const State& start, const State& end);
+      RbPrmInterpolation (const core::PathVectorConstPtr_t path, const RbPrmFullBodyPtr_t robot,const State& start, const State& end, const bool testReachability = true, const bool quasiStatic = false);
 
       ///
       /// \brief Initialization.
