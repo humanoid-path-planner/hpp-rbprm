@@ -61,8 +61,8 @@ namespace hpp {
         /// \param effectorName name of the joint to be considered as the effector of the limb
         /// \param offset position of the effector in joint coordinates relatively to the effector joint
         /// \param unit normal vector of the contact point, expressed in the effector joint coordinates
-        /// \param x width of the default support polygon of the effector
-        /// \param y height of the default support polygon of the effector
+        /// \param x half width of the default support polygon of the effector
+        /// \param y half height of the default support polygon of the effector
         /// \param nbSamples number of samples to generate for the limb
         /// \param evaluate heuristic method used to bias sample generation
         /// \param resolution, resolution of the octree voxels. The samples generated are stored in an octree data
@@ -83,8 +83,8 @@ namespace hpp {
         /// \param offset position of the effector in joint coordinates relatively to the effector joint
         /// \param limbOffset is the offset between the limb_ joint position and it's link
         /// \param unit normal vector of the contact point, expressed in the effector joint coordinates
-        /// \param x width of the default support polygon of the effector
-        /// \param y height of the default support polygon of the effector
+        /// \param x half width of the default support polygon of the effector
+        /// \param y half height of the default support polygon of the effector
         /// \param nbSamples number of samples to generate for the limb
         /// \param evaluate heuristic method used to bias sample generation
         /// \param resolution, resolution of the octree voxels. The samples generated are stored in an octree data
