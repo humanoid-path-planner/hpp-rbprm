@@ -8,7 +8,7 @@
 #include <hpp/util/timer.hh>
 
 #ifndef QHULL
-#define QHULL 0
+#define QHULL 1
 #endif
 
 #ifndef STAT_TIMINGS
@@ -537,8 +537,8 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
             current_timings<<min_DS,min_SS,min_DS; // hrp2
             #else
 
-            timings_matrix = MatrixXX(4,3);
-  /*          timings_matrix <<
+    /*        timings_matrix = MatrixXX(4,3);
+            timings_matrix <<
                               1.65, 0.2, 0.65, // found with script
                                 0.15, 0.05, 0.3,
                                 0.25,0.1,0.25, // script good
@@ -553,7 +553,7 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
                                     // hyq flat
 */
 
-            timings_matrix = MatrixXX(35,3);
+            timings_matrix = MatrixXX(37,3);
             timings_matrix <<
                               0.3,0.6,0.3,
                               1.65, 0.2, 0.65, // found with script
@@ -593,7 +593,9 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
                               0.3 , 0.05, 0.15,
             // vnc
                                0.6,0.05,0.05,
-                                0.65,0.05,0.05;
+                                0.65,0.05,0.05,
+                                0.8,0.6,0.8,
+                                0.4,0.2,0.4;
 
             current_timings = timings_matrix.block<1,3>(0,0);
             #endif
@@ -723,28 +725,6 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     hppDout(notice,"Between configuration : r(["<<model::displayConfig(previous.configuration_)<<"])");
     hppDout(notice,"and     configuration : r(["<<model::displayConfig(next.configuration_)<<"])");
 
-
-
-    // test : compare to 0step :
-    // only work with 2 phases !!
-    /*
-    hppDout(notice,"Compare with 0Step : ");
-    hppDout(notice," time = "<<total_time);
-    bezier_com_traj::ProblemData pData0;
-    pData0.c0_ = pData.c0_;
-    pData0.c1_ = pData.c1_;
-    pData0.dc0_ = pData.dc0_;
-    pData0.dc1_ = pData.dc1_;
-    pData0.ddc0_ = pData.ddc0_;
-    pData0.ddc1_ = pData.ddc1_;
-    pData0.contacts_.push_back(previousData);
-    std::vector<double> Ts;
-    Ts.push_back(total_time);
-    double timeStep0 = total_time/6.;
-    bezier_com_traj::ResultDataCOMTraj res0 = bezier_com_traj::solve0step(pData0,Ts,timeStep0);
-    hppDout(notice,"success 0 step : "<<res0.success_);
-    hppDout(notice,"x 0 step : "<<res0.x.transpose());
-    */
 
     return res;
 }
