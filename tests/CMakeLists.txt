@@ -40,6 +40,7 @@ MACRO(ADD_TESTCASE NAME GENERATED)
 
   PKG_CONFIG_USE_DEPENDENCY(${NAME} hpp-core)
   PKG_CONFIG_USE_DEPENDENCY(${NAME} hpp-model)
+  PKG_CONFIG_USE_DEPENDENCY(${NAME} hpp-model-urdf)
   PKG_CONFIG_USE_DEPENDENCY(${NAME} hpp-fcl)
 
   # Link against Boost and project library.
@@ -51,9 +52,10 @@ MACRO(ADD_TESTCASE NAME GENERATED)
 
 ENDMACRO(ADD_TESTCASE)
 
-# ADD_TESTCASE (test-device FALSE)
-# ADD_TESTCASE (test-rbprm-shooter FALSE)
-ADD_TESTCASE (test-sampling FALSE)
+#ADD_TESTCASE (test-device FALSE)
+#ADD_TESTCASE (test-rbprm-shooter FALSE)
+#ADD_TESTCASE (test-sampling FALSE)
 #ADD_TESTCASE (test-fullbody FALSE)
 #ADD_TESTCASE (test-interpolate FALSE)
-ADD_TESTCASE (test-contact-gen FALSE)
+#ADD_TESTCASE (test-contact-gen FALSE)
+ADD_TESTCASE (test-reachability FALSE)
