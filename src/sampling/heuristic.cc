@@ -284,7 +284,7 @@ HeuristicFactory::HeuristicFactory()
    // seed = 1519638309 ; // new hyq sideWall v0
    // seed = 1519663861 ; // hyq sideWall, vplanning, screen traj
    // seed = 1519655157 ; // stairs w/ ramp screen actuels
-
+    //seed = 1521197622 ; //darpa hrp2 (Justin RSS)
     std::cout<<"seed HEURISTIC = "<<seed<<std::endl;
     srand (seed);
     hppDout(notice,"SEED for heuristic = "<<seed);
