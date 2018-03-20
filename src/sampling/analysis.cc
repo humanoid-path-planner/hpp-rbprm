@@ -243,8 +243,10 @@ namespace
 
       double distance = 0;
       Configuration_t diff(device->numberDof());
-      Configuration_t weight(6);
-      weight<<50,100,1,0.1,0.1,1; //TODO : retrive it from somewhere, hardcoded values for hrp2 legs (hight weight on leg z, low on knee)
+      //Configuration_t weight(6);
+      //weight<<50,100,1,0.1,0.1,1; //TODO : retrive it from somewhere, hardcoded values for hrp2 legs (hight weight on leg z, low on knee)
+      Configuration_t weight = Configuration_t::Ones(device->numberDof());
+
       hpp::model::difference (device, conf, fullBody->referenceConfig(), diff);
       // the difference vector depend on the index in the velocity vector, not in the configuration
       // we only sum for the index of the current limb
