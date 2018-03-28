@@ -72,14 +72,14 @@ namespace hpp{
       ssCenters<<"[";
       for(std::map<std::string,core::CollisionValidationReportPtr_t>::const_iterator it = rbReport->ROMReports.begin() ; it != rbReport->ROMReports.end() ; ++it)
       {
-        hppDout(info,"~~ for rom : "<<it->first);
+        //hppDout(info,"~~ for rom : "<<it->first);
         core::CollisionObjectPtr_t obj1 = it->second->object1;
         core::CollisionObjectPtr_t obj2 = it->second->object2;
-        hppDout(notice,"~~ collision between : "<<obj1->name() << " and "<<obj2->name());
+        //hppDout(notice,"~~ collision between : "<<obj1->name() << " and "<<obj2->name());
         fcl::CollisionResult result = it->second->result;
         // debug display :
         size_t numContact =result.numContacts();
-        hppDout(notice,"~~ number of contact : "<<numContact);
+        //hppDout(notice,"~~ number of contact : "<<numContact);
     /*    std::ostringstream ss;
         ss<<"[";
         for(size_t i = 0 ; i < numContact ; i++)
@@ -97,25 +97,27 @@ namespace hpp{
         // get intersection between the two objects :
         geom::T_Point vertices1;
         geom::BVHModelOBConst_Ptr_t model1 =  geom::GetModel(obj1->fcl());
-        hppDout(info,"vertices obj1 : "<<obj1->name()<< " ( "<<model1->num_vertices<<" ) ");
+        geom::T_Point vertices2;
+        geom::BVHModelOBConst_Ptr_t model2 =  geom::GetModel(obj2->fcl());
+
+/*      // display intersection for debug
+        //hppDout(info,"vertices obj1 : "<<obj1->name()<< " ( "<<model1->num_vertices<<" ) ");
         std::ostringstream ss1;
         ss1<<"[";
         for(int i = 0 ; i < model1->num_vertices ; ++i)
         {
           vertices1.push_back(Eigen::Vector3d(model1->vertices[i][0], model1->vertices[i][1], model1->vertices[i][2]));
           //hppDout(notice,"vertices : "<<model1->vertices[i]);
-/*          ss1<<"["<<model1->vertices[i][0]<<","<<model1->vertices[i][1]<<","<<model1->vertices[i][2]<<"]";
+          ss1<<"["<<model1->vertices[i][0]<<","<<model1->vertices[i][1]<<","<<model1->vertices[i][2]<<"]";
           if(i< (model1->num_vertices-1))
- */           ss1<<",";
+            ss1<<",";
         }
-/*        ss1<<"]";
+        ss1<<"]";
         std::cout<<"obj "<<obj1->name()<<std::endl;
         std::cout<<ss1.str()<<std::endl;
-*/
 
-        geom::T_Point vertices2;
-        geom::BVHModelOBConst_Ptr_t model2 =  geom::GetModel(obj2->fcl());
-        hppDout(info,"vertices obj2 : "<<obj2->name()<< " ( "<<model2->num_vertices<<" ) ");
+
+        //hppDout(info,"vertices obj2 : "<<obj2->name()<< " ( "<<model2->num_vertices<<" ) ");
         std::ostringstream ss2;
         ss2<<"[";
         for(int i = 0 ; i < model2->num_vertices ; ++i)
@@ -131,7 +133,7 @@ namespace hpp{
        // std::cout<<"obj "<<obj2->name()<<std::endl;
        // std::cout<<ss2.str()<<std::endl;
         hppDout(notice," "<<ss2.str());
-
+*/
 
 
 
@@ -195,8 +197,8 @@ namespace hpp{
           ti1 = pn.cross(Vector3(0,1,0));
         ti2 = pn.cross(ti1);
 
-        hppDout(info,"t"<<indexRom<<"1 : "<<ti1.transpose());
-        hppDout(info,"t"<<indexRom<<"2 : "<<ti2.transpose());
+       // hppDout(info,"t"<<indexRom<<"1 : "<<ti1.transpose());
+       // hppDout(info,"t"<<indexRom<<"2 : "<<ti2.transpose());
 
         //fill V with generating ray ([ n_i + \mu t_{i1} & n_i - \mu t_{i1} & n_i + \mu t_{i2} & n_i - \mu t_{i2}]
         Vi = MatrixXX::Zero(3,4);
@@ -214,8 +216,8 @@ namespace hpp{
           shiftY = sizeFootY*ti1;
 
 
-          hppDout(notice,"shift x = "<<shiftX.transpose());
-          hppDout(notice,"shift y = "<<shiftY.transpose());
+         // hppDout(notice,"shift x = "<<shiftX.transpose());
+         // hppDout(notice,"shift y = "<<shiftY.transpose());
 
           hppDout(notice,"Center of rom collision :  ["<<center[0]<<" , "<<center[1]<<" , "<<center[2]<<"]");
           ssCenters<<"["<<center[0]<<" , "<<center[1]<<" , "<<center[2]<<"],";
