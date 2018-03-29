@@ -84,6 +84,9 @@ namespace hpp {
 
       void fillNodeMatrices(ValidationReportPtr_t report,bool rectangularContact, double sizeFootx, double sizeFooty, double m,double mu);
 
+      void chooseBestContactSurface(ValidationReportPtr_t report,std::map<std::string,fcl::Vec3f> rom_ref_endEffector );
+
+
       Eigen::Quaterniond getQuaternion();
     private:
       fcl::Vec3f normal_;

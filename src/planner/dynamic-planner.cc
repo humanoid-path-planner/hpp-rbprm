@@ -463,7 +463,7 @@ namespace hpp {
 
 
 
-    void DynamicPlanner::computeGIWC(const core::NodePtr_t x){
+    void DynamicPlanner::computeGIWC(const core::NodePtr_t x,bool use_bestReport){
       core::ValidationReportPtr_t report;
       //randomnize the collision pair, in order to get a different surface of contact each time
       // (because only the first one in collision is considered by fcl and put in the report)
@@ -471,6 +471,10 @@ namespace hpp {
       rbprmPathValidation_->getValidator()->computeAllContacts(true);
       problem().configValidations()->validate(*(x->configuration()),report);
       rbprmPathValidation_->getValidator()->computeAllContacts(false);
+      if(use_bestReport){
+          core::RbprmNodePtr_t node = static_cast<core::RbprmNodePtr_t>(x);
+          node->chooseBestContactSurface(report,rom_ref_endEffector_);
+      }
       computeGIWC(x,report);
     }
 
@@ -495,6 +499,7 @@ namespace hpp {
     }// computeGIWC
 
 
+
     // re implement virtual method, same as base class but without the symetric edge (goal -> start)
     void DynamicPlanner::tryDirectPath ()
     {
@@ -504,10 +509,10 @@ namespace hpp {
       core::PathPtr_t validPath, projPath, path,kinoPath,paraPath;
       core::NodePtr_t initNode = roadmap ()->initNode();
       core::NodePtr_t x_jump;
-      computeGIWC(initNode);
+      computeGIWC(initNode,true);
       for (core::Nodes_t::const_iterator itn = roadmap ()->goalNodes ().begin();
            itn != roadmap ()->goalNodes ().end (); ++itn) {
-        computeGIWC(*itn);
+        computeGIWC(*itn,true);
         core::ConfigurationPtr_t q1 ((initNode)->configuration ());
         core::ConfigurationPtr_t q2 ((*itn)->configuration ());
         assert (*q1 != *q2);
