@@ -84,6 +84,7 @@ namespace hpp {
 
       void fillNodeMatrices(ValidationReportPtr_t report,bool rectangularContact, double sizeFootx, double sizeFooty, double m,double mu);
 
+      Eigen::Quaterniond getQuaternion();
     private:
       fcl::Vec3f normal_;
       RbprmValidationReportPtr_t collisionReport_;
