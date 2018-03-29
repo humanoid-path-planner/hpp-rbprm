@@ -45,6 +45,7 @@
 #include <hpp/rbprm/planner/parabola-path.hh>
 #include <hpp/core/path-validation-report.hh>
 #include <hpp/rbprm/rbprm-path-validation.hh>
+#include <hpp/rbprm/rbprm-device.hh>
 
 namespace hpp {
   namespace rbprm {
@@ -123,6 +124,26 @@ namespace hpp {
             hppDout(notice,"mu not defined, take : "<<mu_<<" as default.");
           }
 
+          // create the map of end effector reference position in root frame
+          model::RbPrmDevicePtr_t rbDevice = boost::dynamic_pointer_cast<model::RbPrmDevice>(problem.robot());
+          for(model::T_Rom::const_iterator itr = rbDevice->robotRoms_.begin() ; itr != rbDevice->robotRoms_.end() ; ++itr){
+            core::Configuration_t pos(3);
+            try{
+                boost::any vx = problem.get<boost::any> (std::string(itr->first+"_ref_x"));
+                pos[0] = boost::any_cast<double>(vx);
+                boost::any vy = problem.get<boost::any> (std::string(itr->first+"_ref_y"));
+                pos[1] = boost::any_cast<double>(vy);
+                boost::any vz = problem.get<boost::any> (std::string(itr->first+"_ref_z"));
+                pos[2] = boost::any_cast<double>(vz);
+            }catch (const std::exception& e) {
+                hppDout(notice,"No reference position for end effector contact defined for the ROM "<<itr->first);
+            }
+            rom_ref_endEffector_.insert(std::make_pair(itr->first,pos));
+            hppDout(notice,"Reference end effector position for rom : "<<itr->first);
+            hppDout(notice,""<<model::displayConfig(pos));
+          }
+
+
     }
 
     DynamicPlanner::DynamicPlanner (const Problem& problem,
@@ -165,6 +186,25 @@ namespace hpp {
       } catch (const std::exception& e) {
         mu_= 0.5;
         hppDout(notice,"mu not defined, take : "<<mu_<<" as default.");
+      }
+
+      // create the map of end effector reference position in root frame
+      model::RbPrmDevicePtr_t rbDevice = boost::dynamic_pointer_cast<model::RbPrmDevice>(problem.robot());
+      for(model::T_Rom::const_iterator itr = rbDevice->robotRoms_.begin() ; itr != rbDevice->robotRoms_.end() ; ++itr){
+        fcl::Vec3f pos = fcl::Vec3f::Zero();
+        try{
+            boost::any vx = problem.get<boost::any> (std::string(itr->first+"_ref_x"));
+            pos[0] = boost::any_cast<double>(vx);
+            boost::any vy = problem.get<boost::any> (std::string(itr->first+"_ref_y"));
+            pos[1] = boost::any_cast<double>(vy);
+            boost::any vz = problem.get<boost::any> (std::string(itr->first+"_ref_z"));
+            pos[2] = boost::any_cast<double>(vz);
+        }catch (const std::exception& e) {
+            hppDout(notice,"No reference position for end effector contact defined for the ROM "<<itr->first);
+        }
+        rom_ref_endEffector_.insert(std::make_pair(itr->first,pos));
+        hppDout(notice,"Reference end effector position for rom : "<<itr->first);
+        hppDout(notice,""<<pos);
       }
 
     }

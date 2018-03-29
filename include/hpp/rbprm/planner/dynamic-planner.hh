@@ -107,6 +107,7 @@ private:
     bool rectangularContact_;
     bool tryJump_;
     double mu_;
+    std::map<std::string,fcl::Vec3f> rom_ref_endEffector_;
 };
 /// \}
 } // namespace core
