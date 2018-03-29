@@ -27,6 +27,8 @@
 # include <hpp/util/debug.hh>
 # include <hpp/util/timer.hh>
 
+#define ignore_acc_bound 0 // testing and debug only
+
 namespace hpp{
   namespace rbprm{
 
@@ -94,6 +96,7 @@ namespace hpp{
       assert (path && "Error while casting path shared ptr"); // really usefull ? should never happen
       core::size_type configSize = problem_->robot()->configSize() - problem_->robot()->extraConfigSpace().dimension ();
 
+      #if !ignore_acc_bound
       // check if acceleration is valid after each sign change :
       hppStartBenchmark(INTERMEDIATE_ACCELERATION_CHECKS);
       core::vector_t t0 = kinoPath->getT0();
@@ -169,7 +172,7 @@ namespace hpp{
       hppDout(notice,"totalTimeValidated = "<<totalTimeValidated_);
       hppStopBenchmark(INTERMEDIATE_ACCELERATION_CHECKS);
       hppDisplayBenchmark(INTERMEDIATE_ACCELERATION_CHECKS);
-
+      #endif
       return kinoPath;
     }
 
@@ -307,12 +310,14 @@ namespace hpp{
       assert(node && "Unable to cast near node to rbprmNode");
       // compute direction (v) :
       Vector3 aMax ;
+
+
       // ###################################
-/*
+#if ignore_acc_bound
       aMax = Vector3::Ones(3)*aMaxFixed_;
       setAmax(aMax);
       return node;
-*/
+#endif
       // ####################################
 
       hppDout(notice,"Set bounds between : ");
@@ -387,12 +392,7 @@ namespace hpp{
 
       hppDout(info,"Amax after min : "<<alpha0);
       aMax = alpha0*direction;
-      //BENCH ONLY : #############
-    /* aMax[0]=aMaxFixed_;
-      aMax[1]=aMaxFixed_;
-      aMax[2]=aMaxFixed_;
-*/
-      // #########################
+
       if((aMax[2] < aMaxFixed_Z_))
         aMax[2] = aMaxFixed_Z_;
       setAmax(aMax);
