@@ -83,7 +83,7 @@ protected:
      * @brief computeGIWC compute the GIWC for the node configuration and fill the node attribut, get validation report and call the second method
      * @param x the node
      */
-    void computeGIWC(const core::NodePtr_t x, bool use_bestReport = false);
+    void computeGIWC(const core::NodePtr_t x, bool use_bestReport = true);
 
     core::PathPtr_t extendInternal (core::ConfigurationPtr_t& qProj_, const core::NodePtr_t& near,
                     const core::ConfigurationPtr_t& target, bool reverse=false);
