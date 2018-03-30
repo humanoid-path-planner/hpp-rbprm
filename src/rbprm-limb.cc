@@ -178,8 +178,8 @@ namespace hpp {
       , sampleContainer_(fileStream, loadValues)
       , disableEndEffectorCollision_(disableEndEffectorCollision)
       , grasps_(grasps)
-      , effectorReferencePosition_()
-      , kinematicConstraints_(reachability::loadConstraintsFromObj("package://hpp-rbprm-corba/com_inequalities/"+limb_->name()+"_com_constraints.obj"))
+      , effectorReferencePosition_(computeEffectorReferencePosition(limb_,effector_->name()))
+      , kinematicConstraints_(reachability::loadConstraintsFromObj("package://hpp-rbprm-corba/com_inequalities/"+limb_->name()+"_com_constraints.obj",0.3))
     {
       // NOTHING
     }
