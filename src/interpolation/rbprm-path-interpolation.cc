@@ -166,10 +166,10 @@ namespace hpp {
             State& newState = rep.result_;
 
 
-            const bool  sameAsPrevious = rep.success_ && rep.contactMaintained_;
+            const bool  sameAsPrevious = rep.success_ && rep.contactMaintained_ && !rep.contactCreated_;
             const bool& multipleBreaks = rep.multipleBreaks_;
             const bool& respositioned = rep.repositionedInPlace_;
-            hppDout(notice,"success : "<<rep.success_<<" ; sameAsPrevious : "<<sameAsPrevious<<" ; multipleBreak : "<<multipleBreaks<<" ; repositionned : "<<respositioned<<" ; allowFailure : "<<allowFailure<<" ; status :"<<rep.status_);
+            hppDout(notice,"success : "<<rep.success_<<" ; contacts maintained  : "<<rep.contactMaintained_<<" ; contact created : "<<rep.contactCreated_<<" ; sameAsPrevious : "<<sameAsPrevious<<" ; multipleBreak : "<<multipleBreaks<<" ; repositionned : "<<respositioned<<" ; allowFailure : "<<allowFailure<<" ; status :"<<rep.status_);
 
             if(allowFailure && (!rep.success_ || rep.multipleBreaks_))
             {
