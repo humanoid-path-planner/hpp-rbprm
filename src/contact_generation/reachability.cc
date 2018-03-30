@@ -103,7 +103,7 @@ bool intersectionExist(const std::pair<MatrixXX, VectorX> &Ab, const fcl::Vec3f&
 
     hppDout(notice,"Call solveur solveIntersection");
     hppDout(notice,"init = "<<init);
-    bezier_com_traj::ResultData res = bezier_com_traj::solveIntersection(Ab,computeDistanceCost(c0),init);
+    bezier_com_traj::ResultData res = bezier_com_traj::solve(Ab,computeDistanceCost(c0),init);
     c_out = res.x;
     hppDout(notice,"success Solveur solveIntersection = "<<res.success_);
     hppDout(notice,"x = ["<<c_out[0]<<","<<c_out[1]<<","<<c_out[2]<<"]");
