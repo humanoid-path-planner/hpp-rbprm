@@ -723,7 +723,7 @@ projection::ProjectionReport repositionContacts(ContactGenHelper& helper)
             params.tfWorldRoot_.setQuatRotation(fcl::Quaternion3f(helper.workingState_.configuration_[3],helper.workingState_.configuration_[4],helper.workingState_.configuration_[5],helper.workingState_.configuration_[6]));
 
             projection::ProjectionReport rep = contact::generate_contact(helper,*cit, params);
-            if(rep.status_ == STABLE_CONTACT)
+            if(rep.status_ == STABLE_CONTACT || REACHABLE_CONTACT)
             {
                 nContactName = *cit;
                 notFound = false;
