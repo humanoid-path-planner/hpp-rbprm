@@ -243,16 +243,48 @@ namespace
 
       double distance = 0;
       Configuration_t diff(device->numberDof());
-      //Configuration_t weight(6);
-      //weight<<50,100,1,0.1,0.1,1; //TODO : retrive it from somewhere, hardcoded values for hrp2 legs (hight weight on leg z, low on knee)
-      Configuration_t weight = Configuration_t::Ones(device->numberDof());
+      Configuration_t weight = Configuration_t::Zero(limb->effector_->rankInVelocity() - limb->limb_->rankInVelocity()+1);
 
+      // compute default weight vector : (TODO add an API to set custom weight vector)
+      // FIXME : lot of assumptions are made here, but they are true for the most common robots used
+      // * the robot's limbs only contain revolute joint
+      // * the robot's root is oriented with x forward and z up (ie. the most common direction of deplacement is along x)
+
+      // by looking at the jacobian of each joint we can check around wich axis the joint is.
+      // We set the weight depending on the axis of each joint :
+      // y : used to move forward, low weight
+      // z : use to turn, medium weight
+      // x : only used for less common behaviour like straffing, high weight
+      // prismatic joint ?? high weight
+      size_t i_weight = 0;
+    /*  hppDout(notice,"effector : "<<limb->effector_->name());
+      hppDout(notice,"effector id vel= "<<limb->effector_->rankInVelocity());
+      hppDout(notice,"effector id pos= "<<limb->effector_->rankInConfiguration());
+      hppDout(notice,"joint at effector id vel : "<<device->getJointAtVelocityRank(limb->effector_->rankInVelocity())->name());
+      hppDout(notice,"joint at effector id pos : "<<device->getJointAtConfigRank(limb->effector_->rankInConfiguration())->name());
+
+      hppDout(notice,"limb     id vel= "<<limb->limb_->rankInVelocity());
+      hppDout(notice,"limb     id pos= "<<limb->limb_->rankInConfiguration());
+*/
+      for (size_t i = limb->limb_->rankInVelocity() ; i <= limb->effector_->rankInVelocity() ; ++i){
+          model::vector_t jointJacobian= device->getJointAtVelocityRank(i)->jacobian().block<6,1>(0,i).transpose();
+          //hppDout(notice,"Jacobian of joint "<<device->getJointAtVelocityRank(i)->name()<<" at id = "<<i);
+          //hppDout(notice,"joint column : \n"<<jointJacobian);
+          if(fabs(jointJacobian[4]) > 0.5){ // rot y
+            weight[i_weight]=0.5;
+          }else if(fabs(jointJacobian[5]) > 0.5){ // rot z
+              weight[i_weight]=50.;
+          }else{ // prismatic or rot x
+              weight[i_weight]=100.;
+          }
+          i_weight++;
+      }
       hpp::model::difference (device, conf, fullBody->referenceConfig(), diff);
       // the difference vector depend on the index in the velocity vector, not in the configuration
       // we only sum for the index of the current limb
      // hppDout(notice,"ref config rank: "<<cit->second->limb_->rankInVelocity()<<" ; "<<cit->second->effector_->rankInVelocity());
       for (size_t i = limb->limb_->rankInVelocity() ; i <= limb->effector_->rankInVelocity() ; ++i){
-        distance += (diff[i]*diff[i])*weight[i-limb->limb_->rankInVelocity()]; // abs value because we don't want the real distance but only how different we are from the reference.
+        distance += (diff[i]*diff[i])*weight[i-limb->limb_->rankInVelocity()];
       }
       // This is an heuristic and not a cost, a null distance is the best result
       // TODO : replace hardcoded value with the real max
