@@ -181,7 +181,7 @@ double fixedStepHeuristic(const sampling::Sample& sample,
         hppDout(notice,"In heuristic : comPath was not provided, use default heuristic");
         return DynamicWalkHeuristic(sample,direction,normal,params);
     }
-    hppDout(notice,"FixedStep heuristic : comPath exist");
+    //hppDout(notice,"FixedStep heuristic : comPath exist");
     bool success;
     // Compute the 'ideal' contact position in t_step
     Configuration_t q_target = (*params.comPath_)(params.currentPathId_+t_step,success).head<7>();
@@ -189,12 +189,12 @@ double fixedStepHeuristic(const sampling::Sample& sample,
     tRootTarget.setTranslation(fcl::Vec3f(q_target.head<3>()));
     fcl::Quaternion3f quatRoot(q_target[3],q_target[4],q_target[5],q_target[6]);
     tRootTarget.setQuatRotation(quatRoot);
-    hppDout(notice,"heuristic : tRootTarget = "<<tRootTarget);
+    //hppDout(notice,"heuristic : tRootTarget = "<<tRootTarget);
     fcl::Vec3f pTarget = (tRootTarget * params.limbReferenceOffset_).getTranslation();
-    hppDout(notice,"heuristic : pTarget = ["<<pTarget[0]<<","<<pTarget[1]<<","<<pTarget[2]<<"]");
+    //hppDout(notice,"heuristic : pTarget = ["<<pTarget[0]<<","<<pTarget[1]<<","<<pTarget[2]<<"]");
     // FIXME : we could factorize all of the above and only do it once for each position of the CoM. But this require to know t_step in contact_generation::generate_contact ...
     fcl::Vec3f pSample = (params.tfWorldRoot_ * sample.effectorPosition_).getTranslation();
-    return (5.-(pSample-pTarget).squaredNorm()) + sample.staticValue_; // 5 - because it's an heuristic and not a cost
+    return (5.-(pSample-pTarget).squaredNorm()) + sample.staticValue_; // 10 - because it's an heuristic and not a cost
 }
 
 

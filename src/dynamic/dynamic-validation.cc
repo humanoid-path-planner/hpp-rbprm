@@ -35,7 +35,7 @@ namespace hpp {
 
 
     bool DynamicValidation::validate (const core::Configuration_t& config, core::ValidationReportPtr_t& validationReport){
-      //hppDout(notice,"Begin dynamic validation");
+      hppDout(notice,"Begin dynamic validation");
      // hppStartBenchmark(DYNAMIC_VALIDATION);
       // test if the same number of ROM are in collision :
       core::RbprmValidationReportPtr_t rbReport = boost::dynamic_pointer_cast<core::RbprmValidationReport> (validationReport);
@@ -69,7 +69,7 @@ namespace hpp {
       }
        // if !sameContact, compute new contacts infos and test acceleration
       if(sameContacts && initContacts_){
-       // hppDout(notice,"initial contacts still active");
+       hppDout(notice,"initial contacts still active");
        // hppStopBenchmark(DYNAMIC_VALIDATION);
        // hppDisplayBenchmark(DYNAMIC_VALIDATION);
         return true;
@@ -78,21 +78,21 @@ namespace hpp {
 
       if(sameContacts){ // new contacts already computed
         if(config.segment<3>(configSize-3) == lastAcc_){
-         // hppDout(notice,"this acceleration is already verified");
+            hppDout(notice,"this acceleration is already verified");
         //  hppStopBenchmark(DYNAMIC_VALIDATION);
         //  hppDisplayBenchmark(DYNAMIC_VALIDATION);
           return true;
         }else{ // new acceleration, check if valid
           lastAcc_ = config.segment<3>(configSize-3);
           bool aValid = sEq_->checkAdmissibleAcceleration(H_,h_,lastAcc_);
-         // hppDout(notice,"new acceleration : "<<lastAcc_.transpose()<<", valid = "<<aValid);
+            hppDout(notice,"new acceleration : "<<lastAcc_.transpose()<<", valid = "<<aValid);
         //  hppStopBenchmark(DYNAMIC_VALIDATION);
         //  hppDisplayBenchmark(DYNAMIC_VALIDATION);
           return aValid;
         }
       }else{ // changes in contacts, recompute the matrices and check the acceleration :
         initContacts_ = false;
-        //hppDout(notice,"new contacts ! for config = "<<model::displayConfig(config));
+        hppDout(notice,"new contacts ! for config = "<<model::displayConfig(config));
         lastAcc_ = config.segment<3>(configSize-3);
         lastReport_=rbReport;
         core::ConfigurationPtr_t q = core::ConfigurationPtr_t (new core::Configuration_t(config));
@@ -105,7 +105,7 @@ namespace hpp {
 
         // test the acceleration
         bool aValid = sEq_->checkAdmissibleAcceleration(H_,h_,lastAcc_);
-       // hppDout(notice,"new acceleration : "<<lastAcc_.transpose()<<", valid = "<<aValid);
+          hppDout(notice,"new acceleration : "<<lastAcc_.transpose()<<", valid = "<<aValid);
        // hppStopBenchmark(DYNAMIC_VALIDATION);
       //  hppDisplayBenchmark(DYNAMIC_VALIDATION);
         return aValid;
