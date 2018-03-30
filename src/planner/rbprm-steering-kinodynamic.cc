@@ -69,7 +69,7 @@ namespace hpp{
         return core::PathPtr_t();
       hppStopBenchmark(FIND_A_MAX);
       hppDisplayBenchmark(FIND_A_MAX);
-      if(aMax_.norm() <= 0)
+      if((aMax_[0]+aMax_[1]) <= 0)
         return core::PathPtr_t();
       //return core::steeringMethod::Kinodynamic::impl_compute(*x->configuration(),q2);
       hppStartBenchmark(steering_kino);
@@ -185,7 +185,7 @@ namespace hpp{
         return core::PathPtr_t();
       hppStopBenchmark(FIND_A_MAX);
       hppDisplayBenchmark(FIND_A_MAX);
-      if(aMax_.norm() <= 0)
+      if((aMax_[0]+aMax_[1]) <= 0)
         return core::PathPtr_t();
       hppStartBenchmark(steering_kino);
       core::PathPtr_t path = core::steeringMethod::Kinodynamic::impl_compute(q1,*x->configuration());
