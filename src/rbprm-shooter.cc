@@ -211,6 +211,7 @@ namespace
      // seed = 1518874734 ; // stairs test transition
       //seed = 1519050403 ; //platform hrp2
      // seed = 1519487130 ; // stair no ramp
+     // seed = 1522388624; // error stairs
       srand (seed);
       hppDout(notice,"&&&&&& SEED = "<<seed);
       std::cout<<"seed = "<<seed<<std::endl;
