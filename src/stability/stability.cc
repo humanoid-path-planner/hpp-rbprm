@@ -226,7 +226,7 @@ const fcl::Vec3f comfcl = comcptr->com();*/
         hppDout(notice,"Setup cone contacts : ");
         hppDout(notice,"position : \n"<<positions);
         hppDout(notice,"normal : \n"<<normals);
-        sEq.setNewContacts(positions,normals,friction,alg);
+        sEq.setNewContacts(positions,normals,friction,alg,graspIndex,1.);
         return com;
     }
 
@@ -287,11 +287,15 @@ const fcl::Vec3f comfcl = comcptr->com();*/
         double res;
         LP_status status;
         if(alg == EQUILIBRIUM_ALGORITHM_PP)
-        {
+        {            
             hppDout(notice,"isStable Called with STATIC_EQUILIBRIUM_ALGORITHM_PP");
             bool isStable(false);
-            status = staticEquilibrium.checkRobustEquilibrium(com,isStable);
-            res = isStable? 1. : -1.;
+            if(fullbody->staticStability()){
+                status = staticEquilibrium.checkRobustEquilibrium(com,isStable);
+            }else{
+                status = staticEquilibrium.checkRobustEquilibrium(com,acc,isStable);
+            }
+            res = isStable? std::numeric_limits<double>::max() : -1.; // FIXME robustness not implemented with PP algorithm ...
         }
         else // STATIC_EQUILIBRIUM_ALGORITHM_DLP
         {
