@@ -271,15 +271,18 @@ namespace
           //hppDout(notice,"Jacobian of joint "<<device->getJointAtVelocityRank(i)->name()<<" at id = "<<i);
           //hppDout(notice,"joint column : \n"<<jointJacobian);
           if(fabs(jointJacobian[4]) > 0.5){ // rot y
-            weight[i_weight]=0.5;
+            weight[i_weight]=1;
           }else if(fabs(jointJacobian[5]) > 0.5){ // rot z
-              weight[i_weight]=50.;
+              weight[i_weight]=10.;
           }else{ // prismatic or rot x
-              weight[i_weight]=100.;
+              weight[i_weight]=50.;
           }
           i_weight++;
       }
+     // hppDout(notice,"Weight vector in reference analysis, for limb : "<<limb->limb_->name());
+     // hppDout(notice,""<<model::displayConfig(weight));
       hpp::model::difference (device, conf, fullBody->referenceConfig(), diff);
+     // hppDout(notice,"Reference config in analysis : "<<model::displayConfig(fullBody->referenceConfig()));
       // the difference vector depend on the index in the velocity vector, not in the configuration
       // we only sum for the index of the current limb
      // hppDout(notice,"ref config rank: "<<cit->second->limb_->rankInVelocity()<<" ; "<<cit->second->effector_->rankInVelocity());
