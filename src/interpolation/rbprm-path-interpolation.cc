@@ -139,6 +139,7 @@ namespace hpp {
         rbprm::T_StateFrame states;
         states.push_back(std::make_pair(currentVal, this->start_));
         Configuration_t lastConfig(this->start_.configuration_);
+        CIT_Configuration lastIterator = configs.begin();
         std::size_t nbRecontacts = 0;
         std::size_t repos = 0;
         bool allowFailure = true;
@@ -241,6 +242,8 @@ if (nbFailures > 1)
                     hppDout(notice,"Abort interpolate, too much repositionning");
                     return FilterStates(states, filterStates);
                 }
+                cit = lastIterator;
+                currentVal = states.back().first;
             }
 
             newState.nbContacts = newState.contactNormals_.size();
@@ -264,6 +267,7 @@ if (nbFailures > 1)
             if(!sameAsPrevious){
                 states.push_back(std::make_pair(currentVal, newState));
                 hppDout(notice,"new state added at index "<<states.size()-1<<" conf = r(["<<model::displayConfig(states.back().second.configuration_)<<"])");
+                lastIterator = cit;
             }else{
                 hppDout(notice,"Same as previous, new config = r(["<<model::displayConfig(newState.configuration_)<<"])");
             }
