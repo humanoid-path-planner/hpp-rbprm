@@ -636,7 +636,7 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
         hppDout(notice,"Try with timings : "<<current_timings.transpose());
         hppDout(notice,"Call solveOneStep");
         hppStartBenchmark(SOLVE_TRANSITION_ONE_STEP);
-        resBezier = bezier_com_traj::solveOnestep(pData,current_timings,init_guess,numPointsPerPhases,feasabilityTreshold);
+        resBezier = bezier_com_traj::computeCOMTraj(pData,current_timings,init_guess,numPointsPerPhases,feasabilityTreshold);
         hppStopBenchmark(SOLVE_TRANSITION_ONE_STEP);
         hppDisplayBenchmark(SOLVE_TRANSITION_ONE_STEP);
 
