@@ -59,7 +59,7 @@ namespace hpp {
                               const ConstraintFactory_T& constraintFactory,
                               core::ProblemPtr_t referenceProblem,
                               core::PathPtr_t refPath,
-                              const model::value_type error_treshold = 0.0000001)
+                              const model::value_type error_treshold = 1e-3)
              : fullbody_(fullbody)
              , fullBodyDevice_(fullbody->device_->clone())
              , rootProblem_(fullBodyDevice_)
