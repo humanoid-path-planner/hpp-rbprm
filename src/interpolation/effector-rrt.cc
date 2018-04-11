@@ -754,7 +754,7 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
 
         std::vector<PathVectorPtr_t> listPathBezier = fitBeziersToPath(fullbody,effector,comPath,fullBodyComPath,startState,nextState);
         // iterate over all bezier path and try to find a whole body motion that can follow it :
-        const size_t maxIterationRRT = 200; //FIXME : adjust value for more complexe environnement
+        const size_t maxIterationRRT = 1000; //FIXME : adjust value for more complexe environnement
         std::vector<double> weightRRT; // only required for debug
         weightRRT.push_back(0);
         weightRRT.push_back(0.5);
