@@ -515,8 +515,8 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
         c0[2]=0; // replace with normal instead of z axis
         c1[2]=0;
         const double dist_translation = (c1-c0).norm();
-        const double timeDelay = 0.; //(percentage of the total) this is the time during the 'single support' phase where the feet don't move. It is needed to allow a safe mass transfer without exiting the flexibility.
-        const double totalTime = comPath->length()*(1-2*timeDelay);
+        const double timeDelay = 0.05; // this is the time during the 'single support' phase where the feet don't move. It is needed to allow a safe mass transfer without exiting the flexibility.
+        const double totalTime = comPath->length()-2*timeDelay;
         //const double ratioTimeTakeOff=0.1;// percentage of the total time // was 0.1
 
 
@@ -531,8 +531,8 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
            // timeTakeoff = 0.1;
            // p_max = 0.1;
            // p_min = 0.05;
-            timeTakeoff = 0.1;
-            p_max = 0.05;
+            timeTakeoff = 0.2;
+            p_max = 0.03;
             p_min = 0.01;
         }else{
             timeTakeoff = 0.07;
@@ -661,16 +661,16 @@ buildPredefinedPath(endEffectorDevice,nextNormal,endConfig,posOffset,-velOffset,
         c0[2]=0; // replace with normal instead of z axis
         c1[2]=0;
         const double dist_translation = (c1-c0).norm();
-        const double timeDelay = 0.03; //(percentage of the total) this is the time during the 'single support' phase where the feet don't move. It is needed to allow a safe mass transfer without exiting the flexibility.
-        const double totalTime = comPath->length()*(1-2*timeDelay);
+        const double timeDelay = 0.05; // this is the time during the 'single support' phase where the feet don't move. It is needed to allow a safe mass transfer without exiting the flexibility.
+        const double totalTime = comPath->length()-2*timeDelay;
         //const double ratioTimeTakeOff=0.1;// percentage of the total time // was 0.1
 
 
 
        // const double timeTakeoff = totalTime*ratioTimeTakeOff; // percentage of the total time
-        double timeTakeoff = 0.01; // it's a minimum time, it can be increased //Hyq
+        double timeTakeoff = 0.2; // it's a minimum time, it can be increased
         const double p_max = 0.03; // offset for the higher point in the curve
-        const double p_min = 0.002; // min offset at the end of the predefined trajectory
+        const double p_min = 0.01; // min offset at the end of the predefined trajectory
 
         // values for hrp2 :
         /*double timeTakeoff = 0.1; // it's a minimum time, it can be increased //HRP2
