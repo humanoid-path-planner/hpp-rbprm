@@ -768,7 +768,7 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
 
         core::PathPtr_t interpolatedPath;
         core::PathVectorPtr_t solutionPath;
-        for(std::vector<PathVectorPtr_t>::const_iterator it_path = listPathBezier.begin() ; it_path != listPathBezier.end() ; ++it_path , ++it){
+        for(std::vector<PathVectorPtr_t>::const_iterator it_path = listPathBezier.begin() ; it_path != listPathBezier.end() && !success_rrt; ++it_path , ++it){
 
             // ## compute whole body motion that follow the reference
             EffectorRRTShooterFactory shooterFactory(reducedComPath);
