@@ -296,12 +296,22 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         hppDout(notice,"ddc1 = "<<pData.ddc1_.transpose());
         hppDout(notice,"Compute waypoints for takeOff phase : ");
         std::vector<bezier_t::point_t> pts;
-        pts = bezier_com_traj::computeConstantWaypoints(pData,time,7);
         BezierPathPtr_t refEffector;
-        if (init)
+        if (init){
+            pts = bezier_com_traj::computeConstantWaypointsInitPredef(pData,time);
             refEffector= BezierPath::create(endEffectorDevice,pts.begin(),pts.end(),config,offsetConfig,core::interval_t(0.,time));
-        else
+            pData.j1_ = refEffector->getBezier()->derivate(time,3);
+            hppDout(notice,"New final jerk : "<<pData.j1_.transpose());
+        }
+        else{
+            pts = bezier_com_traj::computeConstantWaypointsGoalPredef(pData,time);
             refEffector= BezierPath::create(endEffectorDevice,pts.begin(),pts.end(),offsetConfig,config,core::interval_t(0.,time));
+            pData.j0_ = refEffector->getBezier()->derivate(0.,3);
+            hppDout(notice,"New final jerk : "<<pData.j0_.transpose());
+            }
+
+        // get the final / initial jerk and set it in problemData :
+
 
         hppDout(notice,"Path Bezier created");
         /*
@@ -363,14 +373,14 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
         return refEffectorPath;
     }
 
+    /*
     void computePredefConstants(double dist_translation,double p_max,double p_min,double t_total,double &t_predef, double &posOffset, double &velOffset,double &a_max_predefined ){
         double timeMid= t_total - (2*t_predef);
         //const double jerk_mid = ((1./6.)*(1/8.)*timeMid*timeMid*timeMid);
         //const double jerk = p_max / ((0.5*t_predef*(timeMid*timeMid/4.)) + (0.25*t_predef*t_predef*timeMid) + ((1./6.)*t_predef*t_predef*t_predef) - (2.*t_predef/timeMid));
         double jerk = 1.5*p_max / (((1./6.)*t_predef*t_predef*t_predef) + ((1./6.)*t_predef*t_predef*timeMid) + ((1./24.)*t_predef*timeMid*timeMid));
-       // const double jerk = 15.;
         a_max_predefined = jerk * t_predef;
-
+        hppDout(notice,"computed jerk in computePredefConstant : "<<jerk);
 
         const double a_max_translation  = dist_translation*8 /(timeMid*timeMid);
         hppDout(notice,"A_max predefined = "<<a_max_predefined<<" ; translation : "<<a_max_translation);
@@ -387,8 +397,53 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
 
 
      }
+*/
+
+    void computePredefConstants(double dist_translation,double p_max,double p_min,double t_total,double &t_predef, double &posOffset, double &velOffset,double &a_max_predefined ){
+        double timeMid= t_total - (2*t_predef);
+
+        const double dddjerk = 8000.;
+        //const double djerk = ddjerk*t_predef;
+        const double jerk = (1./6.)*dddjerk*t_predef*t_predef* t_predef;
+        a_max_predefined = (1./24.)*dddjerk *t_predef*t_predef*t_predef* t_predef;
+        hppDout(notice,"computed jerk in computePredefConstant : "<<jerk);
+
+        velOffset = (1./120.) * dddjerk * t_predef * t_predef * t_predef * t_predef* t_predef;
+        posOffset = (1./720.) * dddjerk * t_predef * t_predef * t_predef* t_predef * t_predef* t_predef;
+        hppDout(notice,"pos offset = "<<posOffset<<" ; jerk = "<<jerk<<" ; acc = "<<a_max_predefined<<" ; vel = "<<velOffset);
+     }
+/*
+    void computePredefConstants(double dist_translation,double p_max,double p_min,double t_total,double &t_predef, double &posOffset, double &velOffset,double &a_max_predefined ){
+        double timeMid= t_total - (2*t_predef);
+
+        const double ddjerk = 500.;
+        //const double djerk = ddjerk*t_predef;
+        const double jerk = 0.5*ddjerk*t_predef*t_predef;
+        a_max_predefined = (1./6.)*ddjerk *t_predef*t_predef*t_predef;
+        hppDout(notice,"computed jerk in computePredefConstant : "<<jerk);
+
+        velOffset = (1./24.) * ddjerk * t_predef * t_predef * t_predef * t_predef;
+        posOffset = (1./120.) * ddjerk * t_predef * t_predef * t_predef* t_predef * t_predef;
+        hppDout(notice,"pos offset = "<<posOffset<<" ; jerk = "<<jerk<<" ; acc = "<<a_max_predefined<<" ; vel = "<<velOffset);
+     }
+*/
+/*
+    void computePredefConstants(double dist_translation,double p_max,double p_min,double t_total,double &t_predef, double &posOffset, double &velOffset,double &a_max_predefined ){
+        double timeMid= t_total - (2*t_predef);
+
+        const double djerk = 20.;
+        //const double djerk = ddjerk*t_predef;
+        const double jerk = djerk*t_predef;
+        a_max_predefined = 0.5*djerk *t_predef*t_predef;
+        hppDout(notice,"computed jerk in computePredefConstant : "<<jerk);
+
+        velOffset = (1./6.) * djerk * t_predef * t_predef * t_predef ;
+        posOffset = (1./24.) * djerk * t_predef * t_predef * t_predef* t_predef ;
+        hppDout(notice,"pos offset = "<<posOffset<<" ; jerk = "<<jerk<<" ; acc = "<<a_max_predefined<<" ; vel = "<<velOffset);
 
 
+     }
+*/
     /*void computePredefConstants(double dist_translation,double p_max,double p_min,double t_total,double &t_predef, double &posOffset, double &velOffset,double &a_max_predefined ){
         double timeMid= t_total - (2*t_predef);
         posOffset = (p_max/(1+(timeMid/(2*t_predef))));
@@ -521,20 +576,23 @@ buildPredefinedPath(endEffectorDevice,nextNormal,endConfig,posOffset,-velOffset,
         pDataMid.dc1_=pDataLanding.dc0_;
         pDataMid.ddc0_=pDataTakeoff.ddc1_;
         pDataMid.ddc1_=pDataLanding.ddc0_;
+        pDataMid.j0_ = pDataTakeoff.j1_;
+        pDataMid.j1_ = pDataLanding.j0_;
 
         hppDout(notice,"CREATE BEZIER for constraints : ");
         hppDout(notice,"c0   = "<<pDataMid.c0_.transpose());
         hppDout(notice,"dc0  = "<<pDataMid.dc0_.transpose());
         hppDout(notice,"ddc0 = "<<pDataMid.ddc0_.transpose());
+        hppDout(notice,"j0   = "<<pDataMid.j0_.transpose());
         hppDout(notice,"c1   = "<<pDataMid.c1_.transpose());
         hppDout(notice,"dc1  = "<<pDataMid.dc1_.transpose());
         hppDout(notice,"ddc1 = "<<pDataMid.ddc1_.transpose());
+        hppDout(notice,"j1   = "<<pDataMid.j1_.transpose());
 
         hppDout(notice,"Distance traveled by the end effector : "<<(pDataMid.c1_-pDataMid.c0_).norm());
         hppDout(notice,"Distance : "<<(pDataMid.c1_-pDataMid.c0_).transpose());
         hppDout(notice,"Time = "<<timeMid);
 
-        //endEffPath.setOffset(pDataMid.c0_ - endEffPath(0));
 
         // ## call solver :
         bezier_Ptr refEffectorMidBezier;
