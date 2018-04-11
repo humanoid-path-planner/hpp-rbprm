@@ -8,7 +8,7 @@
 #include <hpp/util/timer.hh>
 
 #ifndef QHULL
-#define QHULL 1
+#define QHULL 0
 #endif
 
 #ifndef STAT_TIMINGS
