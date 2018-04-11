@@ -194,7 +194,14 @@ double fixedStepHeuristic(const sampling::Sample& sample,
     //hppDout(notice,"heuristic : pTarget = ["<<pTarget[0]<<","<<pTarget[1]<<","<<pTarget[2]<<"]");
     // FIXME : we could factorize all of the above and only do it once for each position of the CoM. But this require to know t_step in contact_generation::generate_contact ...
     fcl::Vec3f pSample = (params.tfWorldRoot_ * sample.effectorPosition_).getTranslation();
-    return (5.-(pSample-pTarget).squaredNorm()) + sample.staticValue_; // 10 - because it's an heuristic and not a cost
+/*    hppDout(notice,"Heuristic : norm     = "<<(pSample-pTarget).squaredNorm());
+    hppDout(notice,"Heuristic : 5 - norm = "<<5-(pSample-pTarget).squaredNorm());
+    hppDout(notice,"Heuristic : static   = "<<sample.staticValue_);
+    hppDout(notice,"Heuritic :           = "<<(5.-(pSample-pTarget).squaredNorm()) + sample.staticValue_);
+ */
+    if((pSample-pTarget).squaredNorm() > 1)
+        hppDout(warning,"WARNING : In fixed step heuristic, norm is too high. You should change the hardcoded max value ");
+    return (1.-(pSample-pTarget).squaredNorm()) + sample.staticValue_; // 1 - because it's an heuristic and not a cost
 }
 
 
