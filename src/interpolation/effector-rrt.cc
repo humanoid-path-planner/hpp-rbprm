@@ -888,7 +888,7 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
                 Create6DEffectorConstraint<EffectorRRTHelper, core::PathPtr_t  >(helper, refFullbody_, *cit);
             }
         }
-        if(endEffectorDevice_ && false){ // TEST disable orientation constraint for test
+        if(endEffectorDevice_ && true){ // TEST disable orientation constraint for test
             hppDout(notice,"EndEffectorDevice provided, add orientation constraint for the end effector ");
             CreateOrientationConstraint<EffectorRRTHelper, core::PathPtr_t  >(helper,refEff_ , effector_,endEffectorDevice_);
         }
