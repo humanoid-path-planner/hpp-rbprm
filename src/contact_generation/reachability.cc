@@ -545,14 +545,21 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
                                0.3 , 0.05, 0.15;
                         // hyq flat
 */
-           /* timings_matrix <<
-                                         1, 0.6, 1, // found with script
-                                            1.5, 0.6, 1,
-                                            0.8,0.6,0.8, // script good
+            timings_matrix = MatrixXX(10,3);
+            timings_matrix <<
+                                        0.3, 1.2, 0.3,
+                                        0.6, 1.2, 0.6,
+                                        1. , 1.2, 1.,
+                                        0.3 , 0.8, 0.3,
+                                        0.3 , 0.7, 0.3,
+                                         0.6 , 0.8, 0.6,
+                                         1, 0.7, 1, // found with script
+                                            1.5, 0.7, 1,
+                                            0.8,0.8,0.8, // script good
                                           0.8 , 0.7, 0.8;
                                     // hyq flat
-*/
 
+/*
             timings_matrix = MatrixXX(37,3);
             timings_matrix <<
                               0.3,0.6,0.3,
@@ -596,7 +603,7 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
                                 0.65,0.05,0.05,
                                 0.8,0.6,0.8,
                                 0.4,0.2,0.4;
-
+*/
             current_timings = timings_matrix.block<1,3>(0,0);
             #endif
             total_time = current_timings[0] + current_timings[1] + current_timings[2];
