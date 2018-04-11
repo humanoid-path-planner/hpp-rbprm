@@ -60,6 +60,7 @@ using namespace core;
                            const  std::size_t numOptimizations,
                            const bool keepExtraDof)
     {
+        hppDout(notice,"Begin interpolation::comRRT.");
         //check whether there is a contact variations
         std::vector<std::string> variations = nextState.allVariations(startState, extractEffectorsName(fullbody->GetLimbs()));
         core::PathPtr_t guidePath;
@@ -67,8 +68,13 @@ using namespace core;
         T_StateFrame stateFrames;
         stateFrames.push_back(std::make_pair(comPath->timeRange().first, startState));
         stateFrames.push_back(std::make_pair(comPath->timeRange().second, nextState));
+        hppDout(notice,"comRRT : comPath length : "<<comPath->length());
+        hppDout(notice,"comRRT : startState : r(["<<model::displayConfig(startState.configuration_)<<"])");
+        hppDout(notice,"comRRT : nextState  : r(["<<model::displayConfig(nextState.configuration_)<<"])");
+
         if(variations.empty())
         {
+            hppDout(notice,"No contact variation, use comRRT.");
             std::vector<std::string> fixed = nextState.fixedContacts(startState);
             model::DevicePtr_t device = fullbody->device_->clone();
             /*if(keepExtraDof)
@@ -93,11 +99,14 @@ using namespace core;
             ProblemTargetPtr_t target = problemTarget::GoalConfigurations::create (planner);
             rootProblem.target (target);
             rootProblem.addGoalConfig(end);
+            hppDout(notice,"Start solve");
             guidePath = planner->solve();
+            hppDout(notice,"Solve success");
             //return guidePath;
         }
         else
         {
+            hppDout(notice,"Contact variations, use limbRRT.");
             guidePath = limbRRT(fullbody,referenceProblem,states.begin(),states.begin()+1,numOptimizations);
         }
         ComRRTShooterFactory shooterFactory(guidePath);
@@ -106,8 +115,10 @@ using namespace core;
     RbPrmProfiler& watch = getRbPrmProfiler();
     watch.start("com_traj");
 #endif
+        hppDout(notice,"Start interpolateStatesFromPath");
         core::PathPtr_t resPath = interpolateStatesFromPath<ComRRTHelper, ComRRTShooterFactory, SetComRRTConstraints>
               (fullbody, referenceProblem, shooterFactory, constraintFactory, comPath, stateFrames.begin(), stateFrames.begin()+1, numOptimizations, keepExtraDof);
+        hppDout(notice,"interpolateStatesFromPath end.");
 #ifdef PROFILE
     watch.stop("com_traj");
 #endif

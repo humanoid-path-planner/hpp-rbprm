@@ -287,6 +287,7 @@ namespace
                                               const std::size_t numOptimizations, const bool keepExtraDof=false,
                                               const model::value_type error_treshold = 0.001, const size_t maxIterations = 0)
     {
+        hppDout(notice,"Begin interpolateStatesFromPathGetter :");
         PathVectorPtr_t res[100];
         bool valid[100];
         std::size_t distance = std::distance(startState,endState);
@@ -302,7 +303,9 @@ namespace
             b = (startState+i+1);
             Helper_T helper(fullbody, shooterFactory, constraintFactory, referenceProblem, pathGetter(a,b),error_treshold); // 0.1 : error
             helper.SetConstraints(get(a), get(b));
+            hppDout(notice,"Start helper.run :");
             PathVectorPtr_t partialPath = helper.Run(get(a), get(b),maxIterations);
+            hppDout(notice,"helper.run done.");
             if(partialPath)
             {
                 res[i] = optimize(helper,partialPath, numOptimizations);

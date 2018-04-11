@@ -91,8 +91,6 @@ using namespace core;
     vector_t GetEffectorPositionAt(core::PathPtr_t path, constraints::PositionPtr_t position, const value_type time)
     {
         vector_t result (position->outputSize());
-        hppDout(notice,"getEffectorPositionAt : output size : "<<position->outputSize());
-        hppDout(notice,"getEffectorPositionAt : path size : "<<path->outputSize());
         position->operator ()(result, path->operator ()(time));
         return result;
     }
@@ -274,10 +272,10 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
             pData.c0_+=posOffset*normal;
         if(init){
             pData.dc0_=Vector3::Zero();
-            pData.dc1_=normal*velOffset; // TODO replace with value * normal
+            pData.dc1_=normal*velOffset;
         }else{
             pData.dc1_=Vector3::Zero();
-            pData.dc0_=normal*velOffset; // TODO replace with value * normal
+            pData.dc0_=normal*velOffset;
         }
         if(init){
             pData.ddc0_=Vector3::Zero();
@@ -289,6 +287,7 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
 
         offsetConfig.head<3>()=pData.c1_;
         hppDout(notice,"CREATE BEZIER for constraints : ");
+        hppDout(notice,"normal : "<<normal.transpose());
         hppDout(notice,"c0   = "<<pData.c0_.transpose());
         hppDout(notice,"dc0  = "<<pData.dc0_.transpose());
         hppDout(notice,"ddc0 = "<<pData.ddc0_.transpose());
