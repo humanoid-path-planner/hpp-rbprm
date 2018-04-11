@@ -402,7 +402,7 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
     void computePredefConstants(double dist_translation,double p_max,double p_min,double t_total,double &t_predef, double &posOffset, double &velOffset,double &a_max_predefined ){
         double timeMid= t_total - (2*t_predef);
 
-        const double dddjerk = 8000.;
+        const double dddjerk = 25000.;
         //const double djerk = ddjerk*t_predef;
         const double jerk = (1./6.)*dddjerk*t_predef*t_predef* t_predef;
         a_max_predefined = (1./24.)*dddjerk *t_predef*t_predef*t_predef* t_predef;
@@ -515,7 +515,7 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
         c0[2]=0; // replace with normal instead of z axis
         c1[2]=0;
         const double dist_translation = (c1-c0).norm();
-        const double timeDelay = 0.05; // this is the time during the 'single support' phase where the feet don't move. It is needed to allow a safe mass transfer without exiting the flexibility.
+        const double timeDelay = 0.; //0.05; // this is the time during the 'single support' phase where the feet don't move. It is needed to allow a safe mass transfer without exiting the flexibility.
         const double totalTime = comPath->length()-2*timeDelay;
         //const double ratioTimeTakeOff=0.1;// percentage of the total time // was 0.1
 
@@ -646,7 +646,7 @@ buildPredefinedPath(endEffectorDevice,nextNormal,endConfig,posOffset,-velOffset,
         c0[2]=0; // replace with normal instead of z axis
         c1[2]=0;
         const double dist_translation = (c1-c0).norm();
-        const double timeDelay = 0.05; // this is the time during the 'single support' phase where the feet don't move. It is needed to allow a safe mass transfer without exiting the flexibility.
+        const double timeDelay = 0.; //0.05; // this is the time during the 'single support' phase where the feet don't move. It is needed to allow a safe mass transfer without exiting the flexibility.
         const double totalTime = comPath->length()-2*timeDelay;
         //const double ratioTimeTakeOff=0.1;// percentage of the total time // was 0.1
 
@@ -720,6 +720,7 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
         core::PathVectorPtr_t bezierPath;
         bezier_Ptr refEffectorMidBezier;
         for(std::vector<double>::const_iterator it_weight = weightRRT.begin() ; it_weight != weightRRT.end() ; ++it_weight){
+            hppDout(notice,"Compute bezier path for weight : "<<*it_weight);
             bezierPath = computeBezierPath(endEffectorDevice,pDataMid,endEffPath,timeMid,(*it_weight),refEffectorTakeoff, refEffectorLanding,refEffectorMidBezier );
             if(bezierPath){
                 res.push_back(bezierPath);
