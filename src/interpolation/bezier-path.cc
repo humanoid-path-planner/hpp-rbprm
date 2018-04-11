@@ -37,6 +37,8 @@ namespace hpp {
   BezierPath::BezierPath (const DevicePtr_t& robot, const bezier_Ptr& curve, core::ConfigurationIn_t init, core::ConfigurationIn_t end, interval_t timeRange):
       parent_t(timeRange,robot->configSize(),robot->numberDof()),device_(robot),curve_(curve),initial_(init),end_(end)
   {
+      hppDout(notice,"Create a bezier path, with init config : "<<model::displayConfig(initial_));
+      hppDout(notice,"                            end config : "<<model::displayConfig(end_));
     assert(timeRange.first>=curve_->min() && "The time range is outside the curve definition");
     assert(timeRange.second<=curve_->max() && "The time range is outside the curve definition");
   }
@@ -47,6 +49,8 @@ namespace hpp {
                           core::ConfigurationIn_t end, core::interval_t timeRange):
       parent_t(timeRange,robot->configSize(),robot->numberDof()),device_(robot),curve_(bezier_Ptr(new bezier_t(wpBegin,wpEnd,timeRange.second-timeRange.first))),initial_(init),end_(end)
   {
+   hppDout(notice,"Create a bezier path, with init config : "<<model::displayConfig(initial_));
+   hppDout(notice,"                            end config : "<<model::displayConfig(end_));
     assert (timeRange.first == 0 && "Bezier path cannot be created from waypoint with initiale time different from 0");
   }
 
