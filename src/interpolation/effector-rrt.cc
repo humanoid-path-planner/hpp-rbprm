@@ -621,24 +621,9 @@ buildPredefinedPath(endEffectorDevice,nextNormal,endConfig,posOffset,-velOffset,
         }
     }
 
-
-
-    core::PathPtr_t effectorRRTFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemSolverPtr_t problemSolver, const PathPtr_t comPath,
-                           const State &startState, const State &nextState,
-                           const std::size_t numOptimizations, const bool keepExtraDof,
-                           const PathPtr_t refPath, const std::vector<std::string>& constrainedJointPos,
-                           const std::vector<std::string>& constrainedLockedJoints)
-    {
-        ProblemPtr_t referenceProblem = problemSolver->problem();
-        core::PathPtr_t fullBodyComPath = comRRT(fullbody, problemSolver, comPath, startState, nextState, numOptimizations, true);
-        //removing extra dof
-        core::SizeInterval_t interval(0, fullBodyComPath->initial().rows()-1);
-        core::SizeIntervals_t intervals;
-        intervals.push_back(interval);
-        core::PathPtr_t reducedComPath = core::SubchainPath::create(fullBodyComPath,intervals);
-        if(effectorDistance(startState, nextState) < 0.03) // end effectors does not move, return the comRRT path
-            return fullBodyComPath;
-        JointPtr_t effector =  getEffector(fullbody, startState, nextState);
+    std::vector<core::PathVectorPtr_t> fitBeziersToPath(RbPrmFullBodyPtr_t fullbody,JointPtr_t effector, const PathPtr_t comPath,const PathPtr_t fullBodyComPath, const State &startState, const State &nextState){
+        core::PathVectorPtr_t fullBodyPathVector = core::PathVector::create(fullBodyComPath->outputSize(), fullBodyComPath->outputDerivativeSize());
+        fullBodyPathVector->appendPath(fullBodyComPath);
         std::string effectorName = getEffectorLimb(startState,nextState);
         EndEffectorPath endEffPath(fullbody->device_,effector,fullBodyComPath);
         // create a 'device' object for the end effector (freeflyer 6D). Needed for the path and the orientation constraint
@@ -683,7 +668,6 @@ buildPredefinedPath(endEffectorDevice,nextNormal,endConfig,posOffset,-velOffset,
 
         computePredefConstants(dist_translation,p_max,p_min,totalTime,timeTakeoff,posOffset,velOffset,a_max_predefined);
 
-
         const double timeLanding = timeTakeoff;
         const double timeMid = totalTime-2*timeTakeoff;
 
@@ -705,36 +689,85 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
         pDataMid.dc1_=pDataLanding.dc0_;
         pDataMid.ddc0_=pDataTakeoff.ddc1_;
         pDataMid.ddc1_=pDataLanding.ddc0_;
+        pDataMid.j0_ = pDataTakeoff.j1_;
+        pDataMid.j1_ = pDataLanding.j0_;
 
         hppDout(notice,"CREATE BEZIER for constraints : ");
         hppDout(notice,"c0   = "<<pDataMid.c0_.transpose());
         hppDout(notice,"dc0  = "<<pDataMid.dc0_.transpose());
         hppDout(notice,"ddc0 = "<<pDataMid.ddc0_.transpose());
+        hppDout(notice,"j0   = "<<pDataMid.j0_.transpose());
         hppDout(notice,"c1   = "<<pDataMid.c1_.transpose());
         hppDout(notice,"dc1  = "<<pDataMid.dc1_.transpose());
         hppDout(notice,"ddc1 = "<<pDataMid.ddc1_.transpose());
-
+        hppDout(notice,"j1   = "<<pDataMid.j1_.transpose());
         hppDout(notice,"Distance traveled by the end effector : "<<(pDataMid.c1_-pDataMid.c0_).norm());
         hppDout(notice,"Distance : "<<(pDataMid.c1_-pDataMid.c0_).transpose());
         hppDout(notice,"Time = "<<timeMid);
 
-       // endEffPath.setOffset(pDataMid.c0_ - endEffPath(0)); FIXME : bug with com_path = bezier ???
+      //  endEffPath.setOffset(pDataMid.c0_ - endEffPath(0)); //FIXME : bug with com_path = bezier ???
 
         // ## call solver :
-        double weightRRT = 0.;
-        bool success_rrt = false;
-        PathPtr_t interpolatedPath;
+        std::vector<double> weightRRT;
+        weightRRT.push_back(0);
+        weightRRT.push_back(0.5);
+        weightRRT.push_back(0.75);
+        weightRRT.push_back(0.85);
+        weightRRT.push_back(0.9);
+        weightRRT.push_back(0.95);
+        weightRRT.push_back(1.);
+        std::vector<core::PathVectorPtr_t> res;
+        core::PathVectorPtr_t bezierPath;
         bezier_Ptr refEffectorMidBezier;
-        PathVectorPtr_t refEffectorPath;
-        const size_t maxIterationRRT = 100; //FIXME : adjust value for more complexe environnement
-        while(!success_rrt && weightRRT <=1){
-            refEffectorPath  = computeBezierPath(endEffectorDevice,pDataMid,endEffPath,timeMid,weightRRT,refEffectorTakeoff, refEffectorLanding,refEffectorMidBezier );
-            if(!refEffectorPath){
-                hppDout(notice,"Error whil computing Bezier path");
-                return fullBodyComPath;
+        for(std::vector<double>::const_iterator it_weight = weightRRT.begin() ; it_weight != weightRRT.end() ; ++it_weight){
+            bezierPath = computeBezierPath(endEffectorDevice,pDataMid,endEffPath,timeMid,(*it_weight),refEffectorTakeoff, refEffectorLanding,refEffectorMidBezier );
+            if(bezierPath){
+                res.push_back(bezierPath);
+            }else{
+                hppDout(notice,"Error while compute bezier path, with weight : "<<*it_weight);
+                res.push_back(fullBodyPathVector);
             }
+        }
 
+        return res;
+    }
 
+    core::PathPtr_t effectorRRTFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemSolverPtr_t problemSolver, const PathPtr_t comPath,const PathPtr_t fullBodyComPath,
+                           const State &startState, const State &nextState,
+                           const std::size_t numOptimizations, const bool keepExtraDof,
+                           const PathPtr_t refPath, const std::vector<std::string>& constrainedJointPos,
+                           const std::vector<std::string>& constrainedLockedJoints){
+
+        hppDout(notice,"Begin effectorRRT with fullBodyComPath");
+        //removing extra dof
+        core::SizeInterval_t interval(0, fullBodyComPath->initial().rows()-1);
+        core::SizeIntervals_t intervals;
+        intervals.push_back(interval);
+        core::PathPtr_t reducedComPath = core::SubchainPath::create(fullBodyComPath,intervals);
+        JointPtr_t effector =  getEffector(fullbody, startState, nextState);
+        DevicePtr_t endEffectorDevice = Device::create("endEffector");
+        JointPtr_t transJoint = new JointTranslation <3> (Transform3f());
+        JointPtr_t so3Joint = new JointSO3(Transform3f());
+        endEffectorDevice->rootJoint(transJoint);
+        transJoint->addChildJoint (so3Joint);
+
+        std::vector<PathVectorPtr_t> listPathBezier = fitBeziersToPath(fullbody,effector,comPath,fullBodyComPath,startState,nextState);
+        // iterate over all bezier path and try to find a whole body motion that can follow it :
+        const size_t maxIterationRRT = 200; //FIXME : adjust value for more complexe environnement
+        std::vector<double> weightRRT; // only required for debug
+        weightRRT.push_back(0);
+        weightRRT.push_back(0.5);
+        weightRRT.push_back(0.75);
+        weightRRT.push_back(0.85);
+        weightRRT.push_back(0.9);
+        weightRRT.push_back(0.95);
+        weightRRT.push_back(1.);
+        size_t it = 0;
+        bool success_rrt = false;
+
+        core::PathPtr_t interpolatedPath;
+        core::PathVectorPtr_t solutionPath;
+        for(std::vector<PathVectorPtr_t>::const_iterator it_path = listPathBezier.begin() ; it_path != listPathBezier.end() ; ++it_path , ++it){
 
             // ## compute whole body motion that follow the reference
             EffectorRRTShooterFactory shooterFactory(reducedComPath);
@@ -743,45 +776,48 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
             hppDout(notice,"effectorRRT, contrained joint pose size : "<<constrainedJointPos.size());
             hppDout(notice,"effectorRRT, contrained locked joint  size : "<<constrainedLockedJoints.size());
 
-            SetEffectorRRTConstraints constraintFactory(comPath, refEffectorPath, refPath, effector,endEffectorDevice, constrainedJoint, constrainedLocked);
+            SetEffectorRRTConstraints constraintFactory(comPath, *it_path, refPath, effector,endEffectorDevice, constrainedJoint, constrainedLocked);
             T_StateFrame stateFrames;
             stateFrames.push_back(std::make_pair(comPath->timeRange().first, startState));
             stateFrames.push_back(std::make_pair(comPath->timeRange().second, nextState));
 
             try{
                 interpolatedPath = interpolateStatesFromPath<EffectorRRTHelper, EffectorRRTShooterFactory, SetEffectorRRTConstraints>
-                        (fullbody, referenceProblem, shooterFactory, constraintFactory, comPath,
+                        (fullbody, problemSolver->problem(), shooterFactory, constraintFactory, comPath,
                          //stateFrames.begin(), stateFrames.begin()+1, numOptimizations % 10, keepExtraDof);
                          stateFrames.begin(), stateFrames.begin()+1, /*numOptimizations this should be different from the numOptimization used by comRRT*/ 1 , keepExtraDof, 0.001,maxIterationRRT);
                 if(interpolatedPath){
                     success_rrt = true;
-                    hppDout(notice,"InterpolateStateFromPath success for weightDistance = "<<weightRRT);
+                    hppDout(notice,"InterpolateStateFromPath success for weightDistance = "<<weightRRT[it]);
+                    solutionPath = *it_path;
                 }
             } catch(std::runtime_error e){
-                hppDout(notice,"InterpolateStateFromPath failed for weightDistance = "<<weightRRT);
+                hppDout(notice,"InterpolateStateFromPath failed for weightDistance = "<<weightRRT[it]);
                 hppDout(notice,"Error = "<<e.what());
             }
+            /*
             success_rrt = true; //FIXME for testing purpose : always return the first path computed
             if(!interpolatedPath)//FIXME for testing purpose : always return the first path computed
                interpolatedPath = refEffectorPath; //FIXME for testing purpose : always return the first path computed
-            weightRRT +=0.25;
+            */
         } // TODO : if this still fail, add another free waypoint to the bezier optimisation problem.
-
-
-        success_rrt = true;
 
         if (success_rrt){
             // ## save the path
-            problemSolver->addPath(refEffectorPath); // add end effector path to the problemSolver
+            problemSolver->addPath(solutionPath); // add end effector path to the problemSolver
 
             // save the endEffector trajectory in the map :
             {
             size_t pathId = problemSolver->paths().size();
             hppDout(notice,"Add trajectories for path = "<<pathId<<" and effector = "<<effector->name());
+            assert (solutionPath->numberPaths() == 3 && "Solution pathVector should have 3 paths (takeoff, mid, landing)");
+            BezierPathPtr_t takeoffPath = boost::dynamic_pointer_cast<BezierPath>(solutionPath->pathAtRank(0));
+            BezierPathPtr_t midPath = boost::dynamic_pointer_cast<BezierPath>(solutionPath->pathAtRank(1));
+            BezierPathPtr_t landingPath = boost::dynamic_pointer_cast<BezierPath>(solutionPath->pathAtRank(2));
             std::vector<bezier_Ptr> allRefEffector;
-            allRefEffector.push_back(refEffectorTakeoff->getBezier());
-            allRefEffector.push_back(refEffectorMidBezier);
-            allRefEffector.push_back(refEffectorLanding->getBezier());
+            allRefEffector.push_back(takeoffPath->getBezier());
+            allRefEffector.push_back(midPath->getBezier());
+            allRefEffector.push_back(landingPath->getBezier());
             bool successMap = fullbody->addEffectorTrajectory(pathId,effector->name(),allRefEffector);
             hppDout(notice,"success = "<<successMap);
             }
@@ -792,6 +828,28 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
             return fullBodyComPath;
         }
 
+    }
+
+
+    core::PathPtr_t effectorRRTFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemSolverPtr_t problemSolver, const PathPtr_t comPath,
+                           const State &startState, const State &nextState,
+                           const std::size_t numOptimizations, const bool keepExtraDof,
+                           const PathPtr_t refPath, const std::vector<std::string>& constrainedJointPos,
+                           const std::vector<std::string>& constrainedLockedJoints)
+    {
+        hppDout(notice,"Begin effectorRRTFromPath, start comRRT : ");
+        core::PathPtr_t fullBodyComPath = comRRT(fullbody, problemSolver, comPath, startState, nextState, numOptimizations, true);
+        core::PathVectorPtr_t fullBodyPathVector = core::PathVector::create(fullBodyComPath->outputSize(), fullBodyComPath->outputDerivativeSize());
+        fullBodyPathVector->appendPath(fullBodyComPath);
+        problemSolver->addPath(fullBodyPathVector);
+        hppDout(notice,"add fullBodyCom path at id : "<<(problemSolver->paths().size() -1));
+        hppDout(notice,"comRRT done.");
+        if(effectorDistance(startState, nextState) < 0.03){ // end effectors does not move, return the comRRT path
+            hppDout(notice,"Effector doesn't move, return comRRT path.");
+            return fullBodyComPath;
+        }
+
+        return effectorRRTFromPath(fullbody,problemSolver,comPath,fullBodyComPath,startState,nextState,numOptimizations,keepExtraDof,refPath,constrainedJointPos,constrainedLockedJoints);
 
     }
 
