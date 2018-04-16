@@ -427,7 +427,7 @@ ProjectionReport projectStateToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& bo
     core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 100);
     interpolation::addContactConstraints(body, body->device_,proj, state, state.fixedContacts(state));
     // get current normal orientation
-    return projectToObstacle(proj, body, limbId, limb, validation, configuration, current, normal, position);
+    return projectToObstacle(proj, body, limbId, limb, validation, configuration, state, normal, position);
 }
 
 
