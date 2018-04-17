@@ -515,8 +515,8 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
         c0[2]=0; // replace with normal instead of z axis
         c1[2]=0;
         const double dist_translation = (c1-c0).norm();
-        const double timeDelay = 0.; //0.05; // this is the time during the 'single support' phase where the feet don't move. It is needed to allow a safe mass transfer without exiting the flexibility.
-        const double totalTime = comPath->length()-2*timeDelay;
+        const double timeDelay = 0.05; // this is the time during the 'single support' phase where the feet don't move. It is needed to allow a safe mass transfer without exiting the flexibility.
+        const double totalTime = comPath->length()-timeDelay;
         //const double ratioTimeTakeOff=0.1;// percentage of the total time // was 0.1
 
 
@@ -646,8 +646,8 @@ buildPredefinedPath(endEffectorDevice,nextNormal,endConfig,posOffset,-velOffset,
         c0[2]=0; // replace with normal instead of z axis
         c1[2]=0;
         const double dist_translation = (c1-c0).norm();
-        const double timeDelay = 0.; //0.05; // this is the time during the 'single support' phase where the feet don't move. It is needed to allow a safe mass transfer without exiting the flexibility.
-        const double totalTime = comPath->length()-2*timeDelay;
+        const double timeDelay = 0.05; // this is the time during the 'single support' phase where the feet don't move. It is needed to allow a safe mass transfer without exiting the flexibility.
+        const double totalTime = comPathLength-timeDelay;
         //const double ratioTimeTakeOff=0.1;// percentage of the total time // was 0.1
 
 
