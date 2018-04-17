@@ -29,12 +29,12 @@ using namespace core;
     }
 
     core::PathPtr_t limbRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
-                 const rbprm::CIT_State &startState, const rbprm::CIT_State &endState, const std::size_t numOptimizations)
+                 const rbprm::CIT_State &startState, const rbprm::CIT_State &endState, const std::size_t numOptimizations, const std::size_t maxIteration)
     {
         LimbRRTShooterFactory shooterFactory;
         SetLimbRRTConstraints constraintFactory;
         return interpolateStates<LimbRRTHelper, LimbRRTShooterFactory, SetLimbRRTConstraints, CIT_State >
-                (fullbody, referenceProblem, shooterFactory, constraintFactory, startState, endState, numOptimizations);
+                (fullbody, referenceProblem, shooterFactory, constraintFactory, startState, endState, numOptimizations,maxIteration);
     }
 
     core::PathPtr_t limbRRTFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t refPath,

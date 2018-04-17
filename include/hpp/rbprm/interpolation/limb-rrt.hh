@@ -47,7 +47,7 @@ namespace hpp {
     };
 
     core::PathPtr_t limbRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
-                 const rbprm::CIT_State &startState, const rbprm::CIT_State &endState, const std::size_t numOptimizations);
+                 const rbprm::CIT_State &startState, const rbprm::CIT_State &endState, const std::size_t numOptimizations, const std::size_t maxIteration = 0);
 
     core::PathPtr_t limbRRTFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t refPath,
                          const CIT_StateFrame &startState, const CIT_StateFrame &endState, const  std::size_t numOptimizations);

@@ -107,7 +107,7 @@ using namespace core;
         else
         {
             hppDout(notice,"Contact variations, use limbRRT.");
-            guidePath = limbRRT(fullbody,referenceProblem,states.begin(),states.begin()+1,numOptimizations);
+            guidePath = limbRRT(fullbody,referenceProblem,states.begin(),states.begin()+1,numOptimizations,10000);
         }
         ComRRTShooterFactory shooterFactory(guidePath);
         SetComRRTConstraints constraintFactory;
