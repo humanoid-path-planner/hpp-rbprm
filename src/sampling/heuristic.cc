@@ -295,9 +295,12 @@ HeuristicFactory::HeuristicFactory()
     //seed = 1521541663 ; //walk flat pyrene
    // seed = 1521822606; // walk flat pyrene with offset
    // seed = 1522914292; // stairs 10, 2 marches
-  //  seed = 1523025653 ; // stairs 10cm safe // DEMO 2 steps
-  //  seed = 1523436977; // stairs 10cm full
-    seed = 1523448571; // darpa STEVE
+   // seed = 1523025653 ; // stairs 10cm safe // DEMO 2 steps
+   // seed = 1523436977; // stairs 10cm full
+  //  seed = 1523620355 ; //stairs 10
+    // seed = 1523892376 ; //stairs TO TRY
+    seed = 1523953674; // stairs 10cm, FIRST VIDEO
+   // seed = 1523448571; // darpa STEVE
     std::cout<<"seed HEURISTIC = "<<seed<<std::endl;
     srand (seed);
     hppDout(notice,"SEED for heuristic = "<<seed);

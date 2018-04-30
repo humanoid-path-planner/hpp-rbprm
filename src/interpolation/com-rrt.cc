@@ -100,6 +100,7 @@ using namespace core;
             rootProblem.target (target);
             rootProblem.addGoalConfig(end);
             hppDout(notice,"Start solve");
+
             guidePath = planner->solve();
             hppDout(notice,"Solve success");
             //return guidePath;
