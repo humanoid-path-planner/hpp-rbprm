@@ -142,7 +142,7 @@ void CreatePosturalTaskConstraint(hpp::rbprm::RbPrmFullBodyPtr_t fullBody,core::
   for(size_t i = 3 ; i <= 9 ; i++){
     mask[i] = true;
   }
-  mask[5] = false; // z root rotation ????
+ // mask[5] = false; // z root rotation ????
 
 
   // normalize weight array :
@@ -428,7 +428,7 @@ ProjectionReport projectStateToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& bo
     hpp::rbprm::State state = current;
     state.RemoveContact(limbId);
     model::Configuration_t configuration = current.configuration_;
-    core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 100);
+    core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 1000);
     interpolation::addContactConstraints(body, body->device_,proj, state, state.fixedContacts(state));
     // get current normal orientation
     return projectToObstacle(proj, body, limbId, limb, validation, configuration, state, normal, position);
