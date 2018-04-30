@@ -342,7 +342,7 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
         printQHull(K_n,int_pt_kin,"kinematics.txt");
     }
     hppDout(notice,"Intersection of constraints :");
-    printQHull(Ab,int_pt_kin,"constraints.txt");
+    printQHull(Ab,int_pt_stab,"constraints.txt");
 
     if(contactsCreation.size() <= 0 && contactsBreak.size() <= 0){
         hppDout(notice,"No contact variation, abort.");
