@@ -349,6 +349,7 @@ ProjectionReport projectEffector(hpp::core::ConfigProjectorPtr_t proj, const hpp
         tmp.contactPositions_[limbId] = limb->effector_->currentTransformation().getTranslation();
         tmp.contactRotation_[limbId] = limb->effector_->currentTransformation().getRotation();
         tmp.contactNormals_[limbId] = normal;
+        tmp.contactOrder_.push(limbId);
         tmp.configuration_ = configuration;
         ++tmp.nbContacts;
         rep.success_ = true;
