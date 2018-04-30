@@ -34,7 +34,7 @@ using namespace core;
         LimbRRTShooterFactory shooterFactory;
         SetLimbRRTConstraints constraintFactory;
         return interpolateStates<LimbRRTHelper, LimbRRTShooterFactory, SetLimbRRTConstraints, CIT_State >
-                (fullbody, referenceProblem, shooterFactory, constraintFactory, startState, endState, numOptimizations,maxIteration);
+                (fullbody, referenceProblem, shooterFactory, constraintFactory, startState, endState, numOptimizations,false,0.001,maxIteration);
     }
 
     core::PathPtr_t limbRRTFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t refPath,

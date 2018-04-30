@@ -119,7 +119,7 @@ using namespace core;
 #endif
         hppDout(notice,"Start interpolateStatesFromPath");
         core::PathPtr_t resPath = interpolateStatesFromPath<ComRRTHelper, ComRRTShooterFactory, SetComRRTConstraints>
-              (fullbody, referenceProblem, shooterFactory, constraintFactory, comPath, stateFrames.begin(), stateFrames.begin()+1, numOptimizations, keepExtraDof);
+              (fullbody, referenceProblem, shooterFactory, constraintFactory, comPath, stateFrames.begin(), stateFrames.begin()+1, numOptimizations, keepExtraDof,0.05,10000);
         hppDout(notice,"interpolateStatesFromPath end.");
 #ifdef PROFILE
     watch.stop("com_traj");
