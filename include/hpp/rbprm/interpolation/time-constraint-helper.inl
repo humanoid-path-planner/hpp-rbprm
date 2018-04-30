@@ -181,6 +181,9 @@ namespace
         }catch (std::runtime_error e){
             hppDout(notice,"TimeConstraintHelper : planner returned an error : "<<e.what());
             res = PathVectorPtr_t();
+        }catch (core::projection_error e){
+            hppDout(notice,"TimeConstraintHelper : Projection error : "<<e.what());
+            res = PathVectorPtr_t();
         }
 
         rootProblem_.resetGoalConfigs();

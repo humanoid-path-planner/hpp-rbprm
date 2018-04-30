@@ -140,6 +140,7 @@ namespace hpp {
     }
 
     void TimeConstraintPath::checkPath () const
+    throw (projection_error)
     {
       Configuration_t initc = initial();
       Configuration_t endc = end();

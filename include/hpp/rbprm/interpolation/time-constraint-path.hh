@@ -174,7 +174,7 @@ namespace interpolation {
         return end_;
       }
 
-      virtual void checkPath () const;
+      virtual void checkPath () const throw (core::projection_error);
     protected:
       /// Print path in a stream
       virtual std::ostream& print (std::ostream &os) const
