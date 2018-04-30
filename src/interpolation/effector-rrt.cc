@@ -621,7 +621,7 @@ buildPredefinedPath(endEffectorDevice,nextNormal,endConfig,posOffset,-velOffset,
         }
     }
 
-    std::vector<core::PathVectorPtr_t> fitBeziersToPath(RbPrmFullBodyPtr_t fullbody,JointPtr_t effector, const PathPtr_t comPath,const PathPtr_t fullBodyComPath, const State &startState, const State &nextState){
+    std::vector<core::PathVectorPtr_t> fitBeziersToPath(RbPrmFullBodyPtr_t fullbody,JointPtr_t effector, const double comPathLength,const PathPtr_t fullBodyComPath, const State &startState, const State &nextState){
         core::PathVectorPtr_t fullBodyPathVector = core::PathVector::create(fullBodyComPath->outputSize(), fullBodyComPath->outputDerivativeSize());
         fullBodyPathVector->appendPath(fullBodyComPath);
         std::string effectorName = getEffectorLimb(startState,nextState);
@@ -752,9 +752,9 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
         endEffectorDevice->rootJoint(transJoint);
         transJoint->addChildJoint (so3Joint);
 
-        std::vector<PathVectorPtr_t> listPathBezier = fitBeziersToPath(fullbody,effector,comPath,fullBodyComPath,startState,nextState);
+        std::vector<PathVectorPtr_t> listPathBezier = fitBeziersToPath(fullbody,effector,comPath->length(),fullBodyComPath,startState,nextState);
         // iterate over all bezier path and try to find a whole body motion that can follow it :
-        const size_t maxIterationRRT = 1000; //FIXME : adjust value for more complexe environnement
+        const size_t maxIterationRRT = 500; //FIXME : adjust value for more complexe environnement
         std::vector<double> weightRRT; // only required for debug
         weightRRT.push_back(0);
         weightRRT.push_back(0.5);

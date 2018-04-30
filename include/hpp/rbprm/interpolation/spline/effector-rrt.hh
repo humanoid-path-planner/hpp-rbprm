@@ -106,6 +106,18 @@ namespace interpolation {
                                         const std::vector<std::string>& constrainedJointPos = std::vector<std::string>(),
                                         const std::vector<std::string>& constrainedLockedJoints = std::vector<std::string>());
 
+    /**
+     * @brief fitBeziersToPath generate a vector of pathVector : each pathVector containt BezierPath, computed with varying value of weight-rrt
+     * @param fullbody
+     * @param effector
+     * @param comPathLength
+     * @param fullBodyComPath
+     * @param startState
+     * @param nextState
+     * @return
+     */
+    std::vector<core::PathVectorPtr_t> fitBeziersToPath(RbPrmFullBodyPtr_t fullbody,JointPtr_t effector, const double comPathLength,const PathPtr_t fullBodyComPath, const State &startState, const State &nextState);
+
     typedef spline::exact_cubic<double, double, 3, true, Eigen::Matrix<value_type, 3, 1> > exact_cubic_t;
     typedef spline::spline_deriv_constraint<double, double, 3, true, Eigen::Matrix<value_type, 3, 1> > spline_deriv_constraint_t;
     typedef boost::shared_ptr<exact_cubic_t> exact_cubic_Ptr;    
