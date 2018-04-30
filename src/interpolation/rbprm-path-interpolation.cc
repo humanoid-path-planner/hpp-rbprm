@@ -291,8 +291,8 @@ if (nbFailures > 1)
         fout<<"Planner succeeded"<<std::endl;
         fout.close();
         */
-        states = FilterStates(states, filterStates);
         states = addGoalConfig(states);
+        states = FilterStates(states, filterStates);
         return states;
     }
 
@@ -341,6 +341,22 @@ if (nbFailures > 1)
       return bestState;
     }
 
+    bool RbPrmInterpolation::testReachability(const State& s0, const State& s1){
+        if(testReachability_){
+            State state0(s0);
+            State state1(s1);
+            reachability::Result resReachability;
+            if(quasiStatic_){
+                resReachability = reachability::isReachable(robot_,state0,state1);
+            }else{
+                resReachability = reachability::isReachableDynamic(robot_,state0,state1);
+            }
+            return resReachability.success();
+        }else{
+            return true;
+        }
+    }
+
     void RbPrmInterpolation::FilterRepositioning(const CIT_StateFrame& from, const CIT_StateFrame to, T_StateFrame& res)
     {
         if(from == to) return;
@@ -350,7 +366,8 @@ if (nbFailures > 1)
         if(EqStringVec(current.contactBreaks(current_m1),
                        current_p1.contactBreaks(current_m1)) &&
            EqStringVec(current.contactCreations(current_m1),
-                       current_p1.contactCreations(current)))
+                       current_p1.contactCreations(current))
+                && testReachability(current_m1,current_p1))
         {
             if(from+1 == to) return;
             // Check if there is others state with the same contacts, and only add the one with the best score for the heuristic :
@@ -383,7 +400,7 @@ if (nbFailures > 1)
             repositionnedStates.push_back(std::make_pair((from+1)->first, (from+1)->second));
             std::vector<std::string> limbsNames = current.contactCreations(current_m1);
             StateFrame bestState = findBestRepositionState(repositionnedStates,limbsNames);
-            */
+            */            
             res.push_back(std::make_pair((from+1)->first, (from+1)->second));
             FilterRepositioning(from+2, to, res);
         }
@@ -394,7 +411,7 @@ if (nbFailures > 1)
         }
     }
 
-    void FilterBreakCreate(const CIT_StateFrame& from, const CIT_StateFrame to, T_StateFrame& res)
+    void RbPrmInterpolation::FilterBreakCreate(const CIT_StateFrame& from, const CIT_StateFrame to, T_StateFrame& res)
     {
         if(from == to) return;
         const State& current    = (from)->second;
@@ -403,7 +420,8 @@ if (nbFailures > 1)
         if(current.contactCreations(current_m1).empty()  &&
            current_p1.contactBreaks(current).empty() &&
            EqStringVec(current_p1.contactCreations(current),
-                       current.contactBreaks(current_m1)))
+                       current.contactBreaks(current_m1))
+                &&  testReachability(current_m1,current_p1))
         {
             if(from+1 == to) return;
             res.push_back(std::make_pair((from+1)->first, (from+1)->second));
@@ -426,7 +444,7 @@ if (nbFailures > 1)
         return res;
     }
 
-    T_StateFrame FilterBreakCreate(const T_StateFrame& originStates)
+    T_StateFrame RbPrmInterpolation::FilterBreakCreate(const T_StateFrame& originStates)
     {
         if(originStates.size() < 3) return originStates;
         T_StateFrame res;
@@ -480,13 +498,157 @@ if (nbFailures > 1)
         return res;
     }
 
-    T_StateFrame RbPrmInterpolation::FilterStatesRec(const T_StateFrame& originStates)
-    {
-        hppDout(notice,"FilterStatesRec");
-        return FilterObsolete(FilterBreakCreate(FilterRepositioning(originStates)));
+    void RbPrmInterpolation::tryReplaceStates(const CIT_StateFrame& from, const CIT_StateFrame to, T_StateFrame& res){
+        if(from == to){
+            res.push_back(std::make_pair(from->first, from->second));
+            res.push_back(std::make_pair((from+1)->first, (from+1)->second));
+            return;
+        }
+        const State& ci0 = (from)->second;
+        const State& ci1 = (from+1)->second;
+        const State& ci2 = (from+2)->second;
+        const State& ci3 = (from+3)->second;
+
+        hppDout(notice,"Try Replace State : ");
+        if(ci3.contactCreations(ci2).size() == 1
+        && EqStringVec(ci1.contactBreaks(ci0), ci3.contactBreaks(ci2))
+        && EqStringVec(ci1.contactBreaks(ci0), ci1.contactCreations(ci0))
+        && EqStringVec(ci1.contactBreaks(ci0), ci3.contactCreations(ci2))
+        && !EqStringVec(ci1.contactBreaks(ci0), ci2.contactBreaks(ci1))
+        && !EqStringVec(ci1.contactCreations(ci0), ci2.contactCreations(ci1))){
+            hppDout(notice,"condition on contact OK");
+            // try to create a state s1_bis : s1 with the new contact in the same position as in s3
+            State s1_bis(ci1);
+            // get contact information from state 3 :
+            std::string contactCreate = ci3.contactCreations(ci2)[0];
+            hppDout(notice,"contact to change : "<<contactCreate);
+            fcl::Vec3f n = ci3.contactNormals_.at(contactCreate);
+            fcl::Vec3f p = ci3.contactPositions_.at(contactCreate) + robot_->GetLimb(contactCreate)->offset_;
+            p -= n*10e-3 ; // FIXME see 'epsilon' in projection::computeProjectionMatrix, why is it added ?
+            fcl::Vec3f p1 = ci1.contactPositions_.at(contactCreate) + robot_->GetLimb(contactCreate)->offset_;
+            p1 -= ci1.contactNormals_.at(contactCreate)*10e-3 ;
+            hppDout(notice,"position : "<<p);
+            hppDout(notice,"normal   : "<<n);
+            hppDout(notice,"difference with previous position : "<<(p1-p).norm());
+           // fcl::Matrix3f r = ci3.contactRotation_.at(contactCreate);
+            projection::ProjectionReport rep = projection::projectStateToObstacle(robot_,contactCreate,robot_->GetLimb(contactCreate),s1_bis,n,p);
+            hppDout(notice,"projection success : "<<rep.success_);
+            ValidationReportPtr_t rport (ValidationReportPtr_t(new CollisionValidationReport));
+            if((p1-p).norm() < 0.2 && rep.success_ && robot_->GetCollisionValidation()->validate(rep.result_.configuration_,rport)
+                   &&  testReachability(rep.result_,ci3) ){
+                hppDout(notice,"projection is collision free !");
+                // success ! add s1_bis instead of s1, and skip s2 :
+                res.push_back(std::make_pair(from->first, from->second));
+                res.push_back(std::make_pair((from+1)->first, rep.result_));
+                if(from+1 == to) return;
+                if(from+2 == to){
+                    res.push_back(std::make_pair((from+3)->first, (from+3)->second));
+                    return;
+                }
+                tryReplaceStates(from+3, to, res);
+            }else
+            {
+                res.push_back(std::make_pair(from->first, from->second));
+                tryReplaceStates(from+1, to, res);
+            }
+        }
+        else
+        {
+            res.push_back(std::make_pair(from->first, from->second));
+            tryReplaceStates(from+1, to, res);
+        }
     }
 
-    T_StateFrame RbPrmInterpolation::FilterStates(const T_StateFrame& originStates, const bool deep)
+
+    T_StateFrame RbPrmInterpolation::tryReplaceStates( const T_StateFrame& originStates){
+        hppDout(notice,"Begin tryReplaceStates, size of list : "<<originStates.size());
+        if(originStates.size() < 4) return originStates;
+        T_StateFrame res;
+        tryReplaceStates(originStates.begin(), originStates.end()-3, res);
+        res.push_back(originStates.back());
+        return res;
+    }
+
+    void RbPrmInterpolation::trySkipStates(const CIT_StateFrame& from, const CIT_StateFrame to, T_StateFrame& res){
+        if(from == to){
+            res.push_back(std::make_pair(from->first, from->second));
+            res.push_back(std::make_pair((from+1)->first, (from+1)->second));
+            return;
+        }
+        const State& ci0 = (from)->second;
+        const State& ci1 = (from+1)->second;
+        const State& ci2 = (from+2)->second;
+        const State& ci3 = (from+3)->second;
+
+        hppDout(notice,"Try Skip State : ");
+        if(ci2.contactCreations(ci1).size() == 1
+        && EqStringVec(ci1.contactBreaks(ci0), ci3.contactBreaks(ci2))
+        && EqStringVec(ci1.contactBreaks(ci0), ci1.contactCreations(ci0))
+        && EqStringVec(ci1.contactBreaks(ci0), ci3.contactCreations(ci2))
+        && !EqStringVec(ci1.contactBreaks(ci0), ci2.contactBreaks(ci1))
+        && !EqStringVec(ci1.contactCreations(ci0), ci2.contactCreations(ci1))){
+            hppDout(notice,"condition on contact OK");
+            // try to create a state s2_bis : s2 with the previous contact in the same position as in s0
+            State s2_bis(ci2);
+            // get contact information from state 0 :
+            std::string contactCreate = ci1.contactCreations(ci0)[0];
+            hppDout(notice,"contact to change : "<<contactCreate);
+            fcl::Vec3f n = ci0.contactNormals_.at(contactCreate);
+            fcl::Vec3f p = ci0.contactPositions_.at(contactCreate) + robot_->GetLimb(contactCreate)->offset_;
+            p -= n*10e-3 ; // FIXME see 'epsilon' in projection::computeProjectionMatrix, why is it added ?
+            fcl::Vec3f p1 = ci1.contactPositions_.at(contactCreate) + robot_->GetLimb(contactCreate)->offset_;
+            p1 -= ci1.contactNormals_.at(contactCreate)*10e-3 ;
+            hppDout(notice,"position : "<<p);
+            hppDout(notice,"normal   : "<<n);
+            hppDout(notice,"difference with previous position : "<<(p1-p).norm());
+           // fcl::Matrix3f r = ci3.contactRotation_.at(contactCreate);
+            projection::ProjectionReport rep = projection::projectStateToObstacle(robot_,contactCreate,robot_->GetLimb(contactCreate),s2_bis,n,p);
+            hppDout(notice,"projection success : "<<rep.success_);
+            ValidationReportPtr_t rport (ValidationReportPtr_t(new CollisionValidationReport));
+            if((p1-p).norm() < 0.1 && rep.success_ && robot_->GetCollisionValidation()->validate(rep.result_.configuration_,rport)
+                   &&  testReachability(ci0,rep.result_) && testReachability(rep.result_,ci3) ){
+                hppDout(notice,"projection is collision free !");
+                // success ! add s2_bis instead of s2, and skip s1 :
+                res.push_back(std::make_pair(from->first, from->second));
+                res.push_back(std::make_pair((from+2)->first, rep.result_));
+                if(from+1 == to) return;
+                if(from+2 == to){
+                    res.push_back(std::make_pair((from+3)->first, (from+3)->second));
+                    return;
+                }
+                trySkipStates(from+3, to, res);
+            }else
+            {
+                res.push_back(std::make_pair(from->first, from->second));
+                trySkipStates(from+1, to, res);
+            }
+        }
+        else
+        {
+            res.push_back(std::make_pair(from->first, from->second));
+            trySkipStates(from+1, to, res);
+        }
+    }
+
+    T_StateFrame RbPrmInterpolation::trySkipStates( const T_StateFrame& originStates){
+        hppDout(notice,"Begin trySkipStates, size of list : "<<originStates.size());
+        if(originStates.size() < 4) return originStates;
+        T_StateFrame res;
+        trySkipStates(originStates.begin(), originStates.end()-3, res);
+        res.push_back(originStates.back());
+        return res;
+    }
+
+
+
+
+    T_StateFrame RbPrmInterpolation::FilterStatesRec( const T_StateFrame& originStates)
+    {
+        hppDout(notice,"FilterStatesRec");
+        return trySkipStates(tryReplaceStates(FilterObsolete(FilterBreakCreate(FilterRepositioning(originStates)))));
+    }
+
+    T_StateFrame RbPrmInterpolation::FilterStates( const T_StateFrame& originStates, const bool deep)
     {
         //make sure they re ok
         hppDout(notice,"Begin filter states !");

@@ -106,10 +106,17 @@ namespace hpp {
         RbPrmFullBodyPtr_t robot_;
 
         T_StateFrame FilterStates(const T_StateFrame& originStates, const bool deep);
-        T_StateFrame FilterStatesRec(const T_StateFrame& originStates);
+        T_StateFrame FilterStatesRec( const T_StateFrame& originStates);
+        T_StateFrame tryReplaceStates( const T_StateFrame& originStates);
+        void tryReplaceStates(const CIT_StateFrame& from, const CIT_StateFrame to, T_StateFrame& res);
+        T_StateFrame trySkipStates( const T_StateFrame& originStates);
+        void trySkipStates(const CIT_StateFrame& from, const CIT_StateFrame to, T_StateFrame& res);
         void FilterRepositioning(const CIT_StateFrame& from, const CIT_StateFrame to, T_StateFrame& res);
         T_StateFrame FilterRepositioning(const T_StateFrame& originStates);
+        void FilterBreakCreate(const CIT_StateFrame& from, const CIT_StateFrame to, T_StateFrame& res);
+        T_StateFrame FilterBreakCreate(const T_StateFrame& originStates);
         StateFrame findBestRepositionState(T_StateFrame candidates,std::vector<std::string> limbsNames);
+        bool testReachability(const State& s0, const State& s1);
 
 
     protected:
