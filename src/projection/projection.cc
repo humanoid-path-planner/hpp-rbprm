@@ -341,6 +341,7 @@ ProjectionReport projectEffector(hpp::core::ConfigProjectorPtr_t proj, const hpp
 #ifdef PROFILE
         watch.stop("collision");
 #endif
+        hppDout(notice,"Projection successfull, add new contact info :");
         body->device_->currentConfiguration(configuration);
         body->device_->computeForwardKinematics();
         State tmp (current);
@@ -378,7 +379,9 @@ fcl::Transform3f computeProjectionMatrix(const hpp::rbprm::RbPrmFullBodyPtr_t& b
     // the normal is given by the normal of the contacted object
     const fcl::Vec3f z = limb->effector_->currentTransformation().getRotation() * limb->normal_;
     const fcl::Matrix3f alignRotation = tools::GetRotationMatrix(z,normal);
+    hppDout(notice,"alignRotation : \n"<<alignRotation);
     const fcl::Matrix3f rotation = alignRotation * limb->effector_->currentTransformation().getRotation();
+    hppDout(notice,"rotation : \n"<<rotation);
     fcl::Vec3f posOffset = position - rotation * limb->offset_;
     posOffset = posOffset + normal * epsilon;
     return fcl::Transform3f(rotation,posOffset);

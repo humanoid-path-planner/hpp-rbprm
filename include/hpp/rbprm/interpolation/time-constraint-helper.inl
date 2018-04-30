@@ -44,7 +44,7 @@
 #include <hpp/constraints/symbolic-calculus.hh>
 #include <hpp/constraints/symbolic-function.hh>
 #include <vector>
-
+#include <hpp/model/configuration.hh>
 namespace hpp {
 using namespace core;
 using namespace model;
@@ -161,6 +161,9 @@ namespace
 
         ConfigurationPtr_t start = TimeConfigFromDevice(*this, from, 0.);
         ConfigurationPtr_t end   = TimeConfigFromDevice(*this, to  , 1.);
+        hppDout(notice,"Run : start config = r(["<<model::displayConfig(*start)<<"])");
+        hppDout(notice,"Run : end   config = r(["<<model::displayConfig(*end)<<"])");
+
         rootProblem_.initConfig(start);
         BiRRTPlannerPtr_t planner = BiRRTPlanner::create(rootProblem_);
         ProblemTargetPtr_t target = problemTarget::GoalConfigurations::create (planner);
@@ -169,6 +172,7 @@ namespace
         InitConstraints();
         if(maxIterations>0)
             planner->maxIterations(maxIterations);
+        hppDout(notice,"Max iterations : "<<maxIterations);
         boost::posix_time::ptime timeStart(boost::posix_time::microsec_clock::universal_time());
         try{
             res = planner->solve();

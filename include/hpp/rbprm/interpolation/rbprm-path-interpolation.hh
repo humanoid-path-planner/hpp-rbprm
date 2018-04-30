@@ -88,7 +88,7 @@ namespace hpp {
 
 
         ///
-        /// \brief addGoalConfig add goal configuration (end_ state) at the end of a states list. Modify the last state (or add intermediate states) in the list to assure that there is only one contact variation between each states.
+        /// \brief addGoalConfig add goal configuration (end_state) at the end of a states list. Modify the last state (or add intermediate states) in the list to assure that there is only one contact variation between each states.
         /// \param states
         /// \return the input list with the last states modified and the goal state added
         ///
