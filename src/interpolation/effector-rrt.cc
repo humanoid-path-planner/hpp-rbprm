@@ -301,13 +301,22 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
             pts = bezier_com_traj::computeConstantWaypointsInitPredef(pData,time);
             refEffector= BezierPath::create(endEffectorDevice,pts.begin(),pts.end(),config,offsetConfig,core::interval_t(0.,time));
             pData.j1_ = refEffector->getBezier()->derivate(time,3);
+            pData.ddc1_ = refEffector->getBezier()->derivate(time,2);
+            pData.dc1_ = refEffector->getBezier()->derivate(time,1);
             hppDout(notice,"New final jerk : "<<pData.j1_.transpose());
+            hppDout(notice,"New final acc  : "<<pData.ddc1_.transpose());
+            hppDout(notice,"New final vel  : "<<pData.dc1_.transpose());
         }
         else{
             pts = bezier_com_traj::computeConstantWaypointsGoalPredef(pData,time);
             refEffector= BezierPath::create(endEffectorDevice,pts.begin(),pts.end(),offsetConfig,config,core::interval_t(0.,time));
             pData.j0_ = refEffector->getBezier()->derivate(0.,3);
-            hppDout(notice,"New final jerk : "<<pData.j0_.transpose());
+            pData.ddc0_ = refEffector->getBezier()->derivate(0.,2);
+            pData.dc0_ = refEffector->getBezier()->derivate(0.,1);
+            hppDout(notice,"New init jerk : "<<pData.j0_.transpose());
+            hppDout(notice,"New init acc  : "<<pData.ddc0_.transpose());
+            hppDout(notice,"New init vel  : "<<pData.dc0_.transpose());
+
             }
 
         // get the final / initial jerk and set it in problemData :
@@ -398,11 +407,11 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
 
      }
 */
-
+/*
     void computePredefConstants(double dist_translation,double p_max,double p_min,double t_total,double &t_predef, double &posOffset, double &velOffset,double &a_max_predefined ){
         double timeMid= t_total - (2*t_predef);
 
-        const double dddjerk = 25000.;
+        const double dddjerk = 4000.; // 3000
         //const double djerk = ddjerk*t_predef;
         const double jerk = (1./6.)*dddjerk*t_predef*t_predef* t_predef;
         a_max_predefined = (1./24.)*dddjerk *t_predef*t_predef*t_predef* t_predef;
@@ -412,11 +421,11 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
         posOffset = (1./720.) * dddjerk * t_predef * t_predef * t_predef* t_predef * t_predef* t_predef;
         hppDout(notice,"pos offset = "<<posOffset<<" ; jerk = "<<jerk<<" ; acc = "<<a_max_predefined<<" ; vel = "<<velOffset);
      }
-/*
+*/
     void computePredefConstants(double dist_translation,double p_max,double p_min,double t_total,double &t_predef, double &posOffset, double &velOffset,double &a_max_predefined ){
         double timeMid= t_total - (2*t_predef);
 
-        const double ddjerk = 500.;
+        const double ddjerk = 250.;
         //const double djerk = ddjerk*t_predef;
         const double jerk = 0.5*ddjerk*t_predef*t_predef;
         a_max_predefined = (1./6.)*ddjerk *t_predef*t_predef*t_predef;
@@ -426,12 +435,12 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
         posOffset = (1./120.) * ddjerk * t_predef * t_predef * t_predef* t_predef * t_predef;
         hppDout(notice,"pos offset = "<<posOffset<<" ; jerk = "<<jerk<<" ; acc = "<<a_max_predefined<<" ; vel = "<<velOffset);
      }
-*/
+
 /*
     void computePredefConstants(double dist_translation,double p_max,double p_min,double t_total,double &t_predef, double &posOffset, double &velOffset,double &a_max_predefined ){
-        double timeMid= t_total - (2*t_predef);
+       // double timeMid= t_total - (2*t_predef);
 
-        const double djerk = 20.;
+        const double djerk = 30.;
         //const double djerk = ddjerk*t_predef;
         const double jerk = djerk*t_predef;
         a_max_predefined = 0.5*djerk *t_predef*t_predef;
@@ -440,8 +449,6 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
         velOffset = (1./6.) * djerk * t_predef * t_predef * t_predef ;
         posOffset = (1./24.) * djerk * t_predef * t_predef * t_predef* t_predef ;
         hppDout(notice,"pos offset = "<<posOffset<<" ; jerk = "<<jerk<<" ; acc = "<<a_max_predefined<<" ; vel = "<<velOffset);
-
-
      }
 */
     /*void computePredefConstants(double dist_translation,double p_max,double p_min,double t_total,double &t_predef, double &posOffset, double &velOffset,double &a_max_predefined ){
@@ -516,7 +523,7 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
         c1[2]=0;
         const double dist_translation = (c1-c0).norm();
         const double timeDelay = 0.05; // this is the time during the 'single support' phase where the feet don't move. It is needed to allow a safe mass transfer without exiting the flexibility.
-        const double totalTime = comPath->length()-timeDelay;
+        const double totalTime = comPath->length()-2.*timeDelay;
         //const double ratioTimeTakeOff=0.1;// percentage of the total time // was 0.1
 
 
@@ -531,7 +538,7 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
            // timeTakeoff = 0.1;
            // p_max = 0.1;
            // p_min = 0.05;
-            timeTakeoff = 0.2;
+            timeTakeoff = 0.3;
             p_max = 0.03;
             p_min = 0.01;
         }else{
@@ -541,7 +548,10 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
         }
 
 
-        computePredefConstants(dist_translation,p_max,p_min,totalTime,timeTakeoff,posOffset,velOffset,a_max_predefined);
+        //computePredefConstants(dist_translation,p_max,p_min,totalTime,timeTakeoff,posOffset,velOffset,a_max_predefined);
+        posOffset = 0.005;
+        velOffset = 0.;
+        a_max_predefined = 0.;
 
 
         const double timeLanding = timeTakeoff;
@@ -647,13 +657,13 @@ buildPredefinedPath(endEffectorDevice,nextNormal,endConfig,posOffset,-velOffset,
         c1[2]=0;
         const double dist_translation = (c1-c0).norm();
         const double timeDelay = 0.05; // this is the time during the 'single support' phase where the feet don't move. It is needed to allow a safe mass transfer without exiting the flexibility.
-        const double totalTime = comPathLength-timeDelay;
+        const double totalTime = comPathLength-2.*timeDelay;
         //const double ratioTimeTakeOff=0.1;// percentage of the total time // was 0.1
 
 
 
        // const double timeTakeoff = totalTime*ratioTimeTakeOff; // percentage of the total time
-        double timeTakeoff = 0.2; // it's a minimum time, it can be increased
+        double timeTakeoff = 0.3; // it's a minimum time, it can be increased
         const double p_max = 0.03; // offset for the higher point in the curve
         const double p_min = 0.01; // min offset at the end of the predefined trajectory
 
@@ -666,7 +676,11 @@ buildPredefinedPath(endEffectorDevice,nextNormal,endConfig,posOffset,-velOffset,
         //a_max_predefined = 1.5;
 
 
-        computePredefConstants(dist_translation,p_max,p_min,totalTime,timeTakeoff,posOffset,velOffset,a_max_predefined);
+       // computePredefConstants(dist_translation,p_max,p_min,totalTime,timeTakeoff,posOffset,velOffset,a_max_predefined);
+        posOffset = 0.005;
+        velOffset = 0.;
+        a_max_predefined = 0.;
+
 
         const double timeLanding = timeTakeoff;
         const double timeMid = totalTime-2*timeTakeoff;
@@ -716,6 +730,14 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
         weightRRT.push_back(0.9);
         weightRRT.push_back(0.95);
         weightRRT.push_back(1.);
+       /* weightRRT.push_back(0.);
+        weightRRT.push_back(0.2);
+        weightRRT.push_back(0.4);
+        weightRRT.push_back(0.6);
+        weightRRT.push_back(0.8);
+        weightRRT.push_back(0.9);
+        weightRRT.push_back(1.);*/
+
         std::vector<core::PathVectorPtr_t> res;
         core::PathVectorPtr_t bezierPath;
         bezier_Ptr refEffectorMidBezier;
