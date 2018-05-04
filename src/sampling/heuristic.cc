@@ -299,8 +299,11 @@ HeuristicFactory::HeuristicFactory()
    // seed = 1523436977; // stairs 10cm full
   //  seed = 1523620355 ; //stairs 10
     // seed = 1523892376 ; //stairs TO TRY
-    seed = 1523953674; // stairs 10cm, FIRST VIDEO
+   // seed = 1523953674; // stairs 10cm, FIRST VIDEO
    // seed = 1523448571; // darpa STEVE
+    //seed = 1525355227; // slalom bauzil no obstacles
+   // seed = 1525416193 ; //slalom 0.8 ; small steps
+    //seed = 1525357326; //slalom 0.8
     std::cout<<"seed HEURISTIC = "<<seed<<std::endl;
     srand (seed);
     hppDout(notice,"SEED for heuristic = "<<seed);
