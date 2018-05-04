@@ -226,7 +226,8 @@ const fcl::Vec3f comfcl = comcptr->com();*/
         hppDout(notice,"Setup cone contacts : ");
         hppDout(notice,"position : \n"<<positions);
         hppDout(notice,"normal : \n"<<normals);
-        sEq.setNewContacts(positions,normals,friction,alg,graspIndex,1.);
+        bool success = sEq.setNewContacts(positions,normals,friction,alg,graspIndex,1.);
+        assert(success && "Error in centroidal dynamic while setting the new contacts");
         return com;
     }
 
