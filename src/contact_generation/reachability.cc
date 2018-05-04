@@ -148,7 +148,7 @@ std::pair<MatrixXX, VectorX> computeStabilityConstraints(const centroidal_dynami
 
 centroidal_dynamics::Equilibrium computeContactConeForState(const RbPrmFullBodyPtr_t& fullbody, State &state){
     hppStartBenchmark(REACHABLE_CALL_CENTROIDAL);
-    centroidal_dynamics::Equilibrium contactCone(fullbody->device_->name(), fullbody->device_->mass(),4,centroidal_dynamics::SOLVER_LP_QPOASES,true,10,false);
+    centroidal_dynamics::Equilibrium contactCone(fullbody->device_->name(), fullbody->device_->mass(),4,centroidal_dynamics::SOLVER_LP_QPOASES,true,100,false);
     centroidal_dynamics::EquilibriumAlgorithm alg = centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP;
     stability::setupLibrary(fullbody,state,contactCone,alg);
     hppStopBenchmark(REACHABLE_CALL_CENTROIDAL);
