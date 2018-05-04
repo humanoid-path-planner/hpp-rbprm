@@ -479,8 +479,8 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     pData.dc1_ = next.configuration_.segment<3>(id_velocity);
     pData.ddc0_ = previous.configuration_.segment<3>(id_velocity+3); // unused for now
     pData.ddc1_ = next.configuration_.segment<3>(id_velocity+3);
-    //pData.dc0_ = fcl::Vec3f::Zero();
-    //pData.dc1_ = fcl::Vec3f::Zero();
+    pData.dc0_ = fcl::Vec3f::Zero();
+    pData.dc1_ = fcl::Vec3f::Zero();
     pData.ddc0_ = fcl::Vec3f::Zero();
     pData.ddc1_ = fcl::Vec3f::Zero();
     hppDout(notice,"Build pData : ");
@@ -518,7 +518,7 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     VectorX times;
     double total_time = 0;
     const double time_increment = 0.05;
-    const double min_SS = 0.2;
+    const double min_SS = 0.6;
     const double min_DS = 0.1;
     MatrixXX timings_matrix;
     bool timing_provided(false);
