@@ -519,7 +519,10 @@ if (nbFailures > 1)
         && !EqStringVec(ci1.contactCreations(ci0), ci2.contactCreations(ci1))){
             hppDout(notice,"condition on contact OK");
             // try to create a state s1_bis : s1 with the new contact in the same position as in s3
+            //robot_->device_->currentConfiguration(ci3.configuration_);
+            //robot_->device_->computeForwardKinematics();
             State s1_bis(ci1);
+            s1_bis.configuration_=ci3.configuration_;
             // get contact information from state 3 :
             std::string contactCreate = ci3.contactCreations(ci2)[0];
             hppDout(notice,"contact to change : "<<contactCreate);
@@ -591,6 +594,7 @@ if (nbFailures > 1)
             hppDout(notice,"condition on contact OK");
             // try to create a state s2_bis : s2 with the previous contact in the same position as in s0
             State s2_bis(ci2);
+            s2_bis.configuration_ = ci0.configuration_;
             // get contact information from state 0 :
             std::string contactCreate = ci1.contactCreations(ci0)[0];
             hppDout(notice,"contact to change : "<<contactCreate);
