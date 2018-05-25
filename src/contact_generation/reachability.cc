@@ -146,25 +146,31 @@ std::pair<MatrixXX, VectorX> computeStabilityConstraints(const centroidal_dynami
     return std::make_pair(A,b);
 }
 
-centroidal_dynamics::Equilibrium computeContactConeForState(const RbPrmFullBodyPtr_t& fullbody, State &state){
+centroidal_dynamics::Equilibrium computeContactConeForState(const RbPrmFullBodyPtr_t& fullbody, State &state, bool& success){
     hppStartBenchmark(REACHABLE_CALL_CENTROIDAL);
     centroidal_dynamics::Equilibrium contactCone(fullbody->device_->name(), fullbody->device_->mass(),4,centroidal_dynamics::SOLVER_LP_QPOASES,true,100,false);
     centroidal_dynamics::EquilibriumAlgorithm alg = centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP;
-    stability::setupLibrary(fullbody,state,contactCone,alg);
+    try{
+        stability::setupLibrary(fullbody,state,contactCone,alg,fullbody->getFriction(),0.05,0.05); // 0.01 : 'safe' support zone, under the flexibility
+        success = true;
+    }catch(std::runtime_error e){
+        hppDout(notice,"Error in setupLibrary : "<<e.what());
+        success = false;
+    }
     hppStopBenchmark(REACHABLE_CALL_CENTROIDAL);
     hppDisplayBenchmark(REACHABLE_CALL_CENTROIDAL);
     return contactCone;
 }
 
-std::pair<MatrixXX, VectorX> computeStabilityConstraintsForState(const RbPrmFullBodyPtr_t& fullbody, State &state,const fcl::Vec3f& acc){
+std::pair<MatrixXX, VectorX> computeStabilityConstraintsForState(const RbPrmFullBodyPtr_t& fullbody, State &state,bool& success, const fcl::Vec3f& acc){
     hppDout(notice,"contact order : ");
     hppDout(notice,"  "<<state.contactOrder_.front());
-    return computeStabilityConstraints(computeContactConeForState(fullbody,state),state.contactPositions_.at(state.contactOrder_.front()),
+    return computeStabilityConstraints(computeContactConeForState(fullbody,state,success),state.contactPositions_.at(state.contactOrder_.front()),
                                        acc.isZero() ? state.configuration_.tail<3>() : acc);
 }
 
-std::pair<MatrixXX, VectorX> computeConstraintsForState(const RbPrmFullBodyPtr_t& fullbody, State &state){
-    return stackConstraints(computeKinematicsConstraintsForState(fullbody,state),computeStabilityConstraintsForState(fullbody,state));
+std::pair<MatrixXX, VectorX> computeConstraintsForState(const RbPrmFullBodyPtr_t& fullbody, State &state,bool& success){
+    return stackConstraints(computeKinematicsConstraintsForState(fullbody,state),computeStabilityConstraintsForState(fullbody,state,success));
 }
 
 Result isReachableIntermediate(const RbPrmFullBodyPtr_t& fullbody,State &previous,State &intermediate, State& next){
@@ -241,6 +247,7 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
     }
 
     bool success;
+    bool successCone;
     Result res;
     std::pair<MatrixXX,VectorX> Ab,K_p,K_n,A_p,A_n;
     // there is only one contact creation OR (exclusive) break between the two states
@@ -256,7 +263,10 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
         //Ab = stackConstraints(A_n,K_p);
         // develloped computation, needed to display the differents constraints :
         hppStartBenchmark(REACHABLE_STABILITY);
-        A_n = computeStabilityConstraintsForState(fullbody,next,acc);
+        A_n = computeStabilityConstraintsForState(fullbody,next,successCone,acc);
+        if(!successCone)
+            return Result(UNABLE_TO_COMPUTE);
+
         hppStopBenchmark(REACHABLE_STABILITY);
         hppDisplayBenchmark(REACHABLE_STABILITY);
         hppStartBenchmark(REACHABLE_KINEMATIC);
@@ -277,7 +287,9 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
         //std::pair<MatrixXX,VectorX> K_n_m = computeKinematicsConstraintsForLimb(fullbody,previous,contactsCreation[0]); // kinematic constraint only for the moving contact for state previous
         //Ab = stackConstraints(C_p,K_n_m);
         hppStartBenchmark(REACHABLE_STABILITY);
-        A_p = computeStabilityConstraintsForState(fullbody,previous,acc);
+        A_p = computeStabilityConstraintsForState(fullbody,previous,successCone,acc);
+        if(!successCone)
+            return Result(UNABLE_TO_COMPUTE);
         hppStopBenchmark(REACHABLE_STABILITY);
         hppDisplayBenchmark(REACHABLE_STABILITY);
         //K_p = computeKinematicsConstraintsForState(fullbody,previous);
@@ -444,25 +456,34 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
 
     // build ProblemData from states object and call solveOneStep()
     bezier_com_traj::ProblemData pData;
+    bool successCone(true),successConeCurrent;
     // build contactPhases :
     bezier_com_traj::ContactData previousData,nextData,midData;
     std::pair<MatrixX3,VectorX> Ab = computeKinematicsConstraintsForState(fullbody,previous);
     previousData.Kin_ = Ab.first;
     previousData.kin_ = Ab.second;
-    centroidal_dynamics::Equilibrium conePrevious = computeContactConeForState(fullbody,previous);
+    centroidal_dynamics::Equilibrium conePrevious = computeContactConeForState(fullbody,previous,successConeCurrent);
+    successCone = successCone && successConeCurrent;
     previousData.contactPhase_ = &conePrevious;
     if(contactsBreak.size() > 0){
         Ab = computeKinematicsConstraintsForState(fullbody,mid);
         midData.Kin_ = Ab.first;
         midData.kin_ = Ab.second;
     }
-    centroidal_dynamics::Equilibrium coneMid = computeContactConeForState(fullbody,mid);
+    centroidal_dynamics::Equilibrium coneMid = computeContactConeForState(fullbody,mid,successConeCurrent);
+    successCone = successCone && successConeCurrent;
     midData.contactPhase_ = &coneMid;
     Ab = computeKinematicsConstraintsForState(fullbody,next);
     nextData.Kin_ = Ab.first;
     nextData.kin_ = Ab.second;
-    centroidal_dynamics::Equilibrium coneNext = computeContactConeForState(fullbody,next);
+    centroidal_dynamics::Equilibrium coneNext = computeContactConeForState(fullbody,next,successConeCurrent);
+    successCone = successCone && successConeCurrent;
     nextData.contactPhase_ = &coneNext;
+
+    if(!successCone){
+        return Result(UNABLE_TO_COMPUTE);
+    }
+
 
     pData.contacts_.push_back(previousData);
     if(contactsBreak.size() == 1 && contactsCreation.size() == 1){
@@ -503,13 +524,6 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
         lessContacts = previous;
     else
         lessContacts = previous;
-    fcl::Vec3f init_guess = fcl::Vec3f::Zero();
-    for(std::map<std::string, fcl::Vec3f>::const_iterator cit = lessContacts.contactPositions_.begin() ; cit != lessContacts.contactPositions_.end() ; ++cit){
-        init_guess += cit->second;
-    }
-    init_guess /= lessContacts.contactPositions_.size();
-    init_guess[2] = (previous.com_[2] + next.com_[2])/2.;
-
 
 
 
@@ -545,7 +559,7 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
                                0.3 , 0.05, 0.15;
                         // hyq flat
 */
-            timings_matrix = MatrixXX(10,3);
+            timings_matrix = MatrixXX(16,3);
             timings_matrix <<
                                         0.3, 1.2, 0.3,
                                         0.6, 1.2, 0.6,
@@ -556,7 +570,14 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
                                          1, 0.7, 1, // found with script
                                             1.5, 0.7, 1,
                                             0.8,0.8,0.8, // script good
-                                          0.8 , 0.7, 0.8;
+                                          0.8 , 0.7, 0.8,
+                                          0.3 , 0.6, 0.3,
+                                            0.5 , 0.6, 0.5,
+                                            0.8 , 0.6, 0.8,
+                                            1. , 0.6, 1.,
+                                            1.2 , 0.6, 1.2,
+                                            1.5 , 0.6, 1.5;
+
                                     // hyq flat
 
 /*
@@ -643,7 +664,7 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
         hppDout(notice,"Try with timings : "<<current_timings.transpose());
         hppDout(notice,"Call solveOneStep");
         hppStartBenchmark(SOLVE_TRANSITION_ONE_STEP);
-        resBezier = bezier_com_traj::computeCOMTraj(pData,current_timings,init_guess,numPointsPerPhases,feasabilityTreshold);
+        resBezier = bezier_com_traj::computeCOMTrajFixedSize(pData,current_timings,numPointsPerPhases);
         hppStopBenchmark(SOLVE_TRANSITION_ONE_STEP);
         hppDisplayBenchmark(SOLVE_TRANSITION_ONE_STEP);
 
