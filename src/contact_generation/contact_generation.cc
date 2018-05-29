@@ -61,6 +61,8 @@ ContactGenHelper::ContactGenHelper(RbPrmFullBodyPtr_t fb, const State& ps, model
 , testReachability_(true)
 , maximiseContacts_(true)
 , accept_unreachable_(false)
+, tryQuasiStatic_(true)
+, reachabilityPointPerPhases_(5)
 {
     workingState_.configuration_ = configuration;
     workingState_.stable = false;
@@ -471,7 +473,7 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
                         if(contactGenHelper.quasiStatic_){
                             resReachability = reachability::isReachable(contactGenHelper.fullBody_,intermediateState,rep.result_);
                         }else{
-                            resReachability = reachability::isReachableDynamic(contactGenHelper.fullBody_,previous,rep.result_);
+                            resReachability = reachability::isReachableDynamic(contactGenHelper.fullBody_,previous,rep.result_,contactGenHelper.tryQuasiStatic_,std::vector<double>(),contactGenHelper.reachabilityPointPerPhases_);
                         }
                         isReachable = resReachability.success();
                     }else{

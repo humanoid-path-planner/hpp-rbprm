@@ -71,6 +71,8 @@ struct ContactGenHelper
     bool testReachability_;
     const bool maximiseContacts_;
     const bool accept_unreachable_;
+    const bool tryQuasiStatic_;
+    const int reachabilityPointPerPhases_;
 
 };
 
