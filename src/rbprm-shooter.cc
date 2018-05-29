@@ -212,6 +212,7 @@ namespace
       //seed = 1519050403 ; //platform hrp2
      // seed = 1519487130 ; // stair no ramp
      // seed = 1522388624; // error stairs
+      seed = 1525354944 ; // slalom bauzil
       srand (seed);
       hppDout(notice,"&&&&&& SEED = "<<seed);
       std::cout<<"seed = "<<seed<<std::endl;
