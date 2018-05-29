@@ -263,6 +263,7 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
      * @return the path
      */
     BezierPathPtr_t buildPredefinedPath(const DevicePtr_t& endEffectorDevice,const Vector3& normal,const Configuration_t& config,double posOffset, double velOffset,double time,bool init, Configuration_t& offsetConfig,bezier_com_traj::ProblemData& pData,double aOffset = 0){
+        pData.constraints_.flag_ = INIT_POS | INIT_VEL | INIT_ACC | END_ACC | END_VEL | END_POS | INIT_JERK | END_JERK;
         Vector3 c(config.head<3>());
         pData.c0_=c;
         pData.c1_=c;
@@ -538,7 +539,7 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
            // timeTakeoff = 0.1;
            // p_max = 0.1;
            // p_min = 0.05;
-            timeTakeoff = 0.2;
+            timeTakeoff = 0.3;
             p_max = 0.03;
             p_min = 0.01;
         }else{
@@ -549,7 +550,7 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
 
 
         //computePredefConstants(dist_translation,p_max,p_min,totalTime,timeTakeoff,posOffset,velOffset,a_max_predefined);
-        posOffset = 0.005;
+        posOffset = 0.004;
         velOffset = 0.;
         a_max_predefined = 0.;
 
@@ -580,6 +581,8 @@ buildPredefinedPath(endEffectorDevice,nextNormal,endConfig,posOffset,-velOffset,
 
         // ## compute bezier curve that follow the rrt path and that respect the constraints :
         bezier_com_traj::ProblemData pDataMid;
+        pDataMid.constraints_.flag_ = INIT_POS | INIT_VEL | INIT_ACC | END_ACC | END_VEL | END_POS | INIT_JERK | END_JERK;
+
         pDataMid.c0_=pDataTakeoff.c1_;
         pDataMid.c1_=pDataLanding.c0_;
         pDataMid.dc0_=pDataTakeoff.dc1_;
@@ -663,7 +666,7 @@ buildPredefinedPath(endEffectorDevice,nextNormal,endConfig,posOffset,-velOffset,
 
 
        // const double timeTakeoff = totalTime*ratioTimeTakeOff; // percentage of the total time
-        double timeTakeoff = 0.2; // it's a minimum time, it can be increased
+        double timeTakeoff = 0.3; // it's a minimum time, it can be increased
         const double p_max = 0.03; // offset for the higher point in the curve
         const double p_min = 0.01; // min offset at the end of the predefined trajectory
 
@@ -677,7 +680,7 @@ buildPredefinedPath(endEffectorDevice,nextNormal,endConfig,posOffset,-velOffset,
 
 
        // computePredefConstants(dist_translation,p_max,p_min,totalTime,timeTakeoff,posOffset,velOffset,a_max_predefined);
-        posOffset = 0.005;
+        posOffset = 0.004;
         velOffset = 0.;
         a_max_predefined = 0.;
 
@@ -697,6 +700,8 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
 
         // ## compute bezier curve that follow the rrt path and that respect the constraints :
         bezier_com_traj::ProblemData pDataMid;
+        pDataMid.constraints_.flag_ = INIT_POS | INIT_VEL | INIT_ACC | END_ACC | END_VEL | END_POS | INIT_JERK | END_JERK;
+
         pDataMid.c0_=pDataTakeoff.c1_;
         pDataMid.c1_=pDataLanding.c0_;
         pDataMid.dc0_=pDataTakeoff.dc1_;
@@ -741,7 +746,36 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
         std::vector<core::PathVectorPtr_t> res;
         core::PathVectorPtr_t bezierPath;
         bezier_Ptr refEffectorMidBezier;
+        hppDout(notice,"Try to fit bezier to rrt path with 1 variables");
         for(std::vector<double>::const_iterator it_weight = weightRRT.begin() ; it_weight != weightRRT.end() ; ++it_weight){
+            hppDout(notice,"Compute bezier path for weight : "<<*it_weight);
+            bezierPath = computeBezierPath(endEffectorDevice,pDataMid,endEffPath,timeMid,(*it_weight),refEffectorTakeoff, refEffectorLanding,refEffectorMidBezier );
+            if(bezierPath){
+                res.push_back(bezierPath);
+            }else{
+                hppDout(notice,"Error while compute bezier path, with weight : "<<*it_weight);
+                res.push_back(fullBodyPathVector);
+            }
+        }
+        // now use 3 waypoints variables :
+        hppDout(notice,"Try to fit bezier to rrt path with 3 variables");
+        pDataMid.constraints_.flag_ =INIT_POS | INIT_VEL | INIT_ACC | END_ACC | END_VEL | END_POS | INIT_JERK | END_JERK | THREE_FREE_VAR;
+
+        for(std::vector<double>::const_iterator it_weight = weightRRT.begin() +1; it_weight != weightRRT.end() ; ++it_weight){
+            hppDout(notice,"Compute bezier path for weight : "<<*it_weight);
+            bezierPath = computeBezierPath(endEffectorDevice,pDataMid,endEffPath,timeMid,(*it_weight),refEffectorTakeoff, refEffectorLanding,refEffectorMidBezier );
+            if(bezierPath){
+                res.push_back(bezierPath);
+            }else{
+                hppDout(notice,"Error while compute bezier path, with weight : "<<*it_weight);
+                res.push_back(fullBodyPathVector);
+            }
+        }
+
+        hppDout(notice,"Try to fit bezier to rrt path with 5 variables");
+        pDataMid.constraints_.flag_ =INIT_POS | INIT_VEL | INIT_ACC | END_ACC | END_VEL | END_POS | INIT_JERK | END_JERK | FIVE_FREE_VAR;
+
+        for(std::vector<double>::const_iterator it_weight = weightRRT.begin() +1; it_weight != weightRRT.end() ; ++it_weight){
             hppDout(notice,"Compute bezier path for weight : "<<*it_weight);
             bezierPath = computeBezierPath(endEffectorDevice,pDataMid,endEffPath,timeMid,(*it_weight),refEffectorTakeoff, refEffectorLanding,refEffectorMidBezier );
             if(bezierPath){
