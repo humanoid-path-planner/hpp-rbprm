@@ -439,7 +439,7 @@ ProjectionReport projectToComPosition(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, c
                                            const hpp::rbprm::State& currentState)
 {
     ProjectionReport res;
-    core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(fullBody->device_,"proj", 1e-3, 1000);
+    core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(fullBody->device_,"proj", 1e-4, 1000);
     CreateContactConstraints(fullBody, currentState, proj);
     CreateComPosConstraint(fullBody, target, proj);
    /* CreatePosturalTaskConstraint(fullBody,proj);
