@@ -269,7 +269,7 @@ const fcl::Vec3f comfcl = comcptr->com();*/
     }
 
 
-    double IsStable(const RbPrmFullBodyPtr_t fullbody, State& state,fcl::Vec3f acc, const centroidal_dynamics::EquilibriumAlgorithm algorithm)
+    double IsStable(const RbPrmFullBodyPtr_t fullbody, State& state, fcl::Vec3f acc, fcl::Vec3f com, const centroidal_dynamics::EquilibriumAlgorithm algorithm)
     {
 #ifdef PROFILE
     RbPrmProfiler& watch = getRbPrmProfiler();
@@ -288,7 +288,11 @@ const fcl::Vec3f comfcl = comcptr->com();*/
             }
         }
         Equilibrium staticEquilibrium(initLibrary(fullbody));
-        centroidal_dynamics::Vector3 com = setupLibrary(fullbody,state,staticEquilibrium,alg);
+        centroidal_dynamics::Vector3 comComputed = setupLibrary(fullbody,state,staticEquilibrium,alg);
+        if(! com.isZero()){
+            hppDout(notice,"isStable : a CoM was given as parameter, use this one.");
+            comComputed = centroidal_dynamics::Vector3(com);
+        }
         double res;
         LP_status status;
         if(alg == EQUILIBRIUM_ALGORITHM_PP)
@@ -296,22 +300,22 @@ const fcl::Vec3f comfcl = comcptr->com();*/
             hppDout(notice,"isStable Called with STATIC_EQUILIBRIUM_ALGORITHM_PP");
             bool isStable(false);
             if(fullbody->staticStability()){
-                status = staticEquilibrium.checkRobustEquilibrium(com,isStable);
+                status = staticEquilibrium.checkRobustEquilibrium(comComputed,isStable);
             }else{
-                status = staticEquilibrium.checkRobustEquilibrium(com,acc,isStable);
+                status = staticEquilibrium.checkRobustEquilibrium(comComputed,acc,isStable);
             }
             res = isStable? std::numeric_limits<double>::max() : -1.; // FIXME robustness not implemented with PP algorithm ...
         }
         else // STATIC_EQUILIBRIUM_ALGORITHM_DLP
         {
            if(fullbody->staticStability()){
-          		status = staticEquilibrium.computeEquilibriumRobustness(com,res);
+                status = staticEquilibrium.computeEquilibriumRobustness(comComputed,res);
               hppDout(notice,"isStable Called with staticStability");
            }
            else{
-          		status = staticEquilibrium.computeEquilibriumRobustness(com,acc,res);
+                status = staticEquilibrium.computeEquilibriumRobustness(comComputed,acc,res);
               hppDout(notice,"isStable : config = "<<model::displayConfig(state.configuration_));
-              hppDout(notice,"isStable : COM = "<<com.transpose());
+              hppDout(notice,"isStable : COM = "<<comComputed.transpose());
               hppDout(notice,"isStable : acc = "<<acc);
            }
         }
