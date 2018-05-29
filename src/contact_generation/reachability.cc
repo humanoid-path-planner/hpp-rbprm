@@ -16,7 +16,7 @@
 #endif
 
 #ifndef FULL_TIME_SAMPLING
-#define FULL_TIME_SAMPLING 0
+#define FULL_TIME_SAMPLING 1
 #endif
 
 namespace hpp {
@@ -370,7 +370,7 @@ void printTimingFile(std::ofstream& file,const VectorX& timings, bool success, b
     file<<timings[0]<<" "<<timings[1]<<" "<<timings[2]<<" "<<(success?"1 ":"0 ")<<(quasiStaticSuccess?"1":"0")<<endl;
 }
 
-Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& next,bool tryQuasiStatic, std::vector<double> timings, int numPointsPerPhases,double feasabilityTreshold){
+Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& next, bool tryQuasiStatic, std::vector<double> timings, int numPointsPerPhases){
     Result res;
     std::vector<std::string> contactsCreation, contactsBreak;
     next.contactBreaks(previous,contactsBreak);
@@ -532,8 +532,11 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     VectorX times;
     double total_time = 0;
     const double time_increment = 0.05;
-    const double min_SS = 0.6;
-    const double min_DS = 0.1;
+    const double min_SS = 0.8;
+    const double max_SS = 1.6;
+    const double min_DS = 0.2;
+    const double max_DS = 1.;
+
     MatrixXX timings_matrix;
     bool timing_provided(false);
     int t_id = 1;
@@ -559,9 +562,9 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
                                0.3 , 0.05, 0.15;
                         // hyq flat
 */
-            timings_matrix = MatrixXX(16,3);
+            timings_matrix = MatrixXX(15,3);
             timings_matrix <<
-                                        0.3, 1.2, 0.3,
+
                                         0.6, 1.2, 0.6,
                                         1. , 1.2, 1.,
                                         0.3 , 0.8, 0.3,
@@ -664,7 +667,15 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
         hppDout(notice,"Try with timings : "<<current_timings.transpose());
         hppDout(notice,"Call solveOneStep");
         hppStartBenchmark(SOLVE_TRANSITION_ONE_STEP);
-        resBezier = bezier_com_traj::computeCOMTrajFixedSize(pData,current_timings,numPointsPerPhases);
+        if(numPointsPerPhases > 0){
+            hppDout(notice,"Call computeCOMTraj discretized");
+            resBezier = bezier_com_traj::computeCOMTrajFixedSize(pData,current_timings,numPointsPerPhases);
+        }
+        else{
+            hppDout(notice,"Call computeCOMTraj continuous");
+            resBezier = bezier_com_traj::computeCOMTraj(pData,current_timings);
+        }
+
         hppStopBenchmark(SOLVE_TRANSITION_ONE_STEP);
         hppDisplayBenchmark(SOLVE_TRANSITION_ONE_STEP);
 
@@ -705,14 +716,14 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
         if(!timing_provided){
             #if FULL_TIME_SAMPLING
             current_timings[0] +=time_increment;
-            if(current_timings[0] > 1.5){
+            if(current_timings[0] > max_DS){
                 current_timings[0] = min_DS;
                 current_timings[1] += time_increment;
-                if(current_timings[1] > 1.5){
+                if(current_timings[1] > max_SS){
                     if(current_timings.size() == 3){
                         current_timings[1] = min_SS;
                         current_timings[2] += time_increment;
-                        if(current_timings[2] > 2.){
+                        if(current_timings[2] > max_DS){
                             no_timings_left = true;
                         }
                     }else{
