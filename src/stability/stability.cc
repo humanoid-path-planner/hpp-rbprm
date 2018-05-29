@@ -44,9 +44,12 @@ namespace hpp {
 namespace rbprm {
 namespace stability{
 
-    void computeRectangleContact(const std::string& name, const RbPrmLimbPtr_t limb, const State& state, Ref_matrix43 p)
+    void computeRectangleContact(const std::string& name, const RbPrmLimbPtr_t limb, const State& state, Ref_matrix43 p, double lx = 0, double ly = 0)
     {
-        const double& lx = limb->x_, ly = limb->y_;
+        if (lx == 0)
+            lx = limb->x_;
+        if (ly == 0)
+            ly = limb->y_;
         const fcl::Vec3f& position = state.contactPositions_.at(name);
         //create rotation matrix from normal
         Eigen::Matrix3d R;
@@ -143,7 +146,7 @@ namespace stability{
 
 
     centroidal_dynamics::Vector3 setupLibrary(const RbPrmFullBodyPtr_t fullbody, State& state, Equilibrium& sEq, EquilibriumAlgorithm& alg,
-                                             core::value_type friction )
+                                             core::value_type friction , const double feetX, const double feetY) throw(std::runtime_error)
     {
         friction = fullbody->getFriction();
         const rbprm::T_Limb& limbs = fullbody->GetLimbs();
@@ -175,7 +178,7 @@ namespace stability{
             normal.normalize();
             const std::size_t& inc = *cit;
             if(inc > 1)
-                computeRectangleContact(contacts[c], limb,state,positions.middleRows<4>(currentIndex));
+                computeRectangleContact(contacts[c], limb,state,positions.middleRows<4>(currentIndex),feetX,feetY);
             else
                 computePointContact(contacts[c], limb,state,positions.middleRows<1>(currentIndex,inc));
             for(int i =0; i < inc; ++i)
