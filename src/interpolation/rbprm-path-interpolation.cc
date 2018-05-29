@@ -104,6 +104,7 @@ namespace hpp {
         // If projection was successful, we replace lastState with midState and then add end_ in the list
         if(projReport.success_){
             hppDout(notice,"projection of contact successful");
+            hppDout(notice,"New intermediate state : "<<model::displayConfig(projReport.result_.configuration_));
             results.push_back(std::make_pair(states.back().first,projReport.result_));
         }else{
         // If the projection was not successful, we keep lastState in the list and produce one intermediate state of each contact transition
