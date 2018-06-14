@@ -958,9 +958,31 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
 
     }
 
-    vector_t EndEffectorPath::operator ()(double t) const{
-        double u = fullBodyPath_->timeRange().first + t*fullBodyPath_->length(); // t is between 0 and 1
-        vector_t res = GetEffectorPositionAt(fullBodyPath_,positionConstraint_,u);
+    vector_t EndEffectorPath::operator ()(double u) const{
+        assert(u>=0 && u<=1 && "u must be normalized");
+        int tId = fullBodyPath_->outputSize()-1;
+        double t =  u*fullBodyPath_->end()[tId]; // u is between 0 and 1
+        hppDout(notice,"EndEffectorPath called, last time in fullBodyPath : "<<fullBodyPath_->end()[tId]);
+        hppDout(notice,"Indexed size : "<<fullBodyPath_->length());
+        double cId = 0;
+        bool found(false);
+        double index = 0;
+        hppDout(notice,"Looking for time : "<<t);
+        while(cId<fullBodyPath_->length() && !found){
+            if(fullBodyPath_->operator ()(cId)[tId] >= t){
+                index = cId;
+                found = true;
+            }
+            cId += 0.01;
+        }
+        if(found)
+            hppDout(notice,"found at index : "<<index);
+        else
+            index = t; // should never happen ?? should throw an error
+
+        // the path "fullBodyPath" is not indexed by the time, the time value is the last value of each extraConfig
+        // we need to look for the time corresponding to t :
+        vector_t res = GetEffectorPositionAt(fullBodyPath_,positionConstraint_,index);
         return Vector3(res+offset_);
     }
 
