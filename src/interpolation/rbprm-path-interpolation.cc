@@ -538,6 +538,9 @@ if (nbFailures > 1)
            // fcl::Matrix3f r = ci3.contactRotation_.at(contactCreate);
             projection::ProjectionReport rep = projection::projectStateToObstacle(robot_,contactCreate,robot_->GetLimb(contactCreate),s1_bis,n,p);
             hppDout(notice,"projection success : "<<rep.success_);
+            if(rep.success_){
+                rep = projection::projectToRootConfiguration(robot_,ci1.configuration_.head<3>(),rep.result_);
+            }
             ValidationReportPtr_t rport (ValidationReportPtr_t(new CollisionValidationReport));
             if((p1-p).norm() < 0.2 && rep.success_ && robot_->GetCollisionValidation()->validate(rep.result_.configuration_,rport)
                    &&  testReachability(rep.result_,ci3) ){
@@ -610,6 +613,9 @@ if (nbFailures > 1)
            // fcl::Matrix3f r = ci3.contactRotation_.at(contactCreate);
             projection::ProjectionReport rep = projection::projectStateToObstacle(robot_,contactCreate,robot_->GetLimb(contactCreate),s2_bis,n,p);
             hppDout(notice,"projection success : "<<rep.success_);
+            if(rep.success_){
+                rep = projection::projectToRootConfiguration(robot_,ci2.configuration_.head<3>(),rep.result_);
+            }
             ValidationReportPtr_t rport (ValidationReportPtr_t(new CollisionValidationReport));
             if((p1-p).norm() < 0.1 && rep.success_ && robot_->GetCollisionValidation()->validate(rep.result_.configuration_,rport)
                    &&  testReachability(ci0,rep.result_) && testReachability(rep.result_,ci3) ){
