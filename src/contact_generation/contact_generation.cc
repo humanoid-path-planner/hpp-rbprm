@@ -92,30 +92,36 @@ void reverse(std::queue<std::string> &queue){
 void maintain_contacts_combinatorial_rec(const hpp::rbprm::State& currentState, const std::size_t  depth,
                                          const std::size_t maxBrokenContacts, T_DepthState& res)
 {
+    hppDout(notice,"maintain contact combinatorial recursif : ");
     if (!push_if_new(res[depth], currentState) || depth>=maxBrokenContacts) return;
     std::queue<std::string> contactOrder = currentState.contactOrder_;
-// TEST CODE : reverse order of the queue :
+    // TEST CODE : reverse order of the queue :
+    hppDout(notice,"Size of contact queue : "<<contactOrder.size());
+    hppDout(notice,"Reverse :");
     reverse(contactOrder);
+    hppDout(notice,"Reverse done.");
     int size = contactOrder.size(); int i = 0;
     while(!contactOrder.empty() && size != i)
     {
         hpp::rbprm::State copyState = currentState;
-std::vector<std::string> fixed = currentState.fixedContacts(currentState);
+        std::vector<std::string> fixed = currentState.fixedContacts(currentState);
         const std::string contactRemoved = contactOrder.front();
-//if(!
-//((std::find(fixed.begin(), fixed.end(),std::string("hrp2_rleg_rom")) == fixed.end() && contactRemoved == std::string("hrp2_lleg_rom")) ||
-//(std::find(fixed.begin(), fixed.end(),std::string("hrp2_lleg_rom")) == fixed.end() && contactRemoved == std::string("hrp2_rleg_rom"))))
-{
-        copyState.RemoveContact(contactRemoved);
-        maintain_contacts_combinatorial_rec(copyState, depth+1, maxBrokenContacts, res);
-}
-/*else
+        //if(!
+        //((std::find(fixed.begin(), fixed.end(),std::string("hrp2_rleg_rom")) == fixed.end() && contactRemoved == std::string("hrp2_lleg_rom")) ||
+        //(std::find(fixed.begin(), fixed.end(),std::string("hrp2_lleg_rom")) == fixed.end() && contactRemoved == std::string("hrp2_rleg_rom"))))
+        {
+            hppDout(notice,"Try to remove contact "<<contactRemoved);
+            copyState.RemoveContact(contactRemoved);
+            hppDout(notice,"Done.");
+            maintain_contacts_combinatorial_rec(copyState, depth+1, maxBrokenContacts, res);
+        }
+        /*else
 {
  std::cout << "avoided both leg removed"    << std::endl;
  contactOrder.push(contactRemoved);
 }*/
-++i;
-contactOrder.pop();
+        ++i;
+        contactOrder.pop();
     }
 }
 
@@ -133,6 +139,7 @@ Q_State flatten(const T_DepthState& depthstates)
 Q_State maintain_contacts_combinatorial(const hpp::rbprm::State& currentState, const std::size_t maxBrokenContacts)
 {
     T_DepthState res(maxBrokenContacts+1);
+    hppDout(notice,"maintain contact combinatorial : ");
     maintain_contacts_combinatorial_rec(currentState, 0, maxBrokenContacts,res);
     return flatten(res);
 }
@@ -344,18 +351,25 @@ T_ContactState gen_contacts_combinatorial(ContactGenHelper& contactGenHelper)
 
 ProjectionReport maintain_contacts(ContactGenHelper &contactGenHelper)
 {
-
+    hppDout(notice,"Begin maintain contact");
     ProjectionReport rep;
     Q_State& candidates = contactGenHelper.candidates_;
-    if(candidates.empty())
+    hppDout(notice,"Get candidates");
+    if(candidates.empty()){
+        hppDout(notice,"candidate list empty, gen combinatorial : ");
         candidates = maintain_contacts_combinatorial(contactGenHelper.workingState_,contactGenHelper.maxContactBreaks_);
-    else
+    }
+    else{
+        hppDout(notice,"candidate list already generated, take the next one.");
         candidates.pop(); // first candidate already treated.
+        }
+    hppDout(notice,"candidates OK");
     while(!candidates.empty() && !rep.success_)
     {
         //retrieve latest state
         State cState = candidates.front();
         candidates.pop();
+        hppDout(notice,"Project toRootConfiguration : ");
         rep = projectToRootConfiguration(contactGenHelper.fullBody_,contactGenHelper.workingState_.configuration_,cState);
         hppDout(notice,"maintain contacts, projection success : "<<rep.success_<<" for contacts : ");
         for(std::map<std::string,bool>::const_iterator cit = cState.contacts_.begin();cit!=cState.contacts_.end(); ++ cit)
@@ -442,10 +456,12 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
     ProjectionReport rep ;
     double robustness;
     bool isReachable;
+    int evaluatedCandidates = 0;
     hppDout(notice,"in findValidCandidate for limb : "<<limbId);
     hppDout(notice,"number of candidate : "<<finalSet.size());
     for(;!found_sample && it!=finalSet.end(); ++it)
     {
+        evaluatedCandidates++;
         const sampling::OctreeReport& bestReport = *it;
         hppDout(notice,"heuristic value = "<<it->value_);
         core::Configuration_t conf_before(configuration);
