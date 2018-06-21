@@ -61,8 +61,8 @@ ContactGenHelper::ContactGenHelper(RbPrmFullBodyPtr_t fb, const State& ps, model
 , testReachability_(true)
 , maximiseContacts_(true)
 , accept_unreachable_(false)
-, tryQuasiStatic_(true)
-, reachabilityPointPerPhases_(5)
+, tryQuasiStatic_(false)
+, reachabilityPointPerPhases_(0)
 {
     workingState_.configuration_ = configuration;
     workingState_.stable = false;
