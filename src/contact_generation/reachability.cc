@@ -16,7 +16,7 @@
 #endif
 
 #ifndef FULL_TIME_SAMPLING
-#define FULL_TIME_SAMPLING 1
+#define FULL_TIME_SAMPLING 0
 #endif
 
 namespace hpp {
@@ -493,7 +493,7 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
         pData.contacts_.push_back(midData);
     }
     pData.contacts_.push_back(nextData);
-
+    //pData.constraints_.flag_ = bezier_com_traj::INIT_POS | bezier_com_traj::INIT_VEL | bezier_com_traj::INIT_ACC | bezier_com_traj::END_ACC | bezier_com_traj::END_VEL | bezier_com_traj::END_POS;
     // set init/goal values :
     pData.c0_ = previous.com_;
     pData.c1_ = next.com_;
@@ -534,11 +534,18 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     VectorX times;
     double total_time = 0;
     const double time_increment = 0.05;
-    const double min_SS = 0.8;
+    const double min_SS = 0.6;
     const double max_SS = 1.6;
-    const double min_DS = 0.2;
-    const double max_DS = 1.;
+    const double min_DS = 0.3;
+    const double max_DS = 1.5;
 
+    /*
+    const double time_increment = 0.1;
+    const double min_SS = 0.6;
+    const double max_SS = 1.6;
+    const double min_DS = 0.3;
+    const double max_DS = 1.;
+    */
     MatrixXX timings_matrix;
     bool timing_provided(false);
     int t_id = 1;
@@ -546,7 +553,7 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     if(timings.size() != pData.contacts_.size()){
         // build timing vector
         // TODO : retrieve timing found by planning ?? how ?? (pass it as argument or store it inside the states ?)
-        if(contactsBreak.size() == 1 && contactsCreation.size() == 1){
+        if(true or (contactsBreak.size() == 1 && contactsCreation.size() == 1)){
             hppDout(notice,"Contact break and creation. Use hardcoded timing matrice");
 
             #if FULL_TIME_SAMPLING
@@ -564,26 +571,25 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
                                0.3 , 0.05, 0.15;
                         // hyq flat
 */
-            timings_matrix = MatrixXX(15,3);
+            timings_matrix = MatrixXX(16,3);
             timings_matrix <<
+                              0.8 , 0.7, 0.8,
+                              0.3 , 0.6, 0.3,
+                              0.5 , 0.6, 0.5,
+                              0.6 , 0.6, 0.6,
+                              0.8 , 0.6, 0.8,
+                            0.6, 1.2, 0.6,
+                            1. , 1.2, 1.,
+                            0.3 , 0.8, 0.3,
+                            0.3 , 0.7, 0.3,
+                            0.6 , 0.8, 0.6,
+                            1, 0.7, 1, // found with script
+                            1.5, 0.7, 1,
+                            0.8,0.8,0.8, // script good
+                            1. , 0.6, 1.,
+                            1.2 , 0.6, 1.2,
+                            1.5 , 0.6, 1.5;
 
-                                        0.6, 1.2, 0.6,
-                                        1. , 1.2, 1.,
-                                        0.3 , 0.8, 0.3,
-                                        0.3 , 0.7, 0.3,
-                                         0.6 , 0.8, 0.6,
-                                         1, 0.7, 1, // found with script
-                                            1.5, 0.7, 1,
-                                            0.8,0.8,0.8, // script good
-                                          0.8 , 0.7, 0.8,
-                                          0.3 , 0.6, 0.3,
-                                            0.5 , 0.6, 0.5,
-                                            0.8 , 0.6, 0.8,
-                                            1. , 0.6, 1.,
-                                            1.2 , 0.6, 1.2,
-                                            1.5 , 0.6, 1.5;
-
-                                    // hyq flat
 
 /*
             timings_matrix = MatrixXX(37,3);
@@ -630,9 +636,13 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
                                 0.8,0.6,0.8,
                                 0.4,0.2,0.4;
 */
-            current_timings = timings_matrix.block<1,3>(0,0);
+
+            current_timings = timings_matrix.block(0,0,1,pData.contacts_.size());
             #endif
-            total_time = current_timings[0] + current_timings[1] + current_timings[2];
+            total_time = 0;
+            for(size_t i = 0 ; i < pData.contacts_.size() ; ++ i ){
+                total_time += current_timings[i];
+            }
         }else{
             hppDout(notice,"Only two phases.");
             //current_timings = VectorX(2);
@@ -734,12 +744,15 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
                 }
             }
             #else
-            current_timings = timings_matrix.block<1,3>(t_id,0);
+            current_timings = timings_matrix.block(t_id,0,1,pData.contacts_.size());
             t_id ++;
             if(t_id == timings_matrix.rows())
                 no_timings_left = true;
             #endif
-            total_time = current_timings[0] + current_timings[1] + current_timings[2];
+            total_time = 0;
+            for(size_t i = 0 ; i < pData.contacts_.size() ; ++ i ){
+                total_time += current_timings[i];
+            }
         }else{
             no_timings_left = true;
         }
