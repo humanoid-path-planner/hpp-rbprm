@@ -33,14 +33,18 @@ namespace hpp {
 
         Result():
             status(UNABLE_TO_COMPUTE),
-            x(fcl::Vec3f()),
+            x(fcl::Vec3f::Zero()),
+            xBreak_(fcl::Vec3f::Zero()),
+            xCreate_(fcl::Vec3f::Zero()),
             constraints_(),
             path_()
             {}
 
         Result(Status status):
             status(status),
-            x(fcl::Vec3f()),
+            x(fcl::Vec3f::Zero()),
+            xBreak_(fcl::Vec3f::Zero()),
+            xCreate_(fcl::Vec3f::Zero()),
             constraints_(),
             path_()
             {}
@@ -48,6 +52,8 @@ namespace hpp {
         Result(Status status, fcl::Vec3f x):
             status(status),
             x(x),
+            xBreak_(fcl::Vec3f::Zero()),
+            xCreate_(fcl::Vec3f::Zero()),
             constraints_(),
             path_()
             {}
@@ -65,6 +71,8 @@ namespace hpp {
 
         Status status;
         fcl::Vec3f x;
+        fcl::Vec3f xBreak_;
+        fcl::Vec3f xCreate_;
         std::pair<MatrixXX, VectorX> constraints_;
         core::PathPtr_t path_;
         VectorX timings_;

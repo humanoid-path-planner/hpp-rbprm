@@ -195,6 +195,8 @@ Result isReachableIntermediate(const RbPrmFullBodyPtr_t& fullbody,State &previou
     if(resBreak.success() && resCreate.success()){
         res.status=REACHABLE;
         res.x = (resBreak.x + resCreate.x)/2.;
+        res.xBreak_ = resBreak.x;
+        res.xCreate_ = resCreate.x;
         hppDout(notice,"reachable intermediate success, x = "<<res.x);
         // only for test, it take time to compute :
         #if QHULL
