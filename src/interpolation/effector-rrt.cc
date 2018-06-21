@@ -542,15 +542,16 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
             timeTakeoff = 0.3;
             p_max = 0.03;
             p_min = 0.01;
+            posOffset = 0.003; // was 0.004 (for 1.8second)
         }else{
-            timeTakeoff = 0.07;
+            timeTakeoff = 0.3;
             p_max = 0.05;
             p_min = 0.01;
+            posOffset = 0.004;
         }
 
 
         //computePredefConstants(dist_translation,p_max,p_min,totalTime,timeTakeoff,posOffset,velOffset,a_max_predefined);
-        posOffset = 0.004;
         velOffset = 0.;
         a_max_predefined = 0.;
 
@@ -559,6 +560,8 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
         const double timeMid = totalTime-2*timeTakeoff;
 
         hppDout(notice,"Effector-rrt, moving effector name : "<<effectorName);
+        hppDout(notice,"Time takeoff : "<<timeTakeoff);
+        hppDout(notice,"total time : "<<totalTime);
         Vector3 startNormal,nextNormal;
         if(startState.contactNormals_.find(effectorName) == startState.contactNormals_.end()){
             startNormal = Vector3(0,0,1);
