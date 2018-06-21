@@ -981,7 +981,7 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
         if(found)
             hppDout(notice,"found at index : "<<index);
         else
-            index = t; // should never happen ?? should throw an error
+            index = fullBodyPath_->length(); // should never happen ?? should throw an error
 
         // the path "fullBodyPath" is not indexed by the time, the time value is the last value of each extraConfig
         // we need to look for the time corresponding to t :
