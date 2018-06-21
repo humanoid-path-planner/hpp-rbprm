@@ -761,6 +761,10 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     hppStopBenchmark(IS_REACHABLE_DYNAMIC);
     hppDisplayBenchmark(IS_REACHABLE_DYNAMIC);
 
+    delete pData.contacts_[0].contactPhase_;
+    delete pData.contacts_[1].contactPhase_;
+    if(pData.contacts_.size() > 2)
+        delete pData.contacts_[2].contactPhase_;
 
 
 
