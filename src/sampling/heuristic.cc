@@ -306,7 +306,16 @@ HeuristicFactory::HeuristicFactory()
    // seed = 1526302760; //slalom 0.8
    // seed = 1527239618 ; // slalom 0.6 safe 15
    // seed = 1527253280 ; // slalom 0.6 safe 15
-    seed = 1527495537 ; // barre
+ //   seed = 1529328217 ; // slalom obstacles
+  //  seed = 1529331430 ; //slalom obstacles 2
+   // seed = 1529397757 ; //slalom safe 20
+    //seed = 1529063665 ; //darpa infeasible
+    // seed = 1529163555 ; // darpa safe
+  //  seed = 1529168194; //stairs 15
+    //seed = 1529414211; // obs safe 20 1
+   // seed = 1529418104 ; // obs safe20 2
+    //seed = 1529508508 ; // obs safe MOTION
+    //seed = 1529515613 ; // obs safe to test
     std::cout<<"seed HEURISTIC = "<<seed<<std::endl;
     srand (seed);
     hppDout(notice,"SEED for heuristic = "<<seed);

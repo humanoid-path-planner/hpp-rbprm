@@ -205,14 +205,14 @@ namespace
      // seed = 1503410641; // slalom hrp2 (v = 0.3 ; a = 0.5 ) (not a lot of clearance)
      // seed = 1504775033; // bug random shortcut bauzil
     //  seed = 1505996568 ; //bauzil walk OK v = 0.3
-      //  seed = 1516106467; // walk bauzil v = 0.2
+     //   seed = 1516106467; // walk bauzil v = 0.2
     //  seed = 1507292219 ; // darpa test
      // seed = 1517318451 ; //stairs reduceSize
      // seed = 1518874734 ; // stairs test transition
       //seed = 1519050403 ; //platform hrp2
      // seed = 1519487130 ; // stair no ramp
      // seed = 1522388624; // error stairs
-      seed = 1525354944 ; // slalom bauzil
+     // seed = 1525354944 ; // slalom bauzil
       srand (seed);
       hppDout(notice,"&&&&&& SEED = "<<seed);
       std::cout<<"seed = "<<seed<<std::endl;
