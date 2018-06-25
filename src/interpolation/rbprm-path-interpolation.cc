@@ -539,7 +539,7 @@ if (nbFailures > 1)
             projection::ProjectionReport rep = projection::projectStateToObstacle(robot_,contactCreate,robot_->GetLimb(contactCreate),s1_bis,n,p);
             hppDout(notice,"projection success : "<<rep.success_);
             if(rep.success_){
-                rep = projection::projectToRootConfiguration(robot_,ci1.configuration_.head<3>(),rep.result_);
+                rep = projection::projectToRootConfiguration(robot_,ci1.configuration_,rep.result_);
             }
             ValidationReportPtr_t rport (ValidationReportPtr_t(new CollisionValidationReport));
             if((p1-p).norm() < 0.2 && rep.success_ && robot_->GetCollisionValidation()->validate(rep.result_.configuration_,rport)
@@ -614,7 +614,7 @@ if (nbFailures > 1)
             projection::ProjectionReport rep = projection::projectStateToObstacle(robot_,contactCreate,robot_->GetLimb(contactCreate),s2_bis,n,p);
             hppDout(notice,"projection success : "<<rep.success_);
             if(rep.success_){
-                rep = projection::projectToRootConfiguration(robot_,ci2.configuration_.head<3>(),rep.result_);
+                rep = projection::projectToRootConfiguration(robot_,ci2.configuration_,rep.result_);
             }
             ValidationReportPtr_t rport (ValidationReportPtr_t(new CollisionValidationReport));
             if((p1-p).norm() < 0.1 && rep.success_ && robot_->GetCollisionValidation()->validate(rep.result_.configuration_,rport)

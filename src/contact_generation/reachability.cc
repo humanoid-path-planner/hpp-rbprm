@@ -637,7 +637,7 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
                                 0.4,0.2,0.4;
 */
 
-            current_timings = timings_matrix.block(0,0,1,pData.contacts_.size());
+            current_timings = timings_matrix.block(0,0,1,pData.contacts_.size()).transpose();
             #endif
             total_time = 0;
             for(size_t i = 0 ; i < pData.contacts_.size() ; ++ i ){
@@ -744,7 +744,7 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
                 }
             }
             #else
-            current_timings = timings_matrix.block(t_id,0,1,pData.contacts_.size());
+            current_timings = timings_matrix.block(t_id,0,1,pData.contacts_.size()).transpose();
             t_id ++;
             if(t_id == timings_matrix.rows())
                 no_timings_left = true;
