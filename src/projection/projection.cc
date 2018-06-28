@@ -396,6 +396,21 @@ ProjectionReport projectToObstacle(core::ConfigProjectorPtr_t proj, const hpp::r
     return projectEffector(proj, body, limbId, limb, validation, configuration, pM.getRotation(), setRotationConstraints(),pM.getTranslation(), normal, current);
 }
 
+// are p1 and p2 on the same side of the line AB ?
+bool SameSide(const fcl::Vec3f& p1, const fcl::Vec3f& p2, const fcl::Vec3f& a, const fcl::Vec3f& b)
+{
+    fcl::Vec3f cp1 = (b-a).cross(p1-a);
+    fcl::Vec3f cp2 = (b-a).cross(p2-a);
+    return cp1.dot(cp2)>=0;
+}
+
+// is p inside ABC ?
+bool PointInTriangle(const fcl::Vec3f& p, const fcl::Vec3f& a, const fcl::Vec3f& b, const fcl::Vec3f& c)
+{
+    return SameSide(p,a, b,c) && SameSide(p,b, a,c) && SameSide(p,c, a,b);
+}
+
+
 ProjectionReport projectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
                                          const sampling::OctreeReport& report, core::CollisionValidationPtr_t validation,
                                          model::ConfigurationOut_t configuration, const hpp::rbprm::State& current)
@@ -406,7 +421,10 @@ ProjectionReport projectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& b
     fcl::Transform3f rootT = body->GetLimb(limbId)->limb_->parentJoint()->currentTransformation();
     //compute the orthogonal projection of the end effector on the plan :
     const fcl::Vec3f& pEndEff = (rootT.transform(report.sample_->effectorPosition_)); // compute absolute position (in world frame)
-    const fcl::Vec3f& pos = pEndEff-(normal.dot(pEndEff-report.contact_.pos))*normal; // orthogonal projection on the obstacle surface
+    fcl::Vec3f pos = pEndEff-(normal.dot(pEndEff-report.contact_.pos))*normal; // orthogonal projection on the obstacle surface
+    // if position not in triangle take collision point as target
+    if (!PointInTriangle(pos,report.v1_, report.v2_, report.v3_))
+        pos = report.contact_.pos;
     //hppDout(notice,"Effector position : "<<report.sample_->effectorPosition_);
     //hppDout(notice,"pEndEff = ["<<pEndEff[0]<<","<<pEndEff[1]<<","<<pEndEff[2]<<"]");
     //hppDout(notice,"pos = ["<<pos[0]<<","<<pos[1]<<","<<pos[2]<<"]");

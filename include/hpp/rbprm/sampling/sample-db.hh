@@ -35,7 +35,8 @@ namespace hpp {
     /// colliding with the environment.
     struct OctreeReport
     {
-      OctreeReport(const Sample*, const fcl::Contact, const double, const fcl::Vec3f& normal);
+      OctreeReport(const Sample*, const fcl::Contact, const double, const fcl::Vec3f& normal,
+                   const fcl::Vec3f& v1, const fcl::Vec3f& v2, const fcl::Vec3f& v3); // vertices of triangle collided
       /// Sample considered for contact generation
       const Sample* sample_;
       /// Contact information returned from fcl
@@ -43,7 +44,7 @@ namespace hpp {
       /// heuristic evaluation of the sample
       double value_;
       /// normal vector of the surface in contact
-      fcl::Vec3f normal_;
+      fcl::Vec3f normal_, v1_,v2_,v3_;
     };
 
 
