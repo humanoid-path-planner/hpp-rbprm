@@ -38,8 +38,8 @@ namespace interpolation {
     template<class Helper_T>
     void CreateContactConstraints(const State& from, const State& to);
 
-    template<class Helper_T, typename Reference>
-    void CreateComConstraint(Helper_T& helper, const Reference& ref, const fcl::Vec3f& initTarget=fcl::Vec3f());
+    //template<class Helper_T, typename Reference>
+    //void CreateComConstraint(Helper_T& helper, const Reference& ref, const fcl::Vec3f& initTarget=fcl::Vec3f());
 
     template<class Helper_T, typename Reference>
     void CreateEffectorConstraint(Helper_T& helper, const Reference& ref,  const JointPtr_t effectorJoint, const fcl::Vec3f& initTarget=fcl::Vec3f());

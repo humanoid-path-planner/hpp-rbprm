@@ -145,7 +145,7 @@ namespace hpp {
         std::size_t nbRecontacts = 0;
         std::size_t repos = 0;
         bool allowFailure = true;
-        Eigen::Vector3d dir,acc;
+        Eigen::Vector3d dir,acc; acc = Eigen::Vector3d::Zero();
         const PathConstPtr_t comPath = boost::dynamic_pointer_cast<const core::Path>(path_);
 #ifdef PROFILE
     RbPrmProfiler& watch = getRbPrmProfiler();
@@ -156,9 +156,13 @@ namespace hpp {
         {
             const State& previous = states.back().second;
             core::Configuration_t configuration = loadPreviousConfiguration(robot_->device_,lastConfig,*cit);
-            acc = configuration.segment<3>(accIndex);
-            //dir = configuration.head<3>() - previous.configuration_.head<3>();
-            dir = configuration.segment<3>(accIndex-3);
+            if( accIndex < configuration.size())
+            {
+                acc = configuration.segment<3>(accIndex);
+                dir = configuration.segment<3>(accIndex-3);
+            }
+            else
+                dir = configuration.head<3>() - previous.configuration_.head<3>();
             fcl::Vec3f direction(dir[0], dir[1], dir[2]);
             bool nonZero(false);
             direction.normalize(&nonZero);
