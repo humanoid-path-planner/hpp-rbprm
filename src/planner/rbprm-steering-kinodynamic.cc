@@ -70,7 +70,7 @@ namespace hpp{
       hppDout(notice,"end setBounds");
       hppStopBenchmark(FIND_A_MAX);
       hppDisplayBenchmark(FIND_A_MAX);
-      if((aMax_[0]+aMax_[1]) <= 0)
+      if((std::fabs(aMax_[0])+std::fabs(aMax_[1])) <= 0)
         return core::PathPtr_t();
       if(boundsUpToDate_)
           return unboundedPath;
@@ -190,7 +190,7 @@ namespace hpp{
       core::PathPtr_t unboundedPath =  setSteeringMethodBounds(node,q1,true);
       hppStopBenchmark(FIND_A_MAX);
       hppDisplayBenchmark(FIND_A_MAX);
-      if((aMax_[0]+aMax_[1]) <= 0)
+      if((std::fabs(aMax_[0])+std::fabs(aMax_[1])) <= 0)
         return core::PathPtr_t();
       if(boundsUpToDate_)
           return unboundedPath;
@@ -340,13 +340,8 @@ namespace hpp{
       Vector3 toV,fromV,dVelocity;
       const pinocchio::size_type indexECS =problem_.robot()->configSize() - problem_.robot()->extraConfigSpace().dimension (); // ecs index
 
-<<<<<<< HEAD
-      hppDout(notice,"near = "<<pinocchio::displayConfig((*(near->configuration()))));
+      hppDout(notice,"near = "<<pinocchio::displayConfig((*(node->configuration()))));
       hppDout(notice,"target = "<<pinocchio::displayConfig(target));
-=======
-      hppDout(notice,"node = "<<model::displayConfig((*(node->configuration()))));
-      hppDout(notice,"target = "<<model::displayConfig(target));
->>>>>>> a627b82... rbprm-steering-kinodynamic : Do not call sm again if the bounds do not changes
       if(reverse){
         toP = node->configuration()->head(3);
         fromP = target.head(3);
