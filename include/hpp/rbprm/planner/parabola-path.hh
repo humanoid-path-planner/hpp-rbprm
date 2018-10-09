@@ -36,7 +36,7 @@ namespace hpp {
     /// Linear interpolation between two configurations
     ///
     /// Degrees of freedom are interpolated depending on the type of
-    /// \link hpp::model::Joint joint \endlink
+    /// \link hpp::pinocchio::Joint joint \endlink
     /// they parameterize:
     ///   \li linear interpolation for translation joints, bounded rotation
     ///       joints, and translation part of freeflyer joints,
@@ -95,7 +95,7 @@ namespace hpp {
       {
         ParabolaPath* ptr = new ParabolaPath (*path);
         ParabolaPathPtr_t shPtr (ptr);
-        ptr->initCopy (shPtr);
+        ptr->init (shPtr);
         return shPtr;
       }
 
@@ -109,7 +109,7 @@ namespace hpp {
         //ParabolaPath* ptr = new ParabolaPath (*path, constraints);
         ParabolaPath* ptr = new ParabolaPath (*path);
         ParabolaPathPtr_t shPtr (ptr);
-        ptr->initCopy (shPtr);
+        ptr->init (shPtr);
         return shPtr;
       }
 
@@ -248,11 +248,11 @@ namespace hpp {
         weak_ = self;
       }
 
-      void initCopy (ParabolaPathPtr_t self)
+      /*void initCopy (ParabolaPathPtr_t self)
       {
         parent_t::initCopy (self);
         weak_ = self;
-      }
+      }*/
 
       /// Param is the curvilinear abcissa \in [0 : pathLength]
       /// The pathLength can be computed as long as the coefficients_ are known

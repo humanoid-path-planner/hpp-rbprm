@@ -125,8 +125,8 @@ namespace interpolation {
 
     struct SetEffectorRRTConstraints
     {
-        SetEffectorRRTConstraints(const core::PathPtr_t refCom, const core::PathPtr_t refEff, const core::PathPtr_t refFullbody, const model::JointPtr_t  effector, const model::DevicePtr_t endEffectorDevice,
-                                  const std::vector<model::JointPtr_t >& constrainedJointPos,const std::vector<model::JointPtr_t >& constrainedLockedJoints):
+        SetEffectorRRTConstraints(const core::PathPtr_t refCom, const core::PathPtr_t refEff, const core::PathPtr_t refFullbody, const pinocchio::JointPtr_t  effector, const pinocchio::DevicePtr_t endEffectorDevice,
+                                  const std::vector<pinocchio::JointPtr_t >& constrainedJointPos,const std::vector<pinocchio::JointPtr_t >& constrainedLockedJoints):
             refCom_(refCom), refFullbody_(refFullbody), refEff_ (refEff), effector_(effector),endEffectorDevice_(endEffectorDevice),
             constrainedJointPos_(constrainedJointPos), constrainedLockedJoints_(constrainedLockedJoints) {}
 
@@ -134,10 +134,10 @@ namespace interpolation {
         const core::PathPtr_t   refCom_;
         const core::PathPtr_t   refFullbody_;
         const core::PathPtr_t   refEff_;
-        const model::JointPtr_t effector_;
-        const model::DevicePtr_t endEffectorDevice_;
-        const std::vector<model::JointPtr_t > constrainedJointPos_;
-        const std::vector<model::JointPtr_t > constrainedLockedJoints_;
+        const pinocchio::JointPtr_t effector_;
+        const pinocchio::DevicePtr_t endEffectorDevice_;
+        const std::vector<pinocchio::JointPtr_t > constrainedJointPos_;
+        const std::vector<pinocchio::JointPtr_t > constrainedLockedJoints_;
     };
 
 

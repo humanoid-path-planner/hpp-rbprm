@@ -81,7 +81,7 @@ namespace hpp {
       virtual core::PathPtr_t impl_compute (core::ConfigurationIn_t q1,
                       core::ConfigurationIn_t q2) const
       {
-        core::value_type length = (*problem_->distance()) (q1, q2);
+        core::value_type length = problem_.distance()->operator () (q1, q2);
         core::ConstraintSetPtr_t c;
         if (constraints() && constraints()->configProjector ()) {
           c = HPP_STATIC_PTR_CAST (core::ConstraintSet, constraints()->copy ());
@@ -90,7 +90,7 @@ namespace hpp {
           c = constraints ();
         }
         core::PathPtr_t path = path_t::create
-          (problem_->robot(), q1, q2, length, c, pathDofRank_, tds_);
+          (problem_.robot(), q1, q2, length, c, pathDofRank_, tds_);
             return path;
       }
     protected:
@@ -98,16 +98,16 @@ namespace hpp {
       /// Weighed distance is created from robot
       TimeConstraintSteering (const core::ProblemPtr_t& problem,
                        const std::size_t pathDofRank) :
-    SteeringMethod (problem), pathDofRank_(pathDofRank), weak_ () {}
+    SteeringMethod (*problem), pathDofRank_(pathDofRank), weak_ () {}
 
-      /// Constructor with weighed distance
+      /*/// Constructor with weighed distance
       TimeConstraintSteering (const core::DevicePtr_t& device,
                   const core::WeighedDistancePtr_t& distance,
                        const std::size_t pathDofRank) :
     SteeringMethod (new core::Problem (device)), pathDofRank_(pathDofRank), weak_ ()
       {
-        problem_->distance (distance);
-      }
+        problem_.distance (distance);
+      }*/
       /// Copy constructor
       TimeConstraintSteering (const TimeConstraintSteering& other) :
     SteeringMethod (other), pathDofRank_(other.pathDofRank_), weak_ (), tds_(other.tds_) {}

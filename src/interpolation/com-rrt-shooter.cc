@@ -18,8 +18,7 @@
 #include <hpp/rbprm/interpolation/time-constraint-utils.hh>
 #include <hpp/rbprm/rbprm-limb.hh>
 #include <hpp/rbprm/sampling/sample.hh>
-#include <hpp/model/joint.hh>
-#include <hpp/model/joint-configuration.hh>
+#include <hpp/pinocchio/joint.hh>
 
 namespace hpp {
 using namespace core;

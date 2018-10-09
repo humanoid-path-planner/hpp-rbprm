@@ -1,14 +1,21 @@
 # include <hpp/rbprm/contact_generation/kinematics_constraints.hh>
 # include <hpp/rbprm/rbprm-device.hh>
-# include <hpp/model/urdf/parser.hh>
 # include <hpp/rbprm/rbprm-fullbody.hh>
-
+# include <hpp/fcl/BVH/BVH_model.h>
+# include <hpp/fcl/mesh_loader/assimp.h>
+# include <hpp/pinocchio/urdf/util.hh>
+# include <pinocchio/utils/file-explorer.hpp>
+# include <pinocchio/parsers/utils.hpp>
+# include <pinocchio/multibody/geometry.hpp>
 
 namespace hpp {
   namespace rbprm {
     namespace reachability{
 
-VectorX triangleNormal(const model::urdf::Parser::PolyhedronPtrType& obj, size_t index)
+typedef fcl::BVHModel< fcl::OBBRSS > PolyhedronType;
+typedef boost::shared_ptr <PolyhedronType> PolyhedronPtrType;
+
+VectorX triangleNormal(const PolyhedronPtrType& obj, size_t index)
 {
     VectorX normal(3);
     // access a vertice of faceId with : obj->vertices[obj->tri_indices[index](i)]
@@ -22,7 +29,7 @@ VectorX triangleNormal(const model::urdf::Parser::PolyhedronPtrType& obj, size_t
     return normal.normalized();
 }
 
-VectorX triangleNormalTransform(const model::urdf::Parser::PolyhedronPtrType& obj, size_t index,fcl::Transform3f T)
+VectorX triangleNormalTransform(const PolyhedronPtrType& obj, size_t index,fcl::Transform3f T)
 {
     VectorX normal(3);
     // access a vertice of faceId with : obj->vertices[obj->tri_indices[index](i)]
@@ -43,14 +50,24 @@ VectorX triangleNormalTransform(const model::urdf::Parser::PolyhedronPtrType& ob
 std::pair<MatrixX3, MatrixX3> loadConstraintsFromObj(const std::string& fileName, double minDistance){
     hppDout(notice,"Load constraints for filename : "<<fileName);
 
+    std::vector<std::string> package_dirs = se3::rosPaths();
+    std::string meshPath = se3::retrieveResourcePath(fileName, package_dirs);
+    if (meshPath == "") {
+      std::stringstream ss;
+      ss << "Mesh " << fileName << " could not be found.";
+      throw std::invalid_argument (ss.str());
+    }
 
-    model::urdf::Parser parser("anchor",model::DevicePtr_t());
-    model::urdf::Parser::PolyhedronPtrType  polyhedron (new model::urdf::Parser::PolyhedronType);
+    //pinocchio::urdf::Parser parser("anchor",pinocchio::DevicePtr_t());
+    PolyhedronPtrType  polyhedron (new PolyhedronType);
     // name is stored in link->name
-    try{
-    parser.loadPolyhedronFromResource (fileName, ::urdf::Vector3(1,1,1), polyhedron);
-    }catch (std::runtime_error e){
-        hppDout(warning,"Unable to load kinematics constraints : "<<e.what());
+    try
+    {
+        fcl::loadPolyhedronFromResource(meshPath, Vector3(1,1,1), polyhedron);
+    }
+    catch (std::runtime_error e)
+    {
+        hppDout(warning,"Unable to load kinematics constraints : "<< e.what());
         return std::pair<MatrixX3, MatrixX3>();
     }
 
@@ -90,7 +107,7 @@ std::pair<MatrixX3, MatrixX3> loadConstraintsFromObj(const std::string& fileName
 }
 
 
-std::pair<MatrixX3, VectorX> computeAllKinematicsConstraints(const RbPrmFullBodyPtr_t& fullBody,const model::ConfigurationPtr_t& configuration){
+std::pair<MatrixX3, VectorX> computeAllKinematicsConstraints(const RbPrmFullBodyPtr_t& fullBody,const pinocchio::ConfigurationPtr_t& configuration){
     fullBody->device_->currentConfiguration(*configuration);
     fullBody->device_->computeForwardKinematics();
     // first loop to compute size required :
@@ -163,7 +180,8 @@ std::pair<MatrixX3, VectorX> computeKinematicsConstraintsForLimb(const RbPrmFull
 }
 
 
-std::pair<MatrixX3, VectorX> getInequalitiesAtTransform(const std::pair<MatrixX3, MatrixX3> &NV, const fcl::Transform3f& transform){
+std::pair<MatrixX3, VectorX> getInequalitiesAtTransform(const std::pair<MatrixX3, MatrixX3> &NV, const hpp::pinocchio::Transform3f& transformPin){
+    fcl::Transform3f transform(transformPin.rotation(),transformPin.translation());
     size_t numIneq = NV.first.rows();
     MatrixX3 A(numIneq,3);
     VectorX b(numIneq);
@@ -180,7 +198,7 @@ std::pair<MatrixX3, VectorX> getInequalitiesAtTransform(const std::pair<MatrixX3
     return std::make_pair(A,b);
 }
 
-bool verifyKinematicConstraints(const std::pair<MatrixX3, MatrixX3>& NV, const fcl::Transform3f &transform, const fcl::Vec3f &point){
+bool verifyKinematicConstraints(const std::pair<MatrixX3, MatrixX3>& NV, const hpp::pinocchio::Transform3f &transform, const fcl::Vec3f &point){
     return verifyKinematicConstraints(getInequalitiesAtTransform(NV,transform),point);
 }
 

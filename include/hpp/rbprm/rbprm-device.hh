@@ -20,13 +20,13 @@
 # define HPP_RBPRM_DEVICE_HH
 
 #include <hpp/rbprm/config.hh>
-#include <hpp/model/device.hh>
+#include <hpp/pinocchio/device.hh>
 
 #include <map>
 
 namespace hpp {
 
-  namespace model {
+  namespace pinocchio {
     HPP_PREDEF_CLASS(RbPrmDevice);
 
     typedef std::map<std::string, DevicePtr_t> T_Rom;

@@ -16,13 +16,13 @@
 
 #include <hpp/rbprm/sampling/heuristic.hh>
 #include <hpp/rbprm/sampling/heuristic-tools.hh>
-#include <hpp/model/configuration.hh>
+#include <hpp/pinocchio/configuration.hh>
 #include <time.h>
 
 #include <Eigen/Eigen>
 
 using namespace hpp;
-using namespace hpp::model;
+using namespace hpp::pinocchio;
 using namespace hpp::rbprm;
 using namespace hpp::rbprm::sampling;
 
@@ -134,7 +134,7 @@ double DynamicWalkHeuristic(const sampling::Sample& sample,
       weightDir=100.;
       weightStatic=weightStatic*Eigen::Vector3d::UnitZ().dot(normal);
       dir[2]=0; // FIXME : replace this by a projection on the surface plan ( we know the normal)
-      dir = dir.normalize();
+      dir.normalize();
       //hppDout(notice,"limb frame   vlb = ["<<sample.configuration_[0]<<","<<sample.configuration_[1]<<","<<sample.configuration_[2]<<","<<pos[0]<<","<<pos[1]<<","<<0<<" ]");
       pos = (params.tfWorldRoot_.getRotation()*(pos));
       pos[2] = 0; // FIXME : replace this by a projection on the surface plan ( we know the normal)
@@ -185,7 +185,7 @@ double fixedStepHeuristic(const sampling::Sample& sample,
     bool success;
     // Compute the 'ideal' contact position in t_step
     Configuration_t q_target = (*params.comPath_)(params.currentPathId_+t_step,success).head<7>();
-    Transform3f tRootTarget;
+    fcl::Transform3f tRootTarget;
     tRootTarget.setTranslation(fcl::Vec3f(q_target.head<3>()));
     fcl::Quaternion3f quatRoot(q_target[3],q_target[4],q_target[5],q_target[6]);
     tRootTarget.setQuatRotation(quatRoot);

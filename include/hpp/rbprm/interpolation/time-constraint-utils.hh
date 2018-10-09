@@ -66,7 +66,7 @@ namespace hpp {
         {
             (*cit)(y, configuration);
         }
-        projector->updateRightHandSide ();
+        //projector->updateRightHandSide ();
     }
     }
     }

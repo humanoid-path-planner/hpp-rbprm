@@ -63,7 +63,6 @@ SET(${LIBRARY_NAME}_SOURCES
         tools.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/tools.hh
         stability/stability.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/stability/stability.hh
         stability/support.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/stability/support.hh
-        ik-solver.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/ik-solver.hh
         utils/stop-watch.cc ${PROJECT_SOURCE_DIR}/include/utils/stop-watch.hh
         utils/algorithms.cc ${PROJECT_SOURCE_DIR}/include/utils/algorithms.h
         rbprm-profiler.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-profiler.hh
@@ -95,7 +94,7 @@ PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-util)
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-statistics)
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-constraints)
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-fcl)
-PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-model)
-PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-model-urdf)
+PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-pinocchio)
+PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} pinocchio)
 
 INSTALL(TARGETS ${LIBRARY_NAME} DESTINATION lib)

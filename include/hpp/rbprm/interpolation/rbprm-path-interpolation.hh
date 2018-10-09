@@ -22,13 +22,13 @@
 # include <hpp/rbprm/config.hh>
 # include <hpp/rbprm/rbprm-fullbody.hh>
 # include <hpp/core/path-vector.hh>
-# include <hpp/model/device.hh>
+# include <hpp/pinocchio/device.hh>>
 
 # include <vector>
 
 namespace hpp {
   namespace rbprm {  
-    typedef std::vector<model::vector_t,Eigen::aligned_allocator<model::vector_t> > T_Configuration;
+    typedef std::vector<pinocchio::vector_t,Eigen::aligned_allocator<pinocchio::vector_t> > T_Configuration;
     typedef T_Configuration::const_iterator CIT_Configuration;
     namespace interpolation {
     HPP_PREDEF_CLASS(RbPrmInterpolation);
@@ -81,7 +81,7 @@ namespace hpp {
        /// \return The time parametrized list of states according to the reference path
         rbprm::T_StateFrame Interpolate(const affMap_t& affordances, const std::map<std::string, std::vector<std::string> >& affFilters,
                                         const T_Configuration& configs, const double robustnessTreshold=0.,
-                                        const model::value_type timeStep = 1., const model::value_type initValue = 0.,
+                                        const pinocchio::value_type timeStep = 1., const pinocchio::value_type initValue = 0.,
                                         const bool filterStates = false);
 
         core::Configuration_t configPosition(core::ConfigurationIn_t previous, const core::PathVectorConstPtr_t path, double i);

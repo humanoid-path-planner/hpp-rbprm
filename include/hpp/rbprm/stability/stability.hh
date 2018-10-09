@@ -19,7 +19,7 @@
 #ifndef HPP_RBPRM_STABILITY_HH
 # define HPP_RBPRM_STABILITY_HH
 
-#include <hpp/model/device.hh>
+#include <hpp/pinocchio/device.hh>
 #include <hpp/rbprm/rbprm-state.hh>
 #include <hpp/rbprm/rbprm-fullbody.hh>
 #include <centroidal-dynamics-lib/centroidal_dynamics.hh>
@@ -33,8 +33,8 @@ namespace hpp {
   namespace stability{
 
 
-    typedef Eigen::Matrix <model::value_type, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> MatrixXX;
-    typedef Eigen::Matrix <model::value_type, Eigen::Dynamic, 1>                               VectorX;
+    typedef Eigen::Matrix <pinocchio::value_type, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> MatrixXX;
+    typedef Eigen::Matrix <pinocchio::value_type, Eigen::Dynamic, 1>                               VectorX;
 
     /// Using the polytope computation of the gravito inertial wrench cone, performs
     /// a static equilibrium test on the robot.

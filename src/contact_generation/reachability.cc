@@ -218,7 +218,7 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
     std::vector<std::string> contactsCreation, contactsBreak;
     next.contactBreaks(previous,contactsBreak);
     next.contactCreations(previous,contactsCreation);
-    hppDout(notice,"IsReachable called : for configuration :  r(["<<model::displayConfig(previous.configuration_)<<"])");
+    hppDout(notice,"IsReachable called : for configuration :  r(["<<pinocchio::displayConfig(previous.configuration_)<<"])");
     hppDout(notice,"contact for previous : "<<previous.nbContacts);
     hppDout(notice,"contact for next     : "<<next.nbContacts);
     hppDout(notice,"Contacts break : "<<contactsBreak);
@@ -378,8 +378,8 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     next.contactBreaks(previous,contactsBreak);
     next.contactCreations(previous,contactsCreation);
     hppDout(notice,"IsReachableDynamic called : ");
-    hppDout(notice,"Between configuration : "<<model::displayConfig(previous.configuration_));
-    hppDout(notice,"and     configuration : "<<model::displayConfig(next.configuration_));
+    hppDout(notice,"Between configuration : "<<pinocchio::displayConfig(previous.configuration_));
+    hppDout(notice,"and     configuration : "<<pinocchio::displayConfig(next.configuration_));
 
     if(previous.configuration_.head<3>() == next.configuration_.head<3>()){
         hppDout(notice,"Same root position, unable to compute");
@@ -703,7 +703,7 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
             // replace extra dof in next.configuration to fit the final velocity and acceleration found :
             next.configuration_.segment<3>(id_velocity) = resBezier.dc1_;
             next.configuration_.segment<3>(id_velocity+3) = resBezier.ddc1_;
-            hppDout(notice,"new final configuration : "<<model::displayConfig(next.configuration_));
+            hppDout(notice,"new final configuration : "<<pinocchio::displayConfig(next.configuration_));
             res.path_ = BezierPath::create(fullbody->device_,bezierCurve,previous.configuration_,next.configuration_, core::interval_t(0.,total_time));
             hppDout(notice,"position of the waypoint : "<<resBezier.x.transpose());
             hppDout(notice,"With timings : "<< current_timings.transpose());
@@ -780,8 +780,8 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     if(success && tryQuasiStatic){
         hppDout(notice,"ONLY REACHABLE IN DYNAMIC !!!");
     }
-    hppDout(notice,"Between configuration : r(["<<model::displayConfig(previous.configuration_)<<"])");
-    hppDout(notice,"and     configuration : r(["<<model::displayConfig(next.configuration_)<<"])");
+    hppDout(notice,"Between configuration : r(["<<pinocchio::displayConfig(previous.configuration_)<<"])");
+    hppDout(notice,"and     configuration : r(["<<pinocchio::displayConfig(next.configuration_)<<"])");
 
 
     return res;

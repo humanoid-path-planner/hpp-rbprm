@@ -16,7 +16,7 @@
 // hpp-core  If not, see
 // <http://www.gnu.org/licenses/>.
 
-#include <hpp/model/device.hh>
+#include <hpp/pinocchio/device.hh>
 #include <hpp/core/collision-path-validation-report.hh>
 #include <hpp/core/joint-bound-validation.hh>
 #include <hpp/core/collision-validation.hh>
@@ -26,7 +26,6 @@
 
 namespace hpp {
   using namespace core;
-  using namespace model;
   namespace rbprm {
   namespace interpolation{
 

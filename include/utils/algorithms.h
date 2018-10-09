@@ -10,7 +10,7 @@
 #include <hpp/fcl/collision_object.h>
 #include <hpp/fcl/collision_data.h>
 #include <hpp/fcl/BVH/BVH_model.h>
-#include <hpp/model/collision-object.hh>
+#include <hpp/pinocchio/collision-object.hh>
 
 
 namespace geom

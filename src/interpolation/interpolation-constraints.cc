@@ -24,22 +24,26 @@ namespace hpp {
   namespace rbprm {
   namespace interpolation{
 
-  void addContactConstraints(rbprm::RbPrmFullBodyPtr_t fullBody, model::DevicePtr_t device, core::ConfigProjectorPtr_t projector, const State& state, const std::vector<std::string> active)
+  void addContactConstraints(rbprm::RbPrmFullBodyPtr_t fullBody, pinocchio::DevicePtr_t device, core::ConfigProjectorPtr_t projector, const State& state, const std::vector<std::string> active)
   {
       std::vector<bool> cosntraintsR = setMaintainRotationConstraints();
       for(std::vector<std::string>::const_iterator cit = active.begin();
           cit != active.end(); ++cit)
       {
           RbPrmLimbPtr_t limb = fullBody->GetLimbs().at(*cit);
-          const fcl::Vec3f& ppos  = state.contactPositions_.at(*cit);
-          const fcl::Matrix3f& rotation = state.contactRotation_.at(*cit);
+          //const fcl::Vec3f& ppos  = state.contactPositions_.at(*cit);
+          pinocchio::Transform3f position;
+          position.translation(state.contactPositions_.at(*cit));
+          //const fcl::Matrix3f& rotation = state.contactRotation_.at(*cit);
           JointPtr_t effectorJoint = device->getJointByName(limb->effector_->name());
           projector->add(core::NumericalConstraint::create (
-                                  constraints::deprecated::Position::create("",device,
-                                                                effectorJoint,fcl::Vec3f(0,0,0), ppos)));
+                                  constraints::Position::create("",device,
+                                                                effectorJoint, pinocchio::Transform3f(), position)));
           if(limb->contactType_ == hpp::rbprm::_6_DOF)
           {
-              projector->add(core::NumericalConstraint::create (constraints::deprecated::Orientation::create("", device,
+              pinocchio::Transform3f rotation;
+              rotation.rotation(state.contactRotation_.at(*cit));
+              projector->add(core::NumericalConstraint::create (constraints::Orientation::create("", device,
                                                                                 effectorJoint,
                                                                                 rotation,
                                                                                 cosntraintsR)));

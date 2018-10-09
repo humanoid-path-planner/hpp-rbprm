@@ -15,20 +15,20 @@
 // hpp-rbprm. If not, see <http://www.gnu.org/licenses/>.
 
 #include <hpp/rbprm/rbprm-fullbody.hh>
-#include <hpp/model/joint.hh>
+#include <hpp/pinocchio/joint.hh>
 #include <hpp/rbprm/tools.hh>
 #include <hpp/rbprm/stability/stability.hh>
-#include <hpp/rbprm/ik-solver.hh>
 #include <hpp/rbprm/projection/projection.hh>
 #include <hpp/rbprm/contact_generation/contact_generation.hh>
 #include <hpp/rbprm/contact_generation/algorithm.hh>
 
 #include <hpp/core/constraint-set.hh>
+#include <hpp/core/collision-validation.hh>
 #include <hpp/core/config-projector.hh>
 #include <hpp/core/locked-joint.hh>
-#include <hpp/model/device.hh>
+#include <hpp/pinocchio/device.hh>
 #include <hpp/constraints/generic-transformation.hh>
-#include <hpp/model/configuration.hh>
+#include <hpp/pinocchio/configuration.hh>
 #include <hpp/fcl/BVH/BVH_model.h>
 
 #include <stack>
@@ -44,7 +44,7 @@ namespace hpp {
 
     const double epsilon = 10e-3;
 
-    RbPrmFullBodyPtr_t RbPrmFullBody::create (const model::DevicePtr_t &device)
+    RbPrmFullBodyPtr_t RbPrmFullBody::create (const pinocchio::DevicePtr_t &device)
     {
         RbPrmFullBody* fullBody = new RbPrmFullBody(device);
         RbPrmFullBodyPtr_t res (fullBody);
@@ -64,7 +64,7 @@ namespace hpp {
 
 
     void RbPrmFullBody::AddLimbPrivate(rbprm::RbPrmLimbPtr_t limb, const std::string& id, const std::string& name,
-                        const model::ObjectVector_t &collisionObjects, const bool disableEffectorCollision,const bool nonContactingLimb)
+                        const hpp::core::ObjectStdVector_t &collisionObjects, const bool disableEffectorCollision,const bool nonContactingLimb)
     {
         core::CollisionValidationPtr_t limbcollisionValidation_ = core::CollisionValidation::create(this->device_);
         rbprm::T_Limb limbs;
@@ -74,7 +74,7 @@ namespace hpp {
           limbs=limbs_;
 
         // adding collision validation
-        for(model::ObjectVector_t::const_iterator cit = collisionObjects.begin();
+        for(hpp::core::ObjectStdVector_t::const_iterator cit = collisionObjects.begin();
             cit != collisionObjects.end(); ++cit)
         {
             if(limbs.empty())
@@ -85,8 +85,8 @@ namespace hpp {
             //remove effector collision
             if(disableEffectorCollision)
             {
-                hpp::tools::RemoveEffectorCollision<core::CollisionValidation>((*collisionValidation_.get()), limb->effector_, *cit);
-                hpp::tools::RemoveEffectorCollision<core::CollisionValidation>((*limbcollisionValidation_.get()), limb->effector_, *cit);
+                hpp::tools::RemoveEffectorCollision<hpp::core::CollisionValidation>((*collisionValidation_.get()), limb->effector_, *cit);
+                hpp::tools::RemoveEffectorCollision<hpp::core::CollisionValidation>((*limbcollisionValidation_.get()), limb->effector_, *cit);
             }
         }
         if(nonContactingLimb)
@@ -129,27 +129,27 @@ namespace hpp {
     void RbPrmFullBody::AddLimb(const std::string& id, const std::string& name, const std::string &effectorName,
                                 const fcl::Vec3f &offset, const fcl::Vec3f &limbOffset, const fcl::Vec3f &normal, const double x,
                                 const double y,
-                                const model::ObjectVector_t &collisionObjects, const std::size_t nbSamples, const std::string &heuristicName, const double resolution,
+                                const hpp::core::ObjectStdVector_t &collisionObjects, const std::size_t nbSamples, const std::string &heuristicName, const double resolution,
                                 ContactType contactType, const bool disableEffectorCollision,  const bool grasp,
                                 const std::string& kinematicConstraintsPath, const double kinematicConstraintsMin)
     {
         std::map<std::string, const sampling::heuristic>::const_iterator hit = checkLimbData(id, limbs_,factory_,heuristicName);
-        model::JointPtr_t joint = device_->getJointByName(name);
+        pinocchio::JointPtr_t joint = device_->getJointByName(name);
         rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(joint, effectorName, offset,limbOffset,normal,x,y, nbSamples, hit->second, resolution,contactType, disableEffectorCollision, grasp,kinematicConstraintsPath,kinematicConstraintsMin);
         AddLimbPrivate(limb, id, name,collisionObjects, disableEffectorCollision);
     }
 
     void RbPrmFullBody::AddNonContactingLimb(const std::string& id, const std::string& name, const std::string &effectorName,
-                                const model::ObjectVector_t &collisionObjects, const std::size_t nbSamples)
+                                const hpp::core::ObjectStdVector_t &collisionObjects, const std::size_t nbSamples)
     {
         std::map<std::string, const sampling::heuristic>::const_iterator hit = checkLimbData(id, nonContactingLimbs_,factory_,"static");
-        model::JointPtr_t joint = device_->getJointByName(name);
+        pinocchio::JointPtr_t joint = device_->getJointByName(name);
         rbprm::RbPrmLimbPtr_t limb = rbprm::RbPrmLimb::create(joint, effectorName, fcl::Vec3f(0,0,0),fcl::Vec3f(0,0,0),fcl::Vec3f(0,0,1),0,0  , nbSamples, hit->second,0.03);
         AddLimbPrivate(limb, id, name,collisionObjects, false,true);
     }
 
     void RbPrmFullBody::AddLimb(const std::string& database, const std::string& id,
-                                const model::ObjectVector_t &collisionObjects,
+                                const hpp::core::ObjectStdVector_t &collisionObjects,
                                 const std::string& heuristicName,
                                 const bool loadValues, const bool disableEffectorCollision,
                                 const bool grasp)
@@ -238,9 +238,10 @@ namespace hpp {
         return true;
     }
 
-    void RbPrmFullBody::referenceConfig(model::Configuration_t referenceConfig)
+    void RbPrmFullBody::referenceConfig(pinocchio::Configuration_t referenceConfig)
     {
-        device_->q0(referenceConfig);
+        std::cout << "no setter for reference config " << std::endl;
+        //device_->neutralConfiguration() (referenceConfig);
         //create transform of the freeflyer in the world frame :
         fcl::Transform3f tRoot;
         fcl::Transform3f tJoint_world,tJoint_robot;
@@ -254,7 +255,8 @@ namespace hpp {
         if (limbs_.empty())
             hppDout(warning,"No limbs found when setting reference configuration.");
         for(CIT_Limb lit = limbs_.begin() ; lit != limbs_.end() ; ++lit){
-            tJoint_world = lit->second->effector_->currentTransformation();
+            hpp::pinocchio::Transform3f tf = lit->second->effector_->currentTransformation();
+            tJoint_world = fcl::Transform3f(tf.rotation(),tf.translation());
             hppDout(notice,"tJoint of "<<lit->first<<" : "<<tJoint_world);
             tJoint_robot = tRoot.inverseTimes(tJoint_world);
             hppDout(notice,"tJoint relative : "<<tJoint_robot);
@@ -270,7 +272,7 @@ namespace hpp {
         weakPtr_ = weakPtr;
     }
 
-    RbPrmFullBody::RbPrmFullBody (const model::DevicePtr_t& device)
+    RbPrmFullBody::RbPrmFullBody (const pinocchio::DevicePtr_t& device)
         : device_(device)
         , collisionValidation_(core::CollisionValidation::create(device))
         , staticStability_(true)

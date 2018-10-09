@@ -17,10 +17,6 @@
 // <http://www.gnu.org/licenses/>.
 
 # include <hpp/util/debug.hh>
-# include <hpp/model/collision-object.hh>
-# include <hpp/model/joint.hh>
-# include <hpp/model/joint-configuration.hh>
-# include <hpp/model/configuration.hh>
 # include <hpp/core/config-validations.hh>
 # include <hpp/core/path-validation.hh>
 # include <hpp/core/path-vector.hh>
@@ -33,11 +29,10 @@
 
 namespace hpp {
   namespace rbprm {
-    using model::displayConfig;
     using core::value_type;
     using core::vector_t;
     using core::interval_t;
-    using model::size_type;
+    using pinocchio::size_type;
 
     SteeringMethodParabola::SteeringMethodParabola
     (const core::ProblemPtr_t& problem):
@@ -81,8 +76,8 @@ namespace hpp {
       const core::PathValidationPtr_t pathValidation
           (problem_->pathValidation ());
       RbPrmPathValidationPtr_t rbPathValidation = boost::dynamic_pointer_cast<RbPrmPathValidation>(pathValidation);
-      model::RbPrmDevicePtr_t rbDevice =
-          boost::dynamic_pointer_cast<model::RbPrmDevice> (device_.lock ());
+      pinocchio::RbPrmDevicePtr_t rbDevice =
+          boost::dynamic_pointer_cast<pinocchio::RbPrmDevice> (device_.lock ());
       core::PathValidationReportPtr_t pathReport;
       if (!rbDevice)
         hppDout (error, "Device cannot be cast");

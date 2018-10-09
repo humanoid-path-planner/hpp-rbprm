@@ -28,7 +28,7 @@
 # include <hpp/constraints/symbolic-calculus.hh>
 # include <hpp/constraints/symbolic-function.hh>
 # include <hpp/constraints/configuration-constraint.hh>
-# include <hpp/model/configuration.hh>
+# include <hpp/pinocchio/configuration.hh>
 namespace hpp {
 namespace rbprm {
 namespace interpolation {
@@ -48,7 +48,7 @@ namespace interpolation {
     void Create6DEffectorConstraint(Helper_T& helper, const Reference& ref,  const JointPtr_t effectorJoint, const fcl::Transform3f& initTarget=fcl::Transform3f());
 
     template<class Helper_T, typename Reference>
-    void CreateOrientationConstraint(Helper_T& helper, const Reference &ref,  const JointPtr_t effector, const model::DevicePtr_t endEffectorDevice, const fcl::Transform3f& initTarget=fcl::Transform3f());
+    void CreateOrientationConstraint(Helper_T& helper, const Reference &ref,  const JointPtr_t effector, const pinocchio::DevicePtr_t endEffectorDevice, const fcl::Transform3f& initTarget=fcl::Transform3f());
 
     // Implementation
 
@@ -59,7 +59,7 @@ namespace interpolation {
          {}
         ~VecRightSide(){}
         virtual void operator() (constraints::vectorOut_t output,
-                               const constraints::value_type& normalized_input, model::ConfigurationOut_t /*conf*/) const
+                               const constraints::value_type& normalized_input, pinocchio::ConfigurationOut_t /*conf*/) const
         {
           const std::pair<core::value_type, core::value_type>& tR (ref_->timeRange());
           constraints::value_type unNormalized = (tR.second-tR.first)* normalized_input + tR.first;
@@ -85,37 +85,41 @@ namespace interpolation {
     template<class Helper_T, typename Reference>
     void CreateComConstraint(Helper_T& helper, const Reference &ref, const fcl::Vec3f& initTarget=fcl::Vec3f())
     {
-        model::DevicePtr_t device = helper.rootProblem_.robot();
-        core::ComparisonTypePtr_t equals = core::Equality::create ();
+        pinocchio::DevicePtr_t device = helper.rootProblem_.robot();
+        //constraints::ComparisonType equals = constraints::Equality;
         core::ConfigProjectorPtr_t& proj = helper.proj_;
-        model::CenterOfMassComputationPtr_t comComp = model::CenterOfMassComputation::
+        pinocchio::CenterOfMassComputationPtr_t comComp = pinocchio::CenterOfMassComputation::
           create (device);
         comComp->add (device->rootJoint());
-        comComp->computeMass ();
+        //comComp->computeMass ();
+        comComp->compute ();
         PointComFunctionPtr_t comFunc = PointComFunction::create ("COM-walkgen",
             device, /*10000 **/ PointCom::create (comComp));
-        NumericalConstraintPtr_t comEq = NumericalConstraint::create (comFunc, equals);
+        ComparisonTypes_t comps; comps.push_back(constraints::Equality);
+        NumericalConstraintPtr_t comEq = NumericalConstraint::create (comFunc, comps);
         comEq->nonConstRightHandSide() = initTarget; // * 10000;
         proj->add(comEq);
-        proj->updateRightHandSide();
+        //proj->updateRightHandSide();
         helper.steeringMethod_->tds_.push_back(TimeDependant(comEq, boost::shared_ptr<VecRightSide<Reference> >(new VecRightSide<Reference> (ref, 3, true))));
     }
 
     template<class Helper_T, typename Reference>
     void CreatePosturalTaskConstraint(Helper_T& helper, const Reference &ref){
-      model::DevicePtr_t device = helper.rootProblem_.robot();
-      core::ComparisonTypePtr_t equals = core::Equality::create ();
+      pinocchio::DevicePtr_t device = helper.rootProblem_.robot();
+      //core::ComparisonTypePtr_t equals = core::Equality::create ();
       core::ConfigProjectorPtr_t& proj = helper.proj_;
-      hppDout(notice,"create postural task, ref config = "<<model::displayConfig(ref));
+      hppDout(notice,"create postural task, ref config = "<<pinocchio::displayConfig(ref));
       std::vector <bool> mask (device->numberDof(),false);
       Configuration_t weight(device->numberDof());
 
       // mask : 0 for the freeflyer and the extraDoFs :
       for(size_t i = 0 ; i < 3 ; i++){
         mask[i]=false;
+        weight[i] = 0.;
       }
       for(size_t i = device->numberDof()-7 ; i < device->numberDof() ; i++){
         mask[i]=false;
+        weight[i] = 0.;
       }
 
 
@@ -126,7 +130,7 @@ namespace interpolation {
       hppDout(notice,"mask = "<<oss.str());
 
       // create a weight vector
-      for(size_t i = 0 ; i < device->numberDof() ; ++i){
+      for(size_t i = 3 ; i < device->numberDof()-7 ; ++i){
         weight[i] = 1.;
       }
       // TODO : retrieve it from somewhere, store it in fullbody ?
@@ -164,18 +168,19 @@ namespace interpolation {
         weight[i] = weight[i]/moy;
 
 
-      constraints::ConfigurationConstraintPtr_t postFunc = constraints::ConfigurationConstraint::create("Postural_Task",device,ref,weight,mask);
-      const NumericalConstraintPtr_t posturalTask = NumericalConstraint::create (postFunc, equals);
-      proj->add(posturalTask,SizeIntervals_t (0),1);
-      proj->updateRightHandSide();
+      constraints::ConfigurationConstraintPtr_t postFunc = constraints::ConfigurationConstraint::create("Postural_Task",device,ref,weight);
+      ComparisonTypes_t comps; comps.push_back(constraints::Equality);
+      const NumericalConstraintPtr_t posturalTask = NumericalConstraint::create (postFunc, comps);
+      proj->add(posturalTask,segments_t(0),1);
+      //proj->updateRightHandSide();
     }
 
-    inline constraints::PositionPtr_t createPositionMethod(model::DevicePtr_t device, const fcl::Vec3f& initTarget, JointPtr_t effector)
+    inline constraints::PositionPtr_t createPositionMethod(pinocchio::DevicePtr_t device, const fcl::Vec3f& initTarget, JointPtr_t effector)
     {
         //std::vector<bool> mask; mask.push_back(false); mask.push_back(false); mask.push_back(true);
         std::vector<bool> mask; mask.push_back(true); mask.push_back(true); mask.push_back(true);
-        fcl::Transform3f localFrame, globalFrame;
-        globalFrame.setTranslation(initTarget);
+        pinocchio::Transform3f localFrame, globalFrame;
+        globalFrame.translation(initTarget);
         return constraints::Position::create("",device,
                                              effector,
                                              localFrame,
@@ -183,11 +188,12 @@ namespace interpolation {
                                              mask);
     }
 
-    inline constraints::OrientationPtr_t createOrientationMethod(model::DevicePtr_t device, const fcl::Transform3f& initTarget, JointPtr_t effector)
+    inline constraints::OrientationPtr_t createOrientationMethod(pinocchio::DevicePtr_t device, const fcl::Transform3f& initTarget, JointPtr_t effector)
     {
         //std::vector<bool> mask; mask.push_back(false); mask.push_back(false); mask.push_back(true);
         std::vector<bool> mask; mask.push_back(true); mask.push_back(true); mask.push_back(true);
-        const fcl::Matrix3f& rotation = initTarget.getRotation();
+        pinocchio::Transform3f rotation;
+        rotation.rotation(initTarget.getRotation());
         return constraints::Orientation::create("", device,
                                                     effector,
                                                     rotation,
@@ -198,15 +204,15 @@ namespace interpolation {
     template<class Helper_T, typename Reference>
     void CreateEffectorConstraint(Helper_T& helper, const Reference &ref,  const JointPtr_t effectorJoint, const fcl::Vec3f& initTarget)
     {
-        model::DevicePtr_t device = helper.rootProblem_.robot();
-        core::ComparisonTypePtr_t equals = core::Equality::create ();
+        pinocchio::DevicePtr_t device = helper.rootProblem_.robot();
+        ComparisonTypes_t comps; comps.push_back(constraints::Equality);
         core::ConfigProjectorPtr_t& proj = helper.proj_;
         JointPtr_t effector = device->getJointByName(effectorJoint->name());
         NumericalConstraintPtr_t effEq = core::NumericalConstraint::create (
-                                    createPositionMethod(device,initTarget, effector), equals);
+                                    createPositionMethod(device,initTarget, effector), comps);
         effEq->nonConstRightHandSide()[0] = initTarget[2];
         proj->add(effEq);
-        proj->updateRightHandSide();
+        proj->rightHandSide(effEq->nonConstRightHandSide());
         helper.steeringMethod_->tds_.push_back(
                     TimeDependant(effEq, boost::shared_ptr<VecRightSide<Reference> >(new VecRightSide<Reference>(ref, 3))));
     }
@@ -222,11 +228,11 @@ namespace interpolation {
             return ref_->timeRange ();
         }
         void operator ()(constraints::vectorOut_t output,
-                         const constraints::value_type& normalized_input, model::ConfigurationOut_t /*conf*/) const
+                         const constraints::value_type& normalized_input, pinocchio::ConfigurationOut_t /*conf*/) const
         {
             const std::pair<core::value_type, core::value_type>& tR (ref_->timeRange());
             constraints::value_type unNormalized = (tR.second-tR.first)* normalized_input + tR.first;
-            method_->operator ()(output, (ref_->operator ()(unNormalized)));
+            output = method_->operator ()((ref_->operator ()(unNormalized))).vector();;
         }
 
         const Reference ref_;
@@ -236,16 +242,16 @@ namespace interpolation {
 
 
     template<class Helper_T, typename Reference>
-    void CreateOrientationConstraint(Helper_T& helper, const Reference &ref,  const JointPtr_t effectorJoint,const model::DevicePtr_t endEffectorDevice, const fcl::Transform3f& initTarget){
-        model::DevicePtr_t device = helper.rootProblem_.robot();
-        core::ComparisonTypePtr_t equals = core::Equality::create ();
+    void CreateOrientationConstraint(Helper_T& helper, const Reference &ref,  const JointPtr_t effectorJoint,const pinocchio::DevicePtr_t endEffectorDevice, const fcl::Transform3f& initTarget){
+        pinocchio::DevicePtr_t device = helper.rootProblem_.robot();
+        ComparisonTypes_t equals; equals.push_back(constraints::Equality);
         core::ConfigProjectorPtr_t& proj = helper.proj_;
         JointPtr_t effector = device->getJointByName(effectorJoint->name());
         constraints::OrientationPtr_t orCons = createOrientationMethod(device,initTarget, effector);
         constraints::OrientationPtr_t orConsRef = createOrientationMethod(endEffectorDevice,initTarget, endEffectorDevice->rootJoint()->childJoint(0)); // same orientation constraint but for a freeflyer device that represent the end effector (same dim as the ref path)
         NumericalConstraintPtr_t effEq = core::NumericalConstraint::create (orCons, equals);
         proj->add(effEq);
-        proj->updateRightHandSide();
+        //proj->updateRightHandSide();
         boost::shared_ptr<funEvaluator<Reference, constraints::OrientationPtr_t> > orEv
                 (new funEvaluator<Reference, constraints::OrientationPtr_t>(ref, orConsRef));
         helper.steeringMethod_->tds_.push_back(
@@ -257,20 +263,20 @@ namespace interpolation {
     void Create6DEffectorConstraint(Helper_T& helper, const Reference &ref,  const JointPtr_t effectorJoint, const fcl::Transform3f& initTarget)
     {
         //CreateEffectorConstraint(helper, ref, effectorJoint, initTarget.getTranslation());
-        model::DevicePtr_t device = helper.rootProblem_.robot();
+        pinocchio::DevicePtr_t device = helper.rootProblem_.robot();
         // reduce dof if reference path is of lower dimension
         if(ref->operator()(0).rows() < device->configSize())
         {
             device = device->clone();
             device->setDimensionExtraConfigSpace(device->extraConfigSpace().dimension()-1);
         }
-        core::ComparisonTypePtr_t equals = core::Equality::create ();
+        ComparisonTypes_t equals; equals.push_back(constraints::Equality);
         core::ConfigProjectorPtr_t& proj = helper.proj_;
         JointPtr_t effector = device->getJointByName(effectorJoint->name());
         constraints::OrientationPtr_t orCons = createOrientationMethod(device,initTarget, effector);
         NumericalConstraintPtr_t effEq = core::NumericalConstraint::create (orCons, equals);
         proj->add(effEq);
-        proj->updateRightHandSide();
+        //proj->updateRightHandSide();
         boost::shared_ptr<funEvaluator<Reference, constraints::OrientationPtr_t> > orEv
                 (new funEvaluator<Reference, constraints::OrientationPtr_t>(ref, orCons));
         helper.steeringMethod_->tds_.push_back(
@@ -278,12 +284,12 @@ namespace interpolation {
     }
 
 
-    void addContactConstraints(rbprm::RbPrmFullBodyPtr_t fullBody, model::DevicePtr_t device, core::ConfigProjectorPtr_t projector, const State& state, const std::vector<std::string> active);
+    void addContactConstraints(rbprm::RbPrmFullBodyPtr_t fullBody, pinocchio::DevicePtr_t device, core::ConfigProjectorPtr_t projector, const State& state, const std::vector<std::string> active);
 
     template<class Helper_T>
     void CreateContactConstraints(Helper_T& helper, const State& from, const State& to)
     {
-        model::DevicePtr_t device = helper.rootProblem_.robot();
+        pinocchio::DevicePtr_t device = helper.rootProblem_.robot();
         std::vector<std::string> fixed = to.fixedContacts(from);
         addContactConstraints(helper.fullbody_, device, helper.proj_,from,fixed);
     }

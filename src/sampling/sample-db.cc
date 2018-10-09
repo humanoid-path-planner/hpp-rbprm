@@ -1,6 +1,6 @@
 #include <hpp/rbprm/sampling/sample-db.hh>
-#include <hpp/model/joint.hh>
-#include <hpp/model/collision-object.hh>
+#include <hpp/pinocchio/joint.hh>
+#include <hpp/pinocchio/collision-object.hh>
 
 #include <hpp/fcl/shape/geometric_shapes.h>
 #include <hpp/fcl/collision.h>
@@ -13,7 +13,7 @@
 #include <string>
 
 using namespace hpp;
-using namespace hpp::model;
+using namespace hpp::pinocchio;
 using namespace hpp::rbprm;
 using namespace hpp::rbprm::sampling;
 using namespace fcl;
@@ -135,14 +135,14 @@ namespace
             Box* box = new Box(size, size, size);
             box->cost_density = cost;
             box->threshold_occupied = threshold;
-            fcl::CollisionObject* obj = new fcl::CollisionObject(boost::shared_ptr<fcl::CollisionGeometry>(box), Transform3f(Vec3f(x, y, z)));
+            fcl::CollisionObject* obj = new fcl::CollisionObject(boost::shared_ptr<fcl::CollisionGeometry>(box), fcl::Transform3f(Vec3f(x, y, z)));
             boxes.insert(std::make_pair(id,obj));
         }
         return boxes;
     }
 }
 
-SampleDB::SampleDB(const model::JointPtr_t limb, const std::string& effector,
+SampleDB::SampleDB(const pinocchio::JointPtr_t limb, const std::string& effector,
                    const std::size_t nbSamples, const fcl::Vec3f& offset,const fcl::Vec3f& limbOffset, const double resolution, const T_evaluate& data,  const std::string& staticValue)
     : resolution_(resolution)
     , samples_(GenerateSamples(limb, effector, nbSamples, offset,limbOffset))
@@ -224,13 +224,13 @@ SampleDB& hpp::rbprm::sampling::addValue(SampleDB& database, const std::string& 
 
 // TODO Samples should be Vec3f
 bool rbprm::sampling::GetCandidates(const SampleDB& sc, const fcl::Transform3f& treeTrf,
-                                    const hpp::model::CollisionObjectPtr_t& o2,
+                                    const hpp::pinocchio::CollisionObjectPtr_t& o2,
                                     const fcl::Vec3f& direction, hpp::rbprm::sampling::T_OctreeReport &reports,
                                     const HeuristicParam & params, const heuristic evaluate)
 {
     fcl::CollisionRequest req(1000, true);
     fcl::CollisionResult cResult;
-    fcl::CollisionObjectPtr_t obj = o2->fcl();
+    fcl::CollisionObject* obj = o2->fcl();
     fcl::collide(sc.geometry_.get(), treeTrf, obj->collisionGeometry().get(), obj->getTransform(), req, cResult);
     sampling::T_VoxelSampleId::const_iterator voxelIt;
     Eigen::Vector3d eDir(direction[0], direction[1], direction[2]);
@@ -276,7 +276,7 @@ bool rbprm::sampling::GetCandidates(const SampleDB& sc, const fcl::Transform3f& 
 
 
 rbprm::sampling::T_OctreeReport rbprm::sampling::GetCandidates(const SampleDB& sc, const fcl::Transform3f& treeTrf,
-                                                               const hpp::model::CollisionObjectPtr_t& o2,
+                                                               const hpp::pinocchio::CollisionObjectPtr_t& o2,
                                                                const fcl::Vec3f& direction, const HeuristicParam & params, const heuristic evaluate)
 {
     rbprm::sampling::T_OctreeReport report;

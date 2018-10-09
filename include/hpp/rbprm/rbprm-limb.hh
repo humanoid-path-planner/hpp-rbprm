@@ -22,7 +22,7 @@
 # include <hpp/rbprm/config.hh>
 # include <hpp/rbprm/sampling/sample-db.hh>
 # include <hpp/rbprm/sampling/heuristic.hh>
-# include <hpp/model/device.hh>
+# include <hpp/pinocchio/device.hh>
 
 namespace hpp {
   namespace rbprm {
@@ -44,10 +44,10 @@ namespace hpp {
     typedef boost::shared_ptr <RbPrmLimb> RbPrmLimbPtr_t;
     typedef std::map<std::string, const rbprm::RbPrmLimbPtr_t > T_Limb;
     typedef T_Limb::const_iterator CIT_Limb;
-    typedef Eigen::Matrix <model::value_type, Eigen::Dynamic, Eigen::Dynamic> MatrixXX;
-    typedef Eigen::Matrix <model::value_type, Eigen::Dynamic, 3>              MatrixX3;
-    typedef Eigen::Matrix <model::value_type, Eigen::Dynamic, 1>              VectorX;
-    typedef Eigen::Matrix <model::value_type, 3, 1>                           Vector3;
+    typedef Eigen::Matrix <pinocchio::value_type, Eigen::Dynamic, Eigen::Dynamic> MatrixXX;
+    typedef Eigen::Matrix <pinocchio::value_type, Eigen::Dynamic, 3>              MatrixX3;
+    typedef Eigen::Matrix <pinocchio::value_type, Eigen::Dynamic, 1>              VectorX;
+    typedef Eigen::Matrix <pinocchio::value_type, 3, 1>                           Vector3;
 
 
     class HPP_RBPRM_DLLAPI RbPrmLimb
@@ -70,7 +70,7 @@ namespace hpp {
         /// of the unit voxel of the octree. The larger they are, the more samples will be considered as candidates for contact.
         /// This can be problematic in terms of performance. The default value is 3 cm.
         /// \param contactType Whether the contact is a surface contact (orientation matters) or a punctual contact
-        /*static RbPrmLimbPtr_t create (const model::JointPtr_t limb, const fcl::Vec3f &offset,
+        /*static RbPrmLimbPtr_t create (const pinocchio::JointPtr_t limb, const fcl::Vec3f &offset,
                                       const fcl::Vec3f &normal,const double x, const double y,
                                       const std::size_t nbSamples, const sampling::heuristic evaluate = 0,
                                       const double resolution = 0.1, ContactType contactType = _6_DOF);*/
@@ -93,7 +93,7 @@ namespace hpp {
         /// This can be problematic in terms of performance. The default value is 3 cm.
         /// \param contactType Whether the contact is a surface contact (orientation matters) or a punctual contact
         /// \param disableEndEffectorCollision Whether the end effector bodies should be counted for collision detection
-        static RbPrmLimbPtr_t create (const model::JointPtr_t limb, const std::string& effectorName, const fcl::Vec3f &offset,
+        static RbPrmLimbPtr_t create (const pinocchio::JointPtr_t limb, const std::string& effectorName, const fcl::Vec3f &offset,
                                       const fcl::Vec3f &limbOffset, const fcl::Vec3f &normal,const double x, const double y,
                                       const std::size_t nbSamples, const sampling::heuristic evaluate = 0,
                                       const double resolution = 0.1, ContactType contactType = _6_DOF,
@@ -102,7 +102,7 @@ namespace hpp {
                                       const std::string& kinematicsConstraintsPath = std::string(),
                                       const double kinematicConstraintsMinDistance = 0.);
 
-        static RbPrmLimbPtr_t create (const model::DevicePtr_t device, std::ifstream& fileStream, const bool loadValues = true,
+        static RbPrmLimbPtr_t create (const pinocchio::DevicePtr_t device, std::ifstream& fileStream, const bool loadValues = true,
                                       const hpp::rbprm::sampling::heuristic evaluate = 0,
                                       bool disableEndEffectorCollision = false,
                                       bool grasps = false);
@@ -111,11 +111,11 @@ namespace hpp {
         ~RbPrmLimb();
 
     public:
-        fcl::Transform3f octreeRoot() const;
+        pinocchio::Transform3f octreeRoot() const;
 
     public:
-        const model::JointPtr_t limb_;
-        const model::JointPtr_t effector_;
+        const pinocchio::JointPtr_t limb_;
+        const pinocchio::JointPtr_t effector_;
         const fcl::Matrix3f effectorDefaultRotation_; // effector transform in rest pose
         const fcl::Vec3f offset_; // effector location
         const fcl::Vec3f limbOffset_; // offset of between the limb_ joint position and it's link
@@ -132,7 +132,7 @@ namespace hpp {
 
     protected:
 
-      RbPrmLimb (const model::JointPtr_t& limb, const std::string& effectorName,  const fcl::Vec3f &offset,
+      RbPrmLimb (const pinocchio::JointPtr_t& limb, const std::string& effectorName,  const fcl::Vec3f &offset,
                  const fcl::Vec3f &limbOffset, const fcl::Vec3f &normal,const double x, const double y,
                  const std::size_t nbSamples, const sampling::heuristic evaluate,
                  const double resolution, ContactType contactType,
@@ -141,7 +141,7 @@ namespace hpp {
                  const std::string& kinematicsConstraintsPath = std::string(),
                  const double kinematicConstraintsMinDistance = 0.);
 
-      RbPrmLimb (const model::DevicePtr_t device, std::ifstream& fileStream, const bool loadValues,
+      RbPrmLimb (const pinocchio::DevicePtr_t device, std::ifstream& fileStream, const bool loadValues,
                  const hpp::rbprm::sampling::heuristic evaluate,
                  bool disableEndEffectorCollision = false,
                  bool grasps = false);

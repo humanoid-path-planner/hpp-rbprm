@@ -16,15 +16,14 @@
 
 #include <hpp/rbprm/sampling/analysis.hh>
 #include <hpp/core/basic-configuration-shooter.hh>
-#include <hpp/model/joint-configuration.hh>
-#include <hpp/model/joint.hh>
+#include <hpp/pinocchio/joint.hh>
+#include <hpp/pinocchio/configuration.hh>
 #include <time.h>
-#include <hpp/model/configuration.hh>
 #include <Eigen/Eigen>
 #include <Eigen/SVD>
 
 using namespace hpp;
-using namespace hpp::model;
+using namespace hpp::pinocchio;
 using namespace hpp::rbprm;
 using namespace hpp::rbprm::sampling;
 
@@ -119,10 +118,10 @@ namespace
 
     struct FullBodyDB
     {
-        std::vector<model::Configuration_t> fullBodyConfigs_;
+        std::vector<pinocchio::Configuration_t> fullBodyConfigs_;
         static FullBodyDB* instance_;
 
-        static FullBodyDB& Instance(model::DevicePtr_t device, std::size_t nbSamples = 10000)
+        static FullBodyDB& Instance(pinocchio::DevicePtr_t device, std::size_t nbSamples = 10000)
         {
             if(!instance_)
                 instance_ = new FullBodyDB;
@@ -132,15 +131,15 @@ namespace
         }
 
 
-        void GenerateFullBodyDB(std::size_t nbSamples, model::DevicePtr_t device)
+        void GenerateFullBodyDB(std::size_t nbSamples, pinocchio::DevicePtr_t device)
         {
             core::BasicConfigurationShooterPtr_t shooter = core::BasicConfigurationShooter::create(device);
-            model::Configuration_t save(device->currentConfiguration());
+            pinocchio::Configuration_t save(device->currentConfiguration());
             core::CollisionValidationPtr_t colVal = core::CollisionValidation::create(device);
             std::size_t i = nbSamples - fullBodyConfigs_.size();
             while(i>0)
             {
-                model::ConfigurationPtr_t conf = shooter->shoot();
+                pinocchio::ConfigurationPtr_t conf = shooter->shoot();
                 device->currentConfiguration(*conf);
                 device->computeForwardKinematics();
                 core::ValidationReportPtr_t colRep(new core::CollisionValidationReport);
@@ -161,15 +160,15 @@ namespace
     // computing probability of auto collision given a large number of full body samples
     double selfCollisionProbability(rbprm::RbPrmFullBodyPtr_t fullBody , const SampleDB& /*sampleDB*/, const sampling::Sample& sample)
     {
-        model::DevicePtr_t device = fullBody->device_;
-        model::Configuration_t save(device->currentConfiguration());
+        pinocchio::DevicePtr_t device = fullBody->device_;
+        pinocchio::Configuration_t save(device->currentConfiguration());
         FullBodyDB& fullBodyDB = FullBodyDB::Instance(device);
         core::CollisionValidationPtr_t colVal = core::CollisionValidation::create(device);
         std::size_t totalSamples = fullBodyDB.fullBodyConfigs_.size(), totalNoCollisions =  0;
-        for(std::vector<model::Configuration_t>::const_iterator cit = fullBodyDB.fullBodyConfigs_.begin();
+        for(std::vector<pinocchio::Configuration_t>::const_iterator cit = fullBodyDB.fullBodyConfigs_.begin();
             cit != fullBodyDB.fullBodyConfigs_.end(); ++cit)
         {
-            model::Configuration_t conf = *cit;
+            pinocchio::Configuration_t conf = *cit;
             sampling::Load(sample,conf);
             device->currentConfiguration(conf);
             device->computeForwardKinematics();
@@ -183,13 +182,13 @@ namespace
         return (double)(totalNoCollisions) / (double)(totalSamples);
     }
 
-    void distanceRec(const ConfigurationIn_t conf, const std::string& lastJoint, model::JointPtr_t currentJoint, double& currentDistance)
+    void distanceRec(const ConfigurationIn_t conf, const std::string& lastJoint, pinocchio::JointPtr_t currentJoint, double& currentDistance)
     {
-        model::size_type rk = currentJoint->rankInConfiguration();
+        pinocchio::size_type rk = currentJoint->rankInConfiguration();
         if(currentJoint->configSize() > 0 && currentJoint->isBounded(0))
         {
-            model::value_type lb = currentJoint->lowerBound(0), ub = currentJoint->upperBound(0);
-            model::value_type val = conf[rk];
+            pinocchio::value_type lb = currentJoint->lowerBound(0), ub = currentJoint->upperBound(0);
+            pinocchio::value_type val = conf[rk];
             val= (val - lb) * (ub - val) / ((ub - lb) * (ub - lb));
             currentDistance = std::min(currentDistance, val);
         }
@@ -225,8 +224,8 @@ namespace
     {
         // find limb name
        rbprm::RbPrmLimbPtr_t limb = getLimbFromStartRank(sample.startRank_,fullBody);
-        model::DevicePtr_t device = fullBody->device_;
-        model::Configuration_t conf(device->currentConfiguration());
+        pinocchio::DevicePtr_t device = fullBody->device_;
+        pinocchio::Configuration_t conf(device->currentConfiguration());
         double distance = 1; //std::numeric_limits<double>::max();
         sampling::Load(sample,conf);
         distanceRec(conf, limb->effector_->name(), limb->limb_, distance);
@@ -237,8 +236,8 @@ namespace
     double referenceConfiguration(rbprm::RbPrmFullBodyPtr_t fullBody , const SampleDB& /*sampleDB*/, const sampling::Sample& sample){
       // find limb name
       rbprm::RbPrmLimbPtr_t limb = getLimbFromStartRank(sample.startRank_,fullBody);
-      model::DevicePtr_t device = fullBody->device_;
-      model::Configuration_t conf(device->currentConfiguration());
+      pinocchio::DevicePtr_t device = fullBody->device_;
+      pinocchio::Configuration_t conf(device->currentConfiguration());
       sampling::Load(sample,conf); // retrieve the configuration of the sample (only for the concerned limb)
 
       double distance = 0;
@@ -267,7 +266,7 @@ namespace
       hppDout(notice,"limb     id pos= "<<limb->limb_->rankInConfiguration());
 */
       for (size_t i = limb->limb_->rankInVelocity() ; i <= limb->effector_->rankInVelocity() ; ++i){
-          model::vector_t jointJacobian= device->getJointAtVelocityRank(i)->jacobian().block<6,1>(0,i).transpose();
+          pinocchio::vector_t jointJacobian= device->getJointAtVelocityRank(i)->jacobian().block<6,1>(0,i).transpose();
           //hppDout(notice,"Jacobian of joint "<<device->getJointAtVelocityRank(i)->name()<<" at id = "<<i);
           //hppDout(notice,"joint column : \n"<<jointJacobian);
           if(fabs(jointJacobian[4]) > 0.5){ // rot y
@@ -280,9 +279,9 @@ namespace
           i_weight++;
       }
       //hppDout(notice,"Weight vector in reference analysis, for limb : "<<limb->limb_->name());
-      //hppDout(notice,""<<model::displayConfig(weight));
-      hpp::model::difference (device, conf, fullBody->referenceConfig(), diff);
-     // hppDout(notice,"Reference config in analysis : "<<model::displayConfig(fullBody->referenceConfig()));
+      //hppDout(notice,""<<pinocchio::displayConfig(weight));
+      hpp::pinocchio::difference (device, conf, fullBody->referenceConfig(), diff);
+     // hppDout(notice,"Reference config in analysis : "<<pinocchio::displayConfig(fullBody->referenceConfig()));
       // the difference vector depend on the index in the velocity vector, not in the configuration
       // we only sum for the index of the current limb
      // hppDout(notice,"ref config rank: "<<cit->second->limb_->rankInVelocity()<<" ; "<<cit->second->effector_->rankInVelocity());

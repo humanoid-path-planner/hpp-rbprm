@@ -40,7 +40,7 @@ namespace hpp {
     class HPP_RBPRM_DLLAPI RbPrmRomValidation : public core::CollisionValidation
     {
     public:
-      static RbPrmRomValidationPtr_t create (const model::DevicePtr_t& robot,
+      static RbPrmRomValidationPtr_t create (const pinocchio::DevicePtr_t& robot,
                                              const std::vector<std::string>& affFilters 
 																						 	= std::vector<std::string>());
 
@@ -68,7 +68,7 @@ namespace hpp {
 
       void setOptional(bool optional){optional_ = optional;}
     protected:
-      RbPrmRomValidation (const model::DevicePtr_t &robot,
+      RbPrmRomValidation (const pinocchio::DevicePtr_t &robot,
                        const std::vector<std::string>& affFilters);
     private:
       core::ValidationReportPtr_t unusedReport_;

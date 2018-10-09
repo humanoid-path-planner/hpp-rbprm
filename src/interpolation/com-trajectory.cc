@@ -18,8 +18,8 @@
 
 #include <hpp/rbprm/interpolation/com-trajectory.hh>
 #include <hpp/rbprm/interpolation/time-constraint-utils.hh>
-#include <hpp/model/device.hh>
-#include <hpp/model/configuration.hh>
+#include <hpp/pinocchio/device.hh>
+#include <hpp/pinocchio/configuration.hh>
 #include <hpp/core/config-projector.hh>
 #include <hpp/core/locked-joint.hh>
 
@@ -28,10 +28,10 @@ using namespace hpp::core;
 namespace hpp {
   namespace rbprm {
   namespace interpolation{
-    ComTrajectory::ComTrajectory (model::vector3_t init,
-                                  model::vector3_t end,
-                                  model::vector3_t initSpeed,
-                                  model::vector3_t acceleration,
+    ComTrajectory::ComTrajectory (pinocchio::vector3_t init,
+                                  pinocchio::vector3_t end,
+                                  pinocchio::vector3_t initSpeed,
+                                  pinocchio::vector3_t acceleration,
                                   core::value_type length) :
         parent_t (interval_t (0, length), 3,3),
         initial_ (init), end_ (end),
@@ -45,7 +45,7 @@ namespace hpp {
       }
 
 
-    model::value_type normalize(const ComTrajectory& path, model::value_type param)
+    pinocchio::value_type normalize(const ComTrajectory& path, pinocchio::value_type param)
     {
         value_type u;
         if (path.timeRange ().second == 0)
@@ -92,7 +92,7 @@ namespace hpp {
         Configuration_t q1 ((*this) (subInterval.first, success));
         Configuration_t q2 ((*this) (subInterval.second, success));
         value_type u = normalize(*this, subInterval.first) * length_;
-        model::vector3_t speedAtQ1 = acceleration_ * u + initSpeed_;
+        pinocchio::vector3_t speedAtQ1 = acceleration_ * u + initSpeed_;
         PathPtr_t result = ComTrajectory::create (q1, q2, speedAtQ1, acceleration_, l);
         return result;
     }

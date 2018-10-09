@@ -31,23 +31,22 @@
 #include <hpp/core/path-optimization/partial-shortcut.hh>
 #include <hpp/core/constraint-set.hh>
 #include <hpp/constraints/generic-transformation.hh>
-#include <hpp/constraints/position.hh>
-#include <hpp/constraints/orientation.hh>
+//#include <hpp/constraints/position.hh>
+//#include <hpp/constraints/orientation.hh>
 #include <hpp/core/config-projector.hh>
 #include <hpp/core/locked-joint.hh>
 #include <hpp/core/path-vector.hh>
 #include <hpp/core/subchain-path.hh>
-#include <hpp/model/joint.hh>
-#include <hpp/model/object-factory.hh>
+#include <hpp/pinocchio/joint.hh>
+//#include <hpp/pinocchio/object-factory.hh>
 #include <hpp/rbprm/tools.hh>
 #include <hpp/constraints/relative-com.hh>
 #include <hpp/constraints/symbolic-calculus.hh>
 #include <hpp/constraints/symbolic-function.hh>
 #include <vector>
-#include <hpp/model/configuration.hh>
+#include <hpp/pinocchio/configuration.hh>
 namespace hpp {
 using namespace core;
-using namespace model;
 namespace rbprm {
 namespace interpolation {
 
@@ -161,12 +160,13 @@ namespace
 
         ConfigurationPtr_t start = TimeConfigFromDevice(*this, from, 0.);
         ConfigurationPtr_t end   = TimeConfigFromDevice(*this, to  , 1.);
-        hppDout(notice,"Run : start config = r(["<<model::displayConfig(*start)<<"])");
-        hppDout(notice,"Run : end   config = r(["<<model::displayConfig(*end)<<"])");
+        hppDout(notice,"Run : start config = r(["<<pinocchio::displayConfig(*start)<<"])");
+        hppDout(notice,"Run : end   config = r(["<<pinocchio::displayConfig(*end)<<"])");
 
         rootProblem_.initConfig(start);
         BiRRTPlannerPtr_t planner = BiRRTPlanner::create(rootProblem_);
-        ProblemTargetPtr_t target = problemTarget::GoalConfigurations::create (planner);
+        //ProblemTargetPtr_t target = problemTarget::GoalConfigurations::create (planner);
+        ProblemTargetPtr_t target = problemTarget::GoalConfigurations::create (&rootProblem_);
         rootProblem_.target (target);
         rootProblem_.addGoalConfig(end);
         InitConstraints();
@@ -245,8 +245,8 @@ namespace
             else
             {
                 // reducing path
-                core::SizeInterval_t interval(0, completePath->initial().rows()-1);
-                core::SizeIntervals_t intervals;
+                core::segment_t interval(0, completePath->initial().rows()-1);
+                core::segments_t intervals;
                 intervals.push_back(interval);
                 PathPtr_t reducedPath = core::SubchainPath::create(completePath,intervals);
                 return reducedPath;
@@ -292,7 +292,7 @@ namespace
                                               const PathGetter_T& pathGetter,
                                               const StateIterator_T &startState, const StateIterator_T &endState,
                                               const std::size_t numOptimizations, const bool keepExtraDof=false,
-                                              const model::value_type error_treshold = 0.001, const size_t maxIterations = 0)
+                                              const pinocchio::value_type error_treshold = 0.001, const size_t maxIterations = 0)
     {
         hppDout(notice,"Begin interpolateStatesFromPathGetter :");
         PathVectorPtr_t res[100];

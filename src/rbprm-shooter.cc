@@ -16,13 +16,14 @@
 
 #include <hpp/core/collision-validation-report.hh>
 #include <hpp/rbprm/rbprm-shooter.hh>
-#include <hpp/model/collision-object.hh>
-#include <hpp/model/joint.hh>
+#include <hpp/pinocchio/liegroup-space.hh>
+#include <hpp/pinocchio/liegroup-element.hh>
+#include <pinocchio/algorithm/joint-configuration.hpp>
 #include <hpp/fcl/collision_object.h>
 #include <hpp/fcl/BVH/BVH_model.h>
 #include <hpp/core/collision-validation.hh>
 #include <Eigen/Geometry>
-#include <hpp/model/configuration.hh>
+#include <hpp/pinocchio/configuration.hh>
 #include <hpp/util/timer.hh>
 
 namespace hpp {
@@ -30,10 +31,11 @@ using namespace core;
 using namespace fcl;
 namespace
 {
+    static const int SIZE_EULER = 6;
     typedef fcl::BVHModel<OBBRSS> BVHModelOB;
     typedef boost::shared_ptr<const BVHModelOB> BVHModelOBConst_Ptr_t;
 		
-    BVHModelOBConst_Ptr_t GetModel(const fcl::CollisionObjectConstPtr_t object)
+    BVHModelOBConst_Ptr_t GetModel(const pinocchio::FclConstCollisionObjectPtr_t object)
     {
         assert(object->collisionGeometry()->getNodeType() == BV_OBBRSS);
         const BVHModelOBConst_Ptr_t model = boost::static_pointer_cast<const BVHModelOB>(object->collisionGeometry());
@@ -51,7 +53,7 @@ namespace
         return sqrt(s * (s-a) * (s-b) * (s-c));
     }
 
-    std::vector<double> getTranslationBounds(const model::RbPrmDevicePtr_t robot)
+    std::vector<double> getTranslationBounds(const pinocchio::RbPrmDevicePtr_t robot)
     {
         const JointPtr_t root = robot->Device::rootJoint();
         std::vector<double> res;
@@ -71,7 +73,7 @@ namespace
         return res;
     }
 
-    void SetConfigTranslation(const model::RbPrmDevicePtr_t robot, ConfigurationPtr_t config, const Vec3f& translation)
+    void SetConfigTranslation(const pinocchio::RbPrmDevicePtr_t robot, ConfigurationPtr_t config, const Vec3f& translation)
     {
         std::vector<double> bounds = getTranslationBounds(robot);
         for(std::size_t i =0; i<3; ++i)
@@ -80,7 +82,7 @@ namespace
         }
     }
 
-    void Translate(const model::RbPrmDevicePtr_t robot, ConfigurationPtr_t config, const Vec3f& translation)
+    void Translate(const pinocchio::RbPrmDevicePtr_t robot, ConfigurationPtr_t config, const Vec3f& translation)
     {
         // bound to positions limits
         std::vector<double> bounds = getTranslationBounds(robot);
@@ -90,23 +92,45 @@ namespace
         }
     }
 
-    void SampleRotationRec(ConfigurationPtr_t config, JointVector_t& jv, std::size_t& current)
+    /*void SampleRotationRec(ConfigurationPtr_t config, JointVector_t& jv, std::size_t& current)
     {
         JointPtr_t joint = jv[current++];
         std::size_t rank = joint->rankInConfiguration ();
-        joint->configuration ()->uniformlySample (rank, *config);
+        const hpp::pinocchio::LiegroupSpacePtr_t jm = joint->configurationSpace();
+        jm->neutral().setNeutral(); setRandom ();
+        hpp::pinocchio::LiegroupSpace toto;
+        //toto/
+        joint->jointModel()-> configuration ()->uniformlySample (rank, *config);
         if(current<jv.size())
             SampleRotationRec(config,jv,current);
+    }*/
+
+    void SampleRotation(const std::vector<double>& so3, ConfigurationPtr_t config)
+    {
+        if (so3.empty())
+            return;
+        assert (so3.size() == SIZE_EULER);
+        Eigen::Vector3d rot;
+        for(int i = 0; i<6;++i)
+            rot [i%2] = so3[i] + (so3[i+1] - so3[i]) * rand ()/RAND_MAX;
+        Eigen::Quaterniond qt = Eigen::AngleAxisd(rot(0), Eigen::Vector3d::UnitZ())
+          * Eigen::AngleAxisd(rot(1), Eigen::Vector3d::UnitY())
+          * Eigen::AngleAxisd(rot(2), Eigen::Vector3d::UnitX());
+        std::size_t rank = 3;
+        (*config)(rank+0) = qt.x();
+        (*config)(rank+1) = qt.y();
+        (*config)(rank+2) = qt.z();
+        (*config)(rank+3) = qt.w();
     }
 
-    void SampleRotation(model::DevicePtr_t so3, ConfigurationPtr_t config, JointVector_t& jv)
+    /*void SampleRotation(pinocchio::DevicePtr_t so3, ConfigurationPtr_t config, JointVector_t& jv)
     {
         std::size_t id = 1;
         if(so3->rootJoint())
         {
             Eigen::Matrix <value_type, 3, 1> confso3;
             id+=1;
-            model::JointPtr_t joint = so3->rootJoint();
+            pinocchio::JointPtr_t joint = so3->rootJoint();
             for(int i =0; i <3; ++i)
             {
                 joint->configuration()->uniformlySample (i, confso3);
@@ -123,26 +147,33 @@ namespace
         }
         if(id < jv.size())
             SampleRotationRec(config,jv,id);
-    }
+    }*/
 
-    model::DevicePtr_t initSo3()
+    /*std::vector<double> initSo3()
     {
-        DevicePtr_t so3Robot = model::Device::create("so3Robot");
-        /*model::JointPtr_t res = new model::JointSO3(fcl::Transform3f());
-        res->name("defaultSO3");*/
+        std::vector<double> res;
+        int sign = -1;
+        for (int i =0; i<6; ++i)
+        {
+            res.push_back(sign * std::numeric_limits<double>::infinity());
+            sign *= -1;
+        }
+        //DevicePtr_t so3Robot = pinocchio::Device::create("so3Robot");
         //so3Robot->rootJoint(0);
-        return so3Robot;
-    }
+        return res;
+    }*/
 
-    void seRotationtLimits (model::DevicePtr_t so3Robot, const std::vector<double>& limitszyx)
+    void seRotationtLimits (std::vector<double>& so3Robot, const std::vector<double>& limitszyx)
     {
-        model::Joint* previous = so3Robot->rootJoint();
+        assert(so3Robot.size() == limitszyx.size());
+        so3Robot = limitszyx;
+        /*pinocchio::Joint* previous = so3Robot->rootJoint();
         if(previous == 0)
         {
             // init joints
-            previous = new model::jointRotation::Bounded(fcl::Transform3f());
-            model::Joint * jy = new model::jointRotation::Bounded(fcl::Transform3f());
-            model::Joint * jx = new model::jointRotation::Bounded(fcl::Transform3f());
+            previous = new pinocchio::jointRotation::Bounded(fcl::Transform3f());
+            pinocchio::Joint * jy = new pinocchio::jointRotation::Bounded(fcl::Transform3f());
+            pinocchio::Joint * jx = new pinocchio::jointRotation::Bounded(fcl::Transform3f());
             so3Robot->rootJoint(previous);
             previous->addChildJoint (jy);
             jy->addChildJoint (jx);
@@ -150,10 +181,10 @@ namespace
             jy->name("so3y");
             jx->name("so3x");
         }
-        // set limits model::JointPtr_t
+        // set limits pinocchio::JointPtr_t
         assert(limitszyx.size() == 6);
         int i = 0;
-        model::JointPtr_t current = previous;
+        pinocchio::JointPtr_t current = previous;
         for(std::vector<double>::const_iterator cit = limitszyx.begin();
             cit != limitszyx.end(); ++cit, ++i)
         {
@@ -166,14 +197,15 @@ namespace
                 current->upperBound(0, *cit);
                 current = current->numberChildJoints() > 0 ? current->childJoint(0) : 0;
             }
-        }
+        }*/
     }
 
 } // namespace
 
   namespace rbprm {
 
-    RbPrmShooterPtr_t RbPrmShooter::create (const model::RbPrmDevicePtr_t& robot,
+
+    RbPrmShooterPtr_t RbPrmShooter::create (const pinocchio::RbPrmDevicePtr_t& robot,
                                             const ObjectVector_t& geometries,
 																						const affMap_t& affordances,
                                             const std::vector<std::string>& filter,
@@ -239,7 +271,7 @@ namespace
 
 // TODO: outward
 
-    RbPrmShooter::RbPrmShooter (const model::RbPrmDevicePtr_t& robot,
+    RbPrmShooter::RbPrmShooter (const pinocchio::RbPrmDevicePtr_t& robot,
                               const ObjectVector_t& geometries,
 															const affMap_t& affordances,
                               const std::vector<std::string>& filter,
@@ -251,8 +283,7 @@ namespace
     , filter_(filter)
     , robot_ (robot)
     , validator_(rbprm::RbPrmValidation::create(robot_, filter, affFilters,
-																								affordances, geometries))
-    , eulerSo3_(initSo3())
+                                                affordances, geometries))
     {
         for(hpp::core::ObjectVector_t::const_iterator cit = geometries.begin();
             cit != geometries.end(); ++cit)
@@ -262,13 +293,13 @@ namespace
         this->InitWeightedTriangles(geometries);
 		}
 
-    void RbPrmShooter::InitWeightedTriangles(const model::ObjectVector_t& geometries)
+    void RbPrmShooter::InitWeightedTriangles(const pinocchio::ObjectVector_t& geometries)
     {
         double sum = 0;
-        for(model::ObjectVector_t::const_iterator objit = geometries.begin();
+        for(pinocchio::ObjectVector_t::const_iterator objit = geometries.begin();
           objit != geometries.end(); ++objit)
         {
-            const  fcl::CollisionObjectPtr_t& colObj = (*objit)->fcl();
+            const  pinocchio::FclConstCollisionObjectPtr_t colObj = (*objit)->fcl();
             BVHModelOBConst_Ptr_t model =  GetModel(colObj); // TODO NOT TRIANGLES
             for(int i =0; i < model->num_tris; ++i)
             {
@@ -313,12 +344,19 @@ namespace
       return triangles_[triangles_.size()-1]; // not supposed to happen
   }
 
+void randConfigAtPos(const pinocchio::RbPrmDevicePtr_t robot, const std::vector<double>& eulerSo3, ConfigurationPtr_t config, const Vec3f p)
+{
+    (*config) = se3::randomConfiguration(robot->model());
+    SetConfigTranslation(robot,config, p);
+    SampleRotation(eulerSo3, config);
+}
+
 hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
 {
     hppDout(notice,"!!! Random shoot");
     HPP_DEFINE_TIMECOUNTER(SHOOT_COLLISION);
     JointVector_t jv = robot_->getJointVector ();
-    ConfigurationPtr_t config (new Configuration_t (robot_->Device::currentConfiguration()));
+    ConfigurationPtr_t config (new Configuration_t (se3::randomConfiguration(robot_->model())));
     std::size_t limit = shootLimit_;
     bool found(false);
     while(limit >0 && !found)
@@ -338,8 +376,7 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
                 + (sqrt(r1) * r2) * tri.p3;
 
         //set configuration position to sampled point
-        SetConfigTranslation(robot_,config, p);
-        SampleRotation(eulerSo3_, config, jv);
+        randConfigAtPos(robot_,eulerSo3_,config,p);
         // rotate and translate randomly until valid configuration found or
         // no obstacle is reachable
         ValidationReportPtr_t reportShPtr(new CollisionValidationReport);
@@ -358,7 +395,8 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
                 // try to rotate to reach rom
                 for(; limitDis>0 && !found && valid ; --limitDis)
                 {
-                    SampleRotation(eulerSo3_, config, jv);
+                    //SampleRotation(eulerSo3_, config);
+                    randConfigAtPos(robot_,eulerSo3_,config,p);
                     HPP_START_TIMECOUNTER(SHOOT_COLLISION);
                     found = validator_->validate(*config, filter_);
                     HPP_STOP_TIMECOUNTER(SHOOT_COLLISION);
@@ -415,7 +453,7 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
         limit--;
     }
     if (!found) std::cout << "no config found" << std::endl;
-    hppDout(info,"shoot : "<<model::displayConfig(*config));
+    hppDout(info,"shoot : "<<pinocchio::displayConfig(*config));
     HPP_DISPLAY_TIMECOUNTER(SHOOT_COLLISION);
     return config;
 }

@@ -43,7 +43,7 @@ namespace hpp {
         /// \param limb root joint for the considered limb
         /// \param nbSamples number of samples to generate
         /// \param resolution, resolution of the octree voxels
-        OctreeNode(const model::JointPtr_t limb, const std::size_t nbSamples, const double resolution = 0.1);
+        OctreeNode(const pinocchio::JointPtr_t limb, const std::size_t nbSamples, const double resolution = 0.1);
        ~OctreeNode();
 
     private:

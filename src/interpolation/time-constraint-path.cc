@@ -18,8 +18,8 @@
 
 #include <hpp/rbprm/interpolation/time-constraint-path.hh>
 #include <hpp/rbprm/interpolation/time-constraint-utils.hh>
-#include <hpp/model/device.hh>
-#include <hpp/model/configuration.hh>
+#include <hpp/pinocchio/device.hh>
+#include <hpp/pinocchio/configuration.hh>
 #include <hpp/core/config-projector.hh>
 #include <hpp/core/locked-joint.hh>
 
@@ -70,10 +70,10 @@ namespace hpp {
         parent_t (path, constraints), device_ (path.device_),
         initial_ (path.initial_), end_ (path.end_), pathDofRank_(path.pathDofRank_), tds_(path.tds_) {}
 
-    model::value_type ComputeExtraDofValue(const std::size_t dofRank,
+    pinocchio::value_type ComputeExtraDofValue(const std::size_t dofRank,
                               const Configuration_t init,
                               const Configuration_t end,
-                              const model::value_type normalizedValue)
+                              const pinocchio::value_type normalizedValue)
     {
         double a = init[dofRank];
         double b = end[dofRank];
@@ -106,8 +106,8 @@ namespace hpp {
                 u = 0;
             else
                 u = (param - timeRange ().first) / (timeRange ().second - timeRange().first);
-            model::interpolate (device_, initial_, end_, u, result);
-            model::value_type dof = ComputeExtraDofValue(pathDofRank_,initial_, end_, u);
+            pinocchio::interpolate (device_, initial_, end_, u, result);
+            pinocchio::value_type dof = ComputeExtraDofValue(pathDofRank_,initial_, end_, u);
             result[pathDofRank_] = dof;
         }
         updateConstraints(result);
@@ -164,14 +164,14 @@ std::cout <<  device_->getJointByName("rh_foot_joint")->currentTransformation().
 
 std::cout << "lh_foot_joint  " << std::endl;
 std::cout <<  device_->getJointByName("lh_foot_joint")->currentTransformation().getTranslation() << std::endl;*/
-          hppDout (error,"Initial configuration of path does not satisfy the constraints" << model::displayConfig(initial()));
+          hppDout (error,"Initial configuration of path does not satisfy the constraints" << pinocchio::displayConfig(initial()));
           throw projection_error ("Initial configuration of path does not satisfy "
               "the constraints");
         }
         updateConstraints(endc);
         if (constraints() && !constraints()->isSatisfied (end())) {
 //std::cout << "end conf " <<  initc << std::endl;
-          hppDout (error,"End configuration of path does not satisfy the constraints"<< model::displayConfig(end()));
+          hppDout (error,"End configuration of path does not satisfy the constraints"<< pinocchio::displayConfig(end()));
           throw projection_error ("End configuration of path does not satisfy "
               "the constraints");
         }

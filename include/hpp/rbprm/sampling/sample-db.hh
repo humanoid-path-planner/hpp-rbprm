@@ -23,6 +23,7 @@
 #include <hpp/rbprm/sampling/sample.hh>
 #include <hpp/rbprm/sampling/heuristic.hh>
 #include <hpp/fcl/octree.h>
+#include <boost/function.hpp>
 #include <vector>
 #include <map>
 
@@ -86,7 +87,7 @@ namespace hpp {
     {
     public:
          SampleDB(std::ifstream& databaseStream, bool loadValues = true);
-         SampleDB(const model::JointPtr_t limb, const std::string& effector, const std::size_t nbSamples,
+         SampleDB(const pinocchio::JointPtr_t limb, const std::string& effector, const std::size_t nbSamples,
                   const fcl::Vec3f& offset= fcl::Vec3f(0,0,0),const fcl::Vec3f& limbOffset= fcl::Vec3f(0,0,0), const double resolution = 0.1, const T_evaluate& data = T_evaluate(), const std::string& staticValue ="");
         ~SampleDB();
 /*
@@ -126,7 +127,7 @@ namespace hpp {
     /// \param evaluate heuristic used to sort candidates
     /// \return a set of OctreeReport with all the possible candidates for contact
     HPP_RBPRM_DLLAPI T_OctreeReport GetCandidates(const SampleDB& sc, const fcl::Transform3f& treeTrf,
-                                            const hpp::model::CollisionObjectPtr_t& o2,
+                                            const hpp::pinocchio::CollisionObjectPtr_t& o2,
                                             const fcl::Vec3f& direction, const HeuristicParam & params, const heuristic evaluate = 0);
 
     /// Given the current position of a robot, returns a set
@@ -142,7 +143,7 @@ namespace hpp {
     /// \param evaluate heuristic used to sort candidates
     /// \return true if at least one candidate was found
     HPP_RBPRM_DLLAPI bool GetCandidates(const SampleDB& sc, const fcl::Transform3f& treeTrf,
-                                            const hpp::model::CollisionObjectPtr_t& o2,
+                                            const hpp::pinocchio::CollisionObjectPtr_t& o2,
                                             const fcl::Vec3f& direction, T_OctreeReport& report, const HeuristicParam & params, const heuristic evaluate = 0);
 
   } // namespace sampling

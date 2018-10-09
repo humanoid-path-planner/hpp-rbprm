@@ -22,7 +22,7 @@
 #include <Eigen/StdVector>
 
 #include <hpp/rbprm/config.hh>
-#include <hpp/model/device.hh>
+#include <hpp/pinocchio/device.hh>
 
 #include <deque>
 namespace hpp {
@@ -50,12 +50,12 @@ namespace hpp {
         /// \param effector joint to be considered as the effector of the limb
         /// \param offset location of the contact point of the effector, relatively to the effector joint
         /// \param id optional identifier for the sample
-        Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, const fcl::Vec3f& offset = fcl::Vec3f(0,0,0),const fcl::Vec3f& limbOffset = fcl::Vec3f(0,0,0),  const std::size_t id =0);
+        Sample(const pinocchio::JointPtr_t limb, const pinocchio::JointPtr_t effector, const fcl::Vec3f& offset = fcl::Vec3f(0,0,0),const fcl::Vec3f& limbOffset = fcl::Vec3f(0,0,0),  const std::size_t id =0);
 
 
         Sample(const std::size_t id, const std::size_t length, const std::size_t startRank, const double staticValue,
-               const fcl::Vec3f& effectorPosition,const fcl::Vec3f& effectorPositionInLimbFrame, const model::ConfigurationIn_t configuration, const Eigen::MatrixXd& jacobian,
-               const Eigen::Matrix <model::value_type, 6, 6>& jacobianProduct);
+               const fcl::Vec3f& effectorPosition,const fcl::Vec3f& effectorPositionInLimbFrame, const pinocchio::ConfigurationIn_t configuration, const Eigen::MatrixXd& jacobian,
+               const Eigen::Matrix <pinocchio::value_type, 6, 6>& jacobianProduct);
 
         /// Creates sample configuration for a limb, extracted from a complete robot configuration, passed as a parameter
         /// \param limb root of the considered limb
@@ -63,20 +63,20 @@ namespace hpp {
         /// \param effector joint to be considered as the effector of the limb
         /// \param offset location of the contact point of the effector, relatively to the effector joint
         /// \param id optional identifier for the sample
-        Sample(const model::JointPtr_t limb, const model::JointPtr_t effector, model::ConfigurationIn_t configuration, const fcl::Vec3f& offset = fcl::Vec3f(0,0,0),const fcl::Vec3f& limbOffset = fcl::Vec3f(0,0,0), const std::size_t id =0);
+        Sample(const pinocchio::JointPtr_t limb, const pinocchio::JointPtr_t effector, pinocchio::ConfigurationIn_t configuration, const fcl::Vec3f& offset = fcl::Vec3f(0,0,0),const fcl::Vec3f& limbOffset = fcl::Vec3f(0,0,0), const std::size_t id =0);
         Sample(const Sample &clone);
        ~Sample(){}
 
     public:
       std::size_t startRank_;
       std::size_t length_;
-      model::Configuration_t configuration_;
+      pinocchio::Configuration_t configuration_;
       /// Position relative to robot root (ie, robot base at 0 everywhere)
       fcl::Vec3f effectorPosition_;
       fcl::Vec3f effectorPositionInLimbFrame_;
       Eigen::MatrixXd jacobian_;
       /// Product of the jacobian by its transpose
-      Eigen::Matrix <model::value_type, 6, 6> jacobianProduct_;
+      Eigen::Matrix <pinocchio::value_type, 6, 6> jacobianProduct_;
       /// id in sample container
       std::size_t id_;
       double staticValue_;
@@ -97,12 +97,12 @@ namespace hpp {
     /// \param offset location of the contact point of the effector relatively to the effector joint origin
     /// \param limbOffset offset betwwen the limb joint position and it's link
     /// \return a deque of sample configurations respecting joint limits.
-SampleVector_t GenerateSamples(const model::JointPtr_t limb,  const std::string& effector,  const std::size_t nbSamples,const fcl::Vec3f& offset = fcl::Vec3f(0,0,0),const fcl::Vec3f& limbOffset = fcl::Vec3f(0,0,0));
+SampleVector_t GenerateSamples(const pinocchio::JointPtr_t limb,  const std::string& effector,  const std::size_t nbSamples,const fcl::Vec3f& offset = fcl::Vec3f(0,0,0),const fcl::Vec3f& limbOffset = fcl::Vec3f(0,0,0));
 
 /// Assigns the limb configuration associated with a sample to a robot configuration
 /// \param sample The limb configuration to load
 /// \param robot the configuration to be modified
-void Load(const Sample& sample, model::ConfigurationOut_t robot);
+void Load(const Sample& sample, pinocchio::ConfigurationOut_t robot);
 
   } // namespace sampling
 } // namespace rbprm

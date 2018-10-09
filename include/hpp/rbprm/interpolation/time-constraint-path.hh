@@ -33,7 +33,7 @@ namespace interpolation {
     /// Linear interpolation between two configurations
     ///
     /// Degrees of freedom are interpolated depending on the type of
-    /// \link hpp::model::Joint joint \endlink
+    /// \link hpp::pinocchio::Joint joint \endlink
     /// they parameterize:
     ///   \li linear interpolation for translation joints, bounded rotation
     ///       joints, and translation part of freeflyer joints,
@@ -142,7 +142,7 @@ namespace interpolation {
       void initialConfig (core::ConfigurationIn_t initial)
       {
     assert (initial.size () == initial_.size ());
-    model::value_type dof = initial_[pathDofRank_];
+    pinocchio::value_type dof = initial_[pathDofRank_];
     initial_ = initial;
     initial_[pathDofRank_] = dof;
       }
@@ -154,7 +154,7 @@ namespace interpolation {
       void endConfig (core::ConfigurationIn_t end)
       {
     assert (end.size () == end_.size ());
-    model::value_type dof = end_[pathDofRank_];
+    pinocchio::value_type dof = end_[pathDofRank_];
     end_ = end;
     end_[pathDofRank_] = dof;
       }
@@ -213,7 +213,7 @@ namespace interpolation {
 
       void initCopy (TimeConstraintPathPtr_t self)
       {
-    parent_t::initCopy (self);
+    parent_t::init (self);
     weak_ = self;
       }
 

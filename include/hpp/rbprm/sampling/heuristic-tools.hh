@@ -1,7 +1,7 @@
 #ifndef HPP_HEURISTIC_TOOLS_HH
 #define HPP_HEURISTIC_TOOLS_HH
 
-#include <hpp/model/device.hh> // way to get the includes of fcl, ...
+#include <hpp/pinocchio/device.hh> // way to get the includes of fcl, ...
 #include <hpp/core/path.hh>
 #include <map>
 

@@ -20,8 +20,8 @@
 # include <hpp/rbprm/config.hh>
 # include <hpp/rbprm/rbprm-device.hh>
 # include <hpp/rbprm/rbprm-validation.hh>
-# include <hpp/model/joint.hh>
-# include <hpp/model/joint-configuration.hh>
+# include <hpp/pinocchio/joint.hh>
+//# include <hpp/pinocchio/joint-configuration.hh>
 # include <hpp/core/configuration-shooter.hh>
 
 # include <vector>
@@ -36,7 +36,7 @@ namespace hpp {
     HPP_PREDEF_CLASS (RbPrmShooter);
     typedef boost::shared_ptr <RbPrmShooter>
     RbPrmShooterPtr_t;
-		typedef std::map<std::string, std::vector<model::CollisionObjectPtr_t> > affMap_t;
+		typedef std::map<std::string, std::vector<pinocchio::CollisionObjectPtr_t> > affMap_t;
 
 /// \addtogroup configuration_sampling
 /// \{
@@ -61,7 +61,7 @@ namespace hpp {
         /// \param displacementLimit maximum number of local displacements allowed for a shot configuration to try to verify
         /// the reachability condition.
         /// \return a pointer to an instance of RbPrmShooter
-        static HPP_RBPRM_DLLAPI RbPrmShooterPtr_t create (const model::RbPrmDevicePtr_t& robot,
+        static HPP_RBPRM_DLLAPI RbPrmShooterPtr_t create (const pinocchio::RbPrmDevicePtr_t& robot,
                                          const core::ObjectVector_t &geometries,
 																				 const affMap_t& affordances,
                                          const std::vector<std::string>& filter = std::vector<std::string>(),
@@ -90,7 +90,7 @@ namespace hpp {
 
     protected:
     /// Note that translation joints have to be bounded.
-    RbPrmShooter (const model::RbPrmDevicePtr_t& robot,
+    RbPrmShooter (const pinocchio::RbPrmDevicePtr_t& robot,
                   const core::ObjectVector_t &geometries,
 									const affMap_t &affordances,
                   const std::vector<std::string>& filter,
@@ -101,17 +101,18 @@ namespace hpp {
     void init (const RbPrmShooterPtr_t& self);
 
     private:
-        void InitWeightedTriangles (const model::ObjectVector_t &geometries);
+        void InitWeightedTriangles (const pinocchio::ObjectVector_t &geometries);
         const T_TriangleNormal& RandomPointIntriangle () const;
         const T_TriangleNormal& WeightedTriangle () const;
 
     private:
         std::vector<double> weights_;
         std::vector<T_TriangleNormal> triangles_;
-        const model::RbPrmDevicePtr_t robot_;
+        const pinocchio::RbPrmDevicePtr_t robot_;
         rbprm::RbPrmValidationPtr_t validator_;
         RbPrmShooterWkPtr_t weak_;
-        model::DevicePtr_t eulerSo3_;
+        //pinocchio::DevicePtr_t eulerSo3_;
+        std::vector<double> eulerSo3_;
     }; // class RbprmShooter
 /// \}
     } // namespace rbprm

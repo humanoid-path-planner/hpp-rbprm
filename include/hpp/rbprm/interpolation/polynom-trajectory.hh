@@ -36,7 +36,7 @@ namespace interpolation {
     /// Linear interpolation between two configurations
     ///
     /// Degrees of freedom are interpolated depending on the type of
-    /// \link hpp::model::Joint joint \endlink
+    /// \link hpp::pinocchio::Joint joint \endlink
     /// they parameterize:
     ///   \li linear interpolation for translation joints, bounded rotation
     ///       joints, and translation part of freeflyer joints,
@@ -70,7 +70,7 @@ namespace interpolation {
       {
     PolynomTrajectory* ptr = new PolynomTrajectory (*path);
     PolynomTrajectoryPtr_t shPtr (ptr);
-    ptr->initCopy (shPtr);
+    ptr->init (shPtr);
         ptr->checkPath ();
     return shPtr;
       }
@@ -126,12 +126,6 @@ namespace interpolation {
       void init (PolynomTrajectoryPtr_t self)
       {
     parent_t::init (self);
-    weak_ = self;
-      }
-
-      void initCopy (PolynomTrajectoryPtr_t self)
-      {
-    parent_t::initCopy (self);
     weak_ = self;
       }
 

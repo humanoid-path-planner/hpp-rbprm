@@ -4,11 +4,11 @@
 #include <hpp/core/roadmap.hh>
 #include <hpp/rbprm/planner/rbprm-node.hh>
 #include <hpp/util/debug.hh>
-#include <hpp/model/configuration.hh>
+#include <hpp/pinocchio/configuration.hh>
 
 namespace hpp {
   namespace core {
-    using model::displayConfig;
+    using pinocchio::displayConfig;
     HPP_PREDEF_CLASS (RbprmRoadmap);
     typedef boost::shared_ptr <RbprmRoadmap> RbprmRoadmapPtr_t;
     

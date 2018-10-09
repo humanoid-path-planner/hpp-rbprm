@@ -18,9 +18,8 @@
 #include <Eigen/Geometry>
 #include <iostream>
 #include <fstream>
-#include <hpp/model/joint.hh>
-#include <hpp/model/joint-configuration.hh>
-#include <hpp/model/device.hh>
+#include <hpp/pinocchio/joint.hh>
+#include <hpp/pinocchio/device.hh>
 #include <hpp/core/config-projector.hh>
 #include <hpp/core/locked-joint.hh>
 #include <hpp/core/equation.hh>
@@ -54,7 +53,7 @@ namespace hpp {
     }
 
     // TODO directly compute transformation, this is terrible
-    fcl::Matrix3f GetRotationMatrix(const fcl::Vec3f& from, const fcl::Vec3f& to)
+    /*fcl::Matrix3f GetRotationMatrix(const fcl::Vec3f& from, const fcl::Vec3f& to)
     {
         fcl::Matrix3f result;
         Eigen::Matrix3d resEigen = Eigen::Matrix3d::Identity();
@@ -92,7 +91,7 @@ namespace hpp {
             }
         }
         return result;
-    }
+    }*/
 
     fcl::Matrix3f GetZRotMatrix(const core::value_type theta)
     {
@@ -124,7 +123,7 @@ namespace hpp {
         return r;
     }
 
-    model::value_type angleBetweenQuaternions (model::ConfigurationIn_t  q1, model::ConfigurationIn_t  q2,
+    pinocchio::value_type angleBetweenQuaternions (pinocchio::ConfigurationIn_t  q1, pinocchio::ConfigurationIn_t  q2,
                                                bool& cosIsNegative)
     {
         if (q1 == q2)
@@ -132,26 +131,26 @@ namespace hpp {
             cosIsNegative = false;
             return 0;
         }
-        model::value_type innerprod = q1.dot(q2);
+        pinocchio::value_type innerprod = q1.dot(q2);
         assert (fabs (innerprod) < 1.001);
         if (innerprod < -1) innerprod = -1;
         if (innerprod >  1) innerprod =  1;
         cosIsNegative = (innerprod < 0);
-        model::value_type theta = acos (innerprod);
+        pinocchio::value_type theta = acos (innerprod);
         return theta;
     }
 
-    model::Configuration_t interpolate(model::ConfigurationIn_t  q1, model::ConfigurationIn_t  q2, const model::value_type& u)
+    pinocchio::Configuration_t interpolate(pinocchio::ConfigurationIn_t  q1, pinocchio::ConfigurationIn_t  q2, const pinocchio::value_type& u)
     {
         bool cosIsNegative;
-        model::value_type angle = angleBetweenQuaternions(q1, q2, cosIsNegative);
+        pinocchio::value_type angle = angleBetweenQuaternions(q1, q2, cosIsNegative);
         const int invertor = (cosIsNegative) ? -1 : 1;
-        const model::value_type theta = (cosIsNegative) ? (M_PI - angle) : angle;
+        const pinocchio::value_type theta = (cosIsNegative) ? (M_PI - angle) : angle;
         // theta is between 0 and M_PI/2.
         // sin(alpha*theta)/sin(theta) in 0 should be computed differently.
         if (fabs (theta) > 1e-4)
         {
-            const model::value_type sintheta_inv = 1 / sin (theta);
+            const pinocchio::value_type sintheta_inv = 1 / sin (theta);
             return (sin ((1-u)*theta) * sintheta_inv)  * q1 + invertor * (sin (u*theta) * sintheta_inv) * q2;
         }
         else
@@ -160,43 +159,46 @@ namespace hpp {
         }
     }
 
-    model::value_type distance (model::ConfigurationIn_t  q1, model::ConfigurationIn_t  q2)
+    pinocchio::value_type distance (pinocchio::ConfigurationIn_t  q1, pinocchio::ConfigurationIn_t  q2)
     {
         bool cosIsNegative;
-        model::value_type theta = angleBetweenQuaternions (q1, q2, cosIsNegative);
+        pinocchio::value_type theta = angleBetweenQuaternions (q1, q2, cosIsNegative);
         return 2 * (cosIsNegative ? M_PI - theta : theta);
     }
 
-    void LockJoint(const model::JointPtr_t joint, core::ConfigProjectorPtr_t& projector, const bool constant)
+    void LockJoint(const pinocchio::JointPtr_t joint, core::ConfigProjectorPtr_t& projector, const bool constant)
     {
         const core::Configuration_t& c = joint->robot()->currentConfiguration();
         core::size_type rankInConfiguration (joint->rankInConfiguration ());
-        core::LockedJointPtr_t lockedJoint = core::LockedJoint::create(joint,c.segment(rankInConfiguration, joint->configSize()));
+        core::LockedJointPtr_t lockedJoint = core::LockedJoint::create(joint, hpp::core::LiegroupElement(c.segment(rankInConfiguration, joint->configSize())));
         if(!constant)
         {
-            lockedJoint->comparisonType(core::Equality::create());
+            constraints::ComparisonTypes_t comps; comps.push_back(constraints::Equality);
+            lockedJoint->comparisonType(comps);
         }
         projector->add(lockedJoint);
     }
 
-    void LockJointRec(const std::string& spared, const model::JointPtr_t joint, core::ConfigProjectorPtr_t& projector)
+    void LockJointRec(const std::string& spared, const pinocchio::JointPtr_t joint, core::ConfigProjectorPtr_t& projector)
     {
         if(joint->name() == spared) return;
         const core::Configuration_t& c = joint->robot()->currentConfiguration();
         core::size_type rankInConfiguration (joint->rankInConfiguration ());
-        projector->add(core::LockedJoint::create(joint,c.segment(rankInConfiguration, joint->configSize())));
+        projector->add(core::LockedJoint::create(joint,
+                                                 hpp::core::LiegroupElement(c.segment(rankInConfiguration, joint->configSize()))));
         for(std::size_t i=0; i< joint->numberChildJoints(); ++i)
         {
             LockJointRec(spared,joint->childJoint(i), projector);
         }
     }
 
-    void LockJointRec(const std::vector<std::string> &spared, const model::JointPtr_t joint, core::ConfigProjectorPtr_t& projector)
+    void LockJointRec(const std::vector<std::string> &spared, const pinocchio::JointPtr_t joint, core::ConfigProjectorPtr_t& projector)
     {
         if(std::find(spared.begin(), spared.end(), joint->name()) != spared.end()) return;
         const core::Configuration_t& c = joint->robot()->currentConfiguration();
         core::size_type rankInConfiguration (joint->rankInConfiguration ());
-        projector->add(core::LockedJoint::create(joint,c.segment(rankInConfiguration, joint->configSize())));
+        projector->add(core::LockedJoint::create(joint,
+                                                 hpp::core::LiegroupElement(c.segment(rankInConfiguration, joint->configSize()))));
         for(std::size_t i=0; i< joint->numberChildJoints(); ++i)
         {
             LockJointRec(spared,joint->childJoint(i), projector);

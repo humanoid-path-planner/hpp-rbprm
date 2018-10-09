@@ -18,10 +18,10 @@
 
 #include <hpp/rbprm/stability/stability.hh>
 #include <hpp/rbprm/stability/support.hh>
-#include <hpp/model/device.hh>
-#include <hpp/model/configuration.hh>
-#include <hpp/model/joint.hh>
-#include <hpp/model/center-of-mass-computation.hh>
+#include <hpp/pinocchio/device.hh>
+#include <hpp/pinocchio/configuration.hh>
+#include <hpp/pinocchio/joint.hh>
+#include <hpp/pinocchio/center-of-mass-computation.hh>
 #include <hpp/rbprm/tools.hh>
 
 #include <Eigen/Dense>
@@ -36,7 +36,7 @@
 
 using namespace hpp;
 using namespace hpp::core;
-using namespace hpp::model;
+using namespace hpp::pinocchio;
 using namespace hpp::rbprm;
 using namespace centroidal_dynamics;
 
@@ -61,9 +61,9 @@ namespace stability{
         {
             //create rotation matrix from normal
             const fcl::Vec3f& normal = state.contactNormals_.at(name);
-            const fcl::Vec3f z_current = limb->effector_->currentTransformation().getRotation() * limb->normal_;
+            const fcl::Vec3f z_current = limb->effector_->currentTransformation().rotation() * limb->normal_;
             const fcl::Matrix3f alignRotation = tools::GetRotationMatrix(z_current,normal);
-            const fcl::Matrix3f rotation = alignRotation * limb->effector_->currentTransformation().getRotation();
+            const fcl::Matrix3f rotation = alignRotation * limb->effector_->currentTransformation().rotation();
             const fcl::Vec3f offset = rotation * limb->offset_;
             Eigen::Vector3d z,x,y;
             for(int i =0; i<3; ++i) z[i] = normal[i];
@@ -110,9 +110,9 @@ namespace stability{
         const fcl::Vec3f& position = state.contactPositions_.at(name);
         //create rotation matrix from normal
         const fcl::Vec3f& normal = state.contactNormals_.at(name);
-        const fcl::Vec3f z_current = limb->effector_->currentTransformation().getRotation() * limb->normal_;
+        const fcl::Vec3f z_current = limb->effector_->currentTransformation().rotation() * limb->normal_;
         const fcl::Matrix3f alignRotation = tools::GetRotationMatrix(z_current,normal);
-        const fcl::Matrix3f rotation = alignRotation * limb->effector_->currentTransformation().getRotation();
+        const fcl::Matrix3f rotation = alignRotation * limb->effector_->currentTransformation().rotation();
         const fcl::Vec3f offset = rotation * limb->offset_;
         p = position + offset;
     }
@@ -150,7 +150,7 @@ namespace stability{
     {
         friction = fullbody->getFriction();
         const rbprm::T_Limb& limbs = fullbody->GetLimbs();
-        hpp::model::ConfigurationIn_t save = fullbody->device_->currentConfiguration();
+        hpp::pinocchio::ConfigurationIn_t save = fullbody->device_->currentConfiguration();
         std::vector<std::string> contacts;
         std::vector<std::string> graspscontacts;
         for(std::map<std::string,fcl::Vec3f>::const_iterator cit = state.contactPositions_.begin();
@@ -211,7 +211,7 @@ namespace stability{
             }
         }
         centroidal_dynamics::Vector3 com;
-/*model::CenterOfMassComputationPtr_t comcptr = model::CenterOfMassComputation::create(fullbody->device_);
+/*pinocchio::CenterOfMassComputationPtr_t comcptr = pinocchio::CenterOfMassComputation::create(fullbody->device_);
 comcptr->add(fullbody->device_->getJointByName("romeo/base_joint_xyz"));
 comcptr->computeMass();
 comcptr->compute();
@@ -281,7 +281,7 @@ const fcl::Vec3f comfcl = comcptr->com();*/
         {
             if(acc.norm() == 0){
               hppDout(notice,"isStable ? called with acc = 0");
-              hppDout(notice,"configuration in state = "<<model::displayConfig(state.configuration_));
+              hppDout(notice,"configuration in state = "<<pinocchio::displayConfig(state.configuration_));
               core::size_type configSize = fullbody->device_->configSize() - fullbody->device_->extraConfigSpace().dimension ();
               acc = state.configuration_.segment<3>(configSize+3);
               hppDout(notice,"new acceleration = "<<acc);
@@ -314,7 +314,7 @@ const fcl::Vec3f comfcl = comcptr->com();*/
            }
            else{
                 status = staticEquilibrium.computeEquilibriumRobustness(comComputed,acc,res);
-              hppDout(notice,"isStable : config = "<<model::displayConfig(state.configuration_));
+              hppDout(notice,"isStable : config = "<<pinocchio::displayConfig(state.configuration_));
               hppDout(notice,"isStable : COM = "<<comComputed.transpose());
               hppDout(notice,"isStable : acc = "<<acc);
            }

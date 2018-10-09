@@ -18,8 +18,8 @@
 
 #include <hpp/rbprm/interpolation/polynom-trajectory.hh>
 #include <hpp/rbprm/interpolation/time-constraint-utils.hh>
-#include <hpp/model/device.hh>
-#include <hpp/model/configuration.hh>
+#include <hpp/pinocchio/device.hh>
+#include <hpp/pinocchio/configuration.hh>
 #include <hpp/core/config-projector.hh>
 #include <hpp/core/locked-joint.hh>
 
@@ -37,13 +37,13 @@ namespace hpp {
         subSetEnd_(subSetEnd),
         length_(subSetEnd - subSetStart)
       {
-        timeRange_ = interval_t(subSetStart_, subSetEnd_);
+        timeRange(interval_t(subSetStart_, subSetEnd_));
         assert (length_ >= 0);
         assert (!constraints ());
       }
 
 
-    model::value_type normalize(const PolynomTrajectory& path, model::value_type param)
+    pinocchio::value_type normalize(const PolynomTrajectory& path, pinocchio::value_type param)
     {
         value_type u;
         if (path.timeRange ().second == 0)
@@ -60,7 +60,7 @@ namespace hpp {
         subSetEnd_(path.subSetEnd_),
         length_(path.length_)
     {
-        timeRange_ = path.timeRange_;
+        timeRange(path.timeRange());
     }
 
     bool PolynomTrajectory::impl_compute (ConfigurationOut_t result,

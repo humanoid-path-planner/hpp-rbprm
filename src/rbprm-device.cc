@@ -17,11 +17,11 @@
 #include <hpp/rbprm/rbprm-device.hh>
 
 namespace hpp {
-  namespace model {
+  namespace pinocchio {
 
     RbPrmDevicePtr_t RbPrmDevice::create (const std::string& name, DevicePtr_t& robotRom)
     {
-        hpp::model::T_Rom roms;
+        hpp::pinocchio::T_Rom roms;
         roms.insert(std::make_pair(robotRom->name(),robotRom));
         RbPrmDevice* rbprmDevice = new RbPrmDevice(name, roms);
         RbPrmDevicePtr_t res (rbprmDevice);
@@ -29,7 +29,7 @@ namespace hpp {
         return res;
     }
 
-    RbPrmDevicePtr_t RbPrmDevice::create (const std::string& name, const hpp::model::T_Rom &robotRoms)
+    RbPrmDevicePtr_t RbPrmDevice::create (const std::string& name, const hpp::pinocchio::T_Rom &robotRoms)
     {
         RbPrmDevice* rbprmDevice = new RbPrmDevice(name, robotRoms);
         RbPrmDevicePtr_t res (rbprmDevice);
@@ -52,7 +52,7 @@ namespace hpp {
 
     bool RbPrmDevice::currentConfiguration (ConfigurationIn_t configuration)
     {
-        for(hpp::model::T_Rom::const_iterator cit = robotRoms_.begin();
+        for(hpp::pinocchio::T_Rom::const_iterator cit = robotRoms_.begin();
             cit != robotRoms_.end(); ++cit)
         {
             cit->second->currentConfiguration(configuration);
@@ -64,13 +64,13 @@ namespace hpp {
     {
       Device::setDimensionExtraConfigSpace(dimension); // call inherited method
       // call method for each robotRoms :
-      for(hpp::model::T_Rom::const_iterator cit = robotRoms_.begin();
+      for(hpp::pinocchio::T_Rom::const_iterator cit = robotRoms_.begin();
           cit != robotRoms_.end(); ++cit){
           cit->second->setDimensionExtraConfigSpace(dimension);
         }
     }
 
-    RbPrmDevice::RbPrmDevice (const std::string& name, const hpp::model::T_Rom &robotRoms)
+    RbPrmDevice::RbPrmDevice (const std::string& name, const hpp::pinocchio::T_Rom &robotRoms)
         : Device(name)
         , robotRoms_(robotRoms)
         , weakPtr_()

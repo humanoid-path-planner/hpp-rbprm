@@ -16,7 +16,7 @@
 // <http://www.gnu.org/licenses/>.
 
 # include <hpp/rbprm/planner/rbprm-steering-kinodynamic.hh>
-# include <hpp/model/device.hh>
+# include <hpp/pinocchio/device.hh>>
 # include <hpp/model/joint.hh>
 # include <hpp/model/configuration.hh>
 # include <hpp/core/problem.hh>
@@ -111,7 +111,7 @@ namespace hpp{
       double epsilon = 0.0001;
       t = epsilon;
       (*kinoPath)(*q,t);
-      hppDout(info,"q(t="<<t<<") = "<<model::displayConfig(*q));
+      hppDout(info,"q(t="<<t<<") = "<<pinocchio::displayConfig(*q));
       a = (*q).segment<3>(configSize+3);
       hppDout(info,"a = "<<a);
       sEq_->setG(node->getG());
@@ -126,7 +126,7 @@ namespace hpp{
           hppDout(info,"for joint "<<ijoint);
           t = t0[ijoint] + epsilon; // add an epsilon to get the value after the sign change
           (*kinoPath)(*q,t);
-          hppDout(info,"q(t="<<t<<") = "<<model::displayConfig(*q));
+          hppDout(info,"q(t="<<t<<") = "<<pinocchio::displayConfig(*q));
           a = (*q).segment<3>(configSize+3);
           hppDout(info,"a = "<<a);
           aValid = sEq_->checkAdmissibleAcceleration(node->getH(),node->geth(),a);
@@ -138,7 +138,7 @@ namespace hpp{
           hppDout(info,"for joint "<<ijoint);
           t += t1[ijoint]; // add an epsilon to get the value after the sign change
           (*kinoPath)(*q,t);
-          hppDout(info,"q(t="<<t<<") = "<<model::displayConfig(*q));
+          hppDout(info,"q(t="<<t<<") = "<<pinocchio::displayConfig(*q));
           a = (*q).segment<3>(configSize+3);
           hppDout(info,"a = "<<a);
           aValid = sEq_->checkAdmissibleAcceleration(node->getH(),node->geth(),a);
@@ -149,7 +149,7 @@ namespace hpp{
         if(tv[ijoint] > 0){
           t += tv[ijoint];
           (*kinoPath)(*q,t);
-          hppDout(info,"q(t="<<t<<") = "<<model::displayConfig(*q));
+          hppDout(info,"q(t="<<t<<") = "<<pinocchio::displayConfig(*q));
           a = (*q).segment<3>(configSize+3);
           hppDout(info,"a = "<<a);
           aValid = sEq_->checkAdmissibleAcceleration(node->getH(),node->geth(),a);
@@ -165,7 +165,7 @@ namespace hpp{
         totalTimeValidated_ += maxT;
         hppDout(notice,"totalTimeValidated = "<<totalTimeValidated_);
         core::PathPtr_t extracted = kinoPath->extract(core::interval_t(kinoPath->timeRange().first,kinoPath->timeRange().first + maxT));
-        hppDout(notice,"extracted path : end = "<<model::displayConfig((extracted->end())));
+        hppDout(notice,"extracted path : end = "<<pinocchio::displayConfig((extracted->end())));
         return extracted;
       }
       totalTimeValidated_ += kinoPath->length();
@@ -225,7 +225,7 @@ namespace hpp{
       double epsilon = 0.0001;
       t = kinoPath->length() - epsilon;
       (*kinoPath)(*q,t);
-      hppDout(info,"q(t="<<t<<") = "<<model::displayConfig(*q));
+      hppDout(info,"q(t="<<t<<") = "<<pinocchio::displayConfig(*q));
       a = (*q).segment<3>(configSize+3);
       hppDout(info,"a = "<<a);
       sEq_->setG(node->getG());
@@ -241,7 +241,7 @@ namespace hpp{
           hppDout(info,"for joint "<<ijoint);
           t = t0[ijoint] - epsilon; // add an epsilon to get the value after the sign change
           (*kinoPath)(*q,t);
-          hppDout(info,"q(t="<<t<<") = "<<model::displayConfig(*q));
+          hppDout(info,"q(t="<<t<<") = "<<pinocchio::displayConfig(*q));
           a = (*q).segment<3>(configSize+3);
           hppDout(info,"a = "<<a);
           aValid = sEq_->checkAdmissibleAcceleration(node->getH(),node->geth(),a);
@@ -252,7 +252,7 @@ namespace hpp{
         if(t1[ijoint] > 0){
           t += t1[ijoint];
           (*kinoPath)(*q,t);
-          hppDout(info,"q(t="<<t<<") = "<<model::displayConfig(*q));
+          hppDout(info,"q(t="<<t<<") = "<<pinocchio::displayConfig(*q));
           a = (*q).segment<3>(configSize+3);
           hppDout(info,"a = "<<a);
           aValid = sEq_->checkAdmissibleAcceleration(node->getH(),node->geth(),a);
@@ -263,7 +263,7 @@ namespace hpp{
         if(tv[ijoint] > 0){
           t += tv[ijoint];
           (*kinoPath)(*q,t);
-          hppDout(info,"q(t="<<t<<") = "<<model::displayConfig(*q));
+          hppDout(info,"q(t="<<t<<") = "<<pinocchio::displayConfig(*q));
           a = (*q).segment<3>(configSize+3);
           hppDout(info,"a = "<<a);
           aValid = sEq_->checkAdmissibleAcceleration(node->getH(),node->geth(),a);
@@ -278,7 +278,7 @@ namespace hpp{
         totalTimeValidated_ += (kinoPath->length() - minT);
         hppDout(notice,"totalTimeValidated = "<<totalTimeValidated_);
         core::PathPtr_t extracted = kinoPath->extract(core::interval_t(minT,kinoPath->timeRange().second));
-        hppDout(notice,"extracted path : end = "<<model::displayConfig((extracted->end())));
+        hppDout(notice,"extracted path : end = "<<pinocchio::displayConfig((extracted->end())));
         return extracted;
       }
       totalTimeValidated_ += kinoPath->length();
@@ -322,11 +322,11 @@ namespace hpp{
 
       hppDout(notice,"Set bounds between : ");
       if(reverse){
-        hppDout(notice,"target : "<<model::displayConfig(target));
-        hppDout(notice,"node   : "<<model::displayConfig(*(near->configuration())));
+        hppDout(notice,"target : "<<pinocchio::displayConfig(target));
+        hppDout(notice,"node   : "<<pinocchio::displayConfig(*(near->configuration())));
       }else{
-        hppDout(notice,"node   : "<<model::displayConfig(*(near->configuration())));
-        hppDout(notice,"target : "<<model::displayConfig(target));
+        hppDout(notice,"node   : "<<pinocchio::displayConfig(*(near->configuration())));
+        hppDout(notice,"target : "<<pinocchio::displayConfig(target));
       }
 
 
@@ -335,10 +335,10 @@ namespace hpp{
       Vector3 direction;
  /*     Vector3 toP,fromP,dPosition;
       Vector3 toV,fromV,dVelocity;
-      const model::size_type indexECS =problem_->robot()->configSize() - problem_->robot()->extraConfigSpace().dimension (); // ecs index
+      const pinocchio::size_type indexECS =problem_->robot()->configSize() - problem_->robot()->extraConfigSpace().dimension (); // ecs index
 
-      hppDout(notice,"near = "<<model::displayConfig((*(near->configuration()))));
-      hppDout(notice,"target = "<<model::displayConfig(target));
+      hppDout(notice,"near = "<<pinocchio::displayConfig((*(near->configuration()))));
+      hppDout(notice,"target = "<<pinocchio::displayConfig(target));
       if(reverse){
         toP = near->configuration()->head(3);
         fromP = target.head(3);

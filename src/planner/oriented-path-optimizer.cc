@@ -40,7 +40,7 @@ namespace hpp{
     using core::ConfigurationIn_t;
     using core::ConfigurationPtr_t;
     using core::Configuration_t;
-    using model::value_type;
+    using pinocchio::value_type;
     using core::DistancePtr_t;
     using core::KinodynamicPathPtr_t;
     using core::KinodynamicPath;

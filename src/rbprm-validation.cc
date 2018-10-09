@@ -22,19 +22,19 @@
 
 namespace
 {
-  hpp::core::CollisionValidationPtr_t tuneFclValidation(const hpp::model::RbPrmDevicePtr_t& robot)
+  hpp::core::CollisionValidationPtr_t tuneFclValidation(const hpp::pinocchio::RbPrmDevicePtr_t& robot)
   {
     hpp::core::CollisionValidationPtr_t validation = hpp::core::CollisionValidation::create(robot);
     validation->collisionRequest_.enable_contact = true;
     return validation;
   }
 
-  hpp::rbprm::T_RomValidation createRomValidations(const hpp::model::RbPrmDevicePtr_t& robot,
+  hpp::rbprm::T_RomValidation createRomValidations(const hpp::pinocchio::RbPrmDevicePtr_t& robot,
                                                    const std::map<std::string, std::vector<std::string> >& affFilters)
   {
     hpp::rbprm::T_RomValidation result;
     hppDout(notice,"Number of ROM : "<<robot->robotRoms_.size());
-    for(hpp::model::T_Rom::const_iterator cit = robot->robotRoms_.begin(); cit != robot->robotRoms_.end(); ++cit)
+    for(hpp::pinocchio::T_Rom::const_iterator cit = robot->robotRoms_.begin(); cit != robot->robotRoms_.end(); ++cit)
     {
       hppDout(notice,"name = "<<cit->first);
       std::map<std::string, std::vector<std::string> >::const_iterator cfit = affFilters.find(cit->first);
@@ -56,9 +56,9 @@ namespace hpp {
   namespace rbprm {
 
     RbPrmValidationPtr_t RbPrmValidation::create
-    (const model::RbPrmDevicePtr_t& robot, const std::vector<std::string>& filter,
+    (const pinocchio::RbPrmDevicePtr_t& robot, const std::vector<std::string>& filter,
      const std::map<std::string, std::vector<std::string> >& affFilters,
-     const std::map<std::string, std::vector<model::CollisionObjectPtr_t> >& affordances,
+     const std::map<std::string, std::vector<pinocchio::CollisionObjectPtr_t> >& affordances,
      const core::ObjectVector_t& geometries)
     {
       RbPrmValidation* ptr = new RbPrmValidation (robot, filter, affFilters,
@@ -66,12 +66,12 @@ namespace hpp {
       return RbPrmValidationPtr_t (ptr);
     }
 
-    RbPrmValidation::RbPrmValidation (const model::RbPrmDevicePtr_t& robot
+    RbPrmValidation::RbPrmValidation (const pinocchio::RbPrmDevicePtr_t& robot
                                       , const std::vector<std::string>& filter,
                                       const std::map<std::string,
                                       std::vector<std::string> >& affFilters,
                                       const std::map<std::string,
-                                      std::vector<model::CollisionObjectPtr_t> >& affordances,
+                                      std::vector<pinocchio::CollisionObjectPtr_t> >& affordances,
                                       const core::ObjectVector_t& geometries)
       : trunkValidation_(tuneFclValidation(robot))
       , boundValidation_(core::JointBoundValidation::create(robot))
@@ -94,7 +94,7 @@ namespace hpp {
       }
       // Add obstacles corresponding to affordances of given rom
       hppDout(notice,"add obstacle, filter size = "<<filter.size());
-      for(hpp::model::T_Rom::const_iterator cit = robot->robotRoms_.begin(); cit != robot->robotRoms_.end(); ++cit)
+      for(hpp::pinocchio::T_Rom::const_iterator cit = robot->robotRoms_.begin(); cit != robot->robotRoms_.end(); ++cit)
       {
         std::map<std::string, std::vector<std::string> >::const_iterator affFilterIt = affFilters.find(cit->first);
         // Check if all rom filters have been given an affordance filter.
@@ -110,7 +110,7 @@ namespace hpp {
             std::runtime_error ("No romValidator object found for filter " + affFilterIt->first + "!");
           }
           for (unsigned int fIdx = 0; fIdx < affFilterIt->second.size (); fIdx++) {
-            std::map<std::string, std::vector<model::CollisionObjectPtr_t> >::const_iterator affIt = affordances.find (affFilterIt->second[fIdx]);
+            std::map<std::string, std::vector<pinocchio::CollisionObjectPtr_t> >::const_iterator affIt = affordances.find (affFilterIt->second[fIdx]);
             if (affIt == affordances.end ()) {
               std::cout << "Filter " << affFilterIt->first << " has invalid affordance filter setting "
                         << affFilterIt->second[fIdx] << ". Ignoring such filter setting." << std::endl;
@@ -237,7 +237,7 @@ namespace hpp {
     }
 
 
-    void RbPrmValidation::addObstacle (const CollisionObjectPtr_t& object)
+    void RbPrmValidation::addObstacle (const CollisionObjectConstPtr_t& object)
     {
       trunkValidation_->addObstacle(object);
     }
@@ -261,13 +261,13 @@ namespace hpp {
       }
     }
 
-    void RbPrmValidation::computeAllContacts(bool computeAllContacts){
+    /*void RbPrmValidation::computeAllContacts(bool computeAllContacts){
       for(T_RomValidation::const_iterator cit = romValidations_.begin();
           cit != romValidations_.end(); ++cit)
       {
         cit->second->computeAllContacts(computeAllContacts);
       }
-    }
+    }*/
 
   }// namespace rbprm
 }// namespace hpp

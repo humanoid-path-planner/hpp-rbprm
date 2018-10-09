@@ -22,7 +22,6 @@
 #include <hpp/rbprm/tools.hh>
 # include <hpp/rbprm/rbprm-state.hh>
 # include <hpp/rbprm/rbprm-fullbody.hh>
-# include <hpp/model/configuration.hh>
 # include <hpp/rbprm/sampling/heuristic-tools.hh>
 
 namespace hpp {
@@ -64,7 +63,7 @@ ContactReport generateContactReport(const projection::ProjectionReport& parent, 
 projection::ProjectionReport genContactFromOneMaintainCombinatorial(ContactGenHelper& helper)
 {
     // retrieve the first feasible result of maintain combinatorial...
-    hppDout(notice,"Try to maintain contact for configuration : r(["<<model::displayConfig(helper.workingState_.configuration_)<<"])");
+    hppDout(notice,"Try to maintain contact for configuration : r(["<<pinocchio::displayConfig(helper.workingState_.configuration_)<<"])");
     projection::ProjectionReport rep = contact::maintain_contacts(helper);
     hppDout(notice,"maintain contact, success = "<<rep.success_);
     for(std::map<std::string,bool>::const_iterator cit = rep.result_.contacts_.begin();cit!=rep.result_.contacts_.end(); ++ cit)
@@ -73,7 +72,7 @@ projection::ProjectionReport genContactFromOneMaintainCombinatorial(ContactGenHe
       hppDout(notice,"position : "<<rep.result_.contactPositions_.at(cit->first));
       hppDout(notice,"normal   : "<<rep.result_.contactNormals_.at(cit->first));
     }
-    hppDout(notice,"genContact, after maintain : config : "<<model::displayConfig(rep.result_.configuration_));
+    hppDout(notice,"genContact, after maintain : config : "<<pinocchio::displayConfig(rep.result_.configuration_));
     if(rep.success_)
     {
         // ... if found, then try to generate feasible contact for this combinatorial.
@@ -131,8 +130,8 @@ ContactComputationStatus ComputeStableContact(const hpp::rbprm::RbPrmFullBodyPtr
                           core::CollisionValidationPtr_t validation,
                           const std::string& limbId,
                           const hpp::rbprm::RbPrmLimbPtr_t& limb,
-                          model::ConfigurationIn_t rbconfiguration,
-                          model::ConfigurationOut_t configuration,
+                          pinocchio::ConfigurationIn_t rbconfiguration,
+                          pinocchio::ConfigurationOut_t configuration,
                           const affMap_t& affordances,
                           const std::map<std::string, std::vector<std::string> >& affFilters,
                           const fcl::Vec3f& direction,
@@ -174,7 +173,7 @@ ContactComputationStatus ComputeStableContact(const hpp::rbprm::RbPrmFullBodyPtr
 }
 
 hpp::rbprm::State ComputeContacts(const hpp::rbprm::RbPrmFullBodyPtr_t& body,
-        model::ConfigurationIn_t configuration, const affMap_t& affordances,
+        pinocchio::ConfigurationIn_t configuration, const affMap_t& affordances,
   const std::map<std::string, std::vector<std::string> >& affFilters, const fcl::Vec3f& direction,
         const double robustnessTreshold, const fcl::Vec3f& acceleration)
 {
@@ -212,20 +211,20 @@ hpp::rbprm::State ComputeContacts(const hpp::rbprm::RbPrmFullBodyPtr_t& body,
 
 hpp::rbprm::contact::ContactReport ComputeContacts(const hpp::rbprm::State& previous,
         const hpp::rbprm::RbPrmFullBodyPtr_t& body,
-        model::ConfigurationIn_t configuration, const affMap_t& affordances,
+        pinocchio::ConfigurationIn_t configuration, const affMap_t& affordances,
         const std::map<std::string, std::vector<std::string> >& affFilters,
         const fcl::Vec3f& direction, const double robustnessTreshold, const fcl::Vec3f& acceleration, const core::PathConstPtr_t& comPath, const double currentPathId, const bool testReachability, const bool quasiStatic)
 {
     // save old configuration
     core::ConfigurationIn_t save = body->device_->currentConfiguration();
-    model::Device::Computation_t flag = body->device_->computationFlag ();
-    model::Device::Computation_t newflag = static_cast <model::Device::Computation_t> (model::Device::JOINT_POSITION);
+    pinocchio::Device::Computation_t flag = body->device_->computationFlag ();
+    pinocchio::Device::Computation_t newflag = static_cast <pinocchio::Device::Computation_t> (pinocchio::Device::JOINT_POSITION);
     // load new root position
     body->device_->controlComputation (newflag);
     body->device_->currentConfiguration(configuration);
     body->device_->computeForwardKinematics ();
     // try to maintain previous contacts
-    hppDout(notice,"Compute contact, previous state : r(["<<model::displayConfig(previous.configuration_)<<"])");
+    hppDout(notice,"Compute contact, previous state : r(["<<pinocchio::displayConfig(previous.configuration_)<<"])");
     contact::ContactGenHelper cHelper(body,previous,configuration,affordances,affFilters,robustnessTreshold,1,1,false,
                                       true,direction,acceleration,false,false,comPath,currentPathId);
     cHelper.testReachability_ = testReachability;
@@ -235,7 +234,7 @@ hpp::rbprm::contact::ContactReport ComputeContacts(const hpp::rbprm::State& prev
     // copy extra dofs
     if(rep.success_)
     {
-        const model::size_type& extraDim = body->device_->extraConfigSpace().dimension();
+        const pinocchio::size_type& extraDim = body->device_->extraConfigSpace().dimension();
         rep.result_.configuration_.tail(extraDim) = configuration.tail(extraDim);
     }
     body->device_->currentConfiguration(save);

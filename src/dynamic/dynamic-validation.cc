@@ -92,7 +92,7 @@ namespace hpp {
         }
       }else{ // changes in contacts, recompute the matrices and check the acceleration :
         initContacts_ = false;
-        hppDout(notice,"new contacts ! for config = "<<model::displayConfig(config));
+        hppDout(notice,"new contacts ! for config = "<<pinocchio::displayConfig(config));
         lastAcc_ = config.segment<3>(configSize-3);
         lastReport_=rbReport;
         core::ConfigurationPtr_t q = core::ConfigurationPtr_t (new core::Configuration_t(config));

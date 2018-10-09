@@ -25,7 +25,7 @@
 # include <hpp/core/config-projector.hh>
 # include <hpp/core/configuration-shooter.hh>
 # include <hpp/core/path.hh>
-# include <hpp/model/device.hh>
+# include <hpp/pinocchio/device.hh>
 
 # include <vector>
 

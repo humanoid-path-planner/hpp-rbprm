@@ -20,7 +20,8 @@
 #include <hpp/rbprm/stability/stability.hh>
 #include <hpp/rbprm/contact_generation/reachability.hh>
 #include <hpp/rbprm/tools.hh>
-#include <hpp/model/configuration.hh>
+#include <hpp/pinocchio/configuration.hh>
+#include <pinocchio/spatial/se3.hpp>
 #include <hpp/rbprm/sampling/heuristic-tools.hh>
 #ifdef PROFILE
     #include "hpp/rbprm/rbprm-profiler.hh"
@@ -32,7 +33,7 @@ namespace rbprm {
 namespace contact{
 
 
-ContactGenHelper::ContactGenHelper(RbPrmFullBodyPtr_t fb, const State& ps, model::ConfigurationIn_t configuration,
+ContactGenHelper::ContactGenHelper(RbPrmFullBodyPtr_t fb, const State& ps, pinocchio::ConfigurationIn_t configuration,
                                     const hpp::rbprm::affMap_t &affordances, const std::map<std::string, std::vector<std::string> > &affFilters,
                                     const double robustnessTreshold,
                                     const std::size_t maxContactBreaks, const std::size_t maxContactCreations,
@@ -147,7 +148,7 @@ Q_State maintain_contacts_combinatorial(const hpp::rbprm::State& currentState, c
 using namespace projection;
 
 bool maintain_contacts_stability_rec(hpp::rbprm::RbPrmFullBodyPtr_t fullBody,
-                        model::ConfigurationIn_t targetRootConfiguration,
+                        pinocchio::ConfigurationIn_t targetRootConfiguration,
                         Q_State& candidates,const std::size_t contactLength,
                         const fcl::Vec3f& acceleration, const double robustness,
                         ProjectionReport& currentRep)
@@ -177,10 +178,10 @@ bool maintain_contacts_stability_rec(hpp::rbprm::RbPrmFullBodyPtr_t fullBody,
 }
 
 
-hpp::model::ObjectVector_t getAffObjectsForLimb(const std::string& limb,
+std::vector<pinocchio::CollisionObjectPtr_t> getAffObjectsForLimb(const std::string& limb,
     const affMap_t& affordances, const std::map<std::string, std::vector<std::string> >& affFilters)
 {
-    model::ObjectVector_t affs;
+    std::vector<pinocchio::CollisionObjectPtr_t> affs;
     std::vector<std::string> affTypes;
     bool settingFound = false;
     for (std::map<std::string, std::vector<std::string> >::const_iterator fIt =
@@ -383,7 +384,7 @@ ProjectionReport maintain_contacts(ContactGenHelper &contactGenHelper)
             //collision validation
             hpp::core::ValidationReportPtr_t valRep (new hpp::core::CollisionValidationReport);
             rep.success_ = contactGenHelper.fullBody_->GetCollisionValidation()->validate(rep.result_.configuration_, valRep);
-            hppDout(notice,"maintain contact collision for config : r(["<<model::displayConfig(rep.result_.configuration_)<<"])");
+            hppDout(notice,"maintain contact collision for config : r(["<<pinocchio::displayConfig(rep.result_.configuration_)<<"])");
             hppDout(notice,"valide  : "<<rep.success_);
             if(!rep.success_)
               hppDout(notice,"report = "<<*valRep);
@@ -409,8 +410,9 @@ ProjectionReport maintain_contacts(ContactGenHelper &contactGenHelper)
 sampling::T_OctreeReport CollideOctree(const ContactGenHelper &contactGenHelper, const std::string& limbName,
                                                     RbPrmLimbPtr_t limb, const sampling::heuristic evaluate, const sampling::HeuristicParam & params)
 {
-    fcl::Transform3f transform = limb->octreeRoot(); // get root transform from configuration
-    hpp::model::ObjectVector_t affordances = getAffObjectsForLimb (limbName,contactGenHelper.affordances_, contactGenHelper.affFilters_);
+    pinocchio::Transform3f transformpinocchio = limb->octreeRoot(); // get root transform from configuration
+    fcl::Transform3f transform(transformpinocchio.rotation(),transformpinocchio.translation());
+    std::vector<pinocchio::CollisionObjectPtr_t> affordances = getAffObjectsForLimb (limbName,contactGenHelper.affordances_, contactGenHelper.affFilters_);
 
     //#pragma omp parallel for
     // request samples which collide with each of the collision objects
@@ -420,7 +422,7 @@ sampling::T_OctreeReport CollideOctree(const ContactGenHelper &contactGenHelper,
       throw std::runtime_error ("No aff objects found!!!");
 
     std::vector<sampling::T_OctreeReport> reports(affordances.size());
-    for(model::ObjectVector_t::const_iterator oit = affordances.begin();
+    for(std::vector<pinocchio::CollisionObjectPtr_t>::const_iterator oit = affordances.begin();
         oit != affordances.end(); ++oit, ++i)
     {
         if(eval)
@@ -466,9 +468,9 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
         hppDout(notice,"heuristic value = "<<it->value_);
         core::Configuration_t conf_before(configuration);
         sampling::Load(*bestReport.sample_, conf_before);
-        hppDout(notice,"config before projection : r(["<<model::displayConfig(conf_before)<<"])");
+        hppDout(notice,"config before projection : r(["<<pinocchio::displayConfig(conf_before)<<"])");
         /*ProjectionReport */rep = projectSampleToObstacle(contactGenHelper.fullBody_, limbId, limb, bestReport, validation, configuration, current);
-        hppDout(notice,"config : r(["<<model::displayConfig(configuration)<<"])");
+        hppDout(notice,"config : r(["<<pinocchio::displayConfig(configuration)<<"])");
         hppDout(notice,"projection to obstacle success = "<<rep.success_);
         if(rep.success_)
         {
@@ -521,7 +523,7 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
                         (*eval)(*(bestReport.sample_), eDir, normal, params); // TODO : comment when not debugging
                         core::Configuration_t confBefore= current.configuration_; // remove
                         sampling::Load(*(bestReport.sample_),confBefore); //remove
-                        hppDout(notice,"config before projection : r(["<<model::displayConfig(confBefore)<<"])"); //remove
+                        hppDout(notice,"config before projection : r(["<<pinocchio::displayConfig(confBefore)<<"])"); //remove
                        */
                     }
                 }
@@ -588,7 +590,7 @@ ProjectionReport generate_contact(const ContactGenHelper &contactGenHelper, cons
     rep.result_ = findValidCandidate(contactGenHelper,limbName,limb, validation, found_sample,found_stable,unstableContact, params, evaluate);
 
     if(found_sample){
-        hppDout(notice,"found reachable sample : "<<model::displayConfig(rep.result_.configuration_));
+        hppDout(notice,"found reachable sample : "<<pinocchio::displayConfig(rep.result_.configuration_));
         rep.status_ =  REACHABLE_CONTACT;
         rep.success_ = true;
         #ifdef PROFILE
@@ -599,7 +601,7 @@ ProjectionReport generate_contact(const ContactGenHelper &contactGenHelper, cons
     else if(found_stable)
     {
         hppDout(notice,"NOT REACHABLE in generate_contact");
-        hppDout(notice,"found stable sample : "<<model::displayConfig(rep.result_.configuration_));
+        hppDout(notice,"found stable sample : "<<pinocchio::displayConfig(rep.result_.configuration_));
         rep.status_ = STABLE_CONTACT;
         if(contactGenHelper.accept_unreachable_)
             rep.success_ = true;
@@ -639,7 +641,7 @@ ProjectionReport gen_contacts(ContactGenHelper &contactGenHelper)
     ProjectionReport rep;
     T_ContactState candidates = gen_contacts_combinatorial(contactGenHelper);
     hppDout(notice,"gen_contact candidates size : "<<candidates.size());
-    hppDout(notice,"working state config : r(["<<model::displayConfig(contactGenHelper.workingState_.configuration_)<<"])");
+    hppDout(notice,"working state config : r(["<<pinocchio::displayConfig(contactGenHelper.workingState_.configuration_)<<"])");
     bool checkStability(contactGenHelper.checkStabilityGenerate_);
     while(!candidates.empty() && !rep.success_)
     {

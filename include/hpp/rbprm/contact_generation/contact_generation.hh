@@ -35,7 +35,7 @@ typedef std::queue<ContactState> T_ContactState;
 struct ContactGenHelper
 {
      ContactGenHelper(RbPrmFullBodyPtr_t fb, const State& ps,
-                      model::ConfigurationIn_t configuration,
+                      pinocchio::ConfigurationIn_t configuration,
                       const affMap_t& affordances,
                       const std::map<std::string, std::vector<std::string> >& affFilters,
                       const double robustnessTreshold = 0,
@@ -77,7 +77,7 @@ struct ContactGenHelper
 };
 
 
-hpp::model::ObjectVector_t HPP_RBPRM_DLLAPI getAffObjectsForLimb(const std::string& limb,
+std::vector<hpp::pinocchio::CollisionObjectPtr_t> HPP_RBPRM_DLLAPI getAffObjectsForLimb(const std::string& limb,
     const affMap_t& affordances, const std::map<std::string, std::vector<std::string> >& affFilters);
 
 /// Generates all potentially valid cases of valid contact maintenance

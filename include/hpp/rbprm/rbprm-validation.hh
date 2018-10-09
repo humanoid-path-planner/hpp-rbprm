@@ -42,12 +42,12 @@ namespace hpp {
     class HPP_RBPRM_DLLAPI RbPrmValidation : public core::ConfigValidation
     {
     public:
-      static RbPrmValidationPtr_t create (const model::RbPrmDevicePtr_t& robot,
+      static RbPrmValidationPtr_t create (const pinocchio::RbPrmDevicePtr_t& robot,
                                           const std::vector<std::string>& filter = std::vector<std::string>(),
                                           const std::map<std::string, std::vector<std::string> >& affFilters =
 																						std::map<std::string, std::vector<std::string> >(),
-																					const std::map<std::string, std::vector<model::CollisionObjectPtr_t> >& affordances = 
-																						std::map<std::string, std::vector<model::CollisionObjectPtr_t> >(),
+                                                                                    const std::map<std::string, std::vector<pinocchio::CollisionObjectPtr_t> >& affordances =
+                                                                                        std::map<std::string, std::vector<pinocchio::CollisionObjectPtr_t> >(),
 																					const core::ObjectVector_t& geometries =
 																						core::ObjectVector_t());
 
@@ -103,7 +103,7 @@ namespace hpp {
       /// Store obstacle and build a collision pair with each body of the robot.
       /// \notice this function has to be called for trunk validation and rom 
 			/// validation separately unless they use same obstacles (not usually the case)
-			virtual void addObstacle (const core::CollisionObjectPtr_t& object);
+            virtual void addObstacle (const core::CollisionObjectConstPtr_t& object);
 
       /// Remove a collision pair between a joint and an obstacle
       /// \param the joint that holds the inner objects,
@@ -151,7 +151,7 @@ namespace hpp {
       /// \brief set if the collision validation should compute all the possible
       /// contacts or stop after the first pairs in collision
       ///
-      void computeAllContacts(bool computeAllContacts);
+     // void computeAllContacts(bool computeAllContacts);
 
 
     public:
@@ -163,12 +163,12 @@ namespace hpp {
       std::vector<std::string> defaultFilter_;
 
     protected:
-      RbPrmValidation (const model::RbPrmDevicePtr_t& robot,
+      RbPrmValidation (const pinocchio::RbPrmDevicePtr_t& robot,
                        const std::vector<std::string>& filter,
                        const std::map<std::string,
 											 	std::vector<std::string> >& affFilters,
 											 const std::map<std::string, 
-												std::vector<model::CollisionObjectPtr_t> >& affordances,
+                                                std::vector<pinocchio::CollisionObjectPtr_t> >& affordances,
 											 const core::ObjectVector_t& geometries);
 
 											 

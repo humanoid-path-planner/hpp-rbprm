@@ -17,10 +17,10 @@
 // <http://www.gnu.org/licenses/>.
 
 #include <hpp/util/debug.hh>
-#include <hpp/model/configuration.hh>
-#include <hpp/model/device.hh>
-#include <hpp/model/joint.hh>
-#include <hpp/model/joint-configuration.hh>
+#include <hpp/pinocchio/configuration.hh>
+#include <hpp/pinocchio/device.hh>
+#include <hpp/pinocchio/joint.hh>
+#include <hpp/pinocchio/joint-configuration.hh>
 #include <hpp/core/config-projector.hh>
 #include <hpp/rbprm/planner/timed-parabola-path.hh>
 #include <hpp/core/straight-path.hh>
@@ -31,7 +31,7 @@
 
 namespace hpp {
   namespace rbprm {
-    using model::displayConfig;
+    using pinocchio::displayConfig;
     using core::value_type;
     using core::vector_t;
     using core::interval_t;
@@ -44,7 +44,7 @@ namespace hpp {
     parent_t(*parabolaPath),
     device_ (robot), initial_ (init), end_ (end),parabolaPath_(parabolaPath),length_(computeTimedLength(parabolaPath))
     {
-      hppDout(notice,"timed path constructor : end = "<<model::displayConfig(end_));
+      hppDout(notice,"timed path constructor : end = "<<pinocchio::displayConfig(end_));
     }
 
 

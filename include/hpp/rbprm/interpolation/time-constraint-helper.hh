@@ -59,7 +59,7 @@ namespace hpp {
                               const ConstraintFactory_T& constraintFactory,
                               core::ProblemPtr_t referenceProblem,
                               core::PathPtr_t refPath,
-                              const model::value_type error_treshold = 1e-3)
+                              const pinocchio::value_type error_treshold = 1e-3)
              : fullbody_(fullbody)
              , fullBodyDevice_(fullbody->device_->clone())
              , rootProblem_(fullBodyDevice_)
@@ -133,7 +133,7 @@ namespace hpp {
                                                              const StateConstIterator& endState,
                                                              const std::size_t numOptimizations = 10,
                                                              const bool keepExtraDof = false,
-                                                             const model::value_type error_treshold = 0.001,
+                                                             const pinocchio::value_type error_treshold = 0.001,
                                                              const size_t maxIterations = 0);
 
     /// Runs the LimbRRT to create a kinematic, continuous,
@@ -172,7 +172,7 @@ namespace hpp {
                                                              const CIT_StateFrame& endState,
                                                              const std::size_t numOptimizations = 10,
                                                              const bool keepExtraDof = false,
-                                                             const model::value_type error_treshold = 0.001,
+                                                             const pinocchio::value_type error_treshold = 0.001,
                                                              const size_t maxIterations = 0);
 
     /*typedef core::PathPtr_t (*interpolate_states)(rbprm::RbPrmFullBodyPtr_t, core::ProblemPtr_t,const rbprm::CIT_State&,

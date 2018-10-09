@@ -449,7 +449,7 @@ namespace geom
   
   T_Point intersectTriangles(fcl::Vec3f* tri, fcl::Vec3f* tri2,std::ostringstream* ss){
     T_Point res;
-    fcl::Vec3f n2=0;
+    fcl::Vec3f n2(fcl::Vec3f::Zero());
     fcl::FCL_REAL t2=0;
     fcl::Intersect::buildTrianglePlane(tri2[0],tri2[1],tri2[2], &n2, &t2);
     fcl::Vec3f distance;

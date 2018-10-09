@@ -25,13 +25,13 @@ namespace hpp {
   namespace rbprm {
 
     RbPrmRomValidationPtr_t RbPrmRomValidation::create
-    (const model::DevicePtr_t& robot, const std::vector<std::string>& affFilters)
+    (const pinocchio::DevicePtr_t& robot, const std::vector<std::string>& affFilters)
     {
       RbPrmRomValidation* ptr = new RbPrmRomValidation (robot, affFilters);
       return RbPrmRomValidationPtr_t (ptr);
     }
 
-    RbPrmRomValidation::RbPrmRomValidation (const model::DevicePtr_t& robot
+    RbPrmRomValidation::RbPrmRomValidation (const pinocchio::DevicePtr_t& robot
                                            ,const std::vector<std::string>& affFilters)
         : hpp::core::CollisionValidation(robot)
         , filter_(affFilters)
@@ -67,10 +67,11 @@ namespace hpp {
 
           // re arrange the collision pair such that the first one is the pair in collision
           // (allow us to maintain the contact with the same obstacle as long as possible)
-          CollisionObjectPtr_t obj2 = romCollisionReport->object2;
+          CollisionObjectConstPtr_t obj2 = romCollisionReport->object2;
           CollisionPair_t colPair;
           bool first(true);
-          for(CollisionPairs_t::iterator it = collisionPairs_.begin() ; it != collisionPairs_.end() ; ++it){
+          CollisionPairs_t::iterator it = collisionPairs_.begin();
+          for(; it != collisionPairs_.end() ; ++it){
             if(it->second == obj2){
               colPair = *it;
               break;
@@ -79,8 +80,8 @@ namespace hpp {
           }
 
           if(!first){
-            collisionPairs_.remove(colPair);
-            collisionPairs_.push_front(colPair);
+            collisionPairs_.erase(it);
+            collisionPairs_.insert(collisionPairs_.begin(),colPair);
           }
 
         }else{

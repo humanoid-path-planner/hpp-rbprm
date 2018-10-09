@@ -19,11 +19,12 @@
 #include <hpp/rbprm/interpolation/spline/effector-rrt.hh>
 #include <hpp/rbprm/interpolation/com-rrt.hh>
 #include <hpp/rbprm/tools.hh>
-#include <hpp/model/joint.hh>
+#include <hpp/pinocchio/joint.hh>
+#include <pinocchio/multibody/geometry.hpp>
 #include <hpp/core/bi-rrt-planner.hh>
 #include <hpp/core/basic-configuration-shooter.hh>
 #include <hpp/core/discretized-path-validation.hh>
-#include <hpp/constraints/position.hh>
+#include <hpp/constraints/generic-transformation.hh>
 #include <bezier-com-traj/solve_end_effector.hh>
 #include <hpp/core/problem-solver.hh>
 #include <spline/helpers/effector_spline.h>
@@ -80,7 +81,7 @@ using namespace core;
     Transform3f getEffectorTransformAt(core::DevicePtr_t device,const JointPtr_t effector,const core::PathPtr_t path,const value_type time){
         Configuration_t result(path->outputSize());
         (*path)(result,time);
-        hppDout(notice,"result in getEffectorTransform : "<<model::displayConfig(result));
+        hppDout(notice,"result in getEffectorTransform : "<<pinocchio::displayConfig(result));
         device->currentConfiguration(result);
         device->computeForwardKinematics();
         Transform3f transform = effector->currentTransformation();
@@ -90,18 +91,13 @@ using namespace core;
 
     vector_t GetEffectorPositionAt(core::PathPtr_t path, constraints::PositionPtr_t position, const value_type time)
     {
-        vector_t result (position->outputSize());
-        position->operator ()(result, path->operator ()(time));
-        return result;
+       return position->operator ()(path->operator ()(time)).vector();
     }
 
     void getEffectorConfigAt(core::DevicePtr_t device,const JointPtr_t effector,const core::PathPtr_t path,const value_type time,ConfigurationOut_t result ){
         Transform3f transform = getEffectorTransformAt(device,effector,path,time);
-        result.head<3>() = transform.getTranslation();
-        result [3] = transform.getQuatRotation () [0];
-        result [4] = transform.getQuatRotation () [1];
-        result [5] = transform.getQuatRotation () [2];
-        result [6] = transform.getQuatRotation () [3];
+        result.head<3>() = transform.translation();
+        result.segment<4>(3) = Transform3f::Quaternion_t(transform.rotation()).coeffs();
 
     }
 
@@ -109,14 +105,11 @@ using namespace core;
         device->currentConfiguration(fullBodyConfig);
         device->computeForwardKinematics();
         Transform3f transform = effector->currentTransformation();
-        result.head<3>() = transform.getTranslation();
-        result [3] = transform.getQuatRotation () [0];
-        result [4] = transform.getQuatRotation () [1];
-        result [5] = transform.getQuatRotation () [2];
-        result [6] = transform.getQuatRotation () [3];
+        result.head<3>() = transform.translation();
+        result.segment<4>(3) = Transform3f::Quaternion_t(transform.rotation()).coeffs();
     }
 
-    T_Waypoint getWayPoints(model::DevicePtr_t device, core::PathPtr_t path,
+    T_Waypoint getWayPoints(pinocchio::DevicePtr_t device, core::PathPtr_t path,
                          const JointPtr_t effector, const value_type effectorDistance, bool& isLine)
     {
         //create evaluation function
@@ -241,9 +234,9 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         return ptr;
     }
 
-    std::vector<model::JointPtr_t> getJointsByName(RbPrmFullBodyPtr_t fullbody, const std::vector<std::string>& names)
+    std::vector<pinocchio::JointPtr_t> getJointsByName(RbPrmFullBodyPtr_t fullbody, const std::vector<std::string>& names)
     {
-        std::vector<model::JointPtr_t> res;
+        std::vector<pinocchio::JointPtr_t> res;
         for(std::vector<std::string>::const_iterator cit = names.begin(); cit != names.end(); ++cit)
         {
             res.push_back(fullbody->device_->getJointByName(*cit));
@@ -367,10 +360,10 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         hppDout(notice,ss.str());
 
         hppDout(notice,"configurations of the path : ");
-        hppDout(notice,"init    : "<<model::displayConfig(refEffectorTakeoff->initial()));
-        hppDout(notice,"takeoff : "<<model::displayConfig(refEffectorTakeoff->end()));
-        hppDout(notice,"landing : "<<model::displayConfig(refEffectorLanding->initial()));
-        hppDout(notice,"end     : "<<model::displayConfig(refEffectorLanding->end()));
+        hppDout(notice,"init    : "<<pinocchio::displayConfig(refEffectorTakeoff->initial()));
+        hppDout(notice,"takeoff : "<<pinocchio::displayConfig(refEffectorTakeoff->end()));
+        hppDout(notice,"landing : "<<pinocchio::displayConfig(refEffectorLanding->initial()));
+        hppDout(notice,"end     : "<<pinocchio::displayConfig(refEffectorLanding->end()));
 
         BezierPathPtr_t refEffectorMid =
 BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->end(),refEffectorLanding->initial(), core::interval_t(0.,timeMid));
@@ -499,20 +492,28 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
     }
 */
 
+    DevicePtr_t createFreeFlyerDevice()
+    {
+        DevicePtr_t endEffectorDevice = hpp::core::Device_t::create("endEffector");
+        hpp::pinocchio::ModelPtr_t m =  hpp::pinocchio::ModelPtr_t(new ::se3::Model());
+        hpp::pinocchio::GeomModelPtr_t gm =  hpp::pinocchio::GeomModelPtr_t(new ::se3::GeometryModel());
+        Transform3f mat; mat.setIdentity ();
+        endEffectorDevice->model(m);
+        endEffectorDevice->geomModel(gm);
+        endEffectorDevice->model().addJoint(0, ::se3::JointModelFreeFlyer(),mat,"freeflyer");
+        return endEffectorDevice;
+    }
+
     core::PathPtr_t generateEndEffectorBezier(RbPrmFullBodyPtr_t fullbody, core::ProblemSolverPtr_t problemSolver, const PathPtr_t comPath,
     const State &startState, const State &nextState){
         JointPtr_t effector =  getEffector(fullbody, startState, nextState);
         std::string effectorName = getEffectorLimb(startState,nextState);
         EndEffectorPath endEffPath(fullbody->device_,effector,comPath);
         // create a 'device' object for the end effector (freeflyer 6D). Needed for the path and the orientation constraint
-        DevicePtr_t endEffectorDevice = Device::create("endEffector");
-        JointPtr_t transJoint = new JointTranslation <3> (Transform3f());
-        JointPtr_t so3Joint = new JointSO3(Transform3f());
-        endEffectorDevice->rootJoint(transJoint);
-        transJoint->addChildJoint (so3Joint);
+        DevicePtr_t endEffectorDevice = createFreeFlyerDevice();
         Configuration_t initConfig(endEffectorDevice->configSize()),endConfig(endEffectorDevice->configSize());
         getEffectorConfigForConfig(fullbody->device_,effector,startState.configuration_,initConfig);
-        hppDout(notice,"start state conf = "<<model::displayConfig(startState.configuration_));
+        hppDout(notice,"start state conf = "<<pinocchio::displayConfig(startState.configuration_));
         getEffectorConfigForConfig(fullbody->device_,effector,nextState.configuration_,endConfig);
         Configuration_t takeoffConfig(initConfig),landingConfig(endConfig);
 
@@ -642,16 +643,12 @@ buildPredefinedPath(endEffectorDevice,nextNormal,endConfig,posOffset,-velOffset,
         fullBodyPathVector->appendPath(fullBodyComPath);
         std::string effectorName = getEffectorLimb(startState,nextState);
         EndEffectorPath endEffPath(fullbody->device_,effector,fullBodyComPath);
-        // create a 'device' object for the end effector (freeflyer 6D). Needed for the path and the orientation constraint
-        DevicePtr_t endEffectorDevice = Device::create("endEffector");
-        JointPtr_t transJoint = new JointTranslation <3> (Transform3f());
-        JointPtr_t so3Joint = new JointSO3(Transform3f());
-        endEffectorDevice->rootJoint(transJoint);
-        transJoint->addChildJoint (so3Joint);
+        // create a 'device' object for the end effector (freeflyer 6D). Needed for the path and the orientation constraint        
+        DevicePtr_t endEffectorDevice = createFreeFlyerDevice();
         Configuration_t initConfig(endEffectorDevice->configSize()),endConfig(endEffectorDevice->configSize());
         getEffectorConfigForConfig(fullbody->device_,effector,startState.configuration_,initConfig);
-        hppDout(notice,"fb com path init = "<<model::displayConfig((*fullBodyComPath)(0.)));
-        hppDout(notice,"start state conf = "<<model::displayConfig(startState.configuration_));
+        hppDout(notice,"fb com path init = "<<pinocchio::displayConfig((*fullBodyComPath)(0.)));
+        hppDout(notice,"start state conf = "<<pinocchio::displayConfig(startState.configuration_));
         getEffectorConfigForConfig(fullbody->device_,effector,nextState.configuration_,endConfig);
         Configuration_t takeoffConfig(initConfig),landingConfig(endConfig);
 
@@ -800,16 +797,12 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
 
         hppDout(notice,"Begin effectorRRT with fullBodyComPath");
         //removing extra dof
-        core::SizeInterval_t interval(0, fullBodyComPath->initial().rows()-1);
-        core::SizeIntervals_t intervals;
+        core::segment_t interval(0, fullBodyComPath->initial().rows()-1);
+        core::segments_t intervals;
         intervals.push_back(interval);
         core::PathPtr_t reducedComPath = core::SubchainPath::create(fullBodyComPath,intervals);
         JointPtr_t effector =  getEffector(fullbody, startState, nextState);
-        DevicePtr_t endEffectorDevice = Device::create("endEffector");
-        JointPtr_t transJoint = new JointTranslation <3> (Transform3f());
-        JointPtr_t so3Joint = new JointSO3(Transform3f());
-        endEffectorDevice->rootJoint(transJoint);
-        transJoint->addChildJoint (so3Joint);
+        DevicePtr_t endEffectorDevice = createFreeFlyerDevice();
 
         std::vector<PathVectorPtr_t> listPathBezier = fitBeziersToPath(fullbody,effector,comPath->length(),fullBodyComPath,startState,nextState);
         // iterate over all bezier path and try to find a whole body motion that can follow it :
@@ -831,8 +824,8 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
 
             // ## compute whole body motion that follow the reference
             EffectorRRTShooterFactory shooterFactory(reducedComPath);
-            std::vector<model::JointPtr_t> constrainedJoint = getJointsByName(fullbody, constrainedJointPos);
-            std::vector<model::JointPtr_t> constrainedLocked = getJointsByName(fullbody, constrainedLockedJoints);
+            std::vector<pinocchio::JointPtr_t> constrainedJoint = getJointsByName(fullbody, constrainedJointPos);
+            std::vector<pinocchio::JointPtr_t> constrainedLocked = getJointsByName(fullbody, constrainedLockedJoints);
             hppDout(notice,"effectorRRT, contrained joint pose size : "<<constrainedJointPos.size());
             hppDout(notice,"effectorRRT, contrained locked joint  size : "<<constrainedLockedJoints.size());
 
@@ -940,7 +933,7 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
         if(refFullbody_)
         {
             hppDout(notice,"Ref fullBody provided, create 6D effector constraint : ");
-            for(std::vector<model::JointPtr_t>::const_iterator cit = constrainedJointPos_.begin();
+            for(std::vector<pinocchio::JointPtr_t>::const_iterator cit = constrainedJointPos_.begin();
                 cit != constrainedJointPos_.end(); ++cit)
             {
                 hppDout(notice,"Constrained joint pose : "<<(*cit)->name());

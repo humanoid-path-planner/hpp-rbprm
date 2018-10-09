@@ -21,7 +21,7 @@
 
 #include <hpp/rbprm/config.hh>
 #include <hpp/rbprm/rbprm-state.hh>
-#include <hpp/model/device.hh>
+#include <hpp/pinocchio/device.hh>
 #include <hpp/rbprm/rbprm-limb.hh>
 #include <hpp/core/collision-validation.hh>
 #include <hpp/rbprm/sampling/heuristic.hh>
@@ -41,13 +41,13 @@ namespace hpp {
     ///
     class RbPrmFullBody;
     typedef boost::shared_ptr <RbPrmFullBody> RbPrmFullBodyPtr_t;
-		typedef std::map<std::string, std::vector<model::CollisionObjectPtr_t> > affMap_t;
+		typedef std::map<std::string, std::vector<pinocchio::CollisionObjectPtr_t> > affMap_t;
         typedef std::map<std::string,std::vector<bezier_Ptr> > EffectorTrajectoriesMap_t;
 
     class HPP_RBPRM_DLLAPI RbPrmFullBody
     {
     public:
-        static RbPrmFullBodyPtr_t create (const model::DevicePtr_t& device);
+        static RbPrmFullBodyPtr_t create (const pinocchio::DevicePtr_t& device);
 
     public:
         virtual ~RbPrmFullBody();
@@ -75,7 +75,7 @@ namespace hpp {
         /// \param disableEffectorCollision, whether collision detection should be disabled for end effector bones
         void AddLimb(const std::string& id, const std::string& name, const std::string& effectorName, const fcl::Vec3f &offset,
                      const fcl::Vec3f &limbOffset, const fcl::Vec3f &normal, const double x, const double y,
-                     const model::ObjectVector_t &collisionObjects,
+                     const core::ObjectStdVector_t &collisionObjects,
                      const std::size_t nbSamples, const std::string& heuristic = "static", const double resolution = 0.03,
                      ContactType contactType = _6_DOF, const bool disableEffectorCollision = false,
                      const bool grasp = false, const std::string &kinematicConstraintsPath=std::string(), const double kinematicConstraintsMin=0.);
@@ -92,7 +92,7 @@ namespace hpp {
         /// of the unit voxel of the octree. The larger they are, the more samples will be considered as candidates for contact.
         /// This can be problematic in terms of performance. The default value is 3 cm.
         /// \param disableEffectorCollision, whether collision detection should be disabled for end effector bones
-        void AddLimb(const std::string& database, const std::string& id, const model::ObjectVector_t &collisionObjects,
+        void AddLimb(const std::string& database, const std::string& id, const core::ObjectStdVector_t &collisionObjects,
                       const std::string& heuristicName, const bool loadValues, const bool disableEffectorCollision = false,
                      const bool grasp = false);
 
@@ -105,7 +105,7 @@ namespace hpp {
         /// \param collisionObjects objects to be considered for collisions with the limb. TODO remove
         /// \param nbSamples number of samples to generate for the limb
         void AddNonContactingLimb(const std::string& id, const std::string& name, const std::string &effectorName,
-                                    const model::ObjectVector_t &collisionObjects, const std::size_t nbSamples);
+                                    const hpp::core::ObjectStdVector_t &collisionObjects, const std::size_t nbSamples);
 
         /// Add a new heuristic for biasing sample candidate selection
         ///
@@ -124,13 +124,13 @@ namespace hpp {
         const T_LimbGroup& GetGroups() {return limbGroups_;}
         const core::CollisionValidationPtr_t& GetCollisionValidation() {return collisionValidation_;}
         const std::map<std::string, core::CollisionValidationPtr_t>& GetLimbCollisionValidation() {return limbcollisionValidations_;}
-        const model::DevicePtr_t device_;
+        const pinocchio::DevicePtr_t device_;
         void staticStability(bool staticStability){staticStability_ = staticStability;}
-        const bool staticStability(){return staticStability_;}
-        const double getFriction(){return mu_;}
+        bool staticStability() const {return staticStability_;}
+        double getFriction() const {return mu_;}
         void setFriction(double mu){mu_ = mu;}
-        const model::Configuration_t referenceConfig(){return device_->q0();}
-        void referenceConfig(model::Configuration_t referenceConfig);
+        const pinocchio::Configuration_t referenceConfig(){return device_->neutralConfiguration();}
+        void referenceConfig(pinocchio::Configuration_t referenceConfig);
         bool addEffectorTrajectory(const size_t pathId,const std::string& effectorName,const bezier_Ptr& trajectory);
         bool addEffectorTrajectory(const size_t pathId, const std::string& effectorName, const std::vector<bezier_Ptr>& trajectories);
         bool getEffectorsTrajectories(const size_t pathId,EffectorTrajectoriesMap_t& result);
@@ -148,10 +148,10 @@ namespace hpp {
         std::map<size_t,EffectorTrajectoriesMap_t> effectorsTrajectoriesMaps_; // the map link the pathIndex (the same as in the wholeBody paths in problem solver) to a map of trajectories for each effectors.
     private:
         void AddLimbPrivate(rbprm::RbPrmLimbPtr_t limb, const std::string& id, const std::string& name,
-                            const model::ObjectVector_t &collisionObjects, const bool disableEffectorCollision, const bool nonContactingLimb=false);
+                            const hpp::core::ObjectStdVector_t &collisionObjects, const bool disableEffectorCollision, const bool nonContactingLimb=false);
 
     protected:
-      RbPrmFullBody (const model::DevicePtr_t &device);
+      RbPrmFullBody (const pinocchio::DevicePtr_t &device);
 
       ///
       /// \brief Initialization.

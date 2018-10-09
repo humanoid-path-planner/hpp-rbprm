@@ -25,7 +25,7 @@
 #include <hpp/core/validation-report.hh>
 #include <hpp/core/collision-path-validation-report.hh>
 #include <hpp/util/debug.hh>
-#include <hpp/model/configuration.hh>
+#include <hpp/pinocchio/configuration.hh>
 #include <hpp/util/timer.hh>
 
 namespace hpp {
@@ -150,7 +150,7 @@ namespace hpp {
       else
         (*path)(q,path->timeRange ().first);
 
-      hppDout(info,"q = "<<model::displayConfig(q));
+      hppDout(info,"q = "<<pinocchio::displayConfig(q));
       rbprmValidation_->validate(q,configReport);
 
 

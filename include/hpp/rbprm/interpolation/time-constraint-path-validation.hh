@@ -39,7 +39,7 @@ namespace hpp {
     {
     public:
       static TimeConstraintPathValidationPtr_t
-    create (const model::DevicePtr_t& robot, const model::value_type& stepSize, const std::size_t pathDofRank);
+    create (const pinocchio::DevicePtr_t& robot, const pinocchio::value_type& stepSize, const std::size_t pathDofRank);
 
       /// Compute the largest valid interval starting from the path beginning
       /// In the context of the LimbRRT algoritm, a path is only valid if the extra DOF
@@ -63,7 +63,7 @@ namespace hpp {
 
     protected:
       TimeConstraintPathValidation
-      (const model::DevicePtr_t& robot, const model::value_type& stepSize, const std::size_t pathDofRank);
+      (const pinocchio::DevicePtr_t& robot, const pinocchio::value_type& stepSize, const std::size_t pathDofRank);
     }; // class DiscretizedPathValidation
     /// \}
   } // namespace interpolation

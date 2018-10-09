@@ -20,8 +20,8 @@
 #include <boost/tuple/tuple.hpp>
 #include <hpp/util/debug.hh>
 #include <hpp/util/timer.hh>
-#include <hpp/model/configuration.hh>
-#include <hpp/model/device.hh>
+#include <hpp/pinocchio/configuration.hh>
+#include <hpp/pinocchio/device.hh>
 #include <hpp/core/config-projector.hh>
 #include <hpp/core/node.hh>
 #include <hpp/core/edge.hh>
@@ -49,8 +49,8 @@
 
 namespace hpp {
   namespace rbprm {
-    using model::displayConfig;
-    using model::value_type;
+    using pinocchio::displayConfig;
+    using pinocchio::value_type;
     using core::BiRRTPlanner;
     using core::Problem;
     using core::Roadmap;
@@ -125,8 +125,8 @@ namespace hpp {
           }
 
           // create the map of end effector reference position in root frame
-          model::RbPrmDevicePtr_t rbDevice = boost::dynamic_pointer_cast<model::RbPrmDevice>(problem.robot());
-          for(model::T_Rom::const_iterator itr = rbDevice->robotRoms_.begin() ; itr != rbDevice->robotRoms_.end() ; ++itr){
+          pinocchio::RbPrmDevicePtr_t rbDevice = boost::dynamic_pointer_cast<pinocchio::RbPrmDevice>(problem.robot());
+          for(pinocchio::T_Rom::const_iterator itr = rbDevice->robotRoms_.begin() ; itr != rbDevice->robotRoms_.end() ; ++itr){
             core::Configuration_t pos(3);
             try{
                 boost::any vx = problem.get<boost::any> (std::string(itr->first+"_ref_x"));
@@ -140,7 +140,7 @@ namespace hpp {
             }
             rom_ref_endEffector_.insert(std::make_pair(itr->first,pos));
             hppDout(notice,"Reference end effector position for rom : "<<itr->first);
-            hppDout(notice,""<<model::displayConfig(pos));
+            hppDout(notice,""<<pinocchio::displayConfig(pos));
           }
 
 
@@ -189,8 +189,8 @@ namespace hpp {
       }
 
       // create the map of end effector reference position in root frame
-      model::RbPrmDevicePtr_t rbDevice = boost::dynamic_pointer_cast<model::RbPrmDevice>(problem.robot());
-      for(model::T_Rom::const_iterator itr = rbDevice->robotRoms_.begin() ; itr != rbDevice->robotRoms_.end() ; ++itr){
+      pinocchio::RbPrmDevicePtr_t rbDevice = boost::dynamic_pointer_cast<pinocchio::RbPrmDevice>(problem.robot());
+      for(pinocchio::T_Rom::const_iterator itr = rbDevice->robotRoms_.begin() ; itr != rbDevice->robotRoms_.end() ; ++itr){
         fcl::Vec3f pos = fcl::Vec3f::Zero();
         try{
             boost::any vx = problem.get<boost::any> (std::string(itr->first+"_ref_x"));

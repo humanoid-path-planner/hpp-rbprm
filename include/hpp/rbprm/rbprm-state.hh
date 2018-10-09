@@ -20,7 +20,7 @@
 # define HPP_RBPRM_STATE_HH
 
 # include <hpp/rbprm/config.hh>
-# include <hpp/model/device.hh>
+# include <hpp/pinocchio/device.hh>
 # include <hpp/rbprm/rbprm-limb.hh>
 
 # include <queue>
@@ -31,7 +31,7 @@ namespace rbprm {
 struct State;
 typedef std::vector<State> T_State;
 typedef T_State::const_iterator CIT_State;
-typedef std::pair<model::value_type, rbprm::State> StateFrame;
+typedef std::pair<pinocchio::value_type, rbprm::State> StateFrame;
 typedef std::vector<StateFrame> T_StateFrame;
 typedef T_StateFrame::const_iterator CIT_StateFrame;
 
@@ -106,7 +106,7 @@ typedef T_StateFrame::const_iterator CIT_StateFrame;
         void printInternal(std::stringstream& ss) const;
 
 
-        hpp::model::Configuration_t configuration_;
+        hpp::pinocchio::Configuration_t configuration_;
         fcl::Vec3f com_;
         std::map<std::string, bool> contacts_;
         std::map<std::string, fcl::Vec3f> contactNormals_;
@@ -119,7 +119,7 @@ typedef T_StateFrame::const_iterator CIT_StateFrame;
     }; // struct State
     /// Given two State, compute the contact effectors distance travelled
     /// between two states
-    HPP_RBPRM_DLLAPI model::value_type effectorDistance(const State& from, const State& to);
+    HPP_RBPRM_DLLAPI pinocchio::value_type effectorDistance(const State& from, const State& to);
 
 
     /// Given a State and a list of effectors, computes the list of

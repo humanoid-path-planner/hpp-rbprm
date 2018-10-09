@@ -16,7 +16,7 @@
 
 #include <hpp/rbprm/interpolation/rbprm-path-interpolation.hh>
 #include <hpp/rbprm/contact_generation/algorithm.hh>
-#include <hpp/model/configuration.hh>
+#include <hpp/pinocchio/configuration.hh>
 #include <hpp/rbprm/projection/projection.hh>
 #include <hpp/core/config-projector.hh>
 #include <hpp/rbprm/interpolation/interpolation-constraints.hh>
@@ -69,13 +69,13 @@ namespace hpp {
         T_Configuration configs;
         const core::interval_t& range = path_->timeRange();
         configs.push_back(start_.configuration_);
-        hppDout(notice,"config start = "<<model::displayConfig(start_.configuration_));
+        hppDout(notice,"config start = "<<pinocchio::displayConfig(start_.configuration_));
         int j = 0;
         //for(double i = range.first + timeStep; i< range.second; i+= timeStep)
         for(double i = range.first+timeStep; i< range.second; i+= timeStep, ++j)
         {
             configs.push_back(configPosition(configs.back(),path_,i));
-            //hppDout(notice,"config added = "<<model::displayConfig(configs.back()));
+            //hppDout(notice,"config added = "<<pinocchio::displayConfig(configs.back()));
         }
         configs.push_back(configPosition(configs.back(),path_,range.second));
         return Interpolate(affordances, affFilters, configs, robustnessTreshold, timeStep, range.first, filterStates);
@@ -92,7 +92,7 @@ namespace hpp {
         State midState(lastState);
         midState.RemoveContact(limbId);
         hppDout(notice,"Try to replace contact for limb : "<<limbId);
-        model::Configuration_t configuration = midState.configuration_;
+        pinocchio::Configuration_t configuration = midState.configuration_;
         core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(robot_->device_,"proj", 1e-4, 100);
         interpolation::addContactConstraints(robot_, robot_->device_,proj, midState, midState.fixedContacts(midState));
         std::vector<bool> rotationMask;
@@ -104,7 +104,7 @@ namespace hpp {
         // If projection was successful, we replace lastState with midState and then add end_ in the list
         if(projReport.success_){
             hppDout(notice,"projection of contact successful");
-            hppDout(notice,"New intermediate state : "<<model::displayConfig(projReport.result_.configuration_));
+            hppDout(notice,"New intermediate state : "<<pinocchio::displayConfig(projReport.result_.configuration_));
             results.push_back(std::make_pair(states.back().first,projReport.result_));
         }else{
         // If the projection was not successful, we keep lastState in the list and produce one intermediate state of each contact transition
@@ -131,13 +131,13 @@ namespace hpp {
     rbprm::T_StateFrame RbPrmInterpolation::Interpolate(const affMap_t& affordances,
                                                         const std::map<std::string, std::vector<std::string> >& affFilters,
                                                         const hpp::rbprm::T_Configuration &configs, const double robustnessTreshold,
-                                                        const model::value_type timeStep, const model::value_type initValue, const bool filterStates)
+                                                        const pinocchio::value_type timeStep, const pinocchio::value_type initValue, const bool filterStates)
     {
         hppDout(notice,"Begin interpolate in path-interpolation, number of configs to test : "<<configs.size());
         int nbFailures = 0;
         size_t accIndex = robot_->device_->configSize() - robot_->device_->extraConfigSpace().dimension () + 3 ; // index of the start of the acceleration vector (of size 3), in the configuration vector
         hppDout(notice,"acceleration index : "<<accIndex);
-        model::value_type currentVal(initValue);
+        pinocchio::value_type currentVal(initValue);
         rbprm::T_StateFrame states;
         states.push_back(std::make_pair(currentVal, this->start_));
         Configuration_t lastConfig(this->start_.configuration_);
@@ -165,7 +165,7 @@ namespace hpp {
                 dir = configuration.head<3>() - previous.configuration_.head<3>();
             fcl::Vec3f direction(dir[0], dir[1], dir[2]);
             bool nonZero(false);
-            direction.normalize(&nonZero);
+            direction.normalize();
             if(!nonZero) direction = fcl::Vec3f(0,0,1.);
             // TODO Direction 6d
             hppDout(notice,"#call ComputeContact, looking for state "<<states.size()-1);
@@ -259,8 +259,8 @@ if (nbFailures > 1)
                 states.pop_back();
             }
             else{
-              hppDout(notice,"new state added at index "<<states.size()-1<<" conf = r(["<<model::displayConfig(states.back().second.configuration_)<<"])");
-               hppDout(notice,"First configuration for state "<<states.size()<<" : r(["<<model::displayConfig(newState.configuration_)<<"])");
+              hppDout(notice,"new state added at index "<<states.size()-1<<" conf = r(["<<pinocchio::displayConfig(states.back().second.configuration_)<<"])");
+               hppDout(notice,"First configuration for state "<<states.size()<<" : r(["<<pinocchio::displayConfig(newState.configuration_)<<"])");
             }
             if(states.empty()){ // initial state, we keep the initial configuration but update the timing
                 states.push_back(std::make_pair(currentVal, this->start_));
@@ -272,10 +272,10 @@ if (nbFailures > 1)
             // code to add the first valid config of each states :
             if(!sameAsPrevious){
                 states.push_back(std::make_pair(currentVal, newState));
-                hppDout(notice,"new state added at index "<<states.size()-1<<" conf = r(["<<model::displayConfig(states.back().second.configuration_)<<"])");
+                hppDout(notice,"new state added at index "<<states.size()-1<<" conf = r(["<<pinocchio::displayConfig(states.back().second.configuration_)<<"])");
                 lastIterator = cit;
             }else{
-                hppDout(notice,"Same as previous, new config = r(["<<model::displayConfig(newState.configuration_)<<"])");
+                hppDout(notice,"Same as previous, new config = r(["<<pinocchio::displayConfig(newState.configuration_)<<"])");
             }
             //allowFailure = nbRecontacts < robot_->GetLimbs().size();
             allowFailure = nbRecontacts < 2;
@@ -339,7 +339,7 @@ if (nbFailures > 1)
         if(currentScore>bestScore){
           bestScore=currentScore;
           bestState = *sit;
-          hppDout(notice,"here, config = "<<model::displayConfig(bestState.second.configuration_));
+          hppDout(notice,"here, config = "<<pinocchio::displayConfig(bestState.second.configuration_));
         }
       }
       hppDout(notice,"Filtering, looking for best candidate : best score = "<<bestScore);

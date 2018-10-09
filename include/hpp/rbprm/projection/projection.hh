@@ -61,7 +61,7 @@ ProjectionReport HPP_RBPRM_DLLAPI projectToColFreeComPosition(hpp::rbprm::RbPrmF
 /// \param target, desired root position
 /// \param currentState current state of the robot (configuration and contacts)
 /// \return projection report containing the state projected
-ProjectionReport HPP_RBPRM_DLLAPI projectToRootConfiguration(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const model::ConfigurationIn_t conf,
+ProjectionReport HPP_RBPRM_DLLAPI projectToRootConfiguration(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const pinocchio::ConfigurationIn_t conf,
                                            const hpp::rbprm::State& currentState);
 
 /// Project a configuration such that a given limb configuration is collision free
@@ -80,14 +80,14 @@ ProjectionReport HPP_RBPRM_DLLAPI projectStateToObstacle(const hpp::rbprm::RbPrm
 
 ProjectionReport HPP_RBPRM_DLLAPI projectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
                                                  const sampling::OctreeReport& report, core::CollisionValidationPtr_t validation,
-                                                 model::ConfigurationOut_t configuration, const hpp::rbprm::State& current);
+                                                 pinocchio::ConfigurationOut_t configuration, const hpp::rbprm::State& current);
 
 ProjectionReport HPP_RBPRM_DLLAPI projectEffector(core::ConfigProjectorPtr_t proj, const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
-                                           core::CollisionValidationPtr_t validation, model::ConfigurationOut_t configuration,
+                                           core::CollisionValidationPtr_t validation, pinocchio::ConfigurationOut_t configuration,
                                            const fcl::Matrix3f& rotationTarget, const std::vector<bool>& rotationFilter, const fcl::Vec3f& positionTarget, const fcl::Vec3f& normal,
                                            const hpp::rbprm::State& current);
 
-fcl::Transform3f HPP_RBPRM_DLLAPI  computeProjectionMatrix(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const hpp::rbprm::RbPrmLimbPtr_t& limb, const model::ConfigurationIn_t configuration,
+fcl::Transform3f HPP_RBPRM_DLLAPI  computeProjectionMatrix(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const hpp::rbprm::RbPrmLimbPtr_t& limb, const pinocchio::ConfigurationIn_t configuration,
                                          const fcl::Vec3f& normal, const fcl::Vec3f& position);
 
     } // namespace projection

@@ -342,10 +342,10 @@ void State::print(std::stringstream& ss, const State& previous) const
   ss << "\n \n";*/
 }
 
-model::value_type effectorDistance(const State& from, const State& to)
+pinocchio::value_type effectorDistance(const State& from, const State& to)
 {
     std::vector<std::string> variations = to.contactCreations(from);
-    model::value_type norm = 0.;
+    pinocchio::value_type norm = 0.;
     for(std::vector<std::string>::const_iterator cit = variations.begin(); cit != variations.end(); ++cit)
     {
         std::string name = *cit;

@@ -16,13 +16,14 @@
 
 #include <hpp/rbprm/rbprm-limb.hh>
 #include <hpp/rbprm/sampling/sample-db.hh>
-#include <hpp/model/joint.hh>
+#include <hpp/pinocchio/joint.hh>
 #include <hpp/rbprm/tools.hh>
 #include <hpp/rbprm/contact_generation/kinematics_constraints.hh>
+#include <pinocchio/spatial/se3.hpp>
 namespace hpp {
   namespace rbprm {
 
-    RbPrmLimbPtr_t RbPrmLimb::create (const model::JointPtr_t limb, const std::string& effectorName, const fcl::Vec3f &offset,
+    RbPrmLimbPtr_t RbPrmLimb::create (const pinocchio::JointPtr_t limb, const std::string& effectorName, const fcl::Vec3f &offset,
                                       const fcl::Vec3f &limbOffset, const fcl::Vec3f &normal,const double x, const double y,
                                       const std::size_t nbSamples, const hpp::rbprm::sampling::heuristic evaluate, const double resolution,
                                       hpp::rbprm::ContactType contactType, const bool disableEffectorCollision, const bool grasp,
@@ -36,7 +37,7 @@ namespace hpp {
         return res;
     }
 
-    RbPrmLimbPtr_t RbPrmLimb::create (const model::DevicePtr_t device, std::ifstream& fileStream, const bool loadValues,
+    RbPrmLimbPtr_t RbPrmLimb::create (const pinocchio::DevicePtr_t device, std::ifstream& fileStream, const bool loadValues,
                                       const hpp::rbprm::sampling::heuristic evaluate, const bool disableEffectorCollision, const bool grasp)
     {
         RbPrmLimb* rbprmDevice = new RbPrmLimb(device, fileStream, loadValues, evaluate, disableEffectorCollision, grasp);
@@ -57,9 +58,9 @@ namespace hpp {
         weakPtr_ = weakPtr;
     }
 
-    model::JointPtr_t GetEffector(const model::JointPtr_t limb, const std::string name ="")
+    pinocchio::JointPtr_t GetEffector(const pinocchio::JointPtr_t limb, const std::string name ="")
     {
-        model::JointPtr_t current = limb;
+        pinocchio::JointPtr_t current = limb;
         while(current->numberChildJoints() !=0)
         {
             //assert(current->numberChildJoints() ==1);
@@ -69,35 +70,36 @@ namespace hpp {
         return current;
     }
 
-    fcl::Matrix3f GetEffectorTransform(const model::JointPtr_t effector)
+    fcl::Matrix3f GetEffectorTransform(const pinocchio::JointPtr_t effector)
     {
-        model::Configuration_t save = effector->robot()->currentConfiguration ();
+        pinocchio::Configuration_t save = effector->robot()->currentConfiguration ();
         effector->robot()->currentConfiguration (effector->robot()->neutralConfiguration());
-        fcl::Matrix3f rot = effector->currentTransformation().getRotation();
+        const pinocchio::matrix3_t& rot (effector->currentTransformation().rotation());
         effector->robot()->currentConfiguration (save);
         return rot.transpose();
     }
 
-    fcl::Vec3f computeEffectorReferencePosition(const model::JointPtr_t& limb, const std::string& effectorName){
+    fcl::Vec3f computeEffectorReferencePosition(const pinocchio::JointPtr_t& limb, const std::string& effectorName){
         core::DevicePtr_t device = limb->robot();
-        core::Configuration_t referenceConfig = device->q0();
-        fcl::Transform3f tRoot;
-        fcl::Transform3f tJoint_world,tJoint_robot;
-        tRoot.setTranslation(fcl::Vec3f(referenceConfig.head<3>()));
-        fcl::Quaternion3f quatRoot(referenceConfig[3],referenceConfig[4],referenceConfig[5],referenceConfig[6]);
-        tRoot.setQuatRotation(quatRoot);
+        core::Configuration_t referenceConfig = device->neutralConfiguration();
+        pinocchio::Transform3f tRoot;
+        pinocchio::Transform3f tJoint_world,tJoint_robot;
+        tRoot.translation(fcl::Vec3f(referenceConfig.head<3>()));
+        //fcl::Quaternion3f quatRoot(referenceConfig[3],referenceConfig[4],referenceConfig[5],referenceConfig[6]);
+        tRoot.rotation(Eigen::Quaterniond(referenceConfig.segment<4>(3)).matrix());
         hppDout(notice,"Create limb, reference root transform : "<<tRoot);
         // retrieve transform of each effector joint
         device->currentConfiguration(referenceConfig);
         device->computeForwardKinematics();
         tJoint_world = GetEffector(limb, effectorName)->currentTransformation();
         hppDout(notice,"tJoint of "<<limb->name()<<" : "<<tJoint_world);
-        tJoint_robot = tRoot.inverseTimes(tJoint_world);
+        //tJoint_robot = tRoot.inverseTimes(tJoint_world);
+        tJoint_robot = tRoot.inverse()*tJoint_world;
         hppDout(notice,"tJoint relative : "<<tJoint_robot);
-        return tJoint_robot.getTranslation();
+        return tJoint_robot.translation();
     }
 
-    RbPrmLimb::RbPrmLimb (const model::JointPtr_t& limb, const std::string& effectorName,
+    RbPrmLimb::RbPrmLimb (const pinocchio::JointPtr_t& limb, const std::string& effectorName,
                           const fcl::Vec3f &offset, const fcl::Vec3f &limbOffset, const fcl::Vec3f &normal, const double x, const double y, const std::size_t nbSamples,
                           const hpp::rbprm::sampling::heuristic evaluate, const double resolution, ContactType contactType,
                           bool disableEndEffectorCollision, bool grasps,
@@ -122,7 +124,7 @@ namespace hpp {
         // NOTHING
     }
 
-    fcl::Transform3f RbPrmLimb::octreeRoot() const
+    pinocchio::Transform3f RbPrmLimb::octreeRoot() const
     {
         return limb_->parentJoint()->currentTransformation();
     }
@@ -146,7 +148,7 @@ namespace hpp {
     {
     namespace io
     {
-        hpp::model::JointPtr_t extractJoint(const hpp::model::DevicePtr_t device, std::ifstream& myfile)
+        hpp::pinocchio::JointPtr_t extractJoint(const hpp::pinocchio::DevicePtr_t device, std::ifstream& myfile)
         {
             std::string name;
             getline(myfile, name);
@@ -163,7 +165,7 @@ namespace hpp {
     }
     using namespace hpp::tools::io;
 
-    hpp::rbprm::RbPrmLimb::RbPrmLimb (const model::DevicePtr_t device, std::ifstream& fileStream,
+    hpp::rbprm::RbPrmLimb::RbPrmLimb (const pinocchio::DevicePtr_t device, std::ifstream& fileStream,
                         const bool loadValues, const hpp::rbprm::sampling::heuristic evaluate,
                         bool disableEndEffectorCollision, bool grasps)
       : limb_(extractJoint(device,fileStream))

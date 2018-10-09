@@ -202,7 +202,7 @@ protected :
 
     void initCopy (BezierPathPtr_t self)
     {
-        parent_t::initCopy (self);
+        parent_t::init (self);
         weak_ = self;
     }
 
@@ -217,7 +217,7 @@ protected :
 
 
 private:
-    model::DevicePtr_t device_;
+    pinocchio::DevicePtr_t device_;
     bezier_Ptr curve_;
     core::Configuration_t initial_;
     core::Configuration_t end_;

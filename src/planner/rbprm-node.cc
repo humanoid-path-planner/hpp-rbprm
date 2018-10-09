@@ -22,7 +22,7 @@
 #include "utils/algorithms.h"
 #include <hpp/util/debug.hh>
 #include <hpp/util/timer.hh>
-#include <hpp/model/configuration.hh>
+#include <hpp/pinocchio/configuration.hh>
 #include <hpp/core/collision-validation-report.hh>
 
 namespace hpp{

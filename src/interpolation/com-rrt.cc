@@ -22,7 +22,7 @@
 #include <hpp/core/bi-rrt-planner.hh>
 #include <hpp/core/basic-configuration-shooter.hh>
 #include <hpp/core/discretized-path-validation.hh>
-#include <hpp/model/configuration.hh>
+#include <hpp/pinocchio/configuration.hh>
 #include <hpp/core/problem-solver.hh>
 #ifdef PROFILE
 #include "hpp/rbprm/rbprm-profiler.hh"
@@ -69,14 +69,14 @@ using namespace core;
         stateFrames.push_back(std::make_pair(comPath->timeRange().first, startState));
         stateFrames.push_back(std::make_pair(comPath->timeRange().second, nextState));
         hppDout(notice,"comRRT : comPath length : "<<comPath->length());
-        hppDout(notice,"comRRT : startState : r(["<<model::displayConfig(startState.configuration_)<<"])");
-        hppDout(notice,"comRRT : nextState  : r(["<<model::displayConfig(nextState.configuration_)<<"])");
+        hppDout(notice,"comRRT : startState : r(["<<pinocchio::displayConfig(startState.configuration_)<<"])");
+        hppDout(notice,"comRRT : nextState  : r(["<<pinocchio::displayConfig(nextState.configuration_)<<"])");
 
         if(variations.empty())
         {
             hppDout(notice,"No contact variation, use comRRT.");
             std::vector<std::string> fixed = nextState.fixedContacts(startState);
-            model::DevicePtr_t device = fullbody->device_->clone();
+            pinocchio::DevicePtr_t device = fullbody->device_->clone();
             /*if(keepExtraDof)
             {
                 device->setDimensionExtraConfigSpace(device->extraConfigSpace().dimension()+1);
@@ -96,7 +96,7 @@ using namespace core;
             ConfigurationPtr_t end =  ConfigurationPtr_t(new Configuration_t(nextState.configuration_));
             rootProblem.initConfig(start);
             BiRRTPlannerPtr_t planner = BiRRTPlanner::create(rootProblem);
-            ProblemTargetPtr_t target = problemTarget::GoalConfigurations::create (planner);
+            ProblemTargetPtr_t target = problemTarget::GoalConfigurations::create (&rootProblem);
             rootProblem.target (target);
             rootProblem.addGoalConfig(end);
             hppDout(notice,"Start solve");
@@ -150,8 +150,8 @@ using namespace core;
         Configuration_t refConfig = fullbody->referenceConfig();
         CreatePosturalTaskConstraint<ComRRTHelper,Configuration_t>(helper, refConfig);
         helper.proj_->lastIsOptional(true);
-        helper.proj_->numOptimize(100);
-        helper.proj_->lastAsCost(true);
+        helper.proj_->maxIterations(100);
+        //helper.proj_->lastAsCost(true);
         helper.proj_->errorThreshold(1e-3);
 
         Configuration_t res(helper.fullBodyDevice_->configSize());
@@ -163,10 +163,10 @@ using namespace core;
             CreatePosturalTaskConstraint<ComRRTHelper,ConfigurationPtr_t>(helper, refConfig);
             helper.proj_->lastIsOptional(true);
             helper.proj_->errorThreshold(1e-3);
-            hppDout(notice,"before : "<<model::displayConfig(res));
+            hppDout(notice,"before : "<<pinocchio::displayConfig(res));
             bool opSuccess = helper.proj_->optimize(res);
             hppDout(notice,"optimize successfull : "<<opSuccess);
-            hppDout(notice,"after : "<<model::displayConfig(res));*/
+            hppDout(notice,"after : "<<pinocchio::displayConfig(res));*/
         }
         else
         {
@@ -174,29 +174,29 @@ using namespace core;
         }
         // copy extraDoF from original config :
         hppDout(notice,"projectOnCom end : ");
-        hppDout(notice,"original config : "<<model::displayConfig(model.configuration_));
-        hppDout(notice,"project  config : "<<model::displayConfig(res));
+        hppDout(notice,"original config : "<<pinocchio::displayConfig(model.configuration_));
+        hppDout(notice,"project  config : "<<pinocchio::displayConfig(res));
         res.segment((fullbody->device_->configSize() - fullbody->device_->extraConfigSpace().dimension()),fullbody->device_->extraConfigSpace().dimension()) = model.configuration_.tail(fullbody->device_->extraConfigSpace().dimension());
-        hppDout(notice,"project  config : "<<model::displayConfig(res.head(res.rows()-1)));
+        hppDout(notice,"project  config : "<<pinocchio::displayConfig(res.head(res.rows()-1)));
         return res.head(res.rows()-1);
     }
 
-    /*void generateOneComPath(const model::ConfigurationIn_t & from, const model::ConfigurationIn_t & to,
-                       const model::ConfigurationIn_t & initSpeed, const double& acceleration)
+    /*void generateOneComPath(const pinocchio::ConfigurationIn_t & from, const pinocchio::ConfigurationIn_t & to,
+                       const pinocchio::ConfigurationIn_t & initSpeed, const double& acceleration)
     {
 
     }
 
-    typedef std::vector<model::vector_t,Eigen::aligned_allocator<model::vector_t> > T_Configuration;
-    core::PathPtr_t generateComPath(model::DevicePtr_t device, const T_Configuration& configurations, const std::vector<double>& accelerations,
-                                    const model::value_type dt, const model::ConfigurationIn_t & initSpeed)
+    typedef std::vector<pinocchio::vector_t,Eigen::aligned_allocator<pinocchio::vector_t> > T_Configuration;
+    core::PathPtr_t generateComPath(pinocchio::DevicePtr_t device, const T_Configuration& configurations, const std::vector<double>& accelerations,
+                                    const pinocchio::value_type dt, const pinocchio::ConfigurationIn_t & initSpeed)
     {
         assert(configurations.size() == accelerations.size() +1);
         core::PathVectorPtr_t res = core::PathVector::create(device->configSize(), device->numberDof());
-        model::value_type size_step = 1 /(model::value_type)(positions.size());
-        model::value_type u = 0.;
+        pinocchio::value_type size_step = 1 /(pinocchio::value_type)(positions.size());
+        pinocchio::value_type u = 0.;
         CIT_Configuration pit = positions.begin();
-        model::Configuration_t previous = addRotation(pit, 0., q1, q2, ref), current;
+        pinocchio::Configuration_t previous = addRotation(pit, 0., q1, q2, ref), current;
         ++pit;
         for(;pit != positions.end()-1; ++pit, u+=size_step)
         {

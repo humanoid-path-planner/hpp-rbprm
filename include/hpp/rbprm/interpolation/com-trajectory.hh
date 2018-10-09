@@ -33,7 +33,7 @@ namespace interpolation {
     /// Linear interpolation between two configurations
     ///
     /// Degrees of freedom are interpolated depending on the type of
-    /// \link hpp::model::Joint joint \endlink
+    /// \link hpp::pinocchio::Joint joint \endlink
     /// they parameterize:
     ///   \li linear interpolation for translation joints, bounded rotation
     ///       joints, and translation part of freeflyer joints,
@@ -50,10 +50,10 @@ namespace interpolation {
       /// \param device Robot corresponding to configurations
       /// \param init, end Start and end configurations of the path
       /// \param length Distance between the configurations.
-      static ComTrajectoryPtr_t create (model::vector3_t init,
-                                        model::vector3_t end,
-                                        model::vector3_t initSpeed,
-                                        model::vector3_t acceleration,
+      static ComTrajectoryPtr_t create (pinocchio::vector3_t init,
+                                        pinocchio::vector3_t end,
+                                        pinocchio::vector3_t initSpeed,
+                                        pinocchio::vector3_t acceleration,
                                         core::value_type length)
       {
     ComTrajectory* ptr = new ComTrajectory (init, end, initSpeed, acceleration, length);
@@ -69,7 +69,7 @@ namespace interpolation {
       {
     ComTrajectory* ptr = new ComTrajectory (*path);
     ComTrajectoryPtr_t shPtr (ptr);
-    ptr->initCopy (shPtr);
+    ptr->init (shPtr);
         ptr->checkPath ();
     return shPtr;
       }
@@ -118,10 +118,10 @@ namespace interpolation {
     return os;
       }
       /// Constructor
-      ComTrajectory (model::vector3_t init,
-                     model::vector3_t end,
-                     model::vector3_t initSpeed,
-                     model::vector3_t acceleration,
+      ComTrajectory (pinocchio::vector3_t init,
+                     pinocchio::vector3_t end,
+                     pinocchio::vector3_t initSpeed,
+                     pinocchio::vector3_t acceleration,
                      core::value_type length);
 
       /// Copy constructor
@@ -133,24 +133,18 @@ namespace interpolation {
     weak_ = self;
       }
 
-      void initCopy (ComTrajectoryPtr_t self)
-      {
-    parent_t::initCopy (self);
-    weak_ = self;
-      }
-
       virtual bool impl_compute (core::ConfigurationOut_t result,
                  core::value_type param) const;
 
       virtual core::PathPtr_t copy(const core::ConstraintSetPtr_t&) const {throw;}
 
     public:
-      const model::vector3_t initial_;
-      const model::vector3_t end_;
-      const model::vector3_t initSpeed_;
-      const model::vector3_t half_acceleration_;
-      const model::vector3_t acceleration_;
-      const model::value_type length_;
+      const pinocchio::vector3_t initial_;
+      const pinocchio::vector3_t end_;
+      const pinocchio::vector3_t initSpeed_;
+      const pinocchio::vector3_t half_acceleration_;
+      const pinocchio::vector3_t acceleration_;
+      const pinocchio::value_type length_;
 
     private:
       ComTrajectoryWkPtr_t weak_;
