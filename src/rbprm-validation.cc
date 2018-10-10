@@ -73,7 +73,8 @@ namespace hpp {
                                       const std::map<std::string,
                                       std::vector<pinocchio::CollisionObjectPtr_t> >& affordances,
                                       const core::ObjectVector_t& geometries)
-      : trunkValidation_(tuneFclValidation(robot))
+      : CollisionValidation(robot)
+      , trunkValidation_(tuneFclValidation(robot))
       , boundValidation_(core::JointBoundValidation::create(robot))
       , romValidations_(createRomValidations(robot, affFilters))
       , unusedReport_(new CollisionValidationReport)

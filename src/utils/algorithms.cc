@@ -1,6 +1,8 @@
 #include "utils/algorithms.h"
 #include <hpp/fcl/intersect.h>
 #include <hpp/util/debug.hh>
+#include <hpp/pinocchio/collision-object.hh>
+#include <pinocchio/multibody/geometry.hpp>
 
 namespace geom
 {
@@ -16,15 +18,15 @@ namespace geom
     return normal;
   }
   
-  BVHModelOBConst_Ptr_t GetModel(const fcl::CollisionObjectConstPtr_t object)
+  BVHModelOBConst_Ptr_t GetModel(const hpp::pinocchio::CollisionObjectConstPtr_t object)
   {
     assert(object->collisionGeometry()->getNodeType() == fcl::BV_OBBRSS);
-    const BVHModelOBConst_Ptr_t model = boost::static_pointer_cast<const BVHModelOB>(object->collisionGeometry());
+    const BVHModelOBConst_Ptr_t model = boost::static_pointer_cast<const fcl::BVHModel<fcl::OBBRSS> >(object->fcl()->collisionGeometry());
     assert(model->getModelType() == fcl::BVH_MODEL_TRIANGLES);
     // todo avoid recopy, but if we keep the same ptr the geometry is changed 
     const BVHModelOBConst_Ptr_t modelTransform (new BVHModelOB(*model));
     for(int i = 0 ; i < model->num_vertices ; i++){
-      modelTransform->vertices[i] = object->getTransform().transform(model->vertices[i]);
+      modelTransform->vertices[i] = object->fcl()->getTransform().transform(model->vertices[i]);
     }
     return modelTransform;
   }

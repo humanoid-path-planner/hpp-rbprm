@@ -65,10 +65,8 @@ namespace hpp{
 
       // retrieve parameters from problem :
       try {
-        boost::any value_x = problem.get<boost::any> (std::string("sizeFootX"));
-        boost::any value_y = problem.get<boost::any> (std::string("sizeFootY"));
-        sizeFootX_ = boost::any_cast<double>(value_x)/2.;
-        sizeFootY_ = boost::any_cast<double>(value_y)/2.;
+        sizeFootX_ = problem.getParameter ("sizeFootX").floatValue()/2.;
+        sizeFootY_ = problem.getParameter ("sizeFootY").floatValue()/2.;
         rectangularContact_ = 1;
       } catch (const std::exception& e) {
         hppDout(warning,"Warning : size of foot not definied, use 0 (contact point)");
@@ -77,16 +75,14 @@ namespace hpp{
         rectangularContact_ = 0;
       }
       try {
-        boost::any value = problem.get<boost::any> (std::string("tryJump"));
-        tryJump_ = boost::any_cast<bool>(value);
+        tryJump_ = problem.getParameter ("tryJump").boolValue();
       } catch (const std::exception& e) {
         tryJump_=false;
       }
-      hppDout(notice,"tryJump in random shortcut = "<<tryJump_);
+      hppDout(notice,"tryJump in steering method = "<<tryJump_);
 
       try {
-        boost::any value = problem.get<boost::any> (std::string("friction"));
-        mu_ = boost::any_cast<double>(value);
+        mu_ = problem.getParameter ("friction").floatValue();
         hppDout(notice,"mu define in python : "<<mu_);
       } catch (const std::exception& e) {
         mu_= 0.5;

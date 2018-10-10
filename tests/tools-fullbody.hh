@@ -23,8 +23,8 @@
 #define TOOLSFULLBODY_HH
 
 #include <hpp/rbprm/rbprm-fullbody.hh>
-#include <hpp/model/urdf/util.hh>
 #include <hpp/rbprm/rbprm-state.hh>
+#include <pinocchio/parsers/urdf.hpp>
 
 using namespace hpp;
 using namespace rbprm;
@@ -65,8 +65,8 @@ RbPrmFullBodyPtr_t loadHRP2(){
     const std::string urdfSuffix ("_reduced");
     const std::string srdfSuffix ("");
 
-    model::DevicePtr_t device = model::Device::create (robotName);
-    hpp::model::urdf::loadRobotModel (device,rootJointType, packageName, modelName, urdfSuffix,srdfSuffix);
+    hpp::pinocchio::DevicePtr_t device = hpp::pinocchio::Device::create (robotName);
+    //hpp::pinocchio:: (device,rootJointType, packageName, modelName, urdfSuffix,srdfSuffix);
     device->setDimensionExtraConfigSpace(6);
 
     RbPrmFullBodyPtr_t fullBody = RbPrmFullBody::create(device);
@@ -85,7 +85,7 @@ RbPrmFullBodyPtr_t loadHRP2(){
     fcl::Vec3f rLegNormal(0,0,1);
     double legX = 0.09;
     double legY = 0.05;
-    fullBody->AddLimb(rLegId,rLeg,rfeet,rLegOffset,rLegLimbOffset,rLegNormal,legX,legY,model::ObjectVector_t(),1000,"fixedStep1",0.01,hpp::rbprm::_6_DOF,false,false,std::string(),0.3);
+    fullBody->AddLimb(rLegId,rLeg,rfeet,rLegOffset,rLegLimbOffset,rLegNormal,legX,legY,hpp::core::ObjectStdVector_t(),1000,"fixedStep1",0.01,hpp::rbprm::_6_DOF,false,false,std::string(),0.3);
 
     const std::string lLegId("hrp2_lleg_rom");
     const std::string lLeg("LLEG_JOINT0");
@@ -93,7 +93,7 @@ RbPrmFullBodyPtr_t loadHRP2(){
     fcl::Vec3f lLegOffset(0,0,-0.105);
     fcl::Vec3f lLegLimbOffset(0,0,0.035);
     fcl::Vec3f lLegNormal(0,0,1);
-    fullBody->AddLimb(lLegId,lLeg,lfeet,lLegOffset,lLegLimbOffset,lLegNormal,legX,legY,model::ObjectVector_t(),1000,"fixedStep1",0.01,hpp::rbprm::_6_DOF,false,false,std::string(),0.3);
+    fullBody->AddLimb(lLegId,lLeg,lfeet,lLegOffset,lLegLimbOffset,lLegNormal,legX,legY,hpp::core::ObjectStdVector_t(),1000,"fixedStep1",0.01,hpp::rbprm::_6_DOF,false,false,std::string(),0.3);
 
     return fullBody;
 
@@ -109,10 +109,10 @@ State createState(const RbPrmFullBodyPtr_t& fullBody,core::Configuration_t confi
         rbprm::RbPrmLimbPtr_t limb = fullBody->GetLimbs().at(*cit);
         const std::string& limbName = *cit;
         state.contacts_[limbName] = true;
-        const fcl::Vec3f position = limb->effector_->currentTransformation().getTranslation();
+        const fcl::Vec3f position = limb->effector_->currentTransformation().translation();
         state.contactPositions_[limbName] = position;
-        state.contactNormals_[limbName] = limb->effector_->currentTransformation().getRotation() * limb->normal_;
-        state.contactRotation_[limbName] = limb->effector_->currentTransformation().getRotation();
+        state.contactNormals_[limbName] = limb->effector_->currentTransformation().rotation() * limb->normal_;
+        state.contactRotation_[limbName] = limb->effector_->currentTransformation().rotation();
         state.contactOrder_.push(limbName);
     }
     state.nbContacts = state.contactNormals_.size();

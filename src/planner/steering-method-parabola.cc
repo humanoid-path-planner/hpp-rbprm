@@ -36,7 +36,7 @@ namespace hpp {
 
     SteeringMethodParabola::SteeringMethodParabola
     (const core::ProblemPtr_t& problem):
-      SteeringMethod (problem), problem_ (problem),
+      SteeringMethod (*problem), problem_ (problem),
       device_ (problem-> robot ()),
       distance_ (core::WeighedDistance::create (problem->robot())), weak_ (),
       g_(9.81), V0max_ (1.),
@@ -46,10 +46,8 @@ namespace hpp {
     {
       hppDout(notice,"Constructor steering-method-parabola");
       try {
-        boost::any value_0 = problem_->get<boost::any> (std::string("vMax"));
-        boost::any value_imp = problem_->get<boost::any> (std::string("vMax"));
-        V0max_ = boost::any_cast<double>(value_0);
-        Vimpmax_ = boost::any_cast<double>(value_imp);
+        V0max_ = (double)problem_->getParameter ("vMax").floatValue();
+        Vimpmax_ =V0max_;
       } catch (const std::exception& e) {
         std::cout<<"Warning : no velocity bounds set in problem, use 1.0 as default"<<std::endl;
       }

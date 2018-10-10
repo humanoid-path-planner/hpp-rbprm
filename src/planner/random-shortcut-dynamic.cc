@@ -67,11 +67,9 @@ namespace hpp{
 
       // retrieve parameters from problem :
       try {
-        boost::any value_x = problem.get<boost::any> (std::string("sizeFootX"));
-        boost::any value_y = problem.get<boost::any> (std::string("sizeFootY"));
-        sizeFootX_ = boost::any_cast<double>(value_x)/2.;
-        sizeFootY_ = boost::any_cast<double>(value_y)/2.;
-        rectangularContact_ = 1;
+          sizeFootX_ = problem.getParameter ("sizeFootX").floatValue()/2.;
+          sizeFootY_ = problem.getParameter ("sizeFootY").floatValue()/2.;
+          rectangularContact_ = 1;
       } catch (const std::exception& e) {
         hppDout(warning,"Warning : size of foot not definied, use 0 (contact point)");
         sizeFootX_ =0;
@@ -79,16 +77,14 @@ namespace hpp{
         rectangularContact_ = 0;
       }
       try {
-        boost::any value = problem.get<boost::any> (std::string("tryJump"));
-        tryJump_ = boost::any_cast<bool>(value);
+        tryJump_ = problem.getParameter ("tryJump").boolValue();
       } catch (const std::exception& e) {
         tryJump_=false;
       }
       hppDout(notice,"tryJump in random shortcut = "<<tryJump_);
 
       try {
-        boost::any value = problem.get<boost::any> (std::string("friction"));
-        mu_ = boost::any_cast<double>(value);
+        mu_ = problem.getParameter ("friction").floatValue();
         hppDout(notice,"mu define in python : "<<mu_);
       } catch (const std::exception& e) {
         mu_= 0.5;
@@ -132,7 +128,7 @@ namespace hpp{
       PathVectorPtr_t tmpPath = path;
 
       // Maximal number of iterations without improvements
-      std::size_t n = problem().getParameter<std::size_t>("PathOptimizersNumberOfLoops", 5);
+      std::size_t n = problem().getParameter("PathOptimizersNumberOfLoops").intValue();
       n = 100;
       std::cout<<" number of loops : "<<n<<std::endl;
       std::size_t projectionError = n;

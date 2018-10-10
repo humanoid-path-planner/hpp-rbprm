@@ -21,6 +21,7 @@
 
 # include <hpp/core/collision-validation-report.hh>
 # include <hpp/core/config-validation.hh>
+# include <hpp/core/collision-validation.hh>
 # include <hpp/rbprm/rbprm-rom-validation.hh>
 # include <hpp/rbprm/rbprm-device.hh>
 # include <hpp/rbprm/config.hh>
@@ -39,7 +40,7 @@ namespace hpp {
     /// a Configuration is valid if the trunk robot is collision free while
     /// the Range Of Motion of the is colliding.
     ///
-    class HPP_RBPRM_DLLAPI RbPrmValidation : public core::ConfigValidation
+    class HPP_RBPRM_DLLAPI RbPrmValidation : public core::CollisionValidation
     {
     public:
       static RbPrmValidationPtr_t create (const pinocchio::RbPrmDevicePtr_t& robot,

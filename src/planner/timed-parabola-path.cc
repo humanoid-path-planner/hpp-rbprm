@@ -20,7 +20,6 @@
 #include <hpp/pinocchio/configuration.hh>
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/joint.hh>
-#include <hpp/pinocchio/joint-configuration.hh>
 #include <hpp/core/config-projector.hh>
 #include <hpp/rbprm/planner/timed-parabola-path.hh>
 #include <hpp/core/straight-path.hh>

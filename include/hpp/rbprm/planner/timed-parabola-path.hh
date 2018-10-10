@@ -105,7 +105,7 @@ namespace hpp {
       {
         TimedParabolaPath* ptr = new TimedParabolaPath (*path);
         TimedParabolaPathPtr_t shPtr (ptr);
-        ptr->initCopy (shPtr);
+        ptr->init (shPtr);
         return shPtr;
       }
 
@@ -119,7 +119,7 @@ namespace hpp {
         //TimedParabolaPath* ptr = new TimedParabolaPath (*path, constraints);
         TimedParabolaPath* ptr = new TimedParabolaPath (*path);
         TimedParabolaPathPtr_t shPtr (ptr);
-        ptr->initCopy (shPtr);
+        ptr->init (shPtr);
         return shPtr;
       }
 
@@ -221,12 +221,6 @@ namespace hpp {
       void init (TimedParabolaPathPtr_t self)
       {
         parent_t::init (self);
-        weak_ = self;
-      }
-
-      void initCopy (TimedParabolaPathPtr_t self)
-      {
-        parent_t::initCopy (self);
         weak_ = self;
       }
 

@@ -19,7 +19,6 @@
 # include <hpp/rbprm/dynamic/dynamic-validation.hh>
 # include <hpp/util/debug.hh>
 # include <hpp/rbprm/planner/rbprm-node.hh>
-# include <hpp/model/configuration.hh>
 #include <hpp/util/timer.hh>
 
 namespace hpp {

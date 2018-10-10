@@ -17,8 +17,6 @@
 
 # include <hpp/rbprm/planner/rbprm-steering-kinodynamic.hh>
 # include <hpp/pinocchio/device.hh>>
-# include <hpp/model/joint.hh>
-# include <hpp/model/configuration.hh>
 # include <hpp/core/problem.hh>
 # include <hpp/core/weighed-distance.hh>
 # include <hpp/core/kinodynamic-path.hh>
@@ -36,8 +34,8 @@ namespace hpp{
     using centroidal_dynamics::MatrixXX;
 
     SteeringMethodKinodynamic::SteeringMethodKinodynamic (const core::ProblemPtr_t& problem) :
-      core::steeringMethod::Kinodynamic (problem),
-      sEq_(new centroidal_dynamics::Equilibrium(problem_->robot()->name(), problem_->robot()->mass(),4,centroidal_dynamics::SOLVER_LP_QPOASES,true,10,false)),
+      core::steeringMethod::Kinodynamic (*problem),
+      sEq_(new centroidal_dynamics::Equilibrium(problem_.robot()->name(), problem_.robot()->mass(),4,centroidal_dynamics::SOLVER_LP_QPOASES,true,10,false)),
       totalTimeComputed_(0),totalTimeValidated_(0),dirTotal_(0),dirValid_(0),rejectedPath_(0),device_ (problem->robot ()),lastDirection_(), weak_ ()
     {
     }
@@ -45,7 +43,7 @@ namespace hpp{
     /// Copy constructor
     SteeringMethodKinodynamic::SteeringMethodKinodynamic (const SteeringMethodKinodynamic& other) :
       core::steeringMethod::Kinodynamic (other),
-      sEq_(new centroidal_dynamics::Equilibrium(problem_->robot()->name(), problem_->robot()->mass(),4,centroidal_dynamics::SOLVER_LP_QPOASES,true,10,false)),
+      sEq_(new centroidal_dynamics::Equilibrium(problem_.robot()->name(), problem_.robot()->mass(),4,centroidal_dynamics::SOLVER_LP_QPOASES,true,10,false)),
       totalTimeComputed_(0),totalTimeValidated_(0),dirTotal_(0),dirValid_(0),rejectedPath_(0),device_ (other.device_),lastDirection_(),weak_()
     {
     }
@@ -94,7 +92,7 @@ namespace hpp{
 
 
       assert (path && "Error while casting path shared ptr"); // really usefull ? should never happen
-      core::size_type configSize = problem_->robot()->configSize() - problem_->robot()->extraConfigSpace().dimension ();
+      core::size_type configSize = problem_.robot()->configSize() - problem_.robot()->extraConfigSpace().dimension ();
 
       #if !ignore_acc_bound
       // check if acceleration is valid after each sign change :
@@ -103,7 +101,7 @@ namespace hpp{
       core::vector_t t1 = kinoPath->getT1();
       core::vector_t tv = kinoPath->getTv();
       double t=0;
-      core::ConfigurationPtr_t q(new core::Configuration_t(problem_->robot()->configSize()));
+      core::ConfigurationPtr_t q(new core::Configuration_t(problem_.robot()->configSize()));
       core::vector3_t a;
       bool aValid;
       double maxT = kinoPath->length();
@@ -210,13 +208,13 @@ namespace hpp{
       hppStartBenchmark(INTERMEDIATE_ACCELERATION_CHECKS);
       hppDout(notice,"TotaltimeComputed = "<<totalTimeComputed_);
       assert (path && "Error while casting path shared ptr"); // really usefull ? should never happen
-      core::size_type configSize = problem_->robot()->configSize() - problem_->robot()->extraConfigSpace().dimension ();
+      core::size_type configSize = problem_.robot()->configSize() - problem_.robot()->extraConfigSpace().dimension ();
       // check if acceleration is valid after each sign change :
       core::vector_t t0 = kinoPath->getT0();
       core::vector_t t1 = kinoPath->getT1();
       core::vector_t tv = kinoPath->getTv();
       double t=0;
-      core::ConfigurationPtr_t q(new core::Configuration_t(problem_->robot()->configSize()));
+      core::ConfigurationPtr_t q(new core::Configuration_t(problem_.robot()->configSize()));
       core::vector3_t a;
       bool aValid;
       double minT = 0;
@@ -335,7 +333,7 @@ namespace hpp{
       Vector3 direction;
  /*     Vector3 toP,fromP,dPosition;
       Vector3 toV,fromV,dVelocity;
-      const pinocchio::size_type indexECS =problem_->robot()->configSize() - problem_->robot()->extraConfigSpace().dimension (); // ecs index
+      const pinocchio::size_type indexECS =problem_.robot()->configSize() - problem_.robot()->extraConfigSpace().dimension (); // ecs index
 
       hppDout(notice,"near = "<<pinocchio::displayConfig((*(near->configuration()))));
       hppDout(notice,"target = "<<pinocchio::displayConfig(target));

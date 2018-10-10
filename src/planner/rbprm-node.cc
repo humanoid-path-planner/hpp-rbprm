@@ -45,8 +45,8 @@ Eigen::Quaterniond RbprmNode::getQuaternion(){
 bool centerOfRomIntersection(const core::CollisionValidationReportPtr_t report, geom::Point& pn, geom::Point& center){
 
 
-    core::CollisionObjectPtr_t obj_rom = report->object1;
-    core::CollisionObjectPtr_t obj_env = report->object2;
+    core::CollisionObjectConstPtr_t obj_rom = report->object1;
+    core::CollisionObjectConstPtr_t obj_env = report->object2;
 
     // debug display :
     hppDout(notice,"~~ collision between : "<<obj_rom->name() << " and "<<obj_env->name());
@@ -71,9 +71,9 @@ bool centerOfRomIntersection(const core::CollisionValidationReportPtr_t report, 
 
     // get intersection between the two objects :
     // geom::T_Point vertices1;
-    geom::BVHModelOBConst_Ptr_t model_rom =  geom::GetModel(obj_rom->fcl());
+    geom::BVHModelOBConst_Ptr_t model_rom =  geom::GetModel(obj_rom);
     // geom::T_Point vertices2;
-    geom::BVHModelOBConst_Ptr_t model_env =  geom::GetModel(obj_env->fcl());
+    geom::BVHModelOBConst_Ptr_t model_env =  geom::GetModel(obj_env);
 
     /*      // display intersection for debug
             //hppDout(info,"vertices obj1 : "<<obj1->name()<< " ( "<<model1->num_vertices<<" ) ");
@@ -336,9 +336,8 @@ void RbprmNode::chooseBestContactSurface(ValidationReportPtr_t report,std::map<s
         fcl::Transform3f tRoot;
         tRoot.setTranslation(fcl::Vec3f((*q)[0],(*q)[1],(*q)[2]));
         fcl::Quaternion3f quat((*q)[3],(*q)[4],(*q)[5],(*q)[6]);
-        fcl::Matrix3f rot;
-        quat.toRotation(rot);
-        tRoot.setRotation(rot);
+        //fcl::Matrix3f rot = quat.matrix();
+        tRoot.setRotation(quat.matrix());
         reference = (tRoot*reference).getTranslation();
         geom::Point refPoint(reference);
         hppDout(notice,"Reference after root transform = "<<reference);

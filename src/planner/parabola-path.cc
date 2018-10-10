@@ -20,7 +20,6 @@
 #include <hpp/pinocchio/configuration.hh>
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/joint.hh>
-#include <hpp/pinocchio/joint-configuration.hh>
 #include <hpp/core/config-projector.hh>
 #include <hpp/rbprm/planner/parabola-path.hh>
 #include <hpp/core/straight-path.hh>
@@ -111,14 +110,15 @@ namespace hpp {
       result (2) = coefficients_(0)*x_theta*x_theta + coefficients_(1)*x_theta + coefficients_(2);
 
 
+      pinocchio::interpolate (device_, initial_, end_, u, result);
       /* Quaternions interpolation */
-      const core::JointPtr_t SO3joint = device_->getJointByName ("base_joint_SO3");
+      /*const core::JointPtr_t SO3joint = device_->getJointByName ("base_joint_SO3");
       const std::size_t rank = SO3joint->rankInConfiguration ();
       const core::size_type dimSO3 = SO3joint->configSize ();
       SO3joint->configuration ()->interpolate
           (initial_, end_, u, rank, result);
 
-      /* if robot-trunk has internal DoF (except freeflyer ones) */
+      // if robot-trunk has internal DoF (except freeflyer ones)
       // then linear interpolation on them
       const std::size_t freeflyerDim = 3 + dimSO3;
       const bool hasInternalDof = nbConfig > ecsDim + freeflyerDim;
@@ -126,7 +126,7 @@ namespace hpp {
         for (core::size_type i = freeflyerDim; i<nbConfig-ecsDim; i++) {
           result (i) = (1 - u) * initial_ (i) + u * end_ (i);
         }
-      }
+      }*/
 
       /* Set to zero extra-configs (only on path, not on extremities */
       const std::size_t indexECS = nbConfig - ecsDim;
