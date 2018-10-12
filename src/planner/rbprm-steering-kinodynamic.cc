@@ -33,10 +33,10 @@ namespace hpp{
     using centroidal_dynamics::Vector3;
     using centroidal_dynamics::MatrixXX;
 
-    SteeringMethodKinodynamic::SteeringMethodKinodynamic (const core::ProblemPtr_t& problem) :
-      core::steeringMethod::Kinodynamic (*problem),
+    SteeringMethodKinodynamic::SteeringMethodKinodynamic (const core::Problem& problem) :
+      core::steeringMethod::Kinodynamic (problem),
       sEq_(new centroidal_dynamics::Equilibrium(problem_.robot()->name(), problem_.robot()->mass(),4,centroidal_dynamics::SOLVER_LP_QPOASES,true,10,false)),
-      totalTimeComputed_(0),totalTimeValidated_(0),dirTotal_(0),dirValid_(0),rejectedPath_(0),device_ (problem->robot ()),lastDirection_(), weak_ ()
+      totalTimeComputed_(0),totalTimeValidated_(0),dirTotal_(0),dirValid_(0),rejectedPath_(0),device_ (problem.robot ()),lastDirection_(), weak_ ()
     {
     }
 

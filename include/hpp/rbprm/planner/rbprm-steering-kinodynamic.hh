@@ -59,7 +59,7 @@ namespace hpp {
         return core::PathPtr_t ();
       }
       /// Create an instance
-      static SteeringMethodKinodynamicPtr_t create (const core::ProblemPtr_t& problem)
+      static SteeringMethodKinodynamicPtr_t create (const core::Problem& problem)
       {
         SteeringMethodKinodynamic* ptr = new SteeringMethodKinodynamic (problem);
         SteeringMethodKinodynamicPtr_t shPtr (ptr);
@@ -103,7 +103,7 @@ namespace hpp {
     protected:
 
       /// Constructor
-      SteeringMethodKinodynamic (const core::ProblemPtr_t& problem);
+      SteeringMethodKinodynamic (const core::Problem& problem);
 
       /// Copy constructor
       SteeringMethodKinodynamic (const SteeringMethodKinodynamic& other);
