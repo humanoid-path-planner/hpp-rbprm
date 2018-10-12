@@ -117,10 +117,14 @@ namespace
           * Eigen::AngleAxisd(rot(1), Eigen::Vector3d::UnitY())
           * Eigen::AngleAxisd(rot(2), Eigen::Vector3d::UnitX());
         std::size_t rank = 3;
-        (*config)(rank+0) = qt.x();
+        for(std::size_t i = 0; i <4; ++i)
+        {
+            (*config)(rank+i) = qt.coeffs()(i);
+        }
+        /*(*config)(rank+0) = qt.x();
         (*config)(rank+1) = qt.y();
         (*config)(rank+2) = qt.z();
-        (*config)(rank+3) = qt.w();
+        (*config)(rank+3) = qt.w();*/
     }
 
     /*void SampleRotation(pinocchio::DevicePtr_t so3, ConfigurationPtr_t config, JointVector_t& jv)
