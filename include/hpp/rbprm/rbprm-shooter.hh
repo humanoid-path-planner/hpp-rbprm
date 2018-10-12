@@ -20,6 +20,7 @@
 # include <hpp/rbprm/config.hh>
 # include <hpp/rbprm/rbprm-device.hh>
 # include <hpp/rbprm/rbprm-validation.hh>
+# include <hpp/core/problem-solver.hh>
 # include <hpp/pinocchio/joint.hh>
 //# include <hpp/pinocchio/joint-configuration.hh>
 # include <hpp/core/configuration-shooter.hh>
@@ -36,7 +37,7 @@ namespace hpp {
     HPP_PREDEF_CLASS (RbPrmShooter);
     typedef boost::shared_ptr <RbPrmShooter>
     RbPrmShooterPtr_t;
-		typedef std::map<std::string, std::vector<pinocchio::CollisionObjectPtr_t> > affMap_t;
+    typedef hpp::core::Container <hpp::core::AffordanceObjects_t> affMap_t;
 
 /// \addtogroup configuration_sampling
 /// \{
@@ -62,8 +63,8 @@ namespace hpp {
         /// the reachability condition.
         /// \return a pointer to an instance of RbPrmShooter
         static HPP_RBPRM_DLLAPI RbPrmShooterPtr_t create (const pinocchio::RbPrmDevicePtr_t& robot,
-                                         const core::ObjectVector_t &geometries,
-																				 const affMap_t& affordances,
+                                         const core::ObjectStdVector_t &geometries,
+                                         const affMap_t& affordances,
                                          const std::vector<std::string>& filter = std::vector<std::string>(),
                                          const std::map<std::string, std::vector<std::string> >& affFilters = std::map<std::string, std::vector<std::string> >(),
                                          const std::size_t shootLimit = 10000,
@@ -91,7 +92,7 @@ namespace hpp {
     protected:
     /// Note that translation joints have to be bounded.
     RbPrmShooter (const pinocchio::RbPrmDevicePtr_t& robot,
-                  const core::ObjectVector_t &geometries,
+                  const core::ObjectStdVector_t &geometries,
 									const affMap_t &affordances,
                   const std::vector<std::string>& filter,
                   const std::map<std::string, std::vector<std::string> >& affFilters,
@@ -101,7 +102,7 @@ namespace hpp {
     void init (const RbPrmShooterPtr_t& self);
 
     private:
-        void InitWeightedTriangles (const pinocchio::ObjectVector_t &geometries);
+        void InitWeightedTriangles (const core::ObjectStdVector_t &geometries);
         const T_TriangleNormal& RandomPointIntriangle () const;
         const T_TriangleNormal& WeightedTriangle () const;
 

@@ -24,6 +24,7 @@
 #include <hpp/pinocchio/device.hh>
 #include <hpp/rbprm/rbprm-limb.hh>
 #include <hpp/core/collision-validation.hh>
+#include <hpp/core/problem-solver.hh>
 #include <hpp/rbprm/sampling/heuristic.hh>
 #include <hpp/rbprm/reports.hh>
 #include <hpp/rbprm/interpolation/spline/bezier-path.hh>
@@ -41,8 +42,8 @@ namespace hpp {
     ///
     class RbPrmFullBody;
     typedef boost::shared_ptr <RbPrmFullBody> RbPrmFullBodyPtr_t;
-		typedef std::map<std::string, std::vector<pinocchio::CollisionObjectPtr_t> > affMap_t;
-        typedef std::map<std::string,std::vector<bezier_Ptr> > EffectorTrajectoriesMap_t;
+    typedef hpp::core::Container <hpp::core::AffordanceObjects_t> affMap_t;
+    typedef std::map<std::string,std::vector<bezier_Ptr> > EffectorTrajectoriesMap_t;
 
     class HPP_RBPRM_DLLAPI RbPrmFullBody
     {

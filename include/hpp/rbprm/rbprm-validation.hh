@@ -22,6 +22,7 @@
 # include <hpp/core/collision-validation-report.hh>
 # include <hpp/core/config-validation.hh>
 # include <hpp/core/collision-validation.hh>
+# include <hpp/core/problem-solver.hh>
 # include <hpp/rbprm/rbprm-rom-validation.hh>
 # include <hpp/rbprm/rbprm-device.hh>
 # include <hpp/rbprm/config.hh>
@@ -31,7 +32,8 @@ namespace hpp {
 
     class RbPrmValidation;
     typedef boost::shared_ptr <RbPrmValidation> RbPrmValidationPtr_t;
-    typedef std::map<std::string, RbPrmRomValidationPtr_t> T_RomValidation;
+    typedef std::map<std::string, RbPrmRomValidationPtr_t> T_RomValidation;    
+    typedef hpp::core::Container <hpp::core::AffordanceObjects_t> affMap_t;
 
     /// \addtogroup validation
     /// \{
@@ -47,10 +49,9 @@ namespace hpp {
                                           const std::vector<std::string>& filter = std::vector<std::string>(),
                                           const std::map<std::string, std::vector<std::string> >& affFilters =
 																						std::map<std::string, std::vector<std::string> >(),
-                                                                                    const std::map<std::string, std::vector<pinocchio::CollisionObjectPtr_t> >& affordances =
-                                                                                        std::map<std::string, std::vector<pinocchio::CollisionObjectPtr_t> >(),
-																					const core::ObjectVector_t& geometries =
-																						core::ObjectVector_t());
+                                                                                    const affMap_t & affordances =affMap_t(),
+                                                                                    const core::ObjectStdVector_t& geometries =
+                                                                                        core::ObjectStdVector_t());
 
       /// Compute whether the configuration is valid
       ///
@@ -168,9 +169,8 @@ namespace hpp {
                        const std::vector<std::string>& filter,
                        const std::map<std::string,
 											 	std::vector<std::string> >& affFilters,
-											 const std::map<std::string, 
-                                                std::vector<pinocchio::CollisionObjectPtr_t> >& affordances,
-											 const core::ObjectVector_t& geometries);
+                                             const affMap_t& affordances,
+                                             const core::ObjectStdVector_t& geometries);
 
 											 
     private:

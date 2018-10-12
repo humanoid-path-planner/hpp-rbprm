@@ -23,6 +23,7 @@
 #include <hpp/pinocchio/configuration.hh>
 #include <pinocchio/spatial/se3.hpp>
 #include <hpp/rbprm/sampling/heuristic-tools.hh>
+
 #ifdef PROFILE
     #include "hpp/rbprm/rbprm-profiler.hh"
 #endif
@@ -177,6 +178,9 @@ bool maintain_contacts_stability_rec(hpp::rbprm::RbPrmFullBodyPtr_t fullBody,
     return false;
 }
 
+pinocchio::CollisionObjectPtr_t second( const std::pair<std::string, pinocchio::CollisionObjectPtr_t> &p ) {
+    return p.second;
+}
 
 std::vector<pinocchio::CollisionObjectPtr_t> getAffObjectsForLimb(const std::string& limb,
     const affMap_t& affordances, const std::map<std::string, std::vector<std::string> >& affFilters)
@@ -201,10 +205,10 @@ std::vector<pinocchio::CollisionObjectPtr_t> getAffObjectsForLimb(const std::str
         std::cout << "No affordance filter setting found for limb " << limb
             << ". Has such filter been set?" << std::endl;
         // Use all AFF OBJECTS as default if no filter setting exists
-        for (affMap_t::const_iterator affordanceIt = affordances.begin ();
-            affordanceIt != affordances.end (); ++affordanceIt)
+        for (std::map<std::string, std::vector< std::pair<std::string, pinocchio::CollisionObjectPtr_t> > >::const_iterator affordanceIt = affordances.map.begin ();
+            affordanceIt != affordances.map.end (); ++affordanceIt)
         {
-            std::copy (affordanceIt->second.begin (), affordanceIt->second.end (), std::back_inserter (affs));
+            std::transform (affordanceIt->second.begin (), affordanceIt->second.end (), std::back_inserter (affs), second);
         }
     }
     else
@@ -212,8 +216,8 @@ std::vector<pinocchio::CollisionObjectPtr_t> getAffObjectsForLimb(const std::str
         for (std::vector<std::string>::const_iterator affTypeIt = affTypes.begin ();
             affTypeIt != affTypes.end (); ++affTypeIt)
         {
-            affMap_t::const_iterator affIt = affordances.find(*affTypeIt);
-            std::copy (affIt->second.begin (), affIt->second.end (), std::back_inserter (affs));
+            affMap_t::const_iterator affIt = affordances.map.find(*affTypeIt);
+            std::transform (affIt->second.begin (), affIt->second.end (), std::back_inserter (affs), second);
         }
     }
     if (affs.empty())

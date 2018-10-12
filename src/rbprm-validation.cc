@@ -58,8 +58,8 @@ namespace hpp {
     RbPrmValidationPtr_t RbPrmValidation::create
     (const pinocchio::RbPrmDevicePtr_t& robot, const std::vector<std::string>& filter,
      const std::map<std::string, std::vector<std::string> >& affFilters,
-     const std::map<std::string, std::vector<pinocchio::CollisionObjectPtr_t> >& affordances,
-     const core::ObjectVector_t& geometries)
+     const hpp::rbprm::affMap_t &affordances,
+     const core::ObjectStdVector_t& geometries)
     {
       RbPrmValidation* ptr = new RbPrmValidation (robot, filter, affFilters,
                                                   affordances, geometries);
@@ -70,9 +70,8 @@ namespace hpp {
                                       , const std::vector<std::string>& filter,
                                       const std::map<std::string,
                                       std::vector<std::string> >& affFilters,
-                                      const std::map<std::string,
-                                      std::vector<pinocchio::CollisionObjectPtr_t> >& affordances,
-                                      const core::ObjectVector_t& geometries)
+                                      const hpp::rbprm::affMap_t &affordances,
+                                      const hpp::core::ObjectStdVector_t &geometries)
       : CollisionValidation(robot)
       , trunkValidation_(tuneFclValidation(robot))
       , boundValidation_(core::JointBoundValidation::create(robot))
@@ -88,7 +87,7 @@ namespace hpp {
         }
       }
 
-      for(hpp::core::ObjectVector_t::const_iterator cit = geometries.begin();
+      for(hpp::core::ObjectStdVector_t::const_iterator cit = geometries.begin();
           cit != geometries.end(); ++cit)
       {
         addObstacle(*cit);
@@ -110,8 +109,23 @@ namespace hpp {
             // TODO: Throw error?
             std::runtime_error ("No romValidator object found for filter " + affFilterIt->first + "!");
           }
-          for (unsigned int fIdx = 0; fIdx < affFilterIt->second.size (); fIdx++) {
-            std::map<std::string, std::vector<pinocchio::CollisionObjectPtr_t> >::const_iterator affIt = affordances.find (affFilterIt->second[fIdx]);
+          for (unsigned int fIdx = 0; fIdx < affFilterIt->second.size (); fIdx++)
+          {
+              if (!affordances.has(std::string (affFilterIt->second[fIdx])))
+              {
+                  std::cout << "Filter " << affFilterIt->first << " has invalid affordance filter setting "
+                            << affFilterIt->second[fIdx] << ". Ignoring such filter setting." << std::endl;
+              }
+              else
+              {
+                  const hpp::core::AffordanceObjects_t& affObjs = affordances.get(affFilterIt->second[fIdx]);
+                  for (std::size_t affIdx = 0; affIdx < affObjs.size (); affIdx++)
+                  {
+                      romIt->second->addObstacle(affObjs[affIdx].second);
+                  }
+              }
+
+            /*hpp::core::AffordanceObjects_t::const_iterator affIt = affordances.find (affFilterIt->second[fIdx]);
             if (affIt == affordances.end ()) {
               std::cout << "Filter " << affFilterIt->first << " has invalid affordance filter setting "
                         << affFilterIt->second[fIdx] << ". Ignoring such filter setting." << std::endl;
@@ -119,7 +133,7 @@ namespace hpp {
               for (unsigned int affIdx = 0; affIdx < affIt->second.size (); affIdx++) {
                 romIt->second->addObstacle(affIt->second[affIdx]);
               }
-            }
+            }*/
           }
           if(std::find(filter.begin(), filter.end(), romIt->first) == filter.end()){
             romIt->second->setOptional(true);

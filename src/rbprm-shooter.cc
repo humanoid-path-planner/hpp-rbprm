@@ -206,8 +206,8 @@ namespace
 
 
     RbPrmShooterPtr_t RbPrmShooter::create (const pinocchio::RbPrmDevicePtr_t& robot,
-                                            const ObjectVector_t& geometries,
-																						const affMap_t& affordances,
+                                            const ObjectStdVector_t& geometries,
+                                            const affMap_t& affordances,
                                             const std::vector<std::string>& filter,
                                             const std::map<std::string, std::vector<std::string> >& affFilters,
                                             const std::size_t shootLimit, const std::size_t displacementLimit)
@@ -272,8 +272,8 @@ namespace
 // TODO: outward
 
     RbPrmShooter::RbPrmShooter (const pinocchio::RbPrmDevicePtr_t& robot,
-                              const ObjectVector_t& geometries,
-															const affMap_t& affordances,
+                              const hpp::core::ObjectStdVector_t &geometries,
+                              const affMap_t& affordances,
                               const std::vector<std::string>& filter,
                               const std::map<std::string, std::vector<std::string> >& affFilters,
                               const std::size_t shootLimit,
@@ -285,7 +285,7 @@ namespace
     , validator_(rbprm::RbPrmValidation::create(robot_, filter, affFilters,
                                                 affordances, geometries))
     {
-        for(hpp::core::ObjectVector_t::const_iterator cit = geometries.begin();
+        for(hpp::core::ObjectStdVector_t::const_iterator cit = geometries.begin();
             cit != geometries.end(); ++cit)
         {
             validator_->addObstacle(*cit);
@@ -293,10 +293,10 @@ namespace
         this->InitWeightedTriangles(geometries);
 		}
 
-    void RbPrmShooter::InitWeightedTriangles(const pinocchio::ObjectVector_t& geometries)
+    void RbPrmShooter::InitWeightedTriangles(const core::ObjectStdVector_t& geometries)
     {
         double sum = 0;
-        for(pinocchio::ObjectVector_t::const_iterator objit = geometries.begin();
+        for(core::ObjectStdVector_t::const_iterator objit = geometries.begin();
           objit != geometries.end(); ++objit)
         {
             const  pinocchio::FclConstCollisionObjectPtr_t colObj = (*objit)->fcl();
