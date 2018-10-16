@@ -20,7 +20,7 @@ namespace geom
   
   BVHModelOBConst_Ptr_t GetModel(const hpp::pinocchio::CollisionObjectConstPtr_t object)
   {
-    assert(object->collisionGeometry()->getNodeType() == fcl::BV_OBBRSS);
+    assert(object->fcl()->collisionGeometry()->getNodeType() == fcl::BV_OBBRSS);
     const BVHModelOBConst_Ptr_t model = boost::static_pointer_cast<const fcl::BVHModel<fcl::OBBRSS> >(object->fcl()->collisionGeometry());
     assert(model->getModelType() == fcl::BVH_MODEL_TRIANGLES);
     // todo avoid recopy, but if we keep the same ptr the geometry is changed 

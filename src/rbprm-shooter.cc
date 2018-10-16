@@ -111,20 +111,24 @@ namespace
             return;
         assert (so3.size() == SIZE_EULER);
         Eigen::Vector3d rot;
-        for(int i = 0; i<6;++i)
-            rot [i%2] = so3[i] + (so3[i+1] - so3[i]) * rand ()/RAND_MAX;
+        for(int i = 0; i<6;i+=2)
+        {
+            rot [i/2] = so3[i] + (so3[i+1] - so3[i]) * rand ()/RAND_MAX;
+            //std::cout << "rot i " << rot [i/2] << " i " << i/2 << std::endl;
+        }
+
         Eigen::Quaterniond qt = Eigen::AngleAxisd(rot(0), Eigen::Vector3d::UnitZ())
           * Eigen::AngleAxisd(rot(1), Eigen::Vector3d::UnitY())
           * Eigen::AngleAxisd(rot(2), Eigen::Vector3d::UnitX());
         std::size_t rank = 3;
-        for(std::size_t i = 0; i <4; ++i)
+        /*for(std::size_t i = 0; i <4; ++i)
         {
             (*config)(rank+i) = qt.coeffs()(i);
-        }
-        /*(*config)(rank+0) = qt.x();
+        }*/
+        (*config)(rank+0) = qt.x();
         (*config)(rank+1) = qt.y();
         (*config)(rank+2) = qt.z();
-        (*config)(rank+3) = qt.w();*/
+        (*config)(rank+3) = qt.w();
     }
 
     /*void SampleRotation(pinocchio::DevicePtr_t so3, ConfigurationPtr_t config, JointVector_t& jv)
@@ -169,7 +173,7 @@ namespace
 
     void seRotationtLimits (std::vector<double>& so3Robot, const std::vector<double>& limitszyx)
     {
-        assert(so3Robot.size() == limitszyx.size());
+        assert(SIZE_EULER == limitszyx.size());
         so3Robot = limitszyx;
         /*pinocchio::Joint* previous = so3Robot->rootJoint();
         if(previous == 0)
