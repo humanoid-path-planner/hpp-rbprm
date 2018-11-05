@@ -115,7 +115,7 @@ namespace hpp {
 
     public:
         const pinocchio::JointPtr_t limb_;
-        const pinocchio::JointPtr_t effector_;
+        const pinocchio::Frame effector_;
         const fcl::Matrix3f effectorDefaultRotation_; // effector transform in rest pose
         const fcl::Vec3f offset_; // effector location
         const fcl::Vec3f limbOffset_; // offset of between the limb_ joint position and it's link

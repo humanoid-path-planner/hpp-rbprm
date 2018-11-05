@@ -121,7 +121,7 @@ std::pair<MatrixX3, VectorX> computeAllKinematicsConstraints(const RbPrmFullBody
     size_t currentId = 0;
     for(CIT_Limb lit = fullBody->GetLimbs().begin() ; lit != fullBody->GetLimbs().end() ; ++lit){
         if(lit->second->kinematicConstraints_.first.size()>0){
-            Ab_limb = getInequalitiesAtTransform(lit->second->kinematicConstraints_,lit->second->effector_->currentTransformation());
+            Ab_limb = getInequalitiesAtTransform(lit->second->kinematicConstraints_,lit->second->effector_.currentTransformation());
             A.block(currentId,0,Ab_limb.first.rows(),3) = Ab_limb.first;
             b.segment(currentId,Ab_limb.first.rows()) = Ab_limb.second;
             currentId += Ab_limb.first.rows();
@@ -151,7 +151,7 @@ std::pair<MatrixX3, VectorX> computeKinematicsConstraintsForState(const RbPrmFul
     for(std::map<std::string,bool>::const_iterator cit = state.contacts_.begin();cit!=state.contacts_.end(); ++ cit){
         if(cit->second){ // limb with name cit->first is in contact
             limb = fullBody->GetLimb(cit->first);
-            Ab_limb = getInequalitiesAtTransform(limb->kinematicConstraints_,limb->effector_->currentTransformation());
+            Ab_limb = getInequalitiesAtTransform(limb->kinematicConstraints_,limb->effector_.currentTransformation());
             A.block(currentId,0,Ab_limb.first.rows(),3) = Ab_limb.first;
             b.segment(currentId,Ab_limb.first.rows()) = Ab_limb.second;
             currentId += Ab_limb.first.rows();
@@ -176,7 +176,7 @@ std::pair<MatrixX3, VectorX> computeKinematicsConstraintsForLimb(const RbPrmFull
     }
 
     RbPrmLimbPtr_t limb = fullBody->GetLimb(limbName);
-    return getInequalitiesAtTransform(limb->kinematicConstraints_,limb->effector_->currentTransformation());
+    return getInequalitiesAtTransform(limb->kinematicConstraints_,limb->effector_.currentTransformation());
 }
 
 

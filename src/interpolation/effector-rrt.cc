@@ -78,13 +78,13 @@ using namespace core;
         return true;
     }
 
-    Transform3f getEffectorTransformAt(core::DevicePtr_t device,const JointPtr_t effector,const core::PathPtr_t path,const value_type time){
+    Transform3f getEffectorTransformAt(core::DevicePtr_t device,const pinocchio::Frame& effector,const core::PathPtr_t path,const value_type time){
         Configuration_t result(path->outputSize());
         (*path)(result,time);
         hppDout(notice,"result in getEffectorTransform : "<<pinocchio::displayConfig(result));
         device->currentConfiguration(result);
         device->computeForwardKinematics();
-        Transform3f transform = effector->currentTransformation();
+        Transform3f transform = effector.currentTransformation();
         return transform;
     }
 
@@ -94,23 +94,23 @@ using namespace core;
        return position->operator ()(path->operator ()(time)).vector();
     }
 
-    void getEffectorConfigAt(core::DevicePtr_t device,const JointPtr_t effector,const core::PathPtr_t path,const value_type time,ConfigurationOut_t result ){
+    void getEffectorConfigAt(core::DevicePtr_t device,const pinocchio::Frame& effector,const core::PathPtr_t path,const value_type time,ConfigurationOut_t result ){
         Transform3f transform = getEffectorTransformAt(device,effector,path,time);
         result.head<3>() = transform.translation();
         result.segment<4>(3) = Transform3f::Quaternion_t(transform.rotation()).coeffs();
 
     }
 
-    void getEffectorConfigForConfig(core::DevicePtr_t device,const JointPtr_t effector,const Configuration_t fullBodyConfig,ConfigurationOut_t result ){
+    void getEffectorConfigForConfig(core::DevicePtr_t device,const pinocchio::Frame& effector,const Configuration_t fullBodyConfig,ConfigurationOut_t result ){
         device->currentConfiguration(fullBodyConfig);
         device->computeForwardKinematics();
-        Transform3f transform = effector->currentTransformation();
+        Transform3f transform = effector.currentTransformation();
         result.head<3>() = transform.translation();
         result.segment<4>(3) = Transform3f::Quaternion_t(transform.rotation()).coeffs();
     }
 
     T_Waypoint getWayPoints(pinocchio::DevicePtr_t device, core::PathPtr_t path,
-                         const JointPtr_t effector, const value_type effectorDistance, bool& isLine)
+                         const pinocchio::Frame effector, const value_type effectorDistance, bool& isLine)
     {
         //create evaluation function
         constraints::PositionPtr_t position = createPositionMethod(device,fcl::Vec3f(), effector);
@@ -200,14 +200,14 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
     }
 
 
-    JointPtr_t getEffector(RbPrmFullBodyPtr_t fullbody,
+    pinocchio::Frame getEffector(RbPrmFullBodyPtr_t fullbody,
                            const  State &startState, const State &nextState)
     {
         std::string effectorVar = getEffectorLimb(startState, nextState);
-        return fullbody->device_->getJointByName(fullbody->GetLimbs().at(effectorVar)->effector_->name());
+        return fullbody->device_->getFrameByName(fullbody->GetLimbs().at(effectorVar)->effector_.name());
     }
 
-    exact_cubic_Ptr splineFromEffectorTraj(RbPrmFullBodyPtr_t fullbody, JointPtr_t effector, core::PathPtr_t path,
+    exact_cubic_Ptr splineFromEffectorTraj(RbPrmFullBodyPtr_t fullbody, const pinocchio::Frame effector, core::PathPtr_t path,
                                           const  State &startState, const State &nextState, bool& isLine)
     {
         // estimate length of distance travelled
@@ -506,7 +506,7 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
 
     core::PathPtr_t generateEndEffectorBezier(RbPrmFullBodyPtr_t fullbody, core::ProblemSolverPtr_t problemSolver, const PathPtr_t comPath,
     const State &startState, const State &nextState){
-        JointPtr_t effector =  getEffector(fullbody, startState, nextState);
+        pinocchio::Frame effector =  getEffector(fullbody, startState, nextState);
         std::string effectorName = getEffectorLimb(startState,nextState);
         EndEffectorPath endEffPath(fullbody->device_,effector,comPath);
         // create a 'device' object for the end effector (freeflyer 6D). Needed for the path and the orientation constraint
@@ -630,7 +630,7 @@ buildPredefinedPath(endEffectorDevice,nextNormal,endConfig,posOffset,-velOffset,
             allRefEffector.push_back(refEffectorTakeoff->getBezier());
             allRefEffector.push_back(refEffectorMidBezier);
             allRefEffector.push_back(refEffectorLanding->getBezier());
-            bool successMap = fullbody->addEffectorTrajectory(pathId,effector->name(),allRefEffector);
+            bool successMap = fullbody->addEffectorTrajectory(pathId,effector.name(),allRefEffector);
             hppDout(notice,"success add bezier to map = "<<successMap);
             }
             // FIXME : using pathId = problemSolver->paths().size()  this way assume that the path returned by this method will be the next added in problemSolver. As there is no access to problemSolver here, it's the best workaround.
@@ -638,7 +638,7 @@ buildPredefinedPath(endEffectorDevice,nextNormal,endConfig,posOffset,-velOffset,
         }
     }
 
-    std::vector<core::PathVectorPtr_t> fitBeziersToPath(RbPrmFullBodyPtr_t fullbody,JointPtr_t effector, const double comPathLength,const PathPtr_t fullBodyComPath, const State &startState, const State &nextState){
+    std::vector<core::PathVectorPtr_t> fitBeziersToPath(RbPrmFullBodyPtr_t fullbody, const pinocchio::Frame &effector, const double comPathLength, const PathPtr_t fullBodyComPath, const State &startState, const State &nextState){
         core::PathVectorPtr_t fullBodyPathVector = core::PathVector::create(fullBodyComPath->outputSize(), fullBodyComPath->outputDerivativeSize());
         fullBodyPathVector->appendPath(fullBodyComPath);
         std::string effectorName = getEffectorLimb(startState,nextState);
@@ -801,7 +801,7 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
         core::segments_t intervals;
         intervals.push_back(interval);
         core::PathPtr_t reducedComPath = core::SubchainPath::create(fullBodyComPath,intervals);
-        JointPtr_t effector =  getEffector(fullbody, startState, nextState);
+        const pinocchio::Frame effector =  getEffector(fullbody, startState, nextState);
         DevicePtr_t endEffectorDevice = createFreeFlyerDevice();
 
         std::vector<PathVectorPtr_t> listPathBezier = fitBeziersToPath(fullbody,effector,comPath->length(),fullBodyComPath,startState,nextState);
@@ -871,7 +871,7 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
             allRefEffector.push_back(takeoffPath->getBezier());
             allRefEffector.push_back(midPath->getBezier());
             allRefEffector.push_back(landingPath->getBezier());
-            bool successMap = fullbody->addEffectorTrajectory(pathId,effector->name(),allRefEffector);
+            bool successMap = fullbody->addEffectorTrajectory(pathId,effector.name(),allRefEffector);
             hppDout(notice,"success = "<<successMap);
             }
             // FIXME : using pathId = problemSolver->paths().size()  this way assume that the path returned by this method will be the next added in problemSolver. As there is no access to problemSolver here, it's the best workaround.
@@ -936,8 +936,8 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
             for(std::vector<pinocchio::JointPtr_t>::const_iterator cit = constrainedJointPos_.begin();
                 cit != constrainedJointPos_.end(); ++cit)
             {
-                hppDout(notice,"Constrained joint pose : "<<(*cit)->name());
-                Create6DEffectorConstraint<EffectorRRTHelper, core::PathPtr_t  >(helper, refFullbody_, *cit);
+                hppDout(notice,"Constrained joint pose : "<<(*cit)->name());                
+                Create6DEffectorConstraint<EffectorRRTHelper, core::PathPtr_t  >(helper, refFullbody_, helper.fullBodyDevice_->getFrameByName((*cit)->name()));
             }
         }
         if(endEffectorDevice_ && false){ // TEST disable orientation constraint for test

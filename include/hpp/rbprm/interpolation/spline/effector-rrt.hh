@@ -116,7 +116,7 @@ namespace interpolation {
      * @param nextState
      * @return
      */
-    std::vector<core::PathVectorPtr_t> fitBeziersToPath(RbPrmFullBodyPtr_t fullbody,JointPtr_t effector, const double comPathLength,const PathPtr_t fullBodyComPath, const State &startState, const State &nextState);
+    std::vector<core::PathVectorPtr_t> fitBeziersToPath(RbPrmFullBodyPtr_t fullbody,const pinocchio::Frame& effector, const double comPathLength,const PathPtr_t fullBodyComPath, const State &startState, const State &nextState);
 
     typedef spline::exact_cubic<double, double, 3, true, Eigen::Matrix<value_type, 3, 1> > exact_cubic_t;
     typedef spline::spline_deriv_constraint<double, double, 3, true, Eigen::Matrix<value_type, 3, 1> > spline_deriv_constraint_t;
@@ -125,7 +125,7 @@ namespace interpolation {
 
     struct SetEffectorRRTConstraints
     {
-        SetEffectorRRTConstraints(const core::PathPtr_t refCom, const core::PathPtr_t refEff, const core::PathPtr_t refFullbody, const pinocchio::JointPtr_t  effector, const pinocchio::DevicePtr_t endEffectorDevice,
+        SetEffectorRRTConstraints(const core::PathPtr_t refCom, const core::PathPtr_t refEff, const core::PathPtr_t refFullbody, const pinocchio::Frame  effector, const pinocchio::DevicePtr_t endEffectorDevice,
                                   const std::vector<pinocchio::JointPtr_t >& constrainedJointPos,const std::vector<pinocchio::JointPtr_t >& constrainedLockedJoints):
             refCom_(refCom), refFullbody_(refFullbody), refEff_ (refEff), effector_(effector),endEffectorDevice_(endEffectorDevice),
             constrainedJointPos_(constrainedJointPos), constrainedLockedJoints_(constrainedLockedJoints) {}
@@ -134,7 +134,7 @@ namespace interpolation {
         const core::PathPtr_t   refCom_;
         const core::PathPtr_t   refFullbody_;
         const core::PathPtr_t   refEff_;
-        const pinocchio::JointPtr_t effector_;
+        const pinocchio::Frame effector_;
         const pinocchio::DevicePtr_t endEffectorDevice_;
         const std::vector<pinocchio::JointPtr_t > constrainedJointPos_;
         const std::vector<pinocchio::JointPtr_t > constrainedLockedJoints_;
@@ -143,7 +143,7 @@ namespace interpolation {
 
     struct EndEffectorPath
     {
-        EndEffectorPath(const DevicePtr_t device,const JointPtr_t effector,const PathPtr_t path,const fcl::Vec3f& offset = fcl::Vec3f(0,0,0)):
+        EndEffectorPath(const DevicePtr_t device,const pinocchio::Frame& effector,const PathPtr_t path,const fcl::Vec3f& offset = fcl::Vec3f(0,0,0)):
             device_(device),effector_(effector),fullBodyPath_(path),positionConstraint_(createPositionMethod(device,fcl::Vec3f(), effector)),offset_(offset),length_(path->length())
         {}
         vector_t operator()(double t) const;
@@ -152,7 +152,7 @@ namespace interpolation {
             offset_ = offset;}
 
         const core::DevicePtr_t device_;
-        const JointPtr_t effector_;
+        const pinocchio::Frame effector_;
         const core::PathPtr_t fullBodyPath_;
         constraints::PositionPtr_t positionConstraint_;
         fcl::Vec3f offset_;

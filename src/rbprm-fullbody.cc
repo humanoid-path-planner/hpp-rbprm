@@ -71,16 +71,24 @@ namespace hpp {
         if(nonContactingLimb)
           limbs=nonContactingLimbs_;
         else
-          limbs=limbs_;
-
+          limbs=limbs_;        
+        pinocchio::JointPtr_t effectorJoint (new pinocchio::Joint(limb->effector_.joint()));
+        hpp::tools::addLimbCollisionRec<hpp::core::CollisionValidation>
+                (limb->limb_, effectorJoint, collisionObjects,(*limbcollisionValidation_.get()), disableEffectorCollision);
+        if(limbs.empty())
+        {
+            hpp::tools::addLimbCollisionRec<hpp::core::CollisionValidation>
+                (device_->rootJoint(), effectorJoint, collisionObjects,(*collisionValidation_.get()), disableEffectorCollision);
+        }
         // adding collision validation
-        for(hpp::core::ObjectStdVector_t::const_iterator cit = collisionObjects.begin();
+        /*for(hpp::core::ObjectStdVector_t::const_iterator cit = collisionObjects.begin();
             cit != collisionObjects.end(); ++cit)
         {
             if(limbs.empty())
             {
                 collisionValidation_->addObstacle(*cit);
             }
+            /*std::cout << "adding obstacle to limb validation " <<(*cit)->name() << std::endl;
             limbcollisionValidation_->addObstacle(*cit);
             //remove effector collision
             if(disableEffectorCollision)
@@ -88,12 +96,12 @@ namespace hpp {
                 hpp::tools::RemoveEffectorCollision<hpp::core::CollisionValidation>((*collisionValidation_.get()), limb->effector_, *cit);
                 hpp::tools::RemoveEffectorCollision<hpp::core::CollisionValidation>((*limbcollisionValidation_.get()), limb->effector_, *cit);
             }
-        }
+        }*/
         if(nonContactingLimb)
           nonContactingLimbs_.insert(std::make_pair(id, limb));
         else
           limbs_.insert(std::make_pair(id, limb));
-        tools::RemoveNonLimbCollisionRec<core::CollisionValidation>(device_->rootJoint(),name,collisionObjects,*limbcollisionValidation_.get());
+        //tools::RemoveNonLimbCollisionRec<core::CollisionValidation>(device_->rootJoint(),name,collisionObjects,*limbcollisionValidation_.get());
         hpp::core::RelativeMotion::matrix_type m = hpp::core::RelativeMotion::matrix(device_);
         limbcollisionValidation_->filterCollisionPairs(m);
         collisionValidation_->filterCollisionPairs(m);
@@ -255,7 +263,7 @@ namespace hpp {
         if (limbs_.empty())
             hppDout(warning,"No limbs found when setting reference configuration.");
         for(CIT_Limb lit = limbs_.begin() ; lit != limbs_.end() ; ++lit){
-            hpp::pinocchio::Transform3f tf = lit->second->effector_->currentTransformation();
+            hpp::pinocchio::Transform3f tf = lit->second->effector_.currentTransformation();
             tJoint_world = fcl::Transform3f(tf.rotation(),tf.translation());
             hppDout(notice,"tJoint of "<<lit->first<<" : "<<tJoint_world);
             tJoint_robot = tRoot.inverseTimes(tJoint_world);

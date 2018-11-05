@@ -98,7 +98,7 @@ namespace
         if(limb->disableEndEffectorCollision_)
         {
             hpp::tools::RemoveEffectorCollision<core::Problem>(problem,
-                                                               problem.robot()->getJointByName(limb->effector_->name()),
+                                                               problem.robot()->getJointByName(limb->effector_.name()),
                                                                problem.collisionObstacles());
         }
     }
@@ -115,7 +115,7 @@ namespace
             if(limb->disableEndEffectorCollision_)
             {
                 hpp::tools::RemoveEffectorCollision<core::Problem>(problem,
-                                                                   problem.robot()->getJointByName(limb->effector_->name()),
+                                                                   problem.robot()->getJointByName(limb->effector_.name()),
                                                                    problem.collisionObstacles());
             }
         }

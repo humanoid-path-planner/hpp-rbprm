@@ -58,24 +58,26 @@ namespace hpp {
         weakPtr_ = weakPtr;
     }
 
-    pinocchio::JointPtr_t GetEffector(const pinocchio::JointPtr_t limb, const std::string name ="")
-    {
+    pinocchio::Frame GetEffector(const pinocchio::JointPtr_t limb, const std::string name ="")
+    {        
+        if (name != "")
+            return limb->robot()->getFrameByName(name);
         pinocchio::JointPtr_t current = limb;
         while(current->numberChildJoints() !=0)
         {
             //assert(current->numberChildJoints() ==1);
             current = current->childJoint(0);
-            if(current->name() == name) break;
         }
-        return current;
+        return limb->robot()->getFrameByName(current->name());
     }
 
-    fcl::Matrix3f GetEffectorTransform(const pinocchio::JointPtr_t effector)
+    fcl::Matrix3f GetEffectorTransform(const pinocchio::Frame& effector)
     {
-        pinocchio::Configuration_t save = effector->robot()->currentConfiguration ();
-        effector->robot()->currentConfiguration (effector->robot()->neutralConfiguration());
-        const pinocchio::matrix3_t& rot (effector->currentTransformation().rotation());
-        effector->robot()->currentConfiguration (save);
+        pinocchio::Frame ef(effector);
+        pinocchio::Configuration_t save = ef.robot()->currentConfiguration ();
+        ef.robot()->currentConfiguration (ef.robot()->neutralConfiguration());
+        const pinocchio::matrix3_t& rot (ef.currentTransformation().rotation());
+        ef.robot()->currentConfiguration (save);
         return rot.transpose();
     }
 
@@ -91,7 +93,7 @@ namespace hpp {
         // retrieve transform of each effector joint
         device->currentConfiguration(referenceConfig);
         device->computeForwardKinematics();
-        tJoint_world = GetEffector(limb, effectorName)->currentTransformation();
+        tJoint_world = GetEffector(limb, effectorName).currentTransformation();
         hppDout(notice,"tJoint of "<<limb->name()<<" : "<<tJoint_world);
         //tJoint_robot = tRoot.inverseTimes(tJoint_world);
         tJoint_robot = tRoot.inverse()*tJoint_world;
@@ -115,7 +117,7 @@ namespace hpp {
         , y_(y)
         , contactType_(contactType)
         , evaluate_(evaluate)
-        , sampleContainer_(limb, effector_->name(), nbSamples, offset,limbOffset, resolution)
+        , sampleContainer_(limb, effector_.name(), nbSamples, offset,limbOffset, resolution)
         , disableEndEffectorCollision_(disableEndEffectorCollision)
         , grasps_(grasps)
         , effectorReferencePosition_(computeEffectorReferencePosition(limb,effectorName))
@@ -132,7 +134,7 @@ namespace hpp {
     bool saveLimbInfoAndDatabase(const hpp::rbprm::RbPrmLimbPtr_t limb, std::ofstream& fp)
     {
         fp << limb->limb_->name() << std::endl;
-        fp << limb->effector_->name() << std::endl;
+        fp << limb->effector_.name() << std::endl;
         tools::io::writeRotMatrixFCL(limb->effectorDefaultRotation_, fp); fp << std::endl;
         tools::io::writeVecFCL(limb->offset_, fp); fp << std::endl;
         tools::io::writeVecFCL(limb->normal_, fp); fp << std::endl;
@@ -155,6 +157,13 @@ namespace hpp {
             return device->getJointByName(name);
         }
 
+        hpp::pinocchio::Frame extractFrame(const hpp::pinocchio::DevicePtr_t device, std::ifstream& myfile)
+        {
+            std::string name;
+            getline(myfile, name);
+            return device->getFrameByName(name);
+        }
+
         std::ostream& operator << (std::ostream& out, hpp::rbprm::ContactType ctype)
         {
             unsigned u = ctype;
@@ -169,7 +178,7 @@ namespace hpp {
                         const bool loadValues, const hpp::rbprm::sampling::heuristic evaluate,
                         bool disableEndEffectorCollision, bool grasps)
       : limb_(extractJoint(device,fileStream))
-      , effector_(extractJoint(device,fileStream))
+      , effector_(extractFrame(device,fileStream))
       , effectorDefaultRotation_(tools::io::readRotMatrixFCL(fileStream))
       , offset_(readVecFCL(fileStream))
       , normal_(readVecFCL(fileStream))
@@ -180,7 +189,7 @@ namespace hpp {
       , sampleContainer_(fileStream, loadValues)
       , disableEndEffectorCollision_(disableEndEffectorCollision)
       , grasps_(grasps)
-      , effectorReferencePosition_(computeEffectorReferencePosition(limb_,effector_->name()))
+      , effectorReferencePosition_(computeEffectorReferencePosition(limb_,effector_.name()))
       , kinematicConstraints_(reachability::loadConstraintsFromObj("package://hpp-rbprm-corba/com_inequalities/"+limb_->name()+"_com_constraints.obj",0.3))
     {
       // NOTHING

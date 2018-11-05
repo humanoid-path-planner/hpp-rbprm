@@ -35,14 +35,15 @@ namespace hpp {
           pinocchio::Transform3f position;
           position.translation(state.contactPositions_.at(*cit));
           //const fcl::Matrix3f& rotation = state.contactRotation_.at(*cit);
-          JointPtr_t effectorJoint = device->getJointByName(limb->effector_->name());
+          pinocchio::Frame effectorFrame = device->getFrameByName(limb->effector_.name());
+          pinocchio::JointPtr_t effectorJoint (new pinocchio::Joint(effectorFrame.joint()));
           projector->add(core::NumericalConstraint::create (
                                   constraints::Position::create("",device,
-                                                                effectorJoint, pinocchio::Transform3f(), position)));
+                                                                effectorJoint, pinocchio::Transform3f(), effectorFrame.currentTransformation() * position)));
           if(limb->contactType_ == hpp::rbprm::_6_DOF)
           {
               pinocchio::Transform3f rotation;
-              rotation.rotation(state.contactRotation_.at(*cit));
+              rotation.rotation(effectorFrame.currentTransformation().rotation() * state.contactRotation_.at(*cit));
               projector->add(core::NumericalConstraint::create (constraints::Orientation::create("", device,
                                                                                 effectorJoint,
                                                                                 rotation,

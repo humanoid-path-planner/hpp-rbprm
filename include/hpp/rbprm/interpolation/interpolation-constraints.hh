@@ -42,13 +42,13 @@ namespace interpolation {
     //void CreateComConstraint(Helper_T& helper, const Reference& ref, const fcl::Vec3f& initTarget=fcl::Vec3f());
 
     template<class Helper_T, typename Reference>
-    void CreateEffectorConstraint(Helper_T& helper, const Reference& ref,  const JointPtr_t effectorJoint, const fcl::Vec3f& initTarget=fcl::Vec3f());
+    void CreateEffectorConstraint(Helper_T& helper, const Reference& ref,  const pinocchio::Frame effectorJoint, const fcl::Vec3f& initTarget=fcl::Vec3f());
 
     template<class Helper_T, typename Reference>
-    void Create6DEffectorConstraint(Helper_T& helper, const Reference& ref,  const JointPtr_t effectorJoint, const fcl::Transform3f& initTarget=fcl::Transform3f());
+    void Create6DEffectorConstraint(Helper_T& helper, const Reference& ref,  const pinocchio::Frame effectorJoint, const fcl::Transform3f& initTarget=fcl::Transform3f());
 
     template<class Helper_T, typename Reference>
-    void CreateOrientationConstraint(Helper_T& helper, const Reference &ref,  const JointPtr_t effector, const pinocchio::DevicePtr_t endEffectorDevice, const fcl::Transform3f& initTarget=fcl::Transform3f());
+    void CreateOrientationConstraint(Helper_T& helper, const Reference &ref,  const pinocchio::Frame effector, const pinocchio::DevicePtr_t endEffectorDevice, const fcl::Transform3f& initTarget=fcl::Transform3f());
 
     // Implementation
 
@@ -175,41 +175,44 @@ namespace interpolation {
       //proj->updateRightHandSide();
     }
 
-    inline constraints::PositionPtr_t createPositionMethod(pinocchio::DevicePtr_t device, const fcl::Vec3f& initTarget, JointPtr_t effector)
+    inline constraints::PositionPtr_t createPositionMethod(pinocchio::DevicePtr_t device, const fcl::Vec3f& initTarget, const pinocchio::Frame effectorFrame)
     {
         //std::vector<bool> mask; mask.push_back(false); mask.push_back(false); mask.push_back(true);
         std::vector<bool> mask; mask.push_back(true); mask.push_back(true); mask.push_back(true);
         pinocchio::Transform3f localFrame, globalFrame;
         globalFrame.translation(initTarget);
+        pinocchio::JointPtr_t effectorJoint (new pinocchio::Joint(effectorFrame.joint()));
         return constraints::Position::create("",device,
-                                             effector,
+                                             effectorJoint,
                                              localFrame,
-                                             globalFrame,
+                                             effectorFrame.currentTransformation() * globalFrame,
                                              mask);
     }
 
-    inline constraints::OrientationPtr_t createOrientationMethod(pinocchio::DevicePtr_t device, const fcl::Transform3f& initTarget, JointPtr_t effector)
+    inline constraints::OrientationPtr_t createOrientationMethod(pinocchio::DevicePtr_t device, const fcl::Transform3f& initTarget, const pinocchio::Frame effectorFrame)
     {
         //std::vector<bool> mask; mask.push_back(false); mask.push_back(false); mask.push_back(true);
         std::vector<bool> mask; mask.push_back(true); mask.push_back(true); mask.push_back(true);
+        pinocchio::JointPtr_t effectorJoint (new pinocchio::Joint(effectorFrame.joint()));
         pinocchio::Transform3f rotation;
-        rotation.rotation(initTarget.getRotation());
+        rotation.rotation(effectorFrame.currentTransformation().rotation()*initTarget.getRotation());
         return constraints::Orientation::create("", device,
-                                                    effector,
+                                                    effectorJoint,
                                                     rotation,
                                                     mask);
     }
 
 
     template<class Helper_T, typename Reference>
-    void CreateEffectorConstraint(Helper_T& helper, const Reference &ref,  const JointPtr_t effectorJoint, const fcl::Vec3f& initTarget)
+    void CreateEffectorConstraint(Helper_T& helper, const Reference &ref,  const pinocchio::Frame effectorFr, const fcl::Vec3f& initTarget)
     {
         pinocchio::DevicePtr_t device = helper.rootProblem_.robot();
         ComparisonTypes_t comps; comps.push_back(constraints::Equality);
         core::ConfigProjectorPtr_t& proj = helper.proj_;
-        JointPtr_t effector = device->getJointByName(effectorJoint->name());
+
+        pinocchio::Frame effectorFrame = device->getFrameByName(effectorFr.name());
         NumericalConstraintPtr_t effEq = core::NumericalConstraint::create (
-                                    createPositionMethod(device,initTarget, effector), comps);
+                                    createPositionMethod(device,initTarget, effectorFrame), comps);
         effEq->nonConstRightHandSide()[0] = initTarget[2];
         proj->add(effEq);
         proj->rightHandSide(effEq->nonConstRightHandSide());
@@ -242,13 +245,13 @@ namespace interpolation {
 
 
     template<class Helper_T, typename Reference>
-    void CreateOrientationConstraint(Helper_T& helper, const Reference &ref,  const JointPtr_t effectorJoint,const pinocchio::DevicePtr_t endEffectorDevice, const fcl::Transform3f& initTarget){
+    void CreateOrientationConstraint(Helper_T& helper, const Reference &ref,  const pinocchio::Frame effectorFr,const pinocchio::DevicePtr_t endEffectorDevice, const fcl::Transform3f& initTarget){
         pinocchio::DevicePtr_t device = helper.rootProblem_.robot();
         ComparisonTypes_t equals; equals.push_back(constraints::Equality);
         core::ConfigProjectorPtr_t& proj = helper.proj_;
-        JointPtr_t effector = device->getJointByName(effectorJoint->name());
-        constraints::OrientationPtr_t orCons = createOrientationMethod(device,initTarget, effector);
-        constraints::OrientationPtr_t orConsRef = createOrientationMethod(endEffectorDevice,initTarget, endEffectorDevice->rootJoint()->childJoint(0)); // same orientation constraint but for a freeflyer device that represent the end effector (same dim as the ref path)
+        pinocchio::Frame effectorFrame = device->getFrameByName(effectorFr.name());
+        constraints::OrientationPtr_t orCons = createOrientationMethod(device,initTarget, effectorFrame);
+        constraints::OrientationPtr_t orConsRef = createOrientationMethod(endEffectorDevice,initTarget, endEffectorDevice->getFrameByName(endEffectorDevice->rootJoint()->childJoint(0)->name())); // same orientation constraint but for a freeflyer device that represent the end effector (same dim as the ref path)
         NumericalConstraintPtr_t effEq = core::NumericalConstraint::create (orCons, equals);
         proj->add(effEq);
         //proj->updateRightHandSide();
@@ -272,7 +275,7 @@ namespace interpolation {
         }
         ComparisonTypes_t equals; equals.push_back(constraints::Equality);
         core::ConfigProjectorPtr_t& proj = helper.proj_;
-        JointPtr_t effector = device->getJointByName(effectorJoint->name());
+        pinocchio::Frame effector = device->getFrameByName(effectorJoint->name());
         constraints::OrientationPtr_t orCons = createOrientationMethod(device,initTarget, effector);
         NumericalConstraintPtr_t effEq = core::NumericalConstraint::create (orCons, equals);
         proj->add(effEq);

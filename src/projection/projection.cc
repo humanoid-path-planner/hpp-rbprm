@@ -63,7 +63,8 @@ void CreateContactConstraints(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const hpp
         const std::string& effector = *cit;
         RbPrmLimbPtr_t limb = fullBody->GetLimbs().at(effector);
         const fcl::Vec3f& ppos  = currentState.contactPositions_.at(effector);
-        JointPtr_t effectorJoint = device->getJointByName(limb->effector_->name());
+        pinocchio::Frame effectorFrame = device->getFrameByName(limb->effector_.name());
+        pinocchio::JointPtr_t effectorJoint (new pinocchio::Joint(effectorFrame.joint()));
 
         std::vector<bool> mask; mask.push_back(true); mask.push_back(true); mask.push_back(true);
         pinocchio::Transform3f localFrame, globalFrame;
@@ -71,7 +72,7 @@ void CreateContactConstraints(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const hpp
         proj->add(core::NumericalConstraint::create( constraints::Position::create("",device,
                                              effectorJoint,
                                              localFrame,
-                                             globalFrame,
+                                             effectorFrame.currentTransformation() * globalFrame,
                                              mask)));
 
         /*proj->add(core::NumericalConstraint::create (
@@ -81,7 +82,7 @@ void CreateContactConstraints(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const hpp
         {
 
             pinocchio::Transform3f rotation;
-            rotation.rotation(currentState.contactRotation_.at(effector));
+            rotation.rotation(effectorFrame.currentTransformation().rotation() * currentState.contactRotation_.at(effector));
             proj->add(core::NumericalConstraint::create ( constraints::Orientation::create("", device,
                                                                                            effectorJoint,
                                                                                            rotation,
@@ -328,19 +329,25 @@ ProjectionReport projectEffector(hpp::core::ConfigProjectorPtr_t proj, const hpp
     rep.success_ = false;
     rep.result_ = current;
     // Add constraints to resolve Ik
+
+
+    pinocchio::Frame effectorFrame = body->device_->getFrameByName(limb->effector_.name());
+    pinocchio::JointPtr_t effectorJoint (new pinocchio::Joint(effectorFrame.joint()));
     Transform3f localFrame, globalFrame;
     globalFrame.translation(positionTarget);
     proj->add(core::NumericalConstraint::create (constraints::Position::create("",body->device_,
-                                                                               limb->effector_,
+                                                                               effectorJoint,
                                                                                localFrame,
-                                                                               globalFrame,
+                                                                               effectorFrame.currentTransformation()*globalFrame,
                                                                                setTranslationConstraints())));
 
     if(limb->contactType_ == hpp::rbprm::_6_DOF)
     {
-        Transform3f rotation; rotation.rotation(rotationTarget);
+        Transform3f rotation;
+        //rotation.rotation(rotationTarget);
+        rotation.rotation(effectorFrame.currentTransformation().rotation() * rotationTarget);
         proj->add(core::NumericalConstraint::create (constraints::Orientation::create("",body->device_,
-                                                                                      limb->effector_,
+                                                                                      effectorJoint,
                                                                                       rotation,
                                                                                       rotationFilter)));
     }
@@ -370,8 +377,8 @@ ProjectionReport projectEffector(hpp::core::ConfigProjectorPtr_t proj, const hpp
         body->device_->computeForwardKinematics();
         State tmp (current);
         tmp.contacts_[limbId] = true;
-        tmp.contactPositions_[limbId] = limb->effector_->currentTransformation().translation();
-        tmp.contactRotation_[limbId] = limb->effector_->currentTransformation().rotation();
+        tmp.contactPositions_[limbId] = limb->effector_.currentTransformation().translation();
+        tmp.contactRotation_[limbId] = limb->effector_.currentTransformation().rotation();
         tmp.contactNormals_[limbId] = normal;
         tmp.contactOrder_.push(limbId);
         tmp.configuration_ = configuration;
@@ -402,10 +409,10 @@ fcl::Transform3f computeProjectionMatrix(const hpp::rbprm::RbPrmFullBodyPtr_t& b
     body->device_->currentConfiguration(configuration);
     body->device_->computeForwardKinematics();
     // the normal is given by the normal of the contacted object
-    const fcl::Vec3f z = limb->effector_->currentTransformation().rotation() * limb->normal_;
+    const fcl::Vec3f z = limb->effector_.currentTransformation().rotation() * limb->normal_;
     const fcl::Matrix3f alignRotation = tools::GetRotationMatrix(z,normal);
     hppDout(notice,"alignRotation : \n"<<alignRotation);
-    const fcl::Matrix3f rotation = alignRotation * limb->effector_->currentTransformation().rotation();
+    const fcl::Matrix3f rotation = alignRotation * limb->effector_.currentTransformation().rotation();
     hppDout(notice,"rotation : \n"<<rotation);
     fcl::Vec3f posOffset = position - rotation * limb->offset_;
     posOffset = posOffset + normal * epsilon;

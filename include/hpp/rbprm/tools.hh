@@ -136,6 +136,20 @@ namespace hpp {
       }
   }
 
+  template<typename T>
+  void addLimbCollisionRec(pinocchio::JointPtr_t joint, pinocchio::JointPtr_t effector,
+                           const core::ObjectStdVector_t &collisionObjects,
+                           T& collisionValidation, const bool disableEffectorCollision)
+  {
+      if(disableEffectorCollision && joint->name() == effector->name())
+          return;
+      for(core::ObjectStdVector_t::const_iterator cit = collisionObjects.begin();
+          cit != collisionObjects.end(); ++cit)
+          collisionValidation.addObstacleToJoint(*cit,joint,false);
+      for(std::size_t i=0; i<joint->numberChildJoints(); ++i)
+          addLimbCollisionRec<T>(joint->childJoint(i),effector, collisionObjects, collisionValidation,disableEffectorCollision);
+  }
+
 
   template<typename T>
   void RemoveNonLimbCollisionRec(const pinocchio::JointPtr_t joint, const std::string& limbname,
@@ -148,12 +162,16 @@ namespace hpp {
       {
           try
           {
-              collisionValidation.removeObstacleFromJoint(joint, *cit);
+              if(joint->linkedBody ())
+              {
+                  std::cout << "remiove obstacle: " << limbname << " "<< joint->name() << " " << (*cit)->name() << std::endl;
+                  collisionValidation.removeObstacleFromJoint(joint, *cit);
+              }
           }
           catch(const std::runtime_error& e)
           {
               std::cout << "WARNING: "<< e.what() << std::endl;
-              return;
+              //return;
           }
       }
       for(std::size_t i=0; i<joint->numberChildJoints(); ++i)

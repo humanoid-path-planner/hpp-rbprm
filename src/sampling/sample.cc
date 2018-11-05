@@ -27,18 +27,18 @@ using namespace hpp::rbprm;
 using namespace hpp::rbprm::sampling;
 
 
-std::size_t ComputeLength(const pinocchio::JointPtr_t limb, const pinocchio::JointPtr_t effector)
+std::size_t ComputeLength(const pinocchio::JointPtr_t limb, const pinocchio::Frame effector)
 {
     std::size_t start = limb->rankInConfiguration();
-    std::size_t end = effector->rankInConfiguration()
-            + effector->configSize(); //neutralConfiguration().rows();
+    std::size_t end = effector.joint().rankInConfiguration()
+            + effector.joint().configSize(); //neutralConfiguration().rows();
     return end - start;
 }
 
 
-fcl::Vec3f ComputeEffectorPosition(const pinocchio::JointPtr_t limb, const pinocchio::JointPtr_t effector, const fcl::Vec3f& offset)
+fcl::Vec3f ComputeEffectorPosition(const pinocchio::JointPtr_t limb, const pinocchio::Frame effector, const fcl::Vec3f& offset)
 {
-    const hpp::pinocchio::Transform3f& tf =effector->currentTransformation();
+    const hpp::pinocchio::Transform3f& tf =effector.currentTransformation();
     const fcl::Transform3f transform (tf.rotation(),tf.translation());
     const hpp::pinocchio::Transform3f& tfParent = limb->parentJoint()->currentTransformation();
     fcl::Transform3f parentT = fcl::inverse(fcl::Transform3f(tfParent.rotation(), tfParent.translation()));
@@ -54,7 +54,7 @@ fcl::Vec3f ComputeEffectorPosition(const pinocchio::JointPtr_t limb, const pinoc
  * @param offset
  * @return
  */
-fcl::Vec3f ComputeEffectorPositionInLimbFrame(const pinocchio::JointPtr_t limb, const pinocchio::JointPtr_t effector, const fcl::Vec3f& offset,const fcl::Vec3f&  limbOffset)
+fcl::Vec3f ComputeEffectorPositionInLimbFrame(const pinocchio::JointPtr_t limb, const pinocchio::Frame effector, const fcl::Vec3f& offset,const fcl::Vec3f&  limbOffset)
 {
     // we want to use the orientation expressed in the world frame, but with the origin in the limb's root :
     //hppDout(notice,"offset = "<<offset);
@@ -63,7 +63,7 @@ fcl::Vec3f ComputeEffectorPositionInLimbFrame(const pinocchio::JointPtr_t limb, 
     const fcl::Transform3f transformLimb(transformLimbPin.rotation(),transformLimbPin.translation());
     fcl::Transform3f transformOffset;
     transformOffset.setTranslation(limbOffset);
-    fcl::Vec3f effTr = effector->currentTransformation().translation() + offset;
+    fcl::Vec3f effTr = effector.currentTransformation().translation() + offset;
     fcl::Vec3f limbTr = (transformLimb*transformOffset).getTranslation();
    /* hppDout(notice,"effTr = "<<effTr);
     hppDout(notice,"limbTr = "<<limbTr);
@@ -71,9 +71,9 @@ fcl::Vec3f ComputeEffectorPositionInLimbFrame(const pinocchio::JointPtr_t limb, 
     return (effTr-limbTr);
 }
 
-Eigen::MatrixXd Jacobian(const pinocchio::JointPtr_t limb, const pinocchio::JointPtr_t effector)
+Eigen::MatrixXd Jacobian(const pinocchio::JointPtr_t limb, const pinocchio::Frame effector)
 {
-    return effector->jacobian().block(0,limb->rankInVelocity(),6, effector->rankInVelocity() - limb->rankInVelocity() + effector->numberDof());
+    return effector.jacobian().block(0,limb->rankInVelocity(),6, effector.joint().rankInVelocity() - limb->rankInVelocity() + effector.joint().numberDof());
 }
 
 
@@ -83,7 +83,7 @@ double Manipulability(const Eigen::MatrixXd& product)
     return det > 0 ? sqrt(det) : 0;
 }
 
-Sample::Sample(const pinocchio::JointPtr_t limb, const pinocchio::JointPtr_t effector, const fcl::Vec3f& offset,const fcl::Vec3f& limbOffset, std::size_t id)
+Sample::Sample(const pinocchio::JointPtr_t limb, const pinocchio::Frame effector, const fcl::Vec3f& offset,const fcl::Vec3f& limbOffset, std::size_t id)
     : startRank_(limb->rankInConfiguration())
     , length_ (ComputeLength(limb, effector))
     , configuration_ (limb->robot()->currentConfiguration().segment(startRank_, length_))
@@ -113,7 +113,7 @@ Sample::Sample(const std::size_t id, const std::size_t length, const std::size_t
     // NOTHING
 }
 
-Sample::Sample(const pinocchio::JointPtr_t limb, const pinocchio::JointPtr_t effector, pinocchio::ConfigurationIn_t configuration,  const fcl::Vec3f& offset,const fcl::Vec3f& limbOffset, std::size_t id)
+Sample::Sample(const pinocchio::JointPtr_t limb, const pinocchio::Frame effector, pinocchio::ConfigurationIn_t configuration,  const fcl::Vec3f& offset,const fcl::Vec3f& limbOffset, std::size_t id)
     : startRank_(limb->rankInConfiguration())
     , length_ (ComputeLength(limb, effector))
     , configuration_ (configuration)
@@ -154,7 +154,7 @@ hpp::rbprm::sampling::SampleVector_t hpp::rbprm::sampling::GenerateSamples(const
     pinocchio::DevicePtr_t device (model->robot()->clone());
     Configuration_t config = device->currentConfiguration();
     JointPtr_t clone = device->getJointByName(model->name());
-    JointPtr_t effectorClone = device->getJointByName(effector);
+    Frame effectorClone = device->getFrameByName(effector);
     std::size_t startRank_(model->rankInConfiguration());
     std::size_t length_ (ComputeLength(model, effectorClone));
     Configuration_t configRef(model->robot()->neutralConfiguration());

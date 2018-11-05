@@ -50,7 +50,7 @@ namespace hpp {
         /// \param effector joint to be considered as the effector of the limb
         /// \param offset location of the contact point of the effector, relatively to the effector joint
         /// \param id optional identifier for the sample
-        Sample(const pinocchio::JointPtr_t limb, const pinocchio::JointPtr_t effector, const fcl::Vec3f& offset = fcl::Vec3f(0,0,0),const fcl::Vec3f& limbOffset = fcl::Vec3f(0,0,0),  const std::size_t id =0);
+        Sample(const pinocchio::JointPtr_t limb, const pinocchio::Frame effector, const fcl::Vec3f& offset = fcl::Vec3f(0,0,0),const fcl::Vec3f& limbOffset = fcl::Vec3f(0,0,0),  const std::size_t id =0);
 
 
         Sample(const std::size_t id, const std::size_t length, const std::size_t startRank, const double staticValue,
@@ -63,7 +63,7 @@ namespace hpp {
         /// \param effector joint to be considered as the effector of the limb
         /// \param offset location of the contact point of the effector, relatively to the effector joint
         /// \param id optional identifier for the sample
-        Sample(const pinocchio::JointPtr_t limb, const pinocchio::JointPtr_t effector, pinocchio::ConfigurationIn_t configuration, const fcl::Vec3f& offset = fcl::Vec3f(0,0,0),const fcl::Vec3f& limbOffset = fcl::Vec3f(0,0,0), const std::size_t id =0);
+        Sample(const pinocchio::JointPtr_t limb, const pinocchio::Frame effector, pinocchio::ConfigurationIn_t configuration, const fcl::Vec3f& offset = fcl::Vec3f(0,0,0),const fcl::Vec3f& limbOffset = fcl::Vec3f(0,0,0), const std::size_t id =0);
         Sample(const Sample &clone);
        ~Sample(){}
 

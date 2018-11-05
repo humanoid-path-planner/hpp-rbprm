@@ -84,6 +84,7 @@ bool push_if_new(T_State& states, const State currentState)
 }
 
 void reverse(std::queue<std::string> &queue){
+    assert(!queue.empty());
     std::string temp(queue.front());
     queue.pop();
     if(!queue.empty())
@@ -360,7 +361,7 @@ ProjectionReport maintain_contacts(ContactGenHelper &contactGenHelper)
     ProjectionReport rep;
     Q_State& candidates = contactGenHelper.candidates_;
     hppDout(notice,"Get candidates");
-    if(candidates.empty()){
+    if(candidates.empty() && !contactGenHelper.workingState_.contacts_.empty()){
         hppDout(notice,"candidate list empty, gen combinatorial : ");
         candidates = maintain_contacts_combinatorial(contactGenHelper.workingState_,contactGenHelper.maxContactBreaks_);
     }
@@ -391,7 +392,11 @@ ProjectionReport maintain_contacts(ContactGenHelper &contactGenHelper)
             hppDout(notice,"maintain contact collision for config : r(["<<pinocchio::displayConfig(rep.result_.configuration_)<<"])");
             hppDout(notice,"valide  : "<<rep.success_);
             if(!rep.success_)
+            {
+              valRep->print( std::cout) ;
+              std::cout << std::endl;
               hppDout(notice,"report = "<<*valRep);
+            }
         }
         if(rep.success_){
             if(contactGenHelper.quasiStatic_ && contactGenHelper.testReachability_){
