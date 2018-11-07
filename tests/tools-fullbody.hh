@@ -109,10 +109,10 @@ State createState(const RbPrmFullBodyPtr_t& fullBody,core::Configuration_t confi
         rbprm::RbPrmLimbPtr_t limb = fullBody->GetLimbs().at(*cit);
         const std::string& limbName = *cit;
         state.contacts_[limbName] = true;
-        const fcl::Vec3f position = limb->effector_->currentTransformation().translation();
+        const fcl::Vec3f position = limb->effector_.currentTransformation().translation();
         state.contactPositions_[limbName] = position;
-        state.contactNormals_[limbName] = limb->effector_->currentTransformation().rotation() * limb->normal_;
-        state.contactRotation_[limbName] = limb->effector_->currentTransformation().rotation();
+        state.contactNormals_[limbName] = limb->effector_.currentTransformation().rotation() * limb->normal_;
+        state.contactRotation_[limbName] = limb->effector_.currentTransformation().rotation();
         state.contactOrder_.push(limbName);
     }
     state.nbContacts = state.contactNormals_.size();

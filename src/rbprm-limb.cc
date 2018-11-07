@@ -84,8 +84,8 @@ namespace hpp {
     fcl::Vec3f computeEffectorReferencePosition(const pinocchio::JointPtr_t& limb, const std::string& effectorName){
         core::DevicePtr_t device = limb->robot();
         core::Configuration_t referenceConfig = device->neutralConfiguration();
-        pinocchio::Transform3f tRoot;
-        pinocchio::Transform3f tJoint_world,tJoint_robot;
+        pinocchio::Transform3f tRoot(1);
+        pinocchio::Transform3f tJoint_world(1),tJoint_robot(1);
         tRoot.translation(fcl::Vec3f(referenceConfig.head<3>()));
         //fcl::Quaternion3f quatRoot(referenceConfig[3],referenceConfig[4],referenceConfig[5],referenceConfig[6]);
         tRoot.rotation(Eigen::Quaterniond(referenceConfig.segment<4>(3)).matrix());

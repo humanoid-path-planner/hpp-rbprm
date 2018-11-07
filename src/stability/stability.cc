@@ -61,9 +61,9 @@ namespace stability{
         {
             //create rotation matrix from normal
             const fcl::Vec3f& normal = state.contactNormals_.at(name);
-            const fcl::Vec3f z_current = limb->effector_->currentTransformation().rotation() * limb->normal_;
+            const fcl::Vec3f z_current = limb->effector_.currentTransformation().rotation() * limb->normal_;
             const fcl::Matrix3f alignRotation = tools::GetRotationMatrix(z_current,normal);
-            const fcl::Matrix3f rotation = alignRotation * limb->effector_->currentTransformation().rotation();
+            const fcl::Matrix3f rotation = alignRotation * limb->effector_.currentTransformation().rotation();
             const fcl::Vec3f offset = rotation * limb->offset_;
             Eigen::Vector3d z,x,y;
             for(int i =0; i<3; ++i) z[i] = normal[i];
@@ -110,9 +110,9 @@ namespace stability{
         const fcl::Vec3f& position = state.contactPositions_.at(name);
         //create rotation matrix from normal
         const fcl::Vec3f& normal = state.contactNormals_.at(name);
-        const fcl::Vec3f z_current = limb->effector_->currentTransformation().rotation() * limb->normal_;
+        const fcl::Vec3f z_current = limb->effector_.currentTransformation().rotation() * limb->normal_;
         const fcl::Matrix3f alignRotation = tools::GetRotationMatrix(z_current,normal);
-        const fcl::Matrix3f rotation = alignRotation * limb->effector_->currentTransformation().rotation();
+        const fcl::Matrix3f rotation = alignRotation * limb->effector_.currentTransformation().rotation();
         const fcl::Vec3f offset = rotation * limb->offset_;
         p = position + offset;
     }

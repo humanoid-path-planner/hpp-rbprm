@@ -29,6 +29,8 @@
 # include <hpp/constraints/symbolic-function.hh>
 # include <hpp/constraints/configuration-constraint.hh>
 # include <hpp/pinocchio/configuration.hh>
+# include <hpp/pinocchio/frame.hh>
+# include <pinocchio/multibody/frame.hpp>
 namespace hpp {
 namespace rbprm {
 namespace interpolation {
@@ -180,12 +182,13 @@ namespace interpolation {
         //std::vector<bool> mask; mask.push_back(false); mask.push_back(false); mask.push_back(true);
         std::vector<bool> mask; mask.push_back(true); mask.push_back(true); mask.push_back(true);
         pinocchio::Transform3f localFrame, globalFrame;
+        localFrame = localFrame.Identity(); globalFrame = globalFrame.Identity();
         globalFrame.translation(initTarget);
         pinocchio::JointPtr_t effectorJoint (new pinocchio::Joint(effectorFrame.joint()));
         return constraints::Position::create("",device,
                                              effectorJoint,
-                                             localFrame,
-                                             effectorFrame.currentTransformation() * globalFrame,
+                                             effectorFrame.positionInParentFrame() * localFrame,
+                                             globalFrame,
                                              mask);
     }
 
@@ -194,8 +197,8 @@ namespace interpolation {
         //std::vector<bool> mask; mask.push_back(false); mask.push_back(false); mask.push_back(true);
         std::vector<bool> mask; mask.push_back(true); mask.push_back(true); mask.push_back(true);
         pinocchio::JointPtr_t effectorJoint (new pinocchio::Joint(effectorFrame.joint()));
-        pinocchio::Transform3f rotation;
-        rotation.rotation(effectorFrame.currentTransformation().rotation()*initTarget.getRotation());
+        pinocchio::Transform3f rotation(1);
+        rotation.rotation(effectorFrame.positionInParentFrame().rotation()*initTarget.getRotation());
         return constraints::Orientation::create("", device,
                                                     effectorJoint,
                                                     rotation,
@@ -263,7 +266,7 @@ namespace interpolation {
 
 
     template<class Helper_T, typename Reference>
-    void Create6DEffectorConstraint(Helper_T& helper, const Reference &ref,  const JointPtr_t effectorJoint, const fcl::Transform3f& initTarget)
+    void Create6DEffectorConstraint(Helper_T& helper, const Reference &ref,  const pinocchio::Frame effectorJoint, const fcl::Transform3f& initTarget)
     {
         //CreateEffectorConstraint(helper, ref, effectorJoint, initTarget.getTranslation());
         pinocchio::DevicePtr_t device = helper.rootProblem_.robot();
@@ -275,7 +278,7 @@ namespace interpolation {
         }
         ComparisonTypes_t equals; equals.push_back(constraints::Equality);
         core::ConfigProjectorPtr_t& proj = helper.proj_;
-        pinocchio::Frame effector = device->getFrameByName(effectorJoint->name());
+        pinocchio::Frame effector = device->getFrameByName(effectorJoint.name());
         constraints::OrientationPtr_t orCons = createOrientationMethod(device,initTarget, effector);
         NumericalConstraintPtr_t effEq = core::NumericalConstraint::create (orCons, equals);
         proj->add(effEq);

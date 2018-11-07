@@ -63,16 +63,16 @@ void CreateContactConstraints(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const hpp
         const std::string& effector = *cit;
         RbPrmLimbPtr_t limb = fullBody->GetLimbs().at(effector);
         const fcl::Vec3f& ppos  = currentState.contactPositions_.at(effector);
-        pinocchio::Frame effectorFrame = device->getFrameByName(limb->effector_.name());
+        const pinocchio::Frame effectorFrame = device->getFrameByName(limb->effector_.name());
         pinocchio::JointPtr_t effectorJoint (new pinocchio::Joint(effectorFrame.joint()));
 
         std::vector<bool> mask; mask.push_back(true); mask.push_back(true); mask.push_back(true);
-        pinocchio::Transform3f localFrame, globalFrame;
+        pinocchio::Transform3f localFrame(1), globalFrame(1);
         globalFrame.translation(ppos);
         proj->add(core::NumericalConstraint::create( constraints::Position::create("",device,
                                              effectorJoint,
-                                             localFrame,
-                                             effectorFrame.currentTransformation() * globalFrame,
+                                             effectorFrame.pinocchio().placement * localFrame,
+                                             globalFrame,
                                              mask)));
 
         /*proj->add(core::NumericalConstraint::create (
@@ -81,8 +81,8 @@ void CreateContactConstraints(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const hpp
         if(limb->contactType_ == hpp::rbprm::_6_DOF)
         {
 
-            pinocchio::Transform3f rotation;
-            rotation.rotation(effectorFrame.currentTransformation().rotation() * currentState.contactRotation_.at(effector));
+            pinocchio::Transform3f rotation(1);
+            rotation.rotation(currentState.contactRotation_.at(effector) * effectorFrame.pinocchio().placement.rotation().transpose() );
             proj->add(core::NumericalConstraint::create ( constraints::Orientation::create("", device,
                                                                                            effectorJoint,
                                                                                            rotation,
@@ -99,11 +99,11 @@ void CreateContactConstraints(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const hpp
 
 void CreateRootPosConstraint(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const fcl::Vec3f& target, core::ConfigProjectorPtr_t proj)
 {
-    pinocchio::Transform3f position;
+    pinocchio::Transform3f position(1);
     position.translation(target);
     proj->add(core::NumericalConstraint::create (
                             constraints::Position::create("",fullBody->device_,
-                                                          fullBody->device_->rootJoint(),pinocchio::Transform3f(), position)));
+                                                          fullBody->device_->rootJoint(),pinocchio::Transform3f(1), position)));
 }
 
 typedef constraints::PointCom PointCom;
@@ -490,7 +490,7 @@ ProjectionReport projectToComPosition(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, c
     ProjectionReport res;
     core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(fullBody->device_,"proj", 1e-4, 1000);
     CreateContactConstraints(fullBody, currentState, proj);
-    CreateComPosConstraint(fullBody, target, proj);
+    //CreateComPosConstraint(fullBody, target, proj); TODO DEBUG
    /* CreatePosturalTaskConstraint(fullBody,proj);
     proj->lastIsOptional(true);
     proj->numOptimize(500);
@@ -498,7 +498,9 @@ ProjectionReport projectToComPosition(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, c
     proj->errorThreshold(1e-3);*/
 
     pinocchio::Configuration_t configuration = currentState.configuration_;
-    res.success_ = proj->apply(configuration);
+    res.success_ = proj->apply(configuration);    
+    std::cout << "proj " << proj << std::endl; //  TODO DEBUG
+    std::cout << "diff1 " << (currentState.configuration_ - configuration).norm() << std::endl; //  TODO DEBUG
     res.result_ = currentState;
     res.result_.configuration_ = configuration;
     return res;

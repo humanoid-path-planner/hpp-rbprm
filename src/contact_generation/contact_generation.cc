@@ -695,8 +695,8 @@ ProjectionReport gen_contacts(ContactGenHelper &contactGenHelper)
             params.tfWorldRoot_.setTranslation(fcl::Vec3f(cState.first.configuration_[0],cState.first.configuration_[1],cState.first.configuration_[2]));
             params.tfWorldRoot_.setQuatRotation(fcl::Quaternion3f(cState.first.configuration_[3],cState.first.configuration_[4],cState.first.configuration_[5],cState.first.configuration_[6]));
 
-            if(cit+1 == cState.second.end())
-                contactGenHelper.checkStabilityGenerate_ = checkStability;
+            /*if(cit+1 == cState.second.end()) // DEBUG STABILITY
+                contactGenHelper.checkStabilityGenerate_ = checkStability;*/
             rep = generate_contact(contactGenHelper,*cit, params);
             if(rep.success_)
             {

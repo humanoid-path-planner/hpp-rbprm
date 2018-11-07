@@ -228,7 +228,7 @@ namespace
         pinocchio::Configuration_t conf(device->currentConfiguration());
         double distance = 1; //std::numeric_limits<double>::max();
         sampling::Load(sample,conf);
-        distanceRec(conf, limb->effector_->name(), limb->limb_, distance);
+        distanceRec(conf, limb->effector_.name(), limb->limb_, distance);
         distance = 1 - exp(-5*distance);
         return distance;
     }
@@ -242,7 +242,7 @@ namespace
 
       double distance = 0;
       Configuration_t diff(device->numberDof());
-      Configuration_t weight = Configuration_t::Zero(limb->effector_->rankInVelocity() - limb->limb_->rankInVelocity()+1);
+      Configuration_t weight = Configuration_t::Zero(limb->effector_.joint().rankInVelocity() - limb->limb_->rankInVelocity()+1);
 
       // compute default weight vector : (TODO add an API to set custom weight vector)
       // FIXME : lot of assumptions are made here, but they are true for the most common robots used
@@ -265,7 +265,7 @@ namespace
       hppDout(notice,"limb     id vel= "<<limb->limb_->rankInVelocity());
       hppDout(notice,"limb     id pos= "<<limb->limb_->rankInConfiguration());
 */
-      for (size_t i = limb->limb_->rankInVelocity() ; i <= limb->effector_->rankInVelocity() ; ++i){
+      for (size_t i = limb->limb_->rankInVelocity() ; i <= limb->effector_.joint().rankInVelocity() ; ++i){
           pinocchio::vector_t jointJacobian= device->getJointAtVelocityRank(i)->jacobian().block<6,1>(0,i).transpose();
           //hppDout(notice,"Jacobian of joint "<<device->getJointAtVelocityRank(i)->name()<<" at id = "<<i);
           //hppDout(notice,"joint column : \n"<<jointJacobian);
@@ -285,7 +285,7 @@ namespace
       // the difference vector depend on the index in the velocity vector, not in the configuration
       // we only sum for the index of the current limb
      // hppDout(notice,"ref config rank: "<<cit->second->limb_->rankInVelocity()<<" ; "<<cit->second->effector_->rankInVelocity());
-      for (size_t i = limb->limb_->rankInVelocity() ; i <= limb->effector_->rankInVelocity() ; ++i){
+      for (size_t i = limb->limb_->rankInVelocity() ; i <= limb->effector_.joint().rankInVelocity() ; ++i){
         distance += (diff[i]*diff[i])*weight[i-limb->limb_->rankInVelocity()];
       }
       // This is an heuristic and not a cost, a null distance is the best result
