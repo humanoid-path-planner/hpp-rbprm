@@ -113,7 +113,7 @@ namespace hpp{
         castedPath = boost::dynamic_pointer_cast<KinodynamicPath>(element);
         if(castedPath){
           resultPaths[i] = castedPath;
-          orientedPaths[i] = core::KinodynamicOrientedPath::createCopy(castedPath);
+          orientedPaths[i] = core::KinodynamicOrientedPath::create(castedPath);
           if(orientedPaths[i]){
             orientedValid[i] = rbprmPathValidation_->validate(orientedPaths[i], false, unusedValidPart, unusedReport);
           }
