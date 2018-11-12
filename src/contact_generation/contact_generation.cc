@@ -359,17 +359,17 @@ ProjectionReport maintain_contacts(ContactGenHelper &contactGenHelper)
 {
     hppDout(notice,"Begin maintain contact");
     ProjectionReport rep;
-    Q_State& candidates = contactGenHelper.candidates_;
     hppDout(notice,"Get candidates");
-    if(candidates.empty() && !contactGenHelper.workingState_.contacts_.empty()){
+    if(contactGenHelper.candidates_.empty() && !contactGenHelper.workingState_.contacts_.empty()){
         hppDout(notice,"candidate list empty, gen combinatorial : ");
-        candidates = maintain_contacts_combinatorial(contactGenHelper.workingState_,contactGenHelper.maxContactBreaks_);
+        contactGenHelper.candidates_ = maintain_contacts_combinatorial(contactGenHelper.workingState_,contactGenHelper.maxContactBreaks_);
     }
-    else{
+    else if (!contactGenHelper.candidates_.empty()){
         hppDout(notice,"candidate list already generated, take the next one.");
-        candidates.pop(); // first candidate already treated.
+        contactGenHelper.candidates_.pop(); // first candidate already treated.
         }
     hppDout(notice,"candidates OK");
+    Q_State& candidates = contactGenHelper.candidates_;
     while(!candidates.empty() && !rep.success_)
     {
         //retrieve latest state

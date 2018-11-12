@@ -69,7 +69,6 @@ void CreateContactConstraints(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const hpp
         std::vector<bool> mask; mask.push_back(true); mask.push_back(true); mask.push_back(true);
         pinocchio::Transform3f localFrame(1), globalFrame(1);
         globalFrame.translation(ppos);
-        std::cout << " adding constraint named " << effector << std::endl;
         proj->add(core::NumericalConstraint::create( constraints::Position::create(effector,device,
                                              effectorJoint,
                                              effectorFrame.pinocchio().placement * localFrame,
@@ -332,21 +331,20 @@ ProjectionReport projectEffector(hpp::core::ConfigProjectorPtr_t proj, const hpp
     // Add constraints to resolve Ik
 
 
-    pinocchio::Frame effectorFrame = body->device_->getFrameByName(limb->effector_.name());
+    const pinocchio::Frame effectorFrame = body->device_->getFrameByName(limb->effector_.name());
     pinocchio::JointPtr_t effectorJoint (new pinocchio::Joint(effectorFrame.joint()));
-    Transform3f localFrame, globalFrame;
+    Transform3f localFrame(1), globalFrame(1);
     globalFrame.translation(positionTarget);
     proj->add(core::NumericalConstraint::create (constraints::Position::create("",body->device_,
                                                                                effectorJoint,
-                                                                               localFrame,
-                                                                               effectorFrame.currentTransformation()*globalFrame,
+                                                                               effectorFrame.pinocchio().placement * localFrame,
+                                                                               globalFrame,
                                                                                setTranslationConstraints())));
-
     if(limb->contactType_ == hpp::rbprm::_6_DOF)
     {
-        Transform3f rotation;
+        Transform3f rotation(1);
         //rotation.rotation(rotationTarget);
-        rotation.rotation(effectorFrame.currentTransformation().rotation() * rotationTarget);
+        rotation.rotation(rotationTarget * effectorFrame.pinocchio().placement.rotation().transpose());
         proj->add(core::NumericalConstraint::create (constraints::Orientation::create("",body->device_,
                                                                                       effectorJoint,
                                                                                       rotation,
@@ -399,7 +397,6 @@ ProjectionReport projectEffector(hpp::core::ConfigProjectorPtr_t proj, const hpp
         watch.stop("ik");
         #endif
         hppDout(notice,"unable to apply contact constraints");
-
     }
     return rep;
 }

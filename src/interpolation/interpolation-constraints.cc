@@ -32,18 +32,18 @@ namespace hpp {
       {
           RbPrmLimbPtr_t limb = fullBody->GetLimbs().at(*cit);
           //const fcl::Vec3f& ppos  = state.contactPositions_.at(*cit);
-          pinocchio::Transform3f position(1);
-          position.translation(state.contactPositions_.at(*cit));
+          pinocchio::Transform3f localFrame(1), globalFrame(1);
+          globalFrame.translation(state.contactPositions_.at(*cit));
           //const fcl::Matrix3f& rotation = state.contactRotation_.at(*cit);
-          pinocchio::Frame effectorFrame = device->getFrameByName(limb->effector_.name());
+          const pinocchio::Frame effectorFrame = device->getFrameByName(limb->effector_.name());
           pinocchio::JointPtr_t effectorJoint (new pinocchio::Joint(effectorFrame.joint()));
           projector->add(core::NumericalConstraint::create (
                                   constraints::Position::create("",device,
-                                                                effectorJoint, effectorFrame.positionInParentFrame() * pinocchio::Transform3f(), position)));
+                                                                effectorJoint, effectorFrame.pinocchio().placement * localFrame, globalFrame)));
           if(limb->contactType_ == hpp::rbprm::_6_DOF)
           {
               pinocchio::Transform3f rotation(1);
-              rotation.rotation(effectorFrame.currentTransformation().rotation() * state.contactRotation_.at(*cit));
+              rotation.rotation(state.contactRotation_.at(*cit) * effectorFrame.pinocchio().placement.rotation().transpose());
               projector->add(core::NumericalConstraint::create (constraints::Orientation::create("", device,
                                                                                 effectorJoint,
                                                                                 rotation,
