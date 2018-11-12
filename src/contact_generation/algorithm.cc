@@ -218,7 +218,8 @@ hpp::rbprm::contact::ContactReport ComputeContacts(const hpp::rbprm::State& prev
     // save old configuration
     core::ConfigurationIn_t save = body->device_->currentConfiguration();
     pinocchio::Device::Computation_t flag = body->device_->computationFlag ();
-    pinocchio::Device::Computation_t newflag = static_cast <pinocchio::Device::Computation_t> (pinocchio::Device::JOINT_POSITION);
+    pinocchio::Device::Computation_t newflag = static_cast <pinocchio::Device::Computation_t> (pinocchio::Device::JOINT_POSITION | pinocchio::Device::JACOBIAN);
+    //pinocchio::Device::Computation_t newflag = static_cast <pinocchio::Device::Computation_t> (pinocchio::Device::ALL);
     // load new root position
     body->device_->controlComputation (newflag);
     body->device_->currentConfiguration(configuration);

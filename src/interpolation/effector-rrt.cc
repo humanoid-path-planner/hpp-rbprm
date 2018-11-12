@@ -625,7 +625,7 @@ buildPredefinedPath(endEffectorDevice,nextNormal,endConfig,posOffset,-velOffset,
             // save the endEffector trajectory in the map :
             {
             size_t pathId = problemSolver->paths().size()-1;
-            hppDout(notice,"Add trajectories for path = "<<pathId<<" and effector = "<<effector->name());
+            hppDout(notice,"Add trajectories for path = "<<pathId<<" and effector = "<<effector.name());
             std::vector<bezier_Ptr> allRefEffector;
             allRefEffector.push_back(refEffectorTakeoff->getBezier());
             allRefEffector.push_back(refEffectorMidBezier);
@@ -862,7 +862,7 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
             // save the endEffector trajectory in the map :
             {
             size_t pathId = problemSolver->paths().size();
-            hppDout(notice,"Add trajectories for path = "<<pathId<<" and effector = "<<effector->name());
+            hppDout(notice,"Add trajectories for path = "<<pathId<<" and effector = "<<effector.name());
             assert (solutionPath->numberPaths() == 3 && "Solution pathVector should have 3 paths (takeoff, mid, landing)");
             BezierPathPtr_t takeoffPath = boost::dynamic_pointer_cast<BezierPath>(solutionPath->pathAtRank(0));
             BezierPathPtr_t midPath = boost::dynamic_pointer_cast<BezierPath>(solutionPath->pathAtRank(1));

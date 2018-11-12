@@ -72,13 +72,13 @@ namespace hpp {
           limbs=nonContactingLimbs_;
         else
           limbs=limbs_;        
-        pinocchio::JointPtr_t effectorJoint (new pinocchio::Joint(limb->effector_.joint()));
+        //pinocchio::JointPtr_t effectorJoint (new pinocchio::Joint(limb->effector_.joint()));
         hpp::tools::addLimbCollisionRec<hpp::core::CollisionValidation>
-                (limb->limb_, effectorJoint, collisionObjects,(*limbcollisionValidation_.get()), disableEffectorCollision);
+                (limb->limb_, limb->effector_, collisionObjects,(*limbcollisionValidation_.get()), disableEffectorCollision);
         if(limbs.empty())
         {
             hpp::tools::addLimbCollisionRec<hpp::core::CollisionValidation>
-                (device_->rootJoint(), effectorJoint, collisionObjects,(*collisionValidation_.get()), disableEffectorCollision);
+                (device_->rootJoint(), limb->effector_, collisionObjects,(*collisionValidation_.get()), disableEffectorCollision);
         }
         // adding collision validation
         /*for(hpp::core::ObjectStdVector_t::const_iterator cit = collisionObjects.begin();

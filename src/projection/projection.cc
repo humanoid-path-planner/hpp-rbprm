@@ -69,7 +69,8 @@ void CreateContactConstraints(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const hpp
         std::vector<bool> mask; mask.push_back(true); mask.push_back(true); mask.push_back(true);
         pinocchio::Transform3f localFrame(1), globalFrame(1);
         globalFrame.translation(ppos);
-        proj->add(core::NumericalConstraint::create( constraints::Position::create("",device,
+        std::cout << " adding constraint named " << effector << std::endl;
+        proj->add(core::NumericalConstraint::create( constraints::Position::create(effector,device,
                                              effectorJoint,
                                              effectorFrame.pinocchio().placement * localFrame,
                                              globalFrame,
@@ -233,7 +234,7 @@ void LockFromRootRec(pinocchio::JointPtr_t cJoint, const std::vector<pinocchio::
     if(not_a_limb(cJoint, jointLimbs))
     {
         core::size_type rankInConfiguration = (cJoint->rankInConfiguration ());
-        projector->add(core::LockedJoint::create(cJoint, LiegroupElement(targetRootConfiguration.segment(rankInConfiguration, cJoint->configSize()))));
+        projector->add(core::LockedJoint::create(cJoint, LiegroupElement(targetRootConfiguration.segment(rankInConfiguration, cJoint->configSize()),cJoint->configurationSpace())));
         //if (cJoint->numberChildJoints() !=1)
         //    return;
         for(int i =0; i< cJoint->numberChildJoints(); ++i)
@@ -490,7 +491,7 @@ ProjectionReport projectToComPosition(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, c
     ProjectionReport res;
     core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(fullBody->device_,"proj", 1e-4, 1000);
     CreateContactConstraints(fullBody, currentState, proj);
-    //CreateComPosConstraint(fullBody, target, proj); TODO DEBUG
+    CreateComPosConstraint(fullBody, target, proj);
    /* CreatePosturalTaskConstraint(fullBody,proj);
     proj->lastIsOptional(true);
     proj->numOptimize(500);
@@ -498,9 +499,7 @@ ProjectionReport projectToComPosition(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, c
     proj->errorThreshold(1e-3);*/
 
     pinocchio::Configuration_t configuration = currentState.configuration_;
-    res.success_ = proj->apply(configuration);    
-    std::cout << "proj " << proj << std::endl; //  TODO DEBUG
-    std::cout << "diff1 " << (currentState.configuration_ - configuration).norm() << std::endl; //  TODO DEBUG
+    res.success_ = proj->apply(configuration);
     res.result_ = currentState;
     res.result_.configuration_ = configuration;
     return res;

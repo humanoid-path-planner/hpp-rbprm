@@ -24,6 +24,7 @@
 # include <hpp/rbprm/config.hh>
 # include <hpp/pinocchio/collision-object.hh>
 # include <hpp/pinocchio/device-object-vector.hh>
+# include <hpp/pinocchio/frame.hh>
 # include <Eigen/Core>
 
 namespace hpp {
@@ -54,19 +55,19 @@ namespace hpp {
   /// \param spared Name of the root of the unlocked kinematic chain
   /// \param joint Root of the considered kinematic chain to block
   /// \param projector Projector on which to block the joints
-  void LockJointRec(const std::string& spared, const pinocchio::JointPtr_t joint, core::ConfigProjectorPtr_t& projector);
+  void LockJointRec(const std::string& spared, const pinocchio::JointPtr_t joint, core::ConfigProjectorPtr_t projector);
 
   ///Lock all joints in a kinematic chain, except for a list of subchains
   /// \param spared names of the root of the unlocked kinematic chains
   /// \param joint Root of the considered kinematic chain to block
   /// \param projector Projector on which to block the joints
-  void LockJointRec(const std::vector<std::string>& spared, const pinocchio::JointPtr_t joint, core::ConfigProjectorPtr_t& projector);
+  void LockJointRec(const std::vector<std::string>& spared, const pinocchio::JointPtr_t joint, core::ConfigProjectorPtr_t projector);
 
   ///Lock a single joint
   /// \param joint of the considered kinematic chain to block
   /// \param projector Projector on which to block the joints
   /// \param constant if false, joint lock constraint can be updated with rightHandSide method
-  void LockJoint(const pinocchio::JointPtr_t joint, core::ConfigProjectorPtr_t& projector, const bool constant=true);
+  void LockJoint(const pinocchio::JointPtr_t joint, core::ConfigProjectorPtr_t projector, const bool constant=true);
 
   ///Some io tools for serialization
   namespace io
@@ -137,12 +138,17 @@ namespace hpp {
   }
 
   template<typename T>
-  void addLimbCollisionRec(pinocchio::JointPtr_t joint, pinocchio::JointPtr_t effector,
+  void addLimbCollisionRec(pinocchio::JointPtr_t joint, const pinocchio::Frame& effector,
                            const core::ObjectStdVector_t &collisionObjects,
                            T& collisionValidation, const bool disableEffectorCollision)
   {
-      if(disableEffectorCollision && joint->name() == effector->name())
-          return;
+      if(disableEffectorCollision)
+      {
+          if (joint->name() == effector.name())
+            return;
+          else if(joint->name() == effector.joint().name() )
+            return; // TODO only disable collision for frame
+      }
       for(core::ObjectStdVector_t::const_iterator cit = collisionObjects.begin();
           cit != collisionObjects.end(); ++cit)
           collisionValidation.addObstacleToJoint(*cit,joint,false);

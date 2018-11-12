@@ -166,11 +166,11 @@ namespace hpp {
         return 2 * (cosIsNegative ? M_PI - theta : theta);
     }
 
-    void LockJoint(const pinocchio::JointPtr_t joint, core::ConfigProjectorPtr_t& projector, const bool constant)
+    void LockJoint(const pinocchio::JointPtr_t joint, hpp::core::ConfigProjectorPtr_t projector, const bool constant)
     {
         const core::Configuration_t& c = joint->robot()->currentConfiguration();
         core::size_type rankInConfiguration (joint->rankInConfiguration ());
-        core::LockedJointPtr_t lockedJoint = core::LockedJoint::create(joint, hpp::core::LiegroupElement(c.segment(rankInConfiguration, joint->configSize())));
+        core::LockedJointPtr_t lockedJoint = core::LockedJoint::create(joint, hpp::core::LiegroupElement(c.segment(rankInConfiguration, joint->configSize()), joint->configurationSpace()));
         if(!constant)
         {
             constraints::ComparisonTypes_t comps; comps.push_back(constraints::Equality);
@@ -179,26 +179,26 @@ namespace hpp {
         projector->add(lockedJoint);
     }
 
-    void LockJointRec(const std::string& spared, const pinocchio::JointPtr_t joint, core::ConfigProjectorPtr_t& projector)
+    void LockJointRec(const std::string& spared, const pinocchio::JointPtr_t joint, hpp::core::ConfigProjectorPtr_t projector)
     {
         if(joint->name() == spared) return;
         const core::Configuration_t& c = joint->robot()->currentConfiguration();
         core::size_type rankInConfiguration (joint->rankInConfiguration ());
         projector->add(core::LockedJoint::create(joint,
-                                                 hpp::core::LiegroupElement(c.segment(rankInConfiguration, joint->configSize()))));
+                                                 hpp::core::LiegroupElement(c.segment(rankInConfiguration, joint->configSize()),joint->configurationSpace())));
         for(std::size_t i=0; i< joint->numberChildJoints(); ++i)
         {
             LockJointRec(spared,joint->childJoint(i), projector);
         }
     }
 
-    void LockJointRec(const std::vector<std::string> &spared, const pinocchio::JointPtr_t joint, core::ConfigProjectorPtr_t& projector)
+    void LockJointRec(const std::vector<std::string> &spared, const pinocchio::JointPtr_t joint, hpp::core::ConfigProjectorPtr_t projector)
     {
         if(std::find(spared.begin(), spared.end(), joint->name()) != spared.end()) return;
         const core::Configuration_t& c = joint->robot()->currentConfiguration();
         core::size_type rankInConfiguration (joint->rankInConfiguration ());
         projector->add(core::LockedJoint::create(joint,
-                                                 hpp::core::LiegroupElement(c.segment(rankInConfiguration, joint->configSize()))));
+                                                 hpp::core::LiegroupElement(c.segment(rankInConfiguration, joint->configSize()), joint->configurationSpace())));
         for(std::size_t i=0; i< joint->numberChildJoints(); ++i)
         {
             LockJointRec(spared,joint->childJoint(i), projector);
