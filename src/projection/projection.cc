@@ -34,7 +34,7 @@ namespace hpp {
 namespace rbprm {
 namespace projection{
 
-const double epsilon = 10e-3;
+const double epsilon = 10e-4;
 
 ProjectionReport::ProjectionReport(const ProjectionReport& from)
     : success_(from.success_)
@@ -439,21 +439,69 @@ bool PointInTriangle(const fcl::Vec3f& p, const fcl::Vec3f& a, const fcl::Vec3f&
     return SameSide(p,a, b,c) && SameSide(p,b, a,c) && SameSide(p,c, a,b);
 }
 
+fcl::Vec3f closestPointOnline(const fcl::Vec3f& p, const fcl::Vec3f& a, const fcl::Vec3f& b)
+{
+    fcl::Vec3f u = b - a; u.normalize();
+    fcl::Vec3f v = p - a;
+    return (u.dot(v)) * u;
+}
+
+
+fcl::Vec3f closestPointInTriangle(const fcl::Vec3f& p, const fcl::Vec3f& a, const fcl::Vec3f& b, const fcl::Vec3f& c, const fcl::Vec3f& n)
+{
+    fcl::Vec3f pPlane = p-(n.dot(p - a))*n;
+    //if(PointInTriangle(pPlane, a, b, c))
+        return pPlane;
+    /*// TODO ugly: return closest point on one of the lines
+    fcl::Vec3f c1 = closestPointOnline(pPlane,a,b);
+    fcl::Vec3f c2 = closestPointOnline(pPlane,b,c);
+    fcl::Vec3f c3 = closestPointOnline(pPlane,c,a);
+    std::cout << "closest 1" << c1 << std::endl;
+    std::cout << "closest 2" << c2 << std::endl;
+    std::cout << "closest 3" << c3 << std::endl;
+    fcl::Vec3f best = c1;
+    double bn = (c1-pPlane).norm();
+    double ntmp =(c2-pPlane).norm();
+    if(ntmp < bn)
+    {
+        bn = ntmp;
+        best = c2;
+    }
+    if((c3-pPlane).norm() < bn)
+        best = c3;
+    return best;*/
+}
+
 
 ProjectionReport projectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
                                          const sampling::OctreeReport& report, core::CollisionValidationPtr_t validation,
                                          pinocchio::ConfigurationOut_t configuration, const hpp::rbprm::State& current)
 {
     sampling::Load(*report.sample_, configuration);
-    const fcl::Vec3f& normal = report.normal_;
+    fcl::Vec3f normal = report.normal_;
+    normal.normalize();
    // hppDout(notice,"contact normal = "<<normal);
     Transform3f rootT = body->GetLimb(limbId)->limb_->parentJoint()->currentTransformation();
     //compute the orthogonal projection of the end effector on the plan :
-    const fcl::Vec3f& pEndEff = (rootT.act(report.sample_->effectorPosition_)); // compute absolute position (in world frame)
-    fcl::Vec3f pos = pEndEff-(normal.dot(pEndEff-report.contact_.pos))*normal; // orthogonal projection on the obstacle surface
+    const fcl::Vec3f pEndEff = (rootT.act(report.sample_->effectorPosition_)); // compute absolute position (in world frame)
+    // make sure contact pos is actually on triangle ...
+    /*if(! PointInTriangle(contactpos,report.v1_, report.v2_, report.v3_))
+    {
+        std::cout << "contact pos not in triangle ! " << std::endl;
+    std::cout << contactpos << std::endl;
+    std::cout << report.v1_ << std::endl;
+    std::cout << report.v2_ << std::endl;
+    std::cout << report.v3_ << std::endl;
+    } // todo debug*/
+    fcl::Vec3f pos = pEndEff-(normal.dot(pEndEff-report.v1_))*normal; // orthogonal projection on the obstacle surface
     // if position not in triangle take collision point as target
     if (!PointInTriangle(pos,report.v1_, report.v2_, report.v3_))
-        pos = report.contact_.pos;
+    {
+        fcl::Vec3f contactpos = closestPointInTriangle(report.contact_.pos,report.v1_, report.v2_, report.v3_, normal);
+        pos = contactpos;
+        if(! PointInTriangle(contactpos,report.v1_, report.v2_, report.v3_))
+            std::cout << "contact pos not in triangle and other failed " << std::endl;
+    }
     //hppDout(notice,"Effector position : "<<report.sample_->effectorPosition_);
     //hppDout(notice,"pEndEff = ["<<pEndEff[0]<<","<<pEndEff[1]<<","<<pEndEff[2]<<"]");
     //hppDout(notice,"pos = ["<<pos[0]<<","<<pos[1]<<","<<pos[2]<<"]");
