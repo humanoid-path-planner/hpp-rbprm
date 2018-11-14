@@ -23,6 +23,7 @@
 #define TOOLSFULLBODY_HH
 
 #include <hpp/rbprm/rbprm-fullbody.hh>
+#include <hpp/rbprm/rbprm-device.hh>
 #include <hpp/rbprm/rbprm-state.hh>
 #include <pinocchio/parsers/urdf.hpp>
 #include <hpp/pinocchio/urdf/util.hh>
@@ -100,6 +101,57 @@ RbPrmFullBodyPtr_t loadHRP2(){
 
 }
 
+void loadRom(pinocchio::T_Rom& romDevices, const std::string romName)
+{
+    std::string rootJointType   ("freeflyer"),
+                packageName     ("hpp-rbprm-corba"),
+                urdfSuffix (""),
+                srdfSuffix ("");
+    hpp::pinocchio::DevicePtr_t romDevice = pinocchio::Device::create (romName);
+    romDevices.insert(std::make_pair(romName, romDevice));
+    hpp::pinocchio::urdf::loadRobotModel (romDevice,
+                      rootJointType,
+                      packageName,
+                      romName,
+                      urdfSuffix,
+                      srdfSuffix);
+}
+
+hpp::pinocchio::RbPrmDevicePtr_t loadAbstractRobot(pinocchio::T_Rom& romDevices, const std::string robotName)
+{
+    std::string rootJointType   ("freeflyer"),
+                packageName     ("hpp-rbprm-corba"),
+                urdfSuffix (""),
+                srdfSuffix ("");
+    hpp::pinocchio::RbPrmDevicePtr_t device = hpp::pinocchio::RbPrmDevice::create (robotName, romDevices);
+    hpp::pinocchio::urdf::loadRobotModel (device,
+            rootJointType,
+            packageName,
+            robotName,
+            urdfSuffix,
+            srdfSuffix);
+    return device;
+}
+
+
+hpp::pinocchio::RbPrmDevicePtr_t loadHyQAbsract()
+{
+    pinocchio::T_Rom romDevices_;
+    loadRom(romDevices_, std::string("hyq_lhleg_rom"));
+    loadRom(romDevices_, std::string("hyq_lfleg_rom"));
+    loadRom(romDevices_, std::string("hyq_rfleg_rom"));
+    loadRom(romDevices_, std::string("hyq_rhleg_rom"));
+    hpp::pinocchio::RbPrmDevicePtr_t device =
+            loadAbstractRobot(romDevices_, std::string("hyq_trunk_large"));
+    device->rootJoint()->lowerBound(0, -2);
+    device->rootJoint()->lowerBound(1, -1);
+    device->rootJoint()->lowerBound(2, 0.3);
+    device->rootJoint()->upperBound(0,  5);
+    device->rootJoint()->upperBound(1,  1);
+    device->rootJoint()->upperBound(2,  4);
+    return device;
+}
+
 RbPrmFullBodyPtr_t loadHyQ(){
     const std::string robotName("hyq");
     const std::string rootJointType ("freeflyer");
@@ -119,12 +171,12 @@ RbPrmFullBodyPtr_t loadHyQ(){
   /*DevicePtr_t robot =
     hpp::pinocchio::humanoidSimple("test", true,
         (Device::Computation_t) (Device::JOINT_POSITION | Device::JACOBIAN));*/
-  device->rootJoint()->lowerBound(0, -2);
-  device->rootJoint()->lowerBound(1,  5);
-  device->rootJoint()->lowerBound(2, -1);
-  device->rootJoint()->upperBound(0,  1);
-  device->rootJoint()->upperBound(1,  0.3);
-  device->rootJoint()->upperBound(2,  4);
+    device->rootJoint()->lowerBound(0, -2);
+    device->rootJoint()->lowerBound(1, -1);
+    device->rootJoint()->lowerBound(2, 0.3);
+    device->rootJoint()->upperBound(0,  5);
+    device->rootJoint()->upperBound(1,  1);
+    device->rootJoint()->upperBound(2,  4);
 
     device->setDimensionExtraConfigSpace(6);
 

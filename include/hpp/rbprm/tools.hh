@@ -148,6 +148,8 @@ namespace hpp {
             return;
           else if(joint->name() == effector.joint().name() )
             return; // TODO only disable collision for frame
+          else if(joint->numberChildJoints() == 0)
+            return; // TODO only disable collision for frame
       }
       for(core::ObjectStdVector_t::const_iterator cit = collisionObjects.begin();
           cit != collisionObjects.end(); ++cit)

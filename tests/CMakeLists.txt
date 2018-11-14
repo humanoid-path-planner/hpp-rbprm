@@ -40,6 +40,7 @@ MACRO(ADD_TESTCASE NAME GENERATED)
 
   PKG_CONFIG_USE_DEPENDENCY(${NAME} hpp-core)
   PKG_CONFIG_USE_DEPENDENCY(${NAME} hpp-fcl)
+  PKG_CONFIG_USE_DEPENDENCY(${NAME} hpp-affordance)
 
   # Link against Boost and project library.
   TARGET_LINK_LIBRARIES(${NAME}
@@ -57,3 +58,4 @@ ENDMACRO(ADD_TESTCASE)
 #ADD_TESTCASE (test-interpolate FALSE)
 #ADD_TESTCASE (test-contact-gen FALSE)
 ADD_TESTCASE (test-reachability FALSE)
+ADD_TESTCASE (test-rbrrt FALSE)
