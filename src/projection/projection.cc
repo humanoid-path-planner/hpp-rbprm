@@ -439,39 +439,108 @@ bool PointInTriangle(const fcl::Vec3f& p, const fcl::Vec3f& a, const fcl::Vec3f&
     return SameSide(p,a, b,c) && SameSide(p,b, a,c) && SameSide(p,c, a,b);
 }
 
-fcl::Vec3f closestPointOnline(const fcl::Vec3f& p, const fcl::Vec3f& a, const fcl::Vec3f& b)
+const double clamp( const double& val, const double& lo, const double& hi)
 {
-    fcl::Vec3f u = b - a; u.normalize();
-    fcl::Vec3f v = p - a;
-    return (u.dot(v)) * u;
+    return std::min( std::max( val, lo ), hi );
 }
 
-
-fcl::Vec3f closestPointInTriangle(const fcl::Vec3f& p, const fcl::Vec3f& a, const fcl::Vec3f& b, const fcl::Vec3f& c, const fcl::Vec3f& n)
+fcl::Vec3f closestPointInTriangle(const fcl::Vec3f& sourcePosition, const fcl::Vec3f& t0, const fcl::Vec3f& t1, const fcl::Vec3f& t2, const double epsilon =0. )
 {
-    fcl::Vec3f pPlane = p-(n.dot(p - a))*n;
-    //if(PointInTriangle(pPlane, a, b, c))
-        return pPlane;
-    /*// TODO ugly: return closest point on one of the lines
-    fcl::Vec3f c1 = closestPointOnline(pPlane,a,b);
-    fcl::Vec3f c2 = closestPointOnline(pPlane,b,c);
-    fcl::Vec3f c3 = closestPointOnline(pPlane,c,a);
-    std::cout << "closest 1" << c1 << std::endl;
-    std::cout << "closest 2" << c2 << std::endl;
-    std::cout << "closest 3" << c3 << std::endl;
-    fcl::Vec3f best = c1;
-    double bn = (c1-pPlane).norm();
-    double ntmp =(c2-pPlane).norm();
-    if(ntmp < bn)
+    const fcl::Vec3f edge0 = t1 - t0;
+    const fcl::Vec3f edge1 = t2 - t0;
+    const fcl::Vec3f v0 = t0 - sourcePosition;
+
+    double a = edge0.dot( edge0 );
+    double b = edge0.dot( edge1 );
+    double c = edge1.dot( edge1 );
+    double d = edge0.dot( v0 );
+    double e = edge1.dot( v0 );
+
+    double det = a*c - b*b;
+    double s = b*e - c*d;
+    double t = b*d - a*e;
+
+    if ( s + t < det )
     {
-        bn = ntmp;
-        best = c2;
+        if ( s < 0.f )
+        {
+            if ( t < 0.f )
+            {
+                if ( d < 0.f )
+                {
+                    s = clamp( -d/a, 0.f, 1.f );
+                    t = 0.f;
+                }
+                else
+                {
+                    s = 0.f;
+                    t = clamp( -e/c, 0.f, 1.f );
+                }
+            }
+            else
+            {
+                s = 0.f;
+                t = clamp( -e/c, 0.f, 1.f );
+            }
+        }
+        else if ( t < 0.f )
+        {
+            s = clamp( -d/a, 0.f, 1.f );
+            t = 0.f;
+        }
+        else
+        {
+            double invDet = 1.f / det;
+            s *= invDet;
+            t *= invDet;
+        }
     }
-    if((c3-pPlane).norm() < bn)
-        best = c3;
-    return best;*/
-}
+    else
+    {
+        if ( s < 0.f )
+        {
+            double tmp0 = b+d;
+            double tmp1 = c+e;
+            if ( tmp1 > tmp0 )
+            {
+                double numer = tmp1 - tmp0;
+                double denom = a-2*b+c;
+                s = clamp( numer/denom, 0.f, 1.f );
+                t = 1-s;
+            }
+            else
+            {
+                t = clamp( -e/c, 0.f, 1.f );
+                s = 0.f;
+            }
+        }
+        else if ( t < 0.f )
+        {
+            if ( a+d > b+e )
+            {
+                double numer = c+e-b-d;
+                double denom = a-2*b+c;
+                s = clamp( numer/denom, 0.f, 1.f );
+                t = 1-s;
+            }
+            else
+            {
+                s = clamp( -e/c, 0.f, 1.f );
+                t = 0.f;
+            }
+        }
+        else
+        {
+            double numer = c+e-b-d;
+            double denom = a-2*b+c;
+            s = clamp( numer/denom, 0.f, 1.f );
+            t = 1.f - s;
+        }
+    }
 
+    fcl::Vec3f res = t0 + s * edge0 + t * edge1;
+    return res + (res - sourcePosition).normalized() * epsilon;
+}
 
 ProjectionReport projectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
                                          const sampling::OctreeReport& report, core::CollisionValidationPtr_t validation,
@@ -484,24 +553,9 @@ ProjectionReport projectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& b
     Transform3f rootT = body->GetLimb(limbId)->limb_->parentJoint()->currentTransformation();
     //compute the orthogonal projection of the end effector on the plan :
     const fcl::Vec3f pEndEff = (rootT.act(report.sample_->effectorPosition_)); // compute absolute position (in world frame)
-    // make sure contact pos is actually on triangle ...
-    /*if(! PointInTriangle(contactpos,report.v1_, report.v2_, report.v3_))
-    {
-        std::cout << "contact pos not in triangle ! " << std::endl;
-    std::cout << contactpos << std::endl;
-    std::cout << report.v1_ << std::endl;
-    std::cout << report.v2_ << std::endl;
-    std::cout << report.v3_ << std::endl;
-    } // todo debug*/
     fcl::Vec3f pos = pEndEff-(normal.dot(pEndEff-report.v1_))*normal; // orthogonal projection on the obstacle surface
-    // if position not in triangle take collision point as target
-    if (!PointInTriangle(pos,report.v1_, report.v2_, report.v3_))
-    {
-        fcl::Vec3f contactpos = closestPointInTriangle(report.contact_.pos,report.v1_, report.v2_, report.v3_, normal);
-        pos = contactpos;
-        if(! PointInTriangle(contactpos,report.v1_, report.v2_, report.v3_))
-            std::cout << "contact pos not in triangle and other failed " << std::endl;
-    }
+    // make sure contact pos is actually on triangle, and take 1 cm margin ...
+    pos = closestPointInTriangle(pEndEff,report.v1_, report.v2_, report.v3_, 0.01);
     //hppDout(notice,"Effector position : "<<report.sample_->effectorPosition_);
     //hppDout(notice,"pEndEff = ["<<pEndEff[0]<<","<<pEndEff[1]<<","<<pEndEff[2]<<"]");
     //hppDout(notice,"pos = ["<<pos[0]<<","<<pos[1]<<","<<pos[2]<<"]");
