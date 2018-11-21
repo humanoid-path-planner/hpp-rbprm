@@ -26,6 +26,7 @@
 # include <hpp/rbprm/rbprm-device.hh>
 # include <hpp/rbprm/rbprm-path-validation.hh>
 # include <hpp/rbprm/rbprm-validation-report.hh>
+# include <hpp/pinocchio/configuration.hh>
 
 namespace hpp {
   namespace rbprm {
@@ -56,8 +57,8 @@ namespace hpp {
     core::PathPtr_t SteeringMethodParabola::impl_compute
     (core::ConfigurationIn_t q1, core::ConfigurationIn_t q2)
     const {
-      hppDout (info, "q_init: " << displayConfig (q1));
-      hppDout (info, "q_goal: " << displayConfig (q2));
+      hppDout (info, "q_init: " << hpp::pinocchio::displayConfig (q1));
+      hppDout (info, "q_goal: " << hpp::pinocchio::displayConfig (q2));
       hppDout (info, "g_: " << g_ << " , mu_: " << mu_ << " , V0max: " <<
                V0max_ << " , Vimpmax: " << Vimpmax_);
 
@@ -438,8 +439,8 @@ namespace hpp {
                                                          x_theta_imp);
 
       if (hasCollisions || !maxHeightRespected) return core::PathPtr_t ();
-      hppDout (notice, "Create path between : init : " << displayConfig(q1));
-      hppDout (notice, "Create path between : goal : " << displayConfig(*qnew));
+      hppDout (notice, "Create path between : init : " << hpp::pinocchio::displayConfig(q1));
+      hppDout (notice, "Create path between : goal : " << hpp::pinocchio::displayConfig(*qnew));
       return pp;
     }
 
@@ -632,7 +633,7 @@ namespace hpp {
         }
 
         // plot outputs
-        hppDout (info, "q: " << displayConfig (q));
+        hppDout (info, "q: " << hpp::pinocchio::displayConfig (q));
         hppDout (info, "x_plus: " << x_plus);
         hppDout (info, "x_minus: " << x_minus);
         hppDout (info, "z_x_plus: " << z_x_plus);

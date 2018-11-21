@@ -184,8 +184,8 @@ void CreatePosturalTaskConstraint(hpp::rbprm::RbPrmFullBodyPtr_t fullBody,core::
   /*std::ostringstream oss;
   for (size_type i=0; i < mask.size (); ++i){
     oss << mask [i] << ",";
-  }*/
-  hppDout(notice,"mask = "<<oss.str());
+  }
+  hppDout(notice,"mask = "<<oss.str());*/
 
   //constraints::ConfigurationConstraintPtr_t postFunc = constraints::ConfigurationConstraint::create("Postural_Task",fullBody->device_,fullBody->referenceConfig(),weight,mask);
   constraints::ConfigurationConstraintPtr_t postFunc = constraints::ConfigurationConstraint::create("Postural_Task",fullBody->device_,fullBody->referenceConfig(),weight);

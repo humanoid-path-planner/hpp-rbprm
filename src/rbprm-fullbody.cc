@@ -256,7 +256,7 @@ namespace hpp {
         tRoot.setTranslation(fcl::Vec3f(referenceConfig.head<3>()));
         fcl::Quaternion3f quatRoot(referenceConfig[3],referenceConfig[4],referenceConfig[5],referenceConfig[6]);
         tRoot.setQuatRotation(quatRoot);
-        hppDout(notice,"reference root transform : "<<tRoot);
+        hppDout(notice,"reference root transform : "<<tRoot.getTranslation() <<" ; " <<tRoot.getRotation() );
         // retrieve transform of each effector joint
         device_->currentConfiguration(referenceConfig);
         device_->computeForwardKinematics();
@@ -265,9 +265,9 @@ namespace hpp {
         for(CIT_Limb lit = limbs_.begin() ; lit != limbs_.end() ; ++lit){
             hpp::pinocchio::Transform3f tf = lit->second->effector_.currentTransformation();
             tJoint_world = fcl::Transform3f(tf.rotation(),tf.translation());
-            hppDout(notice,"tJoint of "<<lit->first<<" : "<<tJoint_world);
+            hppDout(notice,"tJoint of "<<lit->first<<" : "<<tJoint_world.getTranslation() <<" ; " <<tJoint_world.getRotation() );
             tJoint_robot = tRoot.inverseTimes(tJoint_world);
-            hppDout(notice,"tJoint relative : "<<tJoint_robot);
+            hppDout(notice,"tJoint relative : "<<tJoint_robot.getTranslation() <<" ; " <<tJoint_robot.getRotation() );
             lit->second->effectorReferencePosition_ = tJoint_robot.getTranslation();
         }
     }

@@ -23,6 +23,7 @@
 # include <hpp/rbprm/rbprm-state.hh>
 # include <hpp/rbprm/rbprm-fullbody.hh>
 # include <hpp/rbprm/sampling/heuristic-tools.hh>
+#include <hpp/pinocchio/configuration.hh>
 
 namespace hpp {
 namespace rbprm {
