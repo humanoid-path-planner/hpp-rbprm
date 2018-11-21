@@ -363,7 +363,6 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
 {
     hppDout(notice,"!!! Random shoot");
     HPP_DEFINE_TIMECOUNTER(SHOOT_COLLISION);
-    JointVector_t jv = robot_->getJointVector ();
     ConfigurationPtr_t config (new Configuration_t (se3::randomConfiguration(robot_->model())));
     std::size_t limit = shootLimit_;
     bool found(false);

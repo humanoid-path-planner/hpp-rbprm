@@ -135,7 +135,7 @@ void loadObstacleWithAffordance(hpp::core::ProblemSolver& pSolver, std::string p
         hpp::pinocchio::urdf::loadModelFromString (device, 0, "", "anchor", filename, "");
     else
         hpp::pinocchio::urdf::loadUrdfModel(device, "anchor", packagename, filename);
-    device->controlComputation(hpp::pinocchio::Device::JOINT_POSITION);
+    device->controlComputation(hpp::pinocchio::JOINT_POSITION);
     pSolver.addObstacle (device, true, true);
     std::list <std::string> obstacles = pSolver.obstacleNames (true, false);
     for (std::list <std::string>::const_iterator cit = obstacles.begin(); cit != obstacles.end(); ++cit)
