@@ -23,6 +23,7 @@
 # include <hpp/rbprm/rbprm-state.hh>
 # include <hpp/rbprm/rbprm-fullbody.hh>
 # include <hpp/rbprm/sampling/heuristic-tools.hh>
+#include <hpp/pinocchio/configuration.hh>
 
 namespace hpp {
 namespace rbprm {
@@ -219,9 +220,9 @@ hpp::rbprm::contact::ContactReport ComputeContacts(const hpp::rbprm::State& prev
 {
     // save old configuration
     core::ConfigurationIn_t save = body->device_->currentConfiguration();
-    pinocchio::Device::Computation_t flag = body->device_->computationFlag ();
-    pinocchio::Device::Computation_t newflag = static_cast <pinocchio::Device::Computation_t> (pinocchio::Device::JOINT_POSITION | pinocchio::Device::JACOBIAN | pinocchio::Device::COM);
-    //pinocchio::Device::Computation_t newflag = static_cast <pinocchio::Device::Computation_t> (pinocchio::Device::ALL);
+    pinocchio::Computation_t flag = body->device_->computationFlag ();
+    pinocchio::Computation_t newflag = static_cast <pinocchio::Computation_t> (pinocchio::JOINT_POSITION | pinocchio::JACOBIAN | pinocchio::COM);
+    //pinocchio::Computation_t newflag = static_cast <pinocchio::Computation_t> (pinocchio::ALL);
     // load new root position
     body->device_->controlComputation (newflag);
     body->device_->currentConfiguration(configuration);

@@ -498,8 +498,8 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
         hpp::pinocchio::ModelPtr_t m =  hpp::pinocchio::ModelPtr_t(new ::se3::Model());
         hpp::pinocchio::GeomModelPtr_t gm =  hpp::pinocchio::GeomModelPtr_t(new ::se3::GeometryModel());
         Transform3f mat; mat.setIdentity ();
-        endEffectorDevice->model(m);
-        endEffectorDevice->geomModel(gm);
+        endEffectorDevice->setModel(m);
+        endEffectorDevice->setGeomModel(gm);
         endEffectorDevice->model().addJoint(0, ::se3::JointModelFreeFlyer(),mat,"freeflyer");
         return endEffectorDevice;
     }

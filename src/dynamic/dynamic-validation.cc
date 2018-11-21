@@ -20,6 +20,7 @@
 # include <hpp/util/debug.hh>
 # include <hpp/rbprm/planner/rbprm-node.hh>
 #include <hpp/util/timer.hh>
+#include <hpp/pinocchio/configuration.hh>
 
 namespace hpp {
   namespace rbprm {
