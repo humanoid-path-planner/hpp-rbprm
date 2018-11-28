@@ -401,10 +401,14 @@ ProjectionReport projectEffector(hpp::core::ConfigProjectorPtr_t proj, const hpp
 fcl::Transform3f computeProjectionMatrix(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const hpp::rbprm::RbPrmLimbPtr_t& limb, const pinocchio::ConfigurationIn_t configuration,
                                          const fcl::Vec3f& normal, const fcl::Vec3f& position)
 {
+    hppDout(notice,"computeProjection matrice : normal = "<<normal);
     body->device_->currentConfiguration(configuration);
     body->device_->computeForwardKinematics();
     // the normal is given by the normal of the contacted object
+    hppDout(notice,"effector rot : "<<limb->effector_.currentTransformation().rotation());
+    hppDout(notice,"limb normal : "<<limb->normal_);
     const fcl::Vec3f z = limb->effector_.currentTransformation().rotation() * limb->normal_;
+    hppDout(notice,"z = "<<z);
     const fcl::Matrix3f alignRotation = tools::GetRotationMatrix(z,normal);
     hppDout(notice,"alignRotation : \n"<<alignRotation);
     const fcl::Matrix3f rotation = alignRotation * limb->effector_.currentTransformation().rotation();

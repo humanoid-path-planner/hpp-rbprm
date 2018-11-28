@@ -26,6 +26,7 @@
 #ifdef PROFILE
     #include "hpp/rbprm/rbprm-profiler.hh"
 #endif
+#include <hpp/util/timer.hh>
 
 
 namespace hpp {
@@ -471,13 +472,17 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
     hppDout(notice,"number of candidate : "<<finalSet.size());
     for(;!found_sample && it!=finalSet.end(); ++it)
     {
+        hppStartBenchmark(EVALUATE_CONTACT_CANDIDATE);
         evaluatedCandidates++;
         const sampling::OctreeReport& bestReport = *it;
         hppDout(notice,"heuristic value = "<<it->value_);
         core::Configuration_t conf_before(configuration);
         sampling::Load(*bestReport.sample_, conf_before);
         hppDout(notice,"config before projection : r(["<<pinocchio::displayConfig(conf_before)<<"])");
+        hppStartBenchmark(PROJECTION_CONTACT);
         /*ProjectionReport */rep = projectSampleToObstacle(contactGenHelper.fullBody_, limbId, limb, bestReport, validation, configuration, current);
+        hppStopBenchmark(PROJECTION_CONTACT);
+        hppDisplayBenchmark(PROJECTION_CONTACT);
         hppDout(notice,"config : r(["<<pinocchio::displayConfig(configuration)<<"])");
         hppDout(notice,"projection to obstacle success = "<<rep.success_);
         if(rep.success_)
@@ -489,7 +494,10 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
                 normal = rep.result_.contactNormals_.at(limbId);
                 found_sample = true;
             }else{ // check stability and reachability
+                hppStartBenchmark(STABILITY_CONTACT);
                 robustness = stability::IsStable(contactGenHelper.fullBody_,rep.result_, contactGenHelper.acceleration_);
+                hppStopBenchmark(STABILITY_CONTACT);
+                hppDisplayBenchmark(STABILITY_CONTACT);
                 hppDout(notice,"stability rob = "<<robustness);
                 if( robustness>=contactGenHelper.robustnessTreshold_)
                 {
@@ -499,7 +507,10 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
                         if(contactGenHelper.quasiStatic_){
                             resReachability = reachability::isReachable(contactGenHelper.fullBody_,intermediateState,rep.result_);
                         }else{
+                            hppStartBenchmark(REACHABILITY_CONTACT);
                             resReachability = reachability::isReachableDynamic(contactGenHelper.fullBody_,previous,rep.result_,contactGenHelper.tryQuasiStatic_,std::vector<double>(),contactGenHelper.reachabilityPointPerPhases_);
+                            hppStopBenchmark(REACHABILITY_CONTACT);
+                            hppDisplayBenchmark(REACHABILITY_CONTACT);
                         }
                         isReachable = resReachability.success();
                     }else{
@@ -549,6 +560,8 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
                 }
             }
         }
+        hppStopBenchmark(EVALUATE_CONTACT_CANDIDATE);
+        hppDisplayBenchmark(EVALUATE_CONTACT_CANDIDATE);
     }
     if(found_sample || found_stable || unstableContact)
     {
@@ -576,6 +589,13 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
         current.configuration_ = moreRobust;
         current.stable = false;
     }
+/*
+    std::ofstream fout;
+    fout.open("/local/fernbac/bench_iros18/bench_contactGeneration/candidates.log", std::fstream::out | std::fstream::app);
+    fout<<"evaluatedCandidates "<<evaluatedCandidates<<std::endl;
+    fout.close();
+*/
+
     return current;
 }
 

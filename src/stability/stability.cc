@@ -46,11 +46,13 @@ namespace stability{
 
     void computeRectangleContact(const std::string& name, const RbPrmLimbPtr_t limb, const State& state, Ref_matrix43 p, double lx = 0, double ly = 0)
     {
+        hppDout(notice,"Compute rectangular contact : ");
         if (lx == 0)
             lx = limb->x_;
         if (ly == 0)
             ly = limb->y_;
         const fcl::Vec3f& position = state.contactPositions_.at(name);
+        hppDout(notice,"Position of center : "<<position);
         //create rotation matrix from normal
         Eigen::Matrix3d R;
         p << lx,  ly, 0,
@@ -100,6 +102,7 @@ namespace stability{
             {
                 fcl::Vec3f pLocal = rotationLocal*(p.row(i).transpose()) + limb->offset_;
                 p.row(i) = (roWorld * pLocal).getTranslation();
+                hppDout(notice,"position : "<<p.row(i));
             }
         }
 
@@ -288,7 +291,7 @@ const fcl::Vec3f comfcl = comcptr->com();*/
         Equilibrium staticEquilibrium(initLibrary(fullbody));
         centroidal_dynamics::Vector3 comComputed = setupLibrary(fullbody,state,staticEquilibrium,alg);
         if(! com.isZero()){
-            hppDout(notice,"isStable : a CoM was given as parameter, use this one.");
+            hppDout(notice,"isStable : a CoM was given as parameter, use this one. : "<<com);
             comComputed = centroidal_dynamics::Vector3(com);
         }
         double res;

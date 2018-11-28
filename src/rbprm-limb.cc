@@ -124,6 +124,9 @@ namespace hpp {
         , kinematicConstraints_(reachability::loadConstraintsFromObj(kinematicsConstraintsPath.empty() ? ("package://hpp-rbprm-corba/com_inequalities/"+limb_->name()+"_com_constraints.obj") : kinematicsConstraintsPath,kinematicConstraintsMinDistance))
     {
         // NOTHING
+        hppDout(notice,"Create limb, normal = "<<normal);
+        hppDout(notice,"effector default rotation = "<<effectorDefaultRotation_);
+        hppDout(notice,"nex normal : "<<normal_);
     }
 
     pinocchio::Transform3f RbPrmLimb::octreeRoot() const
