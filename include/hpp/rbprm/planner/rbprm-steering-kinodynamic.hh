@@ -120,7 +120,7 @@ namespace hpp {
        * @param to
        * @return
        */
-      centroidal_dynamics::Vector3 computeDirection(const core::ConfigurationIn_t from, const core::ConfigurationIn_t to);
+      core::PathPtr_t computeDirection(const core::ConfigurationIn_t from, const core::ConfigurationIn_t to);
 
       /**
        * @brief setSteeringMethodBounds Compute the maximal acceleration on a direction from near to target,
@@ -130,7 +130,7 @@ namespace hpp {
        * @param reverse if true, we compute the acceleration from target to near, with the information from near
        * @return the node casted from near
        */
-      core::RbprmNodePtr_t setSteeringMethodBounds(const core::NodePtr_t& near, const core::ConfigurationIn_t target,bool reverse);
+      core::PathPtr_t setSteeringMethodBounds(const core::RbprmNodePtr_t& near, const core::ConfigurationIn_t target,bool reverse);
 
 
 
@@ -139,6 +139,7 @@ namespace hpp {
       core::DeviceWkPtr_t device_;
       centroidal_dynamics::Vector3 lastDirection_;
       centroidal_dynamics::Equilibrium* sEq_;
+      bool boundsUpToDate_;
       SteeringMethodKinodynamicWkPtr_t weak_;
 
     }; // class rbprm-kinodynamic
