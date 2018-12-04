@@ -233,7 +233,16 @@ namespace
         return distance;
     }
 
-    double referenceConfiguration(rbprm::RbPrmFullBodyPtr_t fullBody , const SampleDB& /*sampleDB*/, const sampling::Sample& sample){
+
+
+    /**
+     * @brief referenceConfiguration
+     * @param fullBody
+     * @param sample
+     * @param weights vector of size 3, value respectively for x,y,z, rotations
+     * @return
+     */
+    double referenceConfiguration(rbprm::RbPrmFullBodyPtr_t fullBody , const SampleDB& /*sampleDB*/, const sampling::Sample& sample, std::vector<value_type> weights){
       // find limb name
       rbprm::RbPrmLimbPtr_t limb = getLimbFromStartRank(sample.startRank_,fullBody);
       pinocchio::DevicePtr_t device = fullBody->device_;
@@ -270,11 +279,11 @@ namespace
           //hppDout(notice,"Jacobian of joint "<<device->getJointAtVelocityRank(i)->name()<<" at id = "<<i);
           //hppDout(notice,"joint column : \n"<<jointJacobian);
           if(fabs(jointJacobian[4]) > 0.5){ // rot y
-            weight[i_weight]=1;
+            weight[i_weight]=weights[1];
           }else if(fabs(jointJacobian[5]) > 0.5){ // rot z
-              weight[i_weight]=10.;
+            weight[i_weight]=weights[2];
           }else{ // prismatic or rot x
-              weight[i_weight]=100.;
+            weight[i_weight]=weights[0];
           }
           i_weight++;
       }
@@ -296,6 +305,22 @@ namespace
         hppDout(error,"WARNING : max distance to config not big enough");
       }
       return 100-(sqrt(distance));
+    }
+
+    double referenceConfiguration(rbprm::RbPrmFullBodyPtr_t fullBody , const SampleDB& sampleDB, const sampling::Sample& sample){
+      std::vector<value_type> weights;
+      weights.push_back(100.);
+      weights.push_back(1.);
+      weights.push_back(100.);
+      return referenceConfiguration(fullBody,sampleDB,sample,weights);
+    }
+
+    double referenceConfigurationWeightX(rbprm::RbPrmFullBodyPtr_t fullBody , const SampleDB& sampleDB, const sampling::Sample& sample) {
+      std::vector<value_type> weights;
+      weights.push_back(1.);
+      weights.push_back(10.);
+      weights.push_back(100.);
+      return referenceConfiguration(fullBody,sampleDB,sample,weights);
     }
 
 }
@@ -322,6 +347,8 @@ AnalysisFactory::AnalysisFactory(hpp::rbprm::RbPrmFullBodyPtr_t device)
     evaluate_.insert(std::make_pair("selfCollisionProbability", boost::bind(&selfCollisionProbability, boost::ref(device_), _1, _2)));
     evaluate_.insert(std::make_pair("jointLimitsDistance", boost::bind(&distanceToLimits, boost::ref(device_), _1, _2)));
     evaluate_.insert(std::make_pair("ReferenceConfiguration", boost::bind(&referenceConfiguration, boost::ref(device_), _1, _2)));
+    evaluate_.insert(std::make_pair("ReferenceConfigurationWeightX", boost::bind(&referenceConfigurationWeightX, boost::ref(device_), _1, _2)));
+
 
 }
 
