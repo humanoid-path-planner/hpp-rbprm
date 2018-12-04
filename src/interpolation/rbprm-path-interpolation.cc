@@ -88,12 +88,11 @@ namespace hpp {
         std::vector<std::string> variations(results.back().second.contactVariations(lastState));
         assert (variations.size() <=1 && "Two adjacents states should have only one contact variation");
         std::string limbId(variations[0]);
-        // try to create a state with all the contact from 'lastState' expcet for the limb 'variation[0]' which should be in the same position as in 'end_'
         State midState(lastState);
         midState.RemoveContact(limbId);
         hppDout(notice,"Try to replace contact for limb : "<<limbId);
         pinocchio::Configuration_t configuration = midState.configuration_;
-        core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(robot_->device_,"proj", 1e-4, 100);
+        core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(robot_->device_,"proj", 1e-4, 1000);
         interpolation::addContactConstraints(robot_, robot_->device_,proj, midState, midState.fixedContacts(midState));
         std::vector<bool> rotationMask;
         for(std::size_t i =0; i <3; ++i)
@@ -104,14 +103,49 @@ namespace hpp {
         // If projection was successful, we replace lastState with midState and then add end_ in the list
         if(projReport.success_){
             hppDout(notice,"projection of contact successful");
-            hppDout(notice,"New intermediate state : "<<pinocchio::displayConfig(projReport.result_.configuration_));
+            hppDout(notice,"New last state : "<<pinocchio::displayConfig(projReport.result_.configuration_));
             results.push_back(std::make_pair(states.back().first,projReport.result_));
-        }else{
-        // If the projection was not successful, we keep lastState in the list and produce one intermediate state of each contact transition
-            //TODO
+            results.push_back(std::make_pair(path_->timeRange().second,end_));
         }
-
-        results.push_back(std::make_pair(path_->timeRange().second,end_));
+        else{
+        // If the projection was not successful, we keep lastState in the list and produce one intermediate state of each contact transition
+          hppDout(notice,"Projection of lastState was not successful, try to add intermediate state");
+          results.push_back(states.back());
+          std::vector<std::string> variationsGoal(lastState.contactVariations(end_));
+          if(variationsGoal.size() == 1){ // probably never going to happen ??
+            hppDout(notice,"lastState and goalState are already adjacent, add goal state");
+            results.push_back(std::make_pair(path_->timeRange().second,end_));
+          }else if(variationsGoal.size() == 2){
+            hppDout(notice,"Try to add an intermediate state between lastState and goal :");
+            bool success(false);
+            for(size_t id = 0 ; id < variationsGoal.size() && !success; ++id){
+              std::string limbIdGoal(variationsGoal[id]);
+              State midStateGoal(lastState);
+              midStateGoal.RemoveContact(limbIdGoal);
+              hppDout(notice,"Try to replace contact for limb : "<<limbIdGoal);
+              configuration = midStateGoal.configuration_;
+              proj = core::ConfigProjector::create(robot_->device_,"proj", 1e-4, 1000);
+              interpolation::addContactConstraints(robot_, robot_->device_,proj, midStateGoal, midStateGoal.fixedContacts(midStateGoal));
+              std::vector<bool> rotationMaskGoal;
+              for(std::size_t i =0; i <3; ++i)
+              {
+                  rotationMaskGoal.push_back(true);
+              }
+              projReport = projection::projectEffector(proj,robot_,limbIdGoal,robot_->GetLimb(limbIdGoal),robot_->GetCollisionValidation(),configuration,end_.contactRotation_.at(limbIdGoal),rotationMaskGoal,end_.contactPositions_.at(limbIdGoal),end_.contactNormals_.at(limbIdGoal),midStateGoal);
+              // If projection was successful, we replace lastState with midState and then add end_ in the list
+              if(projReport.success_){
+                  hppDout(notice,"projection of contact successful");
+                  hppDout(notice,"New intermediate state : "<<pinocchio::displayConfig(projReport.result_.configuration_));
+                  results.push_back(std::make_pair(states.back().first,projReport.result_)); // there will be 2 states at the same time index ...
+                  results.push_back(std::make_pair(path_->timeRange().second,end_));
+                  success = true;
+              }
+            }
+          }else{
+            hppDout(notice,"Failed to add the goal states contacts, last states of the sequence is not the goal state.");
+            // TODO
+          }
+        }
         return results;
     }
 
