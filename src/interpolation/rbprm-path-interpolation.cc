@@ -331,8 +331,9 @@ if (nbFailures > 1)
         fout<<"Planner succeeded"<<std::endl;
         fout.close();
         */
-        states = addGoalConfig(states);
+
         states = FilterStates(states, filterStates);
+        states = addGoalConfig(states);
         return states;
     }
 
