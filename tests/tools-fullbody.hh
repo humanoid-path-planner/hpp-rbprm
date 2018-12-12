@@ -178,7 +178,7 @@ RbPrmFullBodyPtr_t loadHyQ(){
     device->rootJoint()->upperBound(1,  1);
     device->rootJoint()->upperBound(2,  4);
 
-    device->setDimensionExtraConfigSpace(6);
+    //device->setDimensionExtraConfigSpace(6);
 
     RbPrmFullBodyPtr_t fullBody = RbPrmFullBody::create(device);
 
@@ -218,9 +218,9 @@ RbPrmFullBodyPtr_t loadHyQ(){
     const std::string rfeet("rf_foot_joint");
     fullBody->AddLimb(rLegId,rLeg,rfeet,legOffset,limbOffset,legNormal,legX,legY,hpp::core::ObjectStdVector_t(),1000,"random",0.1,hpp::rbprm::_3_DOF,false,false,std::string(),0.3);
 
-    const std::string lLegId("rfleg");
-    const std::string lLeg("rf_haa_joint");
-    const std::string lfeet("rf_foot_joint");
+    const std::string lLegId("lfleg");
+    const std::string lLeg("lf_haa_joint");
+    const std::string lfeet("lf_foot_joint");
     fullBody->AddLimb(lLegId,lLeg,lfeet,legOffset,limbOffset,legNormal,legX,legY,hpp::core::ObjectStdVector_t(),1000,"random",0.1,hpp::rbprm::_3_DOF,false,false,std::string(),0.3);
 
     const std::string rhLegId("rhleg");
@@ -240,6 +240,8 @@ RbPrmFullBodyPtr_t loadHyQ(){
 
 State createState(const RbPrmFullBodyPtr_t& fullBody,core::Configuration_t config,const std::vector<std::string>& limbsInContact){
     fullBody->device_->currentConfiguration(config);
+    pinocchio::Computation_t newflag = static_cast <pinocchio::Computation_t> (pinocchio::JOINT_POSITION | pinocchio::JACOBIAN | pinocchio::COM);
+    fullBody->device_->controlComputation (newflag);
     fullBody->device_->computeForwardKinematics();
     State state;
     state.configuration_ = config;
@@ -255,6 +257,8 @@ State createState(const RbPrmFullBodyPtr_t& fullBody,core::Configuration_t confi
         state.contactOrder_.push(limbName);
     }
     state.nbContacts = state.contactNormals_.size();
+    state.com_ = fullBody->device_->positionCenterOfMass();
+
     return state;
 }
 
