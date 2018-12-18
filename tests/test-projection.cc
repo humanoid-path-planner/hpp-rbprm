@@ -51,7 +51,11 @@ BOOST_AUTO_TEST_CASE (projectToComPosition) {
 
   State s_init = createState(fullBody,q_ref,allLimbs);
   BOOST_CHECK_EQUAL(s_init.nbContacts,4);
-  fcl::Vec3f com_init =  s_init.com_ ;
+  fullBody->device_->currentConfiguration(q_ref);
+  pinocchio::Computation_t newflag = static_cast <pinocchio::Computation_t> (pinocchio::JOINT_POSITION | pinocchio::JACOBIAN | pinocchio::COM);
+  fullBody->device_->controlComputation (newflag);
+  fullBody->device_->computeForwardKinematics();
+  fcl::Vec3f com_init  = fullBody->device_->positionCenterOfMass();
   // com position with reference configuration given
   BOOST_CHECK_CLOSE(com_init[0],-0.01892558812361088,1e-6);
   BOOST_CHECK_CLOSE(com_init[1],-0.00125656290165268,1e-6);
@@ -69,16 +73,11 @@ BOOST_AUTO_TEST_CASE (projectToComPosition) {
   BOOST_CHECK_EQUAL(rep.result_.nbContacts,4);
 
   fullBody->device_->currentConfiguration(rep.result_.configuration_);
-  pinocchio::Computation_t newflag = static_cast <pinocchio::Computation_t> (pinocchio::JOINT_POSITION | pinocchio::JACOBIAN | pinocchio::COM);
-  fullBody->device_->controlComputation (newflag);
   fullBody->device_->computeForwardKinematics();
   fcl::Vec3f com_pino  = fullBody->device_->positionCenterOfMass();
   for(size_t i = 0 ; i < 3 ; ++i)
     BOOST_CHECK_SMALL(com_pino[i]-com_goal[i],1e-4); // precision should be the same as the error treshold of the config projector
 
-  // check if state.com_ is equal to the com computed by pinocchio
-  //for(size_t i = 0 ; i < 3 ; ++i)
-  //  BOOST_CHECK_SMALL(com_pino[i]-rep.result_.com_[i],1e-4); //FIXME : require fix in State
 
   // check if contact position are preserved :
   for(std::vector<std::string>::const_iterator cit = allLimbs.begin(); cit != allLimbs.end(); ++cit)
@@ -105,9 +104,6 @@ BOOST_AUTO_TEST_CASE (projectToComPosition) {
   for(size_t i = 0 ; i < 3 ; ++i)
     BOOST_CHECK_SMALL(com_pino[i]-com_goal[i],1e-4); // precision should be the same as the error treshold of the config projector
 
-  // check if state.com_ is equal to the com computed by pinocchio
-  //for(size_t i = 0 ; i < 3 ; ++i)
-  //  BOOST_CHECK_SMALL(com_pino[i]-rep.result_.com_[i],1e-4); //FIXME : require fix in State
 
   // check if contact position are preserved :
   for(std::vector<std::string>::const_iterator cit = allLimbs.begin(); cit != allLimbs.end(); ++cit)
@@ -137,9 +133,6 @@ BOOST_AUTO_TEST_CASE (projectToComPosition) {
       for(size_t i = 0 ; i < 3 ; ++i)
         BOOST_CHECK_SMALL(com_pino[i]-com_goal[i],1e-4); // precision should be the same as the error treshold of the config projector
 
-      // check if state.com_ is equal to the com computed by pinocchio
-      //for(size_t i = 0 ; i < 3 ; ++i)
-      //  BOOST_CHECK_SMALL(com_pino[i]-rep.result_.com_[i],1e-4); //FIXME : require fix in State
 
       // check if contact position are preserved :
       for(std::vector<std::string>::const_iterator cit = allLimbs.begin(); cit != allLimbs.end(); ++cit)

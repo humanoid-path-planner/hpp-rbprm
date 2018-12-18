@@ -257,7 +257,6 @@ State createState(const RbPrmFullBodyPtr_t& fullBody,core::Configuration_t confi
         state.contactOrder_.push(limbName);
     }
     state.nbContacts = state.contactNormals_.size();
-    state.com_ = fullBody->device_->positionCenterOfMass();
 
     return state;
 }

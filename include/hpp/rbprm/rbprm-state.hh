@@ -107,7 +107,6 @@ typedef T_StateFrame::const_iterator CIT_StateFrame;
 
 
         hpp::pinocchio::Configuration_t configuration_;
-        fcl::Vec3f com_;
         std::map<std::string, bool> contacts_;
         std::map<std::string, fcl::Vec3f> contactNormals_;
         std::map<std::string, fcl::Vec3f> contactPositions_;
