@@ -47,7 +47,7 @@ namespace hpp {
         file<<"\t "<<intPoint[0]<<"\t"<<intPoint[1]<<"\t"<<intPoint[2]<<endl;
         file<<"4"<<endl;
         clipZ ? file<<Ab.first.rows()+2<<endl : file<<Ab.first.rows()<<endl;
-        for(size_t i = 0 ; i < Ab.first.rows() ; ++i){
+        for(size_type i = 0 ; i < Ab.first.rows() ; ++i){
             file<<"\t"<<Ab.first(i,0)<<"\t"<<Ab.first(i,1)<<"\t"<<Ab.first(i,2)<<"\t"<<-Ab.second[i]-0.005<<endl;
         }
         if(clipZ){
@@ -67,7 +67,7 @@ namespace hpp {
         ss<<"3 1"<<endl;
         ss<<"\t "<<intPoint[0]<<"\t"<<intPoint[1]<<"\t"<<intPoint[2]<<endl;
         ss<<"4"<<endl;
-        for(size_t i = 0 ; i < Ab.first.rows() ; ++i){
+        for(size_type i = 0 ; i < Ab.first.rows() ; ++i){
             ss<<"\t"<<Ab.first(i,0)<<"\t"<<Ab.first(i,1)<<"\t"<<Ab.first(i,2)<<"\t"<<-Ab.second[i]-0.001<<endl;
         }
         //hppDout(notice,ss.str());
@@ -142,6 +142,8 @@ std::pair<MatrixXX, VectorX> computeStabilityConstraints(const centroidal_dynami
     #if QHULL
         hppDout(notice,"Stability constraints qHull : ");
         printQHull(std::make_pair(A,b),int_point);
+    #else
+        (void)int_point; // silent the unused parameter warning in case QHULL 0
     #endif
     return std::make_pair(A,b);
 }
@@ -551,50 +553,31 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
         lessContacts = previous;
 
 
-
-   // MatrixXX timings_matrix; // contain the timings of the first 3 phases, the total time and the discretization step
     VectorX current_timings;
-    VectorX times;
     double total_time = 0;
-    const double time_increment = 0.05;
-    const double min_SS = 0.6;
-    const double max_SS = 1.6;
-    const double min_DS = 0.3;
-    const double max_DS = 1.5;
-
-    /*
-    const double time_increment = 0.1;
-    const double min_SS = 0.6;
-    const double max_SS = 1.6;
-    const double min_DS = 0.3;
-    const double max_DS = 1.;
-    */
-    MatrixXX timings_matrix;
     bool timing_provided(false);
     int t_id = 1;
+    #if !FULL_TIME_SAMPLING
+    MatrixXX timings_matrix;
+    #endif
     hppDout(notice," timings provided size :  "<<timings.size());
     if(timings.size() != pData.contacts_.size()){
         // build timing vector
         // TODO : retrieve timing found by planning ?? how ?? (pass it as argument or store it inside the states ?)
-        if(true or (contactsBreak.size() == 1 && contactsCreation.size() == 1)){
+        if(contactsBreak.size() == 1 && contactsCreation.size() == 1){
             hppDout(notice,"Contact break and creation. Use hardcoded timing matrice");
-
             #if FULL_TIME_SAMPLING
+            const double time_increment = 0.05;
+            const double min_SS = 0.6;
+            const double max_SS = 1.6;
+            const double min_DS = 0.3;
+            const double max_DS = 1.5;
             current_timings = VectorX(3);
             //current_timings<<0.6,0.4,0.6; //hrp2
             //total_time = 1.6;
             current_timings<<min_DS,min_SS,min_DS; // hrp2
             #else
-
-    /*        timings_matrix = MatrixXX(4,3);
-            timings_matrix <<
-                              1.65, 0.2, 0.65, // found with script
-                                0.15, 0.05, 0.3,
-                                0.25,0.1,0.25, // script good
-                               0.3 , 0.05, 0.15;
-                        // hyq flat
-*/
-            timings_matrix = MatrixXX(16,3);
+            timings_matrix = MatrixXX(16,3); // contain the timings of the first 3 phases, the total time and the discretization step
             timings_matrix <<
                               0.8 , 0.7, 0.8,
                               0.3 , 0.6, 0.3,
@@ -612,54 +595,6 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
                             1. , 0.6, 1.,
                             1.2 , 0.6, 1.2,
                             1.5 , 0.6, 1.5;
-
-
-/*
-            timings_matrix = MatrixXX(37,3);
-            timings_matrix <<
-                              0.3,0.6,0.3,
-                              1.65, 0.2, 0.65, // found with script
-                        // hyq flat
-                                1  , 0.2, 1,
-                                1  , 0.2, 0.5,
-                                0.5, 0.2, 1 ,
-                                1  , 0.4, 1,
-                                1  , 0.4, 0.5,
-                                0.5, 0.4, 1 ,
-                                1  , 0.6, 1,
-                                1  , 0.6, 0.5,
-                                0.5, 0.6, 1 ,
-                                1  , 0.05, 1,
-                                1  , 0.05, 0.5,
-                                0.5, 0.05, 1 ,
-                               1.5, 0.1, 1.5,
-                                1.5, 0.2, 1.5,
-                                1.5, 0.5, 1.5,
-                                1  , 0.1, 1,
-                                 1  , 0.1, 0.5,
-                                  0.5, 0.1, 1 ,
-                    // timing found with Steve's script :
-                                0.25,0.1,0.25, // script good
-                                1.6,0.5,0.6, // script good
-                                1.9,0.65,0.8,
-                                1.6,0.5,0.65,
-                                1.7,0.5,0.7,
-                                0.15 , 0.05 , 0.15,
-                            // hyq planches
-                              0.2, 0.05, 0.2,
-                              0.15, 0.05, 0.3,
-                              0.3 , 0.05, 0.15,
-                              0.3, 0.05, 0.3,
-                              0.2, 0.05, 0.2,
-                              0.15, 0.05, 0.3,
-                              0.3 , 0.05, 0.15,
-            // vnc
-                               0.6,0.05,0.05,
-                                0.65,0.05,0.05,
-                                0.8,0.6,0.8,
-                                0.4,0.2,0.4;
-*/
-
             current_timings = timings_matrix.block(0,0,1,pData.contacts_.size()).transpose();
             #endif
             total_time = 0;
@@ -668,18 +603,12 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
             }
         }else{
             hppDout(notice,"Only two phases.");
-            //current_timings = VectorX(2);
-            //current_timings<<1.,1.;
-            //total_time = 2.;
+            current_timings = VectorX(2);
+            current_timings<<1.,1.;
+            total_time = 2.;
         }
     }else{
         hppDout(notice,"Timing vector is provided");
-        /*timings_matrix = MatrixXX(1,5);
-        timings_matrix(0,0) = timings[0];
-        timings_matrix(0,1) = timings[1];
-        timings_matrix(0,2) = timings[2];
-        timings_matrix(0,3) = timings[0] + timings[1] + timings[2];
-        timings_matrix(0,4) = timeStep;*/
         current_timings = VectorX(timings.size());
         for(size_t i = 0 ; i < timings.size() ; ++i){
             current_timings[i] = timings[i];
@@ -745,6 +674,8 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
         #if STAT_TIMINGS
         // print result in file :
         printTimingFile(file,current_timings,res.success(),quasiStaticSucces);
+        #else
+          (void)quasiStaticSucces; // silent warning
         #endif
         // build the new timing vector :
 

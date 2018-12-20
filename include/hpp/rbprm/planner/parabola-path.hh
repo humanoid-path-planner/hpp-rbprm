@@ -25,7 +25,7 @@
 
 namespace hpp {
   namespace rbprm {
-
+    using core::size_type;
 
     // forward declaration of class
     HPP_PREDEF_CLASS (ParabolaPath);
@@ -184,7 +184,7 @@ namespace hpp {
 
       /// Set the three parabola coefficients
       void coefficients (core::vector_t coefs) const {
-        for (std::size_t i = 0; i < coefs.size (); i++)
+        for (size_type i = 0; i < coefs.size (); i++)
           coefficients_(i) = coefs (i);
       }
 

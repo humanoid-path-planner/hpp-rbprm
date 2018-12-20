@@ -33,6 +33,8 @@
 namespace hpp {
   namespace rbprm {
 
+    using core::size_type;
+
     HPP_PREDEF_CLASS(RbPrmFullBody);
 
     /// Encapsulation of a Device class to handle the generation of contacts

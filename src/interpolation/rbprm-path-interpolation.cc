@@ -156,7 +156,7 @@ namespace hpp {
         {
             const State& previous = states.back().second;
             core::Configuration_t configuration = loadPreviousConfiguration(robot_->device_,lastConfig,*cit);
-            if( accIndex < configuration.size())
+            if( accIndex < (std::size_t)configuration.size())
             {
                 acc = configuration.segment<3>(accIndex);
                 dir = configuration.segment<3>(accIndex-3);

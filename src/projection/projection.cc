@@ -134,7 +134,7 @@ void CreatePosturalTaskConstraint(hpp::rbprm::RbPrmFullBodyPtr_t fullBody,core::
   for(size_t i = 0 ; i < 3 ; i++){
     mask[i]=false;
   }
-  for(size_t i = fullBody->device_->numberDof()-7 ; i < fullBody->device_->numberDof() ; i++){
+  for(size_type i = fullBody->device_->numberDof()-7 ; i < fullBody->device_->numberDof() ; i++){
     mask[i]=false;
   }
 
@@ -142,7 +142,7 @@ void CreatePosturalTaskConstraint(hpp::rbprm::RbPrmFullBodyPtr_t fullBody,core::
 
 
   // create a weight vector
-  for(size_t i = 0 ; i < fullBody->device_->numberDof() ; ++i){
+  for(size_type i = 0 ; i < fullBody->device_->numberDof() ; ++i){
     weight[i] = 1.;
   }
   // TODO : retrieve it from somewhere, store it in fullbody ?
@@ -150,11 +150,11 @@ void CreatePosturalTaskConstraint(hpp::rbprm::RbPrmFullBodyPtr_t fullBody,core::
   // : chest
   weight[6]= 10.;
   //head :
-  for(size_t i = 7 ; i <= 9 ; i++)
+  for(size_type i = 7 ; i <= 9 ; i++)
     weight[i] = 1.;
 
   // root's orientation
-  for(size_t i = 3 ; i < 6 ; i++){
+  for(size_type i = 3 ; i < 6 ; i++){
     weight[i] = 50.;
   }
 
@@ -165,16 +165,16 @@ void CreatePosturalTaskConstraint(hpp::rbprm::RbPrmFullBodyPtr_t fullBody,core::
 
 
   // normalize weight array :
-  double moy =0;
+  value_type moy =0;
   int num_active = 0;
-  for (size_t i = 0 ; i < weight.size() ; i++){
+  for (size_type i = 0 ; i < weight.size() ; i++){
     if(mask[i]){
       moy += weight[i];
       num_active++;
     }
   }
   moy = moy/num_active;
-  for (size_t i = 0 ; i < weight.size() ; i++)
+  for (size_type i = 0 ; i < weight.size() ; i++)
     weight[i] = weight[i]/moy;
 
 
@@ -233,7 +233,7 @@ void LockFromRootRec(pinocchio::JointPtr_t cJoint, const std::vector<pinocchio::
         projector->add(core::LockedJoint::create(cJoint, LiegroupElement(targetRootConfiguration.segment(rankInConfiguration, cJoint->configSize()),cJoint->configurationSpace())));
         //if (cJoint->numberChildJoints() !=1)
         //    return;
-        for(int i =0; i< cJoint->numberChildJoints(); ++i)
+        for(std::size_t i =0; i< cJoint->numberChildJoints(); ++i)
             LockFromRootRec(cJoint->childJoint(i), jointLimbs, targetRootConfiguration, projector);
     }
 }
@@ -436,7 +436,7 @@ bool PointInTriangle(const fcl::Vec3f& p, const fcl::Vec3f& a, const fcl::Vec3f&
     return SameSide(p,a, b,c) && SameSide(p,b, a,c) && SameSide(p,c, a,b);
 }
 
-const double clamp( const double& val, const double& lo, const double& hi)
+double clamp( const double& val, const double& lo, const double& hi)
 {
     return std::min( std::max( val, lo ), hi );
 }

@@ -88,7 +88,7 @@ namespace hpp {
             {
                 collisionValidation_->addObstacle(*cit);
             }
-            /*std::cout << "adding obstacle to limb validation " <<(*cit)->name() << std::endl;
+            std::cout << "adding obstacle to limb validation " <<(*cit)->name() << std::endl;
             limbcollisionValidation_->addObstacle(*cit);
             //remove effector collision
             if(disableEffectorCollision)

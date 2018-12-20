@@ -119,20 +119,20 @@ namespace interpolation {
         mask[i]=false;
         weight[i] = 0.;
       }
-      for(size_t i = device->numberDof()-7 ; i < device->numberDof() ; i++){
+      for(size_type i = device->numberDof()-7 ; i < device->numberDof() ; i++){
         mask[i]=false;
         weight[i] = 0.;
       }
 
 
       std::ostringstream oss;
-      for (size_type i=0; i < mask.size (); ++i){
+      for (std::size_t i=0; i < mask.size (); ++i){
         oss << mask [i] << ",";
       }
       hppDout(notice,"mask = "<<oss.str());
 
       // create a weight vector
-      for(size_t i = 3 ; i < device->numberDof()-7 ; ++i){
+      for(size_type i = 3 ; i < device->numberDof()-7 ; ++i){
         weight[i] = 1.;
       }
       // TODO : retrieve it from somewhere, store it in fullbody ?
@@ -140,11 +140,11 @@ namespace interpolation {
       // : chest
       weight[6]= 10.;
       //head :
-      for(size_t i = 7 ; i <= 9 ; i++)
+      for(size_type i = 7 ; i <= 9 ; i++)
         weight[i] = 1.;
 
       // root's orientation
-      for(size_t i = 3 ; i < 6 ; i++){
+      for(size_type i = 3 ; i < 6 ; i++){
         weight[i] = 50.;
       }
 
@@ -159,14 +159,14 @@ namespace interpolation {
       // normalize weight array :
       double moy =0;
       int num_active = 0;
-      for (size_t i = 0 ; i < weight.size() ; i++){
+      for (size_type i = 0 ; i < weight.size() ; i++){
         if(mask[i]){
           moy += weight[i];
           num_active++;
         }
       }
       moy = moy/num_active;
-      for (size_t i = 0 ; i < weight.size() ; i++)
+      for (size_type i = 0 ; i < weight.size() ; i++)
         weight[i] = weight[i]/moy;
 
 

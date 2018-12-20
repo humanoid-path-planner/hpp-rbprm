@@ -91,7 +91,7 @@ using namespace core;
                 sampling::Load(sample,*config);
             }
         }
-        UpdateConstraints(*config, projector_, tds_, pathDofRank_);
+        UpdateConstraints(*config, tds_, pathDofRank_);
         return config;
     }
   }// namespace interpolation

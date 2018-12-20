@@ -38,9 +38,9 @@ namespace hpp {
                                 value_type length,
                                 vector_t coefs) :
       parent_t (interval_t (0, length), device->configSize (),
-                device->numberDof ()), device_ (device), initial_ (init),
-      end_ (end), coefficients_ (vector_t(coefs.size ())), length_ (length),
-      V0_ (vector_t(3)), Vimp_ (vector_t(3))
+                device->numberDof ()),V0_ (vector_t(3)), Vimp_ (vector_t(3)), device_ (device), initial_ (init),
+      end_ (end), coefficients_ (vector_t(coefs.size ())), length_ (length)
+
     {
       assert (device);
       coefficients (coefs);
@@ -57,10 +57,9 @@ namespace hpp {
                                 std::vector <std::string> initialROMnames,
                                 std::vector <std::string> endROMnames) :
       parent_t (interval_t (0, length), device->configSize (),
-                device->numberDof ()), device_ (device), initial_ (init),
-      end_ (end), coefficients_ (vector_t(coefs.size ())), length_ (length),
-      V0_ (V0), Vimp_ (Vimp), initialROMnames_ (initialROMnames),
-      endROMnames_ (endROMnames)
+                device->numberDof ()),V0_ (V0), Vimp_ (Vimp),initialROMnames_ (initialROMnames),
+      endROMnames_ (endROMnames), device_ (device), initial_ (init),
+      end_ (end), coefficients_ (vector_t(coefs.size ())), length_ (length)
     {
       assert (device);
       coefficients (coefs);
@@ -69,11 +68,10 @@ namespace hpp {
     }
 
     ParabolaPath::ParabolaPath (const ParabolaPath& path) :
-      parent_t (path), device_ (path.device_), initial_ (path.initial_),
+      parent_t (path),V0_ (path.V0_), Vimp_ (path.Vimp_),   initialROMnames_ (path.initialROMnames_),
+      endROMnames_ (path.endROMnames_) ,device_ (path.device_), initial_ (path.initial_),
       end_ (path.end_), coefficients_ (path.coefficients_),
-      length_ (path.length_), V0_ (path.V0_), Vimp_ (path.Vimp_),
-      initialROMnames_ (path.initialROMnames_),
-      endROMnames_ (path.endROMnames_)
+      length_ (path.length_)
     {
       hppDout (info, "V0_= " << V0_.transpose () << " Vimp_= " << Vimp_.transpose ());
       hppDout (info, "initialROMnames size= " << initialROMnames_.size ());
@@ -130,7 +128,7 @@ namespace hpp {
 
       /* Set to zero extra-configs (only on path, not on extremities */
       const std::size_t indexECS = nbConfig - ecsDim;
-      for (std::size_t i = 0; i < ecsDim; i++)
+      for (size_type i = 0; i < ecsDim; i++)
         result (indexECS + i) = 0;
       return true;
     }

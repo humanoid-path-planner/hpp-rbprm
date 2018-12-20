@@ -57,7 +57,7 @@ namespace hpp {
         return core::ConfigurationPtr_t(new core::Configuration_t(config));
     }
 
-    inline void UpdateConstraints(core::ConfigurationOut_t configuration, core::ConfigProjectorPtr_t projector,
+    inline void UpdateConstraints(core::ConfigurationOut_t configuration,
                                   const T_TimeDependant& tds, const std::size_t pathDofRank)
     {
         const core::value_type y = configuration[pathDofRank];
@@ -66,7 +66,6 @@ namespace hpp {
         {
             (*cit)(y, configuration);
         }
-        //projector->updateRightHandSide ();
     }
     }
     }

@@ -122,7 +122,7 @@ namespace stability{
         return Equilibrium(fullbody->device_->name(), fullbody->device_->mass(),4,SOLVER_LP_QPOASES,true,10,false);
     }
 
-    const std::size_t numContactPoints(const RbPrmLimbPtr_t& limb)
+    std::size_t numContactPoints(const RbPrmLimbPtr_t& limb)
     {
         if(limb->contactType_ == _3_DOF)
             return 1;
@@ -181,7 +181,7 @@ namespace stability{
                 computeRectangleContact(contacts[c], limb,state,positions.middleRows<4>(currentIndex),feetX,feetY);
             else
                 computePointContact(contacts[c], limb,state,positions.middleRows<1>(currentIndex,inc));
-            for(int i =0; i < inc; ++i)
+            for(std::size_t i =0; i < inc; ++i)
             {
                 normals.middleRows<1>(currentIndex+i) = normal;
             }
@@ -191,7 +191,7 @@ namespace stability{
         if(graspscontacts.size() > 0)
         {
             c = 0;
-            graspIndex = currentIndex;
+            graspIndex = (int)currentIndex;
             for(std::vector<std::size_t>::const_iterator cit = contactGraspPointsInc.begin();
                 cit != contactGraspPointsInc.end(); ++cit, ++c)
             {
@@ -203,7 +203,7 @@ namespace stability{
                     computeRectangleContact(graspscontacts[c], limb,state,positions.middleRows<4>(currentIndex));
                 else
                     computePointContact(graspscontacts[c], limb,state,positions.middleRows<1>(currentIndex,inc));
-                for(int i =0; i < inc; ++i)
+                for(std::size_t i =0; i < inc; ++i)
                 {
                     normals.middleRows<1>(currentIndex+i) = normal;
                 }

@@ -36,10 +36,10 @@ namespace hpp {
     using pinocchio::size_type;
 
     SteeringMethodParabola::SteeringMethodParabola
-    (const core::ProblemPtr_t& problem):
-      SteeringMethod (*problem), problem_ (problem),
-      device_ (problem-> robot ()),
-      distance_ (core::WeighedDistance::create (problem->robot())), weak_ (),
+    (const core::Problem& problem):
+      SteeringMethod (problem),
+      device_ (problem.robot ()),
+      distance_ (core::WeighedDistance::create (problem.robot())), weak_ (),
       g_(9.81), V0max_ (1.),
       Vimpmax_ (1.),
       mu_ (0.5), Dalpha_ (0.001), nLimit_ (6),initialConstraint_(true),
@@ -47,7 +47,7 @@ namespace hpp {
     {
       hppDout(notice,"Constructor steering-method-parabola");
       try {
-        V0max_ = (double)problem_->getParameter ("vMax").floatValue();
+        V0max_ = (double)problem.getParameter ("vMax").floatValue();
         Vimpmax_ =V0max_;
       } catch (const std::exception& e) {
         std::cout<<"Warning : no velocity bounds set in problem, use 1.0 as default"<<std::endl;
@@ -73,7 +73,7 @@ namespace hpp {
       std::vector<std::string> filter;
       core::PathPtr_t validPart;
       const core::PathValidationPtr_t pathValidation
-          (problem_->pathValidation ());
+          (problem_.pathValidation ());
       RbPrmPathValidationPtr_t rbPathValidation = boost::dynamic_pointer_cast<RbPrmPathValidation>(pathValidation);
       pinocchio::RbPrmDevicePtr_t rbDevice =
           boost::dynamic_pointer_cast<pinocchio::RbPrmDevice> (device_.lock ());
@@ -116,15 +116,15 @@ namespace hpp {
       hppDout (info, "phi: " << phi);
 
       /* 5th constraint: first cone */
-      value_type delta1,delta2;
 
       /*   Remove friction check (testing)
+      //value_type delta1,delta2;
       if (1000 * (q1 (index) * q1 (index) + q1 (index+1) * q1 (index+1))
           > q1 (index+2) * q1 (index+2)) { // cone 1 not vertical
         if (!fiveth_constraint (q1, theta, 1, &delta1)) {
           hppDout (info, "plane_theta not intersecting first cone");
           initialConstraint_ = false;
-          //   problem_->parabolaResults_ [1] ++;
+          //   problem.parabolaResults_ [1] ++;
           return core::PathPtr_t ();
         }
       }
@@ -138,7 +138,7 @@ namespace hpp {
           > q2 (index+2) * q2 (index+2)) { // cone 1 not vertical
         if (!fiveth_constraint (q2, theta, 2, &delta2)) {
           hppDout (info, "plane_theta not intersecting second cone");
-          // problem_->parabolaResults_ [1] ++;
+          // problem.parabolaResults_ [1] ++;
           return core::PathPtr_t ();
         }
       }
@@ -199,7 +199,7 @@ namespace hpp {
                                      &alpha_lim_minus);
       if (fail) {
         hppDout (info, "failed to apply 2nd constraint");
-        // problem_->parabolaResults_ [3] ++;
+        // problem.parabolaResults_ [3] ++;
         return core::PathPtr_t ();
       }
 
@@ -212,7 +212,7 @@ namespace hpp {
                                      &alpha_imp_minus);
       if (fail6) {
         hppDout (info, "failed to apply 6th constraint");
-        // problem_->parabolaResults_ [3] ++;
+        // problem.parabolaResults_ [3] ++;
         return core::PathPtr_t ();
       }
 
@@ -226,7 +226,7 @@ namespace hpp {
 
       if (fail3) {
         hppDout (info, "failed to apply 3rd constraint");
-        // problem_->parabolaResults_ [2] ++;
+        // problem.parabolaResults_ [2] ++;
         return core::PathPtr_t ();
       }
 
@@ -275,7 +275,7 @@ namespace hpp {
 
       if (alpha_inf_bound > alpha_sup_bound) {
         hppDout (info, "Constraints intersection is empty");
-        //  problem_->parabolaResults_ [2] ++;
+        //  problem.parabolaResults_ [2] ++;
         return core::PathPtr_t ();
       }
 
@@ -296,7 +296,7 @@ namespace hpp {
                                                          x_theta_imp);
       if (!maxHeightRespected) {
         hppDout (info, "Path always out of the bounds");
-        // problem_->parabolaResults_ [0] ++;
+        // problem.parabolaResults_ [0] ++;
         return core::PathPtr_t ();
       }
 
@@ -332,7 +332,7 @@ namespace hpp {
       bool hasCollisions = !rbPathValidation->validate (pp, false, validPart, pathReport, filter);
       std::size_t n = 0;
       if (hasCollisions || !maxHeightRespected) {
-        // problem_->parabolaResults_ [0] ++; // not increased during dichotomy
+        // problem.parabolaResults_ [0] ++; // not increased during dichotomy
         hppDout (info, "parabola has collisions, start dichotomy");
         while ((hasCollisions || !maxHeightRespected) && n < nLimit_ ) {
           alpha = dichotomy (alpha_inf_bound, alpha_sup_bound, n);
@@ -365,7 +365,7 @@ namespace hpp {
      value_type *alpha0, value_type *v0) const
     {
       const core::PathValidationPtr_t pathValidation
-          (problem_->pathValidation ());
+          (problem_.pathValidation ());
       RbPrmPathValidationPtr_t rbPathValidation = boost::dynamic_pointer_cast<RbPrmPathValidation>(pathValidation);
       std::vector<std::string> filter;
       core::PathValidationReportPtr_t report;
@@ -515,7 +515,7 @@ namespace hpp {
     // at least one z value must be >= z_0
     bool SteeringMethodParabola::fiveth_constraint
     (const core::ConfigurationIn_t q, const value_type theta,
-     const int number, value_type *delta) const {
+     const int /*number*/, value_type *delta) const {
       const size_type index = device_.lock ()->configSize()
           - device_.lock ()->extraConfigSpace ().dimension ();
       const value_type U = q (index); // n_x
@@ -821,7 +821,7 @@ namespace hpp {
     (core::ConfigurationIn_t q, std::vector <std::string> * ROMnames) const {
       core::ValidationReportPtr_t report;
       const core::Configuration_t config = q;
-      problem_->configValidations()->validate(config, report);
+      problem_.configValidations()->validate(config, report);
       core::RbprmValidationReportPtr_t rbReport =
           boost::dynamic_pointer_cast<core::RbprmValidationReport> (report);
       if(rbReport){

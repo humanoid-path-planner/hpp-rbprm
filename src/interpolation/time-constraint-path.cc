@@ -84,7 +84,7 @@ namespace hpp {
     {
         if (constraints() && constraints()->configProjector ())
         {
-            UpdateConstraints(configuration, constraints()->configProjector (), tds_, pathDofRank_);
+            UpdateConstraints(configuration, tds_, pathDofRank_);
         }
     }
 

@@ -116,7 +116,7 @@ namespace interpolation {
      * @param nextState
      * @return
      */
-    std::vector<core::PathVectorPtr_t> fitBeziersToPath(RbPrmFullBodyPtr_t fullbody,const pinocchio::Frame& effector, const double comPathLength,const PathPtr_t fullBodyComPath, const State &startState, const State &nextState);
+    std::vector<core::PathVectorPtr_t> fitBeziersToPath(RbPrmFullBodyPtr_t fullbody,const pinocchio::Frame& effector, const value_type comPathLength,const PathPtr_t fullBodyComPath, const State &startState, const State &nextState);
 
     typedef spline::exact_cubic<double, double, 3, true, Eigen::Matrix<value_type, 3, 1> > exact_cubic_t;
     typedef spline::spline_deriv_constraint<double, double, 3, true, Eigen::Matrix<value_type, 3, 1> > spline_deriv_constraint_t;
@@ -146,7 +146,7 @@ namespace interpolation {
         EndEffectorPath(const DevicePtr_t device,const pinocchio::Frame& effector,const PathPtr_t path,const fcl::Vec3f& offset = fcl::Vec3f(0,0,0)):
             device_(device),effector_(effector),fullBodyPath_(path),positionConstraint_(createPositionMethod(device,fcl::Vec3f(), effector)),offset_(offset),length_(path->length())
         {}
-        vector_t operator()(double t) const;
+        vector_t operator()(value_type t) const;
         void setOffset(const fcl::Vec3f& offset){
             hppDout(notice,"End effector path, offset = "<<offset);
             offset_ = offset;}
@@ -156,7 +156,7 @@ namespace interpolation {
         const core::PathPtr_t fullBodyPath_;
         constraints::PositionPtr_t positionConstraint_;
         fcl::Vec3f offset_;
-        const double length_;
+        const value_type length_;
     };
 
 

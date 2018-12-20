@@ -88,7 +88,7 @@ namespace hpp {
       qProj_ (new core::Configuration_t(problem.robot()->configSize())),
       roadmap_(boost::dynamic_pointer_cast<core::Roadmap>(core::RbprmRoadmap::create (problem.distance (),problem.robot()))),
       sm_(boost::dynamic_pointer_cast<SteeringMethodKinodynamic>(problem.steeringMethod())),
-      smParabola_(rbprm::SteeringMethodParabola::create((core::ProblemPtr_t(&problem)))),
+      smParabola_(rbprm::SteeringMethodParabola::create(problem)),
       rbprmPathValidation_(boost::dynamic_pointer_cast<RbPrmPathValidation>(problem.pathValidation()))
     {
           assert(sm_ && "steering method should be a kinodynamic steering method for this solver");
@@ -145,7 +145,7 @@ namespace hpp {
       qProj_ (new core::Configuration_t(problem.robot()->configSize())),
       roadmap_(boost::dynamic_pointer_cast<core::Roadmap>(core::RbprmRoadmap::create (problem.distance (),problem.robot()))),
       sm_(boost::dynamic_pointer_cast<SteeringMethodKinodynamic>(problem.steeringMethod())),
-      smParabola_(rbprm::SteeringMethodParabola::create((core::ProblemPtr_t(&problem)))),
+      smParabola_(rbprm::SteeringMethodParabola::create(problem)),
       rbprmPathValidation_(boost::dynamic_pointer_cast<RbPrmPathValidation>(problem.pathValidation()))
     {
       assert(sm_ && "steering method should be a kinodynamic steering method for this solver");
@@ -266,7 +266,7 @@ namespace hpp {
       core::PathPtr_t validPath;
       core::PathValidationReportPtr_t report;
       const size_type indexECS =problem().robot()->configSize() - problem().robot()->extraConfigSpace().dimension (); // ecs index
-      bool paraPathValid(false),kinoPathValid(false);
+      bool kinoPathValid(false);
       hppDout(notice,"!! begin tryParabolaPath");
 
       // 1. compute a parabola between last configuration valid in contact, and qrand (target)
@@ -274,7 +274,6 @@ namespace hpp {
       if(paraPath){
         hppDout(notice,"!! ParaPath computed");
         if(paraPath->length() > 0) { // only add if the full path is valid (because we can't extract a subpath of a parabola path)
-          paraPathValid = true;
           hppDout(notice, "!! parabola path valid !");
           ParabolaPathPtr_t parabolaPath = boost::dynamic_pointer_cast<ParabolaPath>(paraPath);
           core::ConfigurationPtr_t q_new (new core::Configuration_t(parabolaPath->end ()));

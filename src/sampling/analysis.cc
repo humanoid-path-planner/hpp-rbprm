@@ -197,7 +197,7 @@ namespace
         else return distanceRec(conf, lastJoint, currentJoint->childJoint(0),currentDistance);
     }
 
-    rbprm::RbPrmLimbPtr_t getLimbFromStartRank(size_t startRank,rbprm::RbPrmFullBodyPtr_t fullBody  ){
+    rbprm::RbPrmLimbPtr_t getLimbFromStartRank(size_type startRank,rbprm::RbPrmFullBodyPtr_t fullBody  ){
       rbprm::T_Limb::const_iterator cit = fullBody->GetLimbs().begin();
       for(; cit != fullBody->GetLimbs().end(); ++cit)
       {
@@ -265,7 +265,7 @@ namespace
       hppDout(notice,"limb     id vel= "<<limb->limb_->rankInVelocity());
       hppDout(notice,"limb     id pos= "<<limb->limb_->rankInConfiguration());
 */
-      for (size_t i = limb->limb_->rankInVelocity() ; i <= limb->effector_.joint().rankInVelocity() ; ++i){
+      for (size_type i = limb->limb_->rankInVelocity() ; i <= limb->effector_.joint().rankInVelocity() ; ++i){
           pinocchio::vector_t jointJacobian= device->getJointAtVelocityRank(i)->jacobian().block<6,1>(0,i).transpose();
           //hppDout(notice,"Jacobian of joint "<<device->getJointAtVelocityRank(i)->name()<<" at id = "<<i);
           //hppDout(notice,"joint column : \n"<<jointJacobian);
@@ -285,7 +285,7 @@ namespace
       // the difference vector depend on the index in the velocity vector, not in the configuration
       // we only sum for the index of the current limb
      // hppDout(notice,"ref config rank: "<<cit->second->limb_->rankInVelocity()<<" ; "<<cit->second->effector_->rankInVelocity());
-      for (size_t i = limb->limb_->rankInVelocity() ; i <= limb->effector_.joint().rankInVelocity() ; ++i){
+      for (size_type i = limb->limb_->rankInVelocity() ; i <= limb->effector_.joint().rankInVelocity() ; ++i){
         distance += (diff[i]*diff[i])*weight[i-limb->limb_->rankInVelocity()];
       }
       // This is an heuristic and not a cost, a null distance is the best result

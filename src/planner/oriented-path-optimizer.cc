@@ -101,10 +101,10 @@ namespace hpp{
       core::PathValidationReportPtr_t unusedReport;
       PathVectorPtr_t result = PathVector::create (path->outputSize (),path->outputDerivativeSize ());
       const size_t numPaths = path->numberPaths ();
-      bool orientedValid[numPaths];
-      bool replaceValid[numPaths];
-      KinodynamicOrientedPathPtr_t orientedPaths[numPaths];
-      KinodynamicPathPtr_t resultPaths[numPaths];
+      std::vector<bool> orientedValid(numPaths);
+      std::vector<bool> replaceValid(numPaths);
+      std::vector<KinodynamicOrientedPathPtr_t> orientedPaths(numPaths);
+      std::vector<KinodynamicPathPtr_t> resultPaths(numPaths);
       KinodynamicPathPtr_t castedPath;
       // iterate over all elements of path (all kinodynamicPath), convert them to orientedPath and test collision
       for (std::size_t i=0; i<numPaths; ++i) {
@@ -164,7 +164,7 @@ namespace hpp{
      * @param resultPaths
      * @return
      */
-    bool OrientedPathOptimizer::checkReplaceOrientation(const size_t index,const size_t lastIndex, bool* replaceValid, bool* orientedValid, core::KinodynamicOrientedPathPtr_t* orientedPaths, core::KinodynamicPathPtr_t* resultPaths){
+    bool OrientedPathOptimizer::checkReplaceOrientation(const size_t index,const size_t lastIndex, std::vector<bool> replaceValid, std::vector<bool> orientedValid, std::vector<core::KinodynamicOrientedPathPtr_t> orientedPaths, std::vector<core::KinodynamicPathPtr_t> resultPaths){
       KinodynamicPathPtr_t previousPath,nextPath;
       bool previousValid(false);
       PathPtr_t unusedValidPart;
