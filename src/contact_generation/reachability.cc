@@ -306,11 +306,21 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
     }
 
 
-
+    // compute COM positions :
+    pinocchio::Computation_t flag = fullbody->device_->computationFlag();
+    pinocchio::Computation_t newflag = static_cast <pinocchio::Computation_t> (pinocchio::JOINT_POSITION | pinocchio::JACOBIAN | pinocchio::COM);
+    fullbody->device_->controlComputation (newflag);
+    fullbody->device_->currentConfiguration(previous.configuration_);
+    fullbody->device_->computeForwardKinematics();
+    fcl::Vec3f com_previous = fullbody->device_->positionCenterOfMass();
+    fullbody->device_->currentConfiguration(next.configuration_);
+    fullbody->device_->computeForwardKinematics();
+    fcl::Vec3f com_next = fullbody->device_->positionCenterOfMass();
+    fullbody->device_->controlComputation (flag);
 
     fcl::Vec3f x;
     hppStartBenchmark(QP_REACHABLE);
-    success = intersectionExist(Ab,previous.com_,next.com_,x);
+    success = intersectionExist(Ab,com_previous,com_next,x);
     hppStopBenchmark(QP_REACHABLE);
     hppDisplayBenchmark(QP_REACHABLE);
     if(success){
@@ -326,6 +336,7 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
     hppStopBenchmark(IS_REACHABLE);
     hppDisplayBenchmark(IS_REACHABLE);
 
+
     // compute interior point to display with qHull (only required for display and debug)
     #if QHULL
     Vector3 int_pt_kin;
@@ -336,11 +347,11 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
     }
     else{
         if(contactsBreak.size() > 0){
-            int_pt_kin = previous.com_;
-            intersectionExist(A_n,previous.com_,next.com_,int_pt_stab);
+            int_pt_kin = com_previous;
+            intersectionExist(A_n,com_previous,com_next,int_pt_stab);
         }else{
-            int_pt_kin = next.com_;
-            intersectionExist(A_p,previous.com_,next.com_,int_pt_stab);
+            int_pt_kin = com_next;
+            intersectionExist(A_p,com_previous,com_next,int_pt_stab);
         }
     }
 
@@ -429,6 +440,18 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     #endif
     bool quasiStaticSucces(false);
 
+    // compute COM positions :
+    pinocchio::Computation_t flag = fullbody->device_->computationFlag();
+    pinocchio::Computation_t newflag = static_cast <pinocchio::Computation_t> (pinocchio::JOINT_POSITION | pinocchio::JACOBIAN | pinocchio::COM);
+    fullbody->device_->controlComputation (newflag);
+    fullbody->device_->currentConfiguration(previous.configuration_);
+    fullbody->device_->computeForwardKinematics();
+    fcl::Vec3f com_previous = fullbody->device_->positionCenterOfMass();
+    fullbody->device_->currentConfiguration(next.configuration_);
+    fullbody->device_->computeForwardKinematics();
+    fcl::Vec3f com_next = fullbody->device_->positionCenterOfMass();
+    fullbody->device_->controlComputation (flag);
+
 
 
     if(tryQuasiStatic){
@@ -439,9 +462,9 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
             quasiStaticResult.status=QUASI_STATIC;
             // build a Bezier curve of order 2 :
             std::vector<Vector3> wps;
-            wps.push_back(previous.com_);
+            wps.push_back(com_previous);
             wps.push_back(quasiStaticResult.x);
-            wps.push_back(next.com_);
+            wps.push_back(com_next);
             bezier_Ptr bezierCurve=bezier_Ptr(new bezier_t(wps.begin(),wps.end(),1.));
             quasiStaticResult.path_ = BezierPath::create(fullbody->device_,bezierCurve,previous.configuration_,next.configuration_, core::interval_t(0.,1));
             quasiStaticSucces = true;
@@ -495,8 +518,8 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     pData.contacts_.push_back(nextData);
     //pData.constraints_.flag_ = bezier_com_traj::INIT_POS | bezier_com_traj::INIT_VEL | bezier_com_traj::INIT_ACC | bezier_com_traj::END_ACC | bezier_com_traj::END_VEL | bezier_com_traj::END_POS;
     // set init/goal values :
-    pData.c0_ = previous.com_;
-    pData.c1_ = next.com_;
+    pData.c0_ = com_previous;
+    pData.c1_ = com_next;
     size_t id_velocity = fullbody->device_->configSize() - fullbody->device_->extraConfigSpace().dimension();
     pData.dc0_ = previous.configuration_.segment<3>(id_velocity);
     pData.dc1_ = next.configuration_.segment<3>(id_velocity);

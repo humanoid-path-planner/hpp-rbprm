@@ -21,7 +21,6 @@ namespace rbprm {
 
 State::State(const State& other)
     : configuration_(other.configuration_)
-    , com_(other.com_)
     , contactOrder_(other.contactOrder_)
     , nbContacts(other.nbContacts)
     , stable(other.stable)
@@ -44,7 +43,6 @@ State& State::operator= (const State& other)
       contactRotation_ = other.contactRotation_;
       contactOrder_ = other.contactOrder_;
       nbContacts = other.nbContacts;
-      com_ = other.com_;
       stable = other.stable;
       configuration_ = other.configuration_;
   }
@@ -254,12 +252,7 @@ void State::printInternal(std::stringstream& ss) const
         }
         ss << "\n";
     }
-    ss << "com ";
-    for(std::size_t i=0; i<3; ++i)
-    {
-        ss << " " << com_[i];
-    }
-    ss << "\n" << "configuration ";
+    ss  << "configuration ";
     for(int i=0; i<configuration_.rows(); ++i)
     {
         ss << " " << configuration_[i];
@@ -328,10 +321,6 @@ void State::print(std::stringstream& ss, const State& previous) const
       for(std::size_t i=0; i<3; ++i)
       {
           ss << " " << normal[i];
-      }
-      for(std::size_t i=0; i<3; ++i)
-      {
-          ss << " " << com_[i];
       }
       ss << "\n";
   }

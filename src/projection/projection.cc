@@ -114,18 +114,15 @@ typedef constraints::SymbolicFunction<s_t>::Ptr_t PointComFunctionPtr_t;
 void CreateComPosConstraint(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const fcl::Vec3f& target, core::ConfigProjectorPtr_t proj)
 {
     pinocchio::DevicePtr_t device = fullBody->device_;
-    //constraints::ComparisonTypePtr_t equals = core::Equality::create ();
     pinocchio::CenterOfMassComputationPtr_t comComp = pinocchio::CenterOfMassComputation::create (device);
     comComp->add (device->rootJoint());
-    //comComp->computeMass ();
     comComp->compute ();
-    PointComFunctionPtr_t comFunc = PointComFunction::create ("COM-walkgen",
+    PointComFunctionPtr_t comFunc = PointComFunction::create ("COM-constraint",
         device, PointCom::create (comComp));
-    ComparisonTypes_t comps; comps.push_back(constraints::Equality);
-    NumericalConstraintPtr_t comEq = NumericalConstraint::create (comFunc, comps);
-    comEq->nonConstRightHandSide() = target;
+    constraints::ComparisonTypes_t equals (3, constraints::Equality);
+    constraints::ImplicitPtr_t comEq = constraints::Implicit::create(comFunc, equals);
     proj->add(comEq);
-    //proj->updateRightHandSide();
+    proj->rightHandSide(comEq,target);
 }
 
 void CreatePosturalTaskConstraint(hpp::rbprm::RbPrmFullBodyPtr_t fullBody,core::ConfigProjectorPtr_t proj){
