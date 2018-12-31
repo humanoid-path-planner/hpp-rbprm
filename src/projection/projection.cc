@@ -69,13 +69,13 @@ void CreateContactConstraints(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const hpp
         std::vector<bool> mask; mask.push_back(true); mask.push_back(true); mask.push_back(true);
         pinocchio::Transform3f localFrame(1), globalFrame(1);
         globalFrame.translation(ppos);
-        proj->add(core::NumericalConstraint::create( constraints::Position::create(effector,device,
+        proj->add(constraints::Implicit::create( constraints::Position::create(effector,device,
                                              effectorJoint,
                                              effectorFrame.pinocchio().placement * localFrame,
                                              globalFrame,
                                              mask)));
 
-        /*proj->add(core::NumericalConstraint::create (
+        /*proj->add(constraints::Implicit::create (
                                 constraints:::Position::create("",device,
                                                               effectorJoint,fcl::Vec3f(0,0,0), ppos)));*/
         if(limb->contactType_ == hpp::rbprm::_6_DOF)
@@ -83,13 +83,13 @@ void CreateContactConstraints(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const hpp
 
             pinocchio::Transform3f rotation(1);
             rotation.rotation(currentState.contactRotation_.at(effector) * effectorFrame.pinocchio().placement.rotation().transpose() );
-            proj->add(core::NumericalConstraint::create ( constraints::Orientation::create("", device,
+            proj->add(constraints::Implicit::create ( constraints::Orientation::create("", device,
                                                                                            effectorJoint,
                                                                                            rotation,
                                                                                            cosntraintsR)));
 
             //const fcl::Matrix3f& rotation = currentState.contactRotation_.at(effector);
-            /*proj->add(core::NumericalConstraint::create (constraints::deprecated::Orientation::create("", device,
+            /*proj->add(constraints::Implicit::create (constraints::deprecated::Orientation::create("", device,
                                                                               effectorJoint,
                                                                               rotation,
                                                                               cosntraintsR)));*/
@@ -101,7 +101,7 @@ void CreateRootPosConstraint(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const fcl:
 {
     pinocchio::Transform3f position(1);
     position.translation(target);
-    proj->add(core::NumericalConstraint::create (
+    proj->add(constraints::Implicit::create (
                             constraints::Position::create("",fullBody->device_,
                                                           fullBody->device_->rootJoint(),pinocchio::Transform3f(1), position)));
 }
@@ -187,7 +187,7 @@ void CreatePosturalTaskConstraint(hpp::rbprm::RbPrmFullBodyPtr_t fullBody,core::
   //constraints::ConfigurationConstraintPtr_t postFunc = constraints::ConfigurationConstraint::create("Postural_Task",fullBody->device_,fullBody->referenceConfig(),weight,mask);
   constraints::ConfigurationConstraintPtr_t postFunc = constraints::ConfigurationConstraint::create("Postural_Task",fullBody->device_,fullBody->referenceConfig(),weight);
   ComparisonTypes_t comps; comps.push_back(constraints::Equality);
-  const NumericalConstraintPtr_t posturalTask = NumericalConstraint::create (postFunc, comps);
+  const constraints::ImplicitPtr_t posturalTask = constraints::Implicit::create (postFunc, comps);
   proj->add(posturalTask,segments_t (0),1);
   //proj->updateRightHandSide();
 }
@@ -332,7 +332,7 @@ ProjectionReport projectEffector(hpp::core::ConfigProjectorPtr_t proj, const hpp
     pinocchio::JointPtr_t effectorJoint (new pinocchio::Joint(effectorFrame.joint()));
     Transform3f localFrame(1), globalFrame(1);
     globalFrame.translation(positionTarget);
-    proj->add(core::NumericalConstraint::create (constraints::Position::create("",body->device_,
+    proj->add(constraints::Implicit::create (constraints::Position::create("",body->device_,
                                                                                effectorJoint,
                                                                                effectorFrame.pinocchio().placement * localFrame,
                                                                                globalFrame,
@@ -342,7 +342,7 @@ ProjectionReport projectEffector(hpp::core::ConfigProjectorPtr_t proj, const hpp
         Transform3f rotation(1);
         //rotation.rotation(rotationTarget);
         rotation.rotation(rotationTarget * effectorFrame.pinocchio().placement.rotation().transpose());
-        proj->add(core::NumericalConstraint::create (constraints::Orientation::create("",body->device_,
+        proj->add(constraints::Implicit::create (constraints::Orientation::create("",body->device_,
                                                                                       effectorJoint,
                                                                                       rotation,
                                                                                       rotationFilter)));

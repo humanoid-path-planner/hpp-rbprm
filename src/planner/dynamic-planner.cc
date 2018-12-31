@@ -31,7 +31,7 @@
 #include <hpp/core/problem.hh>
 #include <hpp/core/roadmap.hh>
 #include <hpp/core/steering-method.hh>
-#include <hpp/core/basic-configuration-shooter.hh>
+#include <hpp/core/configuration-shooter/uniform.hh>
 #include <hpp/core/kinodynamic-distance.hh>
 #include <hpp/rbprm/planner/rbprm-steering-kinodynamic.hh>
 #include <hpp/fcl/collision_data.h>
@@ -537,8 +537,9 @@ namespace hpp {
               core::ValidationReportPtr_t valReport;
               // check if the validation fail because of the ROM or because of the trunk
               RbPrmPathValidationPtr_t rbprmPathValidation = boost::dynamic_pointer_cast<RbPrmPathValidation>(pathValidation);
-              bool trunkValid = rbprmPathValidation->getValidator()->validate((*projPath)(report->parameter),valReport,filter);
-              if(trunkValid){ // if it failed because of the ROM, we can try a parabola
+              bool successPathOperator;
+              bool trunkValid = rbprmPathValidation->getValidator()->validate((*projPath)(report->parameter,successPathOperator),valReport,filter);
+              if(trunkValid && successPathOperator){ // if it failed because of the ROM, we can try a parabola
                 core::ConfigurationPtr_t q_jump(new core::Configuration_t(validPath->end()));
                 core::NodePtr_t x_goal;
                 bool parabolaSuccess = tryParabolaPath(initNode,q_jump,q2,false,x_jump,x_goal,kinoPath,paraPath);

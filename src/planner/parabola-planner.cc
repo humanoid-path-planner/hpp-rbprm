@@ -30,9 +30,9 @@
 #include <hpp/core/problem.hh>
 #include <hpp/core/roadmap.hh>
 #include <hpp/core/steering-method.hh>
-#include <hpp/core/basic-configuration-shooter.hh>
+#include <hpp/core/configuration-shooter/uniform.hh>
 #include <hpp/core/path-validation-report.hh>
-#include <hpp/core/steering-method-straight.hh>
+#include <hpp/core/steering-method/straight.hh>
 #include <hpp/core/path-projector.hh>
 #include <hpp/rbprm/planner/steering-method-parabola.hh>
 #include <hpp/rbprm/rbprm-path-validation.hh>

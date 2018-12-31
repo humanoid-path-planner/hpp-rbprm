@@ -15,7 +15,7 @@
 // hpp-rbprm. If not, see <http://www.gnu.org/licenses/>.
 
 #include <hpp/rbprm/sampling/analysis.hh>
-#include <hpp/core/basic-configuration-shooter.hh>
+#include <hpp/core/configuration-shooter/uniform.hh>
 #include <hpp/pinocchio/joint.hh>
 #include <hpp/pinocchio/configuration.hh>
 #include <time.h>
@@ -133,7 +133,7 @@ namespace
 
         void GenerateFullBodyDB(std::size_t nbSamples, pinocchio::DevicePtr_t device)
         {
-            core::BasicConfigurationShooterPtr_t shooter = core::BasicConfigurationShooter::create(device);
+            core::configurationShooter::UniformPtr_t shooter = core::configurationShooter::Uniform::create(device);
             pinocchio::Configuration_t save(device->currentConfiguration());
             core::CollisionValidationPtr_t colVal = core::CollisionValidation::create(device);
             std::size_t i = nbSamples - fullBodyConfigs_.size();

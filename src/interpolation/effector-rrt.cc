@@ -22,7 +22,7 @@
 #include <hpp/pinocchio/joint.hh>
 #include <pinocchio/multibody/geometry.hpp>
 #include <hpp/core/bi-rrt-planner.hh>
-#include <hpp/core/basic-configuration-shooter.hh>
+#include <hpp/core/configuration-shooter/uniform.hh>
 #include <hpp/core/discretized-path-validation.hh>
 #include <hpp/constraints/generic-transformation.hh>
 #include <bezier-com-traj/solve_end_effector.hh>
@@ -91,7 +91,8 @@ using namespace core;
 
     vector_t GetEffectorPositionAt(core::PathPtr_t path, constraints::PositionPtr_t position, const value_type time)
     {
-       return position->operator ()(path->operator ()(time)).vector();
+       bool success;
+       return position->operator ()(path->operator ()(time,success)).vector();
     }
 
     void getEffectorConfigAt(core::DevicePtr_t device,const pinocchio::Frame& effector,const core::PathPtr_t path,const value_type time,ConfigurationOut_t result ){
@@ -646,7 +647,8 @@ buildPredefinedPath(endEffectorDevice,nextNormal,endConfig,posOffset,-velOffset,
         DevicePtr_t endEffectorDevice = createFreeFlyerDevice();
         Configuration_t initConfig(endEffectorDevice->configSize()),endConfig(endEffectorDevice->configSize());
         getEffectorConfigForConfig(fullbody->device_,effector,startState.configuration_,initConfig);
-        hppDout(notice,"fb com path init = "<<pinocchio::displayConfig((*fullBodyComPath)(0.)));
+        bool success;
+        hppDout(notice,"fb com path init = "<<pinocchio::displayConfig((*fullBodyComPath)(0.,success)));
         hppDout(notice,"start state conf = "<<pinocchio::displayConfig(startState.configuration_));
         getEffectorConfigForConfig(fullbody->device_,effector,nextState.configuration_,endConfig);
         Configuration_t takeoffConfig(initConfig),landingConfig(endConfig);
@@ -963,8 +965,9 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
         bool found(false);
         value_type index = 0;
         hppDout(notice,"Looking for time : "<<t);
+        bool success;
         while(cId<fullBodyPath_->length() && !found){
-            if(fullBodyPath_->operator ()(cId)[tId] >= t){
+            if(fullBodyPath_->operator ()(cId,success)[tId] >= t){
                 index = cId;
                 found = true;
             }

@@ -78,9 +78,9 @@ namespace hpp {
 
       Vector6 geth(){return h_;}
 
-      void setNumberOfContacts(int n){numberOfContacts_ = n;}
+      void setNumberOfContacts(size_type n){numberOfContacts_ = n;}
 
-      int getNumberOfContacts(){return numberOfContacts_;}
+      size_type getNumberOfContacts(){return numberOfContacts_;}
 
       void fillNodeMatrices(ValidationReportPtr_t report,bool rectangularContact, double sizeFootx, double sizeFooty, double m,double mu);
 
@@ -99,7 +99,7 @@ namespace hpp {
       Matrix6X G_; // not initialized yet
       Matrix63 H_;
       Vector6 h_;
-      int numberOfContacts_;
+      size_type numberOfContacts_;
       
 
     }; // class

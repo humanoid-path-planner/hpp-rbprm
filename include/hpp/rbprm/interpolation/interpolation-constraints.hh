@@ -65,13 +65,16 @@ namespace interpolation {
         {
           const std::pair<core::value_type, core::value_type>& tR (ref_->timeRange());
           constraints::value_type unNormalized = (tR.second-tR.first)* normalized_input + tR.first;
+          bool success;
           if(times_ten_)
           {
-              output = ref_->operator ()(unNormalized).head(dim_); // * (10000) ;
+              output = ref_->operator ()(unNormalized,success).head(dim_); // * (10000) ;
+              assert(success && "path operator () did not succeed");
           }
           else
           {
-            output = ref_->operator ()(unNormalized).head(dim_) ;
+            output = ref_->operator ()(unNormalized,success).head(dim_) ;
+            assert(success && "path operator () did not succeed");
           }
         }
         const Reference ref_;
@@ -98,7 +101,7 @@ namespace interpolation {
         PointComFunctionPtr_t comFunc = PointComFunction::create ("COM-walkgen",
             device, /*10000 **/ PointCom::create (comComp));
         ComparisonTypes_t comps; comps.push_back(constraints::Equality);
-        NumericalConstraintPtr_t comEq = NumericalConstraint::create (comFunc, comps);
+        constraints::ImplicitPtr_t comEq = constraints::Implicit::create (comFunc, comps);
         comEq->nonConstRightHandSide() = initTarget; // * 10000;
         proj->add(comEq);
         //proj->updateRightHandSide();
@@ -172,7 +175,7 @@ namespace interpolation {
 
       constraints::ConfigurationConstraintPtr_t postFunc = constraints::ConfigurationConstraint::create("Postural_Task",device,ref,weight);
       ComparisonTypes_t comps; comps.push_back(constraints::Equality);
-      const NumericalConstraintPtr_t posturalTask = NumericalConstraint::create (postFunc, comps);
+      const constraints::ImplicitPtr_t posturalTask = constraints::Implicit::create (postFunc, comps);
       proj->add(posturalTask,segments_t(0),1);
       //proj->updateRightHandSide();
     }
@@ -214,7 +217,7 @@ namespace interpolation {
         core::ConfigProjectorPtr_t& proj = helper.proj_;
 
         pinocchio::Frame effectorFrame = device->getFrameByName(effectorFr.name());
-        NumericalConstraintPtr_t effEq = core::NumericalConstraint::create (
+        constraints::ImplicitPtr_t effEq = constraints::Implicit::create (
                                     createPositionMethod(device,initTarget, effectorFrame), comps);
         effEq->nonConstRightHandSide()[0] = initTarget[2];
         proj->add(effEq);
@@ -237,8 +240,10 @@ namespace interpolation {
                          const constraints::value_type& normalized_input, pinocchio::ConfigurationOut_t /*conf*/) const
         {
             const std::pair<core::value_type, core::value_type>& tR (ref_->timeRange());
+            bool success;
             constraints::value_type unNormalized = (tR.second-tR.first)* normalized_input + tR.first;
-            output = method_->operator ()((ref_->operator ()(unNormalized))).vector();;
+            output = method_->operator ()((ref_->operator ()(unNormalized,success))).vector();
+            assert(success && "path operator () did not succeed");
         }
 
         const Reference ref_;
@@ -255,7 +260,7 @@ namespace interpolation {
         pinocchio::Frame effectorFrame = device->getFrameByName(effectorFr.name());
         constraints::OrientationPtr_t orCons = createOrientationMethod(device,initTarget, effectorFrame);
         constraints::OrientationPtr_t orConsRef = createOrientationMethod(endEffectorDevice,initTarget, endEffectorDevice->getFrameByName(endEffectorDevice->rootJoint()->childJoint(0)->name())); // same orientation constraint but for a freeflyer device that represent the end effector (same dim as the ref path)
-        NumericalConstraintPtr_t effEq = core::NumericalConstraint::create (orCons, equals);
+        constraints::ImplicitPtr_t effEq = constraints::Implicit::create (orCons, equals);
         proj->add(effEq);
         //proj->updateRightHandSide();
         boost::shared_ptr<funEvaluator<Reference, constraints::OrientationPtr_t> > orEv
@@ -271,7 +276,8 @@ namespace interpolation {
         //CreateEffectorConstraint(helper, ref, effectorJoint, initTarget.getTranslation());
         pinocchio::DevicePtr_t device = helper.rootProblem_.robot();
         // reduce dof if reference path is of lower dimension
-        if(ref->operator()(0).rows() < device->configSize())
+        bool success;
+        if(ref->operator()(0,success).rows() < device->configSize())
         {
             device = device->clone();
             device->setDimensionExtraConfigSpace(device->extraConfigSpace().dimension()-1);
@@ -280,7 +286,7 @@ namespace interpolation {
         core::ConfigProjectorPtr_t& proj = helper.proj_;
         pinocchio::Frame effector = device->getFrameByName(effectorJoint.name());
         constraints::OrientationPtr_t orCons = createOrientationMethod(device,initTarget, effector);
-        NumericalConstraintPtr_t effEq = core::NumericalConstraint::create (orCons, equals);
+        constraints::ImplicitPtr_t effEq = constraints::Implicit::create (orCons, equals);
         proj->add(effEq);
         //proj->updateRightHandSide();
         boost::shared_ptr<funEvaluator<Reference, constraints::OrientationPtr_t> > orEv

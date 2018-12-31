@@ -69,7 +69,9 @@ using namespace core;
         value_type u = value_type(rand()) / value_type(RAND_MAX);
         value_type pathDofVal = (b-a)* u + a;
         ConfigurationPtr_t config (new Configuration_t(configSize_));
-        config->head(configSize_-1) =  (*rootPath_)(pathDofVal);
+        bool successPathoperator;
+        config->head(configSize_-1) =  (*rootPath_)(pathDofVal,successPathoperator);
+        assert(successPathoperator && "path operator () did not succeed");
         (*config) [pathDofRank_] = u;
         /*if(freeLimbs_.empty())
         {
