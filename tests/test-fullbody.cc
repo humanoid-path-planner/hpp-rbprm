@@ -33,7 +33,7 @@ using namespace hpp::rbprm;
 using namespace hpp::rbprm::sampling;
 
 
-hpp::rbprm::RbPrmFullBodyPtr_t initFullBodyDevice(const ObjectVector_t& collisionObjects)
+hpp::rbprm::RbPrmFullBodyPtr_t initFullBodyDevice(const core::ObjectStdVector_t& collisionObjects)
 {
     DevicePtr_t device = initDevice();
     fcl::Vec3f offset(0,0,0);
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE (fullbody) {
     // TODO This test can not pass as is (cannot project configuration)
     // UPDATE
     CollisionObjectPtr_t colObject = MeshObstacleBox();
-    ObjectVector_t objects;
+    core::ObjectStdVector_t objects;
     objects.push_back(colObject);
     RbPrmFullBodyPtr_t fb = initFullBodyDevice(objects);
     const Configuration_t& configuration = fb->device_->currentConfiguration();

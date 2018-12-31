@@ -35,7 +35,7 @@ using namespace hpp::rbprm;
 using namespace hpp::rbprm::interpolation;
 
 
-/*hpp::rbprm::RbPrmInterpolationPtr_t initInterpolation(const ObjectVector_t& collisionObjects)
+/*hpp::rbprm::RbPrmInterpolationPtr_t initInterpolation(const core::ObjectStdVector_t& collisionObjects)
 {
     DevicePtr_t device = initDevice();
     fcl::Vec3f offset(0,0,0);
@@ -53,7 +53,7 @@ using namespace hpp::rbprm::interpolation;
 
 BOOST_AUTO_TEST_CASE (initInterpolationTest) {
     CollisionObjectPtr_t colObject = MeshObstacleBox();
-    ObjectVector_t objects;
+    core::ObjectStdVector_t objects;
     objects.push_back(colObject);
     initInterpolation(objects);*/
 

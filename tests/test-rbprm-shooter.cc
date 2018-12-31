@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE (shooterCreation) {
     colObject->move(fcl::Vec3f(11.3,0,0));
     validator->addObstacle(colObject);
 
-    model::ObjectVector_t collisionObjects;
+    core::ObjectStdVector_t collisionObjects;
     collisionObjects.push_back(colObject);
     RbPrmShooterPtr_t shooter = RbPrmShooter::create(robot, collisionObjects);
     for(int i =0; i< 100; ++i)
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE (shooterCreationWithFilters) {
     colObject->move(fcl::Vec3f(11.3,0,0));
     validator->addObstacle(colObject);
 
-    model::ObjectVector_t collisionObjects;
+    core::ObjectStdVector_t collisionObjects;
     collisionObjects.push_back(colObject);
 
     std::vector<std::string> filter;
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE (shooterCreationWithSO3Limits) {
     CollisionObjectPtr_t colObject = MeshObstacleBox();
     colObject->move(fcl::Vec3f(11.3,0,0));
 
-    model::ObjectVector_t collisionObjects;
+    core::ObjectStdVector_t collisionObjects;
     collisionObjects.push_back(colObject);
 
     std::vector<std::string> filter;
