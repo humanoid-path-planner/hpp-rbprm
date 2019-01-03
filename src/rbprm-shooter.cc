@@ -19,6 +19,7 @@
 #include <hpp/pinocchio/liegroup-space.hh>
 #include <hpp/pinocchio/liegroup-element.hh>
 #include <pinocchio/algorithm/joint-configuration.hpp>
+#include <hpp/core/configuration-shooter/uniform.hh>
 #include <hpp/fcl/collision_object.h>
 #include <hpp/fcl/BVH/BVH_model.h>
 #include <hpp/core/collision-validation.hh>
@@ -292,6 +293,7 @@ namespace
     , robot_ (robot)
     , validator_(rbprm::RbPrmValidation::create(robot_, filter, affFilters,
                                                 affordances, geometries))
+    , uniformShooter_(core::configurationShooter::Uniform::create(robot))
     {
         for(hpp::core::ObjectStdVector_t::const_iterator cit = geometries.begin();
             cit != geometries.end(); ++cit)
@@ -352,9 +354,9 @@ namespace
       return triangles_[triangles_.size()-1]; // not supposed to happen
   }
 
-void randConfigAtPos(const pinocchio::RbPrmDevicePtr_t robot, const std::vector<double>& eulerSo3, ConfigurationPtr_t config, const Vec3f p)
+void RbPrmShooter::randConfigAtPos(const pinocchio::RbPrmDevicePtr_t robot, const std::vector<double>& eulerSo3, ConfigurationPtr_t config, const Vec3f p) const
 {
-    (*config) = se3::randomConfiguration(robot->model());
+    (*config) = *(uniformShooter_->shoot());
     SetConfigTranslation(robot,config, p);
     SampleRotation(eulerSo3, config);
 }
@@ -363,7 +365,7 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
 {
     hppDout(notice,"!!! Random shoot");
     HPP_DEFINE_TIMECOUNTER(SHOOT_COLLISION);
-    ConfigurationPtr_t config (new Configuration_t (se3::randomConfiguration(robot_->model())));
+    ConfigurationPtr_t config = uniformShooter_->shoot();
     std::size_t limit = shootLimit_;
     bool found(false);
     while(limit >0 && !found)
