@@ -20,7 +20,7 @@
 # define PP_RBPRM_TIME_DEPENDANT_HH
 
 # include <hpp/rbprm/config.hh>
-# include <hpp/core/equation.hh>
+# include <hpp/constraints/implicit.hh>
 # include <vector>
 
 namespace hpp {
@@ -39,7 +39,7 @@ namespace interpolation {
             (*rhsFunc_) (eq_->nonConstRightHandSide(), s, conf);
         }
 
-        TimeDependant (const core::EquationPtr_t& eq,
+        TimeDependant (const constraints::ImplicitPtr_t& eq,
           const RightHandSideFunctorPtr_t rhs):
         eq_ (eq), rhsFunc_ (rhs)
         {}
@@ -48,7 +48,7 @@ namespace interpolation {
         eq_ (other.eq_), rhsFunc_ (other.rhsFunc_)
         {}
 
-        core::EquationPtr_t eq_;
+        constraints::ImplicitPtr_t eq_;
         RightHandSideFunctorPtr_t rhsFunc_;
     }; // class TimeDependant
 

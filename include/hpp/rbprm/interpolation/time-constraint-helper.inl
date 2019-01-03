@@ -23,7 +23,7 @@
 #include <hpp/rbprm/interpolation/time-constraint-utils.hh>
 #include <hpp/rbprm/interpolation/time-constraint-path-validation.hh>
 #include <hpp/rbprm/interpolation/time-dependant.hh>
-#include <hpp/core/steering-method-straight.hh>
+#include <hpp/core/steering-method/straight.hh>
 #include <hpp/core/problem-target/goal-configurations.hh>
 #include <hpp/core/bi-rrt-planner.hh>
 #include <hpp/core/roadmap.hh>
@@ -34,7 +34,7 @@
 //#include <hpp/constraints/position.hh>
 //#include <hpp/constraints/orientation.hh>
 #include <hpp/core/config-projector.hh>
-#include <hpp/core/locked-joint.hh>
+#include <hpp/constraints/locked-joint.hh>
 #include <hpp/core/path-vector.hh>
 #include <hpp/core/subchain-path.hh>
 #include <hpp/pinocchio/joint.hh>
@@ -236,7 +236,7 @@ namespace
             PathVectorPtr_t completePath = res[0];
             for(std::size_t i = 1; i < numValid; ++i)
             {
-                completePath->concatenate(*res[i]);
+                completePath->concatenate(res[i]);
             }
             if(keepExtraDof)
             {

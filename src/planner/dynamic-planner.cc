@@ -31,7 +31,7 @@
 #include <hpp/core/problem.hh>
 #include <hpp/core/roadmap.hh>
 #include <hpp/core/steering-method.hh>
-#include <hpp/core/basic-configuration-shooter.hh>
+#include <hpp/core/configuration-shooter/uniform.hh>
 #include <hpp/core/kinodynamic-distance.hh>
 #include <hpp/rbprm/planner/rbprm-steering-kinodynamic.hh>
 #include <hpp/fcl/collision_data.h>
@@ -88,7 +88,7 @@ namespace hpp {
       qProj_ (new core::Configuration_t(problem.robot()->configSize())),
       roadmap_(boost::dynamic_pointer_cast<core::Roadmap>(core::RbprmRoadmap::create (problem.distance (),problem.robot()))),
       sm_(boost::dynamic_pointer_cast<SteeringMethodKinodynamic>(problem.steeringMethod())),
-      smParabola_(rbprm::SteeringMethodParabola::create((core::ProblemPtr_t(&problem)))),
+      smParabola_(rbprm::SteeringMethodParabola::create(problem)),
       rbprmPathValidation_(boost::dynamic_pointer_cast<RbPrmPathValidation>(problem.pathValidation()))
     {
           assert(sm_ && "steering method should be a kinodynamic steering method for this solver");
@@ -145,7 +145,7 @@ namespace hpp {
       qProj_ (new core::Configuration_t(problem.robot()->configSize())),
       roadmap_(boost::dynamic_pointer_cast<core::Roadmap>(core::RbprmRoadmap::create (problem.distance (),problem.robot()))),
       sm_(boost::dynamic_pointer_cast<SteeringMethodKinodynamic>(problem.steeringMethod())),
-      smParabola_(rbprm::SteeringMethodParabola::create((core::ProblemPtr_t(&problem)))),
+      smParabola_(rbprm::SteeringMethodParabola::create(problem)),
       rbprmPathValidation_(boost::dynamic_pointer_cast<RbPrmPathValidation>(problem.pathValidation()))
     {
       assert(sm_ && "steering method should be a kinodynamic steering method for this solver");
@@ -266,7 +266,7 @@ namespace hpp {
       core::PathPtr_t validPath;
       core::PathValidationReportPtr_t report;
       const size_type indexECS =problem().robot()->configSize() - problem().robot()->extraConfigSpace().dimension (); // ecs index
-      bool paraPathValid(false),kinoPathValid(false);
+      bool kinoPathValid(false);
       hppDout(notice,"!! begin tryParabolaPath");
 
       // 1. compute a parabola between last configuration valid in contact, and qrand (target)
@@ -274,7 +274,6 @@ namespace hpp {
       if(paraPath){
         hppDout(notice,"!! ParaPath computed");
         if(paraPath->length() > 0) { // only add if the full path is valid (because we can't extract a subpath of a parabola path)
-          paraPathValid = true;
           hppDout(notice, "!! parabola path valid !");
           ParabolaPathPtr_t parabolaPath = boost::dynamic_pointer_cast<ParabolaPath>(paraPath);
           core::ConfigurationPtr_t q_new (new core::Configuration_t(parabolaPath->end ()));
@@ -538,8 +537,9 @@ namespace hpp {
               core::ValidationReportPtr_t valReport;
               // check if the validation fail because of the ROM or because of the trunk
               RbPrmPathValidationPtr_t rbprmPathValidation = boost::dynamic_pointer_cast<RbPrmPathValidation>(pathValidation);
-              bool trunkValid = rbprmPathValidation->getValidator()->validate((*projPath)(report->parameter),valReport,filter);
-              if(trunkValid){ // if it failed because of the ROM, we can try a parabola
+              bool successPathOperator;
+              bool trunkValid = rbprmPathValidation->getValidator()->validate((*projPath)(report->parameter,successPathOperator),valReport,filter);
+              if(trunkValid && successPathOperator){ // if it failed because of the ROM, we can try a parabola
                 core::ConfigurationPtr_t q_jump(new core::Configuration_t(validPath->end()));
                 core::NodePtr_t x_goal;
                 bool parabolaSuccess = tryParabolaPath(initNode,q_jump,q2,false,x_jump,x_goal,kinoPath,paraPath);

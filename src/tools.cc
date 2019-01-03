@@ -21,8 +21,8 @@
 #include <hpp/pinocchio/joint.hh>
 #include <hpp/pinocchio/device.hh>
 #include <hpp/core/config-projector.hh>
-#include <hpp/core/locked-joint.hh>
-#include <hpp/core/equation.hh>
+#include <hpp/constraints/locked-joint.hh>
+#include <hpp/constraints/implicit.hh>
 
 namespace hpp {
   namespace tools {

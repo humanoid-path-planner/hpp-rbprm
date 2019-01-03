@@ -21,7 +21,7 @@
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/configuration.hh>
 #include <hpp/core/config-projector.hh>
-#include <hpp/core/locked-joint.hh>
+#include <hpp/constraints/locked-joint.hh>
 
 using namespace hpp::core;
 
@@ -84,7 +84,7 @@ namespace hpp {
     {
         if (constraints() && constraints()->configProjector ())
         {
-            UpdateConstraints(configuration, constraints()->configProjector (), tds_, pathDofRank_);
+            UpdateConstraints(configuration, tds_, pathDofRank_);
         }
     }
 

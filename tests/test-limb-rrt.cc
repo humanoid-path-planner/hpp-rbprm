@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE (limbRRTCreation) {
     colObject->move(fcl::Vec3f(11.3,0,0));
     validator->addObstacle(colObject);
 
-    model::ObjectVector_t collisionObjects;
+    core::ObjectStdVector_t collisionObjects;
     collisionObjects.push_back(colObject);
     RbPrmShooterPtr_t shooter = RbPrmShooter::create(robot, collisionObjects);
     for(int i =0; i< 100; ++i)

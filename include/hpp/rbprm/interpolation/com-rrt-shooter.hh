@@ -23,7 +23,7 @@
 # include <hpp/rbprm/interpolation/time-constraint-shooter.hh>
 # include <hpp/rbprm/rbprm-fullbody.hh>
 # include <hpp/core/path.hh>
-# include <hpp/pinocchio/device.hh>>
+# include <hpp/pinocchio/device.hh>
 
 # include <vector>
 

@@ -204,7 +204,7 @@ bool verifyKinematicConstraints(const std::pair<MatrixX3, MatrixX3>& NV, const h
 
 bool verifyKinematicConstraints(const std::pair<MatrixX3, VectorX>& Ab, const fcl::Vec3f &point){
     hppDout(notice,"verify kinematic constraints : point = "<<point);
-    for(size_t i = 0 ; i < Ab.second.size() ; ++i){
+    for(size_type i = 0 ; i < Ab.second.size() ; ++i){
         hppDout(notice,"for i = "<<i);
         hppDout(notice,"A = "<<(Ab.first.block<1,3>(i,0)));
         hppDout(notice,"b = "<<Ab.second[i]);

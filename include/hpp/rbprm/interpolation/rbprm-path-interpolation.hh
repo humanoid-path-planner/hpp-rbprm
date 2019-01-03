@@ -22,7 +22,7 @@
 # include <hpp/rbprm/config.hh>
 # include <hpp/rbprm/rbprm-fullbody.hh>
 # include <hpp/core/path-vector.hh>
-# include <hpp/pinocchio/device.hh>>
+# include <hpp/pinocchio/device.hh>
 
 # include <vector>
 

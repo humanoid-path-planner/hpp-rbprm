@@ -45,7 +45,7 @@ namespace hpp {
   bool insertIfNew(std::vector<T>& data, const T& value);
 
   template<typename T>
-  void RemoveEffectorCollision(T& validation, pinocchio::JointPtr_t effectorJoint, const pinocchio::ObjectVector_t& obstacles);
+  void RemoveEffectorCollision(T& validation, pinocchio::JointPtr_t effectorJoint, const core::ObjectStdVector_t& obstacles);
   template<typename T>
   void RemoveEffectorCollision(T& validation, pinocchio::JointPtr_t effectorJoint, const pinocchio::CollisionObjectPtr_t obstacle);
   template<typename T>

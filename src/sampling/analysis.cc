@@ -15,7 +15,7 @@
 // hpp-rbprm. If not, see <http://www.gnu.org/licenses/>.
 
 #include <hpp/rbprm/sampling/analysis.hh>
-#include <hpp/core/basic-configuration-shooter.hh>
+#include <hpp/core/configuration-shooter/uniform.hh>
 #include <hpp/pinocchio/joint.hh>
 #include <hpp/pinocchio/configuration.hh>
 #include <time.h>
@@ -133,7 +133,7 @@ namespace
 
         void GenerateFullBodyDB(std::size_t nbSamples, pinocchio::DevicePtr_t device)
         {
-            core::BasicConfigurationShooterPtr_t shooter = core::BasicConfigurationShooter::create(device);
+            core::configurationShooter::UniformPtr_t shooter = core::configurationShooter::Uniform::create(device);
             pinocchio::Configuration_t save(device->currentConfiguration());
             core::CollisionValidationPtr_t colVal = core::CollisionValidation::create(device);
             std::size_t i = nbSamples - fullBodyConfigs_.size();
@@ -197,7 +197,7 @@ namespace
         else return distanceRec(conf, lastJoint, currentJoint->childJoint(0),currentDistance);
     }
 
-    rbprm::RbPrmLimbPtr_t getLimbFromStartRank(size_t startRank,rbprm::RbPrmFullBodyPtr_t fullBody  ){
+    rbprm::RbPrmLimbPtr_t getLimbFromStartRank(size_type startRank,rbprm::RbPrmFullBodyPtr_t fullBody  ){
       rbprm::T_Limb::const_iterator cit = fullBody->GetLimbs().begin();
       for(; cit != fullBody->GetLimbs().end(); ++cit)
       {
@@ -265,7 +265,7 @@ namespace
       hppDout(notice,"limb     id vel= "<<limb->limb_->rankInVelocity());
       hppDout(notice,"limb     id pos= "<<limb->limb_->rankInConfiguration());
 */
-      for (size_t i = limb->limb_->rankInVelocity() ; i <= limb->effector_.joint().rankInVelocity() ; ++i){
+      for (size_type i = limb->limb_->rankInVelocity() ; i <= limb->effector_.joint().rankInVelocity() ; ++i){
           pinocchio::vector_t jointJacobian= device->getJointAtVelocityRank(i)->jacobian().block<6,1>(0,i).transpose();
           //hppDout(notice,"Jacobian of joint "<<device->getJointAtVelocityRank(i)->name()<<" at id = "<<i);
           //hppDout(notice,"joint column : \n"<<jointJacobian);
@@ -285,7 +285,7 @@ namespace
       // the difference vector depend on the index in the velocity vector, not in the configuration
       // we only sum for the index of the current limb
      // hppDout(notice,"ref config rank: "<<cit->second->limb_->rankInVelocity()<<" ; "<<cit->second->effector_->rankInVelocity());
-      for (size_t i = limb->limb_->rankInVelocity() ; i <= limb->effector_.joint().rankInVelocity() ; ++i){
+      for (size_type i = limb->limb_->rankInVelocity() ; i <= limb->effector_.joint().rankInVelocity() ; ++i){
         distance += (diff[i]*diff[i])*weight[i-limb->limb_->rankInVelocity()];
       }
       // This is an heuristic and not a cost, a null distance is the best result

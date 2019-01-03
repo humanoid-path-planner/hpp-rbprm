@@ -42,7 +42,7 @@ namespace hpp {
     {
     public:
       /// Create instance and return shared pointer
-      static SteeringMethodParabolaPtr_t create (const core::ProblemPtr_t& problem)
+      static SteeringMethodParabolaPtr_t create (const core::Problem& problem)
       {
   SteeringMethodParabola* ptr = new SteeringMethodParabola (problem);
   SteeringMethodParabolaPtr_t shPtr (ptr);
@@ -107,12 +107,12 @@ namespace hpp {
     protected:
       /// Constructor with problem
       /// Robot and weighed distance are created from problem
-      SteeringMethodParabola (const core::ProblemPtr_t& problem);
+      SteeringMethodParabola (const core::Problem& problem);
 
       /// Copy constructor
       SteeringMethodParabola (const SteeringMethodParabola& other) :
   SteeringMethod (other),
-  problem_ (other.problem_), device_ (other.device_),
+  device_ (other.device_),
   distance_ (other.distance_), weak_ (), g_(other.g_),
   V0max_ (other.V0max_), Vimpmax_ (other.Vimpmax_),mu_ (other.mu_),
   Dalpha_ (other.Dalpha_), nLimit_ (other.nLimit_), V0_ (other.V0_),
@@ -180,7 +180,6 @@ namespace hpp {
       void fillROMnames (core::ConfigurationIn_t q,
        std::vector <std::string> * ROMnames) const;
 
-      core::ProblemPtr_t problem_;
       core::DeviceWkPtr_t device_;
       core::WeighedDistancePtr_t distance_;
       SteeringMethodParabolaWkPtr_t weak_;

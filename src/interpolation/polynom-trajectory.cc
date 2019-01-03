@@ -21,7 +21,7 @@
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/configuration.hh>
 #include <hpp/core/config-projector.hh>
-#include <hpp/core/locked-joint.hh>
+#include <hpp/constraints/locked-joint.hh>
 
 using namespace hpp::core;
 

@@ -92,9 +92,9 @@ namespace hpp {
     /// \param subInterval interval of definition of the extract path
     /// If upper bound of subInterval is smaller than lower bound,
     /// result is reversed.
-    core::PathPtr_t TimedParabolaPath::extract (const core::interval_t& subInterval) const throw (core::projection_error){
+    core::PathPtr_t TimedParabolaPath::extract (const core::interval_t& /*subInterval*/) const throw (core::projection_error){
       //TODO
-      return core::PathPtr_t();
+      throw core::projection_error("Extract is not implemented for parabola paths");
     }
 
     /// Reversion of a path
@@ -145,21 +145,25 @@ namespace hpp {
       value_type u = t *v0*cos(parabolaPath_->coefficients()[4]);
     /*  hppDout(notice,"parabola-path length = "<<parabolaPath_->length());
       hppDout(notice,"u = "<<u);*/
-      result = (*parabolaPath_)(u);
+      bool successPath;
+      result = (*parabolaPath_)(u,successPath);
+      if(successPath){
 
-      // TODO : compute extraDOF
-      const size_type indexEcs = device_->configSize()  - device_->extraConfigSpace ().dimension (); // ecs index
-      //velocity :
-      vector_t vel = parabolaPath_->evaluateVelocity(u);
-      result[indexEcs] = vel[0];
-      result[indexEcs+1] = vel[1];
-      result[indexEcs+2] = vel[2];
-      //acceleration :
-      result[indexEcs+3]=0.;
-      result[indexEcs+4]=0.;
-      result[indexEcs+5]=-9.81; //FIXME : retrieve it from somewhere
-
-
+        // TODO : compute extraDOF
+        const size_type indexEcs = device_->configSize()  - device_->extraConfigSpace ().dimension (); // ecs index
+        //velocity :
+        vector_t vel = parabolaPath_->evaluateVelocity(u);
+        result[indexEcs] = vel[0];
+        result[indexEcs+1] = vel[1];
+        result[indexEcs+2] = vel[2];
+        //acceleration :
+        result[indexEcs+3]=0.;
+        result[indexEcs+4]=0.;
+        result[indexEcs+5]=-9.81; //FIXME : retrieve it from somewhere
+        return true;
+      }else{
+        return false;
+      }
     } // impl_compute
 
 

@@ -603,9 +603,9 @@ namespace geom
     Pn = TriangleNormal(triPlane);
     P0 = triPlane.p1; //FIXME : better point ?
 
-    for(size_t i = 0 ; i < polygone->num_tris ; i++){ // FIXME : can test 2 times the same line (in both triangles), avoid this ?
+    for(int i = 0 ; i < polygone->num_tris ; i++){ // FIXME : can test 2 times the same line (in both triangles), avoid this ?
       //hppDout(info,"triangle : "<<i);
-      for(size_t j = 0 ; j < 3 ; j++){
+      for(int j = 0 ; j < 3 ; j++){
        // hppDout(info,"couple : "<<j);
         intersection = intersectSegmentPlane(polygone->vertices[polygone->tri_indices[i][j]],
                                              polygone->vertices[polygone->tri_indices[i][((j == 2) ? 0 : (j+1))]], Pn,P0);

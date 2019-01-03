@@ -23,7 +23,6 @@
 #include <hpp/pinocchio/configuration.hh>
 #include <pinocchio/spatial/se3.hpp>
 #include <hpp/rbprm/sampling/heuristic-tools.hh>
-
 #ifdef PROFILE
     #include "hpp/rbprm/rbprm-profiler.hh"
 #endif
@@ -103,7 +102,7 @@ void maintain_contacts_combinatorial_rec(const hpp::rbprm::State& currentState, 
     hppDout(notice,"Reverse :");
     reverse(contactOrder);
     hppDout(notice,"Reverse done.");
-    int size = contactOrder.size(); int i = 0;
+    size_type size = contactOrder.size(); int i = 0;
     while(!contactOrder.empty() && size != i)
     {
         hpp::rbprm::State copyState = currentState;
@@ -687,7 +686,7 @@ ProjectionReport gen_contacts(ContactGenHelper &contactGenHelper)
             contactGenHelper.fullBody_->device_->currentConfiguration(cState.first.configuration_);
             contactGenHelper.fullBody_->device_->computeForwardKinematics();
             params.comPosition_ = contactGenHelper.fullBody_->device_->positionCenterOfMass();
-            int cfgSize(cState.first.configuration_.rows());
+            size_type cfgSize(cState.first.configuration_.rows());
             params.comSpeed_ = fcl::Vec3f(cState.first.configuration_[cfgSize-6], cState.first.configuration_[cfgSize-5], cState.first.configuration_[cfgSize-4]);
             params.comAcceleration_ = contactGenHelper.acceleration_;
             params.sampleLimbName_ = *cit;
@@ -743,7 +742,7 @@ projection::ProjectionReport repositionContacts(ContactGenHelper& helper)
             helper.fullBody_->device_->currentConfiguration(result.configuration_);
             helper.fullBody_->device_->computeForwardKinematics();
             params.comPosition_ = helper.fullBody_->device_->positionCenterOfMass();
-            int cfgSize(helper.workingState_.configuration_.rows());
+            size_type cfgSize(helper.workingState_.configuration_.rows());
             params.comSpeed_ = fcl::Vec3f(helper.workingState_.configuration_[cfgSize-6], helper.workingState_.configuration_[cfgSize-5], helper.workingState_.configuration_[cfgSize-4]);
             params.comAcceleration_ = helper.acceleration_;
             params.sampleLimbName_ = *cit;

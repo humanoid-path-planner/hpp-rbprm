@@ -236,7 +236,7 @@ void RbprmNode::fillNodeMatrices(ValidationReportPtr_t report, bool rectangularC
 
 
     //FIX ME : position of contact is in center of the collision surface
-    int numContactpoints = (rbReport->ROMReports.size() + 3*rectangularContact*rbReport->ROMReports.size());
+    size_type numContactpoints = (rbReport->ROMReports.size() + 3*rectangularContact*rbReport->ROMReports.size());
     setNumberOfContacts(numContactpoints);
     hppDout(notice,"number of contact points = "<<numContactpoints);
     MatrixXX V = MatrixXX::Zero(3*numContactpoints,4*numContactpoints);

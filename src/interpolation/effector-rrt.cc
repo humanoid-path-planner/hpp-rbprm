@@ -22,7 +22,7 @@
 #include <hpp/pinocchio/joint.hh>
 #include <pinocchio/multibody/geometry.hpp>
 #include <hpp/core/bi-rrt-planner.hh>
-#include <hpp/core/basic-configuration-shooter.hh>
+#include <hpp/core/configuration-shooter/uniform.hh>
 #include <hpp/core/discretized-path-validation.hh>
 #include <hpp/constraints/generic-transformation.hh>
 #include <bezier-com-traj/solve_end_effector.hh>
@@ -91,7 +91,8 @@ using namespace core;
 
     vector_t GetEffectorPositionAt(core::PathPtr_t path, constraints::PositionPtr_t position, const value_type time)
     {
-       return position->operator ()(path->operator ()(time)).vector();
+       bool success;
+       return position->operator ()(path->operator ()(time,success)).vector();
     }
 
     void getEffectorConfigAt(core::DevicePtr_t device,const pinocchio::Frame& effector,const core::PathPtr_t path,const value_type time,ConfigurationOut_t result ){
@@ -119,7 +120,7 @@ using namespace core;
         std::size_t nbWayPoints = 30;
         std::size_t dim = position->outputSize();
         if(!(nbWayPoints % 2)) nbWayPoints+=1;
-        value_type pathIncrement = path->length() / nbWayPoints;
+        value_type pathIncrement = path->length() / (value_type)nbWayPoints;
         T_Waypoint res;
         value_type t = path->timeRange().first;
         res.push_back(std::make_pair(0,GetEffectorPositionAt(path,position,t)));
@@ -133,7 +134,7 @@ using namespace core;
         {
             //value_type height = effectorDistance < 0.1 ? 0.01 : std::max(nbWayPoints* 0.015, 0.02) ;
 //std::cout << "is line " << std::endl;
-value_type height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max(nbWayPoints* 0.01, 0.02)) ;
+value_type height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max((value_type)nbWayPoints* 0.01, 0.02)) ;
             isLine = true;
             T_Waypoint res2;
             res2.push_back(res.front());
@@ -147,20 +148,20 @@ std::cout << "is 2d " << std::endl;
             isLine = true;
             std::size_t apex = nbWayPoints / 2;
             //value_type max_height = effectorDistance < 0.1 ? 0.01 : std::max(nbWayPoints* 0.015, 0.02);
-value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max(nbWayPoints* 0.01, 0.02));
-            value_type inc = max_height / apex;
+value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max((value_type)nbWayPoints* 0.01, 0.02));
+            value_type inc = max_height / (value_type)apex;
             std::size_t current = 0;
             std::size_t inc_fac = 0;
             for(IT_Waypoint it = res.begin(); it != res.end()-1; ++it, ++current)
             {
                 if(current>apex)
                 {
-                    it->second[dim-1] += inc_fac* (inc);
+                    it->second[dim-1] += (value_type)inc_fac* (inc);
                     --inc_fac;
                 }
                 else
                 {
-                    it->second[dim-1] += inc_fac* inc;
+                    it->second[dim-1] += (value_type)inc_fac* inc;
                     if(current==apex)
                         --inc_fac;
                     else
@@ -191,7 +192,7 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         }
     }
 
-    double genHeight(const bool normalFound)
+    value_type genHeight(const bool normalFound)
     {
         if(normalFound)
             return 0.01;
@@ -216,9 +217,9 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         std::string effLimb = getEffectorLimb(startState,nextState);
         bool found (false);
         fcl::Vec3f n1 = getNormal(effLimb, startState, found);
-        double h1 = genHeight(found);
+        value_type h1 = genHeight(found);
         fcl::Vec3f n2 = getNormal(effLimb, nextState, found);
-        double h2 = genHeight(found);
+        value_type h2 = genHeight(found);
         std::cout << "AM I CALLED " << n1 << "\n" <<  n2 << "\n h1 " << h1 << "\n h2 " << h2 <<  std::endl;
        /* exact_cubic_Ptr ptr = exact_cubic_Ptr(spline::helpers::effector_spline(
                                                   wayPoints.begin(),
@@ -255,7 +256,7 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
      * @param offsetConfig return the goal or init configuration
      * @return the path
      */
-    BezierPathPtr_t buildPredefinedPath(const DevicePtr_t& endEffectorDevice,const Vector3& normal,const Configuration_t& config,double posOffset, double velOffset,double time,bool init, Configuration_t& offsetConfig,bezier_com_traj::ProblemData& pData,double aOffset = 0){
+    BezierPathPtr_t buildPredefinedPath(const DevicePtr_t& endEffectorDevice,const Vector3& normal,const Configuration_t& config,value_type posOffset, value_type velOffset,value_type time,bool init, Configuration_t& offsetConfig,bezier_com_traj::ProblemData& pData,value_type aOffset = 0){
         pData.constraints_.flag_ = INIT_POS | INIT_VEL | INIT_ACC | END_ACC | END_VEL | END_POS | INIT_JERK | END_JERK;
         Vector3 c(config.head<3>());
         pData.c0_=c;
@@ -342,7 +343,7 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
     }
 
 
-    PathVectorPtr_t computeBezierPath(const DevicePtr_t& endEffectorDevice,const ProblemData& pDataMid,const EndEffectorPath& endEffPath,double timeMid,double weightRRT, const BezierPathPtr_t& refEffectorTakeoff, const BezierPathPtr_t& refEffectorLanding,bezier_Ptr& refEffectorMidBezier ){
+    PathVectorPtr_t computeBezierPath(const DevicePtr_t& endEffectorDevice,const ProblemData& pDataMid,const EndEffectorPath& endEffPath,value_type timeMid,value_type weightRRT, const BezierPathPtr_t& refEffectorTakeoff, const BezierPathPtr_t& refEffectorLanding,bezier_Ptr& refEffectorMidBezier ){
         bezier_com_traj::ResultDataCOMTraj res = bezier_com_traj::solveEndEffector<EndEffectorPath>(pDataMid,endEffPath,timeMid,weightRRT);
         if(!res.success_){
             hppDout(warning,"[WARNING] qp solver failed to compute bezier curve !!");
@@ -377,15 +378,15 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
     }
 
     /*
-    void computePredefConstants(double dist_translation,double p_max,double p_min,double t_total,double &t_predef, double &posOffset, double &velOffset,double &a_max_predefined ){
-        double timeMid= t_total - (2*t_predef);
-        //const double jerk_mid = ((1./6.)*(1/8.)*timeMid*timeMid*timeMid);
-        //const double jerk = p_max / ((0.5*t_predef*(timeMid*timeMid/4.)) + (0.25*t_predef*t_predef*timeMid) + ((1./6.)*t_predef*t_predef*t_predef) - (2.*t_predef/timeMid));
-        double jerk = 1.5*p_max / (((1./6.)*t_predef*t_predef*t_predef) + ((1./6.)*t_predef*t_predef*timeMid) + ((1./24.)*t_predef*timeMid*timeMid));
+    void computePredefConstants(value_type dist_translation,value_type p_max,value_type p_min,value_type t_total,value_type &t_predef, value_type &posOffset, value_type &velOffset,value_type &a_max_predefined ){
+        value_type timeMid= t_total - (2*t_predef);
+        //const value_type jerk_mid = ((1./6.)*(1/8.)*timeMid*timeMid*timeMid);
+        //const value_type jerk = p_max / ((0.5*t_predef*(timeMid*timeMid/4.)) + (0.25*t_predef*t_predef*timeMid) + ((1./6.)*t_predef*t_predef*t_predef) - (2.*t_predef/timeMid));
+        value_type jerk = 1.5*p_max / (((1./6.)*t_predef*t_predef*t_predef) + ((1./6.)*t_predef*t_predef*timeMid) + ((1./24.)*t_predef*timeMid*timeMid));
         a_max_predefined = jerk * t_predef;
         hppDout(notice,"computed jerk in computePredefConstant : "<<jerk);
 
-        const double a_max_translation  = dist_translation*8 /(timeMid*timeMid);
+        const value_type a_max_translation  = dist_translation*8 /(timeMid*timeMid);
         hppDout(notice,"A_max predefined = "<<a_max_predefined<<" ; translation : "<<a_max_translation);
         if(a_max_predefined>a_max_translation && timeMid > (2*t_predef)){ // we should increase the time allowed to the predefined curve, such that the two acceleration are equals
             hppDout(notice,"a_z sup a_translation, need to increase time_predef");
@@ -402,12 +403,12 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
      }
 */
 /*
-    void computePredefConstants(double dist_translation,double p_max,double p_min,double t_total,double &t_predef, double &posOffset, double &velOffset,double &a_max_predefined ){
-        double timeMid= t_total - (2*t_predef);
+    void computePredefConstants(value_type dist_translation,value_type p_max,value_type p_min,value_type t_total,value_type &t_predef, value_type &posOffset, value_type &velOffset,value_type &a_max_predefined ){
+        value_type timeMid= t_total - (2*t_predef);
 
-        const double dddjerk = 4000.; // 3000
-        //const double djerk = ddjerk*t_predef;
-        const double jerk = (1./6.)*dddjerk*t_predef*t_predef* t_predef;
+        const value_type dddjerk = 4000.; // 3000
+        //const value_type djerk = ddjerk*t_predef;
+        const value_type jerk = (1./6.)*dddjerk*t_predef*t_predef* t_predef;
         a_max_predefined = (1./24.)*dddjerk *t_predef*t_predef*t_predef* t_predef;
         hppDout(notice,"computed jerk in computePredefConstant : "<<jerk);
 
@@ -416,12 +417,11 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
         hppDout(notice,"pos offset = "<<posOffset<<" ; jerk = "<<jerk<<" ; acc = "<<a_max_predefined<<" ; vel = "<<velOffset);
      }
 */
-    void computePredefConstants(double dist_translation,double p_max,double p_min,double t_total,double &t_predef, double &posOffset, double &velOffset,double &a_max_predefined ){
-        double timeMid= t_total - (2*t_predef);
+    void computePredefConstants(value_type /*dist_translation*/,value_type /*p_max*/,value_type /*p_min*/,value_type /*t_total*/,value_type &t_predef, value_type &posOffset, value_type &velOffset,value_type &a_max_predefined ){
 
-        const double ddjerk = 250.;
-        //const double djerk = ddjerk*t_predef;
-        const double jerk = 0.5*ddjerk*t_predef*t_predef;
+        const value_type ddjerk = 250.;
+        //const value_type djerk = ddjerk*t_predef;
+        const value_type jerk = 0.5*ddjerk*t_predef*t_predef;
         a_max_predefined = (1./6.)*ddjerk *t_predef*t_predef*t_predef;
         hppDout(notice,"computed jerk in computePredefConstant : "<<jerk);
 
@@ -431,12 +431,12 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
      }
 
 /*
-    void computePredefConstants(double dist_translation,double p_max,double p_min,double t_total,double &t_predef, double &posOffset, double &velOffset,double &a_max_predefined ){
-       // double timeMid= t_total - (2*t_predef);
+    void computePredefConstants(value_type dist_translation,value_type p_max,value_type p_min,value_type t_total,value_type &t_predef, value_type &posOffset, value_type &velOffset,value_type &a_max_predefined ){
+       // value_type timeMid= t_total - (2*t_predef);
 
-        const double djerk = 30.;
-        //const double djerk = ddjerk*t_predef;
-        const double jerk = djerk*t_predef;
+        const value_type djerk = 30.;
+        //const value_type djerk = ddjerk*t_predef;
+        const value_type jerk = djerk*t_predef;
         a_max_predefined = 0.5*djerk *t_predef*t_predef;
         hppDout(notice,"computed jerk in computePredefConstant : "<<jerk);
 
@@ -445,24 +445,24 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
         hppDout(notice,"pos offset = "<<posOffset<<" ; jerk = "<<jerk<<" ; acc = "<<a_max_predefined<<" ; vel = "<<velOffset);
      }
 */
-    /*void computePredefConstants(double dist_translation,double p_max,double p_min,double t_total,double &t_predef, double &posOffset, double &velOffset,double &a_max_predefined ){
-        double timeMid= t_total - (2*t_predef);
+    /*void computePredefConstants(value_type dist_translation,value_type p_max,value_type p_min,value_type t_total,value_type &t_predef, value_type &posOffset, value_type &velOffset,value_type &a_max_predefined ){
+        value_type timeMid= t_total - (2*t_predef);
         posOffset = (p_max/(1+(timeMid/(2*t_predef))));
         if (posOffset<p_min)
             posOffset = p_min;
         a_max_predefined = posOffset*2./(t_predef*t_predef);
-        const double a_max_translation  = dist_translation*8 /(timeMid*timeMid);
+        const value_type a_max_translation  = dist_translation*8 /(timeMid*timeMid);
         hppDout(notice,"A_max predefined = "<<a_max_predefined<<" ; translation : "<<a_max_translation);
 
         if(a_max_predefined>a_max_translation){ // we should increase the time allowed to the predefined curve, such that the two acceleration are equals
             hppDout(notice,"a_z sup a_translation, need to increase time_predef");
-//            const double a = 8*dist_translation - 4*p_max;
-//            const double b = -4*dist_translation*t_total + 4 * t_total * p_max;
-//            const double c = - t_total*t_total * p_max;
-//            const double delta = b*b - 4 * a * c;
-//            const double x1 = (-b - sqrt(delta))/(2*a);
-//            const double x2 = (-b + sqrt(delta))/(2*a);
-//            double x = 0;
+//            const value_type a = 8*dist_translation - 4*p_max;
+//            const value_type b = -4*dist_translation*t_total + 4 * t_total * p_max;
+//            const value_type c = - t_total*t_total * p_max;
+//            const value_type delta = b*b - 4 * a * c;
+//            const value_type x1 = (-b - sqrt(delta))/(2*a);
+//            const value_type x2 = (-b + sqrt(delta))/(2*a);
+//            value_type x = 0;
 //            hppDout(notice,"x1 = "<<x1<<" ; x2 = "<<x2);
 //            if((x1 < t_predef) || (x1 > t_total/2)){
 //                hppDout(notice,"x1 invalid");
@@ -523,18 +523,18 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
         Vector3 c1(endConfig.head<3>());
         c0[2]=0; // replace with normal instead of z axis
         c1[2]=0;
-        const double dist_translation = (c1-c0).norm();
-        const double timeDelay = 0.05; // this is the time during the 'single support' phase where the feet don't move. It is needed to allow a safe mass transfer without exiting the flexibility.
-        const double totalTime = comPath->length()-2.*timeDelay;
-        //const double ratioTimeTakeOff=0.1;// percentage of the total time // was 0.1
+        const value_type dist_translation = (c1-c0).norm();
+        const value_type timeDelay = 0.05; // this is the time during the 'single support' phase where the feet don't move. It is needed to allow a safe mass transfer without exiting the flexibility.
+        const value_type totalTime = comPath->length()-2.*timeDelay;
+        //const value_type ratioTimeTakeOff=0.1;// percentage of the total time // was 0.1
 
 
 
-       // const double timeTakeoff = totalTime*ratioTimeTakeOff; // percentage of the total time
-        double timeTakeoff; // it's a minimum time, it can be increased
-        double p_max ; // offset for the higher point in the curve
-        double p_min; // min offset at the end of the predefined trajectory
-        double posOffset,velOffset,a_max_predefined;
+       // const value_type timeTakeoff = totalTime*ratioTimeTakeOff; // percentage of the total time
+        value_type timeTakeoff; // it's a minimum time, it can be increased
+        value_type p_max ; // offset for the higher point in the curve
+        value_type p_min; // min offset at the end of the predefined trajectory
+        value_type posOffset,velOffset,a_max_predefined;
         //a_max_predefined = 1.5;
         if(effectorName == "hrp2_rleg_rom" || effectorName == "hrp2_lleg_rom"){
            // timeTakeoff = 0.1;
@@ -552,13 +552,13 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
         }
 
 
-        //computePredefConstants(dist_translation,p_max,p_min,totalTime,timeTakeoff,posOffset,velOffset,a_max_predefined);
-        velOffset = 0.;
-        a_max_predefined = 0.;
+        computePredefConstants(dist_translation,p_max,p_min,totalTime,timeTakeoff,posOffset,velOffset,a_max_predefined);
+        //velOffset = 0.;
+        //a_max_predefined = 0.;
 
 
-        const double timeLanding = timeTakeoff;
-        const double timeMid = totalTime-2*timeTakeoff;
+        const value_type timeLanding = timeTakeoff;
+        const value_type timeMid = totalTime-2*timeTakeoff;
 
         hppDout(notice,"Effector-rrt, moving effector name : "<<effectorName);
         hppDout(notice,"Time takeoff : "<<timeTakeoff);
@@ -638,7 +638,7 @@ buildPredefinedPath(endEffectorDevice,nextNormal,endConfig,posOffset,-velOffset,
         }
     }
 
-    std::vector<core::PathVectorPtr_t> fitBeziersToPath(RbPrmFullBodyPtr_t fullbody, const pinocchio::Frame &effector, const double comPathLength, const PathPtr_t fullBodyComPath, const State &startState, const State &nextState){
+    std::vector<core::PathVectorPtr_t> fitBeziersToPath(RbPrmFullBodyPtr_t fullbody, const pinocchio::Frame &effector, const value_type comPathLength, const PathPtr_t fullBodyComPath, const State &startState, const State &nextState){
         core::PathVectorPtr_t fullBodyPathVector = core::PathVector::create(fullBodyComPath->outputSize(), fullBodyComPath->outputDerivativeSize());
         fullBodyPathVector->appendPath(fullBodyComPath);
         std::string effectorName = getEffectorLimb(startState,nextState);
@@ -647,7 +647,8 @@ buildPredefinedPath(endEffectorDevice,nextNormal,endConfig,posOffset,-velOffset,
         DevicePtr_t endEffectorDevice = createFreeFlyerDevice();
         Configuration_t initConfig(endEffectorDevice->configSize()),endConfig(endEffectorDevice->configSize());
         getEffectorConfigForConfig(fullbody->device_,effector,startState.configuration_,initConfig);
-        hppDout(notice,"fb com path init = "<<pinocchio::displayConfig((*fullBodyComPath)(0.)));
+        bool success;
+        hppDout(notice,"fb com path init = "<<pinocchio::displayConfig((*fullBodyComPath)(0.,success)));
         hppDout(notice,"start state conf = "<<pinocchio::displayConfig(startState.configuration_));
         getEffectorConfigForConfig(fullbody->device_,effector,nextState.configuration_,endConfig);
         Configuration_t takeoffConfig(initConfig),landingConfig(endConfig);
@@ -658,35 +659,35 @@ buildPredefinedPath(endEffectorDevice,nextNormal,endConfig,posOffset,-velOffset,
         Vector3 c1(endConfig.head<3>());
         c0[2]=0; // replace with normal instead of z axis
         c1[2]=0;
-        const double dist_translation = (c1-c0).norm();
-        const double timeDelay = 0.05; // this is the time during the 'single support' phase where the feet don't move. It is needed to allow a safe mass transfer without exiting the flexibility.
-        const double totalTime = comPathLength-2.*timeDelay;
-        //const double ratioTimeTakeOff=0.1;// percentage of the total time // was 0.1
+        const value_type dist_translation = (c1-c0).norm();
+        const value_type timeDelay = 0.05; // this is the time during the 'single support' phase where the feet don't move. It is needed to allow a safe mass transfer without exiting the flexibility.
+        const value_type totalTime = comPathLength-2.*timeDelay;
+        //const value_type ratioTimeTakeOff=0.1;// percentage of the total time // was 0.1
 
 
 
-       // const double timeTakeoff = totalTime*ratioTimeTakeOff; // percentage of the total time
-        double timeTakeoff = 0.3; // it's a minimum time, it can be increased
-        const double p_max = 0.03; // offset for the higher point in the curve
-        const double p_min = 0.01; // min offset at the end of the predefined trajectory
+       // const value_type timeTakeoff = totalTime*ratioTimeTakeOff; // percentage of the total time
+        value_type timeTakeoff = 0.3; // it's a minimum time, it can be increased
+        const value_type p_max = 0.03; // offset for the higher point in the curve
+        const value_type p_min = 0.01; // min offset at the end of the predefined trajectory
 
         // values for hrp2 :
-        /*double timeTakeoff = 0.1; // it's a minimum time, it can be increased //HRP2
-        const double p_max = 0.03; // offset for the higher point in the curve
-        const double p_min = 0.002; // min offset at the end of the predefined trajectory
+        /*value_type timeTakeoff = 0.1; // it's a minimum time, it can be increased //HRP2
+        const value_type p_max = 0.03; // offset for the higher point in the curve
+        const value_type p_min = 0.002; // min offset at the end of the predefined trajectory
         */
-        double posOffset,velOffset,a_max_predefined;
+        value_type posOffset,velOffset,a_max_predefined;
         //a_max_predefined = 1.5;
 
 
-       // computePredefConstants(dist_translation,p_max,p_min,totalTime,timeTakeoff,posOffset,velOffset,a_max_predefined);
-        posOffset = 0.004;
-        velOffset = 0.;
-        a_max_predefined = 0.;
+        computePredefConstants(dist_translation,p_max,p_min,totalTime,timeTakeoff,posOffset,velOffset,a_max_predefined);
+        //posOffset = 0.004;
+        //velOffset = 0.;
+        //a_max_predefined = 0.;
 
 
-        const double timeLanding = timeTakeoff;
-        const double timeMid = totalTime-2*timeTakeoff;
+        const value_type timeLanding = timeTakeoff;
+        const value_type timeMid = totalTime-2*timeTakeoff;
 
         hppDout(notice,"Effector-rrt, moving effector name : "<<effectorName);
         hppDout(notice,"previous normal : "<<startState.contactNormals_.at(effectorName));
@@ -727,7 +728,7 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
       //  endEffPath.setOffset(pDataMid.c0_ - endEffPath(0)); //FIXME : bug with com_path = bezier ???
 
         // ## call solver :
-        std::vector<double> weightRRT;
+        std::vector<value_type> weightRRT;
         weightRRT.push_back(0);
         weightRRT.push_back(0.5);
         weightRRT.push_back(0.75);
@@ -747,7 +748,7 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
         core::PathVectorPtr_t bezierPath;
         bezier_Ptr refEffectorMidBezier;
         hppDout(notice,"Try to fit bezier to rrt path with 1 variables");
-        for(std::vector<double>::const_iterator it_weight = weightRRT.begin() ; it_weight != weightRRT.end() ; ++it_weight){
+        for(std::vector<value_type>::const_iterator it_weight = weightRRT.begin() ; it_weight != weightRRT.end() ; ++it_weight){
             hppDout(notice,"Compute bezier path for weight : "<<*it_weight);
             bezierPath = computeBezierPath(endEffectorDevice,pDataMid,endEffPath,timeMid,(*it_weight),refEffectorTakeoff, refEffectorLanding,refEffectorMidBezier );
             if(bezierPath){
@@ -761,7 +762,7 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
         hppDout(notice,"Try to fit bezier to rrt path with 3 variables");
         pDataMid.constraints_.flag_ =INIT_POS | INIT_VEL | INIT_ACC | END_ACC | END_VEL | END_POS | INIT_JERK | END_JERK | THREE_FREE_VAR;
 
-        for(std::vector<double>::const_iterator it_weight = weightRRT.begin() +1; it_weight != weightRRT.end() ; ++it_weight){
+        for(std::vector<value_type>::const_iterator it_weight = weightRRT.begin() +1; it_weight != weightRRT.end() ; ++it_weight){
             hppDout(notice,"Compute bezier path for weight : "<<*it_weight);
             bezierPath = computeBezierPath(endEffectorDevice,pDataMid,endEffPath,timeMid,(*it_weight),refEffectorTakeoff, refEffectorLanding,refEffectorMidBezier );
             if(bezierPath){
@@ -775,7 +776,7 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
         hppDout(notice,"Try to fit bezier to rrt path with 5 variables");
         pDataMid.constraints_.flag_ =INIT_POS | INIT_VEL | INIT_ACC | END_ACC | END_VEL | END_POS | INIT_JERK | END_JERK | FIVE_FREE_VAR;
 
-        for(std::vector<double>::const_iterator it_weight = weightRRT.begin() +1; it_weight != weightRRT.end() ; ++it_weight){
+        for(std::vector<value_type>::const_iterator it_weight = weightRRT.begin() +1; it_weight != weightRRT.end() ; ++it_weight){
             hppDout(notice,"Compute bezier path for weight : "<<*it_weight);
             bezierPath = computeBezierPath(endEffectorDevice,pDataMid,endEffPath,timeMid,(*it_weight),refEffectorTakeoff, refEffectorLanding,refEffectorMidBezier );
             if(bezierPath){
@@ -791,7 +792,7 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
 
     core::PathPtr_t effectorRRTFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemSolverPtr_t problemSolver, const PathPtr_t comPath,const PathPtr_t fullBodyComPath,
                            const State &startState, const State &nextState,
-                           const std::size_t numOptimizations, const bool keepExtraDof,
+                           const std::size_t /*numOptimizations*/, const bool keepExtraDof,
                            const PathPtr_t refPath, const std::vector<std::string>& constrainedJointPos,
                            const std::vector<std::string>& constrainedLockedJoints){
 
@@ -807,7 +808,7 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
         std::vector<PathVectorPtr_t> listPathBezier = fitBeziersToPath(fullbody,effector,comPath->length(),fullBodyComPath,startState,nextState);
         // iterate over all bezier path and try to find a whole body motion that can follow it :
         const size_t maxIterationRRT = 500; //FIXME : adjust value for more complexe environnement
-        std::vector<double> weightRRT; // only required for debug
+        std::vector<value_type> weightRRT; // only required for debug
         weightRRT.push_back(0);
         weightRRT.push_back(0.5);
         weightRRT.push_back(0.75);
@@ -853,7 +854,7 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
             if(!interpolatedPath)//FIXME for testing purpose : always return the first path computed
                interpolatedPath = refEffectorPath; //FIXME for testing purpose : always return the first path computed
             */
-        } // TODO : if this still fail, add another free waypoint to the bezier optimisation problem.
+        }
 
         if (success_rrt){
             // ## save the path
@@ -954,18 +955,19 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
 
     }
 
-    vector_t EndEffectorPath::operator ()(double u) const{
+    vector_t EndEffectorPath::operator ()(value_type u) const{
         assert(u>=0 && u<=1 && "u must be normalized");
-        int tId = fullBodyPath_->outputSize()-1;
-        double t =  u*fullBodyPath_->end()[tId]; // u is between 0 and 1
+        size_t tId = fullBodyPath_->outputSize()-1;
+        value_type t =  u*fullBodyPath_->end()[tId]; // u is between 0 and 1
         hppDout(notice,"EndEffectorPath called, last time in fullBodyPath : "<<fullBodyPath_->end()[tId]);
         hppDout(notice,"Indexed size : "<<fullBodyPath_->length());
-        double cId = 0;
+        value_type cId = 0;
         bool found(false);
-        double index = 0;
+        value_type index = 0;
         hppDout(notice,"Looking for time : "<<t);
+        bool success;
         while(cId<fullBodyPath_->length() && !found){
-            if(fullBodyPath_->operator ()(cId)[tId] >= t){
+            if(fullBodyPath_->operator ()(cId,success)[tId] >= t){
                 index = cId;
                 found = true;
             }

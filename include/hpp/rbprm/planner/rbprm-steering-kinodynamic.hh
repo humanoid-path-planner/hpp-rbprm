@@ -97,8 +97,7 @@ namespace hpp {
       int dirValid_;
       int dirTotal_;
       int rejectedPath_;
-
-      double maxLength_ = 50;
+      const double maxLength_;
 
     protected:
 
@@ -137,9 +136,9 @@ namespace hpp {
 
 
     private:
-      centroidal_dynamics::Equilibrium* sEq_;
       core::DeviceWkPtr_t device_;
       centroidal_dynamics::Vector3 lastDirection_;
+      centroidal_dynamics::Equilibrium* sEq_;
       SteeringMethodKinodynamicWkPtr_t weak_;
 
     }; // class rbprm-kinodynamic

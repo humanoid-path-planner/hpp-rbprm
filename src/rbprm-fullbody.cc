@@ -25,7 +25,7 @@
 #include <hpp/core/constraint-set.hh>
 #include <hpp/core/collision-validation.hh>
 #include <hpp/core/config-projector.hh>
-#include <hpp/core/locked-joint.hh>
+#include <hpp/constraints/locked-joint.hh>
 #include <hpp/pinocchio/device.hh>
 #include <hpp/constraints/generic-transformation.hh>
 #include <hpp/pinocchio/configuration.hh>
@@ -88,7 +88,7 @@ namespace hpp {
             {
                 collisionValidation_->addObstacle(*cit);
             }
-            /*std::cout << "adding obstacle to limb validation " <<(*cit)->name() << std::endl;
+            std::cout << "adding obstacle to limb validation " <<(*cit)->name() << std::endl;
             limbcollisionValidation_->addObstacle(*cit);
             //remove effector collision
             if(disableEffectorCollision)

@@ -20,7 +20,7 @@
 #include <hpp/rbprm/interpolation/interpolation-constraints.hh>
 #include <hpp/rbprm/tools.hh>
 #include <hpp/core/bi-rrt-planner.hh>
-#include <hpp/core/basic-configuration-shooter.hh>
+#include <hpp/core/configuration-shooter/uniform.hh>
 #include <hpp/core/discretized-path-validation.hh>
 #include <hpp/pinocchio/configuration.hh>
 #include <hpp/core/problem-solver.hh>
@@ -87,7 +87,7 @@ using namespace core;
                 cit != fixed.end(); ++cit)
             {
             }
-            rootProblem.configurationShooter(core::BasicConfigurationShooter::create(device));
+            rootProblem.configurationShooter(core::configurationShooter::Uniform::create(device));
             rootProblem.pathValidation(DiscretizedPathValidation::create(device,0.05));
             core::ConstraintSetPtr_t cSet = core::ConstraintSet::create(rootProblem.robot(),"");
             cSet->addConstraint(proj);

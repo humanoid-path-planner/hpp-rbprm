@@ -54,12 +54,14 @@ namespace hpp {
         std::size_t dim =  init.rows() - 7;
         double totalDistance = (end.tail(dim) - init.tail(dim)).norm();
         double length = path->length();
+        bool successPathOperator;
         //checking 10 points
         Configuration_t last_q = init;
         Configuration_t q = end;
         for(double i = 1; i < 10; ++i)
         {
-            q = path->operator ()(i/10. * length);
+            q = path->operator ()(i/10. * length,successPathOperator);
+            assert(successPathOperator && "path operator () did not succeed");
             double distance = (last_q.tail(dim) - q.tail(dim)).norm();
             last_q =q;
             if(distance / totalDistance > 0.2)

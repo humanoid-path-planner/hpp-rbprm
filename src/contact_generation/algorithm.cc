@@ -128,10 +128,10 @@ bool ContactExistsWithinGroup(const hpp::rbprm::RbPrmLimbPtr_t& limb,
 
 ContactComputationStatus ComputeStableContact(const hpp::rbprm::RbPrmFullBodyPtr_t& body,
                           State& current,
-                          core::CollisionValidationPtr_t validation,
+                          core::CollisionValidationPtr_t /*validation*/,
                           const std::string& limbId,
-                          const hpp::rbprm::RbPrmLimbPtr_t& limb,
-                          pinocchio::ConfigurationIn_t rbconfiguration,
+                          const hpp::rbprm::RbPrmLimbPtr_t& /*limb*/,
+                          pinocchio::ConfigurationIn_t /*rbconfiguration*/,
                           pinocchio::ConfigurationOut_t configuration,
                           const affMap_t& affordances,
                           const std::map<std::string, std::vector<std::string> >& affFilters,
@@ -149,7 +149,7 @@ ContactComputationStatus ComputeStableContact(const hpp::rbprm::RbPrmFullBodyPtr
     contactGenHelper.fullBody_->device_->currentConfiguration(contactGenHelper.workingState_.configuration_);
     contactGenHelper.fullBody_->device_->computeForwardKinematics();
     params.comPosition_ = contactGenHelper.fullBody_->device_->positionCenterOfMass();
-    int cfgSize(contactGenHelper.workingState_.configuration_.rows());
+    size_type cfgSize(contactGenHelper.workingState_.configuration_.rows());
     params.comSpeed_ = fcl::Vec3f(contactGenHelper.workingState_.configuration_[cfgSize-6], contactGenHelper.workingState_.configuration_[cfgSize-5], contactGenHelper.workingState_.configuration_[cfgSize-4]);
     params.comAcceleration_ = contactGenHelper.acceleration_;
     params.sampleLimbName_ = limbId;

@@ -16,7 +16,7 @@
 // <http://www.gnu.org/licenses/>.
 
 # include <hpp/rbprm/planner/rbprm-steering-kinodynamic.hh>
-# include <hpp/pinocchio/device.hh>>
+# include <hpp/pinocchio/device.hh>
 # include <hpp/core/problem.hh>
 # include <hpp/core/weighed-distance.hh>
 # include <hpp/core/kinodynamic-path.hh>
@@ -35,16 +35,16 @@ namespace hpp{
 
     SteeringMethodKinodynamic::SteeringMethodKinodynamic (const core::Problem& problem) :
       core::steeringMethod::Kinodynamic (problem),
-      sEq_(new centroidal_dynamics::Equilibrium(problem_.robot()->name(), problem_.robot()->mass(),4,centroidal_dynamics::SOLVER_LP_QPOASES,true,10,false)),
-      totalTimeComputed_(0),totalTimeValidated_(0),dirTotal_(0),dirValid_(0),rejectedPath_(0),device_ (problem.robot ()),lastDirection_(), weak_ ()
+      totalTimeComputed_(0),totalTimeValidated_(0),dirValid_(0),dirTotal_(0),rejectedPath_(0),maxLength_(50),device_ (problem.robot ()),lastDirection_(),
+       sEq_(new centroidal_dynamics::Equilibrium(problem_.robot()->name(), problem_.robot()->mass(),4,centroidal_dynamics::SOLVER_LP_QPOASES,true,10,false)), weak_ ()
     {
     }
 
     /// Copy constructor
     SteeringMethodKinodynamic::SteeringMethodKinodynamic (const SteeringMethodKinodynamic& other) :
       core::steeringMethod::Kinodynamic (other),
-      sEq_(new centroidal_dynamics::Equilibrium(problem_.robot()->name(), problem_.robot()->mass(),4,centroidal_dynamics::SOLVER_LP_QPOASES,true,10,false)),
-      totalTimeComputed_(0),totalTimeValidated_(0),dirTotal_(0),dirValid_(0),rejectedPath_(0),device_ (other.device_),lastDirection_(),weak_()
+      totalTimeComputed_(0),totalTimeValidated_(0),dirValid_(0),dirTotal_(0),rejectedPath_(0),maxLength_(50),device_ (other.device_),lastDirection_(),
+      sEq_(new centroidal_dynamics::Equilibrium(problem_.robot()->name(), problem_.robot()->mass(),4,centroidal_dynamics::SOLVER_LP_QPOASES,true,10,false)),weak_()
     {
     }
 
