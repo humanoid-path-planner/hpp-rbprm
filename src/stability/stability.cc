@@ -149,6 +149,7 @@ namespace stability{
                                              core::value_type friction , const double feetX, const double feetY) throw(std::runtime_error)
     {
         friction = fullbody->getFriction();
+        hppDout(notice,"Setup centroidal dynamic lib, friction = "<<friction);
         const rbprm::T_Limb& limbs = fullbody->GetLimbs();
         hpp::pinocchio::ConfigurationIn_t save = fullbody->device_->currentConfiguration();
         std::vector<std::string> contacts;
