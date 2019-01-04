@@ -374,7 +374,7 @@ BOOST_AUTO_TEST_CASE(reachable_quasiStatic_rightFoot_front){
     BOOST_CHECK(reachability::isReachable(fullBody,s0,s04).success());
     BOOST_CHECK(reachability::isReachable(fullBody,s0,s06).success());
     BOOST_CHECK(reachability::isReachable(fullBody,s0,s07).success());
-    BOOST_CHECK(reachability::isReachable(fullBody,s0,s075).success());
+    BOOST_CHECK( ! reachability::isReachable(fullBody,s0,s075).success());
     BOOST_CHECK( ! reachability::isReachable(fullBody,s0,s08).success()); // should fail in quasi-static
 
 }
@@ -657,20 +657,17 @@ BOOST_AUTO_TEST_CASE(reachable_quasiStatic_rightFoot_backward){
             0.0,
             0.0;
 
-    std::cout<<"here"<<std::endl;
-  //  State s0 = createState(fullBody,q0);
-  //  State s02 = createState(fullBody,q02);
-   // State s04 = createState(fullBody,q04);
-   // State s06 = createState(fullBody,q06);
-   // State s07 = createState(fullBody,q07);
-   // State s075 = createState(fullBody,q075);
-
-   // BOOST_CHECK(reachability::isReachable(fullBody,s0,s02).success());
-   // BOOST_CHECK(reachability::isReachable(fullBody,s0,s04).success());
-   // BOOST_CHECK(reachability::isReachable(fullBody,s0,s06).success());
-   // BOOST_CHECK(reachability::isReachable(fullBody,s0,s07).success());
-   // BOOST_CHECK( ! reachability::isReachable(fullBody,s0,s075).success());// should fail in quasi-static
-    std::cout<<"here3"<<std::endl;
+    State s0 = createState(fullBody,q0);
+    State s02 = createState(fullBody,q02);
+    State s04 = createState(fullBody,q04);
+    State s06 = createState(fullBody,q06);
+    State s07 = createState(fullBody,q07);
+    State s075 = createState(fullBody,q075);
+    BOOST_CHECK(reachability::isReachable(fullBody,s0,s02).success());
+    BOOST_CHECK(reachability::isReachable(fullBody,s0,s04).success());
+    BOOST_CHECK( ! reachability::isReachable(fullBody,s0,s06).success());
+    BOOST_CHECK( ! reachability::isReachable(fullBody,s0,s07).success());
+    BOOST_CHECK( ! reachability::isReachable(fullBody,s0,s075).success());// should fail in quasi-static
 
 }
 
