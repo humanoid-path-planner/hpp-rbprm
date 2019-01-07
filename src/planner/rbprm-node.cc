@@ -42,7 +42,7 @@ Eigen::Quaterniond RbprmNode::getQuaternion(){
     return quat;
 }
 
-bool centerOfRomIntersection(const core::CollisionValidationReportPtr_t report, geom::Point& pn, geom::Point& center){
+bool centerOfRomIntersection(const core::CollisionValidationReportPtr_t report, geom::Point& pn, geom::Point& center,pinocchio::DeviceData& deviceData){
 
 
     core::CollisionObjectConstPtr_t obj_rom = report->object1;
@@ -51,64 +51,63 @@ bool centerOfRomIntersection(const core::CollisionValidationReportPtr_t report, 
     // debug display :
     hppDout(notice,"~~ collision between : "<<obj_rom->name() << " and "<<obj_env->name());
 
+    /*
+    fcl::CollisionResult result = report->result;
+    size_t numContact =result.numContacts();
+    //hppDout(notice,"~~ number of contact : "<<numContact);
+    std::ostringstream ss;
+    ss<<"[";
+    for(size_t i = 0 ; i < numContact ; i++)
+    { // print with python formating :
+      ss<<"["<<result.getContact(i).pos[0]<<","<<result.getContact(i).pos[1]<<","<<result.getContact(i).pos[2]<<"]";
+      if(i< (numContact-1))
+         ss<<",";
+    }
+    ss<<"]";
 
-    /*  fcl::CollisionResult result = it->second->result;
-            size_t numContact =result.numContacts();
-            //hppDout(notice,"~~ number of contact : "<<numContact);
-            std::ostringstream ss;
-            ss<<"[";
-            for(size_t i = 0 ; i < numContact ; i++)
-            { // print with python formating :
-              ss<<"["<<result.getContact(i).pos[0]<<","<<result.getContact(i).pos[1]<<","<<result.getContact(i).pos[2]<<"]";
-              if(i< (numContact-1))
-                 ss<<",";
-            }
-            ss<<"]";
-        */
-    // std::cout<<"contact point : "<<std::endl;
-    // std::cout<<ss.str()<<std::endl;
-
+    hppDout(notice,"contact point : ");
+    hppDout(notice," " <<ss.str());
+    */
 
     // get intersection between the two objects :
-    // geom::T_Point vertices1;
-    geom::BVHModelOBConst_Ptr_t model_rom =  geom::GetModel(obj_rom);
-    // geom::T_Point vertices2;
-    geom::BVHModelOBConst_Ptr_t model_env =  geom::GetModel(obj_env);
+    geom::BVHModelOBConst_Ptr_t model_rom =  geom::GetModel(obj_rom,deviceData);
+    geom::BVHModelOBConst_Ptr_t model_env =  geom::GetModel(obj_env,deviceData);
 
-    /*      // display intersection for debug
-            //hppDout(info,"vertices obj1 : "<<obj1->name()<< " ( "<<model1->num_vertices<<" ) ");
-            std::ostringstream ss1;
-            ss1<<"[";
-            for(int i = 0 ; i < model1->num_vertices ; ++i)
-            {
-              vertices1.push_back(Eigen::Vector3d(model1->vertices[i][0], model1->vertices[i][1], model1->vertices[i][2]));
-              //hppDout(notice,"vertices : "<<model1->vertices[i]);
-              ss1<<"["<<model1->vertices[i][0]<<","<<model1->vertices[i][1]<<","<<model1->vertices[i][2]<<"]";
-              if(i< (model1->num_vertices-1))
-                ss1<<",";
-            }
-            ss1<<"]";
-            std::cout<<"obj "<<obj1->name()<<std::endl;
-            std::cout<<ss1.str()<<std::endl;
+    // display intersection for debug
+    /*hppDout(info,"vertices obj1 : "<<obj_rom->name()<< " ( "<<model_rom->num_vertices<<" ) ");
+    geom::T_Point vertices1,vertices2;
+    std::ostringstream ss1;
+    ss1<<"[";
+    for(int i = 0 ; i < model_rom->num_vertices ; ++i)
+    {
+      vertices1.push_back(Eigen::Vector3d(model_rom->vertices[i][0], model_rom->vertices[i][1], model_rom->vertices[i][2]));
+      //hppDout(notice,"vertices : "<<model1->vertices[i]);
+      ss1<<"["<<model_rom->vertices[i][0]<<","<<model_rom->vertices[i][1]<<","<<model_rom->vertices[i][2]<<"]";
+      if(i< (model_rom->num_vertices-1))
+        ss1<<",";
+    }
+    ss1<<"]";
+    hppDout(notice,"obj "<<obj_rom->name());
+    hppDout(notice," "<<ss1.str());
 
 
-            //hppDout(info,"vertices obj2 : "<<obj2->name()<< " ( "<<model2->num_vertices<<" ) ");
-            std::ostringstream ss2;
-            ss2<<"[";
-            for(int i = 0 ; i < model2->num_vertices ; ++i)
-            {
-              vertices2.push_back(Eigen::Vector3d(model2->vertices[i][0], model2->vertices[i][1], model2->vertices[i][2]));
-              // hppDout(notice,"vertices : "<<model2->vertices[i]);
-              ss2<<"["<<model2->vertices[i][0]<<","<<model2->vertices[i][1]<<","<<model2->vertices[i][2]<<"]";
-              if(i< (model2->num_vertices -1))
-                ss2<<",";
+    hppDout(info,"vertices obj2 : "<<obj_env->name()<< " ( "<<model_env->num_vertices<<" ) ");
+    std::ostringstream ss2;
+    ss2<<"[";
+    for(int i = 0 ; i < model_env->num_vertices ; ++i)
+    {
+      vertices2.push_back(Eigen::Vector3d(model_env->vertices[i][0], model_env->vertices[i][1], model_env->vertices[i][2]));
+      // hppDout(notice,"vertices : "<<model2->vertices[i]);
+      ss2<<"["<<model_env->vertices[i][0]<<","<<model_env->vertices[i][1]<<","<<model_env->vertices[i][2]<<"]";
+      if(i< (model_env->num_vertices -1))
+        ss2<<",";
 
-            }
-            ss2<<"]";
-           // std::cout<<"obj "<<obj2->name()<<std::endl;
-           // std::cout<<ss2.str()<<std::endl;
-            hppDout(notice," "<<ss2.str());
+    }
+    ss2<<"]";
+    hppDout(notice,"obj "<<obj_env->name());
+    hppDout(notice," "<<ss2.str());
     */
+    // end of debug display
 
     hppStartBenchmark (COMPUTE_INTERSECTION);
     // FIX ME : compute plan equation first
@@ -213,7 +212,7 @@ void computeNodeMatrixForOnePoint(const geom::Point pn, const geom::Point center
 
 }
 
-void RbprmNode::fillNodeMatrices(ValidationReportPtr_t report, bool rectangularContact, double sizeFootX, double sizeFootY, double m,double mu){
+void RbprmNode::fillNodeMatrices(ValidationReportPtr_t report, bool rectangularContact, double sizeFootX, double sizeFootY, double m, double mu, pinocchio::DeviceData &deviceData){
     hppStartBenchmark(FILL_NODE_MATRICE);
 
     core::RbprmValidationReportPtr_t rbReport = boost::dynamic_pointer_cast<core::RbprmValidationReport> (report);
@@ -251,7 +250,7 @@ void RbprmNode::fillNodeMatrices(ValidationReportPtr_t report, bool rectangularC
     {
         hppDout(info,"~~ for rom : "<<it->first);
         geom::Point pn,center;
-        intersectionExist = centerOfRomIntersection(it->second,pn,center);
+        intersectionExist = centerOfRomIntersection(it->second,pn,center,deviceData);
         ssCenters<<"["<<center[0]<<" , "<<center[1]<<" , "<<center[2]<<"],";
 
         if(!intersectionExist){
@@ -317,7 +316,7 @@ void RbprmNode::fillNodeMatrices(ValidationReportPtr_t report, bool rectangularC
 
 }
 
-void RbprmNode::chooseBestContactSurface(ValidationReportPtr_t report,std::map<std::string,fcl::Vec3f> rom_ref_endEffector ){
+void RbprmNode::chooseBestContactSurface(ValidationReportPtr_t report,std::map<std::string,fcl::Vec3f> rom_ref_endEffector, pinocchio::DeviceData& deviceData){
     core::RbprmValidationReportPtr_t rbReport = boost::dynamic_pointer_cast<core::RbprmValidationReport> (report);
     for(std::map<std::string,core::CollisionValidationReportPtr_t>::const_iterator it = rbReport->ROMReports.begin() ; it != rbReport->ROMReports.end() ; ++it){
         core::AllCollisionsValidationReportPtr_t romReports = boost::dynamic_pointer_cast<core::AllCollisionsValidationReport>(it->second);
@@ -345,7 +344,7 @@ void RbprmNode::chooseBestContactSurface(ValidationReportPtr_t report,std::map<s
         double minDistance = std::numeric_limits<double>::max();
         CollisionValidationReportPtr_t bestReport;
         for(std::vector<CollisionValidationReportPtr_t>::const_iterator itAff = romReports->collisionReports.begin() ; itAff != romReports->collisionReports.end() ; ++itAff){
-            centerOfRomIntersection(*itAff,normal,center);
+            centerOfRomIntersection(*itAff,normal,center,deviceData);
             distance = center-refPoint;
             if(distance.norm() < minDistance){
                 minDistance = distance.norm();

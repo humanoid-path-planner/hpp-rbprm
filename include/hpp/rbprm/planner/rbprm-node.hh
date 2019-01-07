@@ -82,9 +82,9 @@ namespace hpp {
 
       size_type getNumberOfContacts(){return numberOfContacts_;}
 
-      void fillNodeMatrices(ValidationReportPtr_t report,bool rectangularContact, double sizeFootx, double sizeFooty, double m,double mu);
+      void fillNodeMatrices(ValidationReportPtr_t report,bool rectangularContact, double sizeFootx, double sizeFooty, double m,double mu,pinocchio::DeviceData& deviceData);
 
-      void chooseBestContactSurface(ValidationReportPtr_t report,std::map<std::string,fcl::Vec3f> rom_ref_endEffector );
+      void chooseBestContactSurface(ValidationReportPtr_t report,std::map<std::string,fcl::Vec3f> rom_ref_endEffector,pinocchio::DeviceData& deviceData );
 
 
       Eigen::Quaterniond getQuaternion();

@@ -218,7 +218,8 @@ namespace hpp{
       problem().configValidations()->validate(q1,report);
       rbprmPathValidation_->getValidator()->computeAllContacts(false);
       hppDout(notice,"Random shortucut, fillNodeMatrices : ");
-      x1->fillNodeMatrices(report,rectangularContact_,sizeFootX_,sizeFootY_,problem().robot()->mass(),mu_);
+      pinocchio::DeviceSync device (problem().robot());
+      x1->fillNodeMatrices(report,rectangularContact_,sizeFootX_,sizeFootY_,problem().robot()->mass(),mu_,device.d());
       // call steering method kinodynamic with the newly created node
       hppDout(notice,"Random shortucut, steering method  : ");
       PathPtr_t dp = (*sm_)(x1,q2);

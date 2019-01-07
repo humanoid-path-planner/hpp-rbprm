@@ -429,11 +429,13 @@ namespace hpp {
       // (because only the first one in collision is considered by fcl and put in the report)
       rbprmPathValidation_->getValidator()->randomnizeCollisionPairs(); // FIXME : remove if we compute all collision pairs
       rbprmPathValidation_->getValidator()->computeAllContacts(true);
+      hppDout(notice,"Compute GIWC, call validate for configuration : "<<pinocchio::displayConfig(*(x->configuration())));
       problem().configValidations()->validate(*(x->configuration()),report);
       rbprmPathValidation_->getValidator()->computeAllContacts(false);
       if(use_bestReport){
           core::RbprmNodePtr_t node = static_cast<core::RbprmNodePtr_t>(x);
-          node->chooseBestContactSurface(report,rom_ref_endEffector_);
+          pinocchio::DeviceSync device (problem().robot());
+          node->chooseBestContactSurface(report,rom_ref_endEffector_,device.d());
       }
       computeGIWC(x,report);
     }
@@ -452,10 +454,8 @@ namespace hpp {
       }
 
       hppDout(info,"~~ q = "<<displayConfig(*q));
-
-      node->fillNodeMatrices(report,rectangularContact_,sizeFootX_,sizeFootY_,problem().robot()->mass(),mu_);
-
-
+      pinocchio::DeviceSync device (problem().robot());
+      node->fillNodeMatrices(report,rectangularContact_,sizeFootX_,sizeFootY_,problem().robot()->mass(),mu_,device.d());
     }// computeGIWC
 
 

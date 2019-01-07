@@ -47,7 +47,7 @@ namespace geom
   typedef fcl::BVHModel<fcl::OBBRSS> BVHModelOB;
   typedef boost::shared_ptr<const BVHModelOB> BVHModelOBConst_Ptr_t;
 
-  BVHModelOBConst_Ptr_t GetModel(const hpp::pinocchio::CollisionObjectConstPtr_t object);
+  BVHModelOBConst_Ptr_t GetModel(const hpp::pinocchio::CollisionObjectConstPtr_t object, hpp::pinocchio::DeviceData &deviceData);
   
   void projectZ(IT_Point pointsBegin, IT_Point pointsEnd);
   
