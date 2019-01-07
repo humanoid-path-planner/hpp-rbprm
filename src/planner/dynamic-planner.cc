@@ -538,11 +538,11 @@ namespace hpp {
 
 
     core::PathVectorPtr_t DynamicPlanner::finishSolve (const core::PathVectorPtr_t& path){
-      std::cout<<"total_path_computed = "<<sm_->totalTimeComputed_<<std::endl;
+      /*std::cout<<"total_path_computed = "<<sm_->totalTimeComputed_<<std::endl;
       std::cout<<"total_path_validated = "<<sm_->totalTimeValidated_<<std::endl;
       std::cout<<"percentage validated path ="<<((sm_->totalTimeValidated_)/(sm_->totalTimeComputed_))*100.<<std::endl;
       std::cout<<"rejected_paths = "<<sm_->rejectedPath_<<std::endl;
-
+      */
       /*
       std::ofstream myfile;
       myfile.open ("/local/dev_hpp/benchs/benchHyq_darpa.txt", std::ios::out | std::ios::app );
