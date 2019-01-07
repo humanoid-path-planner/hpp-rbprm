@@ -46,12 +46,8 @@ namespace hpp {
       V0_ (vector_t(3)), Vimp_ (vector_t(3))
     {
       hppDout(notice,"Constructor steering-method-parabola");
-      try {
-        V0max_ = (double)problem.getParameter ("vMax").floatValue();
-        Vimpmax_ =V0max_;
-      } catch (const std::exception& e) {
-        std::cout<<"Warning : no velocity bounds set in problem, use 1.0 as default"<<std::endl;
-      }
+      V0max_ = problem.getParameter (std::string("Kinodynamic/velocityBound")).floatValue();
+      Vimpmax_ =V0max_;
     }
 
     core::PathPtr_t SteeringMethodParabola::impl_compute
