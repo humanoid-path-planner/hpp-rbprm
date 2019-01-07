@@ -52,7 +52,7 @@ namespace hpp {
     class DynamicValidation : public core::ConfigValidation
     {
     public:
-      static DynamicValidationPtr_t create (bool rectangularContact, double sizeFootX, double sizeFootY, double mass, double mu);
+      static DynamicValidationPtr_t create (bool rectangularContact, double sizeFootX, double sizeFootY, double mass, double mu,core::DevicePtr_t robot);
 
 
       /// Compute whether the configuration is valid
@@ -69,13 +69,14 @@ namespace hpp {
 
 
     protected:
-      DynamicValidation (bool rectangularContact, double sizeFootX, double sizeFootY, double mass, double mu);
+      DynamicValidation (bool rectangularContact, double sizeFootX, double sizeFootY, double mass, double mu,core::DevicePtr_t robot);
     private:
       bool rectangularContact_;
       double sizeFootX_;
       double sizeFootY_;
       double mass_;
       double mu_;
+      core::DevicePtr_t robot_;
       centroidal_dynamics::Equilibrium* sEq_;
       core::RbprmValidationReportPtr_t lastReport_;
       bool initContacts_;
