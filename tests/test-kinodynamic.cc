@@ -102,12 +102,18 @@ BOOST_AUTO_TEST_CASE (straight_line) {
     pSolver.finishSolveStepByStep();
     BOOST_CHECK_EQUAL(pSolver.paths().size(),1);
     BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),8.,1e-6);
+    core::PathVectorPtr_t pv = boost::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back());
+    BOOST_CHECK_EQUAL(pv->numberPaths (),1);
     pSolver.solve();
     BOOST_CHECK_EQUAL(pSolver.paths().size(),3);
     BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),8.,1e-6);
+    pv = boost::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back());
+    BOOST_CHECK_EQUAL(pv->numberPaths (),1);
     pSolver.optimizePath(pSolver.paths().back());
     BOOST_CHECK_EQUAL(pSolver.paths().size(),4);
     BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),8.,1e-6);
+    pv = boost::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back());
+    BOOST_CHECK_EQUAL(pv->numberPaths (),1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
