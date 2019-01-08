@@ -226,7 +226,7 @@ const fcl::Vec3f comfcl = comcptr->com();*/
         hppDout(notice,"Setup cone contacts : ");
         hppDout(notice,"position : \n"<<positions);
         hppDout(notice,"normal : \n"<<normals);
-        bool success = sEq.setNewContacts(positions,normals,friction,alg,graspIndex,1.);
+        bool success = sEq.setNewContacts(positions,normals,friction,alg);
         if (!success)
             throw std::runtime_error("Error in centroidal-dynamic lib while computing new contacts");
         return com;
