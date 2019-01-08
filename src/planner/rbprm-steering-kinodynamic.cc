@@ -390,6 +390,8 @@ namespace hpp{
 
       hppDout(info,"Amax after min : "<<alpha0);
       aMax = alpha0*direction;
+      for(size_t i = 0 ; i < 3 ; ++i)
+        aMax[i] = fabs(aMax[i]); // aMax store the amplitude
 
       if((aMax[2] < aMaxFixed_Z_))
         aMax[2] = aMaxFixed_Z_;
