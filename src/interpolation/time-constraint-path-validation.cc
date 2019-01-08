@@ -70,13 +70,13 @@ namespace hpp {
                 return false;
             }
         }
-        return DiscretizedPathValidation::validate(path,reverse,validPart,validationReport);
+        return core::pathValidation::Discretized::validate(path,reverse,validPart,validationReport);
     }
 
     TimeConstraintPathValidation::TimeConstraintPathValidation(const DevicePtr_t& robot,
                                                  const value_type& stepSize,
                                                  const std::size_t pathDofRank)
-        : DiscretizedPathValidation(robot,stepSize)
+        : core::pathValidation::Discretized(stepSize)
         , pathDofRank_(pathDofRank)
     {
         add (CollisionValidation::create (robot));

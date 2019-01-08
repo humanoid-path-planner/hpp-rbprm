@@ -38,13 +38,13 @@ namespace hpp{
     }
 
 
-    RbPrmPathValidation::RbPrmPathValidation(const core::DevicePtr_t &robot, const core::value_type &stepSize) :
-      core::DiscretizedPathValidation(robot,stepSize)
+    RbPrmPathValidation::RbPrmPathValidation(const core::DevicePtr_t &/*robot*/, const core::value_type &stepSize) :
+      core::pathValidation::Discretized(stepSize)
     {}
 
     void RbPrmPathValidation::add(const core::ConfigValidationPtr_t& configValidation)
     {
-      core::DiscretizedPathValidation::add (configValidation);
+      core::pathValidation::Discretized::add (configValidation);
       rbprmValidation_ = boost::dynamic_pointer_cast<RbPrmValidation>(configValidation);
     }
 

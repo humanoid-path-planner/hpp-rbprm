@@ -19,7 +19,7 @@
 #ifndef HPP_TIME_CONSTRAINT_STEERING_HH
 # define HPP_TIME_CONSTRAINT_STEERING_HH
 
-# include <hpp/core/discretized-path-validation.hh>
+# include <hpp/core/path-validation/discretized.hh>
 # include <hpp/core/steering-method/straight.hh>
 # include <hpp/core/straight-path.hh>
 # include <hpp/rbprm/interpolation/time-constraint-path.hh>
