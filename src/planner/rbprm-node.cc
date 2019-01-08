@@ -38,7 +38,7 @@ typedef centroidal_dynamics::VectorX VectorX;
 
 Eigen::Quaterniond RbprmNode::getQuaternion(){
     ConfigurationPtr_t q=configuration();
-    Eigen::Quaterniond quat((*q)[3],(*q)[4],(*q)[5],(*q)[6]);
+    Eigen::Quaterniond quat((*q)[6],(*q)[3],(*q)[4],(*q)[5]);
     return quat;
 }
 
@@ -335,7 +335,7 @@ void RbprmNode::chooseBestContactSurface(ValidationReportPtr_t report,std::map<s
         core::ConfigurationPtr_t q = configuration();
         fcl::Transform3f tRoot;
         tRoot.setTranslation(fcl::Vec3f((*q)[0],(*q)[1],(*q)[2]));
-        fcl::Quaternion3f quat((*q)[3],(*q)[4],(*q)[5],(*q)[6]);
+        fcl::Quaternion3f quat((*q)[6],(*q)[3],(*q)[4],(*q)[5]);
         //fcl::Matrix3f rot = quat.matrix();
         tRoot.setRotation(quat.matrix());
         reference = (tRoot*reference).getTranslation();
