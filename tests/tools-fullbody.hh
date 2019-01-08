@@ -139,6 +139,9 @@ hpp::pinocchio::RbPrmDevicePtr_t loadAbstractRobot(pinocchio::T_Rom& romDevices,
             robotName,
             urdfSuffix,
             srdfSuffix);
+    const pinocchio::Computation_t flag = static_cast <pinocchio::Computation_t>
+  (pinocchio::JOINT_POSITION | pinocchio::JACOBIAN | pinocchio::COM);
+    device->controlComputation(flag);
     return device;
 }
 
