@@ -93,6 +93,7 @@ namespace hpp {
     {
           assert(sm_ && "steering method should be a kinodynamic steering method for this solver");
           assert(rbprmPathValidation_ && "Path validation should be a RbPrmPathValidation class for this solver");
+          assert(problem.robot()->mass() > 0. && "When using dynamic planner, the robot mass should be correctly defined.");
           hppDout(notice,"number of affordances objects : "<<problem.collisionObstacles().size());
 
           sizeFootX_ = problem.getParameter (std::string("DynamicPlanner/sizeFootX")).floatValue()/2.;
@@ -137,6 +138,7 @@ namespace hpp {
     {
       assert(sm_ && "steering method should be a kinodynamic steering method for this solver");
       assert(rbprmPathValidation_ && "Path validation should be a RbPrmPathValidation class for this solver");
+      assert(problem.robot()->mass() > 0. && "When using dynamic planner, the robot mass should be correctly defined.");
 
       hppDout(notice,"number of affordances objects : "<<problem.collisionObstacles().size());
       sizeFootX_ = problem.getParameter (std::string("DynamicPlanner/sizeFootX")).floatValue()/2.;

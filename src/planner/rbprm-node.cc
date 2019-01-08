@@ -233,7 +233,8 @@ void RbprmNode::fillNodeMatrices(ValidationReportPtr_t report, bool rectangularC
         hppDout(error,"~~ ComputeGIWC : roms filter not respected"); // shouldn't happen
     }
 
-
+    hppDout(notice,"Robot mass used to compute matrices : "<<m);
+    assert(m>0. && " Robot mass during computation of dynamic matrices is 0.");
     //FIX ME : position of contact is in center of the collision surface
     size_type numContactpoints = (rbReport->ROMReports.size() + 3*rectangularContact*rbReport->ROMReports.size());
     setNumberOfContacts(numContactpoints);
