@@ -157,7 +157,7 @@ namespace hpp {
       hppDout(info,"rbprmValidation called" );
       dynamicValidation_->setInitialReport(configReport);
       hppDout(info,"dynamic validation set initial report OK");
-      bool valid = core::DiscretizedPathValidation::validate(path,reverse,validPart,validationReport);
+      bool valid = core::pathValidation::Discretized::validate(path,reverse,validPart,validationReport);
       hppStopBenchmark(PATH_VALIDATION);
       hppDisplayBenchmark(PATH_VALIDATION);
       return valid;

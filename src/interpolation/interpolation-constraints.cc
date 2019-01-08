@@ -36,7 +36,7 @@ namespace hpp {
           globalFrame.translation(state.contactPositions_.at(*cit));
           //const fcl::Matrix3f& rotation = state.contactRotation_.at(*cit);
           const pinocchio::Frame effectorFrame = device->getFrameByName(limb->effector_.name());
-          pinocchio::JointPtr_t effectorJoint (new pinocchio::Joint(effectorFrame.joint()));
+          pinocchio::JointPtr_t effectorJoint = effectorFrame.joint();
           projector->add(constraints::Implicit::create (
                                   constraints::Position::create("",device,
                                                                 effectorJoint, effectorFrame.pinocchio().placement * localFrame, globalFrame)));

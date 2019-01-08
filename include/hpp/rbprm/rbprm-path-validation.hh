@@ -17,7 +17,7 @@
 #ifndef HPP_RBPRM_PATH_VALIDATION_HH
 # define HPP_RBPRM_PATH_VALIDATION_HH
 
-#include <hpp/core/discretized-path-validation.hh>
+#include <hpp/core/path-validation/discretized.hh>
 #include <hpp/util/pointer.hh>
 #include <hpp/rbprm/rbprm-validation.hh>
 #include <hpp/rbprm/config.hh>
@@ -31,7 +31,7 @@ namespace hpp {
     typedef boost::shared_ptr <RbPrmPathValidation> RbPrmPathValidationPtr_t;
 
 
-    class HPP_RBPRM_DLLAPI RbPrmPathValidation : public core::DiscretizedPathValidation
+    class HPP_RBPRM_DLLAPI RbPrmPathValidation : public core::pathValidation::Discretized
     {
     public:
       /// Create an instance and return a shared pointer to the instance
@@ -41,7 +41,7 @@ namespace hpp {
       virtual bool validate (const core::PathPtr_t& path, bool reverse, core::PathPtr_t& validPart,			     core::PathValidationReportPtr_t& report,const std::vector<std::string>& filter);
 
       virtual bool validate (const core::PathPtr_t& path, bool reverse,  core::PathPtr_t& validPart,  core::PathValidationReportPtr_t& report){
-        return core::DiscretizedPathValidation::validate(path,reverse,validPart,report);
+        return core::pathValidation::Discretized::validate(path,reverse,validPart,report);
       }
 
 

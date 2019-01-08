@@ -19,7 +19,7 @@
 #ifndef HPP_RBPRM_TIME_CONSTRAINT_PATH_VALIDATION_HH
 # define HPP_RBPRM_TIME_CONSTRAINT_PATH_VALIDATION_HH
 
-# include <hpp/core/discretized-path-validation.hh>
+# include <hpp/core/path-validation/discretized.hh>
 
 namespace hpp {
   namespace rbprm {
@@ -35,7 +35,7 @@ namespace hpp {
     ///
     /// Apply some configuration validation algorithms at discretized values
     /// of the path parameter.
-    class HPP_CORE_DLLAPI TimeConstraintPathValidation : public core::DiscretizedPathValidation
+    class HPP_CORE_DLLAPI TimeConstraintPathValidation : public core::pathValidation::Discretized
     {
     public:
       static TimeConstraintPathValidationPtr_t

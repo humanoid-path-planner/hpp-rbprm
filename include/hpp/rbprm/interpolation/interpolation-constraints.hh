@@ -187,7 +187,7 @@ namespace interpolation {
         pinocchio::Transform3f localFrame, globalFrame;
         localFrame = localFrame.Identity(); globalFrame = globalFrame.Identity();
         globalFrame.translation(initTarget);
-        pinocchio::JointPtr_t effectorJoint (new pinocchio::Joint(effectorFrame.joint()));
+        pinocchio::JointPtr_t effectorJoint = effectorFrame.joint();
         return constraints::Position::create("",device,
                                              effectorJoint,
                                              effectorFrame.positionInParentFrame() * localFrame,
@@ -199,7 +199,7 @@ namespace interpolation {
     {
         //std::vector<bool> mask; mask.push_back(false); mask.push_back(false); mask.push_back(true);
         std::vector<bool> mask; mask.push_back(true); mask.push_back(true); mask.push_back(true);
-        pinocchio::JointPtr_t effectorJoint (new pinocchio::Joint(effectorFrame.joint()));
+        pinocchio::JointPtr_t effectorJoint = effectorFrame.joint();
         pinocchio::Transform3f rotation(1);
         rotation.rotation(effectorFrame.positionInParentFrame().rotation()*initTarget.getRotation());
         return constraints::Orientation::create("", device,

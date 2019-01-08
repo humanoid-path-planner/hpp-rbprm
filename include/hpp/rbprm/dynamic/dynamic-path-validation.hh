@@ -42,7 +42,7 @@ namespace hpp {
       virtual bool validate (const core::PathPtr_t& path, bool reverse,  core::PathPtr_t& validPart,  core::PathValidationReportPtr_t& report);
 
       void addDynamicValidator(const DynamicValidationPtr_t& dynamicValidation){
-        core::DiscretizedPathValidation::add (dynamicValidation);
+        core::pathValidation::Discretized::add (dynamicValidation);
         dynamicValidation_=dynamicValidation;
       }
 

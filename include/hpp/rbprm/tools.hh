@@ -146,7 +146,7 @@ namespace hpp {
       {
           if (joint->name() == effector.name())
             return;
-          else if(joint->name() == effector.joint().name() )
+          else if(joint->name() == effector.joint()->name() )
             return; // TODO only disable collision for frame
           else if(joint->numberChildJoints() == 0)
             return; // TODO only disable collision for frame

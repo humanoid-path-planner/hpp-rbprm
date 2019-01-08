@@ -30,8 +30,8 @@ using namespace hpp::rbprm::sampling;
 std::size_t ComputeLength(const pinocchio::JointPtr_t limb, const pinocchio::Frame effector)
 {
     std::size_t start = limb->rankInConfiguration();
-    std::size_t end = effector.joint().rankInConfiguration()
-            + effector.joint().configSize(); //neutralConfiguration().rows();
+    std::size_t end = effector.joint()->rankInConfiguration()
+            + effector.joint()->configSize(); //neutralConfiguration().rows();
     return end - start;
 }
 
@@ -73,7 +73,7 @@ fcl::Vec3f ComputeEffectorPositionInLimbFrame(const pinocchio::JointPtr_t limb, 
 
 Eigen::MatrixXd Jacobian(const pinocchio::JointPtr_t limb, const pinocchio::Frame effector)
 {
-    return effector.jacobian().block(0,limb->rankInVelocity(),6, effector.joint().rankInVelocity() - limb->rankInVelocity() + effector.joint().numberDof());
+    return effector.jacobian().block(0,limb->rankInVelocity(),6, effector.joint()->rankInVelocity() - limb->rankInVelocity() + effector.joint()->numberDof());
 }
 
 

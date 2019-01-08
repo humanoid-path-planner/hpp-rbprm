@@ -64,7 +64,7 @@ void CreateContactConstraints(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const hpp
         RbPrmLimbPtr_t limb = fullBody->GetLimbs().at(effector);
         const fcl::Vec3f& ppos  = currentState.contactPositions_.at(effector);
         const pinocchio::Frame effectorFrame = device->getFrameByName(limb->effector_.name());
-        pinocchio::JointPtr_t effectorJoint (new pinocchio::Joint(effectorFrame.joint()));
+        pinocchio::JointPtr_t effectorJoint = effectorFrame.joint();
 
         std::vector<bool> mask; mask.push_back(true); mask.push_back(true); mask.push_back(true);
         pinocchio::Transform3f localFrame(1), globalFrame(1);
@@ -329,7 +329,7 @@ ProjectionReport projectEffector(hpp::core::ConfigProjectorPtr_t proj, const hpp
 
 
     const pinocchio::Frame effectorFrame = body->device_->getFrameByName(limb->effector_.name());
-    pinocchio::JointPtr_t effectorJoint (new pinocchio::Joint(effectorFrame.joint()));
+    pinocchio::JointPtr_t effectorJoint = effectorFrame.joint();
     Transform3f localFrame(1), globalFrame(1);
     globalFrame.translation(positionTarget);
     proj->add(constraints::Implicit::create (constraints::Position::create("",body->device_,

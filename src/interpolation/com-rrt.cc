@@ -88,7 +88,7 @@ using namespace core;
             {
             }
             rootProblem.configurationShooter(core::configurationShooter::Uniform::create(device));
-            rootProblem.pathValidation(DiscretizedPathValidation::create(device,0.05));
+            rootProblem.pathValidation(DiscretizedPathValidation::create(0.05));
             core::ConstraintSetPtr_t cSet = core::ConstraintSet::create(rootProblem.robot(),"");
             cSet->addConstraint(proj);
             rootProblem.constraints(cSet);
