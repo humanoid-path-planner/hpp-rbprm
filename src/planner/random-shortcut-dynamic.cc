@@ -185,12 +185,19 @@ namespace hpp{
             continue;
           }
         }
-
-        length.push_back (PathLength<>::run (result, problem ().distance ()));
-        length.pop_front ();
-        finished = (length [0] - length [n-1]) <= 1e-4 * length[n-1];
-        hppDout (info, "length = " << length [n-1]);
-        tmpPath = result;
+        core::value_type newLength = PathLength<>::run (result, problem ().distance ());
+        if ((length[n-1] - newLength) <= 10.*std::numeric_limits<core::value_type>::epsilon()) {
+          hppDout (info,  "the length would increase:" << length[n-1] << " " << newLength);
+          result = tmpPath;
+          projectionError--;
+        } else {
+          length.push_back (newLength);
+          length.pop_front ();
+          finished = (length [0] - length [n-1]) <= 1e-4 * length[n-1];
+          hppDout (info, "length = " << length [n-1]);
+          tmpPath = result;
+          projectionError = n;
+        }
       }
       for (std::size_t i = 0; i < result->numberPaths (); ++i) {
         if (result->pathAtRank(i)->constraints())
