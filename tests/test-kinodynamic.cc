@@ -31,6 +31,51 @@ using namespace hpp;
 using namespace rbprm;
 
 
+bool checkPathVector(core::PathPtr_t path){
+    core::PathVectorPtr_t pv = boost::dynamic_pointer_cast<core::PathVector>(path);
+    BOOST_CHECK(pv->numberPaths() > 0);
+    if (pv->numberPaths() == 1)
+      return true;
+
+    core::PathPtr_t previousPath = pv->pathAtRank(0);
+    bool successPath;
+    if(previousPath->initial() != (*previousPath)(0.,successPath))
+      return false;
+    if(previousPath->end() != (*previousPath)(previousPath->length(),successPath))
+      return false;
+
+    core::PathPtr_t currentPath;
+    for(size_t i = 1 ; i < pv->numberPaths() ; ++i){
+      currentPath = pv->pathAtRank(i);
+      if(previousPath->end() != currentPath->initial())
+        return false;
+      previousPath = currentPath;
+    }
+    return true;
+}
+
+bool checkPath(core::PathPtr_t path, double v,double dt = 0.01){
+  double t = dt;
+  double maxD = v*sqrt(3.)*dt;
+  bool successPath;
+  vector3_t a = (*path)(0.,successPath).head<3>();
+  if (!successPath)
+    return false;
+  vector3_t b;
+  double norm;
+  while(t < path->length()){
+    b = (*path)(t,successPath).head<3>();
+    if (!successPath)
+      return false;
+    norm = (a-b).norm();
+    if(norm > maxD)
+      return false;
+    t += dt;
+    a = b;
+  }
+  return true;
+}
+
 
 
 BOOST_AUTO_TEST_SUITE( rbrrt_kinodynamic )
@@ -110,6 +155,8 @@ BOOST_AUTO_TEST_CASE (straight_line) {
     bool success = pSolver.prepareSolveStepByStep();
     BOOST_CHECK(success);
     pSolver.finishSolveStepByStep();
+    BOOST_CHECK(checkPathVector(pSolver.paths().back()));
+    BOOST_CHECK(checkPath(pSolver.paths().back(),0.5));
     BOOST_CHECK_EQUAL(pSolver.paths().size(),1);
     BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),8.,1e-6);
     core::PathVectorPtr_t pv = boost::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back());
