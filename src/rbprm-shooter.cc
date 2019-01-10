@@ -402,30 +402,6 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
                  limitDis--;
             }
         }
-        // Shoot extra configuration variables
-        size_type extraDim = robot_->extraConfigSpace ().dimension ();
-        size_type offset = robot_->configSize () - extraDim;
-        for (size_type i=0; i<extraDim; ++i)
-        {
-            value_type lower = robot_->extraConfigSpace ().lower (i);
-            value_type upper = robot_->extraConfigSpace ().upper (i);
-            value_type range = upper - lower;
-            if ((range < 0) ||
-              (range == std::numeric_limits<double>::infinity()))
-            {
-                std::ostringstream oss
-                  ("Cannot uniformy sample extra config variable ");
-                oss << i << ". min = " << ", max = " << upper << std::endl;
-                throw std::runtime_error (oss.str ());
-            }
-            (*config) [offset + i] = lower + (upper - lower) * rand ()/RAND_MAX;
-        }
-        // save the normal (code from Mylène)
-       /* if(extraDim >= 3 ){
-          size_type index = robot_->configSize() -3;  // rempli toujours les 3 derniers
-          for (size_type i=0; i<3; ++i)
-            (*config) [index + i] = lastDirection [i];
-        }*/
         limit--;
     }
     if (!found) std::cout << "no config found" << std::endl;
