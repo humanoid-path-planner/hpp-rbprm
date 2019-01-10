@@ -152,8 +152,9 @@ namespace hpp {
 
       /// \brief set if the collision validation should compute all the possible
       /// contacts or stop after the first pairs in collision
+      /// This method set the parameter for all the romValidations_ objects (but not the trunk)
       ///
-     // void computeAllContacts(bool computeAllContacts);
+      void computeAllContacts(bool computeAllContacts);
 
 
     public:
