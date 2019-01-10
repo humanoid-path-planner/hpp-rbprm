@@ -80,6 +80,9 @@ namespace hpp {
         /// [z_inf, z_sup, y_inf, y_sup, x_inf, x_sup]
         void BoundSO3(const std::vector<double>& limitszyx);
 
+        void sampleExtraDOF(bool sampleExtraDOF);
+
+
     public:
         typedef std::pair<fcl::Vec3f, TrianglePoints> T_TriangleNormal;
 

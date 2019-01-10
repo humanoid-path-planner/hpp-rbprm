@@ -434,6 +434,10 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
     return config;
 }
 
+    void RbPrmShooter::sampleExtraDOF(bool sampleExtraDOF){
+        uniformShooter_->sampleExtraDOF(sampleExtraDOF);
+    }
+
 
   }// namespace rbprm
 }// namespace hpp
