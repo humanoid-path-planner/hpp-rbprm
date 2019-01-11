@@ -386,7 +386,7 @@ namespace hpp{
 
       hppDout(info,"Amax found : "<<alpha0);
       alpha0 = std::min(alpha0,aMaxFixed_);
-      //alpha0 -= 0.01; //FIX ME ???
+      alpha0 -= 0.01; // FIXME : hardcoded "robustness" value to avoid hitting the bounds
 
       hppDout(info,"Amax after min : "<<alpha0);
       aMax = alpha0*direction;
