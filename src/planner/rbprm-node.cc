@@ -24,7 +24,7 @@
 #include <hpp/util/timer.hh>
 #include <hpp/pinocchio/configuration.hh>
 #include <hpp/core/collision-validation-report.hh>
-
+#include <hpp/rbprm/rbprm-device.hh>
 namespace hpp{
 namespace core{
 
@@ -212,7 +212,8 @@ void computeNodeMatrixForOnePoint(const geom::Point pn, const geom::Point center
 
 }
 
-void RbprmNode::fillNodeMatrices(ValidationReportPtr_t report, bool rectangularContact, double sizeFootX, double sizeFootY, double m, double mu, pinocchio::DeviceData &deviceData){
+void RbprmNode::fillNodeMatrices(ValidationReportPtr_t report, bool rectangularContact, double sizeFootX, double sizeFootY, double m, double mu, pinocchio::RbPrmDevicePtr_t device){
+    assert(device && "Error in dynamic cast of problem device to rbprmDevice");
     hppStartBenchmark(FILL_NODE_MATRICE);
 
     core::RbprmValidationReportPtr_t rbReport = boost::dynamic_pointer_cast<core::RbprmValidationReport> (report);
@@ -251,7 +252,8 @@ void RbprmNode::fillNodeMatrices(ValidationReportPtr_t report, bool rectangularC
     {
         hppDout(info,"~~ for rom : "<<it->first);
         geom::Point pn,center;
-        intersectionExist = centerOfRomIntersection(it->second,pn,center,deviceData);
+        pinocchio::DeviceSync deviceSync (device);
+        intersectionExist = centerOfRomIntersection(it->second,pn,center,deviceSync.d());
         ssCenters<<"["<<center[0]<<" , "<<center[1]<<" , "<<center[2]<<"],";
 
         if(!intersectionExist){
@@ -317,7 +319,8 @@ void RbprmNode::fillNodeMatrices(ValidationReportPtr_t report, bool rectangularC
 
 }
 
-void RbprmNode::chooseBestContactSurface(ValidationReportPtr_t report,std::map<std::string,fcl::Vec3f> rom_ref_endEffector, pinocchio::DeviceData& deviceData){
+void RbprmNode::chooseBestContactSurface(ValidationReportPtr_t report, pinocchio::RbPrmDevicePtr_t device){
+    assert(device && "Error in dynamic cast of problem device to rbprmDevice");
     core::RbprmValidationReportPtr_t rbReport = boost::dynamic_pointer_cast<core::RbprmValidationReport> (report);
     for(std::map<std::string,core::CollisionValidationReportPtr_t>::const_iterator it = rbReport->ROMReports.begin() ; it != rbReport->ROMReports.end() ; ++it){
         core::AllCollisionsValidationReportPtr_t romReports = boost::dynamic_pointer_cast<core::AllCollisionsValidationReport>(it->second);
@@ -330,7 +333,7 @@ void RbprmNode::chooseBestContactSurface(ValidationReportPtr_t report,std::map<s
         // 2) find the surface with the center the closest to the reference point in the map
         // 3) modify the report such that this surface is at the top of the list
 
-        fcl::Vec3f reference = rom_ref_endEffector.at(it->first);
+        fcl::Vec3f reference = device->getEffectorReference(it->first);
         hppDout(notice,"Reference position for rom"<<it->first<<" = "<<reference);
         core::ConfigurationPtr_t q = configuration();
         fcl::Transform3f tRoot;
@@ -345,7 +348,8 @@ void RbprmNode::chooseBestContactSurface(ValidationReportPtr_t report,std::map<s
         double minDistance = std::numeric_limits<double>::max();
         CollisionValidationReportPtr_t bestReport;
         for(std::vector<CollisionValidationReportPtr_t>::const_iterator itAff = romReports->collisionReports.begin() ; itAff != romReports->collisionReports.end() ; ++itAff){
-            centerOfRomIntersection(*itAff,normal,center,deviceData);
+            pinocchio::DeviceSync deviceSync (device);
+            centerOfRomIntersection(*itAff,normal,center,deviceSync.d());
             distance = center-refPoint;
             if(distance.norm() < minDistance){
                 minDistance = distance.norm();

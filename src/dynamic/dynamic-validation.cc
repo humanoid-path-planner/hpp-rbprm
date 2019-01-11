@@ -21,7 +21,7 @@
 # include <hpp/rbprm/planner/rbprm-node.hh>
 #include <hpp/util/timer.hh>
 #include <hpp/pinocchio/configuration.hh>
-#include <hpp/pinocchio/device-sync.hh>
+#include <hpp/rbprm/rbprm-device.hh>
 namespace hpp {
   namespace rbprm {
 
@@ -97,8 +97,7 @@ namespace hpp {
         lastReport_=rbReport;
         core::ConfigurationPtr_t q = core::ConfigurationPtr_t (new core::Configuration_t(config));
         core::RbprmNode node(q);
-        pinocchio::DeviceSync device (robot_);
-        node.fillNodeMatrices(rbReport,rectangularContact_,sizeFootX_,sizeFootY_,mass_,mu_,device.d());
+        node.fillNodeMatrices(rbReport,rectangularContact_,sizeFootX_,sizeFootY_,mass_,mu_,robot_);
         sEq_->setG(node.getG());
         h_=node.geth();
         H_=node.getH();
@@ -130,9 +129,10 @@ namespace hpp {
 
 
     DynamicValidation::DynamicValidation (bool rectangularContact, double sizeFootX, double sizeFootY, double mass, double mu,core::DevicePtr_t robot) :
-      rectangularContact_(rectangularContact),sizeFootX_(sizeFootX),sizeFootY_(sizeFootY),mass_(mass),mu_(mu),robot_(robot),
+      rectangularContact_(rectangularContact),sizeFootX_(sizeFootX),sizeFootY_(sizeFootY),mass_(mass),mu_(mu),robot_(boost::dynamic_pointer_cast<pinocchio::RbPrmDevice>(robot)),
       sEq_(new centroidal_dynamics::Equilibrium("dynamic_val", mass,4,centroidal_dynamics::SOLVER_LP_QPOASES,true,10,false))
     {
+      assert(robot_ && "Error in dynamic cast of problem device to rbprmDevice");
       hppDout(info,"Dynamic validation created with attribut : rectangular contact = "<<rectangularContact<<" size foot : "<<sizeFootX);
       hppDout(info,"mass = "<<mass<<"  mu = "<<mu);
     }

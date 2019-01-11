@@ -23,6 +23,10 @@
 #include <centroidal-dynamics-lib/centroidal_dynamics.hh>
 # include <hpp/rbprm/rbprm-validation-report.hh>
 namespace hpp {
+  namespace pinocchio {
+    class RbPrmDevice; //fwd declaration of  rbprmDevice class
+    typedef boost::shared_ptr <RbPrmDevice> RbPrmDevicePtr_t;
+  }
   namespace rbprm {
 
 
@@ -76,7 +80,7 @@ namespace hpp {
       double sizeFootY_;
       double mass_;
       double mu_;
-      core::DevicePtr_t robot_;
+      pinocchio::RbPrmDevicePtr_t robot_;
       centroidal_dynamics::Equilibrium* sEq_;
       core::RbprmValidationReportPtr_t lastReport_;
       bool initContacts_;

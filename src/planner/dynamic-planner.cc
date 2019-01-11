@@ -436,8 +436,7 @@ namespace hpp {
       rbprmPathValidation_->getValidator()->computeAllContacts(false);
       if(use_bestReport){
           core::RbprmNodePtr_t node = static_cast<core::RbprmNodePtr_t>(x);
-          pinocchio::DeviceSync device (problem().robot());
-          node->chooseBestContactSurface(report,rom_ref_endEffector_,device.d());
+          node->chooseBestContactSurface(report,boost::dynamic_pointer_cast<pinocchio::RbPrmDevice>(problem().robot()));
       }
       computeGIWC(x,report);
     }
@@ -456,8 +455,7 @@ namespace hpp {
       }
 
       hppDout(info,"~~ q = "<<displayConfig(*q));
-      pinocchio::DeviceSync device (problem().robot());
-      node->fillNodeMatrices(report,rectangularContact_,sizeFootX_,sizeFootY_,problem().robot()->mass(),mu_,device.d());
+      node->fillNodeMatrices(report,rectangularContact_,sizeFootX_,sizeFootY_,problem().robot()->mass(),mu_,boost::dynamic_pointer_cast<pinocchio::RbPrmDevice>(problem().robot()));
     }// computeGIWC
 
 
