@@ -70,6 +70,21 @@ namespace hpp {
 
         virtual void setDimensionExtraConfigSpace (const size_type& dimension);
 
+        ///
+        /// \brief setEffectorReference set a 3D position reference for the end effector of the given ROM
+        /// \param romName
+        /// \param ref
+        ///
+        virtual void setEffectorReference(std::string romName, vector3_t ref);
+
+        ///
+        /// \brief getEffectorReference get the reference position of the given ROM, return (0,0,0) if the reference was never set
+        /// \param romName
+        /// \return
+        ///
+        virtual vector3_t getEffectorReference(std::string romName);
+
+
     public:
       /// Range Of Motion of the robot
       const T_Rom robotRoms_;
@@ -83,6 +98,7 @@ namespace hpp {
       void init (const RbPrmDeviceWkPtr_t& weakPtr);
 
     private:
+      std::map<std::string, vector3_t> effectorsReferences_;
       RbPrmDeviceWkPtr_t weakPtr_;
     }; // class RbPrmDevice
   } // namespace rbprm
