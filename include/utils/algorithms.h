@@ -252,6 +252,14 @@ namespace geom
   T_Point intersectPolygonePlane(BVHModelOBConst_Ptr_t polygone, BVHModelOBConst_Ptr_t plane, Eigen::Ref<Point> Pn);
 
   T_Point convertBVH(BVHModelOBConst_Ptr_t obj);
+
+  /**
+   * @brief computePlanEquation compute a plan normal and a point in the plan from the first triangle of a BVHModel
+   * @param plane
+   * @param Pn the normal of the plan
+   * @param P0 a point in the plan
+   */
+  void computePlanEquation( BVHModelOBConst_Ptr_t plane,Eigen::Ref<Point> Pn,Eigen::Ref<Point> P0);
   
 } //namespace geom
 

@@ -630,13 +630,7 @@ namespace geom
     T_Point intersection;
     // compute plane equation (normal, point inside the plan)
     Point P0;
-    TrianglePoints triPlane;
-    triPlane.p1 = plane->vertices[plane->tri_indices[0][0]]; // FIXME : always use the first triangle, is it an issue ?
-    triPlane.p2 = plane->vertices[plane->tri_indices[0][1]];
-    triPlane.p3 = plane->vertices[plane->tri_indices[0][2]];
-    Pn = TriangleNormal(triPlane);
-    P0 = triPlane.p1; //FIXME : better point ?
-
+    computePlanEquation(plane,Pn,P0);
     for(int i = 0 ; i < polygone->num_tris ; i++){ // FIXME : can test 2 times the same line (in both triangles), avoid this ?
       //hppDout(info,"triangle : "<<i);
       for(int j = 0 ; j < 3 ; j++){
@@ -679,6 +673,16 @@ namespace geom
 
     return convexHull(result.begin(),result.end());
   }
+
+    void computePlanEquation( BVHModelOBConst_Ptr_t plane,Eigen::Ref<Point> Pn,Eigen::Ref<Point> P0){
+      TrianglePoints triPlane;
+      triPlane.p1 = plane->vertices[plane->tri_indices[0][0]]; // FIXME : always use the first triangle, is it an issue ?
+      triPlane.p2 = plane->vertices[plane->tri_indices[0][1]];
+      triPlane.p3 = plane->vertices[plane->tri_indices[0][2]];
+      Pn = TriangleNormal(triPlane);
+      P0 = triPlane.p1; //FIXME : better point ?
+    }
+
 
 
 } //namespace geom
