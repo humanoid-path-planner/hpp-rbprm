@@ -280,39 +280,47 @@ void RbprmNode::chooseBestContactSurface(ValidationReportPtr_t report, pinocchio
             hppDout(warning,"For rom : "<<it->first<<" unable to cast in a AllCollisionsValidationReport, did you correctly call computeAllContacts(true) before generating the report ? ");
             return;
         }
-        // for each rom :
-        // 1) compute the center of the intersection between the rom and each surfaces in collision
-        // 2) find the surface with the center the closest to the reference point in the map
-        // 3) modify the report such that this surface is at the top of the list
+        if(romReports->collisionReports.size()> 1){
+          // for each rom , for each different environnement surface in collision with the rom:
+          // 1) compute the projection of the reference position inside the intersection of the rom and the environnement surface
+          // 2) find the surface with the minimal distance between the reference and the projection
+          // 3) modify the report such that this surface is at the top of the list
 
-        fcl::Vec3f reference = device->getEffectorReference(it->first);
-        hppDout(notice,"Reference position for rom"<<it->first<<" = "<<reference);
-        core::ConfigurationPtr_t q = configuration();
-        fcl::Transform3f tRoot;
-        tRoot.setTranslation(fcl::Vec3f((*q)[0],(*q)[1],(*q)[2]));
-        fcl::Quaternion3f quat((*q)[6],(*q)[3],(*q)[4],(*q)[5]);
-        //fcl::Matrix3f rot = quat.matrix();
-        tRoot.setRotation(quat.matrix());
-        reference = (tRoot*reference).getTranslation();
-        geom::Point refPoint(reference);
-        hppDout(notice,"Reference after root transform = "<<reference);
-        geom::Point center,normal,distance;
-        double minDistance = std::numeric_limits<double>::max();
-        CollisionValidationReportPtr_t bestReport;
-        for(std::vector<CollisionValidationReportPtr_t>::const_iterator itAff = romReports->collisionReports.begin() ; itAff != romReports->collisionReports.end() ; ++itAff){
+          fcl::Vec3f reference = device->getEffectorReference(it->first);
+          hppDout(notice,"Reference position for rom"<<it->first<<" = "<<reference);
+          core::ConfigurationPtr_t q = configuration();
+          fcl::Transform3f tRoot;
+          tRoot.setTranslation(fcl::Vec3f((*q)[0],(*q)[1],(*q)[2]));
+          fcl::Quaternion3f quat((*q)[6],(*q)[3],(*q)[4],(*q)[5]);
+          //fcl::Matrix3f rot = quat.matrix();
+          tRoot.setRotation(quat.matrix());
+          reference = (tRoot*reference).getTranslation();
+          geom::Point refPoint(reference);
+          hppDout(notice,"Reference after root transform = "<<reference);
+          geom::Point normal,proj;
+          double minDistance = std::numeric_limits<double>::max();
+          double distance;
+          CollisionValidationReportPtr_t bestReport;
+          bool successInter;
+          geom::T_Point intersection;
+          hppDout(notice,"Number of possible surfaces for rom : "<<romReports->collisionReports.size());
+          for(std::vector<CollisionValidationReportPtr_t>::const_iterator itAff = romReports->collisionReports.begin() ; itAff != romReports->collisionReports.end() ; ++itAff){
             pinocchio::DeviceSync deviceSync (device);
-            centerOfRomIntersection(*itAff,normal,center,deviceSync.d());
-            distance = center-refPoint;
-            if(distance.norm() < minDistance){
-                minDistance = distance.norm();
-                bestReport = *itAff;
+            successInter = computeIntersectionSurface(*itAff,intersection,normal,deviceSync.d());
+              if(successInter){
+                distance = geom::projectPointInsidePlan(intersection,refPoint,normal,intersection.front(),proj);
+                hppDout(notice,"Distance found : "<<distance);
+                if(distance < minDistance){
+                    minDistance = distance;
+                    bestReport = *itAff;
+                }
             }
+          }
+          //3)
+          romReports->object1 = bestReport->object1;
+          romReports->object2 = bestReport->object2;
+          romReports->result = bestReport->result;
         }
-        //3)
-        romReports->object1 = bestReport->object1;
-        romReports->object2 = bestReport->object2;
-        romReports->result = bestReport->result;
-
     } // end for all rom
 
 }
