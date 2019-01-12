@@ -190,11 +190,15 @@ BOOST_AUTO_TEST_CASE (straight_line) {
     pSolver.solve();
     BOOST_CHECK_EQUAL(pSolver.paths().size(),3);
     BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),8.,1e-6);
+    BOOST_CHECK(checkPathVector(pSolver.paths().back()));
+    BOOST_CHECK(checkPath(pSolver.paths().back(),0.5));
     pv = boost::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back());
     BOOST_CHECK_EQUAL(pv->numberPaths (),1);
     pSolver.optimizePath(pSolver.paths().back());
     BOOST_CHECK_EQUAL(pSolver.paths().size(),4);
     BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),8.,1e-6);
+    BOOST_CHECK(checkPathVector(pSolver.paths().back()));
+    BOOST_CHECK(checkPath(pSolver.paths().back(),0.5));
     pv = boost::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back());
     BOOST_CHECK_EQUAL(pv->numberPaths (),1);
 }
@@ -366,6 +370,473 @@ BOOST_AUTO_TEST_CASE (square_v0) {
     BOOST_CHECK_EQUAL(boost::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())->numberPaths (),1);
 
 }
+
+
+BOOST_AUTO_TEST_CASE (straight_velocity) {
+    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadTalosLEGAbsract();
+    rbprmDevice->setDimensionExtraConfigSpace(6);
+    BindShooter bShooter;
+    std::vector<double> boundsSO3;
+    boundsSO3.push_back(-1.7);
+    boundsSO3.push_back(1.7);
+    boundsSO3.push_back(-0.1);
+    boundsSO3.push_back(0.1);
+    boundsSO3.push_back(-0.1);
+    boundsSO3.push_back(0.1);
+    bShooter.so3Bounds_ = boundsSO3;
+    hpp::core::ProblemSolverPtr_t  ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
+    hpp::core::ProblemSolver& pSolver = *ps;
+    loadObstacleWithAffordance(pSolver, std::string("hpp-rbprm-corba"),
+                               std::string("ground"),std::string("planning"));
+    // configure planner
+    pSolver.addPathOptimizer(std::string("RandomShortcutDynamic"));
+    pSolver.configurationShooterType(std::string("RbprmShooter"));
+    pSolver.pathValidationType(std::string("RbprmPathValidation"),0.05);
+    pSolver.distanceType(std::string("Kinodynamic"));
+    pSolver.steeringMethodType(std::string("RBPRMKinodynamic"));
+    pSolver.pathPlannerType(std::string("DynamicPlanner"));
+
+    // set problem parameters :
+    double aMax = 0.5;
+    double vMax = 1.5;
+    pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"),core::Parameter(vMax));
+    pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"),core::Parameter(aMax));
+    pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"),core::Parameter(0.2));
+    pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"),core::Parameter(0.12));
+    pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),core::Parameter(0.5));
+    pSolver.problem()->setParameter(std::string("ConfigurationShooter/sampleExtraDOF"),core::Parameter(false));
+
+    for(size_type i = 0 ; i < 2 ; ++i){
+      rbprmDevice->extraConfigSpace().lower(i)=-vMax;
+      rbprmDevice->extraConfigSpace().upper(i)=vMax;
+    }
+    rbprmDevice->extraConfigSpace().lower(2)=0.;
+    rbprmDevice->extraConfigSpace().upper(2)=0.;
+    for(size_type i = 3 ; i < 5 ; ++i){
+      rbprmDevice->extraConfigSpace().lower(i)=-aMax;
+      rbprmDevice->extraConfigSpace().upper(i)=aMax;
+    }
+    rbprmDevice->extraConfigSpace().lower(5)=0.;
+    rbprmDevice->extraConfigSpace().upper(5)=0.;
+
+    // define the planning problem :
+    core::Configuration_t q_init(rbprmDevice->configSize());
+    q_init << 0, 0, 1.0, 0, 0, 0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+    q_init(9) = 0.5; // init velocity along x
+    core::Configuration_t q_goal = q_init;
+    q_goal(0)=1.;
+
+
+    pSolver.initConfig(ConfigurationPtr_t(new core::Configuration_t(q_init)));
+    pSolver.addGoalConfig(ConfigurationPtr_t(new core::Configuration_t(q_goal)));
+    bool success = pSolver.prepareSolveStepByStep();
+    BOOST_CHECK(success);
+    pSolver.finishSolveStepByStep();
+    BOOST_CHECK_EQUAL(pSolver.paths().size(),1);
+    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),1.4641016151377546,1e-10);
+    pSolver.optimizePath(pSolver.paths().back());
+    BOOST_CHECK_EQUAL(pSolver.paths().size(),2);
+    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),1.4641016151377546,1e-10);
+    BOOST_CHECK(checkPathVector(pSolver.paths().back()));
+    BOOST_CHECK(checkPath(pSolver.paths().back(),1.7));
+    BOOST_CHECK_EQUAL(boost::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())->numberPaths (),1);
+
+    pSolver.resetGoalConfigs();
+    q_goal(0) = 0.;
+    q_goal(9) = 0.1;
+    q_goal(10) = -0.2; // final velocity
+    pSolver.addGoalConfig(ConfigurationPtr_t(new core::Configuration_t(q_goal)));
+    success = pSolver.prepareSolveStepByStep();
+    BOOST_CHECK(success);
+    pSolver.finishSolveStepByStep();
+    BOOST_CHECK_EQUAL(pSolver.paths().size(),3);
+    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),2.813161489215438,1e-10);
+    pSolver.optimizePath(pSolver.paths().back());
+    BOOST_CHECK_EQUAL(pSolver.paths().size(),4);
+    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),2.813161489215438,1e-10);
+    BOOST_CHECK(checkPathVector(pSolver.paths().back()));
+    BOOST_CHECK(checkPath(pSolver.paths().back(),1.7));
+    BOOST_CHECK_EQUAL(boost::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())->numberPaths (),1);
+
+    pSolver.resetGoalConfigs();
+    q_goal(0) = 1.;
+    q_goal(9) = -0.3;
+    pSolver.addGoalConfig(ConfigurationPtr_t(new core::Configuration_t(q_goal)));
+    success = pSolver.prepareSolveStepByStep();
+    BOOST_CHECK(success);
+    pSolver.finishSolveStepByStep();
+    BOOST_CHECK_EQUAL(pSolver.paths().size(),5);
+    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),3.0320348700106008,1e-10);
+    pSolver.optimizePath(pSolver.paths().back());
+    BOOST_CHECK_EQUAL(pSolver.paths().size(),6);
+    //BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),3.0320348700106008,1e-10);
+    BOOST_CHECK(checkPathVector(pSolver.paths().back()));
+    BOOST_CHECK(checkPath(pSolver.paths().back(),1.7));
+    //BOOST_CHECK_EQUAL(boost::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())->numberPaths (),1);
+
+    pSolver.resetGoalConfigs();
+    q_goal(0) = -1.;
+    q_goal(9) = 0.;
+    q_goal(10) = 0.3;
+    pSolver.addGoalConfig(ConfigurationPtr_t(new core::Configuration_t(q_goal)));
+    success = pSolver.prepareSolveStepByStep();
+    BOOST_CHECK(success);
+    pSolver.finishSolveStepByStep();
+    BOOST_CHECK_EQUAL(pSolver.paths().size(),7);
+    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),4.4071293474602475,1e-10);
+    pSolver.optimizePath(pSolver.paths().back());
+    BOOST_CHECK_EQUAL(pSolver.paths().size(),8);
+    //BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),4.4071293474602475,1e-10);
+    BOOST_CHECK(checkPathVector(pSolver.paths().back()));
+    BOOST_CHECK(checkPath(pSolver.paths().back(),1.7));
+    //BOOST_CHECK_EQUAL(boost::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())->numberPaths (),1);
+
+
+}
+
+
+
+BOOST_AUTO_TEST_CASE (straight_line_amax_mu05) {
+    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadTalosLEGAbsract();
+    rbprmDevice->setDimensionExtraConfigSpace(6);
+    BindShooter bShooter;
+    std::vector<double> boundsSO3;
+    boundsSO3.push_back(-1.7);
+    boundsSO3.push_back(1.7);
+    boundsSO3.push_back(-0.1);
+    boundsSO3.push_back(0.1);
+    boundsSO3.push_back(-0.1);
+    boundsSO3.push_back(0.1);
+    bShooter.so3Bounds_ = boundsSO3;
+    hpp::core::ProblemSolverPtr_t  ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
+    hpp::core::ProblemSolver& pSolver = *ps;
+    loadObstacleWithAffordance(pSolver, std::string("hpp-rbprm-corba"),
+                               std::string("ground"),std::string("planning"));
+    // configure planner
+    pSolver.addPathOptimizer(std::string("RandomShortcutDynamic"));
+    pSolver.configurationShooterType(std::string("RbprmShooter"));
+    pSolver.pathValidationType(std::string("RbprmPathValidation"),0.05);
+    pSolver.distanceType(std::string("Kinodynamic"));
+    pSolver.steeringMethodType(std::string("RBPRMKinodynamic"));
+    pSolver.pathPlannerType(std::string("DynamicPlanner"));
+
+    // set problem parameters :
+    double aMax = 10.;
+    double vMax = 1.;
+    pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"),core::Parameter(vMax));
+    pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"),core::Parameter(aMax));
+    pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"),core::Parameter(0.2));
+    pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"),core::Parameter(0.12));
+    pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),core::Parameter(0.5));
+    pSolver.problem()->setParameter(std::string("ConfigurationShooter/sampleExtraDOF"),core::Parameter(false));
+    vector3_t p_lLeg(0., 0.0848172440888579,-1.019272022956703);
+    vector3_t p_rLeg(0., -0.0848172440888579,-1.019272022956703);
+    rbprmDevice->setEffectorReference("talos_lleg_rom",p_lLeg);
+    rbprmDevice->setEffectorReference("talos_rleg_rom",p_rLeg);
+
+    for(size_type i = 0 ; i < 2 ; ++i){
+      rbprmDevice->extraConfigSpace().lower(i)=-vMax;
+      rbprmDevice->extraConfigSpace().upper(i)=vMax;
+    }
+    rbprmDevice->extraConfigSpace().lower(2)=0.;
+    rbprmDevice->extraConfigSpace().upper(2)=0.;
+    for(size_type i = 3 ; i < 5 ; ++i){
+      rbprmDevice->extraConfigSpace().lower(i)=-aMax;
+      rbprmDevice->extraConfigSpace().upper(i)=aMax;
+    }
+    rbprmDevice->extraConfigSpace().lower(5)=0.;
+    rbprmDevice->extraConfigSpace().upper(5)=0.;
+
+    // define the planning problem :
+    core::Configuration_t q_init(rbprmDevice->configSize());
+    q_init << 0, 0, 1.0, 0, 0, 0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+
+    core::Configuration_t q_goal = q_init;
+    q_goal(0)=1.5;
+
+    pSolver.initConfig(ConfigurationPtr_t(new core::Configuration_t(q_init)));
+    pSolver.addGoalConfig(ConfigurationPtr_t(new core::Configuration_t(q_goal)));
+    BOOST_CHECK_CLOSE(pSolver.robot()->mass(),90.27,1e-2);
+    bool success = pSolver.prepareSolveStepByStep();
+    BOOST_CHECK(success);
+    pSolver.finishSolveStepByStep();
+    BOOST_CHECK_EQUAL(pSolver.paths().size(),1);
+    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),2.5298682146914024,1e-6);
+}
+
+
+BOOST_AUTO_TEST_CASE (straight_line_amax_mu005) {
+    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadTalosLEGAbsract();
+    rbprmDevice->setDimensionExtraConfigSpace(6);
+    BindShooter bShooter;
+    std::vector<double> boundsSO3;
+    boundsSO3.push_back(-1.7);
+    boundsSO3.push_back(1.7);
+    boundsSO3.push_back(-0.1);
+    boundsSO3.push_back(0.1);
+    boundsSO3.push_back(-0.1);
+    boundsSO3.push_back(0.1);
+    bShooter.so3Bounds_ = boundsSO3;
+    hpp::core::ProblemSolverPtr_t  ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
+    hpp::core::ProblemSolver& pSolver = *ps;
+    loadObstacleWithAffordance(pSolver, std::string("hpp-rbprm-corba"),
+                               std::string("ground"),std::string("planning"));
+    // configure planner
+    pSolver.addPathOptimizer(std::string("RandomShortcutDynamic"));
+    pSolver.configurationShooterType(std::string("RbprmShooter"));
+    pSolver.pathValidationType(std::string("RbprmPathValidation"),0.05);
+    pSolver.distanceType(std::string("Kinodynamic"));
+    pSolver.steeringMethodType(std::string("RBPRMKinodynamic"));
+    pSolver.pathPlannerType(std::string("DynamicPlanner"));
+
+    // set problem parameters :
+    double aMax = 10.;
+    double vMax = 1.;
+    pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"),core::Parameter(vMax));
+    pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"),core::Parameter(aMax));
+    pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"),core::Parameter(0.2));
+    pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"),core::Parameter(0.12));
+    pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),core::Parameter(0.05));
+    pSolver.problem()->setParameter(std::string("ConfigurationShooter/sampleExtraDOF"),core::Parameter(false));
+    vector3_t p_lLeg(0., 0.0848172440888579,-1.019272022956703);
+    vector3_t p_rLeg(0., -0.0848172440888579,-1.019272022956703);
+    rbprmDevice->setEffectorReference("talos_lleg_rom",p_lLeg);
+    rbprmDevice->setEffectorReference("talos_rleg_rom",p_rLeg);
+
+    for(size_type i = 0 ; i < 2 ; ++i){
+      rbprmDevice->extraConfigSpace().lower(i)=-vMax;
+      rbprmDevice->extraConfigSpace().upper(i)=vMax;
+    }
+    rbprmDevice->extraConfigSpace().lower(2)=0.;
+    rbprmDevice->extraConfigSpace().upper(2)=0.;
+    for(size_type i = 3 ; i < 5 ; ++i){
+      rbprmDevice->extraConfigSpace().lower(i)=-aMax;
+      rbprmDevice->extraConfigSpace().upper(i)=aMax;
+    }
+    rbprmDevice->extraConfigSpace().lower(5)=0.;
+    rbprmDevice->extraConfigSpace().upper(5)=0.;
+
+    // define the planning problem :
+    core::Configuration_t q_init(rbprmDevice->configSize());
+    q_init << 0, 0, 1.0, 0, 0, 0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+
+    core::Configuration_t q_goal = q_init;
+    q_goal(0)=1.5;
+
+    pSolver.initConfig(ConfigurationPtr_t(new core::Configuration_t(q_init)));
+    pSolver.addGoalConfig(ConfigurationPtr_t(new core::Configuration_t(q_goal)));
+    BOOST_CHECK_CLOSE(pSolver.robot()->mass(),90.27,1e-2);
+    bool success = pSolver.prepareSolveStepByStep();
+    BOOST_CHECK(success);
+    pSolver.finishSolveStepByStep();
+    BOOST_CHECK_EQUAL(pSolver.paths().size(),1);
+    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),3.5337445642816432,1e-6);
+}
+
+BOOST_AUTO_TEST_CASE (straight_line_amax_mu001) {
+    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadTalosLEGAbsract();
+    rbprmDevice->setDimensionExtraConfigSpace(6);
+    BindShooter bShooter;
+    std::vector<double> boundsSO3;
+    boundsSO3.push_back(-1.7);
+    boundsSO3.push_back(1.7);
+    boundsSO3.push_back(-0.1);
+    boundsSO3.push_back(0.1);
+    boundsSO3.push_back(-0.1);
+    boundsSO3.push_back(0.1);
+    bShooter.so3Bounds_ = boundsSO3;
+    hpp::core::ProblemSolverPtr_t  ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
+    hpp::core::ProblemSolver& pSolver = *ps;
+    loadObstacleWithAffordance(pSolver, std::string("hpp-rbprm-corba"),
+                               std::string("ground"),std::string("planning"));
+    // configure planner
+    pSolver.addPathOptimizer(std::string("RandomShortcutDynamic"));
+    pSolver.configurationShooterType(std::string("RbprmShooter"));
+    pSolver.pathValidationType(std::string("RbprmPathValidation"),0.05);
+    pSolver.distanceType(std::string("Kinodynamic"));
+    pSolver.steeringMethodType(std::string("RBPRMKinodynamic"));
+    pSolver.pathPlannerType(std::string("DynamicPlanner"));
+
+    // set problem parameters :
+    double aMax = 10.;
+    double vMax = 1.;
+    pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"),core::Parameter(vMax));
+    pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"),core::Parameter(aMax));
+    pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"),core::Parameter(0.2));
+    pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"),core::Parameter(0.12));
+    pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),core::Parameter(0.01));
+    pSolver.problem()->setParameter(std::string("ConfigurationShooter/sampleExtraDOF"),core::Parameter(false));
+    vector3_t p_lLeg(0., 0.0848172440888579,-1.019272022956703);
+    vector3_t p_rLeg(0., -0.0848172440888579,-1.019272022956703);
+    rbprmDevice->setEffectorReference("talos_lleg_rom",p_lLeg);
+    rbprmDevice->setEffectorReference("talos_rleg_rom",p_rLeg);
+
+    for(size_type i = 0 ; i < 2 ; ++i){
+      rbprmDevice->extraConfigSpace().lower(i)=-vMax;
+      rbprmDevice->extraConfigSpace().upper(i)=vMax;
+    }
+    rbprmDevice->extraConfigSpace().lower(2)=0.;
+    rbprmDevice->extraConfigSpace().upper(2)=0.;
+    for(size_type i = 3 ; i < 5 ; ++i){
+      rbprmDevice->extraConfigSpace().lower(i)=-aMax;
+      rbprmDevice->extraConfigSpace().upper(i)=aMax;
+    }
+    rbprmDevice->extraConfigSpace().lower(5)=0.;
+    rbprmDevice->extraConfigSpace().upper(5)=0.;
+
+    // define the planning problem :
+    core::Configuration_t q_init(rbprmDevice->configSize());
+    q_init << 0, 0, 1.0, 0, 0, 0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+
+    core::Configuration_t q_goal = q_init;
+    q_goal(0)=1.5;
+
+    pSolver.initConfig(ConfigurationPtr_t(new core::Configuration_t(q_init)));
+    pSolver.addGoalConfig(ConfigurationPtr_t(new core::Configuration_t(q_goal)));
+    BOOST_CHECK_CLOSE(pSolver.robot()->mass(),90.27,1e-2);
+    bool success = pSolver.prepareSolveStepByStep();
+    BOOST_CHECK(success);
+    pSolver.finishSolveStepByStep();
+    BOOST_CHECK_EQUAL(pSolver.paths().size(),1);
+    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),8.253186224036595,1e-6);
+}
+
+BOOST_AUTO_TEST_CASE (straight_line_amax_mu5) {
+    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadTalosLEGAbsract();
+    rbprmDevice->setDimensionExtraConfigSpace(6);
+    BindShooter bShooter;
+    std::vector<double> boundsSO3;
+    boundsSO3.push_back(-1.7);
+    boundsSO3.push_back(1.7);
+    boundsSO3.push_back(-0.1);
+    boundsSO3.push_back(0.1);
+    boundsSO3.push_back(-0.1);
+    boundsSO3.push_back(0.1);
+    bShooter.so3Bounds_ = boundsSO3;
+    hpp::core::ProblemSolverPtr_t  ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
+    hpp::core::ProblemSolver& pSolver = *ps;
+    loadObstacleWithAffordance(pSolver, std::string("hpp-rbprm-corba"),
+                               std::string("ground"),std::string("planning"));
+    // configure planner
+    pSolver.addPathOptimizer(std::string("RandomShortcutDynamic"));
+    pSolver.configurationShooterType(std::string("RbprmShooter"));
+    pSolver.pathValidationType(std::string("RbprmPathValidation"),0.05);
+    pSolver.distanceType(std::string("Kinodynamic"));
+    pSolver.steeringMethodType(std::string("RBPRMKinodynamic"));
+    pSolver.pathPlannerType(std::string("DynamicPlanner"));
+
+    // set problem parameters :
+    double aMax = 10.;
+    double vMax = 1.;
+    pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"),core::Parameter(vMax));
+    pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"),core::Parameter(aMax));
+    pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"),core::Parameter(0.2));
+    pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"),core::Parameter(0.12));
+    pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),core::Parameter(5.));
+    pSolver.problem()->setParameter(std::string("ConfigurationShooter/sampleExtraDOF"),core::Parameter(false));
+    vector3_t p_lLeg(0., 0.0848172440888579,-1.019272022956703);
+    vector3_t p_rLeg(0., -0.0848172440888579,-1.019272022956703);
+    rbprmDevice->setEffectorReference("talos_lleg_rom",p_lLeg);
+    rbprmDevice->setEffectorReference("talos_rleg_rom",p_rLeg);
+
+    for(size_type i = 0 ; i < 2 ; ++i){
+      rbprmDevice->extraConfigSpace().lower(i)=-vMax;
+      rbprmDevice->extraConfigSpace().upper(i)=vMax;
+    }
+    rbprmDevice->extraConfigSpace().lower(2)=0.;
+    rbprmDevice->extraConfigSpace().upper(2)=0.;
+    for(size_type i = 3 ; i < 5 ; ++i){
+      rbprmDevice->extraConfigSpace().lower(i)=-aMax;
+      rbprmDevice->extraConfigSpace().upper(i)=aMax;
+    }
+    rbprmDevice->extraConfigSpace().lower(5)=0.;
+    rbprmDevice->extraConfigSpace().upper(5)=0.;
+
+    // define the planning problem :
+    core::Configuration_t q_init(rbprmDevice->configSize());
+    q_init << 0, 0, 1.0, 0, 0, 0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+
+    core::Configuration_t q_goal = q_init;
+    q_goal(0)=1.5;
+
+    pSolver.initConfig(ConfigurationPtr_t(new core::Configuration_t(q_init)));
+    pSolver.addGoalConfig(ConfigurationPtr_t(new core::Configuration_t(q_goal)));
+    BOOST_CHECK_CLOSE(pSolver.robot()->mass(),90.27,1e-2);
+    bool success = pSolver.prepareSolveStepByStep();
+    BOOST_CHECK(success);
+    pSolver.finishSolveStepByStep();
+    BOOST_CHECK_EQUAL(pSolver.paths().size(),1);
+    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),2.5298683485627125,1e-6);
+}
+
+BOOST_AUTO_TEST_CASE (straight_line_amax_feetChange) {
+    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadTalosLEGAbsract();
+    rbprmDevice->setDimensionExtraConfigSpace(6);
+    BindShooter bShooter;
+    std::vector<double> boundsSO3;
+    boundsSO3.push_back(-1.7);
+    boundsSO3.push_back(1.7);
+    boundsSO3.push_back(-0.1);
+    boundsSO3.push_back(0.1);
+    boundsSO3.push_back(-0.1);
+    boundsSO3.push_back(0.1);
+    bShooter.so3Bounds_ = boundsSO3;
+    hpp::core::ProblemSolverPtr_t  ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
+    hpp::core::ProblemSolver& pSolver = *ps;
+    loadObstacleWithAffordance(pSolver, std::string("hpp-rbprm-corba"),
+                               std::string("ground"),std::string("planning"));
+    // configure planner
+    pSolver.addPathOptimizer(std::string("RandomShortcutDynamic"));
+    pSolver.configurationShooterType(std::string("RbprmShooter"));
+    pSolver.pathValidationType(std::string("RbprmPathValidation"),0.05);
+    pSolver.distanceType(std::string("Kinodynamic"));
+    pSolver.steeringMethodType(std::string("RBPRMKinodynamic"));
+    pSolver.pathPlannerType(std::string("DynamicPlanner"));
+
+    // set problem parameters :
+    double aMax = 10.;
+    double vMax = 1.;
+    pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"),core::Parameter(vMax));
+    pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"),core::Parameter(aMax));
+    pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"),core::Parameter(0.05));
+    pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"),core::Parameter(0.05));
+    pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),core::Parameter(0.5));
+    pSolver.problem()->setParameter(std::string("ConfigurationShooter/sampleExtraDOF"),core::Parameter(false));
+    vector3_t p_lLeg(0., 0.0848172440888579,-1.019272022956703);
+    vector3_t p_rLeg(0., -0.0848172440888579,-1.019272022956703);
+    rbprmDevice->setEffectorReference("talos_lleg_rom",p_lLeg);
+    rbprmDevice->setEffectorReference("talos_rleg_rom",p_rLeg);
+
+    for(size_type i = 0 ; i < 2 ; ++i){
+      rbprmDevice->extraConfigSpace().lower(i)=-vMax;
+      rbprmDevice->extraConfigSpace().upper(i)=vMax;
+    }
+    rbprmDevice->extraConfigSpace().lower(2)=0.;
+    rbprmDevice->extraConfigSpace().upper(2)=0.;
+    for(size_type i = 3 ; i < 5 ; ++i){
+      rbprmDevice->extraConfigSpace().lower(i)=-aMax;
+      rbprmDevice->extraConfigSpace().upper(i)=aMax;
+    }
+    rbprmDevice->extraConfigSpace().lower(5)=0.;
+    rbprmDevice->extraConfigSpace().upper(5)=0.;
+
+    // define the planning problem :
+    core::Configuration_t q_init(rbprmDevice->configSize());
+    q_init << 0, 0, 1.0, 0, 0, 0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+
+    core::Configuration_t q_goal = q_init;
+    q_goal(0)=1.5;
+
+    pSolver.initConfig(ConfigurationPtr_t(new core::Configuration_t(q_init)));
+    pSolver.addGoalConfig(ConfigurationPtr_t(new core::Configuration_t(q_goal)));
+    BOOST_CHECK_CLOSE(pSolver.robot()->mass(),90.27,1e-2);
+    bool success = pSolver.prepareSolveStepByStep();
+    BOOST_CHECK(success);
+    pSolver.finishSolveStepByStep();
+    BOOST_CHECK_EQUAL(pSolver.paths().size(),1);
+    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),5.0502312883507487,1e-6);
+}
+
 
 
 BOOST_AUTO_TEST_SUITE_END()
