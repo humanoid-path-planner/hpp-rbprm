@@ -7,14 +7,14 @@
 namespace geom
 {
 
-  /// Computes the normal vector of a triangle based on the
+  /// Computes the (unit) normal vector of a triangle based on the
   /// global position of its vertices. The normal is subject to convention!
   /// \param tri The global position of a triangles vertices
   Point TriangleNormal(TrianglePoints& tri)
   {
     Point normal = (tri.p2 - tri.p1).cross(tri.p3 - tri.p1);
     normal.normalize();
-    hppDout(notice,"normal, in geom :: "<<normal);
+    //hppDout(notice,"normal, in geom :: "<<normal.transpose());
     return normal;
   }
   
@@ -379,6 +379,7 @@ namespace geom
     ss<<"]";
     hppDout(notice,"intersection3D = "<<ss.str());
     */
+
     return outputList;
   }
 
@@ -480,9 +481,9 @@ namespace geom
       intersectTriangles(tri2,tri,&ss7);
       
     } // for each contact point
-    hppDout(notice,"clipped point : ");        
+    //hppDout(notice,"clipped point : ");
     ss7<<"]";
-    std::cout<<ss7.str()<<std::endl;
+    //std::cout<<ss7.str()<<std::endl;
   }
   
   T_Point intersectTriangles(fcl::Vec3f* tri, fcl::Vec3f* tri2,std::ostringstream* ss){

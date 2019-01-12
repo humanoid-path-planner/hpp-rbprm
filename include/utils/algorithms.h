@@ -243,9 +243,9 @@ namespace geom
   T_Point intersectSegmentPlane(Point s0, Point s1, Eigen::Vector3d pn, Point p0 );
 
   /**
-   * @brief intersectPolygonePlane compute the intersection between a polygone and a plane
+   * @brief intersectPolygonePlane compute the intersection between a polygone and an (infinite) plane
    * @param polygone
-   * @param plane
+   * @param plane a model which first triangle will define the infinite plan used
    * @param pn : output, normal of the plan
    * @return an ordoned list of point (clockwise), which belong to both the polygone and the plane
    */
