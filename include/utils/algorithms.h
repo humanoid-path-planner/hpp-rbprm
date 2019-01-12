@@ -151,7 +151,37 @@ namespace geom
    * @return distance
    */
   double distanceToPlane(const fcl::Vec3f& n, double t, const fcl::Vec3f& v);
-  
+
+  /**
+   * @brief distanceToPlane compute the min distance from a point to an (infinite) plan
+   * @param point the point
+   * @param Pn normal of the plan
+   * @param P0 a point in the plan
+   * @return
+   */
+  double distanceToPlane(CPointRef point,CPointRef Pn,CPointRef P0);
+
+
+  /**
+   * @brief projectPointOnPlane othrogonal projection of a given point on the plan
+   * @param point point to project
+   * @param Pn normal of the plan
+   * @param P0 a point in the plan
+   * @return  the orthogonal projection of the point in the plane
+   */
+  Point projectPointOnPlane(CPointRef point,CPointRef Pn,CPointRef P0);
+
+  /**
+   * @brief projectPointInsidePlan project a point inside on the given plan, inside the given convex hull
+   * @param plan convex hull of points
+   * @param point original point
+   * @param Pn normal of the plan
+   * @param P0 a point in the plan
+   * @param res the resulting projection
+   * @return  the distance between the original point and the projection
+   */
+  double projectPointInsidePlan(T_Point plan, CPointRef point, CPointRef Pn, CPointRef P0,Eigen::Ref<Point> res);
+
   /**
    * @brief computeTrianglePlaneDistance compute distance between each vertice of the triangle and a plane
    * @param tri_point

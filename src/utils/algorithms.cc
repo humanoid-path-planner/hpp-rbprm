@@ -385,6 +385,48 @@ namespace geom
   {
     return n.dot(v) - t;
   }
+
+  double distanceToPlane(CPointRef point,CPointRef Pn,CPointRef P0){
+    Point v = point - P0;
+    return fabs(v.dot(Pn));
+  }
+
+  Point projectPointOnPlane(CPointRef point,CPointRef Pn,CPointRef P0){
+    Point v = (point - P0);
+    double d = v.dot(Pn);
+    //hppDout(notice,"project point on plane, signed distance = "<<d);
+    Point proj = point - d*Pn;
+    //hppDout(notice,"projected point from "<<point.transpose()<<" to "<<proj.transpose());
+    return proj;
+  }
+
+  double projectPointInsidePlan(T_Point plan, CPointRef point, CPointRef Pn, CPointRef P0,Eigen::Ref<Point> res){
+    //hppDout(notice,"project point "<<point.transpose()<<" inside plan, with normal "<<Pn.transpose()<<" and point in plan : "<<P0.transpose());
+    //hppDout(notice,"number of points defining the plan : "<<plan.size());
+    Point proj_ortho = projectPointOnPlane(point,Pn,P0);
+    if(containsHull(plan,proj_ortho,1e-4)){
+      //hppDout(notice,"orthogonal projection is already inside the plan.");
+      res = proj_ortho;
+      return fabs((proj_ortho-point).norm());
+    }else{
+      //hppDout(notice,"orthogonal projection is not inside the plan, compute the closest point inside the plan :");
+      double d_min = std::numeric_limits<double>::max();
+      double d;
+      Point proj;
+      Point c = center(plan.begin(),plan.end());
+      for(CIT_Point e = plan.begin() ; e != plan.end() ; ++e){
+        proj = lineSect3D(proj_ortho,c,*e,*(e+1));
+        d = fabs((proj-point).norm());
+        if(d < d_min){
+          d_min = d;
+          res = proj;
+        }
+      }
+      //hppDout(notice,"new proj with min distance : "<<d_min<<"   : "<<res.transpose());
+      return d_min;
+    }
+  }
+
   
   void computeTrianglePlaneDistance(fcl::Vec3f* tri_point, const fcl::Vec3f& n, double t, fcl::Vec3f* distance, unsigned int* num_penetrating_points)
   {
