@@ -64,25 +64,19 @@ namespace geom
   /// Test whether a 2d point belongs to a 2d convex hull
   /// source http://softsurfer.com/Archive/algorithm_0103/algorithm_0103.htm#wn_PinPolygon()
   ///
-  /// \param pointsBegin, pointsEnd iterators to first and last points
-  /// of the convex hull.ATTENTION: first point is included twice in
-  /// representation (it is also the last point).
+  /// \param pointsBegin, list of points of the convex hull.
+  /// ATTENTION: first point is included twice in representation (it is also the last point).
   /// \param aPoint The point for which to test belonging the the convex hull
   /// \return whether aPoint belongs to the convex polygon determined as the convex hull of the rectangle indicated
-  /* template<int Dim=3, typename Numeric=double, typename Point=Eigen::Matrix<Numeric, Dim, 1>,
-             typename Point2=Eigen::Matrix<Numeric, 2, 1>,
-             typename CPointRef= const Eigen::Ref<const Point>&, typename In>
-    bool containsHull(In pointsBegin, In pointsEnd, CPointRef aPoint, const Numeric Epsilon = 10e-6);
-*/
+    bool containsHull(T_Point hull, CPointRef aPoint, const double epsilon = 10e-6);
+
   /// Test whether a 2d point belongs to a 2d convex hull determined by a list of unordered points
   ///
-  /// \param pointsBegin, pointsEnd iterators to first and last points for which to consider the convex hull
+  /// \param points list of points
   /// \param aPoint The point for which to test belonging the the convex hull
   /// \return whether aPoint belongs to the convex polygon determined as the convex hull of the rectangle indicated
-  /* template<typename T, int Dim=3, typename Numeric=double, typename Point=Eigen::Matrix<Numeric, Dim, 1>,
-             typename CPointRef= const Eigen::Ref<const Point>&, typename In>
-    bool contains(In pointsBegin, In pointsEnd, const CPointRef& aPoint);
-*/
+    bool contains(T_Point points, CPointRef aPoint, const double epsilon = 10e-6);
+
   /// Computes whether two convex polygons intersect
   ///
   /// \param aPointsBegin, aPointsEnd iterators to first and last points of the first polygon

@@ -157,50 +157,42 @@ namespace geom
     return res;
   }
   
-  
-  
-  /*
-    template<int Dim=3, typename Numeric=double, typename Point=Eigen::Matrix<Numeric, Dim, 1>,
-             typename Point2=Eigen::Matrix<Numeric, 2, 1>,
-             typename CPointRef= const Eigen::Ref<const Point>&, typename In>
-    bool containsHull(In pointsBegin, In pointsEnd, CPointRef aPoint, const Numeric Epsilon = 10e-6)
+
+    bool containsHull(T_Point hull, CPointRef aPoint, const double epsilon)
     {
-        int n = (int)(std::distance(pointsBegin, pointsEnd)- 1);
+        int n = (int)hull.size();
         if(n < 1)
             return false;
         else if(n == 1)
         {
-            Numeric x = aPoint[0] - pointsBegin->operator[](0);
-            Numeric y = aPoint[1] - pointsBegin->operator[](1);
-            return sqrt(x*x + y*y) < Epsilon;
+            double x = aPoint[0] - hull.front()[0];
+            double y = aPoint[1] - hull.front()[1];
+            return sqrt(x*x + y*y) < epsilon;
         }
         else if(n == 2)
         {
-            Numeric x = pointsEnd->operator[](0) - pointsBegin->operator[](0);
-            Numeric y = pointsEnd->operator[](1) - pointsBegin->operator[](1);
-            return sqrt(x*x + y*y) < Epsilon;
+            double x = hull.back()[0] - hull.front()[0];
+            double y = hull.back()[1] - hull.front()[1];
+            return sqrt(x*x + y*y) < epsilon;
         }
         
         // loop through all edges of the polygon
-        In current = pointsBegin;
-        In next= pointsBegin +1;
-        for(;next!=pointsEnd;++current,++next)
+        CIT_Point current = hull.begin();
+        CIT_Point next = current+1;
+        for(;next!=hull.end();++current,++next)
         {
             if(isLeft(*current, *next, aPoint) > 0)
                 return false;
         }
         return true;
     }
-*/
-  /*
-    template<typename T, int Dim=3, typename Numeric=double, typename Point=Eigen::Matrix<Numeric, Dim, 1>,
-             typename CPointRef= const Eigen::Ref<const Point>&, typename In>
-    bool contains(In pointsBegin, In pointsEnd, const CPointRef& aPoint)
+
+    bool contains(T_Point points, CPointRef aPoint, const double epsilon)
     {
-        T ch = convexHull<T, Dim, Numeric, Point, In>(pointsBegin, pointsEnd);
-        return contains<Dim, Numeric, Point, In>(ch.begin(), ch.end(), aPoint);
+        T_Point hull = convexHull(points.begin(),points.end());
+        return containsHull(hull,aPoint,epsilon);
     }
-*/
+
   
   Point lineSect(CPointRef p1, CPointRef p2, CPointRef p3, CPointRef p4)
   {
