@@ -42,87 +42,39 @@ Eigen::Quaterniond RbprmNode::getQuaternion(){
     return quat;
 }
 
-bool centerOfRomIntersection(const core::CollisionValidationReportPtr_t report, geom::Point& pn, geom::Point& center,pinocchio::DeviceData& deviceData){
-
+bool computeIntersectionSurface(const core::CollisionValidationReportPtr_t report,geom::T_Point& inter, geom::Point& pn,pinocchio::DeviceData& deviceData){
 
     core::CollisionObjectConstPtr_t obj_rom = report->object1;
     core::CollisionObjectConstPtr_t obj_env = report->object2;
-
-    // debug display :
-    hppDout(notice,"~~ collision between : "<<obj_rom->name() << " and "<<obj_env->name());
-
-    /*
-    fcl::CollisionResult result = report->result;
-    size_t numContact =result.numContacts();
-    //hppDout(notice,"~~ number of contact : "<<numContact);
-    std::ostringstream ss;
-    ss<<"[";
-    for(size_t i = 0 ; i < numContact ; i++)
-    { // print with python formating :
-      ss<<"["<<result.getContact(i).pos[0]<<","<<result.getContact(i).pos[1]<<","<<result.getContact(i).pos[2]<<"]";
-      if(i< (numContact-1))
-         ss<<",";
-    }
-    ss<<"]";
-
-    hppDout(notice,"contact point : ");
-    hppDout(notice," " <<ss.str());
-    */
-
-    // get intersection between the two objects :
+    //hppDout(notice,"~~ compute intersection between : "<<obj_rom->name() << " and "<<obj_env->name());
+    // convert the two objects  :
     geom::BVHModelOBConst_Ptr_t model_rom =  geom::GetModel(obj_rom,deviceData);
     geom::BVHModelOBConst_Ptr_t model_env =  geom::GetModel(obj_env,deviceData);
 
-    // display intersection for debug
-    /*hppDout(info,"vertices obj1 : "<<obj_rom->name()<< " ( "<<model_rom->num_vertices<<" ) ");
-    geom::T_Point vertices1,vertices2;
-    std::ostringstream ss1;
-    ss1<<"[";
-    for(int i = 0 ; i < model_rom->num_vertices ; ++i)
-    {
-      vertices1.push_back(Eigen::Vector3d(model_rom->vertices[i][0], model_rom->vertices[i][1], model_rom->vertices[i][2]));
-      //hppDout(notice,"vertices : "<<model1->vertices[i]);
-      ss1<<"["<<model_rom->vertices[i][0]<<","<<model_rom->vertices[i][1]<<","<<model_rom->vertices[i][2]<<"]";
-      if(i< (model_rom->num_vertices-1))
-        ss1<<",";
-    }
-    ss1<<"]";
-    hppDout(notice,"obj "<<obj_rom->name());
-    hppDout(notice," "<<ss1.str());
-
-
-    hppDout(info,"vertices obj2 : "<<obj_env->name()<< " ( "<<model_env->num_vertices<<" ) ");
-    std::ostringstream ss2;
-    ss2<<"[";
-    for(int i = 0 ; i < model_env->num_vertices ; ++i)
-    {
-      vertices2.push_back(Eigen::Vector3d(model_env->vertices[i][0], model_env->vertices[i][1], model_env->vertices[i][2]));
-      // hppDout(notice,"vertices : "<<model2->vertices[i]);
-      ss2<<"["<<model_env->vertices[i][0]<<","<<model_env->vertices[i][1]<<","<<model_env->vertices[i][2]<<"]";
-      if(i< (model_env->num_vertices -1))
-        ss2<<",";
-
-    }
-    ss2<<"]";
-    hppDout(notice,"obj "<<obj_env->name());
-    hppDout(notice," "<<ss2.str());
-    */
-    // end of debug display
-
     hppStartBenchmark (COMPUTE_INTERSECTION);
-    // FIX ME : compute plan equation first
     geom::T_Point plane = geom::intersectPolygonePlane(model_rom,model_env,pn);
+    // plane contains a list of points : the intersections between model_rom and the infinite plane defined by model_env.
+    // but they may not be contained inside the shape defined by model_env
     hppStopBenchmark (COMPUTE_INTERSECTION);
     hppDisplayBenchmark (COMPUTE_INTERSECTION);
-    geom::T_Point hull;
     if(plane.size() > 0)
-        hull = geom::compute3DIntersection(plane,geom::convertBVH(model_env));
+      inter = geom::compute3DIntersection(plane,geom::convertBVH(model_env)); // hull contain only points inside the model_env shape
+    else
+      return false;
+    if(inter.size() == 0)
+      return false;
+    else
+      return true;
+
+}
 
 
-    if(hull.size() == 0){
-        return false;
-    }
+bool centerOfRomIntersection(const core::CollisionValidationReportPtr_t report, geom::Point& pn, geom::Point& center,pinocchio::DeviceData& deviceData){
 
+    geom::T_Point hull;
+    bool success  = computeIntersectionSurface(report,hull,pn,deviceData);
+    if(!success)
+      return false;
     // compute center point of the hull
     center = geom::center(hull.begin(),hull.end());
 
