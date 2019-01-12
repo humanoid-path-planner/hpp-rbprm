@@ -367,7 +367,9 @@ namespace geom
       }
 
     }
-   /* std::ostringstream ss;
+    outputList = convexHull(outputList.begin(),outputList.end());
+    /*
+    std::ostringstream ss;
     ss<<"[";
     for(size_t i = 0; i < outputList.size() ; ++i){
       ss<<"["<<outputList[i][0]<<","<<outputList[i][1]<<","<<outputList[i][2]<<"]";
