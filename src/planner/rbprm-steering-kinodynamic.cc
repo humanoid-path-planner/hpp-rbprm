@@ -385,11 +385,13 @@ namespace hpp{
       }
 
       hppDout(info,"Amax found : "<<alpha0);
+      alpha0 -= 0.01; // FIXME : hardcoded "robustness" value to avoid hitting the bounds
       alpha0 = std::min(alpha0,aMaxFixed_);
-      //alpha0 -= 0.01; //FIX ME ???
 
       hppDout(info,"Amax after min : "<<alpha0);
       aMax = alpha0*direction;
+      for(size_t i = 0 ; i < 3 ; ++i)
+        aMax[i] = fabs(aMax[i]); // aMax store the amplitude
 
       if((aMax[2] < aMaxFixed_Z_))
         aMax[2] = aMaxFixed_Z_;

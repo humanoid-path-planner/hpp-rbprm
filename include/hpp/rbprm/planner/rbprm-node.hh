@@ -7,6 +7,10 @@
 
 
 namespace hpp {
+  namespace pinocchio {
+    class RbPrmDevice; //fwd declaration of  rbprmDevice class
+    typedef boost::shared_ptr <RbPrmDevice> RbPrmDevicePtr_t;
+  }
   namespace core {
 
     HPP_PREDEF_CLASS (RbprmNode);
@@ -82,9 +86,9 @@ namespace hpp {
 
       size_type getNumberOfContacts(){return numberOfContacts_;}
 
-      void fillNodeMatrices(ValidationReportPtr_t report,bool rectangularContact, double sizeFootx, double sizeFooty, double m,double mu);
+      void fillNodeMatrices(ValidationReportPtr_t report,bool rectangularContact, double sizeFootx, double sizeFooty, double m,double mu,pinocchio::RbPrmDevicePtr_t device);
 
-      void chooseBestContactSurface(ValidationReportPtr_t report,std::map<std::string,fcl::Vec3f> rom_ref_endEffector );
+      void chooseBestContactSurface(ValidationReportPtr_t report, hpp::pinocchio::RbPrmDevicePtr_t device );
 
 
       Eigen::Quaterniond getQuaternion();

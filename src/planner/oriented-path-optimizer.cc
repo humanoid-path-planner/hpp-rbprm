@@ -64,30 +64,17 @@ namespace hpp{
       assert(rbprmPathValidation_ && "Path validation should be a RbPrmPathValidation class for this solver");
 
       // retrieve parameters from problem :
-      try {
-        sizeFootX_ = problem.getParameter ("sizeFootX").floatValue()/2.;
-        sizeFootY_ = problem.getParameter ("sizeFootY").floatValue()/2.;
+      sizeFootX_ = problem.getParameter (std::string("DynamicPlanner/sizeFootX")).floatValue()/2.;
+      sizeFootY_ = problem.getParameter (std::string("DynamicPlanner/sizeFootY")).floatValue()/2.;
+      if(sizeFootX_ > 0. && sizeFootY_ > 0.)
         rectangularContact_ = 1;
-      } catch (const std::exception& e) {
-        hppDout(warning,"Warning : size of foot not definied, use 0 (contact point)");
-        sizeFootX_ =0;
-        sizeFootY_ =0;
+      else
         rectangularContact_ = 0;
-      }
-      try {
-        tryJump_ = problem.getParameter ("tryJump").boolValue();
-      } catch (const std::exception& e) {
-        tryJump_=false;
-      }
+      tryJump_ = problem.getParameter (std::string("DynamicPlanner/tryJump")).boolValue();
       hppDout(notice,"tryJump in steering method = "<<tryJump_);
+      mu_ = problem.getParameter (std::string("DynamicPlanner/friction")).floatValue();
+      hppDout(notice,"mu define in python : "<<mu_);
 
-      try {
-        mu_ = problem.getParameter ("friction").floatValue();
-        hppDout(notice,"mu define in python : "<<mu_);
-      } catch (const std::exception& e) {
-        mu_= 0.5;
-        hppDout(notice,"mu not defined, take : "<<mu_<<" as default.");
-      }
     }
 
 
@@ -232,7 +219,7 @@ namespace hpp{
       problem().configValidations()->validate(q1,report);
       rbprmPathValidation_->getValidator()->computeAllContacts(false);
       hppDout(notice,"Random shortucut, fillNodeMatrices : ");
-      x1->fillNodeMatrices(report,rectangularContact_,sizeFootX_,sizeFootY_,problem().robot()->mass(),mu_);
+      x1->fillNodeMatrices(report,rectangularContact_,sizeFootX_,sizeFootY_,problem().robot()->mass(),mu_,boost::dynamic_pointer_cast<pinocchio::RbPrmDevice>(problem().robot()));
 
       // call steering method kinodynamic with the newly created node
       hppDout(notice,"Random shortucut, steering method  : ");

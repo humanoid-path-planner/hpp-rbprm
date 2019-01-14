@@ -47,7 +47,7 @@ namespace geom
   typedef fcl::BVHModel<fcl::OBBRSS> BVHModelOB;
   typedef boost::shared_ptr<const BVHModelOB> BVHModelOBConst_Ptr_t;
 
-  BVHModelOBConst_Ptr_t GetModel(const hpp::pinocchio::CollisionObjectConstPtr_t object);
+  BVHModelOBConst_Ptr_t GetModel(const hpp::pinocchio::CollisionObjectConstPtr_t object, hpp::pinocchio::DeviceData &deviceData);
   
   void projectZ(IT_Point pointsBegin, IT_Point pointsEnd);
   
@@ -64,25 +64,19 @@ namespace geom
   /// Test whether a 2d point belongs to a 2d convex hull
   /// source http://softsurfer.com/Archive/algorithm_0103/algorithm_0103.htm#wn_PinPolygon()
   ///
-  /// \param pointsBegin, pointsEnd iterators to first and last points
-  /// of the convex hull.ATTENTION: first point is included twice in
-  /// representation (it is also the last point).
+  /// \param pointsBegin, list of points of the convex hull.
+  /// ATTENTION: first point is included twice in representation (it is also the last point).
   /// \param aPoint The point for which to test belonging the the convex hull
   /// \return whether aPoint belongs to the convex polygon determined as the convex hull of the rectangle indicated
-  /* template<int Dim=3, typename Numeric=double, typename Point=Eigen::Matrix<Numeric, Dim, 1>,
-             typename Point2=Eigen::Matrix<Numeric, 2, 1>,
-             typename CPointRef= const Eigen::Ref<const Point>&, typename In>
-    bool containsHull(In pointsBegin, In pointsEnd, CPointRef aPoint, const Numeric Epsilon = 10e-6);
-*/
+    bool containsHull(T_Point hull, CPointRef aPoint, const double epsilon = 10e-6);
+
   /// Test whether a 2d point belongs to a 2d convex hull determined by a list of unordered points
   ///
-  /// \param pointsBegin, pointsEnd iterators to first and last points for which to consider the convex hull
+  /// \param points list of points
   /// \param aPoint The point for which to test belonging the the convex hull
   /// \return whether aPoint belongs to the convex polygon determined as the convex hull of the rectangle indicated
-  /* template<typename T, int Dim=3, typename Numeric=double, typename Point=Eigen::Matrix<Numeric, Dim, 1>,
-             typename CPointRef= const Eigen::Ref<const Point>&, typename In>
-    bool contains(In pointsBegin, In pointsEnd, const CPointRef& aPoint);
-*/
+    bool contains(T_Point points, CPointRef aPoint, const double epsilon = 10e-6);
+
   /// Computes whether two convex polygons intersect
   ///
   /// \param aPointsBegin, aPointsEnd iterators to first and last points of the first polygon
@@ -157,7 +151,37 @@ namespace geom
    * @return distance
    */
   double distanceToPlane(const fcl::Vec3f& n, double t, const fcl::Vec3f& v);
-  
+
+  /**
+   * @brief distanceToPlane compute the min distance from a point to an (infinite) plan
+   * @param point the point
+   * @param Pn normal of the plan
+   * @param P0 a point in the plan
+   * @return
+   */
+  double distanceToPlane(CPointRef point,CPointRef Pn,CPointRef P0);
+
+
+  /**
+   * @brief projectPointOnPlane othrogonal projection of a given point on the plan
+   * @param point point to project
+   * @param Pn normal of the plan
+   * @param P0 a point in the plan
+   * @return  the orthogonal projection of the point in the plane
+   */
+  Point projectPointOnPlane(CPointRef point,CPointRef Pn,CPointRef P0);
+
+  /**
+   * @brief projectPointInsidePlan project a point inside on the given plan, inside the given convex hull
+   * @param plan convex hull of points
+   * @param point original point
+   * @param Pn normal of the plan
+   * @param P0 a point in the plan
+   * @param res the resulting projection
+   * @return  the distance between the original point and the projection
+   */
+  double projectPointInsidePlan(T_Point plan, CPointRef point, CPointRef Pn, CPointRef P0,Eigen::Ref<Point> res);
+
   /**
    * @brief computeTrianglePlaneDistance compute distance between each vertice of the triangle and a plane
    * @param tri_point
@@ -219,15 +243,23 @@ namespace geom
   T_Point intersectSegmentPlane(Point s0, Point s1, Eigen::Vector3d pn, Point p0 );
 
   /**
-   * @brief intersectPolygonePlane compute the intersection between a polygone and a plane
+   * @brief intersectPolygonePlane compute the intersection between a polygone and an (infinite) plane
    * @param polygone
-   * @param plane
+   * @param plane a model which first triangle will define the infinite plan used
    * @param pn : output, normal of the plan
    * @return an ordoned list of point (clockwise), which belong to both the polygone and the plane
    */
   T_Point intersectPolygonePlane(BVHModelOBConst_Ptr_t polygone, BVHModelOBConst_Ptr_t plane, Eigen::Ref<Point> Pn);
 
   T_Point convertBVH(BVHModelOBConst_Ptr_t obj);
+
+  /**
+   * @brief computePlanEquation compute a plan normal and a point in the plan from the first triangle of a BVHModel
+   * @param plane
+   * @param Pn the normal of the plan
+   * @param P0 a point in the plan
+   */
+  void computePlanEquation( BVHModelOBConst_Ptr_t plane,Eigen::Ref<Point> Pn,Eigen::Ref<Point> P0);
   
 } //namespace geom
 

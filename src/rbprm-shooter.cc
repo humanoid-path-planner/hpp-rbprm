@@ -19,6 +19,7 @@
 #include <hpp/pinocchio/liegroup-space.hh>
 #include <hpp/pinocchio/liegroup-element.hh>
 #include <pinocchio/algorithm/joint-configuration.hpp>
+#include <hpp/core/configuration-shooter/uniform.hh>
 #include <hpp/fcl/collision_object.h>
 #include <hpp/fcl/BVH/BVH_model.h>
 #include <hpp/core/collision-validation.hh>
@@ -221,41 +222,8 @@ namespace
                                             const std::size_t shootLimit, const std::size_t displacementLimit)
     {
       unsigned int seed = (unsigned int)(time(NULL));
-      // seed = 1484926006 ;
-      //seed = 1485276927;
-      //seed = 1485359407; //darpa
-      // seed = 1485441926 ; // prepare_jump
-      // seed = 1485973442 ; // stair bauzil (old)
-      // seed = 1486137883; // stair bauzil (new, better) interpolation don't work, too far from ramp
-     //  seed = 1486140324; // stair bauzil NOT WORKING ??
-    // seed = 1486140446; // stair bauzil : work with extract path but not the interpolation (best on yet)
-    //  seed = 1486403996; // sideWall
-     //  seed = 1486557940; // downSlope, lent ( + 5min mais fonctionne) (minz = 0.3)
-       // seed = 1486560453; // downSlop minz = 0.45 (20min)
-      // seed = 1486564172 ; // downSlop minz = 0.45 (20min)
-      //seed = 1486643780; // downSlope HyQ_large
-      // seed = 1486657707 ; // downSlope hrp2
-      // seed = 1487238007; // slalom hyq v=1
-     //seed = 1487348584 ; // hyq slalom v = 0.5
-     // seed = 1488288253; // detour  kino
-      //seed = 1488449318; // downSLope (close to ground ... )
-      //seed = 1492696043; // bug stairs
-      //seed = 149277557 ; // stairs (work)
-      //seed = 1502899400; // slalom hrp2 (v = 1 ; a = 5 )
-     // seed = 1503410641; // slalom hrp2 (v = 0.3 ; a = 0.5 ) (not a lot of clearance)
-     // seed = 1504775033; // bug random shortcut bauzil
-    //  seed = 1505996568 ; //bauzil walk OK v = 0.3
-     //   seed = 1516106467; // walk bauzil v = 0.2
-    //  seed = 1507292219 ; // darpa test
-     // seed = 1517318451 ; //stairs reduceSize
-     // seed = 1518874734 ; // stairs test transition
-      //seed = 1519050403 ; //platform hrp2
-     // seed = 1519487130 ; // stair no ramp
-     // seed = 1522388624; // error stairs
-     // seed = 1525354944 ; // slalom bauzil
       srand (seed);
       hppDout(notice,"&&&&&& SEED = "<<seed);
-      std::cout<<"seed = "<<seed<<std::endl;
       RbPrmShooter* ptr = new RbPrmShooter (robot, geometries, affordances,
                                             filter, affFilters, shootLimit, displacementLimit);
 
@@ -292,6 +260,7 @@ namespace
     , robot_ (robot)
     , validator_(rbprm::RbPrmValidation::create(robot_, filter, affFilters,
                                                 affordances, geometries))
+    , uniformShooter_(core::configurationShooter::Uniform::create(robot))
     {
         for(hpp::core::ObjectStdVector_t::const_iterator cit = geometries.begin();
             cit != geometries.end(); ++cit)
@@ -352,9 +321,9 @@ namespace
       return triangles_[triangles_.size()-1]; // not supposed to happen
   }
 
-void randConfigAtPos(const pinocchio::RbPrmDevicePtr_t robot, const std::vector<double>& eulerSo3, ConfigurationPtr_t config, const Vec3f p)
+void RbPrmShooter::randConfigAtPos(const pinocchio::RbPrmDevicePtr_t robot, const std::vector<double>& eulerSo3, ConfigurationPtr_t config, const Vec3f p) const
 {
-    (*config) = se3::randomConfiguration(robot->model());
+    (*config) = *(uniformShooter_->shoot());
     SetConfigTranslation(robot,config, p);
     SampleRotation(eulerSo3, config);
 }
@@ -363,7 +332,7 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
 {
     hppDout(notice,"!!! Random shoot");
     HPP_DEFINE_TIMECOUNTER(SHOOT_COLLISION);
-    ConfigurationPtr_t config (new Configuration_t (se3::randomConfiguration(robot_->model())));
+    ConfigurationPtr_t config = uniformShooter_->shoot();
     std::size_t limit = shootLimit_;
     bool found(false);
     while(limit >0 && !found)
@@ -433,30 +402,6 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
                  limitDis--;
             }
         }
-        // Shoot extra configuration variables
-        size_type extraDim = robot_->extraConfigSpace ().dimension ();
-        size_type offset = robot_->configSize () - extraDim;
-        for (size_type i=0; i<extraDim; ++i)
-        {
-            value_type lower = robot_->extraConfigSpace ().lower (i);
-            value_type upper = robot_->extraConfigSpace ().upper (i);
-            value_type range = upper - lower;
-            if ((range < 0) ||
-              (range == std::numeric_limits<double>::infinity()))
-            {
-                std::ostringstream oss
-                  ("Cannot uniformy sample extra config variable ");
-                oss << i << ". min = " << ", max = " << upper << std::endl;
-                throw std::runtime_error (oss.str ());
-            }
-            (*config) [offset + i] = lower + (upper - lower) * rand ()/RAND_MAX;
-        }
-        // save the normal (code from Mylène)
-       /* if(extraDim >= 3 ){
-          size_type index = robot_->configSize() -3;  // rempli toujours les 3 derniers
-          for (size_type i=0; i<3; ++i)
-            (*config) [index + i] = lastDirection [i];
-        }*/
         limit--;
     }
     if (!found) std::cout << "no config found" << std::endl;
@@ -464,6 +409,10 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
     HPP_DISPLAY_TIMECOUNTER(SHOOT_COLLISION);
     return config;
 }
+
+    void RbPrmShooter::sampleExtraDOF(bool sampleExtraDOF){
+        uniformShooter_->sampleExtraDOF(sampleExtraDOF);
+    }
 
 
   }// namespace rbprm

@@ -93,32 +93,20 @@ namespace hpp {
     {
           assert(sm_ && "steering method should be a kinodynamic steering method for this solver");
           assert(rbprmPathValidation_ && "Path validation should be a RbPrmPathValidation class for this solver");
+          assert(problem.robot()->mass() > 0. && "When using dynamic planner, the robot mass should be correctly defined.");
           hppDout(notice,"number of affordances objects : "<<problem.collisionObstacles().size());
 
-          try {
-            sizeFootX_ = problem.getParameter ("sizeFootX").floatValue()/2.;
-            sizeFootY_ = problem.getParameter ("sizeFootY").floatValue()/2.;
+          sizeFootX_ = problem.getParameter (std::string("DynamicPlanner/sizeFootX")).floatValue()/2.;
+          sizeFootY_ = problem.getParameter (std::string("DynamicPlanner/sizeFootY")).floatValue()/2.;
+          if(sizeFootX_ > 0. && sizeFootY_ > 0.)
             rectangularContact_ = 1;
-          } catch (const std::exception& e) {
-            hppDout(warning,"Warning : size of foot not definied, use 0 (contact point)");
-            sizeFootX_ =0;
-            sizeFootY_ =0;
+          else
             rectangularContact_ = 0;
-          }
-          try {
-            tryJump_ = problem.getParameter ("tryJump").boolValue();
-          } catch (const std::exception& e) {
-            tryJump_=false;
-          }
-          hppDout(notice,"tryJump in steering method = "<<tryJump_);
 
-          try {
-            mu_ = problem.getParameter ("friction").floatValue();
-            hppDout(notice,"mu define in python : "<<mu_);
-          } catch (const std::exception& e) {
-            mu_= 0.5;
-            hppDout(notice,"mu not defined, take : "<<mu_<<" as default.");
-          }
+          tryJump_ = problem.getParameter (std::string("DynamicPlanner/tryJump")).boolValue();
+          hppDout(notice,"tryJump in dynamic planner = "<<tryJump_);
+          mu_ = problem.getParameter (std::string("DynamicPlanner/friction")).floatValue();
+          hppDout(notice,"mu define in python : "<<mu_);
 
           // create the map of end effector reference position in root frame
           pinocchio::RbPrmDevicePtr_t rbDevice = boost::dynamic_pointer_cast<pinocchio::RbPrmDevice>(problem.robot());
@@ -150,32 +138,21 @@ namespace hpp {
     {
       assert(sm_ && "steering method should be a kinodynamic steering method for this solver");
       assert(rbprmPathValidation_ && "Path validation should be a RbPrmPathValidation class for this solver");
+      assert(problem.robot()->mass() > 0. && "When using dynamic planner, the robot mass should be correctly defined.");
 
       hppDout(notice,"number of affordances objects : "<<problem.collisionObstacles().size());
-      try {
-        sizeFootX_ = problem.getParameter ("sizeFootX").floatValue()/2.;
-        sizeFootY_ = problem.getParameter ("sizeFootY").floatValue()/2.;
+      sizeFootX_ = problem.getParameter (std::string("DynamicPlanner/sizeFootX")).floatValue()/2.;
+      sizeFootY_ = problem.getParameter (std::string("DynamicPlanner/sizeFootY")).floatValue()/2.;
+      if(sizeFootX_ > 0. && sizeFootY_ > 0.)
         rectangularContact_ = 1;
-      } catch (const std::exception& e) {
-        hppDout(warning,"Warning : size of foot not definied, use 0 (contact point)");
-        sizeFootX_ =0;
-        sizeFootY_ =0;
+      else
         rectangularContact_ = 0;
-      }
-      try {
-        tryJump_ = problem.getParameter ("tryJump").boolValue();
-      } catch (const std::exception& e) {
-        tryJump_=false;
-      }
-      hppDout(notice,"tryJump in steering method = "<<tryJump_);
 
-      try {
-        mu_ = problem.getParameter ("friction").floatValue();
-        hppDout(notice,"mu define in python : "<<mu_);
-      } catch (const std::exception& e) {
-        mu_= 0.5;
-        hppDout(notice,"mu not defined, take : "<<mu_<<" as default.");
-      }
+      tryJump_ = problem.getParameter (std::string("DynamicPlanner/tryJump")).boolValue();
+      hppDout(notice,"tryJump in dynamic planner = "<<tryJump_);
+      mu_ = problem.getParameter (std::string("DynamicPlanner/friction")).floatValue();
+      hppDout(notice,"mu define in python : "<<mu_);
+
 
       // create the map of end effector reference position in root frame
       pinocchio::RbPrmDevicePtr_t rbDevice = boost::dynamic_pointer_cast<pinocchio::RbPrmDevice>(problem.robot());
@@ -454,11 +431,12 @@ namespace hpp {
       // (because only the first one in collision is considered by fcl and put in the report)
       rbprmPathValidation_->getValidator()->randomnizeCollisionPairs(); // FIXME : remove if we compute all collision pairs
       rbprmPathValidation_->getValidator()->computeAllContacts(true);
+      hppDout(notice,"Compute GIWC, call validate for configuration : "<<pinocchio::displayConfig(*(x->configuration())));
       problem().configValidations()->validate(*(x->configuration()),report);
       rbprmPathValidation_->getValidator()->computeAllContacts(false);
       if(use_bestReport){
           core::RbprmNodePtr_t node = static_cast<core::RbprmNodePtr_t>(x);
-          node->chooseBestContactSurface(report,rom_ref_endEffector_);
+          node->chooseBestContactSurface(report,boost::dynamic_pointer_cast<pinocchio::RbPrmDevice>(problem().robot()));
       }
       computeGIWC(x,report);
     }
@@ -477,10 +455,7 @@ namespace hpp {
       }
 
       hppDout(info,"~~ q = "<<displayConfig(*q));
-
-      node->fillNodeMatrices(report,rectangularContact_,sizeFootX_,sizeFootY_,problem().robot()->mass(),mu_);
-
-
+      node->fillNodeMatrices(report,rectangularContact_,sizeFootX_,sizeFootY_,problem().robot()->mass(),mu_,boost::dynamic_pointer_cast<pinocchio::RbPrmDevice>(problem().robot()));
     }// computeGIWC
 
 
@@ -563,11 +538,11 @@ namespace hpp {
 
 
     core::PathVectorPtr_t DynamicPlanner::finishSolve (const core::PathVectorPtr_t& path){
-      std::cout<<"total_path_computed = "<<sm_->totalTimeComputed_<<std::endl;
+      /*std::cout<<"total_path_computed = "<<sm_->totalTimeComputed_<<std::endl;
       std::cout<<"total_path_validated = "<<sm_->totalTimeValidated_<<std::endl;
       std::cout<<"percentage validated path ="<<((sm_->totalTimeValidated_)/(sm_->totalTimeComputed_))*100.<<std::endl;
       std::cout<<"rejected_paths = "<<sm_->rejectedPath_<<std::endl;
-
+      */
       /*
       std::ofstream myfile;
       myfile.open ("/local/dev_hpp/benchs/benchHyq_darpa.txt", std::ios::out | std::ios::app );
@@ -585,6 +560,25 @@ namespace hpp {
       return path;
     }
 
-  } // namespace core
+    HPP_START_PARAMETER_DECLARATION(Kinodynamic)
+      Problem::declareParameter(core::ParameterDescription (core::Parameter::FLOAT,
+            "DynamicPlanner/sizeFootX",
+            "The lenght of the feet along X axis (assuming rectangular feet).",
+            core::Parameter(0.)));
+      Problem::declareParameter(core::ParameterDescription (core::Parameter::FLOAT,
+            "DynamicPlanner/sizeFootY",
+            "The lenght of the feet along Y axis (assuming rectangular feet).",
+            core::Parameter(0.)));
+      Problem::declareParameter(core::ParameterDescription (core::Parameter::FLOAT,
+            "DynamicPlanner/friction",
+            "Value of the friction coefficient between the feet of the robot and the ground.",
+            core::Parameter(0.5)));
+      Problem::declareParameter(core::ParameterDescription (core::Parameter::BOOL,
+            "DynamicPlanner/tryJump",
+            "If True, when a trajectory is invalid because all the rom leave the contact, a ballistic motion is tried to connect both states",
+            core::Parameter(false)));
+      HPP_END_PARAMETER_DECLARATION(Kinodynamic)
+
+  } // namespace rbprm
 } // namespace hpp
 

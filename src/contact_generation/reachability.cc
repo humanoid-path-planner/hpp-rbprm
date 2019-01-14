@@ -518,7 +518,10 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
         pData.contacts_.push_back(midData);
     }
     pData.contacts_.push_back(nextData);
-    //pData.constraints_.flag_ = bezier_com_traj::INIT_POS | bezier_com_traj::INIT_VEL | bezier_com_traj::INIT_ACC | bezier_com_traj::END_ACC | bezier_com_traj::END_VEL | bezier_com_traj::END_POS;
+    pData.constraints_.flag_ = bezier_com_traj::INIT_POS | bezier_com_traj::INIT_VEL | bezier_com_traj::INIT_ACC | bezier_com_traj::END_ACC | bezier_com_traj::END_VEL | bezier_com_traj::END_POS;
+    pData.constraints_.constraintAcceleration_=true;
+    pData.constraints_.maxAcceleration_=10.;
+    pData.constraints_.reduce_h_ = 1e-3;
     // set init/goal values :
     pData.c0_ = com_previous;
     pData.c1_ = com_next;

@@ -58,10 +58,10 @@ BOOST_AUTO_TEST_CASE(reachable_quasiStatic_rightFoot_front){
     q0<<4.9999999999999996e-06,
             0.0,
             0.658702,
+            0.0,
+            0.0,
+            0.0,
             1.0,
-            0.0,
-            0.0,
-            0.0,
             0.0,
             0.0,
             0.0,
@@ -101,10 +101,10 @@ BOOST_AUTO_TEST_CASE(reachable_quasiStatic_rightFoot_front){
     q02<<0.08843182423782969,
             0.0011275296729917929,
             0.6548324227315108,
-            0.9998948524670372,
             -0.004885261937904553,
             -0.00489605086429045,
             0.01274546631763341,
+            0.9998948524670372,
             -9.134404225263402e-17,
             1.042152998990706e-17,
             -1.9459076020781713e-17,
@@ -145,10 +145,10 @@ BOOST_AUTO_TEST_CASE(reachable_quasiStatic_rightFoot_front){
     q04<<0.18835767718866914,
             -0.003995082424102922,
             0.6281901711546837,
-            0.9996275614090491,
             0.002085909708105276,
             -0.0047520274380174355,
             0.02679189592611454,
+            0.9996275614090491,
             -1.978205330344533e-16,
             2.1382084021341444e-17,
             2.134616917095093e-17,
@@ -189,10 +189,10 @@ BOOST_AUTO_TEST_CASE(reachable_quasiStatic_rightFoot_front){
     q06<<0.2905954544897296,
             -0.007170181849911604,
             0.5805865931676134,
-            0.9990748009487198,
             0.007401935462840584,
             -0.002181395566012728,
             0.04230833220613408,
+            0.9990748009487198,
             -3.267618377782896e-16,
             2.5565025868505295e-17,
             -1.3981398426668165e-17,
@@ -233,10 +233,10 @@ BOOST_AUTO_TEST_CASE(reachable_quasiStatic_rightFoot_front){
     q07<<0.34189722745035456,
             -0.008012429178832478,
             0.5472670660731433,
-            0.9986450497663171,
             0.009581959244352473,
             -7.564560826158652e-05,
             0.05114924155851632,
+            0.9986450497663171,
             -2.7399870945889274e-16,
             4.216193532779036e-17,
             -6.58893674960029e-18,
@@ -277,10 +277,10 @@ BOOST_AUTO_TEST_CASE(reachable_quasiStatic_rightFoot_front){
     q075<<0.3675759436734773,
             -0.008230122400470406,
             0.5277578352254366,
-            0.9983737131120567,
             0.010560616076045517,
             0.0012976088082582754,
             0.056006415403234644,
+            0.9983737131120567,
             -3.1652970926267093e-16,
             3.74116327140296e-17,
             4.3416408221931256e-18,
@@ -320,10 +320,10 @@ BOOST_AUTO_TEST_CASE(reachable_quasiStatic_rightFoot_front){
     q08<<0.3932766434540968,
             -0.008299049022497723,
             0.506081064665376,
-            0.9980517852619958,
             0.011457923700630398,
             0.0029669929320899863,
             0.06125803516890408,
+            0.9980517852619958,
             -3.792752430536026e-16,
             3.974406823517091e-17,
             -4.48131472602152e-20,
@@ -374,12 +374,11 @@ BOOST_AUTO_TEST_CASE(reachable_quasiStatic_rightFoot_front){
     BOOST_CHECK(reachability::isReachable(fullBody,s0,s04).success());
     BOOST_CHECK(reachability::isReachable(fullBody,s0,s06).success());
     BOOST_CHECK(reachability::isReachable(fullBody,s0,s07).success());
-    BOOST_CHECK(reachability::isReachable(fullBody,s0,s075).success());
+    BOOST_CHECK( ! reachability::isReachable(fullBody,s0,s075).success());
     BOOST_CHECK( ! reachability::isReachable(fullBody,s0,s08).success()); // should fail in quasi-static
 
 }
 
-/*
 
 BOOST_AUTO_TEST_CASE(reachable_quasiStatic_rightFoot_backward){
     RbPrmFullBodyPtr_t fullBody = loadHRP2();
@@ -397,10 +396,10 @@ BOOST_AUTO_TEST_CASE(reachable_quasiStatic_rightFoot_backward){
     q0<<4.9999999999999996e-06,
             0.0,
             0.658702,
+            0.0,
+            0.0,
+            0.0,
             1.0,
-            0.0,
-            0.0,
-            0.0,
             0.0,
             0.0,
             0.0,
@@ -441,10 +440,10 @@ BOOST_AUTO_TEST_CASE(reachable_quasiStatic_rightFoot_backward){
     q02<<-0.09758900019415818,
             0.005901017324075486,
             0.6541835446757959,
-            0.9998205384806439,
             -0.011415109957213333,
             0.0053054514727031935,
             -0.014157622738680858,
+            0.9998205384806439,
             1.0041515222558578e-16,
             -1.489154233972501e-17,
             -1.6673878059977163e-17,
@@ -485,10 +484,10 @@ BOOST_AUTO_TEST_CASE(reachable_quasiStatic_rightFoot_backward){
     q04<<-0.1975688810371278,
             0.005393293849887926,
             0.6257930375123042,
-            0.9995188858706483,
             -0.011461280693882376,
             0.006032664803307026,
             -0.02818231339200397,
+            0.9995188858706483,
             1.8442886254987655e-16,
             -2.473664487562888e-17,
             -8.564331426998748e-17,
@@ -529,10 +528,10 @@ BOOST_AUTO_TEST_CASE(reachable_quasiStatic_rightFoot_backward){
     q06<<-0.29903596704034463,
             0.0055265357029923795,
             0.5757702795178605,
-            0.9989339487983462,
             -0.013001010560369432,
             0.006667591359708588,
             -0.04378907270098682,
+            0.9989339487983462,
             2.8134107462431333e-16,
             -2.5896162952480462e-17,
             -2.1229452527397024e-17,
@@ -573,10 +572,10 @@ BOOST_AUTO_TEST_CASE(reachable_quasiStatic_rightFoot_backward){
     q07<<-0.34965903133902637,
             0.005535314202306755,
             0.540921449010816,
-            0.9984767563634841,
             -0.01411407289508837,
             0.00781857593047554,
             -0.0527620111309932,
+            0.9984767563634841,
             3.6812433790753916e-16,
             -4.365697802765814e-17,
             -5.932848182288139e-17,
@@ -617,10 +616,10 @@ BOOST_AUTO_TEST_CASE(reachable_quasiStatic_rightFoot_backward){
     q075<<-0.3749081498124384,
             0.005475412518938176,
             0.5205190753159222,
-            0.9981853317186729,
             -0.014736681577921108,
             0.008755836621635187,
             -0.05772528980272813,
+            0.9981853317186729,
             4.082110261191296e-16,
             -6.141573573129372e-17,
             -4.6355150389749347e-17,
@@ -658,23 +657,20 @@ BOOST_AUTO_TEST_CASE(reachable_quasiStatic_rightFoot_backward){
             0.0,
             0.0;
 
-    std::cout<<"here"<<std::endl;
-  //  State s0 = createState(fullBody,q0);
-  //  State s02 = createState(fullBody,q02);
-   // State s04 = createState(fullBody,q04);
-   // State s06 = createState(fullBody,q06);
-   // State s07 = createState(fullBody,q07);
-   // State s075 = createState(fullBody,q075);
-
-   // BOOST_CHECK(reachability::isReachable(fullBody,s0,s02).success());
-   // BOOST_CHECK(reachability::isReachable(fullBody,s0,s04).success());
-   // BOOST_CHECK(reachability::isReachable(fullBody,s0,s06).success());
-   // BOOST_CHECK(reachability::isReachable(fullBody,s0,s07).success());
-   // BOOST_CHECK( ! reachability::isReachable(fullBody,s0,s075).success());// should fail in quasi-static
-    std::cout<<"here3"<<std::endl;
+    State s0 = createState(fullBody,q0);
+    State s02 = createState(fullBody,q02);
+    State s04 = createState(fullBody,q04);
+    State s06 = createState(fullBody,q06);
+    State s07 = createState(fullBody,q07);
+    State s075 = createState(fullBody,q075);
+    BOOST_CHECK(reachability::isReachable(fullBody,s0,s02).success());
+    BOOST_CHECK(reachability::isReachable(fullBody,s0,s04).success());
+    BOOST_CHECK( ! reachability::isReachable(fullBody,s0,s06).success());
+    BOOST_CHECK( ! reachability::isReachable(fullBody,s0,s07).success());
+    BOOST_CHECK( ! reachability::isReachable(fullBody,s0,s075).success());// should fail in quasi-static
 
 }
 
-*/
+
 BOOST_AUTO_TEST_SUITE_END()
 

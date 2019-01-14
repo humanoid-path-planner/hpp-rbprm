@@ -254,69 +254,6 @@ double DistanceToLimitHeuristic(const sampling::Sample& sample,
 HeuristicFactory::HeuristicFactory()
 {
     unsigned int seed =  (unsigned int) (time(NULL)) ;
-    //seed = 1485441926; // prepare_jump
-    // seed = 1486147856; // stairs (18)
-    //seed = 1486392757; // sideWall HyQ
-    // seed = 1486721923; //hrp2 downSLope
-   // seed = 1487082431; // hrp2 +0.15 z axis
-    //seed = 1488532591; // downSLope (good contact but not interp) (yaml 1)
-    // seed = 1488545915 ; //downSlope (need test)
-    // seed = 1488550692 ; // downslope 2
-   // seed = 1491571994; // straight walk 2 m static
-    //seed = 1491580336 ; // straight walk dynamic 0.5
-    //seed = 1492176551; // walk 0.3 !!
-    //seed = 1493208163 ; // stairs static contacts
-    //seed = 1504012308; // slalom static
-    //seed = 1504099153; // slalom dynamic
-    //seed = 1505997146 ; // bauzil walk
-    //seed = 1507215254; // bauzil 2
-    //seed = 1507302685; // darpa
-    //seed = 1510137769; // walk bauzil 2
-   // seed = 1511447706; // walk bauzil small steps
-  //  seed = 1513330208; // walk straight line with weight static = 10 000 dit = 100
-  //  seed = 1513588852; // walk straight line (tested on robot)
-  //  seed = 1510645311 ; // darpa line 1 repositionning // step = 0.05
-  //  seed = 1510645700 ; // darpa line // step = 0.1
-  //  seed = 1516093154; // walk bauzil v=0.3, bof
-   // seed = 1516107025;// walk bauzil v=0.2
-    //seed = 1516278938; // walk bauzil ; v=0.2 ; a=0.1 ; heuristic = fixedStep06
-    //seed = 1517496129 ; //walk test
-   // seed = 1517496129 ; // test intersection hyq sideWall (pictures)
-   // seed = 1518458850; // sidewall intersection, feasability treshold = 0.1
-    //seed = 1518716775; // walk hyq
-    //seed = 1519148173; // double step on stairs
-    //seed = 1519209574 ; // stairs muscod work
-   // seed = 1518867071 ; // sidewall v = 0.2
-    //seed = 1519488948 ; // stairs fail
-   // seed = 1519638309 ; // new hyq sideWall v0
-   // seed = 1519663861 ; // hyq sideWall, vplanning, screen traj
-   // seed = 1519655157 ; // stairs w/ ramp screen actuels
-  //  seed = 1521197622 ; //darpa hrp2 (Justin RSS)
-    //seed = 1521541663 ; //walk flat pyrene
-   // seed = 1521822606; // walk flat pyrene with offset
-   // seed = 1522914292; // stairs 10, 2 marches
-   // seed = 1523025653 ; // stairs 10cm safe // DEMO 2 steps
-   // seed = 1523436977; // stairs 10cm full
-  //  seed = 1523620355 ; //stairs 10
-    // seed = 1523892376 ; //stairs TO TRY
-   // seed = 1523953674; // stairs 10cm, FIRST VIDEO
-   // seed = 1523448571; // darpa STEVE
-    //seed = 1525355227; // slalom bauzil no obstacles
-   // seed = 1525416193 ; //slalom 0.8 ; small steps
-   // seed = 1526302760; //slalom 0.8
-   // seed = 1527239618 ; // slalom 0.6 safe 15
-   // seed = 1527253280 ; // slalom 0.6 safe 15
- //   seed = 1529328217 ; // slalom obstacles
-  //  seed = 1529331430 ; //slalom obstacles 2
-   // seed = 1529397757 ; //slalom safe 20
-    //seed = 1529063665 ; //darpa infeasible
-    // seed = 1529163555 ; // darpa safe
-  //  seed = 1529168194; //stairs 15
-    //seed = 1529414211; // obs safe 20 1
-   // seed = 1529418104 ; // obs safe20 2
-    //seed = 1529508508 ; // obs safe MOTION
-    //seed = 1529515613 ; // obs safe to test
-    std::cout<<"seed HEURISTIC = "<<seed<<std::endl;
     srand (seed);
     hppDout(notice,"SEED for heuristic = "<<seed);
     /*std::ofstream fout;

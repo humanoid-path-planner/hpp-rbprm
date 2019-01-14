@@ -70,9 +70,26 @@ namespace hpp {
         }
     }
 
+    vector3_t RbPrmDevice::getEffectorReference(std::string romName){
+      std::map<std::string, vector3_t>::iterator it = effectorsReferences_.find(romName);
+      if(it == effectorsReferences_.end())
+        return vector3_t();
+      else
+        return it->second;
+    }
+
+    void RbPrmDevice::setEffectorReference(std::string romName,vector3_t ref){
+      std::map<std::string, vector3_t>::iterator it = effectorsReferences_.find(romName);
+      if(it == effectorsReferences_.end())
+        effectorsReferences_.insert(std::make_pair(romName,ref));
+      else
+        it->second = ref;
+    }
+
     RbPrmDevice::RbPrmDevice (const std::string& name, const hpp::pinocchio::T_Rom &robotRoms)
         : Device(name)
         , robotRoms_(robotRoms)
+        , effectorsReferences_()
         , weakPtr_()
     {
         // NOTHING

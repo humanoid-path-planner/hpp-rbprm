@@ -24,7 +24,7 @@
 #include <hpp/util/timer.hh>
 #include <hpp/pinocchio/configuration.hh>
 #include <hpp/core/collision-validation-report.hh>
-
+#include <hpp/rbprm/rbprm-device.hh>
 namespace hpp{
 namespace core{
 
@@ -38,92 +38,43 @@ typedef centroidal_dynamics::VectorX VectorX;
 
 Eigen::Quaterniond RbprmNode::getQuaternion(){
     ConfigurationPtr_t q=configuration();
-    Eigen::Quaterniond quat((*q)[3],(*q)[4],(*q)[5],(*q)[6]);
+    Eigen::Quaterniond quat((*q)[6],(*q)[3],(*q)[4],(*q)[5]);
     return quat;
 }
 
-bool centerOfRomIntersection(const core::CollisionValidationReportPtr_t report, geom::Point& pn, geom::Point& center){
-
+bool computeIntersectionSurface(const core::CollisionValidationReportPtr_t report,geom::T_Point& inter, geom::Point& pn,pinocchio::DeviceData& deviceData){
 
     core::CollisionObjectConstPtr_t obj_rom = report->object1;
     core::CollisionObjectConstPtr_t obj_env = report->object2;
-
-    // debug display :
-    hppDout(notice,"~~ collision between : "<<obj_rom->name() << " and "<<obj_env->name());
-
-
-    /*  fcl::CollisionResult result = it->second->result;
-            size_t numContact =result.numContacts();
-            //hppDout(notice,"~~ number of contact : "<<numContact);
-            std::ostringstream ss;
-            ss<<"[";
-            for(size_t i = 0 ; i < numContact ; i++)
-            { // print with python formating :
-              ss<<"["<<result.getContact(i).pos[0]<<","<<result.getContact(i).pos[1]<<","<<result.getContact(i).pos[2]<<"]";
-              if(i< (numContact-1))
-                 ss<<",";
-            }
-            ss<<"]";
-        */
-    // std::cout<<"contact point : "<<std::endl;
-    // std::cout<<ss.str()<<std::endl;
-
-
-    // get intersection between the two objects :
-    // geom::T_Point vertices1;
-    geom::BVHModelOBConst_Ptr_t model_rom =  geom::GetModel(obj_rom);
-    // geom::T_Point vertices2;
-    geom::BVHModelOBConst_Ptr_t model_env =  geom::GetModel(obj_env);
-
-    /*      // display intersection for debug
-            //hppDout(info,"vertices obj1 : "<<obj1->name()<< " ( "<<model1->num_vertices<<" ) ");
-            std::ostringstream ss1;
-            ss1<<"[";
-            for(int i = 0 ; i < model1->num_vertices ; ++i)
-            {
-              vertices1.push_back(Eigen::Vector3d(model1->vertices[i][0], model1->vertices[i][1], model1->vertices[i][2]));
-              //hppDout(notice,"vertices : "<<model1->vertices[i]);
-              ss1<<"["<<model1->vertices[i][0]<<","<<model1->vertices[i][1]<<","<<model1->vertices[i][2]<<"]";
-              if(i< (model1->num_vertices-1))
-                ss1<<",";
-            }
-            ss1<<"]";
-            std::cout<<"obj "<<obj1->name()<<std::endl;
-            std::cout<<ss1.str()<<std::endl;
-
-
-            //hppDout(info,"vertices obj2 : "<<obj2->name()<< " ( "<<model2->num_vertices<<" ) ");
-            std::ostringstream ss2;
-            ss2<<"[";
-            for(int i = 0 ; i < model2->num_vertices ; ++i)
-            {
-              vertices2.push_back(Eigen::Vector3d(model2->vertices[i][0], model2->vertices[i][1], model2->vertices[i][2]));
-              // hppDout(notice,"vertices : "<<model2->vertices[i]);
-              ss2<<"["<<model2->vertices[i][0]<<","<<model2->vertices[i][1]<<","<<model2->vertices[i][2]<<"]";
-              if(i< (model2->num_vertices -1))
-                ss2<<",";
-
-            }
-            ss2<<"]";
-           // std::cout<<"obj "<<obj2->name()<<std::endl;
-           // std::cout<<ss2.str()<<std::endl;
-            hppDout(notice," "<<ss2.str());
-    */
+    //hppDout(notice,"~~ compute intersection between : "<<obj_rom->name() << " and "<<obj_env->name());
+    // convert the two objects  :
+    geom::BVHModelOBConst_Ptr_t model_rom =  geom::GetModel(obj_rom,deviceData);
+    geom::BVHModelOBConst_Ptr_t model_env =  geom::GetModel(obj_env,deviceData);
 
     hppStartBenchmark (COMPUTE_INTERSECTION);
-    // FIX ME : compute plan equation first
     geom::T_Point plane = geom::intersectPolygonePlane(model_rom,model_env,pn);
+    // plane contains a list of points : the intersections between model_rom and the infinite plane defined by model_env.
+    // but they may not be contained inside the shape defined by model_env
     hppStopBenchmark (COMPUTE_INTERSECTION);
     hppDisplayBenchmark (COMPUTE_INTERSECTION);
-    geom::T_Point hull;
     if(plane.size() > 0)
-        hull = geom::compute3DIntersection(plane,geom::convertBVH(model_env));
+      inter = geom::compute3DIntersection(plane,geom::convertBVH(model_env)); // hull contain only points inside the model_env shape
+    else
+      return false;
+    if(inter.size() == 0)
+      return false;
+    else
+      return true;
+
+}
 
 
-    if(hull.size() == 0){
-        return false;
-    }
+bool centerOfRomIntersection(const core::CollisionValidationReportPtr_t report, geom::Point& pn, geom::Point& center,pinocchio::DeviceData& deviceData){
 
+    geom::T_Point hull;
+    bool success  = computeIntersectionSurface(report,hull,pn,deviceData);
+    if(!success)
+      return false;
     // compute center point of the hull
     center = geom::center(hull.begin(),hull.end());
 
@@ -132,9 +83,51 @@ bool centerOfRomIntersection(const core::CollisionValidationReportPtr_t report, 
     return true;
 }
 
+/**
+ * @brief approximateContactPoint Compute the approximation of the contact Point.
+ * Current implementation : closest point of the reference config inside the contact surface.
+ * @param report the collision report
+ * @param pn output the normal of the contact
+ * @param result output the contact point
+ * @param config configuration of the robot (only the root's configuration is used here)
+ * @param device
+ * @return bool success
+ */
+bool approximateContactPoint(const std::string romName,const core::CollisionValidationReportPtr_t report, geom::Point& pn, geom::Point& result,core::ConfigurationPtr_t config,pinocchio::RbPrmDevicePtr_t device){
+    geom::T_Point hull;
+    pinocchio::DeviceSync deviceSync (device);
+    hppDout(notice,"Approximate contact point for rom "<<romName);
+    bool success  = computeIntersectionSurface(report,hull,pn,deviceSync.d());
+    //hppDout(notice,"Number of points in the intersection : "<<hull.size());
+    if(success){
+      fcl::Vec3f reference = device->getEffectorReference(romName);
+      if(reference.norm() != 0){
+        //hppDout(notice,"Reference position for rom"<<romName<<" = "<<reference.transpose());
+        fcl::Transform3f tRoot;
+        tRoot.setTranslation(fcl::Vec3f((*config)[0],(*config)[1],(*config)[2]));
+        fcl::Quaternion3f quat((*config)[6],(*config)[3],(*config)[4],(*config)[5]);
+        tRoot.setRotation(quat.matrix());
+        reference = (tRoot*reference).getTranslation();
+        geom::Point refPoint(reference);
+        //hppDout(notice,"Reference after root transform = "<<refPoint.transpose());
+        geom::projectPointInsidePlan(hull,refPoint,pn,hull.front(),result);
+        hppDout(notice,"Approximate contact point found : "<<result.transpose());
+        return true;
+      }else{
+        hppDout(notice,"No reference end effector position defined, use center of intersection as approximation");
+        result = geom::center(hull.begin(),hull.end());
+        return true;
+      }
+    }else{
+      hppDout(notice,"Error in the approximation of the ocntact point");
+      return false;
+    }
+}
+
 void computeNodeMatrixForOnePoint(const geom::Point pn, const geom::Point center, const double sizeFootX,const double sizeFootY,const bool rectangularContact, const double mu, const Eigen::Quaterniond quat, size_t& indexRom, MatrixXX& V, Matrix6X& IP_hat){
     Vector3 ti1,ti2;
     //hppDout(notice,"normal for this contact : "<<getNormal());
+    hppDout(notice,"mu used in computeNodeMatrix : "<<mu);
     // compute tangent vector :
     //tProj is the the direction of the head of the robot projected in plan (x,y)
     Vector3 tProj = quat*Vector3(1,0,0);
@@ -213,7 +206,8 @@ void computeNodeMatrixForOnePoint(const geom::Point pn, const geom::Point center
 
 }
 
-void RbprmNode::fillNodeMatrices(ValidationReportPtr_t report, bool rectangularContact, double sizeFootX, double sizeFootY, double m,double mu){
+void RbprmNode::fillNodeMatrices(ValidationReportPtr_t report, bool rectangularContact, double sizeFootX, double sizeFootY, double m, double mu, pinocchio::RbPrmDevicePtr_t device){
+    assert(device && "Error in dynamic cast of problem device to rbprmDevice");
     hppStartBenchmark(FILL_NODE_MATRICE);
 
     core::RbprmValidationReportPtr_t rbReport = boost::dynamic_pointer_cast<core::RbprmValidationReport> (report);
@@ -234,7 +228,8 @@ void RbprmNode::fillNodeMatrices(ValidationReportPtr_t report, bool rectangularC
         hppDout(error,"~~ ComputeGIWC : roms filter not respected"); // shouldn't happen
     }
 
-
+    hppDout(notice,"Robot mass used to compute matrices : "<<m);
+    assert(m>0. && " Robot mass during computation of dynamic matrices is 0.");
     //FIX ME : position of contact is in center of the collision surface
     size_type numContactpoints = (rbReport->ROMReports.size() + 3*rectangularContact*rbReport->ROMReports.size());
     setNumberOfContacts(numContactpoints);
@@ -244,18 +239,18 @@ void RbprmNode::fillNodeMatrices(ValidationReportPtr_t report, bool rectangularC
     // get the 2 object in contact for each ROM :
     hppDout(info,"~~ Number of roms in collision : "<<rbReport->ROMReports.size());
     size_t indexRom = 0 ;
-    std::ostringstream ssCenters;
-    ssCenters<<"[";
-    bool intersectionExist;
+    std::ostringstream ssContact;
+    ssContact<<"[";
+    bool pointExist;
     for(std::map<std::string,core::CollisionValidationReportPtr_t>::const_iterator it = rbReport->ROMReports.begin() ; it != rbReport->ROMReports.end() ; ++it)
     {
         hppDout(info,"~~ for rom : "<<it->first);
-        geom::Point pn,center;
-        intersectionExist = centerOfRomIntersection(it->second,pn,center);
-        ssCenters<<"["<<center[0]<<" , "<<center[1]<<" , "<<center[2]<<"],";
+        geom::Point pn,contactPoint;
+        pointExist = approximateContactPoint(it->first,it->second,pn,contactPoint,configuration(),device);
+        ssContact<<"["<<contactPoint[0]<<" , "<<contactPoint[1]<<" , "<<contactPoint[2]<<"],";
 
-        if(!intersectionExist){
-            hppDout(error,"No intersection between rom and environnement");
+        if(!pointExist){
+            hppDout(error,"Unable to compute the approximation of the contact point");
             // save infos needed for LP problem in node structure
             // FIXME : Or retry with another obstacle ???
             setV(V);
@@ -277,7 +272,7 @@ void RbprmNode::fillNodeMatrices(ValidationReportPtr_t report, bool rectangularC
             seth(m*h);
         }
 
-        computeNodeMatrixForOnePoint(pn,center,sizeFootX,sizeFootY,rectangularContact, mu,getQuaternion(), indexRom, V,IP_hat);
+        computeNodeMatrixForOnePoint(pn,contactPoint,sizeFootX,sizeFootY,rectangularContact, mu,getQuaternion(), indexRom, V,IP_hat);
 
 
     } // for each ROMS
@@ -309,15 +304,15 @@ void RbprmNode::fillNodeMatrices(ValidationReportPtr_t report, bool rectangularC
       hppDout(info,"h^T = "<<geth().transpose());
       hppDout(info,"H = \n"<<getH());
 */
-    //hppDout(notice,"list of all contacts = "<<ssContacts.str()<<"]");
-    hppDout(notice,"list of all centers = "<<ssCenters.str()<<"]");
+    hppDout(notice,"list of all centers = "<<ssContact.str()<<"]");
 
     hppStopBenchmark(FILL_NODE_MATRICE);
     hppDisplayBenchmark(FILL_NODE_MATRICE);
 
 }
 
-void RbprmNode::chooseBestContactSurface(ValidationReportPtr_t report,std::map<std::string,fcl::Vec3f> rom_ref_endEffector ){
+void RbprmNode::chooseBestContactSurface(ValidationReportPtr_t report, pinocchio::RbPrmDevicePtr_t device){
+    assert(device && "Error in dynamic cast of problem device to rbprmDevice");
     core::RbprmValidationReportPtr_t rbReport = boost::dynamic_pointer_cast<core::RbprmValidationReport> (report);
     for(std::map<std::string,core::CollisionValidationReportPtr_t>::const_iterator it = rbReport->ROMReports.begin() ; it != rbReport->ROMReports.end() ; ++it){
         core::AllCollisionsValidationReportPtr_t romReports = boost::dynamic_pointer_cast<core::AllCollisionsValidationReport>(it->second);
@@ -325,38 +320,47 @@ void RbprmNode::chooseBestContactSurface(ValidationReportPtr_t report,std::map<s
             hppDout(warning,"For rom : "<<it->first<<" unable to cast in a AllCollisionsValidationReport, did you correctly call computeAllContacts(true) before generating the report ? ");
             return;
         }
-        // for each rom :
-        // 1) compute the center of the intersection between the rom and each surfaces in collision
-        // 2) find the surface with the center the closest to the reference point in the map
-        // 3) modify the report such that this surface is at the top of the list
+        if(romReports->collisionReports.size()> 1){
+          // for each rom , for each different environnement surface in collision with the rom:
+          // 1) compute the projection of the reference position inside the intersection of the rom and the environnement surface
+          // 2) find the surface with the minimal distance between the reference and the projection
+          // 3) modify the report such that this surface is at the top of the list
 
-        fcl::Vec3f reference = rom_ref_endEffector.at(it->first);
-        hppDout(notice,"Reference position for rom"<<it->first<<" = "<<reference);
-        core::ConfigurationPtr_t q = configuration();
-        fcl::Transform3f tRoot;
-        tRoot.setTranslation(fcl::Vec3f((*q)[0],(*q)[1],(*q)[2]));
-        fcl::Quaternion3f quat((*q)[3],(*q)[4],(*q)[5],(*q)[6]);
-        //fcl::Matrix3f rot = quat.matrix();
-        tRoot.setRotation(quat.matrix());
-        reference = (tRoot*reference).getTranslation();
-        geom::Point refPoint(reference);
-        hppDout(notice,"Reference after root transform = "<<reference);
-        geom::Point center,normal,distance;
-        double minDistance = std::numeric_limits<double>::max();
-        CollisionValidationReportPtr_t bestReport;
-        for(std::vector<CollisionValidationReportPtr_t>::const_iterator itAff = romReports->collisionReports.begin() ; itAff != romReports->collisionReports.end() ; ++itAff){
-            centerOfRomIntersection(*itAff,normal,center);
-            distance = center-refPoint;
-            if(distance.norm() < minDistance){
-                minDistance = distance.norm();
-                bestReport = *itAff;
+          fcl::Vec3f reference = device->getEffectorReference(it->first);
+          hppDout(notice,"Reference position for rom"<<it->first<<" = "<<reference);
+          core::ConfigurationPtr_t q = configuration();
+          fcl::Transform3f tRoot;
+          tRoot.setTranslation(fcl::Vec3f((*q)[0],(*q)[1],(*q)[2]));
+          fcl::Quaternion3f quat((*q)[6],(*q)[3],(*q)[4],(*q)[5]);
+          //fcl::Matrix3f rot = quat.matrix();
+          tRoot.setRotation(quat.matrix());
+          reference = (tRoot*reference).getTranslation();
+          geom::Point refPoint(reference);
+          hppDout(notice,"Reference after root transform = "<<reference);
+          geom::Point normal,proj;
+          double minDistance = std::numeric_limits<double>::max();
+          double distance;
+          CollisionValidationReportPtr_t bestReport;
+          bool successInter;
+          geom::T_Point intersection;
+          hppDout(notice,"Number of possible surfaces for rom : "<<romReports->collisionReports.size());
+          for(std::vector<CollisionValidationReportPtr_t>::const_iterator itAff = romReports->collisionReports.begin() ; itAff != romReports->collisionReports.end() ; ++itAff){
+            pinocchio::DeviceSync deviceSync (device);
+            successInter = computeIntersectionSurface(*itAff,intersection,normal,deviceSync.d());
+              if(successInter){
+                distance = geom::projectPointInsidePlan(intersection,refPoint,normal,intersection.front(),proj);
+                hppDout(notice,"Distance found : "<<distance);
+                if(distance < minDistance){
+                    minDistance = distance;
+                    bestReport = *itAff;
+                }
             }
+          }
+          //3)
+          romReports->object1 = bestReport->object1;
+          romReports->object2 = bestReport->object2;
+          romReports->result = bestReport->result;
         }
-        //3)
-        romReports->object1 = bestReport->object1;
-        romReports->object2 = bestReport->object2;
-        romReports->result = bestReport->result;
-
     } // end for all rom
 
 }

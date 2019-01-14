@@ -80,6 +80,9 @@ namespace hpp {
         /// [z_inf, z_sup, y_inf, y_sup, x_inf, x_sup]
         void BoundSO3(const std::vector<double>& limitszyx);
 
+        void sampleExtraDOF(bool sampleExtraDOF);
+
+
     public:
         typedef std::pair<fcl::Vec3f, TrianglePoints> T_TriangleNormal;
 
@@ -105,12 +108,15 @@ namespace hpp {
         void InitWeightedTriangles (const core::ObjectStdVector_t &geometries);
         const T_TriangleNormal& RandomPointIntriangle () const;
         const T_TriangleNormal& WeightedTriangle () const;
+        void randConfigAtPos(const pinocchio::RbPrmDevicePtr_t robot, const std::vector<double>& eulerSo3, core::ConfigurationPtr_t config, const fcl::Vec3f p) const;
+
 
     private:
         std::vector<double> weights_;
         std::vector<T_TriangleNormal> triangles_;
         const pinocchio::RbPrmDevicePtr_t robot_;
         rbprm::RbPrmValidationPtr_t validator_;
+        core::configurationShooter::UniformPtr_t uniformShooter_;
         RbPrmShooterWkPtr_t weak_;
         //pinocchio::DevicePtr_t eulerSo3_;
         std::vector<double> eulerSo3_;

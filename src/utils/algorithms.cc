@@ -7,18 +7,18 @@
 namespace geom
 {
 
-  /// Computes the normal vector of a triangle based on the
+  /// Computes the (unit) normal vector of a triangle based on the
   /// global position of its vertices. The normal is subject to convention!
   /// \param tri The global position of a triangles vertices
   Point TriangleNormal(TrianglePoints& tri)
   {
     Point normal = (tri.p2 - tri.p1).cross(tri.p3 - tri.p1);
     normal.normalize();
-    hppDout(notice,"normal, in geom :: "<<normal);
+    //hppDout(notice,"normal, in geom :: "<<normal.transpose());
     return normal;
   }
   
-  BVHModelOBConst_Ptr_t GetModel(const hpp::pinocchio::CollisionObjectConstPtr_t object)
+  BVHModelOBConst_Ptr_t GetModel(const hpp::pinocchio::CollisionObjectConstPtr_t object,hpp::pinocchio::DeviceData &deviceData)
   {
     assert(object->fcl()->collisionGeometry()->getNodeType() == fcl::BV_OBBRSS);
     const BVHModelOBConst_Ptr_t model = boost::static_pointer_cast<const fcl::BVHModel<fcl::OBBRSS> >(object->fcl()->collisionGeometry());
@@ -26,7 +26,7 @@ namespace geom
     // todo avoid recopy, but if we keep the same ptr the geometry is changed 
     const BVHModelOBConst_Ptr_t modelTransform (new BVHModelOB(*model));
     for(int i = 0 ; i < model->num_vertices ; i++){
-      modelTransform->vertices[i] = object->fcl()->getTransform().transform(model->vertices[i]);
+      modelTransform->vertices[i] = object->fcl(deviceData)->getTransform().transform(model->vertices[i]);
     }
     return modelTransform;
   }
@@ -157,50 +157,42 @@ namespace geom
     return res;
   }
   
-  
-  
-  /*
-    template<int Dim=3, typename Numeric=double, typename Point=Eigen::Matrix<Numeric, Dim, 1>,
-             typename Point2=Eigen::Matrix<Numeric, 2, 1>,
-             typename CPointRef= const Eigen::Ref<const Point>&, typename In>
-    bool containsHull(In pointsBegin, In pointsEnd, CPointRef aPoint, const Numeric Epsilon = 10e-6)
+
+    bool containsHull(T_Point hull, CPointRef aPoint, const double epsilon)
     {
-        int n = (int)(std::distance(pointsBegin, pointsEnd)- 1);
+        int n = (int)hull.size();
         if(n < 1)
             return false;
         else if(n == 1)
         {
-            Numeric x = aPoint[0] - pointsBegin->operator[](0);
-            Numeric y = aPoint[1] - pointsBegin->operator[](1);
-            return sqrt(x*x + y*y) < Epsilon;
+            double x = aPoint[0] - hull.front()[0];
+            double y = aPoint[1] - hull.front()[1];
+            return sqrt(x*x + y*y) < epsilon;
         }
         else if(n == 2)
         {
-            Numeric x = pointsEnd->operator[](0) - pointsBegin->operator[](0);
-            Numeric y = pointsEnd->operator[](1) - pointsBegin->operator[](1);
-            return sqrt(x*x + y*y) < Epsilon;
+            double x = hull.back()[0] - hull.front()[0];
+            double y = hull.back()[1] - hull.front()[1];
+            return sqrt(x*x + y*y) < epsilon;
         }
         
         // loop through all edges of the polygon
-        In current = pointsBegin;
-        In next= pointsBegin +1;
-        for(;next!=pointsEnd;++current,++next)
+        CIT_Point current = hull.begin();
+        CIT_Point next = current+1;
+        for(;next!=hull.end();++current,++next)
         {
             if(isLeft(*current, *next, aPoint) > 0)
                 return false;
         }
         return true;
     }
-*/
-  /*
-    template<typename T, int Dim=3, typename Numeric=double, typename Point=Eigen::Matrix<Numeric, Dim, 1>,
-             typename CPointRef= const Eigen::Ref<const Point>&, typename In>
-    bool contains(In pointsBegin, In pointsEnd, const CPointRef& aPoint)
+
+    bool contains(T_Point points, CPointRef aPoint, const double epsilon)
     {
-        T ch = convexHull<T, Dim, Numeric, Point, In>(pointsBegin, pointsEnd);
-        return contains<Dim, Numeric, Point, In>(ch.begin(), ch.end(), aPoint);
+        T_Point hull = convexHull(points.begin(),points.end());
+        return containsHull(hull,aPoint,epsilon);
     }
-*/
+
   
   Point lineSect(CPointRef p1, CPointRef p2, CPointRef p3, CPointRef p4)
   {
@@ -375,7 +367,9 @@ namespace geom
       }
 
     }
-   /* std::ostringstream ss;
+    outputList = convexHull(outputList.begin(),outputList.end());
+    /*
+    std::ostringstream ss;
     ss<<"[";
     for(size_t i = 0; i < outputList.size() ; ++i){
       ss<<"["<<outputList[i][0]<<","<<outputList[i][1]<<","<<outputList[i][2]<<"]";
@@ -385,6 +379,7 @@ namespace geom
     ss<<"]";
     hppDout(notice,"intersection3D = "<<ss.str());
     */
+
     return outputList;
   }
 
@@ -393,6 +388,48 @@ namespace geom
   {
     return n.dot(v) - t;
   }
+
+  double distanceToPlane(CPointRef point,CPointRef Pn,CPointRef P0){
+    Point v = point - P0;
+    return fabs(v.dot(Pn));
+  }
+
+  Point projectPointOnPlane(CPointRef point,CPointRef Pn,CPointRef P0){
+    Point v = (point - P0);
+    double d = v.dot(Pn);
+    //hppDout(notice,"project point on plane, signed distance = "<<d);
+    Point proj = point - d*Pn;
+    //hppDout(notice,"projected point from "<<point.transpose()<<" to "<<proj.transpose());
+    return proj;
+  }
+
+  double projectPointInsidePlan(T_Point plan, CPointRef point, CPointRef Pn, CPointRef P0,Eigen::Ref<Point> res){
+    //hppDout(notice,"project point "<<point.transpose()<<" inside plan, with normal "<<Pn.transpose()<<" and point in plan : "<<P0.transpose());
+    //hppDout(notice,"number of points defining the plan : "<<plan.size());
+    Point proj_ortho = projectPointOnPlane(point,Pn,P0);
+    if(containsHull(plan,proj_ortho,1e-4)){
+      //hppDout(notice,"orthogonal projection is already inside the plan.");
+      res = proj_ortho;
+      return fabs((proj_ortho-point).norm());
+    }else{
+      //hppDout(notice,"orthogonal projection is not inside the plan, compute the closest point inside the plan :");
+      double d_min = std::numeric_limits<double>::max();
+      double d;
+      Point proj;
+      Point c = center(plan.begin(),plan.end());
+      for(CIT_Point e = plan.begin() ; e != plan.end() ; ++e){
+        proj = lineSect3D(proj_ortho,c,*e,*(e+1));
+        d = fabs((proj-point).norm());
+        if(d < d_min){
+          d_min = d;
+          res = proj;
+        }
+      }
+      //hppDout(notice,"new proj with min distance : "<<d_min<<"   : "<<res.transpose());
+      return d_min;
+    }
+  }
+
   
   void computeTrianglePlaneDistance(fcl::Vec3f* tri_point, const fcl::Vec3f& n, double t, fcl::Vec3f* distance, unsigned int* num_penetrating_points)
   {
@@ -444,9 +481,9 @@ namespace geom
       intersectTriangles(tri2,tri,&ss7);
       
     } // for each contact point
-    hppDout(notice,"clipped point : ");        
+    //hppDout(notice,"clipped point : ");
     ss7<<"]";
-    std::cout<<ss7.str()<<std::endl;
+    //std::cout<<ss7.str()<<std::endl;
   }
   
   T_Point intersectTriangles(fcl::Vec3f* tri, fcl::Vec3f* tri2,std::ostringstream* ss){
@@ -596,13 +633,7 @@ namespace geom
     T_Point intersection;
     // compute plane equation (normal, point inside the plan)
     Point P0;
-    TrianglePoints triPlane;
-    triPlane.p1 = plane->vertices[plane->tri_indices[0][0]]; // FIXME : always use the first triangle, is it an issue ?
-    triPlane.p2 = plane->vertices[plane->tri_indices[0][1]];
-    triPlane.p3 = plane->vertices[plane->tri_indices[0][2]];
-    Pn = TriangleNormal(triPlane);
-    P0 = triPlane.p1; //FIXME : better point ?
-
+    computePlanEquation(plane,Pn,P0);
     for(int i = 0 ; i < polygone->num_tris ; i++){ // FIXME : can test 2 times the same line (in both triangles), avoid this ?
       //hppDout(info,"triangle : "<<i);
       for(int j = 0 ; j < 3 ; j++){
@@ -645,6 +676,16 @@ namespace geom
 
     return convexHull(result.begin(),result.end());
   }
+
+    void computePlanEquation( BVHModelOBConst_Ptr_t plane,Eigen::Ref<Point> Pn,Eigen::Ref<Point> P0){
+      TrianglePoints triPlane;
+      triPlane.p1 = plane->vertices[plane->tri_indices[0][0]]; // FIXME : always use the first triangle, is it an issue ?
+      triPlane.p2 = plane->vertices[plane->tri_indices[0][1]];
+      triPlane.p3 = plane->vertices[plane->tri_indices[0][2]];
+      Pn = TriangleNormal(triPlane);
+      P0 = triPlane.p1; //FIXME : better point ?
+    }
+
 
 
 } //namespace geom

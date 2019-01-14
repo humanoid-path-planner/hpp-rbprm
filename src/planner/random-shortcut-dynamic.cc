@@ -66,30 +66,16 @@ namespace hpp{
       assert(rbprmPathValidation_ && "Path validation should be a RbPrmPathValidation class for this solver");
 
       // retrieve parameters from problem :
-      try {
-          sizeFootX_ = problem.getParameter ("sizeFootX").floatValue()/2.;
-          sizeFootY_ = problem.getParameter ("sizeFootY").floatValue()/2.;
-          rectangularContact_ = 1;
-      } catch (const std::exception& e) {
-        hppDout(warning,"Warning : size of foot not definied, use 0 (contact point)");
-        sizeFootX_ =0;
-        sizeFootY_ =0;
+      sizeFootX_ = problem.getParameter (std::string("DynamicPlanner/sizeFootX")).floatValue()/2.;
+      sizeFootY_ = problem.getParameter (std::string("DynamicPlanner/sizeFootY")).floatValue()/2.;
+      if(sizeFootX_ > 0. && sizeFootY_ > 0.)
+        rectangularContact_ = 1;
+      else
         rectangularContact_ = 0;
-      }
-      try {
-        tryJump_ = problem.getParameter ("tryJump").boolValue();
-      } catch (const std::exception& e) {
-        tryJump_=false;
-      }
-      hppDout(notice,"tryJump in random shortcut = "<<tryJump_);
-
-      try {
-        mu_ = problem.getParameter ("friction").floatValue();
-        hppDout(notice,"mu define in python : "<<mu_);
-      } catch (const std::exception& e) {
-        mu_= 0.5;
-        hppDout(notice,"mu not defined, take : "<<mu_<<" as default.");
-      }
+      tryJump_ = problem.getParameter (std::string("DynamicPlanner/tryJump")).boolValue();
+      hppDout(notice,"tryJump in steering method = "<<tryJump_);
+      mu_ = problem.getParameter (std::string("DynamicPlanner/friction")).floatValue();
+      hppDout(notice,"mu define in python : "<<mu_);
     }
 
 
@@ -128,9 +114,7 @@ namespace hpp{
       PathVectorPtr_t tmpPath = path;
 
       // Maximal number of iterations without improvements
-      std::size_t n = problem().getParameter("PathOptimizersNumberOfLoops").intValue();
-      n = 100;
-      std::cout<<" number of loops : "<<n<<std::endl;
+      std::size_t n = problem().getParameter("PathOptimization/RandomShortcut/NumberOfLoops").intValue();
       std::size_t projectionError = n;
       std::deque <value_type> length (n-1,
                                       numeric_limits <value_type>::infinity ());
@@ -201,12 +185,19 @@ namespace hpp{
             continue;
           }
         }
-
-        length.push_back (PathLength<>::run (result, problem ().distance ()));
-        length.pop_front ();
-        finished = (length [0] - length [n-1]) <= 1e-4 * length[n-1];
-        hppDout (info, "length = " << length [n-1]);
-        tmpPath = result;
+        core::value_type newLength = PathLength<>::run (result, problem ().distance ());
+        if ((length[n-1] - newLength) <= 10.*std::numeric_limits<core::value_type>::epsilon()) {
+          hppDout (info,  "the length would increase:" << length[n-1] << " " << newLength);
+          result = tmpPath;
+          projectionError--;
+        } else {
+          length.push_back (newLength);
+          length.pop_front ();
+          finished = (length [0] - length [n-1]) <= 1e-4 * length[n-1];
+          hppDout (info, "length = " << length [n-1]);
+          tmpPath = result;
+          projectionError = n;
+        }
       }
       for (std::size_t i = 0; i < result->numberPaths (); ++i) {
         if (result->pathAtRank(i)->constraints())
@@ -232,7 +223,7 @@ namespace hpp{
       problem().configValidations()->validate(q1,report);
       rbprmPathValidation_->getValidator()->computeAllContacts(false);
       hppDout(notice,"Random shortucut, fillNodeMatrices : ");
-      x1->fillNodeMatrices(report,rectangularContact_,sizeFootX_,sizeFootY_,problem().robot()->mass(),mu_);
+      x1->fillNodeMatrices(report,rectangularContact_,sizeFootX_,sizeFootY_,problem().robot()->mass(),mu_,boost::dynamic_pointer_cast<pinocchio::RbPrmDevice>(problem().robot()));
       // call steering method kinodynamic with the newly created node
       hppDout(notice,"Random shortucut, steering method  : ");
       PathPtr_t dp = (*sm_)(x1,q2);

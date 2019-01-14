@@ -23,7 +23,6 @@
 # include <hpp/pinocchio/joint.hh>
 # include <hpp/rbprm/config.hh>
 # include <hpp/pinocchio/collision-object.hh>
-# include <hpp/pinocchio/device-object-vector.hh>
 # include <hpp/pinocchio/frame.hh>
 # include <Eigen/Core>
 

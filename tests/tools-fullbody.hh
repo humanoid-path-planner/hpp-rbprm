@@ -68,14 +68,25 @@ RbPrmFullBodyPtr_t loadHRP2(){
     const std::string srdfSuffix ("");
 
     hpp::pinocchio::DevicePtr_t device = hpp::pinocchio::Device::create (robotName);
-    //hpp::pinocchio:: (device,rootJointType, packageName, modelName, urdfSuffix,srdfSuffix);
-    device->setDimensionExtraConfigSpace(6);
+    hpp::pinocchio::urdf::loadRobotModel(device, rootJointType, packageName, modelName,
+    urdfSuffix, srdfSuffix);
+    device->rootJoint()->lowerBound(0, -2);
+    device->rootJoint()->lowerBound(1, -2);
+    device->rootJoint()->lowerBound(2, 0.4);
+    device->rootJoint()->upperBound(0,  2);
+    device->rootJoint()->upperBound(1,  2);
+    device->rootJoint()->upperBound(2,  1.2);
+
+    device->setDimensionExtraConfigSpace(6); // used by kinodynamic methods
+    for(size_type i = 0 ; i < 6 ; ++i){
+      device->extraConfigSpace().lower(i)=-5;
+      device->extraConfigSpace().upper(i)=5;
+    }
 
     RbPrmFullBodyPtr_t fullBody = RbPrmFullBody::create(device);
 
-
     core::Configuration_t q_ref(device->configSize());
-    q_ref<<0.1, -0.82, 0.648702, 1.0, 0.0 , 0.0, 0.0,0.0, 0.0, 0.0, 0.0,0.261799388,  0.174532925, 0.0, -0.523598776, 0.0, 0.0, 0.17,0.261799388, -0.174532925, 0.0, -0.523598776, 0.0, 0.0, 0.17,0.0, 0.0, -0.453785606, 0.872664626, -0.41887902, 0.0,0.0, 0.0, -0.453785606, 0.872664626, -0.41887902, 0.0,0,0,0,0,0,0;
+    q_ref<<0.1, -0.82, 0.648702, 0.0 , 0.0, 0.0, 1.0,0.0, 0.0, 0.0, 0.0,0.261799388,  0.174532925, 0.0, -0.523598776, 0.0, 0.0, 0.17,0.261799388, -0.174532925, 0.0, -0.523598776, 0.0, 0.0, 0.17,0.0, 0.0, -0.453785606, 0.872664626, -0.41887902, 0.0,0.0, 0.0, -0.453785606, 0.872664626, -0.41887902, 0.0,0,0,0,0,0,0;
     fullBody->referenceConfig(q_ref);
 
      // add limbs :
@@ -101,10 +112,9 @@ RbPrmFullBodyPtr_t loadHRP2(){
 
 }
 
-void loadRom(pinocchio::T_Rom& romDevices, const std::string romName)
+void loadRom(pinocchio::T_Rom& romDevices, const std::string romName, const std::string packageName = std::string("hpp-rbprm-corba"))
 {
     std::string rootJointType   ("freeflyer"),
-                packageName     ("hpp-rbprm-corba"),
                 urdfSuffix (""),
                 srdfSuffix ("");
     hpp::pinocchio::DevicePtr_t romDevice = pinocchio::Device::create (romName);
@@ -117,10 +127,9 @@ void loadRom(pinocchio::T_Rom& romDevices, const std::string romName)
                       srdfSuffix);
 }
 
-hpp::pinocchio::RbPrmDevicePtr_t loadAbstractRobot(pinocchio::T_Rom& romDevices, const std::string robotName)
+hpp::pinocchio::RbPrmDevicePtr_t loadAbstractRobot(pinocchio::T_Rom& romDevices, const std::string robotName,const std::string packageName = std::string("hpp-rbprm-corba"))
 {
     std::string rootJointType   ("freeflyer"),
-                packageName     ("hpp-rbprm-corba"),
                 urdfSuffix (""),
                 srdfSuffix ("");
     hpp::pinocchio::RbPrmDevicePtr_t device = hpp::pinocchio::RbPrmDevice::create (robotName, romDevices);
@@ -130,6 +139,9 @@ hpp::pinocchio::RbPrmDevicePtr_t loadAbstractRobot(pinocchio::T_Rom& romDevices,
             robotName,
             urdfSuffix,
             srdfSuffix);
+    const pinocchio::Computation_t flag = static_cast <pinocchio::Computation_t>
+  (pinocchio::JOINT_POSITION | pinocchio::JACOBIAN | pinocchio::COM);
+    device->controlComputation(flag);
     return device;
 }
 
@@ -151,6 +163,28 @@ hpp::pinocchio::RbPrmDevicePtr_t loadHyQAbsract()
     device->rootJoint()->upperBound(2,  4);
     return device;
 }
+
+
+
+hpp::pinocchio::RbPrmDevicePtr_t loadTalosLEGAbsract()
+{
+    pinocchio::T_Rom romDevices_;
+    const std::string packageName("talos-rbprm");
+    loadRom(romDevices_, std::string("talos_lleg_rom"),packageName);
+    loadRom(romDevices_, std::string("talos_rleg_rom"),packageName);
+   // loadRom(romDevices_, std::string("talos_larm_rom"),packageName);
+   // loadRom(romDevices_, std::string("talos_rarm_rom"),packageName);
+    hpp::pinocchio::RbPrmDevicePtr_t device =
+            loadAbstractRobot(romDevices_, std::string("talos_trunk"),packageName);
+    device->rootJoint()->lowerBound(0, -5);
+    device->rootJoint()->lowerBound(1, -5);
+    device->rootJoint()->lowerBound(2, 0.9);
+    device->rootJoint()->upperBound(0,  5);
+    device->rootJoint()->upperBound(1,  5);
+    device->rootJoint()->upperBound(2,  1.1);
+    return device;
+}
+
 
 RbPrmFullBodyPtr_t loadHyQ(){
     const std::string robotName("hyq");
