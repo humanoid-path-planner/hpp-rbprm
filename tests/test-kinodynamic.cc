@@ -1085,7 +1085,7 @@ BOOST_AUTO_TEST_CASE (nav_bauzil_oriented_kino) {
 }
 
 
-/*
+
 // too slow to be added in the test suite ...
 BOOST_AUTO_TEST_CASE (nav_bauzil_hard) {
     std::cout<<"start nav_bauzil_hard test case, this may take a couple of minutes ..."<<std::endl;
@@ -1167,6 +1167,6 @@ BOOST_AUTO_TEST_CASE (nav_bauzil_hard) {
     }
     std::cout<<std::endl;
 }
-*/
+
 
 BOOST_AUTO_TEST_SUITE_END()
