@@ -298,8 +298,7 @@ namespace
         {
             validator_->addObstacle(*cit);
         }
-        hpp::core::ObjectStdVector_t used_surfaces = getUsedSurfaces(affordances,affFilters);
-        this->InitWeightedTriangles(used_surfaces);
+        this->InitWeightedTriangles(getUsedSurfaces(affordances,affFilters));
 		}
 
     void RbPrmShooter::InitWeightedTriangles(const core::ObjectStdVector_t& geometries)
