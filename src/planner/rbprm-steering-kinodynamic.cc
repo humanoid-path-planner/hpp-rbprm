@@ -292,12 +292,13 @@ namespace hpp{
       hppDout(notice,"Compute direction ");
       core::PathPtr_t path = core::steeringMethod::Kinodynamic::impl_compute(from,to);
       Vector3 direction;
+      direction = Vector3(0,0,0);
       if(path){
         core::KinodynamicPathPtr_t kinoPath = boost::dynamic_pointer_cast<core::KinodynamicPath>(path);
-        direction = kinoPath->getA1();
-        direction.normalize();
-      }else{
-        direction = Vector3(0,0,0);
+        if(kinoPath){
+          direction = kinoPath->getA1();
+          direction.normalize();
+        }
       }
       lastDirection_=direction;
       return direction;
