@@ -23,7 +23,6 @@
 #include <pinocchio/multibody/geometry.hpp>
 #include <hpp/core/bi-rrt-planner.hh>
 #include <hpp/core/configuration-shooter/uniform.hh>
-#include <hpp/core/discretized-path-validation.hh>
 #include <hpp/constraints/generic-transformation.hh>
 #include <bezier-com-traj/solve_end_effector.hh>
 #include <hpp/core/problem-solver.hh>
