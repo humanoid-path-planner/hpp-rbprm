@@ -26,6 +26,7 @@
 #include <Eigen/Geometry>
 #include <hpp/pinocchio/configuration.hh>
 #include <hpp/util/timer.hh>
+#include <hpp/core/problem.hh>
 
 namespace hpp {
 using namespace core;
@@ -292,6 +293,7 @@ namespace
     , validator_(rbprm::RbPrmValidation::create(robot_, filter, affFilters,
                                                 affordances, geometries))
     , uniformShooter_(core::configurationShooter::Uniform::create(robot))
+    , ratioWeighted_(0.3)
     {
         for(hpp::core::ObjectStdVector_t::const_iterator cit = geometries.begin();
             cit != geometries.end(); ++cit)
@@ -371,7 +373,7 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
         // pick one triangle randomly
         const T_TriangleNormal* sampled(0);
         double r = ((double) rand() / (RAND_MAX));
-        if(r > 0.3)
+        if(r > ratioWeighted_)
             sampled = &RandomPointIntriangle();
         else
             sampled = &WeightedTriangle();
@@ -444,6 +446,13 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
     void RbPrmShooter::sampleExtraDOF(bool sampleExtraDOF){
         uniformShooter_->sampleExtraDOF(sampleExtraDOF);
     }
+
+    HPP_START_PARAMETER_DECLARATION(RbprmShooter)
+      Problem::declareParameter(core::ParameterDescription (core::Parameter::FLOAT,
+            "RbprmShooter/ratioWeighted",
+            "The ratio used to select a random triangle with a weight proportional to it's area. Otherwise the triangles are choosed uniformly. ",
+            core::Parameter(0.3)));
+      HPP_END_PARAMETER_DECLARATION(RbprmShooter)
 
 
   }// namespace rbprm
