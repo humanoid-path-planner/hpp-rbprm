@@ -52,10 +52,10 @@ std::pair<MatrixX3, MatrixX3> loadConstraintsFromObj(const std::string& fileName
 
     std::vector<std::string> package_dirs = se3::rosPaths();
     std::string meshPath = se3::retrieveResourcePath(fileName, package_dirs);
-    if (meshPath == "") {
-      std::stringstream ss;
-      ss << "Mesh " << fileName << " could not be found.";
-      throw std::invalid_argument (ss.str());
+    if (meshPath == "")
+    {
+        hppDout(warning,"Unable to load kinematics constraints : "<<  "Mesh " << fileName << " could not be found.");
+        return std::pair<MatrixX3, MatrixX3>();
     }
 
     //pinocchio::urdf::Parser parser("anchor",pinocchio::DevicePtr_t());
