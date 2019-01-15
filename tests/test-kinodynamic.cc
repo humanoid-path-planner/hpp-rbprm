@@ -1088,9 +1088,15 @@ BOOST_AUTO_TEST_CASE (nav_bauzil_oriented_kino) {
 
 // too slow to be added in the test suite ...
 BOOST_AUTO_TEST_CASE (nav_bauzil_hard) {
-    std::cout<<"start nav_bauzil_hard test case, this may take a couple of minutes ..."<<std::endl;
+    std::cout<<"start nav_bauzil_hard test case, this may take several minutes ..."<<std::endl;
   // this test case may take up to 5 minute to execute. Usually after ~10 minutes it should be considered as a failure.
     hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadTalosLEGAbsract();
+    rbprmDevice->rootJoint()->lowerBound(0, -2.3);
+    rbprmDevice->rootJoint()->lowerBound(1, -1.5);
+    rbprmDevice->rootJoint()->lowerBound(2, 0.98);
+    rbprmDevice->rootJoint()->upperBound(0,  4.6);
+    rbprmDevice->rootJoint()->upperBound(1,  3.3);
+    rbprmDevice->rootJoint()->upperBound(2,  0.98);
     rbprmDevice->setDimensionExtraConfigSpace(6);
     BindShooter bShooter;
     std::vector<double> boundsSO3;
@@ -1123,7 +1129,7 @@ BOOST_AUTO_TEST_CASE (nav_bauzil_hard) {
     pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"),core::Parameter(0.12));
     pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),core::Parameter(0.5));
     pSolver.problem()->setParameter(std::string("ConfigurationShooter/sampleExtraDOF"),core::Parameter(false));
-    pSolver.problem()->setParameter(std::string("PathOptimization/RandomShortcut/NumberOfLoops"),core::Parameter((core::size_type)50));
+    pSolver.problem()->setParameter(std::string("PathOptimization/RandomShortcut/NumberOfLoops"),core::Parameter((core::size_type)10));
     vector3_t p_lLeg(0., 0.0848172440888579,-1.019272022956703);
     vector3_t p_rLeg(0., -0.0848172440888579,-1.019272022956703);
     rbprmDevice->setEffectorReference("talos_lleg_rom",p_lLeg);
