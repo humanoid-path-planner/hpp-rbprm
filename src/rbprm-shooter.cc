@@ -245,6 +245,37 @@ namespace
         seRotationtLimits(eulerSo3_, limitszyx);
     }
 
+    /**
+     * @brief getUsedSurfaces produce a list of CollisionObject from the affordances list :
+     *  use all objects corresponding to at least one affordance filter set.
+     * @param affordances
+     * @param affFilters
+     * @return
+     */
+    hpp::core::ObjectStdVector_t getUsedSurfaces(const affMap_t& affordances,const std::map<std::string, std::vector<std::string> >& affFilters){
+      core::ObjectStdVector_t surfaces;
+      std::set<std::string> addedTypes;
+      hppDout(notice,"Begin getUsedSurfaces from affordances");
+      for(std::map<std::string, std::vector<std::string> >::const_iterator itFilter = affFilters.begin() ; itFilter != affFilters.end() ; ++itFilter){ // for each roms
+        hppDout(notice,"For rom : "<<itFilter->first);
+        for( std::vector<std::string>::const_iterator itType = itFilter->second.begin() ; itType != itFilter->second.end();++itType){
+          hppDout(notice,"aff type : "<<*itType);
+          if(addedTypes.empty() || (addedTypes.find(*itType) == addedTypes.end())){
+            hppDout(notice,"new type of affordance, add corresponding collision objects to the list");
+            addedTypes.insert(*itType);
+            if(affordances.map.find(*itType) != affordances.map.end()){
+              affMap_t::const_iterator itAff = affordances.map.find(*itType);
+              for(AffordanceObjects_t::const_iterator itObj = itAff->second.begin() ; itObj != itAff->second.end() ; ++itObj){
+                surfaces.push_back(itObj->second);
+              }
+            }
+          }
+        }
+      }
+      hppDout(notice,"final size of surfaces list : "<<surfaces.size());
+      return surfaces;
+    }
+
 // TODO: outward
 
     RbPrmShooter::RbPrmShooter (const pinocchio::RbPrmDevicePtr_t& robot,
@@ -267,7 +298,8 @@ namespace
         {
             validator_->addObstacle(*cit);
         }
-        this->InitWeightedTriangles(geometries);
+        hpp::core::ObjectStdVector_t used_surfaces = getUsedSurfaces(affordances,affFilters);
+        this->InitWeightedTriangles(used_surfaces);
 		}
 
     void RbPrmShooter::InitWeightedTriangles(const core::ObjectStdVector_t& geometries)
