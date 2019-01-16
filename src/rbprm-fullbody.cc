@@ -248,8 +248,7 @@ namespace hpp {
 
     void RbPrmFullBody::referenceConfig(pinocchio::Configuration_t referenceConfig)
     {
-        std::cout << "no setter for reference config " << std::endl;
-        //device_->neutralConfiguration() (referenceConfig);
+        reference_ = referenceConfig;
         //create transform of the freeflyer in the world frame :
         fcl::Transform3f tRoot;
         fcl::Transform3f tJoint_world,tJoint_robot;
@@ -285,6 +284,7 @@ namespace hpp {
         , collisionValidation_(core::CollisionValidation::create(device))
         , staticStability_(true)
         , mu_(0.5)
+        , reference_(device_->neutralConfiguration())
         , effectorsTrajectoriesMaps_()
         , weakPtr_()
     {
