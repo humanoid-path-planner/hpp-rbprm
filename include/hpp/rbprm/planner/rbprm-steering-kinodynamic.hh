@@ -120,7 +120,7 @@ namespace hpp {
        * @param to
        * @return
        */
-      core::PathPtr_t computeDirection(const core::ConfigurationIn_t from, const core::ConfigurationIn_t to);
+      core::PathPtr_t computeDirection(const core::ConfigurationIn_t from, const core::ConfigurationIn_t to, bool reverse);
 
       /**
        * @brief setSteeringMethodBounds Compute the maximal acceleration on a direction from near to target,

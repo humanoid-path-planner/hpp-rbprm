@@ -296,10 +296,15 @@ namespace hpp{
       return kinoPath;
     }
 
-    core::PathPtr_t SteeringMethodKinodynamic::computeDirection(const core::ConfigurationIn_t from, const core::ConfigurationIn_t to){
+    core::PathPtr_t SteeringMethodKinodynamic::computeDirection(const core::ConfigurationIn_t from, const core::ConfigurationIn_t to,bool reverse){
       setAmax(Vector3::Ones(3)*aMaxFixed_);
       hppDout(notice,"Compute direction ");
-      core::PathPtr_t path = core::steeringMethod::Kinodynamic::impl_compute(from,to);
+      core::PathPtr_t path;
+      if(reverse)
+        path = core::steeringMethod::Kinodynamic::impl_compute(to,from);
+      else
+        path = core::steeringMethod::Kinodynamic::impl_compute(from,to);
+
       Vector3 direction;
       direction = Vector3(0,0,0);
       if(path){
@@ -363,8 +368,7 @@ namespace hpp{
       direction = dPosition;
       direction.normalize();
 */
-
-      core::PathPtr_t path = computeDirection(*(node->configuration()),target);
+      core::PathPtr_t path = computeDirection(*(node->configuration()),target,reverse);
 
       if(lastDirection_.norm() <= std::numeric_limits<double>::epsilon()){
         assert(false && "ComputeDirection returned a vector of norm null");
