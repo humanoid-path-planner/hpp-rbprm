@@ -265,10 +265,10 @@ BOOST_AUTO_TEST_CASE (square_v0) {
     BOOST_CHECK(success);
     pSolver.finishSolveStepByStep();
     BOOST_CHECK_EQUAL(pSolver.paths().size(),1);
-    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),3.3635856610148585,1e-10);
+    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),2.8284271247461898,1e-10);
     pSolver.optimizePath(pSolver.paths().back());
     BOOST_CHECK_EQUAL(pSolver.paths().size(),2);
-    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),3.3635856610148585,1e-10);
+    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),2.8284271247461898,1e-10);
     BOOST_CHECK_EQUAL(boost::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())->numberPaths (),1);
 
     pSolver.resetGoalConfigs();
@@ -293,10 +293,10 @@ BOOST_AUTO_TEST_CASE (square_v0) {
     BOOST_CHECK(success);
     pSolver.finishSolveStepByStep();
     BOOST_CHECK_EQUAL(pSolver.paths().size(),5);
-    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),3.3635856610148585,1e-10);
+    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),2.8284271247461898,1e-10);
     pSolver.optimizePath(pSolver.paths().back());
     BOOST_CHECK_EQUAL(pSolver.paths().size(),6);
-    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),3.3635856610148585,1e-10);
+    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),2.8284271247461898,1e-10);
     BOOST_CHECK_EQUAL(boost::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())->numberPaths (),1);
 
     pSolver.resetGoalConfigs();
@@ -321,10 +321,10 @@ BOOST_AUTO_TEST_CASE (square_v0) {
     BOOST_CHECK(success);
     pSolver.finishSolveStepByStep();
     BOOST_CHECK_EQUAL(pSolver.paths().size(),9);
-    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),3.7976578442318836,1e-10);
+    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),3.4641016151377544,1e-10);
     pSolver.optimizePath(pSolver.paths().back());
     BOOST_CHECK_EQUAL(pSolver.paths().size(),10);
-    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),3.7976578442318836,1e-10);
+    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),3.4641016151377544,1e-10);
     BOOST_CHECK_EQUAL(boost::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())->numberPaths (),1);
 
     pSolver.resetGoalConfigs();
@@ -349,10 +349,10 @@ BOOST_AUTO_TEST_CASE (square_v0) {
     BOOST_CHECK(success);
     pSolver.finishSolveStepByStep();
     BOOST_CHECK_EQUAL(pSolver.paths().size(),13);
-    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),3.3635856610148585,1e-10);
+    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),2.8284271247461898,1e-10);
     pSolver.optimizePath(pSolver.paths().back());
     BOOST_CHECK_EQUAL(pSolver.paths().size(),14);
-    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),3.3635856610148585,1e-10);
+    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),2.8284271247461898,1e-10);
     BOOST_CHECK_EQUAL(boost::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())->numberPaths (),1);
 
     pSolver.resetGoalConfigs();
@@ -363,10 +363,10 @@ BOOST_AUTO_TEST_CASE (square_v0) {
     BOOST_CHECK(success);
     pSolver.finishSolveStepByStep();
     BOOST_CHECK_EQUAL(pSolver.paths().size(),15);
-    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),3.7621064326203357,1e-10);
+    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),3.2249030993194197,1e-10);
     pSolver.optimizePath(pSolver.paths().back());
     BOOST_CHECK_EQUAL(pSolver.paths().size(),16);
-    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),3.7621064326203357,1e-10);
+    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),3.2249030993194197,1e-10);
     BOOST_CHECK_EQUAL(boost::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())->numberPaths (),1);
 
 }
@@ -450,10 +450,10 @@ BOOST_AUTO_TEST_CASE (straight_velocity) {
     BOOST_CHECK(success);
     pSolver.finishSolveStepByStep();
     BOOST_CHECK_EQUAL(pSolver.paths().size(),3);
-    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),2.813161489215438,1e-10);
+    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),2.642220510185596,1e-10);
     pSolver.optimizePath(pSolver.paths().back());
     BOOST_CHECK_EQUAL(pSolver.paths().size(),4);
-    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),2.813161489215438,1e-10);
+    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),2.642220510185596,1e-10);
     BOOST_CHECK(checkPathVector(pSolver.paths().back()));
     BOOST_CHECK(checkPath(pSolver.paths().back(),1.7));
     BOOST_CHECK_EQUAL(boost::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())->numberPaths (),1);
@@ -466,13 +466,13 @@ BOOST_AUTO_TEST_CASE (straight_velocity) {
     BOOST_CHECK(success);
     pSolver.finishSolveStepByStep();
     BOOST_CHECK_EQUAL(pSolver.paths().size(),5);
-    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),3.0320348700106008,1e-10);
+    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),2.8741411087489799,1e-10);
     pSolver.optimizePath(pSolver.paths().back());
     BOOST_CHECK_EQUAL(pSolver.paths().size(),6);
-    //BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),3.0320348700106008,1e-10);
+    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),2.8741411087489799,1e-10);
     BOOST_CHECK(checkPathVector(pSolver.paths().back()));
     BOOST_CHECK(checkPath(pSolver.paths().back(),1.7));
-    //BOOST_CHECK_EQUAL(boost::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())->numberPaths (),1);
+    BOOST_CHECK_EQUAL(boost::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())->numberPaths (),1);
 
     pSolver.resetGoalConfigs();
     q_goal(0) = -1.;
@@ -483,13 +483,13 @@ BOOST_AUTO_TEST_CASE (straight_velocity) {
     BOOST_CHECK(success);
     pSolver.finishSolveStepByStep();
     BOOST_CHECK_EQUAL(pSolver.paths().size(),7);
-    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),4.4071293474602475,1e-10);
+    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),4.16227766016838,1e-10);
     pSolver.optimizePath(pSolver.paths().back());
     BOOST_CHECK_EQUAL(pSolver.paths().size(),8);
-    //BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),4.4071293474602475,1e-10);
+    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),4.16227766016838,1e-10);
     BOOST_CHECK(checkPathVector(pSolver.paths().back()));
     BOOST_CHECK(checkPath(pSolver.paths().back(),1.7));
-    //BOOST_CHECK_EQUAL(boost::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())->numberPaths (),1);
+    BOOST_CHECK_EQUAL(boost::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())->numberPaths (),1);
 
 
 }
