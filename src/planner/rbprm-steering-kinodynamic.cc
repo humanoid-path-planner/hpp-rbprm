@@ -371,7 +371,8 @@ namespace hpp{
       core::PathPtr_t path = computeDirection(*(node->configuration()),target,reverse);
 
       if(lastDirection_.norm() <= std::numeric_limits<double>::epsilon()){
-        assert(false && "ComputeDirection returned a vector of norm null");
+        hppDout(notice,"Steering method kinodynamic failed to connect both states, return empty path");
+        boundsUpToDate_=true;
         return core::PathPtr_t();
       }
 
