@@ -420,7 +420,9 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
 
         const value_type ddjerk = 250.;
         //const value_type djerk = ddjerk*t_predef;
+        #ifdef HPP_DEBUG
         const value_type jerk = 0.5*ddjerk*t_predef*t_predef;
+        #endif
         a_max_predefined = (1./6.)*ddjerk *t_predef*t_predef*t_predef;
         hppDout(notice,"computed jerk in computePredefConstant : "<<jerk);
 
@@ -630,6 +632,9 @@ buildPredefinedPath(endEffectorDevice,nextNormal,endConfig,posOffset,-velOffset,
             allRefEffector.push_back(refEffectorMidBezier);
             allRefEffector.push_back(refEffectorLanding->getBezier());
             bool successMap = fullbody->addEffectorTrajectory(pathId,effector.name(),allRefEffector);
+            #ifndef HPP_DEBUG
+            (void)successMap;
+            #endif
             hppDout(notice,"success add bezier to map = "<<successMap);
             }
             // FIXME : using pathId = problemSolver->paths().size()  this way assume that the path returned by this method will be the next added in problemSolver. As there is no access to problemSolver here, it's the best workaround.
@@ -646,7 +651,9 @@ buildPredefinedPath(endEffectorDevice,nextNormal,endConfig,posOffset,-velOffset,
         DevicePtr_t endEffectorDevice = createFreeFlyerDevice();
         Configuration_t initConfig(endEffectorDevice->configSize()),endConfig(endEffectorDevice->configSize());
         getEffectorConfigForConfig(fullbody->device_,effector,startState.configuration_,initConfig);
+        #ifdef HPP_DEBUG
         bool success;
+        #endif
         hppDout(notice,"fb com path init = "<<pinocchio::displayConfig((*fullBodyComPath)(0.,success)));
         hppDout(notice,"start state conf = "<<pinocchio::displayConfig(startState.configuration_));
         getEffectorConfigForConfig(fullbody->device_,effector,nextState.configuration_,endConfig);
@@ -872,6 +879,9 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
             allRefEffector.push_back(midPath->getBezier());
             allRefEffector.push_back(landingPath->getBezier());
             bool successMap = fullbody->addEffectorTrajectory(pathId,effector.name(),allRefEffector);
+            #ifndef HPP_DEBUG
+            (void)successMap;
+            #endif
             hppDout(notice,"success = "<<successMap);
             }
             // FIXME : using pathId = problemSolver->paths().size()  this way assume that the path returned by this method will be the next added in problemSolver. As there is no access to problemSolver here, it's the best workaround.
