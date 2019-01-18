@@ -425,11 +425,12 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
             else if (!valid)// move out of collision
             {
                 // retrieve Contact information
-                //lastDirection = -report.result.getContact(0).normal;
+                lastDirection = -report->result.getContact(0).normal;
+                //hppDout(notice,"Shooter : lastDirection = "<<lastDirection.transpose());
                 // mouve out by penetration depth
                 // v0 move away from normal
                 //get normal from collision tri
-                lastDirection = triangles_[report->result.getContact(0).b2].first;
+                //lastDirection = triangles_[report->result.getContact(0).b2].first;
                 Translate(robot_,config, lastDirection *
                           (std::abs(report->result.getContact(0).penetration_depth) +0.03));
                  limitDis--;
