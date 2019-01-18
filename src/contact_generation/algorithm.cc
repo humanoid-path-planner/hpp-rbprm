@@ -155,7 +155,7 @@ ContactComputationStatus ComputeStableContact(const hpp::rbprm::RbPrmFullBodyPtr
     params.sampleLimbName_ = limbId;
     params.tfWorldRoot_ = fcl::Transform3f();
     params.tfWorldRoot_.setTranslation(fcl::Vec3f(current.configuration_[0],current.configuration_[1],current.configuration_[2]));
-    params.tfWorldRoot_.setQuatRotation(fcl::Quaternion3f(current.configuration_[3],current.configuration_[4],current.configuration_[5],current.configuration_[6]));
+    params.tfWorldRoot_.setQuatRotation(fcl::Quaternion3f(current.configuration_[6],current.configuration_[3],current.configuration_[4],current.configuration_[5]));
     hpp::rbprm::projection::ProjectionReport rep = contact::generate_contact(contactGenHelper,limbId,params,evaluate);
 
     current = rep.result_;

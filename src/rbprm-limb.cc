@@ -87,7 +87,7 @@ namespace hpp {
         pinocchio::Transform3f tRoot(1);
         pinocchio::Transform3f tJoint_world(1),tJoint_robot(1);
         tRoot.translation(fcl::Vec3f(referenceConfig.head<3>()));
-        //fcl::Quaternion3f quatRoot(referenceConfig[3],referenceConfig[4],referenceConfig[5],referenceConfig[6]);
+        //fcl::Quaternion3f quatRoot(referenceConfig[6],referenceConfig[3],referenceConfig[4],referenceConfig[5]);
         tRoot.rotation(Eigen::Quaterniond(referenceConfig.segment<4>(3)).matrix());
         hppDout(notice,"Create limb, reference root transform : "<<tRoot);
         // retrieve transform of each effector joint

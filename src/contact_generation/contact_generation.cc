@@ -712,7 +712,7 @@ ProjectionReport gen_contacts(ContactGenHelper &contactGenHelper)
             params.sampleLimbName_ = *cit;
             params.tfWorldRoot_ = fcl::Transform3f();
             params.tfWorldRoot_.setTranslation(fcl::Vec3f(cState.first.configuration_[0],cState.first.configuration_[1],cState.first.configuration_[2]));
-            params.tfWorldRoot_.setQuatRotation(fcl::Quaternion3f(cState.first.configuration_[3],cState.first.configuration_[4],cState.first.configuration_[5],cState.first.configuration_[6]));
+            params.tfWorldRoot_.setQuatRotation(fcl::Quaternion3f(cState.first.configuration_[6],cState.first.configuration_[3],cState.first.configuration_[4],cState.first.configuration_[5]));
 
             /*if(cit+1 == cState.second.end()) // DEBUG STABILITY
                 contactGenHelper.checkStabilityGenerate_ = checkStability;*/
@@ -768,7 +768,7 @@ projection::ProjectionReport repositionContacts(ContactGenHelper& helper)
             params.sampleLimbName_ = *cit;
             params.tfWorldRoot_ = fcl::Transform3f();
             params.tfWorldRoot_.setTranslation(fcl::Vec3f(helper.workingState_.configuration_[0],helper.workingState_.configuration_[1],helper.workingState_.configuration_[2]));
-            params.tfWorldRoot_.setQuatRotation(fcl::Quaternion3f(helper.workingState_.configuration_[3],helper.workingState_.configuration_[4],helper.workingState_.configuration_[5],helper.workingState_.configuration_[6]));
+            params.tfWorldRoot_.setQuatRotation(fcl::Quaternion3f(helper.workingState_.configuration_[6],helper.workingState_.configuration_[3],helper.workingState_.configuration_[4],helper.workingState_.configuration_[5]));
 
             projection::ProjectionReport rep = contact::generate_contact(helper,*cit, params);
             if(rep.status_ == STABLE_CONTACT || REACHABLE_CONTACT)

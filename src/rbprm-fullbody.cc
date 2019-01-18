@@ -253,7 +253,7 @@ namespace hpp {
         fcl::Transform3f tRoot;
         fcl::Transform3f tJoint_world,tJoint_robot;
         tRoot.setTranslation(fcl::Vec3f(referenceConfig.head<3>()));
-        fcl::Quaternion3f quatRoot(referenceConfig[3],referenceConfig[4],referenceConfig[5],referenceConfig[6]);
+        fcl::Quaternion3f quatRoot(referenceConfig[6],referenceConfig[3],referenceConfig[4],referenceConfig[5]);
         tRoot.setQuatRotation(quatRoot);
         hppDout(notice,"reference root transform : "<<tRoot.getTranslation() <<" ; " <<tRoot.getRotation() );
         // retrieve transform of each effector joint

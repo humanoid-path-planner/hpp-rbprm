@@ -187,7 +187,7 @@ double fixedStepHeuristic(const sampling::Sample& sample,
     Configuration_t q_target = (*params.comPath_)(params.currentPathId_+t_step,success).head<7>();
     fcl::Transform3f tRootTarget;
     tRootTarget.setTranslation(fcl::Vec3f(q_target.head<3>()));
-    fcl::Quaternion3f quatRoot(q_target[3],q_target[4],q_target[5],q_target[6]);
+    fcl::Quaternion3f quatRoot(q_target[6],q_target[3],q_target[4],q_target[5]);
     tRootTarget.setQuatRotation(quatRoot);
     //hppDout(notice,"heuristic : tRootTarget = "<<tRootTarget);
     fcl::Vec3f pTarget = (tRootTarget * params.limbReferenceOffset_).getTranslation();
