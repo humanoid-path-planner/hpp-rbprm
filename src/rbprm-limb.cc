@@ -121,7 +121,7 @@ namespace hpp {
         , disableEndEffectorCollision_(disableEndEffectorCollision)
         , grasps_(grasps)
         , effectorReferencePosition_(computeEffectorReferencePosition(limb,effectorName))
-        , kinematicConstraints_(reachability::loadConstraintsFromObj(kinematicsConstraintsPath.empty() ? ("package://hpp-rbprm-corba/com_inequalities/"+limb_->name()+"_com_constraints.obj") : kinematicsConstraintsPath,kinematicConstraintsMinDistance))
+        , kinematicConstraints_(reachability::loadConstraintsFromObj(kinematicsConstraintsPath.empty() ? ("package://"+limb_->robot()->name()+"-rbprm/com_inequalities/"+limb_->name()+"_com_constraints.obj") : kinematicsConstraintsPath,kinematicConstraintsMinDistance))
     {
         // NOTHING
         hppDout(notice,"Create limb, normal = "<<normal);
@@ -193,7 +193,7 @@ namespace hpp {
       , disableEndEffectorCollision_(disableEndEffectorCollision)
       , grasps_(grasps)
       , effectorReferencePosition_(computeEffectorReferencePosition(limb_,effector_.name()))
-      , kinematicConstraints_(reachability::loadConstraintsFromObj("package://hpp-rbprm-corba/com_inequalities/"+limb_->name()+"_com_constraints.obj",0.3))
+      , kinematicConstraints_(reachability::loadConstraintsFromObj("package://"+limb_->robot()->name()+"-rbprm/com_inequalities/"+limb_->name()+"_com_constraints.obj",0.3))
     {
       // NOTHING
     }
