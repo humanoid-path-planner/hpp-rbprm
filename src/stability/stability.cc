@@ -52,7 +52,7 @@ namespace stability{
         if (ly == 0)
             ly = limb->y_;
         const fcl::Vec3f& position = state.contactPositions_.at(name);
-        hppDout(notice,"Position of center : "<<position);
+        hppDout(notice,"Position of center : "<<position.transpose());
         //create rotation matrix from normal
         Eigen::Matrix3d R;
         p << lx,  ly, 0,

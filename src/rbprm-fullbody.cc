@@ -288,7 +288,7 @@ namespace hpp {
         , effectorsTrajectoriesMaps_()
         , weakPtr_()
     {
-        // NOTHING
+        hppDout(notice,"Neutralconfig when creating fullBody : "<<pinocchio::displayConfig(reference_));
     }
   } // rbprm
 } //hpp

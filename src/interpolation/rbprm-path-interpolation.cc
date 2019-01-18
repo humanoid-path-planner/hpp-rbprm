@@ -331,7 +331,7 @@ if (nbFailures > 1)
         fout<<"Planner succeeded"<<std::endl;
         fout.close();
         */
-
+        hppDout(notice,"Interpolate finished, filter and add goal : ");
         states = FilterStates(states, filterStates);
         states = addGoalConfig(states);
         return states;

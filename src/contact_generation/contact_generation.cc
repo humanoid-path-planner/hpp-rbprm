@@ -487,6 +487,9 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
         hppDout(notice,"projection to obstacle success = "<<rep.success_);
         if(rep.success_)
         {
+            hppDout(notice,"CheckStabilityGenerate : "<<contactGenHelper.checkStabilityGenerate_);
+            hppDout(notice,"StableOneContact"<<contactGenHelper.stableForOneContact_);
+            hppDout(notice,"Num contact : "<<rep.result_.nbContacts);
             if(  !contactGenHelper.checkStabilityGenerate_ || (rep.result_.nbContacts == 1 && !contactGenHelper.stableForOneContact_)){ // only check projection, success !
                 hppDout(notice,"Don't check stability : one contact or not the last contact");
                 position = rep.result_.contactPositions_.at(limbId);
@@ -615,6 +618,7 @@ ProjectionReport generate_contact(const ContactGenHelper &contactGenHelper, cons
     params.comPath_=contactGenHelper.comPath_;
     params.currentPathId_ = contactGenHelper.currentPathId_;
     params.limbReferenceOffset_ = limb->effectorReferencePosition_;
+    hppDout(notice,"findValidCandidate for effector : "<<limb->effector_.name());
     rep.result_ = findValidCandidate(contactGenHelper,limbName,limb, validation, found_sample,found_stable,unstableContact, params, evaluate);
 
     if(found_sample){

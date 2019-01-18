@@ -248,7 +248,7 @@ namespace
       pinocchio::DevicePtr_t device = fullBody->device_;
       pinocchio::Configuration_t conf(device->currentConfiguration());
       sampling::Load(sample,conf); // retrieve the configuration of the sample (only for the concerned limb)
-
+      //hppDout(notice,"Reference conf in analysis : "<<pinocchio::displayConfig(fullBody->referenceConfig()));
       double distance = 0;
       Configuration_t diff(device->numberDof());
       Configuration_t weight = Configuration_t::Zero(limb->effector_.joint()->rankInVelocity() - limb->limb_->rankInVelocity()+1);

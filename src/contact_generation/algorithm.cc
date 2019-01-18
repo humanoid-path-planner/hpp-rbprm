@@ -70,8 +70,8 @@ projection::ProjectionReport genContactFromOneMaintainCombinatorial(ContactGenHe
     for(std::map<std::string,bool>::const_iterator cit = rep.result_.contacts_.begin();cit!=rep.result_.contacts_.end(); ++ cit)
     {
       hppDout(notice,"contact  : "<<cit->first<<" = "<<cit->second);
-      hppDout(notice,"position : "<<rep.result_.contactPositions_.at(cit->first));
-      hppDout(notice,"normal   : "<<rep.result_.contactNormals_.at(cit->first));
+      hppDout(notice,"position : "<<rep.result_.contactPositions_.at(cit->first).transpose());
+      hppDout(notice,"normal   : "<<rep.result_.contactNormals_.at(cit->first).transpose());
     }
     hppDout(notice,"genContact, after maintain : config : "<<pinocchio::displayConfig(rep.result_.configuration_));
     if(rep.success_)
