@@ -82,6 +82,8 @@ namespace hpp {
 
         void sampleExtraDOF(bool sampleExtraDOF);
 
+        void ratioWeighted(double ratio){ratioWeighted_ = ratio;}
+
 
     public:
         typedef std::pair<fcl::Vec3f, TrianglePoints> T_TriangleNormal;
@@ -117,6 +119,7 @@ namespace hpp {
         const pinocchio::RbPrmDevicePtr_t robot_;
         rbprm::RbPrmValidationPtr_t validator_;
         core::configurationShooter::UniformPtr_t uniformShooter_;
+        double ratioWeighted_;
         RbPrmShooterWkPtr_t weak_;
         //pinocchio::DevicePtr_t eulerSo3_;
         std::vector<double> eulerSo3_;

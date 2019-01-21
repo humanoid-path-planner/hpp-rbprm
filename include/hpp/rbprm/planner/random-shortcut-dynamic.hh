@@ -20,7 +20,7 @@
 #ifndef HPP_RBPRM_RANDOM_SHORTCUT_DYNAMIC_HH
 #define HPP_RBPRM_RANDOM_SHORTCUT_DYNAMIC_HH
 
-#include <hpp/core/random-shortcut.hh>
+#include <hpp/core/path-optimization/random-shortcut.hh>
 #include <hpp/rbprm/planner/rbprm-steering-kinodynamic.hh>
 #include <hpp/rbprm/rbprm-path-validation.hh>
 
@@ -50,7 +50,7 @@ namespace hpp {
     typedef boost::shared_ptr <RandomShortcutDynamic> RandomShortcutDynamicPtr_t;
 
 
-    class RandomShortcutDynamic : public core::RandomShortcut
+    class RandomShortcutDynamic : public core::pathOptimization::RandomShortcut
     {
     public:
       /// Return shared pointer to new object.

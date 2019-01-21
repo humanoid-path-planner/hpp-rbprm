@@ -87,7 +87,7 @@ namespace hpp {
         pinocchio::Transform3f tRoot(1);
         pinocchio::Transform3f tJoint_world(1),tJoint_robot(1);
         tRoot.translation(fcl::Vec3f(referenceConfig.head<3>()));
-        //fcl::Quaternion3f quatRoot(referenceConfig[3],referenceConfig[4],referenceConfig[5],referenceConfig[6]);
+        //fcl::Quaternion3f quatRoot(referenceConfig[6],referenceConfig[3],referenceConfig[4],referenceConfig[5]);
         tRoot.rotation(Eigen::Quaterniond(referenceConfig.segment<4>(3)).matrix());
         hppDout(notice,"Create limb, reference root transform : "<<tRoot);
         // retrieve transform of each effector joint
@@ -121,9 +121,12 @@ namespace hpp {
         , disableEndEffectorCollision_(disableEndEffectorCollision)
         , grasps_(grasps)
         , effectorReferencePosition_(computeEffectorReferencePosition(limb,effectorName))
-        , kinematicConstraints_(reachability::loadConstraintsFromObj(kinematicsConstraintsPath.empty() ? ("package://hpp-rbprm-corba/com_inequalities/"+limb_->name()+"_com_constraints.obj") : kinematicsConstraintsPath,kinematicConstraintsMinDistance))
+        , kinematicConstraints_(reachability::loadConstraintsFromObj(kinematicsConstraintsPath.empty() ? ("package://"+limb_->robot()->name()+"-rbprm/com_inequalities/"+limb_->name()+"_com_constraints.obj") : kinematicsConstraintsPath,kinematicConstraintsMinDistance))
     {
         // NOTHING
+        hppDout(notice,"Create limb, normal = "<<normal);
+        hppDout(notice,"effector default rotation = "<<effectorDefaultRotation_);
+        hppDout(notice,"nex normal : "<<normal_);
     }
 
     pinocchio::Transform3f RbPrmLimb::octreeRoot() const
@@ -190,7 +193,7 @@ namespace hpp {
       , disableEndEffectorCollision_(disableEndEffectorCollision)
       , grasps_(grasps)
       , effectorReferencePosition_(computeEffectorReferencePosition(limb_,effector_.name()))
-      , kinematicConstraints_(reachability::loadConstraintsFromObj("package://hpp-rbprm-corba/com_inequalities/"+limb_->name()+"_com_constraints.obj",0.3))
+      , kinematicConstraints_(reachability::loadConstraintsFromObj("package://"+limb_->robot()->name()+"-rbprm/com_inequalities/"+limb_->name()+"_com_constraints.obj",0.3))
     {
       // NOTHING
     }

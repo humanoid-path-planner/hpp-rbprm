@@ -60,7 +60,7 @@ fullBody.setReferenceConfig (q_ref)
 
 
 RbPrmFullBodyPtr_t loadHRP2(){
-    const std::string robotName("hrp2_14");
+    const std::string robotName("hrp2");
     const std::string rootJointType ("freeflyer");
     const std::string packageName ("hrp2_14_description");
     const std::string modelName ("hrp2_14");
@@ -112,7 +112,7 @@ RbPrmFullBodyPtr_t loadHRP2(){
 
 }
 
-void loadRom(pinocchio::T_Rom& romDevices, const std::string romName, const std::string packageName = std::string("hpp-rbprm-corba"))
+void loadRom(pinocchio::T_Rom& romDevices, const std::string romName, const std::string packageName)
 {
     std::string rootJointType   ("freeflyer"),
                 urdfSuffix (""),
@@ -127,7 +127,7 @@ void loadRom(pinocchio::T_Rom& romDevices, const std::string romName, const std:
                       srdfSuffix);
 }
 
-hpp::pinocchio::RbPrmDevicePtr_t loadAbstractRobot(pinocchio::T_Rom& romDevices, const std::string robotName,const std::string packageName = std::string("hpp-rbprm-corba"))
+hpp::pinocchio::RbPrmDevicePtr_t loadAbstractRobot(pinocchio::T_Rom& romDevices, const std::string robotName,const std::string packageName)
 {
     std::string rootJointType   ("freeflyer"),
                 urdfSuffix (""),
@@ -149,12 +149,13 @@ hpp::pinocchio::RbPrmDevicePtr_t loadAbstractRobot(pinocchio::T_Rom& romDevices,
 hpp::pinocchio::RbPrmDevicePtr_t loadHyQAbsract()
 {
     pinocchio::T_Rom romDevices_;
-    loadRom(romDevices_, std::string("hyq_lhleg_rom"));
-    loadRom(romDevices_, std::string("hyq_lfleg_rom"));
-    loadRom(romDevices_, std::string("hyq_rfleg_rom"));
-    loadRom(romDevices_, std::string("hyq_rhleg_rom"));
+    const std::string packageName("hyq-rbprm");
+    loadRom(romDevices_, std::string("hyq_lhleg_rom"),packageName);
+    loadRom(romDevices_, std::string("hyq_lfleg_rom"),packageName);
+    loadRom(romDevices_, std::string("hyq_rfleg_rom"),packageName);
+    loadRom(romDevices_, std::string("hyq_rhleg_rom"),packageName);
     hpp::pinocchio::RbPrmDevicePtr_t device =
-            loadAbstractRobot(romDevices_, std::string("hyq_trunk_large"));
+            loadAbstractRobot(romDevices_, std::string("hyq_trunk_large"),packageName);
     device->rootJoint()->lowerBound(0, -2);
     device->rootJoint()->lowerBound(1, -1);
     device->rootJoint()->lowerBound(2, 0.3);

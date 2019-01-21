@@ -36,7 +36,7 @@ namespace hpp{
     SteeringMethodKinodynamic::SteeringMethodKinodynamic (const core::Problem& problem) :
       core::steeringMethod::Kinodynamic (problem),
       totalTimeComputed_(0),totalTimeValidated_(0),dirValid_(0),dirTotal_(0),rejectedPath_(0),maxLength_(50),device_ (problem.robot ()),lastDirection_(),
-       sEq_(new centroidal_dynamics::Equilibrium(problem_.robot()->name(), problem_.robot()->mass(),4,centroidal_dynamics::SOLVER_LP_QPOASES,true,10,false)), weak_ ()
+       sEq_(new centroidal_dynamics::Equilibrium(problem_.robot()->name(), problem_.robot()->mass(),4,centroidal_dynamics::SOLVER_LP_QPOASES,true,10,false)),boundsUpToDate_(false), weak_ ()
     {
     }
 
@@ -44,7 +44,7 @@ namespace hpp{
     SteeringMethodKinodynamic::SteeringMethodKinodynamic (const SteeringMethodKinodynamic& other) :
       core::steeringMethod::Kinodynamic (other),
       totalTimeComputed_(0),totalTimeValidated_(0),dirValid_(0),dirTotal_(0),rejectedPath_(0),maxLength_(50),device_ (other.device_),lastDirection_(),
-      sEq_(new centroidal_dynamics::Equilibrium(problem_.robot()->name(), problem_.robot()->mass(),4,centroidal_dynamics::SOLVER_LP_QPOASES,true,10,false)),weak_()
+      sEq_(new centroidal_dynamics::Equilibrium(problem_.robot()->name(), problem_.robot()->mass(),4,centroidal_dynamics::SOLVER_LP_QPOASES,true,10,false)),boundsUpToDate_(false),weak_ ()
     {
     }
 
@@ -60,15 +60,20 @@ namespace hpp{
     core::PathPtr_t SteeringMethodKinodynamic::impl_compute (core::NodePtr_t x,
                                          core::ConfigurationIn_t q2)
     {
-      // get kinodynamic path from core::steeringMethod::Kinodynamic
-      hppStartBenchmark(FIND_A_MAX);
-      core::RbprmNodePtr_t node =  setSteeringMethodBounds(x,q2,false);
+      core::RbprmNodePtr_t node = static_cast<core::RbprmNodePtr_t>(x);
+      assert(node && "Unable to cast near node to rbprmNode");
       if(!node)
         return core::PathPtr_t();
+      // get kinodynamic path from core::steeringMethod::Kinodynamic
+      hppStartBenchmark(FIND_A_MAX);
+      core::PathPtr_t unboundedPath =  setSteeringMethodBounds(node,q2,false);
+      hppDout(notice,"end setBounds");
       hppStopBenchmark(FIND_A_MAX);
       hppDisplayBenchmark(FIND_A_MAX);
-      if((aMax_[0]+aMax_[1]) <= 0)
+      if((std::fabs(aMax_[0])+std::fabs(aMax_[1])) <= 0)
         return core::PathPtr_t();
+      if(boundsUpToDate_)
+          return unboundedPath;
       //return core::steeringMethod::Kinodynamic::impl_compute(*x->configuration(),q2);
       hppStartBenchmark(steering_kino);
       core::PathPtr_t path = core::steeringMethod::Kinodynamic::impl_compute(*x->configuration(),q2);
@@ -177,14 +182,18 @@ namespace hpp{
     // reverse (from q1 to x, but end() should always be x)
     core::PathPtr_t SteeringMethodKinodynamic::impl_compute (core::ConfigurationIn_t q1,core::NodePtr_t x)
     {
-      hppStartBenchmark(FIND_A_MAX);
-      core::RbprmNodePtr_t node =  setSteeringMethodBounds(x,q1,true);
+      core::RbprmNodePtr_t node = static_cast<core::RbprmNodePtr_t>(x);
+      assert(node && "Unable to cast near node to rbprmNode");
       if(!node)
         return core::PathPtr_t();
+      hppStartBenchmark(FIND_A_MAX);
+      core::PathPtr_t unboundedPath =  setSteeringMethodBounds(node,q1,true);
       hppStopBenchmark(FIND_A_MAX);
       hppDisplayBenchmark(FIND_A_MAX);
-      if((aMax_[0]+aMax_[1]) <= 0)
+      if((std::fabs(aMax_[0])+std::fabs(aMax_[1])) <= 0)
         return core::PathPtr_t();
+      if(boundsUpToDate_)
+          return unboundedPath;
       hppStartBenchmark(steering_kino);
       core::PathPtr_t path = core::steeringMethod::Kinodynamic::impl_compute(q1,*x->configuration());
       hppStopBenchmark(steering_kino);
@@ -287,28 +296,30 @@ namespace hpp{
       return kinoPath;
     }
 
-    Vector3 SteeringMethodKinodynamic::computeDirection(const core::ConfigurationIn_t from, const core::ConfigurationIn_t to){
+    core::PathPtr_t SteeringMethodKinodynamic::computeDirection(const core::ConfigurationIn_t from, const core::ConfigurationIn_t to,bool reverse){
       setAmax(Vector3::Ones(3)*aMaxFixed_);
       hppDout(notice,"Compute direction ");
-      core::PathPtr_t path = core::steeringMethod::Kinodynamic::impl_compute(from,to);
+      core::PathPtr_t path;
+      if(reverse)
+        path = core::steeringMethod::Kinodynamic::impl_compute(to,from);
+      else
+        path = core::steeringMethod::Kinodynamic::impl_compute(from,to);
+
       Vector3 direction;
+      direction = Vector3(0,0,0);
       if(path){
         core::KinodynamicPathPtr_t kinoPath = boost::dynamic_pointer_cast<core::KinodynamicPath>(path);
-        direction = kinoPath->getA1();
-        direction.normalize();
-      }else{
-        direction = Vector3(0,0,0);
+        if(kinoPath){
+          direction = kinoPath->getA1();
+          direction.normalize();
+        }
       }
       lastDirection_=direction;
-      return direction;
+      return path;
     }
 
-    core::RbprmNodePtr_t SteeringMethodKinodynamic::setSteeringMethodBounds(const core::NodePtr_t& near, const core::ConfigurationIn_t target,bool reverse) {
-      core::RbprmNodePtr_t node = static_cast<core::RbprmNodePtr_t>(near);
-      assert(node && "Unable to cast near node to rbprmNode");
-      // compute direction (v) :
+    core::PathPtr_t SteeringMethodKinodynamic::setSteeringMethodBounds(const core::RbprmNodePtr_t& node, const core::ConfigurationIn_t target,bool reverse) {
       Vector3 aMax ;
-
 
       // ###################################
 #if ignore_acc_bound
@@ -321,31 +332,30 @@ namespace hpp{
       hppDout(notice,"Set bounds between : ");
       if(reverse){
         hppDout(notice,"target : "<<pinocchio::displayConfig(target));
-        hppDout(notice,"node   : "<<pinocchio::displayConfig(*(near->configuration())));
+        hppDout(notice,"node   : "<<pinocchio::displayConfig(*(node->configuration())));
       }else{
-        hppDout(notice,"node   : "<<pinocchio::displayConfig(*(near->configuration())));
+        hppDout(notice,"node   : "<<pinocchio::displayConfig(*(node->configuration())));
         hppDout(notice,"target : "<<pinocchio::displayConfig(target));
       }
 
 
 
       double alpha0=1.; // main variable of our LP problem
-      Vector3 direction;
  /*     Vector3 toP,fromP,dPosition;
       Vector3 toV,fromV,dVelocity;
       const pinocchio::size_type indexECS =problem_.robot()->configSize() - problem_.robot()->extraConfigSpace().dimension (); // ecs index
 
-      hppDout(notice,"near = "<<pinocchio::displayConfig((*(near->configuration()))));
+      hppDout(notice,"near = "<<pinocchio::displayConfig((*(node->configuration()))));
       hppDout(notice,"target = "<<pinocchio::displayConfig(target));
       if(reverse){
-        toP = near->configuration()->head(3);
+        toP = node->configuration()->head(3);
         fromP = target.head(3);
-        toV = near->configuration()->segment<3>(indexECS);
+        toV = node->configuration()->segment<3>(indexECS);
         fromV = target.segment<3>(indexECS);
       }else{
-        fromP = near->configuration()->head(3);
+        fromP = node->configuration()->head(3);
         toP = target.head(3);
-        fromV = near->configuration()->segment<3>(indexECS);
+        fromV = node->configuration()->segment<3>(indexECS);
         toV = target.segment<3>(indexECS);
       }
       dPosition = (toP - fromP);
@@ -358,19 +368,21 @@ namespace hpp{
       direction = dPosition;
       direction.normalize();
 */
+      core::PathPtr_t path = computeDirection(*(node->configuration()),target,reverse);
 
-      direction = computeDirection(*(near->configuration()),target);
+      if(lastDirection_.norm() <= std::numeric_limits<double>::epsilon()){
+        hppDout(notice,"Steering method kinodynamic failed to connect both states, return empty path");
+        boundsUpToDate_=true;
+        return core::PathPtr_t();
+      }
 
-      if(direction.norm() <= std::numeric_limits<double>::epsilon())
-        return core::RbprmNodePtr_t();
-
-      hppDout(info, "direction  = "<<direction.transpose());
-      hppDout(info,"vector = ["<<(*(near->configuration()))[0]<<","<<(*(near->configuration()))[1]<<","<<(*(near->configuration()))[2]<<","<<direction[0]<<","<<direction[1]<<","<<direction[2]<<",0]");
+      hppDout(info, "direction  = "<<lastDirection_.transpose());
+      hppDout(info,"vector = ["<<(*(node->configuration()))[0]<<","<<(*(node->configuration()))[1]<<","<<(*(node->configuration()))[2]<<","<<lastDirection_[0]<<","<<lastDirection_[1]<<","<<lastDirection_[2]<<",0]");
       hppDout(notice,"number of contacts :  "<<node->getNumberOfContacts());
 
       // call to centroidal_dynamics_lib :
       sEq_->setG(node->getG());
-      centroidal_dynamics::LP_status lpStatus = sEq_->findMaximumAcceleration(node->getH(), node->geth(),direction,alpha0);
+      centroidal_dynamics::LP_status lpStatus = sEq_->findMaximumAcceleration(node->getH(), node->geth(),lastDirection_,alpha0);
       if(lpStatus==centroidal_dynamics::LP_STATUS_UNBOUNDED){
         hppDout(notice,"Primal LP problem is unbounded : "<<(lpStatus));
       }
@@ -385,13 +397,20 @@ namespace hpp{
       }
 
       hppDout(info,"Amax found : "<<alpha0);
-      alpha0 -= 0.01; // FIXME : hardcoded "robustness" value to avoid hitting the bounds
-      alpha0 = std::min(alpha0,aMaxFixed_);
+      if (alpha0 <= aMaxFixed_){
+        alpha0 -= 0.01; // FIXME : hardcoded "robustness" value to avoid hitting the bounds
+        hppDout(info,"Amax after min : "<<alpha0);
+        aMax = alpha0*lastDirection_;
+        boundsUpToDate_ = false;
+      }
+      else{
+        alpha0 = aMaxFixed_;
+        boundsUpToDate_=true;
+      }
 
-      hppDout(info,"Amax after min : "<<alpha0);
-      aMax = alpha0*direction;
       for(size_t i = 0 ; i < 3 ; ++i)
         aMax[i] = fabs(aMax[i]); // aMax store the amplitude
+
 
       if((aMax[2] < aMaxFixed_Z_))
         aMax[2] = aMaxFixed_Z_;
@@ -399,7 +418,7 @@ namespace hpp{
       hppDout(info,"Amax vector : "<<aMax_.transpose());
       //setVmax(2*Vector3::Ones(3)); //FIXME: read it from somewhere ?
 
-      return node;
+      return path;
     }
 
   }//rbprm

@@ -27,7 +27,7 @@
 #include <hpp/core/problem-target/goal-configurations.hh>
 #include <hpp/core/bi-rrt-planner.hh>
 #include <hpp/core/roadmap.hh>
-#include <hpp/core/random-shortcut.hh>
+#include <hpp/core/path-optimization/random-shortcut.hh>
 #include <hpp/core/path-optimization/partial-shortcut.hh>
 #include <hpp/core/constraint-set.hh>
 #include <hpp/constraints/generic-transformation.hh>
@@ -196,7 +196,7 @@ namespace
         template<class Helper_T>
         PathVectorPtr_t optimize(Helper_T& helper, PathVectorPtr_t partialPath, const std::size_t numOptimizations)
         {
-            core::RandomShortcutPtr_t rs = core::RandomShortcut::create(helper.rootProblem_);
+            core::pathOptimization::RandomShortcutPtr_t rs = core::pathOptimization::RandomShortcut::create(helper.rootProblem_);
             for(std::size_t j=0; j<numOptimizations;++j)
             {
                 hppDout(notice,"Optimize random shortucut, iter : "<<j);

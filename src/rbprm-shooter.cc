@@ -26,6 +26,7 @@
 #include <Eigen/Geometry>
 #include <hpp/pinocchio/configuration.hh>
 #include <hpp/util/timer.hh>
+#include <hpp/core/problem.hh>
 
 namespace hpp {
 using namespace core;
@@ -245,6 +246,37 @@ namespace
         seRotationtLimits(eulerSo3_, limitszyx);
     }
 
+    /**
+     * @brief getUsedSurfaces produce a list of CollisionObject from the affordances list :
+     *  use all objects corresponding to at least one affordance filter set.
+     * @param affordances
+     * @param affFilters
+     * @return
+     */
+    hpp::core::ObjectStdVector_t getUsedSurfaces(const affMap_t& affordances,const std::map<std::string, std::vector<std::string> >& affFilters){
+      core::ObjectStdVector_t surfaces;
+      std::set<std::string> addedTypes;
+      hppDout(notice,"Begin getUsedSurfaces from affordances");
+      for(std::map<std::string, std::vector<std::string> >::const_iterator itFilter = affFilters.begin() ; itFilter != affFilters.end() ; ++itFilter){ // for each roms
+        hppDout(notice,"For rom : "<<itFilter->first);
+        for( std::vector<std::string>::const_iterator itType = itFilter->second.begin() ; itType != itFilter->second.end();++itType){
+          hppDout(notice,"aff type : "<<*itType);
+          if(addedTypes.empty() || (addedTypes.find(*itType) == addedTypes.end())){
+            hppDout(notice,"new type of affordance, add corresponding collision objects to the list");
+            addedTypes.insert(*itType);
+            if(affordances.map.find(*itType) != affordances.map.end()){
+              affMap_t::const_iterator itAff = affordances.map.find(*itType);
+              for(AffordanceObjects_t::const_iterator itObj = itAff->second.begin() ; itObj != itAff->second.end() ; ++itObj){
+                surfaces.push_back(itObj->second);
+              }
+            }
+          }
+        }
+      }
+      hppDout(notice,"final size of surfaces list : "<<surfaces.size());
+      return surfaces;
+    }
+
 // TODO: outward
 
     RbPrmShooter::RbPrmShooter (const pinocchio::RbPrmDevicePtr_t& robot,
@@ -261,13 +293,14 @@ namespace
     , validator_(rbprm::RbPrmValidation::create(robot_, filter, affFilters,
                                                 affordances, geometries))
     , uniformShooter_(core::configurationShooter::Uniform::create(robot))
+    , ratioWeighted_(0.3)
     {
         for(hpp::core::ObjectStdVector_t::const_iterator cit = geometries.begin();
             cit != geometries.end(); ++cit)
         {
             validator_->addObstacle(*cit);
         }
-        this->InitWeightedTriangles(geometries);
+        this->InitWeightedTriangles(getUsedSurfaces(affordances,affFilters));
 		}
 
     void RbPrmShooter::InitWeightedTriangles(const core::ObjectStdVector_t& geometries)
@@ -340,7 +373,7 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
         // pick one triangle randomly
         const T_TriangleNormal* sampled(0);
         double r = ((double) rand() / (RAND_MAX));
-        if(r > 0.3)
+        if(r > ratioWeighted_)
             sampled = &RandomPointIntriangle();
         else
             sampled = &WeightedTriangle();
@@ -392,11 +425,12 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
             else if (!valid)// move out of collision
             {
                 // retrieve Contact information
-                //lastDirection = -report.result.getContact(0).normal;
+                lastDirection = -report->result.getContact(0).normal;
+                //hppDout(notice,"Shooter : lastDirection = "<<lastDirection.transpose());
                 // mouve out by penetration depth
                 // v0 move away from normal
                 //get normal from collision tri
-                lastDirection = triangles_[report->result.getContact(0).b2].first;
+                //lastDirection = triangles_[report->result.getContact(0).b2].first;
                 Translate(robot_,config, lastDirection *
                           (std::abs(report->result.getContact(0).penetration_depth) +0.03));
                  limitDis--;
@@ -413,6 +447,13 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
     void RbPrmShooter::sampleExtraDOF(bool sampleExtraDOF){
         uniformShooter_->sampleExtraDOF(sampleExtraDOF);
     }
+
+    HPP_START_PARAMETER_DECLARATION(RbprmShooter)
+      Problem::declareParameter(core::ParameterDescription (core::Parameter::FLOAT,
+            "RbprmShooter/ratioWeighted",
+            "The ratio used to select a random triangle with a weight proportional to it's area. Otherwise the triangles are choosed uniformly. ",
+            core::Parameter(0.3)));
+      HPP_END_PARAMETER_DECLARATION(RbprmShooter)
 
 
   }// namespace rbprm

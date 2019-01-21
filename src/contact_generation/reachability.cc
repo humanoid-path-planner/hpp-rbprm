@@ -435,7 +435,7 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     #if STAT_TIMINGS
     // outputs timings results in file :
     std::ofstream file;
-    std::string path("/home/pfernbac/Documents/com_ineq_test/timings_logs.log");
+    std::string path("/local/fernbac/bench_iros18/bench/timing_hrp2_darpa.log");
     hppDout(notice,"print to file : "<<path);
     file.open(path.c_str(),std::ios_base::app);
     file<<"# new pair of states"<<std::endl;
@@ -480,6 +480,7 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     }
 
     hppStartBenchmark(IS_REACHABLE_DYNAMIC);
+    hppStartBenchmark(COMPUTE_DOUBLE_DESCRIPTION);
 
     // build ProblemData from states object and call solveOneStep()
     bezier_com_traj::ProblemData pData;
@@ -506,6 +507,10 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     centroidal_dynamics::Equilibrium coneNext = computeContactConeForState(fullbody,next,successConeCurrent);
     successCone = successCone && successConeCurrent;
     nextData.contactPhase_ = &coneNext;
+
+    hppStopBenchmark(COMPUTE_DOUBLE_DESCRIPTION);
+    hppDisplayBenchmark(COMPUTE_DOUBLE_DESCRIPTION);
+
 
     if(!successCone){
         return Result(UNABLE_TO_COMPUTE);
@@ -620,6 +625,7 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
         timing_provided = true;
     }
 
+    //pData.representation_ = bezier_com_traj::FORCE;
 
     // loop over all possible timings :
     bool success(false);

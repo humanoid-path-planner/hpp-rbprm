@@ -26,6 +26,7 @@
 #ifdef PROFILE
     #include "hpp/rbprm/rbprm-profiler.hh"
 #endif
+#include <hpp/util/timer.hh>
 
 
 namespace hpp {
@@ -471,17 +472,24 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
     hppDout(notice,"number of candidate : "<<finalSet.size());
     for(;!found_sample && it!=finalSet.end(); ++it)
     {
+        hppStartBenchmark(EVALUATE_CONTACT_CANDIDATE);
         evaluatedCandidates++;
         const sampling::OctreeReport& bestReport = *it;
         hppDout(notice,"heuristic value = "<<it->value_);
         core::Configuration_t conf_before(configuration);
         sampling::Load(*bestReport.sample_, conf_before);
         hppDout(notice,"config before projection : r(["<<pinocchio::displayConfig(conf_before)<<"])");
+        hppStartBenchmark(PROJECTION_CONTACT);
         /*ProjectionReport */rep = projectSampleToObstacle(contactGenHelper.fullBody_, limbId, limb, bestReport, validation, configuration, current);
+        hppStopBenchmark(PROJECTION_CONTACT);
+        hppDisplayBenchmark(PROJECTION_CONTACT);
         hppDout(notice,"config : r(["<<pinocchio::displayConfig(configuration)<<"])");
         hppDout(notice,"projection to obstacle success = "<<rep.success_);
         if(rep.success_)
         {
+            hppDout(notice,"CheckStabilityGenerate : "<<contactGenHelper.checkStabilityGenerate_);
+            hppDout(notice,"StableOneContact"<<contactGenHelper.stableForOneContact_);
+            hppDout(notice,"Num contact : "<<rep.result_.nbContacts);
             if(  !contactGenHelper.checkStabilityGenerate_ || (rep.result_.nbContacts == 1 && !contactGenHelper.stableForOneContact_)){ // only check projection, success !
                 hppDout(notice,"Don't check stability : one contact or not the last contact");
                 position = rep.result_.contactPositions_.at(limbId);
@@ -489,7 +497,10 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
                 normal = rep.result_.contactNormals_.at(limbId);
                 found_sample = true;
             }else{ // check stability and reachability
+                hppStartBenchmark(STABILITY_CONTACT);
                 robustness = stability::IsStable(contactGenHelper.fullBody_,rep.result_, contactGenHelper.acceleration_);
+                hppStopBenchmark(STABILITY_CONTACT);
+                hppDisplayBenchmark(STABILITY_CONTACT);
                 hppDout(notice,"stability rob = "<<robustness);
                 if( robustness>=contactGenHelper.robustnessTreshold_)
                 {
@@ -499,7 +510,10 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
                         if(contactGenHelper.quasiStatic_){
                             resReachability = reachability::isReachable(contactGenHelper.fullBody_,intermediateState,rep.result_);
                         }else{
+                            hppStartBenchmark(REACHABILITY_CONTACT);
                             resReachability = reachability::isReachableDynamic(contactGenHelper.fullBody_,previous,rep.result_,contactGenHelper.tryQuasiStatic_,std::vector<double>(),contactGenHelper.reachabilityPointPerPhases_);
+                            hppStopBenchmark(REACHABILITY_CONTACT);
+                            hppDisplayBenchmark(REACHABILITY_CONTACT);
                         }
                         isReachable = resReachability.success();
                     }else{
@@ -549,6 +563,8 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
                 }
             }
         }
+        hppStopBenchmark(EVALUATE_CONTACT_CANDIDATE);
+        hppDisplayBenchmark(EVALUATE_CONTACT_CANDIDATE);
     }
     if(found_sample || found_stable || unstableContact)
     {
@@ -576,6 +592,13 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
         current.configuration_ = moreRobust;
         current.stable = false;
     }
+/*
+    std::ofstream fout;
+    fout.open("/local/fernbac/bench_iros18/bench_contactGeneration/candidates.log", std::fstream::out | std::fstream::app);
+    fout<<"evaluatedCandidates "<<evaluatedCandidates<<std::endl;
+    fout.close();
+*/
+
     return current;
 }
 
@@ -595,6 +618,7 @@ ProjectionReport generate_contact(const ContactGenHelper &contactGenHelper, cons
     params.comPath_=contactGenHelper.comPath_;
     params.currentPathId_ = contactGenHelper.currentPathId_;
     params.limbReferenceOffset_ = limb->effectorReferencePosition_;
+    hppDout(notice,"findValidCandidate for effector : "<<limb->effector_.name());
     rep.result_ = findValidCandidate(contactGenHelper,limbName,limb, validation, found_sample,found_stable,unstableContact, params, evaluate);
 
     if(found_sample){
@@ -692,10 +716,10 @@ ProjectionReport gen_contacts(ContactGenHelper &contactGenHelper)
             params.sampleLimbName_ = *cit;
             params.tfWorldRoot_ = fcl::Transform3f();
             params.tfWorldRoot_.setTranslation(fcl::Vec3f(cState.first.configuration_[0],cState.first.configuration_[1],cState.first.configuration_[2]));
-            params.tfWorldRoot_.setQuatRotation(fcl::Quaternion3f(cState.first.configuration_[3],cState.first.configuration_[4],cState.first.configuration_[5],cState.first.configuration_[6]));
+            params.tfWorldRoot_.setQuatRotation(fcl::Quaternion3f(cState.first.configuration_[6],cState.first.configuration_[3],cState.first.configuration_[4],cState.first.configuration_[5]));
 
-            /*if(cit+1 == cState.second.end()) // DEBUG STABILITY
-                contactGenHelper.checkStabilityGenerate_ = checkStability;*/
+            if(cit+1 == cState.second.end())
+                contactGenHelper.checkStabilityGenerate_ = checkStability;
             rep = generate_contact(contactGenHelper,*cit, params);
             if(rep.success_)
             {
@@ -748,7 +772,7 @@ projection::ProjectionReport repositionContacts(ContactGenHelper& helper)
             params.sampleLimbName_ = *cit;
             params.tfWorldRoot_ = fcl::Transform3f();
             params.tfWorldRoot_.setTranslation(fcl::Vec3f(helper.workingState_.configuration_[0],helper.workingState_.configuration_[1],helper.workingState_.configuration_[2]));
-            params.tfWorldRoot_.setQuatRotation(fcl::Quaternion3f(helper.workingState_.configuration_[3],helper.workingState_.configuration_[4],helper.workingState_.configuration_[5],helper.workingState_.configuration_[6]));
+            params.tfWorldRoot_.setQuatRotation(fcl::Quaternion3f(helper.workingState_.configuration_[6],helper.workingState_.configuration_[3],helper.workingState_.configuration_[4],helper.workingState_.configuration_[5]));
 
             projection::ProjectionReport rep = contact::generate_contact(helper,*cit, params);
             if(rep.status_ == STABLE_CONTACT || REACHABLE_CONTACT)

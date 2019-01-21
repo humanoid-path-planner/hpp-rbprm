@@ -132,7 +132,7 @@ namespace hpp {
         bool staticStability() const {return staticStability_;}
         double getFriction() const {return mu_;}
         void setFriction(double mu){mu_ = mu;}
-        const pinocchio::Configuration_t referenceConfig(){return device_->neutralConfiguration();}
+        pinocchio::Configuration_t referenceConfig(){return reference_;}
         void referenceConfig(pinocchio::Configuration_t referenceConfig);
         bool addEffectorTrajectory(const size_t pathId,const std::string& effectorName,const bezier_Ptr& trajectory);
         bool addEffectorTrajectory(const size_t pathId, const std::string& effectorName, const std::vector<bezier_Ptr>& trajectories);
@@ -148,6 +148,7 @@ namespace hpp {
         sampling::HeuristicFactory factory_;
         bool staticStability_;
         double mu_;
+        pinocchio::Configuration_t reference_;
         std::map<size_t,EffectorTrajectoriesMap_t> effectorsTrajectoriesMaps_; // the map link the pathIndex (the same as in the wholeBody paths in problem solver) to a map of trajectories for each effectors.
     private:
         void AddLimbPrivate(rbprm::RbPrmLimbPtr_t limb, const std::string& id, const std::string& name,

@@ -139,6 +139,8 @@ namespace geom
   {
     
     T_Point res;
+    if(pointsBegin == pointsEnd)
+      return res;
     Point pointOnHull = *leftMost(pointsBegin, pointsEnd);
     Point lastPoint = *pointsBegin;
     do {
@@ -366,6 +368,9 @@ namespace geom
         dirS = dirE;
       }
 
+    }
+    if(outputList.size()==0){
+      hppDout(warning,"In computeIntersection3D : intersection is empty");
     }
     outputList = convexHull(outputList.begin(),outputList.end());
     /*

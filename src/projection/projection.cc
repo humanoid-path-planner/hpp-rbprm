@@ -196,7 +196,7 @@ ProjectionReport projectToRootPosition(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, 
                                            const hpp::rbprm::State& currentState)
 {
     ProjectionReport res;
-    core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(fullBody->device_,"proj", 1e-4, 40);
+    core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(fullBody->device_,"proj", 1e-4, 100);
     CreateContactConstraints(fullBody, currentState, proj);
     CreateRootPosConstraint(fullBody, target, proj);
     pinocchio::Configuration_t configuration = currentState.configuration_;
@@ -250,7 +250,7 @@ ProjectionReport projectToRootConfiguration(hpp::rbprm::RbPrmFullBodyPtr_t fullB
                                            const hpp::rbprm::State& currentState)
 {
     ProjectionReport res;
-    core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(fullBody->device_,"proj", 1e-4, 40);
+    core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(fullBody->device_,"proj", 1e-4, 100);
     CreateContactConstraints(fullBody, currentState, proj);
     LockFromRoot(fullBody->device_, fullBody->GetLimbs(), conf, proj);
     pinocchio::Configuration_t configuration = currentState.configuration_;
@@ -401,10 +401,14 @@ ProjectionReport projectEffector(hpp::core::ConfigProjectorPtr_t proj, const hpp
 fcl::Transform3f computeProjectionMatrix(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const hpp::rbprm::RbPrmLimbPtr_t& limb, const pinocchio::ConfigurationIn_t configuration,
                                          const fcl::Vec3f& normal, const fcl::Vec3f& position)
 {
+    hppDout(notice,"computeProjection matrice : normal = "<<normal.transpose());
     body->device_->currentConfiguration(configuration);
     body->device_->computeForwardKinematics();
     // the normal is given by the normal of the contacted object
+    hppDout(notice,"effector rot : \n"<<limb->effector_.currentTransformation().rotation());
+    hppDout(notice,"limb normal : "<<limb->normal_.transpose());
     const fcl::Vec3f z = limb->effector_.currentTransformation().rotation() * limb->normal_;
+    hppDout(notice,"z = "<<z.transpose());
     const fcl::Matrix3f alignRotation = tools::GetRotationMatrix(z,normal);
     hppDout(notice,"alignRotation : \n"<<alignRotation);
     const fcl::Matrix3f rotation = alignRotation * limb->effector_.currentTransformation().rotation();
@@ -556,7 +560,7 @@ ProjectionReport projectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& b
     //hppDout(notice,"Effector position : "<<report.sample_->effectorPosition_);
     //hppDout(notice,"pEndEff = ["<<pEndEff[0]<<","<<pEndEff[1]<<","<<pEndEff[2]<<"]");
     //hppDout(notice,"pos = ["<<pos[0]<<","<<pos[1]<<","<<pos[2]<<"]");
-    core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 20);
+    core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 100);
     hpp::tools::LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
     return projectToObstacle(proj, body, limbId, limb, validation, configuration, current, normal, pos);
 }

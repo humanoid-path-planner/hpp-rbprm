@@ -95,7 +95,7 @@ namespace hpp {
       const value_type x_theta_0 = cos(theta) * x_0 +  sin(theta) * y_0;
       const value_type x_theta_imp = cos(theta) * x_imp +  sin(theta) * y_imp;
       const value_type X_theta = X*cos(theta) + Y*sin(theta);
-      const value_type phi = atan (mu_);
+
       hppDout (info, "x_0: " << x_0);
       hppDout (info, "y_0: " << y_0);
       hppDout (info, "z_0: " << z_0);
@@ -109,7 +109,7 @@ namespace hpp {
       hppDout (info, "x_theta_0: " << x_theta_0);
       hppDout (info, "x_theta_imp: " << x_theta_imp);
       hppDout (info, "X_theta: " << X_theta);
-      hppDout (info, "phi: " << phi);
+      hppDout (info, "phi: " << atan (mu_)); // phi
 
       /* 5th constraint: first cone */
 
@@ -411,13 +411,14 @@ namespace hpp {
 
 
       const value_type X_theta = X*cos(theta) + Y*sin(theta);
-
+      #ifdef HPP_DEBUG
       const value_type x_theta_0_dot = sqrt((g_ * X_theta * X_theta)
-                                            /(2 * (X_theta*tan(alpha) - Z)));
+                                            /(2 * (X_theta*tan(alpha) - Z)));                 
       const value_type inv_x_th_dot_0_sq = 1/(x_theta_0_dot*x_theta_0_dot);
       //const value_type v = sqrt((1 + tan(alpha)*tan(alpha))) * x_theta_0_dot;
       //hppDout (notice, "v: " << v);
       const value_type Vimp = sqrt(1 + (-g_*X*inv_x_th_dot_0_sq+tan(alpha)) *(-g_*X*inv_x_th_dot_0_sq+tan(alpha))) * x_theta_0_dot; // x_theta_0_dot > 0
+      #endif
       hppDout (notice, "Vimp (after 3 seconde) : " << Vimp);
 
       /* Compute Parabola coefficients */
@@ -627,7 +628,10 @@ namespace hpp {
             z_x_plus = x_plus*K1;
           }
         }
-
+        #ifndef HPP_DEBUG
+        (void)z_x_plus;
+        (void)z_x_minus;
+        #endif
         // plot outputs
         hppDout (info, "q: " << hpp::pinocchio::displayConfig (q));
         hppDout (info, "x_plus: " << x_plus);
@@ -655,12 +659,15 @@ namespace hpp {
         }
         value_type G1 = ((1+mu_*mu_)*V*W + sqrt(discr))/(denomK);
         value_type G2 = ((1+mu_*mu_)*V*W - sqrt(discr))/(denomK);
+
+        #ifdef HPP_DEBUG
         value_type y = 1;
         if (theta == -M_PI /2)
           y = -1;
         hppDout (info, "y: " << y);
         value_type z_y_plus = G1*y; //TODO: sign selection of y
         value_type z_y_minus = G2*y;
+        #endif
         hppDout (info, "z_y_plus: " << z_y_plus);
         hppDout (info, "z_y_minus: " << z_y_minus);
 
@@ -769,7 +776,9 @@ namespace hpp {
       coefs (6) = x_theta_0;
       // Also compute initial and final velocities
       const value_type V0 = sqrt((1 + tan(alpha)*tan(alpha))) * x_theta_0_dot;
+      #ifdef HPP_DEBUG
       const value_type Vimp = sqrt(1 + (-g_*X_theta*inv_x_th_dot_0_sq+tan(alpha)) *(-g_*X_theta*inv_x_th_dot_0_sq+tan(alpha))) * x_theta_0_dot;
+      #endif
       hppDout (info, "V0: " << V0);
       hppDout (info, "Vimp: " << Vimp);
       V0_ [0] = x_theta_0_dot*cos(theta);

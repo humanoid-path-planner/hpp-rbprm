@@ -21,7 +21,7 @@
 #include <hpp/rbprm/tools.hh>
 #include <hpp/core/bi-rrt-planner.hh>
 #include <hpp/core/configuration-shooter/uniform.hh>
-#include <hpp/core/discretized-path-validation.hh>
+#include <hpp/core/path-validation/discretized.hh>
 #include <hpp/pinocchio/configuration.hh>
 #include <hpp/core/problem-solver.hh>
 #ifdef PROFILE
@@ -88,7 +88,7 @@ using namespace core;
             {
             }
             rootProblem.configurationShooter(core::configurationShooter::Uniform::create(device));
-            rootProblem.pathValidation(DiscretizedPathValidation::create(0.05));
+            rootProblem.pathValidation(pathValidation::Discretized::create(0.05));
             core::ConstraintSetPtr_t cSet = core::ConstraintSet::create(rootProblem.robot(),"");
             cSet->addConstraint(proj);
             rootProblem.constraints(cSet);
