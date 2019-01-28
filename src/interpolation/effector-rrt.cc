@@ -402,7 +402,7 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
      }
 */
 /*
-    void computePredefConstants(value_type dist_translation,value_type p_max,value_type p_min,value_type t_total,value_type &t_predef, value_type &posOffset, value_type &velOffset,value_type &a_max_predefined ){
+    void Constants(value_type dist_translation,value_type p_max,value_type p_min,value_type t_total,value_type &t_predef, value_type &posOffset, value_type &velOffset,value_type &a_max_predefined ){
         value_type timeMid= t_total - (2*t_predef);
 
         const value_type dddjerk = 4000.; // 3000
@@ -416,20 +416,21 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
         hppDout(notice,"pos offset = "<<posOffset<<" ; jerk = "<<jerk<<" ; acc = "<<a_max_predefined<<" ; vel = "<<velOffset);
      }
 */
-    void computePredefConstants(value_type /*dist_translation*/,value_type /*p_max*/,value_type /*p_min*/,value_type /*t_total*/,value_type &t_predef, value_type &posOffset, value_type &velOffset,value_type &a_max_predefined ){
 
-        const value_type ddjerk = 250.;
-        //const value_type djerk = ddjerk*t_predef;
-        #ifdef HPP_DEBUG
-        const value_type jerk = 0.5*ddjerk*t_predef*t_predef;
-        #endif
-        a_max_predefined = (1./6.)*ddjerk *t_predef*t_predef*t_predef;
-        hppDout(notice,"computed jerk in computePredefConstant : "<<jerk);
+//    void computePredefConstants(value_type /*dist_translation*/,value_type /*p_max*/,value_type /*p_min*/,value_type /*t_total*/,value_type &t_predef, value_type &posOffset, value_type &velOffset,value_type &a_max_predefined ){
 
-        velOffset = (1./24.) * ddjerk * t_predef * t_predef * t_predef * t_predef;
-        posOffset = (1./120.) * ddjerk * t_predef * t_predef * t_predef* t_predef * t_predef;
-        hppDout(notice,"pos offset = "<<posOffset<<" ; jerk = "<<jerk<<" ; acc = "<<a_max_predefined<<" ; vel = "<<velOffset);
-     }
+//        const value_type ddjerk = 250.;
+//        //const value_type djerk = ddjerk*t_predef;
+//        #ifdef HPP_DEBUG
+//        const value_type jerk = 0.5*ddjerk*t_predef*t_predef;
+//        #endif
+//        a_max_predefined = (1./6.)*ddjerk *t_predef*t_predef*t_predef;
+//        hppDout(notice,"computed jerk in computePredefConstant : "<<jerk);
+
+//        velOffset = (1./24.) * ddjerk * t_predef * t_predef * t_predef * t_predef;
+//        posOffset = (1./120.) * ddjerk * t_predef * t_predef * t_predef* t_predef * t_predef;
+//        hppDout(notice,"pos offset = "<<posOffset<<" ; jerk = "<<jerk<<" ; acc = "<<a_max_predefined<<" ; vel = "<<velOffset);
+//     }
 
 /*
     void computePredefConstants(value_type dist_translation,value_type p_max,value_type p_min,value_type t_total,value_type &t_predef, value_type &posOffset, value_type &velOffset,value_type &a_max_predefined ){
@@ -492,6 +493,12 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
         hppDout(notice," pos offset = "<<posOffset<< "  ; vel offset = "<<velOffset);
     }
 */
+
+
+    void computePredefConstants(double /*dist_translation*/,double p_max,double /*p_min*/,double t_total,double &t_predef, double &posOffset, double &/*velOffset*/,double &/*a_max_predefined*/ ){
+        double timeMid= (t_total - (2*t_predef))/2.;
+        posOffset = p_max / (1. + 4.*timeMid/t_predef + 6.*timeMid*timeMid/(t_predef*t_predef) - (timeMid*timeMid*timeMid)/(t_predef*t_predef*t_predef));
+    }
 
     DevicePtr_t createFreeFlyerDevice()
     {
