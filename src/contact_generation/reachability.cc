@@ -393,7 +393,7 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     hppDout(notice,"IsReachableDynamic called : ");
     hppDout(notice,"Between configuration : "<<pinocchio::displayConfig(previous.configuration_));
     hppDout(notice,"and     configuration : "<<pinocchio::displayConfig(next.configuration_));
-
+    assert(fullbody->device_->extraConfigSpace().dimension() >= 6 && "You need to set at least 6 extraDOF to use the reachability methods.");
     if(previous.configuration_.head<3>() == next.configuration_.head<3>()){
         hppDout(notice,"Same root position, unable to compute");
         return Result(SAME_ROOT_POSITION);
@@ -546,7 +546,7 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     hppDout(notice,"dc1 = "<<pData.dc1_.transpose());
     hppDout(notice,"ddc0 = "<<pData.ddc0_.transpose());
     hppDout(notice,"ddc1 = "<<pData.ddc1_.transpose());
-
+    assert ((pData.contacts_.size() == 2 || pData.contacts_.size() == 3) && "Error in computation of contact constraints, must be only 2 or 3 phases.");
 
     // compute initial guess :
     //average of all contact point for the state with the less contacts, z = average of the CoM heigh between previous and next
