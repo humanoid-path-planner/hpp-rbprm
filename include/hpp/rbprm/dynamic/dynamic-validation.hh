@@ -20,7 +20,7 @@
 # define HPP_RBPRM_DYNAMIC_VALIDATION_HH
 
 # include <hpp/core/config-validation.hh>
-#include <centroidal-dynamics-lib/centroidal_dynamics.hh>
+# include <hpp/centroidal-dynamics/centroidal_dynamics.hh>
 # include <hpp/rbprm/rbprm-validation-report.hh>
 namespace hpp {
   namespace pinocchio {

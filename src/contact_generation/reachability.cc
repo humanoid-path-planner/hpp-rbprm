@@ -1,6 +1,6 @@
 #include <hpp/rbprm/contact_generation/reachability.hh>
-#include <bezier-com-traj/solve.hh>
-#include <bezier-com-traj/common_solve_methods.hh>
+#include <hpp/bezier-com-traj/solve.hh>
+#include <hpp/bezier-com-traj/common_solve_methods.hh>
 #include <hpp/rbprm/rbprm-fullbody.hh>
 #include <hpp/rbprm/stability/stability.hh>
 #include <iostream>

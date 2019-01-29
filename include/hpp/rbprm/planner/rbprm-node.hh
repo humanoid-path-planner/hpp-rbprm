@@ -3,7 +3,7 @@
 
 #include <hpp/core/node.hh>
 #include <hpp/rbprm/rbprm-validation-report.hh>
-#include <centroidal-dynamics-lib/centroidal_dynamics.hh>
+#include <hpp/centroidal-dynamics/centroidal_dynamics.hh>
 
 
 namespace hpp {
@@ -58,7 +58,7 @@ namespace hpp {
       void collisionReport(RbprmValidationReportPtr_t report){
         collisionReport_ = report;
       }
-      
+
 
 
 
@@ -104,7 +104,7 @@ namespace hpp {
       Matrix63 H_;
       Vector6 h_;
       size_type numberOfContacts_;
-      
+
 
     }; // class
 

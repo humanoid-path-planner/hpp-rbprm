@@ -40,7 +40,7 @@
 #include <hpp/core/config-validations.hh>
 #include <hpp/fcl/collision_data.h>
 #include <hpp/fcl/intersect.h>
-#include "utils/algorithms.h"
+#include "hpp/rbprm/utils/algorithms.h"
 #include <polytope/stability_margin.h>
 #include <hpp/rbprm/planner/parabola-path.hh>
 
@@ -48,20 +48,20 @@
 namespace hpp {
   namespace rbprm {
     using model::displayConfig;
-    
+
     ParabolaPlannerPtr_t ParabolaPlanner::createWithRoadmap
     (const core::Problem& problem, const core::RoadmapPtr_t& roadmap)
     {
       ParabolaPlanner* ptr = new ParabolaPlanner (problem, roadmap);
       return ParabolaPlannerPtr_t (ptr);
     }
-    
+
     ParabolaPlannerPtr_t ParabolaPlanner::create (const core::Problem& problem)
     {
       ParabolaPlanner* ptr = new ParabolaPlanner (problem);
       return ParabolaPlannerPtr_t (ptr);
     }
-    
+
     ParabolaPlanner::ParabolaPlanner (const core::Problem& problem):
       PathPlanner (problem),
       configurationShooter_ (problem.configurationShooter()),
@@ -70,7 +70,7 @@ namespace hpp {
       rbRoadmap_(core::RbprmRoadmap::create (problem.distance (),problem.robot())), roadmap_(boost::dynamic_pointer_cast<core::Roadmap>(rbRoadmap_))
     {
     }
-    
+
     ParabolaPlanner::ParabolaPlanner (const core::Problem& problem,
                                     const core::RoadmapPtr_t& roadmap) :
       PathPlanner (problem, roadmap),
@@ -80,13 +80,13 @@ namespace hpp {
       rbRoadmap_(core::RbprmRoadmap::create (problem.distance (),problem.robot())), roadmap_(boost::dynamic_pointer_cast<core::Roadmap>(rbRoadmap_))
     {
     }
-    
+
     void ParabolaPlanner::init (const ParabolaPlannerWkPtr_t &weak)
     {
       PathPlanner::init (weak);
       weakPtr_ = weak;
     }
-    
+
     bool belongs (const core::ConfigurationPtr_t& q, const core::Nodes_t& nodes)
     {
       for (core::Nodes_t::const_iterator itNode = nodes.begin ();
@@ -95,19 +95,19 @@ namespace hpp {
       }
       return false;
     }
-    
+
     void ParabolaPlanner::startSolve ()
     {
       // add 3 extraDof to save contact normal (used for parabola computation)
       //hppDout(notice,"set extra conf");
-      
+
       //problem().robot()->setDimensionExtraConfigSpace(problem().robot()->extraConfigSpace().dimension() + 3);
       //  PathPlanner::startSolve();
       hppDout(notice,"startsolve");
       problem().checkProblem ();
       // Tag init and goal configurations in the roadmap
       roadmap()->resetGoalNodes ();
-      
+
       roadmap()->initNode (problem().initConfig ());
       const core::Configurations_t goals (problem().goalConfigs ());
       for (core::Configurations_t::const_iterator itGoal = goals.begin ();
@@ -115,10 +115,10 @@ namespace hpp {
         roadmap()->addGoalNode (*itGoal);
       }
       hppDout(notice,"startSolve OK");
-      
+
       polytope::init_library();
     }
-    
+
     core::PathPtr_t ParabolaPlanner::extend (const core::NodePtr_t& near,
                                             const core::ConfigurationPtr_t& target)
     {
@@ -143,7 +143,7 @@ namespace hpp {
       }
       return path;
     }
-    
+
     core::PathPtr_t ParabolaPlanner::extendParabola (const core::NodePtr_t& near,
                                                     const core::ConfigurationPtr_t& target)
     {
@@ -168,8 +168,8 @@ namespace hpp {
       }
       return path;
     }
-    
-    
+
+
     /// This method performs one step of RRT extension as follows
     ///  1. a random configuration "q_rand" is shot,
     ///  2. for each connected component,
@@ -193,7 +193,7 @@ namespace hpp {
     ///  Note that edges are actually added to the roadmap after step 2 in order
     ///  to avoid iterating on the list of connected components while modifying
     ///  this list.
-    
+
     void ParabolaPlanner::oneStep ()
     {
       hppDout(notice,"# oneStep BEGIN");
@@ -210,8 +210,8 @@ namespace hpp {
       core::ConfigurationPtr_t q_rand = configurationShooter_->shoot ();
       hppDout(notice,"# random shoot OK : ");
       hppDout(notice,displayConfig(*q_rand));
-      
-      
+
+
       //
       // First extend each connected component toward q_rand
       //
@@ -224,7 +224,7 @@ namespace hpp {
         // Find nearest node in roadmap
         core::value_type distance;
         core::NodePtr_t near = roadmap ()->nearestNode (q_rand, *itcc, distance);
-        
+
         hppStartBenchmark(EXTEND);
         path = extend (near, q_rand);
         hppStopBenchmark (EXTEND);
@@ -233,11 +233,11 @@ namespace hpp {
           hppDout(notice, "### path exist");
           core::PathValidationReportPtr_t report;
           bool pathValid = pathValidation->validate (path, false, validPath,report);
-          
+
           // Insert new path to q_near in roadmap
           core::value_type t_final = validPath->timeRange ().second;
           if (t_final != path->timeRange ().first) {
-            
+
             hppDout(notice, "### path's length not null");
             core::ConfigurationPtr_t q_new (new core::Configuration_t(validPath->end ()));
             if (!pathValid || !belongs (q_new, newNodes)) {
@@ -245,7 +245,7 @@ namespace hpp {
               hppDout(notice, displayConfig(*q_new));
               core::NodePtr_t x_new = rbprmRoadmap()->addNodeAndEdges(near, q_new, validPath);
               computeGIWC(x_new);
-              
+
               newNodes.push_back (x_new);
               if(!pathValid){
                 hppDout(notice,"### Straight path not fully valid, try parabola path between qnew and qrand");
@@ -253,7 +253,7 @@ namespace hpp {
                 // TODO : aaprès modif validation report, recup normal des ROM et non du tronc
                 /* if(report->configurationReport)  {
                   fcl::Vec3f normal ( - boost::dynamic_pointer_cast<core::CollisionValidationReport>(report->configurationReport)->result.getContact(0).normal);
-                  
+
                   hppDout(notice,"normal = "<<normal);
                   // fill extraDof with normal :
                   core::size_type size = problem().robot()->configSize ();
@@ -296,7 +296,7 @@ namespace hpp {
           }
         }else
           hppDout(notice, "### path dosen't exist");
-        
+
       }
       hppDout(notice,"# extend OK");
       // Insert delayed edges
@@ -318,7 +318,7 @@ namespace hpp {
         roadmap ()->addEdge (newNode, near, validPath->reverse());
       }
       hppDout(notice,"# add delayed edge OK");
-      
+
       //
       // Second, try to connect new nodes together
       //
@@ -342,10 +342,10 @@ namespace hpp {
         }
       }
       hppDout(notice,"# OneStep END");
-      
+
     }
-    
-    
+
+
     // This method call SteeringMethodParabola, but we don't try to connect two confuration, instead we shoot a random alpha0 and V0 valide for the initiale configuration and then compute the final point.
     // Then we check for collision (for the trunk)  and we check if the final point is in a valide configuration (trunk not in collision but limbs in accessible contact zone).
     // (Not anymore ) If this is true we do a reverse collision check until we find the first valide configuration, then we check for the friction cone and impact velocity constraint.(Not anymore : can't find normal after this)
@@ -394,8 +394,8 @@ namespace hpp {
             hppDout(notice,"Impact velocity invalid : vImp = "<<Vimp);
             return path;
           }
-          
-          
+
+
           hppDout(notice,"compute friction cone for landing point : ");
           bool coneOK = smParabola_->fiveth_constraint (*q_new,theta,1,&delta);
           if(!coneOK){
@@ -422,7 +422,7 @@ namespace hpp {
           }
           hppDout (notice, "alpha_imp_sup: " << alpha_imp_sup);
           hppDout (notice, "alpha_imp_inf: " << alpha_imp_inf);
-          
+
           value_type alpha_inf_bound = 0;
           value_type alpha_sup_bound = 0;
           value_type alpha_inf4;
@@ -446,11 +446,11 @@ namespace hpp {
             }
             alpha_sup_bound = std::min(M_PI/2, alpha_imp_sup);
           }
-          
+
           hppDout (notice, "alpha_inf_bound: " << alpha_inf_bound);
           hppDout (notice, "alpha_sup_bound: " << alpha_sup_bound);
-          
-          
+
+
           if(alpha0 > alpha_sup_bound || alpha0 < alpha_inf_bound){
             hppDout(notice,"Parabola doesn't land inside friction cone");
             return path;
@@ -458,8 +458,8 @@ namespace hpp {
           hppDout(notice,"# Landing point valid, add node and edges");
           // Here everything is valid, adding node and edge to roadmap :
           delayedEdges.push_back (DelayedEdge_t (x_start, q_new, validPath));
-          
-          
+
+
         }//contactValid
       }else if (valid){
         hppDout(notice,"random parabola doesn't land on obstacle");
@@ -467,7 +467,7 @@ namespace hpp {
       }
       return path;
     }
-    
+
     void ParabolaPlanner::tryDirectPath ()
     {
       // call steering method here to build a direct conexion
@@ -541,15 +541,15 @@ namespace hpp {
         } //if path exist
       } //for qgoals
     }
-    
-    
-    
+
+
+
     void ParabolaPlanner::configurationShooter
     (const core::ConfigurationShooterPtr_t& shooter)
     {
       configurationShooter_ = shooter;
     }
-    
+
     // for debugging
     /* core::PathVectorPtr_t DynamicPlanner::solve (){
       startSolve();
@@ -569,7 +569,7 @@ namespace hpp {
         hppStopBenchmark (EXTEND);
         hppDisplayBenchmark (EXTEND);
         if (path) {
-        
+
           core::PathValidationReportPtr_t report;
           bool pathValid = pathValidation->validate (path, false, validPath,report);
           if (pathValid ) {
@@ -622,14 +622,14 @@ namespace hpp {
     }*/
 
 
-    
+
     void ParabolaPlanner::computeGIWC(const core::RbprmNodePtr_t x){
       core::ValidationReportPtr_t report;
       problem().configValidations()->validate(*(x->configuration()),report);
       computeGIWC(x,report);
     }
-          
-    
+
+
     void ParabolaPlanner::computeGIWC(const core::RbprmNodePtr_t node, core::ValidationReportPtr_t report){
       hppDout(notice,"## compute GIWC");
       core::ConfigurationPtr_t q = node->configuration();
@@ -639,14 +639,14 @@ namespace hpp {
         hppDout(info,"~~ NODE cast correctly");
         node->normal((*q)[cSize-3],(*q)[cSize-2],(*q)[cSize-1]);
         hppDout(info,"~~ normal = "<<node->getNormal());
-        
+
       }else{
         hppDout(error,"~~ NODE cannot be cast");
         return;
       }
-      
+
       hppDout(info,"~~ q = "<<displayConfig(*q));
-      
+
       core::RbprmValidationReportPtr_t rbReport = boost::dynamic_pointer_cast<core::RbprmValidationReport> (report);
       // checks :
       if(!rbReport)
@@ -662,12 +662,12 @@ namespace hpp {
       {
         hppDout(warning,"~~ ComputeGIWC : roms filter not respected"); // shouldn't happen
       }
-      
+
       //TODO
       polytope::T_rotation_t rotContact(3*rbReport->ROMReports.size(),3);
       polytope::vector_t posContact(3*rbReport->ROMReports.size());
-      
-      
+
+
       // get the 2 object in contact for each ROM :
       hppDout(info,"~~ Number of roms in collision : "<<rbReport->ROMReports.size());
       size_t indexRom = 0 ;
@@ -691,7 +691,7 @@ namespace hpp {
         ss<<"]";
         std::cout<<ss.str()<<std::endl;
       */
-        
+
         // get intersection between the two objects :
         obj1->fcl();
         geom::T_Point vertices1;
@@ -709,8 +709,8 @@ namespace hpp {
         }
         ss1<<"]";
         //std::cout<<ss1.str()<<std::endl;
-        
-        
+
+
         obj2->fcl();
         geom::T_Point vertices2;
         geom::BVHModelOBConst_Ptr_t model2 =  geom::GetModel(obj2->fcl());
@@ -724,15 +724,15 @@ namespace hpp {
           ss2<<"["<<model2->vertices[i][0]<<","<<model2->vertices[i][1]<<","<<model2->vertices[i][2]<<"]";
           if(i< (model2->num_vertices -1))
             ss2<<",";
-          
+
         }
         ss2<<"]";
         //std::cout<<ss2.str()<<std::endl;
-        
-        
-        
-      
-        
+
+
+
+
+
         hppStartBenchmark (COMPUTE_INTERSECTION);
         geom::T_Point hull = geom::intersectPolygonePlane(model1,model2,fcl::Vec3f(0,0,1),geom::ZJUMP,result);
         hppStopBenchmark (COMPUTE_INTERSECTION);
@@ -742,43 +742,43 @@ namespace hpp {
          // node->giwc(0);
           return;
         }
-        
+
         // todo : compute center point of the hull
         polytope::vector3_t normal,tangent0,tangent1;
         geom::Point center = geom::center(hull.begin(),hull.end());
         posContact.segment<3>(indexRom*3) = center;
         std::cout<<center<<std::endl<<std::endl;
-        polytope::rotation_t rot; 
+        polytope::rotation_t rot;
         normal = -result.getContact(0).normal;
         hppDout(notice," !!! normal for GIWC : "<<normal);
-        // compute tangent vector : 
+        // compute tangent vector :
         tangent0 = normal.cross(polytope::vector3_t(1,0,0));
         if(tangent0.dot(tangent0)<0.001)
-          tangent0 = normal.cross(polytope::vector3_t(0,1,0)); 
+          tangent0 = normal.cross(polytope::vector3_t(0,1,0));
         tangent1 = normal.cross(tangent0);
         rot(0,0) = tangent0(0) ; rot(0,1) = tangent1(0) ; rot(0,2) = normal(0);
         rot(1,0) = tangent0(1) ; rot(1,1) = tangent1(1) ; rot(1,2) = normal(1);
         rot(2,0) = tangent0(2) ; rot(2,1) = tangent1(2) ; rot(2,2) = normal(2);
-        
+
         rotContact.block<3,3>(indexRom*3,0) = rot;
         std::cout<<rot<<std::endl<<std::endl;
-        
+
         indexRom++;
       } // for each ROMS
-      
+
       polytope::vector_t x(rbReport->ROMReports.size());
       polytope::vector_t y(rbReport->ROMReports.size());
       polytope::vector_t nu(rbReport->ROMReports.size());
       for(size_t k = 0 ; k<rbReport->ROMReports.size() ; ++k){
         x(k) = 0.25; // approx size of foot
-        y(k) = 0.15; 
+        y(k) = 0.15;
         nu(k) = 0.5;
       }
       // save giwc in node structure
       //node->giwc(polytope::U_stance(rotContact,posContact,nu,x,y));
-      
-      
+
+
     }// computeGIWC
-    
+
   } // namespace core
 } // namespace hpp

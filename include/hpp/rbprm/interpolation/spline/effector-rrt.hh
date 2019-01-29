@@ -32,9 +32,9 @@
 # include <hpp/core/problem.hh>
 # include <hpp/core/config-projector.hh>
 # include <hpp/rbprm/interpolation/spline/bezier-path.hh>
-# include <spline/exact_cubic.h>
-# include <spline/bezier_curve.h>
-# include <spline/spline_deriv_constraint.h>
+# include <hpp/spline/exact_cubic.h>
+# include <hpp/spline/bezier_curve.h>
+# include <hpp/spline/spline_deriv_constraint.h>
 # include <vector>
 # include <map>
 
@@ -120,7 +120,7 @@ namespace interpolation {
 
     typedef spline::exact_cubic<double, double, 3, true, Eigen::Matrix<value_type, 3, 1> > exact_cubic_t;
     typedef spline::spline_deriv_constraint<double, double, 3, true, Eigen::Matrix<value_type, 3, 1> > spline_deriv_constraint_t;
-    typedef boost::shared_ptr<exact_cubic_t> exact_cubic_Ptr;    
+    typedef boost::shared_ptr<exact_cubic_t> exact_cubic_Ptr;
 
 
     struct SetEffectorRRTConstraints

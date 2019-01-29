@@ -41,7 +41,7 @@ namespace hpp {
     {
     public:
       static RbPrmRomValidationPtr_t create (const pinocchio::DevicePtr_t& robot,
-                                             const std::vector<std::string>& affFilters 
+                                             const std::vector<std::string>& affFilters
 																						 	= std::vector<std::string>());
 
       /// Compute whether the configuration is valid

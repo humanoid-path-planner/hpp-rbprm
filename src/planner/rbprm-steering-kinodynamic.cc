@@ -21,7 +21,7 @@
 # include <hpp/core/weighed-distance.hh>
 # include <hpp/core/kinodynamic-path.hh>
 # include <hpp/rbprm/planner/rbprm-node.hh>
-#include <centroidal-dynamics-lib/centroidal_dynamics.hh>
+#include <hpp/centroidal-dynamics/centroidal_dynamics.hh>
 # include <hpp/util/debug.hh>
 # include <hpp/util/timer.hh>
 

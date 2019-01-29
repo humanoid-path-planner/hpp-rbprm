@@ -28,14 +28,14 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef RBPRM_PROFILER_H
 #define RBPRM_PROFILER_H
 
-#include "utils/stop-watch.hh"
+#include "hpp/rbprm/utils/stop-watch.hh"
 
 class RbPrmProfiler : public Stopwatch {
 public:
-	
+
   /** Constructor */
   RbPrmProfiler(StopwatchMode _mode=NONE) : Stopwatch(_mode) {}
-  
+
   /** Destructor */
   ~RbPrmProfiler(){}
 

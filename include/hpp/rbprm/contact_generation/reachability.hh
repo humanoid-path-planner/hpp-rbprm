@@ -2,7 +2,7 @@
 #define HPP_RBPRM_REACHABILITY_HH
 
 #include <hpp/rbprm/rbprm-limb.hh>
-#include <centroidal-dynamics-lib/centroidal_dynamics.hh>
+#include <hpp/centroidal-dynamics/centroidal_dynamics.hh>
 #include <hpp/rbprm/rbprm-state.hh>
 #include <hpp/rbprm/contact_generation/kinematics_constraints.hh>
 #include <hpp/core/path.hh>

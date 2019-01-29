@@ -18,7 +18,7 @@
 #include <hpp/fcl/collision.h>
 #include <hpp/fcl/BVH/BVH_model.h>
 #include <hpp/rbprm/rbprm-validation-report.hh>
-#include "utils/algorithms.h"
+#include "hpp/rbprm/utils/algorithms.h"
 
 namespace hpp {
   using namespace core;

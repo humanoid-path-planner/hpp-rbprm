@@ -22,7 +22,7 @@
 #include <hpp/pinocchio/device.hh>
 #include <hpp/rbprm/rbprm-state.hh>
 #include <hpp/rbprm/rbprm-fullbody.hh>
-#include <centroidal-dynamics-lib/centroidal_dynamics.hh>
+#include <hpp/centroidal-dynamics/centroidal_dynamics.hh>
 
 #include <map>
 #include <memory>

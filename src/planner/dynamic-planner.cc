@@ -36,10 +36,10 @@
 #include <hpp/rbprm/planner/rbprm-steering-kinodynamic.hh>
 #include <hpp/fcl/collision_data.h>
 #include <hpp/fcl/intersect.h>
-#include "utils/algorithms.h"
+#include "hpp/rbprm/utils/algorithms.h"
 #include <hpp/core/path-projector.hh>
 #include <hpp/rbprm/planner/rbprm-roadmap.hh>
-#include <centroidal-dynamics-lib/centroidal_dynamics.hh>
+#include <hpp/centroidal-dynamics/centroidal_dynamics.hh>
 #include <hpp/rbprm/rbprm-path-validation.hh>
 #include <hpp/rbprm/rbprm-validation-report.hh>
 #include <hpp/rbprm/planner/parabola-path.hh>
@@ -581,4 +581,3 @@ namespace hpp {
 
   } // namespace rbprm
 } // namespace hpp
-

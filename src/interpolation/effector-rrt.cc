@@ -24,10 +24,10 @@
 #include <hpp/core/bi-rrt-planner.hh>
 #include <hpp/core/configuration-shooter/uniform.hh>
 #include <hpp/constraints/generic-transformation.hh>
-#include <bezier-com-traj/solve_end_effector.hh>
+#include <hpp/bezier-com-traj/solve_end_effector.hh>
 #include <hpp/core/problem-solver.hh>
-#include <spline/helpers/effector_spline.h>
-#include <spline/bezier_curve.h>
+#include <hpp/spline/helpers/effector_spline.h>
+#include <hpp/spline/bezier_curve.h>
 
 namespace hpp {
 using namespace core;
@@ -647,7 +647,7 @@ buildPredefinedPath(endEffectorDevice,nextNormal,endConfig,posOffset,-velOffset,
         fullBodyPathVector->appendPath(fullBodyComPath);
         std::string effectorName = getEffectorLimb(startState,nextState);
         EndEffectorPath endEffPath(fullbody->device_,effector,fullBodyComPath);
-        // create a 'device' object for the end effector (freeflyer 6D). Needed for the path and the orientation constraint        
+        // create a 'device' object for the end effector (freeflyer 6D). Needed for the path and the orientation constraint
         DevicePtr_t endEffectorDevice = createFreeFlyerDevice();
         Configuration_t initConfig(endEffectorDevice->configSize()),endConfig(endEffectorDevice->configSize());
         getEffectorConfigForConfig(fullbody->device_,effector,startState.configuration_,initConfig);
@@ -946,7 +946,7 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
             for(std::vector<pinocchio::JointPtr_t>::const_iterator cit = constrainedJointPos_.begin();
                 cit != constrainedJointPos_.end(); ++cit)
             {
-                hppDout(notice,"Constrained joint pose : "<<(*cit)->name());                
+                hppDout(notice,"Constrained joint pose : "<<(*cit)->name());
                 Create6DEffectorConstraint<EffectorRRTHelper, core::PathPtr_t  >(helper, refFullbody_, helper.fullBodyDevice_->getFrameByName((*cit)->name()));
             }
         }

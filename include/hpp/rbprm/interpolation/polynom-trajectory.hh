@@ -23,7 +23,7 @@
 # include <hpp/core/config.hh>
 # include <hpp/core/path.hh>
 # include <hpp/rbprm/interpolation/time-dependant.hh>
-# include <spline/curve_abc.h>
+# include <hpp/spline/curve_abc.h>
 
 namespace hpp {
 namespace rbprm {

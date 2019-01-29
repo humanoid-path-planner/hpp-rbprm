@@ -121,7 +121,11 @@ namespace hpp {
                   const hpp::core::AffordanceObjects_t& affObjs = affordances.get(affFilterIt->second[fIdx]);
                   for (std::size_t affIdx = 0; affIdx < affObjs.size (); affIdx++)
                   {
-                      romIt->second->addObstacle(affObjs[affIdx].second);
+                    hpp::pinocchio::CollisionObjectPtr_t obj =
+                      hpp::pinocchio::CollisionObjectPtr_t (new
+                          hpp::pinocchio::CollisionObject(robot, affIdx));
+                          //hpp::pinocchio::CollisionObject(robot, affIdx, affObjs));
+                      romIt->second->addObstacle(obj);
                   }
               }
 

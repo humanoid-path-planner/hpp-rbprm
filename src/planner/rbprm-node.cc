@@ -19,7 +19,7 @@
 #include <hpp/rbprm/planner/rbprm-node.hh>
 #include <hpp/fcl/collision_data.h>
 #include <hpp/fcl/intersect.h>
-#include "utils/algorithms.h"
+#include "hpp/rbprm/utils/algorithms.h"
 #include <hpp/util/debug.hh>
 #include <hpp/util/timer.hh>
 #include <hpp/pinocchio/configuration.hh>

@@ -20,7 +20,7 @@
 #ifndef HPP_RBPRM_BEZIER_PATH_HH
 #define HPP_RBPRM_BEZIER_PATH_HH
 
-# include <spline/bezier_curve.h>
+# include <hpp/spline/bezier_curve.h>
 # include <hpp/core/path.hh>
 # include <vector>
 # include <map>

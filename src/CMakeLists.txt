@@ -20,74 +20,62 @@
 SET(LIBRARY_NAME ${PROJECT_NAME})
 
 SET(${LIBRARY_NAME}_SOURCES
-	rbprm-shooter.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-shooter.hh
-	rbprm-validation.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-validation.hh
-  rbprm-path-validation.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-path-validation.hh
-        rbprm-rom-validation.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-rom-validation.hh
-	rbprm-device.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-device.hh
-	rbprm-limb.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-limb.hh
-        ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/time-dependant.hh
-        ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/interpolation-constraints.hh
-        interpolation/interpolation-constraints.cc
-        ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/time-constraint-helper.hh
-        ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/time-constraint-helper.inl
-        ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/time-constraint-utils.hh
-        interpolation/effector-rrt.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/spline/effector-rrt.hh
-        interpolation/bezier-path.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/spline/bezier-path.hh
-        interpolation/rbprm-path-interpolation.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/rbprm-path-interpolation.hh
-        interpolation/time-constraint-shooter.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/time-constraint-shooter.hh
-        interpolation/limb-rrt-shooter.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/limb-rrt-shooter.hh
-        interpolation/com-rrt-shooter.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/com-rrt-shooter.hh
-				projection/projection.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/projection/projection.hh
-				contact_generation/contact_generation.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/contact_generation/contact_generation.hh
-				contact_generation/kinematics_constraints.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/contact_generation/kinematics_constraints.hh
-        ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/reports.hh
-				contact_generation/algorithm.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/contact_generation/algorithm.hh
-				contact_generation/reachability.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/contact_generation/reachability.hh
-        ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/limb-rrt.hh
-        interpolation/limb-rrt.cc
-        ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/com-rrt.hh
-        interpolation/com-rrt.cc
-        interpolation/time-constraint-path-validation.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/time-constraint-path-validation.hh
-        ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/time-constraint-steering.hh
-        interpolation/time-constraint-path.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/time-constraint-path.hh
-        interpolation/com-trajectory.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/com-trajectory.hh
-        interpolation/polynom-trajectory.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/interpolation/polynom-trajectory.hh
-        rbprm-fullbody.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-fullbody.hh
-        rbprm-state.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-state.hh
-        sampling/sample.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/sampling/sample.hh
-        sampling/analysis.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/sampling/analysis.hh
-        sampling/heuristic-tools.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/sampling/heuristic-tools.hh
-        sampling/heuristic.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/sampling/heuristic.hh
-        sampling/sample-db.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/sampling/sample-db.hh
-        tools.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/tools.hh
-        stability/stability.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/stability/stability.hh
-        stability/support.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/stability/support.hh
-        utils/stop-watch.cc ${PROJECT_SOURCE_DIR}/include/utils/stop-watch.hh
-        utils/algorithms.cc ${PROJECT_SOURCE_DIR}/include/utils/algorithms.h
-        rbprm-profiler.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/rbprm-profiler.hh
-#        planner/parabola-planner.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/planner/parabola-planner.hh
-        planner/steering-method-parabola.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/planner/steering-method-parabola.hh
-        planner/parabola-path.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/planner/parabola-path.hh
-        planner/timed-parabola-path.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/planner/timed-parabola-path.hh
-        planner/dynamic-planner.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/planner/dynamic-planner.hh
-        planner/rbprm-steering-kinodynamic.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/planner/rbprm-steering-kinodynamic.hh
-        planner/rbprm-node.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/planner/rbprm-node.hh
-        dynamic/dynamic-validation.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/dynamic/dynamic-validation.hh
-        dynamic/dynamic-path-validation.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/dynamic/dynamic-path-validation.hh
-        planner/random-shortcut-dynamic.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/planner/random-shortcut-dynamic.hh
-        planner/oriented-path-optimizer.cc ${PROJECT_SOURCE_DIR}/include/hpp/rbprm/planner/oriented-path-optimizer.hh
-
-
+  rbprm-shooter.cc
+  rbprm-validation.cc
+  rbprm-path-validation.cc
+  rbprm-rom-validation.cc
+  rbprm-device.cc
+  rbprm-limb.cc
+  interpolation/interpolation-constraints.cc
+  interpolation/effector-rrt.cc
+  interpolation/bezier-path.cc
+  interpolation/rbprm-path-interpolation.cc
+  interpolation/time-constraint-shooter.cc
+  interpolation/limb-rrt-shooter.cc
+  interpolation/com-rrt-shooter.cc
+  projection/projection.cc
+  contact_generation/contact_generation.cc
+  contact_generation/kinematics_constraints.cc
+  contact_generation/algorithm.cc
+  contact_generation/reachability.cc
+  interpolation/limb-rrt.cc
+  interpolation/com-rrt.cc
+  interpolation/time-constraint-path-validation.cc
+  interpolation/time-constraint-path.cc
+  interpolation/com-trajectory.cc
+  interpolation/polynom-trajectory.cc
+  rbprm-fullbody.cc
+  rbprm-state.cc
+  sampling/sample.cc
+  sampling/analysis.cc
+  sampling/heuristic-tools.cc
+  sampling/heuristic.cc
+  sampling/sample-db.cc
+  tools.cc
+  stability/stability.cc
+  stability/support.cc
+  utils/stop-watch.cc
+  utils/algorithms.cc
+  rbprm-profiler.cc
+  #        planner/parabola-planner.cc
+  planner/steering-method-parabola.cc
+  planner/parabola-path.cc
+  planner/timed-parabola-path.cc
+  planner/dynamic-planner.cc
+  planner/rbprm-steering-kinodynamic.cc
+  planner/rbprm-node.cc
+  dynamic/dynamic-validation.cc
+  dynamic/dynamic-path-validation.cc
+  planner/random-shortcut-dynamic.cc
+  planner/oriented-path-optimizer.cc
   )
 
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/src)
 ADD_LIBRARY(${LIBRARY_NAME}
-	SHARED
+  SHARED
   ${${LIBRARY_NAME}_SOURCES}
   )
 
-TARGET_LINK_LIBRARIES(${LIBRARY_NAME} centroidal-dynamics-lib bezier-com-traj)
+TARGET_LINK_LIBRARIES(${LIBRARY_NAME} hpp-centroidal-dynamics hpp-bezier-com-traj)
 
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-core)
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-util)
@@ -95,6 +83,7 @@ PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-statistics)
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-constraints)
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-fcl)
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-pinocchio)
+PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-spline)
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} pinocchio)
 
 INSTALL(TARGETS ${LIBRARY_NAME} DESTINATION lib)
