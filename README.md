@@ -21,36 +21,6 @@ The planner has applications in both robotics and computer graphics applications
 [![IMAGE ALT TEXT](http://img.youtube.com/vi/YjL-DBQgXwk/0.jpg)](http://www.youtube.com/watch?v=YjL-DBQgXwk "https://www.youtube.com/watch?v=YjL-DBQgXwk")
 [![IMAGE ALT TEXT](http://img.youtube.com/vi/NhvL8jWlka0/0.jpg)](http://www.youtube.com/watch?v=NhvL8jWlka0 "Character contact re-positioning under large environment deformation")
 
-##Installation on ubuntu-14.04 64 bit with ros-indigo
-
-To install HPP-RBPRM: 
-
-  1. install HPP 
-	- see https://github.com/humanoid-path-planner/hpp-doc
-	- IMPORTANT: you should use the devel branch of the project for the software to work correctly
-
-  2. install hpp-affordance, and hpp-affordance corba, comprising terrain analysis tools
-	- see https://github.com/humanoid-path-planner/hpp-affordance
-
-  3. install centroidal-dynamics-lib, a library for quickly asserting static equilibrium
-	- see https://github.com/stonneau/centroidal-dynamics-lib.git
-	
-	
-  4. install spline, a library providing all sorts of constrained polynomials generation
-	- see https://github.com/stonneau/spline.git
-
- 
-  5. Use CMake to install the library. For instance:
-
-				mkdir $HPP_RBPRM_DIR/build
-				cd $HPP_RBPRM_DIR/build
-				cd cmake ..
-				make install
-
-  6. Optionally, install the python bindings for python, and example scripts (HPP-RBPRM-CORBA)
-	- see https://github.com/stonneau/hpp-rbprm-corba
-  
-
 ##Documentation
 
   Open $DEVEL_DIR/install/share/doc/hpp-rbprm/doxygen-html/index.html in a web brower and you
