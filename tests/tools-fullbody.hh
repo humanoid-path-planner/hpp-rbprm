@@ -268,6 +268,7 @@ RbPrmFullBodyPtr_t loadHyQ(){
     const std::string lhfeet("lh_foot_joint");
     fullBody->AddLimb(lhLegId,lhLeg,lhfeet,legOffset,limbOffset,legNormal,legX,legY,hpp::core::ObjectStdVector_t(),1000,"random",0.1,hpp::rbprm::_3_DOF,false,false,std::string(),0.3);
 
+    fullBody->device_->currentConfiguration(q_ref);
 
     return fullBody;
 
