@@ -135,8 +135,8 @@ BOOST_AUTO_TEST_CASE (straight_line) {
     bShooter.so3Bounds_ = boundsSO3;
     hpp::core::ProblemSolverPtr_t  ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
     hpp::core::ProblemSolver& pSolver = *ps;
-    loadObstacleWithAffordance(pSolver, std::string("hpp-rbprm-corba"),
-                               std::string("ground"),std::string("planning"));
+    loadObstacleWithAffordance(pSolver, std::string("hpp_environments"),
+                               std::string("multicontact/ground"),std::string("planning"));
     // configure planner
     pSolver.addPathOptimizer(std::string("RandomShortcutDynamic"));
     pSolver.configurationShooterType(std::string("RbprmShooter"));
@@ -218,8 +218,8 @@ BOOST_AUTO_TEST_CASE (square_v0) {
     bShooter.so3Bounds_ = boundsSO3;
     hpp::core::ProblemSolverPtr_t  ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
     hpp::core::ProblemSolver& pSolver = *ps;
-    loadObstacleWithAffordance(pSolver, std::string("hpp-rbprm-corba"),
-                               std::string("ground"),std::string("planning"));
+    loadObstacleWithAffordance(pSolver, std::string("hpp_environments"),
+                               std::string("multicontact/ground"),std::string("planning"));
     // configure planner
     pSolver.addPathOptimizer(std::string("RandomShortcutDynamic"));
     pSolver.configurationShooterType(std::string("RbprmShooter"));
@@ -386,8 +386,8 @@ BOOST_AUTO_TEST_CASE (straight_velocity) {
     bShooter.so3Bounds_ = boundsSO3;
     hpp::core::ProblemSolverPtr_t  ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
     hpp::core::ProblemSolver& pSolver = *ps;
-    loadObstacleWithAffordance(pSolver, std::string("hpp-rbprm-corba"),
-                               std::string("ground"),std::string("planning"));
+    loadObstacleWithAffordance(pSolver, std::string("hpp_environments"),
+                               std::string("multicontact/ground"),std::string("planning"));
     // configure planner
     pSolver.addPathOptimizer(std::string("RandomShortcutDynamic"));
     pSolver.configurationShooterType(std::string("RbprmShooter"));
@@ -510,8 +510,8 @@ BOOST_AUTO_TEST_CASE (straight_line_amax_mu05) {
     bShooter.so3Bounds_ = boundsSO3;
     hpp::core::ProblemSolverPtr_t  ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
     hpp::core::ProblemSolver& pSolver = *ps;
-    loadObstacleWithAffordance(pSolver, std::string("hpp-rbprm-corba"),
-                               std::string("ground"),std::string("planning"));
+    loadObstacleWithAffordance(pSolver, std::string("hpp_environments"),
+                               std::string("multicontact/ground"),std::string("planning"));
     // configure planner
     pSolver.addPathOptimizer(std::string("RandomShortcutDynamic"));
     pSolver.configurationShooterType(std::string("RbprmShooter"));
@@ -579,8 +579,8 @@ BOOST_AUTO_TEST_CASE (straight_line_amax_mu005) {
     bShooter.so3Bounds_ = boundsSO3;
     hpp::core::ProblemSolverPtr_t  ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
     hpp::core::ProblemSolver& pSolver = *ps;
-    loadObstacleWithAffordance(pSolver, std::string("hpp-rbprm-corba"),
-                               std::string("ground"),std::string("planning"));
+    loadObstacleWithAffordance(pSolver, std::string("hpp_environments"),
+                               std::string("multicontact/ground"),std::string("planning"));
     // configure planner
     pSolver.addPathOptimizer(std::string("RandomShortcutDynamic"));
     pSolver.configurationShooterType(std::string("RbprmShooter"));
@@ -647,8 +647,8 @@ BOOST_AUTO_TEST_CASE (straight_line_amax_mu001) {
     bShooter.so3Bounds_ = boundsSO3;
     hpp::core::ProblemSolverPtr_t  ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
     hpp::core::ProblemSolver& pSolver = *ps;
-    loadObstacleWithAffordance(pSolver, std::string("hpp-rbprm-corba"),
-                               std::string("ground"),std::string("planning"));
+    loadObstacleWithAffordance(pSolver, std::string("hpp_environments"),
+                               std::string("multicontact/ground"),std::string("planning"));
     // configure planner
     pSolver.addPathOptimizer(std::string("RandomShortcutDynamic"));
     pSolver.configurationShooterType(std::string("RbprmShooter"));
@@ -715,8 +715,8 @@ BOOST_AUTO_TEST_CASE (straight_line_amax_mu5) {
     bShooter.so3Bounds_ = boundsSO3;
     hpp::core::ProblemSolverPtr_t  ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
     hpp::core::ProblemSolver& pSolver = *ps;
-    loadObstacleWithAffordance(pSolver, std::string("hpp-rbprm-corba"),
-                               std::string("ground"),std::string("planning"));
+    loadObstacleWithAffordance(pSolver, std::string("hpp_environments"),
+                               std::string("multicontact/ground"),std::string("planning"));
     // configure planner
     pSolver.addPathOptimizer(std::string("RandomShortcutDynamic"));
     pSolver.configurationShooterType(std::string("RbprmShooter"));
@@ -783,8 +783,8 @@ BOOST_AUTO_TEST_CASE (straight_line_amax_feetChange) {
     bShooter.so3Bounds_ = boundsSO3;
     hpp::core::ProblemSolverPtr_t  ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
     hpp::core::ProblemSolver& pSolver = *ps;
-    loadObstacleWithAffordance(pSolver, std::string("hpp-rbprm-corba"),
-                               std::string("ground"),std::string("planning"));
+    loadObstacleWithAffordance(pSolver, std::string("hpp_environments"),
+                               std::string("multicontact/ground"),std::string("planning"));
     // configure planner
     pSolver.addPathOptimizer(std::string("RandomShortcutDynamic"));
     pSolver.configurationShooterType(std::string("RbprmShooter"));
@@ -854,8 +854,8 @@ BOOST_AUTO_TEST_CASE (nav_bauzil) {
     bShooter.so3Bounds_ = boundsSO3;
     hpp::core::ProblemSolverPtr_t  ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
     hpp::core::ProblemSolver& pSolver = *ps;
-    loadObstacleWithAffordance(pSolver, std::string("hpp-rbprm-corba"),
-                               std::string("floor_bauzil"),std::string("planning"));
+    loadObstacleWithAffordance(pSolver, std::string("hpp_environments"),
+                               std::string("multicontact/floor_bauzil"),std::string("planning"));
     // configure planner
     pSolver.addPathOptimizer(std::string("RandomShortcutDynamic"));
     pSolver.configurationShooterType(std::string("RbprmShooter"));
@@ -936,8 +936,8 @@ BOOST_AUTO_TEST_CASE (nav_bauzil_oriented) {
     bShooter.so3Bounds_ = boundsSO3;
     hpp::core::ProblemSolverPtr_t  ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
     hpp::core::ProblemSolver& pSolver = *ps;
-    loadObstacleWithAffordance(pSolver, std::string("hpp-rbprm-corba"),
-                               std::string("floor_bauzil"),std::string("planning"));
+    loadObstacleWithAffordance(pSolver, std::string("hpp_environments"),
+                               std::string("multicontact/floor_bauzil"),std::string("planning"));
     // configure planner
     pSolver.addPathOptimizer(std::string("RandomShortcutDynamic"));
     pSolver.configurationShooterType(std::string("RbprmShooter"));
@@ -1019,8 +1019,8 @@ BOOST_AUTO_TEST_CASE (nav_bauzil_oriented_kino) {
     bShooter.so3Bounds_ = boundsSO3;
     hpp::core::ProblemSolverPtr_t  ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
     hpp::core::ProblemSolver& pSolver = *ps;
-    loadObstacleWithAffordance(pSolver, std::string("hpp-rbprm-corba"),
-                               std::string("floor_bauzil"),std::string("planning"));
+    loadObstacleWithAffordance(pSolver, std::string("hpp_environments"),
+                               std::string("multicontact/floor_bauzil"),std::string("planning"));
     // configure planner
     pSolver.addPathOptimizer(std::string("RandomShortcutDynamic"));
     pSolver.configurationShooterType(std::string("RbprmShooter"));
@@ -1109,8 +1109,8 @@ BOOST_AUTO_TEST_CASE (nav_bauzil_hard) {
     bShooter.so3Bounds_ = boundsSO3;
     hpp::core::ProblemSolverPtr_t  ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
     hpp::core::ProblemSolver& pSolver = *ps;
-    loadObstacleWithAffordance(pSolver, std::string("hpp-rbprm-corba"),
-                               std::string("floor_bauzil"),std::string("planning"));
+    loadObstacleWithAffordance(pSolver, std::string("hpp_environments"),
+                               std::string("multicontact/floor_bauzil"),std::string("planning"));
     // configure planner
     pSolver.addPathOptimizer(std::string("RandomShortcutDynamic"));
     pSolver.configurationShooterType(std::string("RbprmShooter"));
