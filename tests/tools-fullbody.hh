@@ -242,8 +242,8 @@ RbPrmFullBodyPtr_t loadHyQ(){
 
 
     const fcl::Vec3f limbOffset(0,0,0);
-    fcl::Vec3f legOffset( 0,-0.021,0);
-    fcl::Vec3f legNormal(0,1,0);
+    fcl::Vec3f legOffset( 0,0,-0.021);
+    fcl::Vec3f legNormal(0,0,1);
     double legX = 0.02;
     double legY = 0.02;
 
