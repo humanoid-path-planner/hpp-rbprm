@@ -16,6 +16,7 @@
 
 #include <hpp/core/collision-validation-report.hh>
 #include <hpp/rbprm/rbprm-shooter.hh>
+#include <hpp/rbprm/rbprm-validation-report.hh>
 #include <hpp/pinocchio/liegroup-space.hh>
 #include <hpp/pinocchio/liegroup-element.hh>
 #include <pinocchio/algorithm/joint-configuration.hpp>
@@ -388,16 +389,17 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
         randConfigAtPos(robot_,eulerSo3_,config,p);
         // rotate and translate randomly until valid configuration found or
         // no obstacle is reachable
-        ValidationReportPtr_t reportShPtr(new CollisionValidationReport);
+        ValidationReportPtr_t reportShPtr(new RbprmValidationReport);
         std::size_t limitDis = displacementLimit_;
         Vec3f lastDirection(0,0,1);
         while(!found && limitDis >0)
         {
             HPP_START_TIMECOUNTER(SHOOT_COLLISION);
-            bool valid = validator_->validateTrunk(*config, reportShPtr);
-            found = valid && validator_->validateRoms(*config, filter_,reportShPtr);
+            found = validator_->validate(*config, reportShPtr, filter_);
+            RbprmValidationReportPtr_t report =
+                    boost::dynamic_pointer_cast<RbprmValidationReport>(reportShPtr);
+            bool valid = found || !report->trunkInCollision;
             HPP_STOP_TIMECOUNTER(SHOOT_COLLISION);
-            CollisionValidationReport* report = static_cast<CollisionValidationReport*>(reportShPtr.get());
 
             if(valid &!found)
             {
@@ -407,7 +409,7 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
                     //SampleRotation(eulerSo3_, config);
                     randConfigAtPos(robot_,eulerSo3_,config,p);
                     HPP_START_TIMECOUNTER(SHOOT_COLLISION);
-                    found = validator_->validate(*config, filter_);
+                    found = validator_->validate(*config, reportShPtr, filter_);
                     HPP_STOP_TIMECOUNTER(SHOOT_COLLISION);
                     if(!found)
                     {
@@ -415,8 +417,9 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
                                   0.2 * ((double) rand() / (RAND_MAX)));
                     }
                     HPP_START_TIMECOUNTER(SHOOT_COLLISION);
-                    valid = validator_->validateTrunk(*config, reportShPtr);
-                    found = valid && validator_->validateRoms(*config, filter_,reportShPtr);
+                    found = validator_->validate(*config, reportShPtr, filter_);
+                    report = boost::dynamic_pointer_cast<RbprmValidationReport>(reportShPtr);
+                    valid = found || !report->trunkInCollision;
                     //found = validator_->validate(*config, filter_);
                     HPP_STOP_TIMECOUNTER(SHOOT_COLLISION);
                 }
@@ -425,6 +428,7 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
             else if (!valid)// move out of collision
             {
                 // retrieve Contact information
+                report = boost::dynamic_pointer_cast<RbprmValidationReport>(reportShPtr);
                 lastDirection = -report->result.getContact(0).normal;
                 //hppDout(notice,"Shooter : lastDirection = "<<lastDirection.transpose());
                 // mouve out by penetration depth
