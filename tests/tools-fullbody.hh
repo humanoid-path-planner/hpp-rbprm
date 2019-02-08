@@ -200,12 +200,20 @@ hpp::pinocchio::RbPrmDevicePtr_t loadHyQAbsract()
     loadRom(romDevices_, std::string("hyq_rhleg_rom"),packageName);
     hpp::pinocchio::RbPrmDevicePtr_t device =
             loadAbstractRobot(romDevices_, std::string("hyq_trunk_large"),packageName);
-    device->rootJoint()->lowerBound(0, -2);
-    device->rootJoint()->lowerBound(1, -1);
+    device->rootJoint()->lowerBound(0, -4);
+    device->rootJoint()->lowerBound(1, -4);
     device->rootJoint()->lowerBound(2, 0.3);
     device->rootJoint()->upperBound(0,  5);
-    device->rootJoint()->upperBound(1,  1);
-    device->rootJoint()->upperBound(2,  4);
+    device->rootJoint()->upperBound(1,  4);
+    device->rootJoint()->upperBound(2,  1);
+    hpp::core::vector3_t p_lFLeg(0.3735, 0.207 , -0.57697);
+    hpp::core::vector3_t p_rFLeg(0.3735, -0.207 , -0.57697);
+    hpp::core::vector3_t p_lHLeg(-0.3735, 0.207 , -0.57697);
+    hpp::core::vector3_t p_rHLeg(-0.3735, -0.207 , -0.57697);
+    device->setEffectorReference("hyq_lfleg_rom",p_lFLeg);
+    device->setEffectorReference("hyq_rfleg_rom",p_rFLeg);
+    device->setEffectorReference("hyq_lhleg_rom",p_lHLeg);
+    device->setEffectorReference("hyq_rhleg_rom",p_rHLeg);
     return device;
 }
 
