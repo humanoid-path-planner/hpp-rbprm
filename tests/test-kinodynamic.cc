@@ -106,23 +106,38 @@ bool checkPath(core::PathPtr_t path, double v,double dt = 0.01){
 
 BOOST_AUTO_TEST_SUITE( rbrrt_kinodynamic )
 
-BOOST_AUTO_TEST_CASE (load_abstract_model) {
+BOOST_AUTO_TEST_CASE (load_abstract_model_hyq) {
 
-    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadTalosLEGAbsract();
+    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadHyQAbsract();
     //for(size_t i = 0 ; i < rbprmDevice->data().mass.size() ; ++i)
     //  std::cout<<"mass : "<<i<<" = "<<rbprmDevice->data().mass[i]<<std::endl;
-    //BOOST_CHECK_CLOSE(rbprmDevice->mass(),90.27,1e-2); // FIXME : need to investigate and open an issue
+    //BOOST_CHECK_CLOSE(rbprmDevice->mass(),70.,1e-2); // FIXME : need to investigate and open an issue
     hpp::core::ProblemSolverPtr_t ps = hpp::core::ProblemSolver::create();
     ps->robot(rbprmDevice);
-    BOOST_CHECK_CLOSE(rbprmDevice->mass(),90.27,1e-2);
-    BOOST_CHECK_CLOSE(ps->robot()->mass(),90.27,1e-2);
+    BOOST_CHECK_CLOSE(rbprmDevice->mass(),50.26,1e-2);
+    BOOST_CHECK_CLOSE(ps->robot()->mass(),50.26,1e-2);
+    //for(size_t i = 0 ; i < rbprmDevice->data().mass.size() ; ++i)
+    //  std::cout<<"mass : "<<i<<" = "<<rbprmDevice->data().mass[i]<<std::endl;
+}
+
+
+BOOST_AUTO_TEST_CASE (load_abstract_model_simpleHumanoid) {
+
+    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadsimpleHumanoidAbsract();
+    //for(size_t i = 0 ; i < rbprmDevice->data().mass.size() ; ++i)
+    //  std::cout<<"mass : "<<i<<" = "<<rbprmDevice->data().mass[i]<<std::endl;
+    //BOOST_CHECK_CLOSE(rbprmDevice->mass(),70.,1e-2); // FIXME : need to investigate and open an issue
+    hpp::core::ProblemSolverPtr_t ps = hpp::core::ProblemSolver::create();
+    ps->robot(rbprmDevice);
+    BOOST_CHECK_CLOSE(rbprmDevice->mass(),70.,1e-2);
+    BOOST_CHECK_CLOSE(ps->robot()->mass(),70.,1e-2);
     //for(size_t i = 0 ; i < rbprmDevice->data().mass.size() ; ++i)
     //  std::cout<<"mass : "<<i<<" = "<<rbprmDevice->data().mass[i]<<std::endl;
 }
 
 
 BOOST_AUTO_TEST_CASE (straight_line) {
-    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadTalosLEGAbsract();
+    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadsimpleHumanoidAbsract();
     rbprmDevice->setDimensionExtraConfigSpace(6);
     BindShooter bShooter;
     std::vector<double> boundsSO3;
@@ -170,14 +185,14 @@ BOOST_AUTO_TEST_CASE (straight_line) {
 
     // define the planning problem :
     core::Configuration_t q_init(rbprmDevice->configSize());
-    q_init << 0, 0, 1.0, 0, 0, 0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+    q_init << 0, 0, 1.0, 0, 0, 0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
 
     core::Configuration_t q_goal = q_init;
     q_goal(0)=1.5;
 
     pSolver.initConfig(ConfigurationPtr_t(new core::Configuration_t(q_init)));
     pSolver.addGoalConfig(ConfigurationPtr_t(new core::Configuration_t(q_goal)));
-    BOOST_CHECK_CLOSE(pSolver.robot()->mass(),90.27,1e-2);
+    BOOST_CHECK_CLOSE(pSolver.robot()->mass(),70.,1e-2);
     bool success = pSolver.prepareSolveStepByStep();
     BOOST_CHECK(success);
     pSolver.finishSolveStepByStep();
@@ -205,7 +220,7 @@ BOOST_AUTO_TEST_CASE (straight_line) {
 
 
 BOOST_AUTO_TEST_CASE (square_v0) {
-    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadTalosLEGAbsract();
+    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadsimpleHumanoidAbsract();
     rbprmDevice->setDimensionExtraConfigSpace(6);
     BindShooter bShooter;
     std::vector<double> boundsSO3;
@@ -253,7 +268,7 @@ BOOST_AUTO_TEST_CASE (square_v0) {
 
     // define the planning problem :
     core::Configuration_t q_init(rbprmDevice->configSize());
-    q_init << 0, 0, 1.0, 0, 0, 0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+    q_init << 0, 0, 1.0, 0, 0, 0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
 
     core::Configuration_t q_goal = q_init;
     q_goal(0)=1.;
@@ -373,7 +388,7 @@ BOOST_AUTO_TEST_CASE (square_v0) {
 
 
 BOOST_AUTO_TEST_CASE (straight_velocity) {
-    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadTalosLEGAbsract();
+    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadsimpleHumanoidAbsract();
     rbprmDevice->setDimensionExtraConfigSpace(6);
     BindShooter bShooter;
     std::vector<double> boundsSO3;
@@ -421,8 +436,8 @@ BOOST_AUTO_TEST_CASE (straight_velocity) {
 
     // define the planning problem :
     core::Configuration_t q_init(rbprmDevice->configSize());
-    q_init << 0, 0, 1.0, 0, 0, 0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
-    q_init(9) = 0.5; // init velocity along x
+    q_init << 0, 0, 1.0, 0, 0, 0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+    q_init(7) = 0.5; // init velocity along x
     core::Configuration_t q_goal = q_init;
     q_goal(0)=1.;
 
@@ -443,8 +458,8 @@ BOOST_AUTO_TEST_CASE (straight_velocity) {
 
     pSolver.resetGoalConfigs();
     q_goal(0) = 0.;
-    q_goal(9) = 0.1;
-    q_goal(10) = -0.2; // final velocity
+    q_goal(7) = 0.1;
+    q_goal(8) = -0.2; // final velocity
     pSolver.addGoalConfig(ConfigurationPtr_t(new core::Configuration_t(q_goal)));
     success = pSolver.prepareSolveStepByStep();
     BOOST_CHECK(success);
@@ -460,7 +475,7 @@ BOOST_AUTO_TEST_CASE (straight_velocity) {
 
     pSolver.resetGoalConfigs();
     q_goal(0) = 1.;
-    q_goal(9) = -0.3;
+    q_goal(7) = -0.3;
     pSolver.addGoalConfig(ConfigurationPtr_t(new core::Configuration_t(q_goal)));
     success = pSolver.prepareSolveStepByStep();
     BOOST_CHECK(success);
@@ -476,8 +491,8 @@ BOOST_AUTO_TEST_CASE (straight_velocity) {
 
     pSolver.resetGoalConfigs();
     q_goal(0) = -1.;
-    q_goal(9) = 0.;
-    q_goal(10) = 0.3;
+    q_goal(7) = 0.;
+    q_goal(8) = 0.3;
     pSolver.addGoalConfig(ConfigurationPtr_t(new core::Configuration_t(q_goal)));
     success = pSolver.prepareSolveStepByStep();
     BOOST_CHECK(success);
@@ -497,7 +512,7 @@ BOOST_AUTO_TEST_CASE (straight_velocity) {
 
 
 BOOST_AUTO_TEST_CASE (straight_line_amax_mu05) {
-    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadTalosLEGAbsract();
+    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadsimpleHumanoidAbsract();
     rbprmDevice->setDimensionExtraConfigSpace(6);
     BindShooter bShooter;
     std::vector<double> boundsSO3;
@@ -529,10 +544,6 @@ BOOST_AUTO_TEST_CASE (straight_line_amax_mu05) {
     pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"),core::Parameter(0.12));
     pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),core::Parameter(0.5));
     pSolver.problem()->setParameter(std::string("ConfigurationShooter/sampleExtraDOF"),core::Parameter(false));
-    vector3_t p_lLeg(0., 0.0848172440888579,-1.019272022956703);
-    vector3_t p_rLeg(0., -0.0848172440888579,-1.019272022956703);
-    rbprmDevice->setEffectorReference("talos_lleg_rom",p_lLeg);
-    rbprmDevice->setEffectorReference("talos_rleg_rom",p_rLeg);
 
     for(size_type i = 0 ; i < 2 ; ++i){
       rbprmDevice->extraConfigSpace().lower(i)=-vMax;
@@ -549,14 +560,14 @@ BOOST_AUTO_TEST_CASE (straight_line_amax_mu05) {
 
     // define the planning problem :
     core::Configuration_t q_init(rbprmDevice->configSize());
-    q_init << 0, 0, 1.0, 0, 0, 0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+    q_init << 0, 0, 1.0, 0, 0, 0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
 
     core::Configuration_t q_goal = q_init;
     q_goal(0)=1.5;
 
     pSolver.initConfig(ConfigurationPtr_t(new core::Configuration_t(q_init)));
     pSolver.addGoalConfig(ConfigurationPtr_t(new core::Configuration_t(q_goal)));
-    BOOST_CHECK_CLOSE(pSolver.robot()->mass(),90.27,1e-2);
+    BOOST_CHECK_CLOSE(pSolver.robot()->mass(),70.,1e-2);
     bool success = pSolver.prepareSolveStepByStep();
     BOOST_CHECK(success);
     pSolver.finishSolveStepByStep();
@@ -566,7 +577,7 @@ BOOST_AUTO_TEST_CASE (straight_line_amax_mu05) {
 
 
 BOOST_AUTO_TEST_CASE (straight_line_amax_mu005) {
-    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadTalosLEGAbsract();
+    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadsimpleHumanoidAbsract();
     rbprmDevice->setDimensionExtraConfigSpace(6);
     BindShooter bShooter;
     std::vector<double> boundsSO3;
@@ -598,10 +609,6 @@ BOOST_AUTO_TEST_CASE (straight_line_amax_mu005) {
     pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"),core::Parameter(0.12));
     pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),core::Parameter(0.05));
     pSolver.problem()->setParameter(std::string("ConfigurationShooter/sampleExtraDOF"),core::Parameter(false));
-    vector3_t p_lLeg(0., 0.0848172440888579,-1.019272022956703);
-    vector3_t p_rLeg(0., -0.0848172440888579,-1.019272022956703);
-    rbprmDevice->setEffectorReference("talos_lleg_rom",p_lLeg);
-    rbprmDevice->setEffectorReference("talos_rleg_rom",p_rLeg);
 
     for(size_type i = 0 ; i < 2 ; ++i){
       rbprmDevice->extraConfigSpace().lower(i)=-vMax;
@@ -618,14 +625,14 @@ BOOST_AUTO_TEST_CASE (straight_line_amax_mu005) {
 
     // define the planning problem :
     core::Configuration_t q_init(rbprmDevice->configSize());
-    q_init << 0, 0, 1.0, 0, 0, 0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+    q_init << 0, 0, 1.0, 0, 0, 0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
 
     core::Configuration_t q_goal = q_init;
     q_goal(0)=1.5;
 
     pSolver.initConfig(ConfigurationPtr_t(new core::Configuration_t(q_init)));
     pSolver.addGoalConfig(ConfigurationPtr_t(new core::Configuration_t(q_goal)));
-    BOOST_CHECK_CLOSE(pSolver.robot()->mass(),90.27,1e-2);
+    BOOST_CHECK_CLOSE(pSolver.robot()->mass(),70.,1e-2);
     bool success = pSolver.prepareSolveStepByStep();
     BOOST_CHECK(success);
     pSolver.finishSolveStepByStep();
@@ -634,7 +641,7 @@ BOOST_AUTO_TEST_CASE (straight_line_amax_mu005) {
 }
 
 BOOST_AUTO_TEST_CASE (straight_line_amax_mu001) {
-    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadTalosLEGAbsract();
+    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadsimpleHumanoidAbsract();
     rbprmDevice->setDimensionExtraConfigSpace(6);
     BindShooter bShooter;
     std::vector<double> boundsSO3;
@@ -666,10 +673,6 @@ BOOST_AUTO_TEST_CASE (straight_line_amax_mu001) {
     pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"),core::Parameter(0.12));
     pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),core::Parameter(0.01));
     pSolver.problem()->setParameter(std::string("ConfigurationShooter/sampleExtraDOF"),core::Parameter(false));
-    vector3_t p_lLeg(0., 0.0848172440888579,-1.019272022956703);
-    vector3_t p_rLeg(0., -0.0848172440888579,-1.019272022956703);
-    rbprmDevice->setEffectorReference("talos_lleg_rom",p_lLeg);
-    rbprmDevice->setEffectorReference("talos_rleg_rom",p_rLeg);
 
     for(size_type i = 0 ; i < 2 ; ++i){
       rbprmDevice->extraConfigSpace().lower(i)=-vMax;
@@ -686,23 +689,23 @@ BOOST_AUTO_TEST_CASE (straight_line_amax_mu001) {
 
     // define the planning problem :
     core::Configuration_t q_init(rbprmDevice->configSize());
-    q_init << 0, 0, 1.0, 0, 0, 0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+    q_init << 0, 0, 1.0, 0, 0, 0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
 
     core::Configuration_t q_goal = q_init;
     q_goal(0)=1.5;
 
     pSolver.initConfig(ConfigurationPtr_t(new core::Configuration_t(q_init)));
     pSolver.addGoalConfig(ConfigurationPtr_t(new core::Configuration_t(q_goal)));
-    BOOST_CHECK_CLOSE(pSolver.robot()->mass(),90.27,1e-2);
+    BOOST_CHECK_CLOSE(pSolver.robot()->mass(),70.,1e-2);
     bool success = pSolver.prepareSolveStepByStep();
     BOOST_CHECK(success);
     pSolver.finishSolveStepByStep();
     BOOST_CHECK_EQUAL(pSolver.paths().size(),1);
-    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),8.253186224036595,1e-6);
+    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),8.2531857104894222,1e-6);
 }
 
 BOOST_AUTO_TEST_CASE (straight_line_amax_mu5) {
-    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadTalosLEGAbsract();
+    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadsimpleHumanoidAbsract();
     rbprmDevice->setDimensionExtraConfigSpace(6);
     BindShooter bShooter;
     std::vector<double> boundsSO3;
@@ -734,10 +737,6 @@ BOOST_AUTO_TEST_CASE (straight_line_amax_mu5) {
     pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"),core::Parameter(0.12));
     pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),core::Parameter(5.));
     pSolver.problem()->setParameter(std::string("ConfigurationShooter/sampleExtraDOF"),core::Parameter(false));
-    vector3_t p_lLeg(0., 0.0848172440888579,-1.019272022956703);
-    vector3_t p_rLeg(0., -0.0848172440888579,-1.019272022956703);
-    rbprmDevice->setEffectorReference("talos_lleg_rom",p_lLeg);
-    rbprmDevice->setEffectorReference("talos_rleg_rom",p_rLeg);
 
     for(size_type i = 0 ; i < 2 ; ++i){
       rbprmDevice->extraConfigSpace().lower(i)=-vMax;
@@ -754,23 +753,23 @@ BOOST_AUTO_TEST_CASE (straight_line_amax_mu5) {
 
     // define the planning problem :
     core::Configuration_t q_init(rbprmDevice->configSize());
-    q_init << 0, 0, 1.0, 0, 0, 0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+    q_init << 0, 0, 1.0, 0, 0, 0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
 
     core::Configuration_t q_goal = q_init;
     q_goal(0)=1.5;
 
     pSolver.initConfig(ConfigurationPtr_t(new core::Configuration_t(q_init)));
     pSolver.addGoalConfig(ConfigurationPtr_t(new core::Configuration_t(q_goal)));
-    BOOST_CHECK_CLOSE(pSolver.robot()->mass(),90.27,1e-2);
+    BOOST_CHECK_CLOSE(pSolver.robot()->mass(),70.,1e-2);
     bool success = pSolver.prepareSolveStepByStep();
     BOOST_CHECK(success);
     pSolver.finishSolveStepByStep();
     BOOST_CHECK_EQUAL(pSolver.paths().size(),1);
-    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),2.5298683485627125,1e-6);
+    BOOST_CHECK_CLOSE(pSolver.paths().back()->length(),2.5298682886765311,1e-6);
 }
 
 BOOST_AUTO_TEST_CASE (straight_line_amax_feetChange) {
-    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadTalosLEGAbsract();
+    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadsimpleHumanoidAbsract();
     rbprmDevice->setDimensionExtraConfigSpace(6);
     BindShooter bShooter;
     std::vector<double> boundsSO3;
@@ -802,10 +801,6 @@ BOOST_AUTO_TEST_CASE (straight_line_amax_feetChange) {
     pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"),core::Parameter(0.05));
     pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),core::Parameter(0.5));
     pSolver.problem()->setParameter(std::string("ConfigurationShooter/sampleExtraDOF"),core::Parameter(false));
-    vector3_t p_lLeg(0., 0.0848172440888579,-1.019272022956703);
-    vector3_t p_rLeg(0., -0.0848172440888579,-1.019272022956703);
-    rbprmDevice->setEffectorReference("talos_lleg_rom",p_lLeg);
-    rbprmDevice->setEffectorReference("talos_rleg_rom",p_rLeg);
 
     for(size_type i = 0 ; i < 2 ; ++i){
       rbprmDevice->extraConfigSpace().lower(i)=-vMax;
@@ -822,14 +817,14 @@ BOOST_AUTO_TEST_CASE (straight_line_amax_feetChange) {
 
     // define the planning problem :
     core::Configuration_t q_init(rbprmDevice->configSize());
-    q_init << 0, 0, 1.0, 0, 0, 0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+    q_init << 0, 0, 1.0, 0, 0, 0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
 
     core::Configuration_t q_goal = q_init;
     q_goal(0)=1.5;
 
     pSolver.initConfig(ConfigurationPtr_t(new core::Configuration_t(q_init)));
     pSolver.addGoalConfig(ConfigurationPtr_t(new core::Configuration_t(q_goal)));
-    BOOST_CHECK_CLOSE(pSolver.robot()->mass(),90.27,1e-2);
+    BOOST_CHECK_CLOSE(pSolver.robot()->mass(),70.,1e-2);
     bool success = pSolver.prepareSolveStepByStep();
     BOOST_CHECK(success);
     pSolver.finishSolveStepByStep();
@@ -841,7 +836,7 @@ BOOST_AUTO_TEST_CASE (straight_line_amax_feetChange) {
 BOOST_AUTO_TEST_CASE (nav_bauzil) {
     std::cout<<"start nav_bauzil test case, this may take a couple of minutes ..."<<std::endl;
   // this test case may take up to a minute to execute. Usually after ~5 minutes it should be considered as a failure.
-    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadTalosLEGAbsract();
+    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadsimpleHumanoidAbsract();
     rbprmDevice->setDimensionExtraConfigSpace(6);
     BindShooter bShooter;
     std::vector<double> boundsSO3;
@@ -874,10 +869,6 @@ BOOST_AUTO_TEST_CASE (nav_bauzil) {
     pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),core::Parameter(0.5));
     pSolver.problem()->setParameter(std::string("ConfigurationShooter/sampleExtraDOF"),core::Parameter(false));
     pSolver.problem()->setParameter(std::string("PathOptimization/RandomShortcut/NumberOfLoops"),core::Parameter((core::size_type)50));
-    vector3_t p_lLeg(0., 0.0848172440888579,-1.019272022956703);
-    vector3_t p_rLeg(0., -0.0848172440888579,-1.019272022956703);
-    rbprmDevice->setEffectorReference("talos_lleg_rom",p_lLeg);
-    rbprmDevice->setEffectorReference("talos_rleg_rom",p_rLeg);
 
 
     for(size_type i = 0 ; i < 2 ; ++i){
@@ -895,13 +886,13 @@ BOOST_AUTO_TEST_CASE (nav_bauzil) {
 
     // define the planning problem :
     core::Configuration_t q_init(rbprmDevice->configSize());
-    q_init << -0.9, 1.5, 0.98, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.07, 0, 0, 0.0, 0.0, 0.0;
+    q_init << -0.9, 1.5, 1., 0.0, 0.0, 0.0, 1.0, 0.07, 0, 0, 0.0, 0.0, 0.0;
     core::Configuration_t q_goal(rbprmDevice->configSize());
-    q_goal << 2, 2.6, 0.98, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.1, 0, 0, 0.0, 0.0, 0.0;
+    q_goal << 2, 2.6, 1., 0.0, 0.0, 0.0, 1.0, 0.1, 0, 0, 0.0, 0.0, 0.0;
 
     pSolver.initConfig(ConfigurationPtr_t(new core::Configuration_t(q_init)));
     pSolver.addGoalConfig(ConfigurationPtr_t(new core::Configuration_t(q_goal)));
-    BOOST_CHECK_CLOSE(pSolver.robot()->mass(),90.27,1e-2);
+    BOOST_CHECK_CLOSE(pSolver.robot()->mass(),70.,1e-2);
 
     pSolver.solve();
     BOOST_CHECK_EQUAL(pSolver.paths().size(),2);
@@ -923,7 +914,7 @@ BOOST_AUTO_TEST_CASE (nav_bauzil) {
 BOOST_AUTO_TEST_CASE (nav_bauzil_oriented) {
     std::cout<<"start nav_bauzil_oriented test case, this may take a couple of minutes ..."<<std::endl;
   // this test case may take up to a minute to execute. Usually after ~5 minutes it should be considered as a failure.
-    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadTalosLEGAbsract();
+    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadsimpleHumanoidAbsract();
     rbprmDevice->setDimensionExtraConfigSpace(6);
     BindShooter bShooter;
     std::vector<double> boundsSO3;
@@ -957,10 +948,6 @@ BOOST_AUTO_TEST_CASE (nav_bauzil_oriented) {
     pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),core::Parameter(0.5));
     pSolver.problem()->setParameter(std::string("ConfigurationShooter/sampleExtraDOF"),core::Parameter(false));
     pSolver.problem()->setParameter(std::string("PathOptimization/RandomShortcut/NumberOfLoops"),core::Parameter((core::size_type)50));
-    vector3_t p_lLeg(0., 0.0848172440888579,-1.019272022956703);
-    vector3_t p_rLeg(0., -0.0848172440888579,-1.019272022956703);
-    rbprmDevice->setEffectorReference("talos_lleg_rom",p_lLeg);
-    rbprmDevice->setEffectorReference("talos_rleg_rom",p_rLeg);
 
 
     for(size_type i = 0 ; i < 2 ; ++i){
@@ -978,13 +965,13 @@ BOOST_AUTO_TEST_CASE (nav_bauzil_oriented) {
 
     // define the planning problem :
     core::Configuration_t q_init(rbprmDevice->configSize());
-    q_init << -0.9, 1.5, 0.98, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.07, 0, 0, 0.0, 0.0, 0.0;
+    q_init << -0.9, 1.5, 1., 0.0, 0.0, 0.0, 1.0, 0.07, 0, 0, 0.0, 0.0, 0.0;
     core::Configuration_t q_goal(rbprmDevice->configSize());
-    q_goal << 2, 2.6, 0.98, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.1, 0, 0, 0.0, 0.0, 0.0;
+    q_goal << 2, 2.6, 1., 0.0, 0.0, 0.0, 1.0, 0.1, 0, 0, 0.0, 0.0, 0.0;
 
     pSolver.initConfig(ConfigurationPtr_t(new core::Configuration_t(q_init)));
     pSolver.addGoalConfig(ConfigurationPtr_t(new core::Configuration_t(q_goal)));
-    BOOST_CHECK_CLOSE(pSolver.robot()->mass(),90.27,1e-2);
+    BOOST_CHECK_CLOSE(pSolver.robot()->mass(),70.,1e-2);
 
     pSolver.solve();
     BOOST_CHECK_EQUAL(pSolver.paths().size(),2);
@@ -1006,7 +993,7 @@ BOOST_AUTO_TEST_CASE (nav_bauzil_oriented) {
 BOOST_AUTO_TEST_CASE (nav_bauzil_oriented_kino) {
     std::cout<<"start nav_bauzil_oriented_kino test case, this may take a couple of minutes ..."<<std::endl;
   // this test case may take up to a minute to execute. Usually after ~5 minutes it should be considered as a failure.
-    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadTalosLEGAbsract();
+    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadsimpleHumanoidAbsract();
     rbprmDevice->setDimensionExtraConfigSpace(6);
     BindShooter bShooter;
     std::vector<double> boundsSO3;
@@ -1040,10 +1027,6 @@ BOOST_AUTO_TEST_CASE (nav_bauzil_oriented_kino) {
     pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),core::Parameter(0.5));
     pSolver.problem()->setParameter(std::string("ConfigurationShooter/sampleExtraDOF"),core::Parameter(true));
     pSolver.problem()->setParameter(std::string("PathOptimization/RandomShortcut/NumberOfLoops"),core::Parameter((core::size_type)50));
-    vector3_t p_lLeg(0., 0.0848172440888579,-1.019272022956703);
-    vector3_t p_rLeg(0., -0.0848172440888579,-1.019272022956703);
-    rbprmDevice->setEffectorReference("talos_lleg_rom",p_lLeg);
-    rbprmDevice->setEffectorReference("talos_rleg_rom",p_rLeg);
 
 
     for(size_type i = 0 ; i < 2 ; ++i){
@@ -1061,13 +1044,13 @@ BOOST_AUTO_TEST_CASE (nav_bauzil_oriented_kino) {
 
     // define the planning problem :
     core::Configuration_t q_init(rbprmDevice->configSize());
-    q_init << -0.9, 1.5, 0.98, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.07, 0, 0, 0.0, 0.0, 0.0;
+    q_init << -0.9, 1.5, 1., 0.0, 0.0, 0.0, 1.0, 0.07, 0, 0, 0.0, 0.0, 0.0;
     core::Configuration_t q_goal(rbprmDevice->configSize());
-    q_goal << 2, 2.6, 0.98, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.1, 0, 0, 0.0, 0.0, 0.0;
+    q_goal << 2, 2.6, 1., 0.0, 0.0, 0.0, 1.0, 0.1, 0, 0, 0.0, 0.0, 0.0;
 
     pSolver.initConfig(ConfigurationPtr_t(new core::Configuration_t(q_init)));
     pSolver.addGoalConfig(ConfigurationPtr_t(new core::Configuration_t(q_goal)));
-    BOOST_CHECK_CLOSE(pSolver.robot()->mass(),90.27,1e-2);
+    BOOST_CHECK_CLOSE(pSolver.robot()->mass(),70.,1e-2);
 
     pSolver.solve();
     BOOST_CHECK_EQUAL(pSolver.paths().size(),2);
@@ -1090,7 +1073,7 @@ BOOST_AUTO_TEST_CASE (nav_bauzil_oriented_kino) {
 BOOST_AUTO_TEST_CASE (nav_bauzil_hard) {
     std::cout<<"start nav_bauzil_hard test case, this may take several minutes ..."<<std::endl;
   // this test case may take up to 5 minute to execute. Usually after ~10 minutes it should be considered as a failure.
-    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadTalosLEGAbsract();
+    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadsimpleHumanoidAbsract();
     rbprmDevice->rootJoint()->lowerBound(0, -2.3);
     rbprmDevice->rootJoint()->lowerBound(1, -1.5);
     rbprmDevice->rootJoint()->lowerBound(2, 0.98);
@@ -1130,10 +1113,6 @@ BOOST_AUTO_TEST_CASE (nav_bauzil_hard) {
     pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),core::Parameter(0.5));
     pSolver.problem()->setParameter(std::string("ConfigurationShooter/sampleExtraDOF"),core::Parameter(false));
     pSolver.problem()->setParameter(std::string("PathOptimization/RandomShortcut/NumberOfLoops"),core::Parameter((core::size_type)10));
-    vector3_t p_lLeg(0., 0.0848172440888579,-1.019272022956703);
-    vector3_t p_rLeg(0., -0.0848172440888579,-1.019272022956703);
-    rbprmDevice->setEffectorReference("talos_lleg_rom",p_lLeg);
-    rbprmDevice->setEffectorReference("talos_rleg_rom",p_rLeg);
 
 
     for(size_type i = 0 ; i < 2 ; ++i){
@@ -1157,7 +1136,7 @@ BOOST_AUTO_TEST_CASE (nav_bauzil_hard) {
 
     pSolver.initConfig(ConfigurationPtr_t(new core::Configuration_t(q_init)));
     pSolver.addGoalConfig(ConfigurationPtr_t(new core::Configuration_t(q_goal)));
-    BOOST_CHECK_CLOSE(pSolver.robot()->mass(),90.27,1e-2);
+    BOOST_CHECK_CLOSE(pSolver.robot()->mass(),70.,1e-2);
 
     pSolver.solve();
     BOOST_CHECK_EQUAL(pSolver.paths().size(),2);
