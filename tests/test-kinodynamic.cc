@@ -1068,6 +1068,168 @@ BOOST_AUTO_TEST_CASE (nav_bauzil_oriented_kino) {
 }
 
 
+
+BOOST_AUTO_TEST_CASE (nav_bauzil_hyq) {
+    std::cout<<"start nav_bauzil_hyq test case, this may take a couple of minutes ..."<<std::endl;
+  // this test case may take up to a minute to execute. Usually after ~5 minutes it should be considered as a failure.
+    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadHyQAbsract();
+    rbprmDevice->rootJoint()->lowerBound(2, 0.62);
+    rbprmDevice->rootJoint()->upperBound(2, 0.62);
+    rbprmDevice->setDimensionExtraConfigSpace(6);
+    BindShooter bShooter;
+    std::vector<double> boundsSO3;
+    boundsSO3.push_back(-4);
+    boundsSO3.push_back(4);
+    boundsSO3.push_back(-0.1);
+    boundsSO3.push_back(0.1);
+    boundsSO3.push_back(-0.1);
+    boundsSO3.push_back(0.1);
+    bShooter.so3Bounds_ = boundsSO3;
+    hpp::core::ProblemSolverPtr_t  ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
+    hpp::core::ProblemSolver& pSolver = *ps;
+    loadObstacleWithAffordance(pSolver, std::string("hpp_environments"),
+                               std::string("multicontact/floor_bauzil"),std::string("planning"));
+    // configure planner
+    pSolver.addPathOptimizer(std::string("RandomShortcutDynamic"));
+    pSolver.configurationShooterType(std::string("RbprmShooter"));
+    pSolver.pathValidationType(std::string("RbprmPathValidation"),0.05);
+    pSolver.distanceType(std::string("Kinodynamic"));
+    pSolver.steeringMethodType(std::string("RBPRMKinodynamic"));
+    pSolver.pathPlannerType(std::string("DynamicPlanner"));
+
+    // set problem parameters :
+    double aMax = 0.5;
+    double vMax = 0.3;
+    pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"),core::Parameter(vMax));
+    pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"),core::Parameter(aMax));
+    pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"),core::Parameter(0.01));
+    pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"),core::Parameter(0.01));
+    pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),core::Parameter(0.5));
+    pSolver.problem()->setParameter(std::string("ConfigurationShooter/sampleExtraDOF"),core::Parameter(false));
+    pSolver.problem()->setParameter(std::string("PathOptimization/RandomShortcut/NumberOfLoops"),core::Parameter((core::size_type)50));
+
+
+    for(size_type i = 0 ; i < 2 ; ++i){
+      rbprmDevice->extraConfigSpace().lower(i)=-vMax;
+      rbprmDevice->extraConfigSpace().upper(i)=vMax;
+    }
+    rbprmDevice->extraConfigSpace().lower(2)=0.;
+    rbprmDevice->extraConfigSpace().upper(2)=0.;
+    for(size_type i = 3 ; i < 5 ; ++i){
+      rbprmDevice->extraConfigSpace().lower(i)=-aMax;
+      rbprmDevice->extraConfigSpace().upper(i)=aMax;
+    }
+    rbprmDevice->extraConfigSpace().lower(5)=0.;
+    rbprmDevice->extraConfigSpace().upper(5)=0.;
+
+    // define the planning problem :
+    core::Configuration_t q_init(rbprmDevice->configSize());
+    q_init << -0.2, 1.9, 0.62, 0.0, 0.0, 0.0, 1.0, 0.05, 0, 0, 0.0, 0.0, 0.0;
+    core::Configuration_t q_goal(rbprmDevice->configSize());
+    q_goal << 3.7,0.,0.62, 0,0,-0.7071,0.7071, 0., -0.1, 0, 0.0, 0.0, 0.0;
+
+    pSolver.initConfig(ConfigurationPtr_t(new core::Configuration_t(q_init)));
+    pSolver.addGoalConfig(ConfigurationPtr_t(new core::Configuration_t(q_goal)));
+    BOOST_CHECK_CLOSE(pSolver.robot()->mass(),50.26,1e-2);
+
+    pSolver.solve();
+    BOOST_CHECK_EQUAL(pSolver.paths().size(),2);
+    std::cout<<"Solve complete, start optimization. This may take few minutes ..."<<std::endl;
+    BOOST_CHECK(checkPathVector(pSolver.paths().back()));
+    BOOST_CHECK(checkPath(pSolver.paths().back(),0.5));
+    for(size_t i = 0 ; i < 10 ; ++i){
+      pSolver.optimizePath(pSolver.paths().back());
+      BOOST_CHECK_EQUAL(pSolver.paths().size(),3+i);
+      BOOST_CHECK(checkPathVector(pSolver.paths().back()));
+      BOOST_CHECK(checkPath(pSolver.paths().back(),0.5));
+      std::cout<<"("<<i+1<<"/10)  "<<std::flush;
+    }
+    std::cout<<std::endl;
+
+}
+
+
+BOOST_AUTO_TEST_CASE (nav_bauzil_oriented_hyq) {
+    std::cout<<"start nav_bauzil_oriented_hyq test case, this may take a couple of minutes ..."<<std::endl;
+  // this test case may take up to a minute to execute. Usually after ~5 minutes it should be considered as a failure.
+    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadHyQAbsract();
+    rbprmDevice->rootJoint()->lowerBound(2, 0.62);
+    rbprmDevice->rootJoint()->upperBound(2, 0.62);
+    rbprmDevice->setDimensionExtraConfigSpace(6);
+    BindShooter bShooter;
+    std::vector<double> boundsSO3;
+    boundsSO3.push_back(-4);
+    boundsSO3.push_back(4);
+    boundsSO3.push_back(-0.1);
+    boundsSO3.push_back(0.1);
+    boundsSO3.push_back(-0.1);
+    boundsSO3.push_back(0.1);
+    bShooter.so3Bounds_ = boundsSO3;
+    hpp::core::ProblemSolverPtr_t  ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
+    hpp::core::ProblemSolver& pSolver = *ps;
+    loadObstacleWithAffordance(pSolver, std::string("hpp_environments"),
+                               std::string("multicontact/floor_bauzil"),std::string("planning"));
+    // configure planner
+    pSolver.addPathOptimizer(std::string("RandomShortcutDynamic"));
+    pSolver.configurationShooterType(std::string("RbprmShooter"));
+    pSolver.pathValidationType(std::string("RbprmPathValidation"),0.05);
+    pSolver.distanceType(std::string("Kinodynamic"));
+    pSolver.steeringMethodType(std::string("RBPRMKinodynamic"));
+    pSolver.pathPlannerType(std::string("DynamicPlanner"));
+
+    // set problem parameters :
+    double aMax = 0.5;
+    double vMax = 0.3;
+    pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"),core::Parameter(vMax));
+    pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"),core::Parameter(aMax));
+    pSolver.problem()->setParameter(std::string("Kinodynamic/forceOrientation"),core::Parameter(true));
+    pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"),core::Parameter(0.01));
+    pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"),core::Parameter(0.01));
+    pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),core::Parameter(0.5));
+    pSolver.problem()->setParameter(std::string("ConfigurationShooter/sampleExtraDOF"),core::Parameter(false));
+    pSolver.problem()->setParameter(std::string("PathOptimization/RandomShortcut/NumberOfLoops"),core::Parameter((core::size_type)50));
+
+
+    for(size_type i = 0 ; i < 2 ; ++i){
+      rbprmDevice->extraConfigSpace().lower(i)=-vMax;
+      rbprmDevice->extraConfigSpace().upper(i)=vMax;
+    }
+    rbprmDevice->extraConfigSpace().lower(2)=0.;
+    rbprmDevice->extraConfigSpace().upper(2)=0.;
+    for(size_type i = 3 ; i < 5 ; ++i){
+      rbprmDevice->extraConfigSpace().lower(i)=-aMax;
+      rbprmDevice->extraConfigSpace().upper(i)=aMax;
+    }
+    rbprmDevice->extraConfigSpace().lower(5)=0.;
+    rbprmDevice->extraConfigSpace().upper(5)=0.;
+
+    // define the planning problem :
+    core::Configuration_t q_init(rbprmDevice->configSize());
+    q_init << -0.2, 1.9, 0.62, 0.0, 0.0, 0.0, 1.0, 0.05, 0, 0, 0.0, 0.0, 0.0;
+    core::Configuration_t q_goal(rbprmDevice->configSize());
+    q_goal << 3.7,0.,0.62, 0,0,-0.7071,0.7071, 0., -0.1, 0, 0.0, 0.0, 0.0;
+
+    pSolver.initConfig(ConfigurationPtr_t(new core::Configuration_t(q_init)));
+    pSolver.addGoalConfig(ConfigurationPtr_t(new core::Configuration_t(q_goal)));
+    BOOST_CHECK_CLOSE(pSolver.robot()->mass(),50.26,1e-2);
+
+    pSolver.solve();
+    BOOST_CHECK_EQUAL(pSolver.paths().size(),2);
+    std::cout<<"Solve complete, start optimization. This may take few minutes ..."<<std::endl;
+    BOOST_CHECK(checkPathVector(pSolver.paths().back()));
+    BOOST_CHECK(checkPath(pSolver.paths().back(),0.5));
+    for(size_t i = 0 ; i < 10 ; ++i){
+      pSolver.optimizePath(pSolver.paths().back());
+      BOOST_CHECK_EQUAL(pSolver.paths().size(),3+i);
+      BOOST_CHECK(checkPathVector(pSolver.paths().back()));
+      BOOST_CHECK(checkPath(pSolver.paths().back(),0.5));
+      std::cout<<"("<<i+1<<"/10)  "<<std::flush;
+    }
+    std::cout<<std::endl;
+
+}
+
+
 /*
 // too slow to be added in the test suite ...
 BOOST_AUTO_TEST_CASE (nav_bauzil_hard) {
