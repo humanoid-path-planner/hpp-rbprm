@@ -21,15 +21,19 @@
 
 #ifndef TOOLSFULLBODY_HH
 #define TOOLSFULLBODY_HH
-
+#include <hpp/core/fwd.hh>
 #include <hpp/rbprm/rbprm-fullbody.hh>
 #include <hpp/rbprm/rbprm-device.hh>
 #include <hpp/rbprm/rbprm-state.hh>
 #include <pinocchio/parsers/urdf.hpp>
 #include <hpp/pinocchio/urdf/util.hh>
+#include <hpp/pinocchio/device.hh>
+#include <hpp/pinocchio/configuration.hh>
+#include <hpp/pinocchio/simple-device.hh>
 
 using namespace hpp;
 using namespace rbprm;
+namespace pin_test = hpp::pinocchio::unittest;
 
 /*
 
@@ -57,6 +61,46 @@ fullBody.runLimbSampleAnalysis(lLegId, "ReferenceConfiguration", True)
 fullBody.setReferenceConfig (q_ref)
 
 */
+
+RbPrmFullBodyPtr_t loadSimpleHumanoid(){
+  hpp::pinocchio::DevicePtr_t device = pin_test::makeDevice(pin_test::HumanoidSimple);
+  device->rootJoint()->lowerBound(0, -2);
+  device->rootJoint()->lowerBound(1, -2);
+  device->rootJoint()->lowerBound(2, 0.4);
+  device->rootJoint()->upperBound(0,  2);
+  device->rootJoint()->upperBound(1,  2);
+  device->rootJoint()->upperBound(2,  1.2);
+
+  device->setDimensionExtraConfigSpace(6); // used by kinodynamic methods
+  for(size_type i = 0 ; i < 6 ; ++i){
+    device->extraConfigSpace().lower(i)=-5;
+    device->extraConfigSpace().upper(i)=5;
+  }
+
+  RbPrmFullBodyPtr_t fullBody = RbPrmFullBody::create(device);
+
+   // add limbs :
+  const std::string rLegId("rleg");
+  const std::string rLeg("rleg1_joint");
+  const std::string rfeet("rleg6_joint");
+  fcl::Vec3f rLegOffset( 0,0,-0.1);
+  fcl::Vec3f rLegLimbOffset(0,0,0);
+  fcl::Vec3f rLegNormal(0,0,1);
+  double legX = 0.1;
+  double legY = 0.05;
+  fullBody->AddLimb(rLegId,rLeg,rfeet,rLegOffset,rLegLimbOffset,rLegNormal,legX,legY,hpp::core::ObjectStdVector_t(),1000,"fixedStep1",0.01,hpp::rbprm::_6_DOF,false,false,std::string(),0.3);
+
+  const std::string lLegId("lleg");
+  const std::string lLeg("lleg1_joint");
+  const std::string lfeet("lleg6_joint");
+  fcl::Vec3f lLegOffset(0,0,-0.1);
+  fcl::Vec3f lLegLimbOffset(0,0,0);
+  fcl::Vec3f lLegNormal(0,0,1);
+  fullBody->AddLimb(lLegId,lLeg,lfeet,lLegOffset,lLegLimbOffset,lLegNormal,legX,legY,hpp::core::ObjectStdVector_t(),1000,"fixedStep1",0.01,hpp::rbprm::_6_DOF,false,false,std::string(),0.3);
+
+
+  return fullBody;
+}
 
 
 RbPrmFullBodyPtr_t loadHRP2(){
@@ -156,16 +200,42 @@ hpp::pinocchio::RbPrmDevicePtr_t loadHyQAbsract()
     loadRom(romDevices_, std::string("hyq_rhleg_rom"),packageName);
     hpp::pinocchio::RbPrmDevicePtr_t device =
             loadAbstractRobot(romDevices_, std::string("hyq_trunk_large"),packageName);
-    device->rootJoint()->lowerBound(0, -2);
-    device->rootJoint()->lowerBound(1, -1);
+    device->rootJoint()->lowerBound(0, -4);
+    device->rootJoint()->lowerBound(1, -4);
     device->rootJoint()->lowerBound(2, 0.3);
     device->rootJoint()->upperBound(0,  5);
-    device->rootJoint()->upperBound(1,  1);
-    device->rootJoint()->upperBound(2,  4);
+    device->rootJoint()->upperBound(1,  4);
+    device->rootJoint()->upperBound(2,  1);
+    hpp::core::vector3_t p_lFLeg(0.3735, 0.207 , -0.57697);
+    hpp::core::vector3_t p_rFLeg(0.3735, -0.207 , -0.57697);
+    hpp::core::vector3_t p_lHLeg(-0.3735, 0.207 , -0.57697);
+    hpp::core::vector3_t p_rHLeg(-0.3735, -0.207 , -0.57697);
+    device->setEffectorReference("hyq_lfleg_rom",p_lFLeg);
+    device->setEffectorReference("hyq_rfleg_rom",p_rFLeg);
+    device->setEffectorReference("hyq_lhleg_rom",p_lHLeg);
+    device->setEffectorReference("hyq_rhleg_rom",p_rHLeg);
     return device;
 }
 
-
+hpp::pinocchio::RbPrmDevicePtr_t loadsimpleHumanoidAbsract(){
+    pinocchio::T_Rom romDevices_;
+    const std::string packageName("simpleHumanoid-rbprm");
+    loadRom(romDevices_, std::string("simpleHumanoid_lleg_rom"),packageName);
+    loadRom(romDevices_, std::string("simpleHumanoid_rleg_rom"),packageName);
+    hpp::pinocchio::RbPrmDevicePtr_t device =
+            loadAbstractRobot(romDevices_, std::string("simpleHumanoid_trunk"),packageName);
+    device->rootJoint()->lowerBound(0, -5);
+    device->rootJoint()->lowerBound(1, -5);
+    device->rootJoint()->lowerBound(2, 0.3);
+    device->rootJoint()->upperBound(0,  5);
+    device->rootJoint()->upperBound(1,  5);
+    device->rootJoint()->upperBound(2,  1);
+    hpp::core::vector3_t p_lLeg(0., 0.1,-1.);
+    hpp::core::vector3_t p_rLeg(0., -0.1,-1.);
+    device->setEffectorReference("simpleHumanoid_lleg_rom",p_lLeg);
+    device->setEffectorReference("simpleHumanoid_rleg_rom",p_rLeg);
+    return device;
+}
 
 hpp::pinocchio::RbPrmDevicePtr_t loadTalosLEGAbsract()
 {
