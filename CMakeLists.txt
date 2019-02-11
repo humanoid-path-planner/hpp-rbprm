@@ -29,8 +29,10 @@ SET(PROJECT_DESCRIPTION
   "Implementation of RB-PRM planner using hpp."
   )
 
-
 SETUP_HPP_PROJECT()
+
+SET(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/find-external/CDD")
+FIND_PACKAGE(CDD REQUIRED)
 
 ADD_REQUIRED_DEPENDENCY("hpp-core >= 4.2")
 ADD_REQUIRED_DEPENDENCY("hpp-util >= 3")
