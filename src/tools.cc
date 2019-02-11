@@ -20,9 +20,10 @@
 #include <fstream>
 #include <hpp/pinocchio/joint.hh>
 #include <hpp/pinocchio/device.hh>
+#include <hpp/pinocchio/liegroup.hh>
 #include <hpp/core/config-projector.hh>
 #include <hpp/constraints/locked-joint.hh>
-#include <hpp/constraints/implicit.hh>
+#include <hpp/pinocchio/liegroup-element.hh>
 
 namespace hpp {
   namespace tools {
