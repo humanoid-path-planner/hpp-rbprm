@@ -156,12 +156,12 @@ RbPrmFullBodyPtr_t loadHRP2(){
 
 }
 
-void loadRom(pinocchio::T_Rom& romDevices, const std::string romName, const std::string packageName)
+void loadRom(hpp::pinocchio::T_Rom& romDevices, const std::string romName, const std::string packageName)
 {
     std::string rootJointType   ("freeflyer"),
                 urdfSuffix (""),
                 srdfSuffix ("");
-    hpp::pinocchio::DevicePtr_t romDevice = pinocchio::Device::create (romName);
+    hpp::pinocchio::DevicePtr_t romDevice = hpp::pinocchio::Device::create (romName);
     romDevices.insert(std::make_pair(romName, romDevice));
     hpp::pinocchio::urdf::loadRobotModel (romDevice,
                       rootJointType,
@@ -171,7 +171,7 @@ void loadRom(pinocchio::T_Rom& romDevices, const std::string romName, const std:
                       srdfSuffix);
 }
 
-hpp::pinocchio::RbPrmDevicePtr_t loadAbstractRobot(pinocchio::T_Rom& romDevices, const std::string robotName,const std::string packageName)
+hpp::pinocchio::RbPrmDevicePtr_t loadAbstractRobot(hpp::pinocchio::T_Rom& romDevices, const std::string robotName,const std::string packageName)
 {
     std::string rootJointType   ("freeflyer"),
                 urdfSuffix (""),
@@ -183,8 +183,8 @@ hpp::pinocchio::RbPrmDevicePtr_t loadAbstractRobot(pinocchio::T_Rom& romDevices,
             robotName,
             urdfSuffix,
             srdfSuffix);
-    const pinocchio::Computation_t flag = static_cast <pinocchio::Computation_t>
-  (pinocchio::JOINT_POSITION | pinocchio::JACOBIAN | pinocchio::COM);
+    const hpp::pinocchio::Computation_t flag = static_cast <hpp::pinocchio::Computation_t>
+  (hpp::pinocchio::JOINT_POSITION | hpp::pinocchio::JACOBIAN | hpp::pinocchio::COM);
     device->controlComputation(flag);
     return device;
 }
@@ -192,7 +192,7 @@ hpp::pinocchio::RbPrmDevicePtr_t loadAbstractRobot(pinocchio::T_Rom& romDevices,
 
 hpp::pinocchio::RbPrmDevicePtr_t loadHyQAbsract()
 {
-    pinocchio::T_Rom romDevices_;
+    hpp::pinocchio::T_Rom romDevices_;
     const std::string packageName("hyq-rbprm");
     loadRom(romDevices_, std::string("hyq_lhleg_rom"),packageName);
     loadRom(romDevices_, std::string("hyq_lfleg_rom"),packageName);
@@ -218,7 +218,7 @@ hpp::pinocchio::RbPrmDevicePtr_t loadHyQAbsract()
 }
 
 hpp::pinocchio::RbPrmDevicePtr_t loadsimpleHumanoidAbsract(){
-    pinocchio::T_Rom romDevices_;
+    hpp::pinocchio::T_Rom romDevices_;
     const std::string packageName("simpleHumanoid-rbprm");
     loadRom(romDevices_, std::string("simpleHumanoid_lleg_rom"),packageName);
     loadRom(romDevices_, std::string("simpleHumanoid_rleg_rom"),packageName);
@@ -239,7 +239,7 @@ hpp::pinocchio::RbPrmDevicePtr_t loadsimpleHumanoidAbsract(){
 
 hpp::pinocchio::RbPrmDevicePtr_t loadTalosLEGAbsract()
 {
-    pinocchio::T_Rom romDevices_;
+    hpp::pinocchio::T_Rom romDevices_;
     const std::string packageName("talos-rbprm");
     loadRom(romDevices_, std::string("talos_lleg_rom"),packageName);
     loadRom(romDevices_, std::string("talos_rleg_rom"),packageName);
@@ -346,7 +346,7 @@ RbPrmFullBodyPtr_t loadHyQ(){
 
 State createState(const RbPrmFullBodyPtr_t& fullBody,core::Configuration_t config,const std::vector<std::string>& limbsInContact){
     fullBody->device_->currentConfiguration(config);
-    pinocchio::Computation_t newflag = static_cast <pinocchio::Computation_t> (pinocchio::JOINT_POSITION | pinocchio::JACOBIAN | pinocchio::COM);
+    hpp::pinocchio::Computation_t newflag = static_cast <hpp::pinocchio::Computation_t> (hpp::pinocchio::JOINT_POSITION | hpp::pinocchio::JACOBIAN | hpp::pinocchio::COM);
     fullBody->device_->controlComputation (newflag);
     fullBody->device_->computeForwardKinematics();
     State state;

@@ -28,6 +28,8 @@
 #include <hpp/core/problem-solver.hh>
 #include <hpp/spline/helpers/effector_spline.h>
 #include <hpp/spline/bezier_curve.h>
+#include <hpp/pinocchio/joint-collection.hh>
+
 
 namespace hpp {
 using namespace core;
@@ -97,7 +99,7 @@ using namespace core;
     void getEffectorConfigAt(core::DevicePtr_t device,const pinocchio::Frame& effector,const core::PathPtr_t path,const value_type time,ConfigurationOut_t result ){
         Transform3f transform = getEffectorTransformAt(device,effector,path,time);
         result.head<3>() = transform.translation();
-        result.segment<4>(3) = Transform3f::Quaternion_t(transform.rotation()).coeffs();
+        result.segment<4>(3) = Transform3f::Quaternion(transform.rotation()).coeffs();
 
     }
 
@@ -106,7 +108,7 @@ using namespace core;
         device->computeForwardKinematics();
         Transform3f transform = effector.currentTransformation();
         result.head<3>() = transform.translation();
-        result.segment<4>(3) = Transform3f::Quaternion_t(transform.rotation()).coeffs();
+        result.segment<4>(3) = Transform3f::Quaternion(transform.rotation()).coeffs();
     }
 
     T_Waypoint getWayPoints(pinocchio::DevicePtr_t device, core::PathPtr_t path,
@@ -376,142 +378,31 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
         return refEffectorPath;
     }
 
-    /*
-    void computePredefConstants(value_type dist_translation,value_type p_max,value_type p_min,value_type t_total,value_type &t_predef, value_type &posOffset, value_type &velOffset,value_type &a_max_predefined ){
-        value_type timeMid= t_total - (2*t_predef);
-        //const value_type jerk_mid = ((1./6.)*(1/8.)*timeMid*timeMid*timeMid);
-        //const value_type jerk = p_max / ((0.5*t_predef*(timeMid*timeMid/4.)) + (0.25*t_predef*t_predef*timeMid) + ((1./6.)*t_predef*t_predef*t_predef) - (2.*t_predef/timeMid));
-        value_type jerk = 1.5*p_max / (((1./6.)*t_predef*t_predef*t_predef) + ((1./6.)*t_predef*t_predef*timeMid) + ((1./24.)*t_predef*timeMid*timeMid));
-        a_max_predefined = jerk * t_predef;
-        hppDout(notice,"computed jerk in computePredefConstant : "<<jerk);
-
-        const value_type a_max_translation  = dist_translation*8 /(timeMid*timeMid);
-        hppDout(notice,"A_max predefined = "<<a_max_predefined<<" ; translation : "<<a_max_translation);
-        if(a_max_predefined>a_max_translation && timeMid > (2*t_predef)){ // we should increase the time allowed to the predefined curve, such that the two acceleration are equals
-            hppDout(notice,"a_z sup a_translation, need to increase time_predef");
-            t_predef *=2;
-            timeMid= t_total - (2*t_predef);
-            jerk = 1.5*p_max / (((1./6.)*t_predef*t_predef*t_predef) + ((1./6.)*t_predef*t_predef*timeMid) + ((1./24.)*t_predef*timeMid*timeMid));
-            a_max_predefined = jerk * t_predef;
-        }
-        velOffset = 0.5 * jerk * t_predef * t_predef;
-        posOffset = (1./6.) * jerk * t_predef * t_predef * t_predef;
-        hppDout(notice,"pos offset = "<<posOffset<<" ; jerk = "<<jerk<<" ; acc = "<<a_max_predefined<<" ; vel = "<<velOffset);
-
-
-     }
-*/
-/*
-    void Constants(value_type dist_translation,value_type p_max,value_type p_min,value_type t_total,value_type &t_predef, value_type &posOffset, value_type &velOffset,value_type &a_max_predefined ){
-        value_type timeMid= t_total - (2*t_predef);
-
-        const value_type dddjerk = 4000.; // 3000
-        //const value_type djerk = ddjerk*t_predef;
-        const value_type jerk = (1./6.)*dddjerk*t_predef*t_predef* t_predef;
-        a_max_predefined = (1./24.)*dddjerk *t_predef*t_predef*t_predef* t_predef;
-        hppDout(notice,"computed jerk in computePredefConstant : "<<jerk);
-
-        velOffset = (1./120.) * dddjerk * t_predef * t_predef * t_predef * t_predef* t_predef;
-        posOffset = (1./720.) * dddjerk * t_predef * t_predef * t_predef* t_predef * t_predef* t_predef;
-        hppDout(notice,"pos offset = "<<posOffset<<" ; jerk = "<<jerk<<" ; acc = "<<a_max_predefined<<" ; vel = "<<velOffset);
-     }
-*/
-
-//    void computePredefConstants(value_type /*dist_translation*/,value_type /*p_max*/,value_type /*p_min*/,value_type /*t_total*/,value_type &t_predef, value_type &posOffset, value_type &velOffset,value_type &a_max_predefined ){
-
-//        const value_type ddjerk = 250.;
-//        //const value_type djerk = ddjerk*t_predef;
-//        #ifdef HPP_DEBUG
-//        const value_type jerk = 0.5*ddjerk*t_predef*t_predef;
-//        #endif
-//        a_max_predefined = (1./6.)*ddjerk *t_predef*t_predef*t_predef;
-//        hppDout(notice,"computed jerk in computePredefConstant : "<<jerk);
-
-//        velOffset = (1./24.) * ddjerk * t_predef * t_predef * t_predef * t_predef;
-//        posOffset = (1./120.) * ddjerk * t_predef * t_predef * t_predef* t_predef * t_predef;
-//        hppDout(notice,"pos offset = "<<posOffset<<" ; jerk = "<<jerk<<" ; acc = "<<a_max_predefined<<" ; vel = "<<velOffset);
-//     }
-
-/*
-    void computePredefConstants(value_type dist_translation,value_type p_max,value_type p_min,value_type t_total,value_type &t_predef, value_type &posOffset, value_type &velOffset,value_type &a_max_predefined ){
-       // value_type timeMid= t_total - (2*t_predef);
-
-        const value_type djerk = 30.;
-        //const value_type djerk = ddjerk*t_predef;
-        const value_type jerk = djerk*t_predef;
-        a_max_predefined = 0.5*djerk *t_predef*t_predef;
-        hppDout(notice,"computed jerk in computePredefConstant : "<<jerk);
-
-        velOffset = (1./6.) * djerk * t_predef * t_predef * t_predef ;
-        posOffset = (1./24.) * djerk * t_predef * t_predef * t_predef* t_predef ;
-        hppDout(notice,"pos offset = "<<posOffset<<" ; jerk = "<<jerk<<" ; acc = "<<a_max_predefined<<" ; vel = "<<velOffset);
-     }
-*/
-    /*void computePredefConstants(value_type dist_translation,value_type p_max,value_type p_min,value_type t_total,value_type &t_predef, value_type &posOffset, value_type &velOffset,value_type &a_max_predefined ){
-        value_type timeMid= t_total - (2*t_predef);
-        posOffset = (p_max/(1+(timeMid/(2*t_predef))));
-        if (posOffset<p_min)
-            posOffset = p_min;
-        a_max_predefined = posOffset*2./(t_predef*t_predef);
-        const value_type a_max_translation  = dist_translation*8 /(timeMid*timeMid);
-        hppDout(notice,"A_max predefined = "<<a_max_predefined<<" ; translation : "<<a_max_translation);
-
-        if(a_max_predefined>a_max_translation){ // we should increase the time allowed to the predefined curve, such that the two acceleration are equals
-            hppDout(notice,"a_z sup a_translation, need to increase time_predef");
-//            const value_type a = 8*dist_translation - 4*p_max;
-//            const value_type b = -4*dist_translation*t_total + 4 * t_total * p_max;
-//            const value_type c = - t_total*t_total * p_max;
-//            const value_type delta = b*b - 4 * a * c;
-//            const value_type x1 = (-b - sqrt(delta))/(2*a);
-//            const value_type x2 = (-b + sqrt(delta))/(2*a);
-//            value_type x = 0;
-//            hppDout(notice,"x1 = "<<x1<<" ; x2 = "<<x2);
-//            if((x1 < t_predef) || (x1 > t_total/2)){
-//                hppDout(notice,"x1 invalid");
-//            }else{
-//                x = x1;
-//            }
-//            if((x2 < t_predef) || (x2 > t_total/2)){
-//                hppDout(notice,"x2 invalid");
-//            }else{
-//                x = std::max(x,x2);
-//            }
-//            if (x > 0)
-//                t_predef = x;
-
-            t_predef *= 2.;
-            hppDout(notice,"new t_predef : "<<t_predef);
-            timeMid= t_total - (2*t_predef);
-            posOffset = (p_max/(1+(timeMid/(2*t_predef))));
-            if (posOffset<p_min)
-                posOffset = p_min;
-            a_max_predefined = posOffset*2./(t_predef*t_predef);
-
-        }
-        velOffset = t_predef*a_max_predefined;
-       // a_max_predefined *= 1.5;
-        hppDout(notice," pos offset = "<<posOffset<< "  ; vel offset = "<<velOffset);
-    }
-*/
-
-
     void computePredefConstants(double /*dist_translation*/,double p_max,double /*p_min*/,double t_total,double &t_predef, double &posOffset, double &/*velOffset*/,double &/*a_max_predefined*/ ){
         double timeMid= (t_total - (2*t_predef))/2.;
         posOffset = p_max / (1. + 4.*timeMid/t_predef + 6.*timeMid*timeMid/(t_predef*t_predef) - (timeMid*timeMid*timeMid)/(t_predef*t_predef*t_predef));
     }
-
-    DevicePtr_t createFreeFlyerDevice()
+} //namespace interpolation
+} //namespace rbprm
+} // namespace hp
+    hpp::DevicePtr_t createFreeFlyerDevice()
     {
-        DevicePtr_t endEffectorDevice = hpp::core::Device_t::create("endEffector");
-        hpp::pinocchio::ModelPtr_t m =  hpp::pinocchio::ModelPtr_t(new ::se3::Model());
-        hpp::pinocchio::GeomModelPtr_t gm =  hpp::pinocchio::GeomModelPtr_t(new ::se3::GeometryModel());
-        Transform3f mat; mat.setIdentity ();
+        hpp::DevicePtr_t endEffectorDevice = hpp::core::Device_t::create("endEffector");
+        hpp::pinocchio::ModelPtr_t m =  hpp::pinocchio::ModelPtr_t(new hpp::pinocchio::Model());
+        hpp::pinocchio::GeomModelPtr_t gm =  hpp::pinocchio::GeomModelPtr_t(new hpp::pinocchio::GeomModel);
+        hpp::Transform3f mat; mat.setIdentity ();
         endEffectorDevice->setModel(m);
         endEffectorDevice->setGeomModel(gm);
-        endEffectorDevice->model().addJoint(0, ::se3::JointModelFreeFlyer(),mat,"freeflyer");
+        endEffectorDevice->model().addJoint(0, pinocchio::JointModelFreeFlyer(),mat,"freeflyer");
         return endEffectorDevice;
     }
 
+namespace hpp
+{
+namespace rbprm
+{
+namespace interpolation
+{
     core::PathPtr_t generateEndEffectorBezier(RbPrmFullBodyPtr_t fullbody, core::ProblemSolverPtr_t problemSolver, const PathPtr_t comPath,
     const State &startState, const State &nextState){
         pinocchio::Frame effector =  getEffector(fullbody, startState, nextState);
@@ -814,7 +705,8 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
         core::segment_t interval(0, fullBodyComPath->initial().rows()-1);
         core::segments_t intervals;
         intervals.push_back(interval);
-        core::PathPtr_t reducedComPath = core::SubchainPath::create(fullBodyComPath,intervals);
+        core::segments_t velIntervals (1, core::segment_t (0, fullbody->device_->numberDof()));
+        core::PathPtr_t reducedComPath = core::SubchainPath::create(fullBodyComPath,intervals,velIntervals);
         const pinocchio::Frame effector =  getEffector(fullbody, startState, nextState);
         DevicePtr_t endEffectorDevice = createFreeFlyerDevice();
 

@@ -43,14 +43,14 @@ bool checkPathVector(core::PathPtr_t path){
     bool successPath;
     if(previousPath->initial().head(idAcc) != (*previousPath)(0.,successPath).head(idAcc)){
       std::cout<<"init config not equal to config at time 0"<<std::endl;
-      std::cout<<"init config : "<<pinocchio::displayConfig(previousPath->initial() )<<std::endl;
-      std::cout<<"t=0  config : "<<pinocchio::displayConfig((*previousPath)(0.,successPath))<<std::endl;
+      std::cout<<"init config : "<<hpp::pinocchio::displayConfig(previousPath->initial() )<<std::endl;
+      std::cout<<"t=0  config : "<<hpp::pinocchio::displayConfig((*previousPath)(0.,successPath))<<std::endl;
       return false;
     }
     if(previousPath->end().head(idAcc) != (*previousPath)(previousPath->length(),successPath).head(idAcc)){
       std::cout<<"end config not equal to config at time length()"<<std::endl;
-      std::cout<<"end  config : "<<pinocchio::displayConfig(previousPath->end() )<<std::endl;
-      std::cout<<"t=l  config : "<<pinocchio::displayConfig((*previousPath)(previousPath->length(),successPath))<<std::endl;
+      std::cout<<"end  config : "<<hpp::pinocchio::displayConfig(previousPath->end() )<<std::endl;
+      std::cout<<"t=l  config : "<<hpp::pinocchio::displayConfig((*previousPath)(previousPath->length(),successPath))<<std::endl;
       return false;
     }
 
@@ -59,20 +59,20 @@ bool checkPathVector(core::PathPtr_t path){
       currentPath = pv->pathAtRank(i);
       if(previousPath->end().head(idAcc) != currentPath->initial().head(idAcc)){
         std::cout<<"previous path end not equal to current init, for id"<<i<<std::endl;
-        std::cout<<"end previous : "<<pinocchio::displayConfig(previousPath->end() )<<std::endl;
-        std::cout<<"init current : "<<pinocchio::displayConfig(currentPath->initial())<<std::endl;
+        std::cout<<"end previous : "<<hpp::pinocchio::displayConfig(previousPath->end() )<<std::endl;
+        std::cout<<"init current : "<<hpp::pinocchio::displayConfig(currentPath->initial())<<std::endl;
         return false;
       }
       if(currentPath->initial().head(idAcc) != (*currentPath)(0.,successPath).head(idAcc)){
         std::cout<<"init config not equal to config at time 0 at index "<<i<<std::endl;
-        std::cout<<"init config : "<<pinocchio::displayConfig(currentPath->initial() )<<std::endl;
-        std::cout<<"t=0  config : "<<pinocchio::displayConfig((*currentPath)(0.,successPath))<<std::endl;
+        std::cout<<"init config : "<<hpp::pinocchio::displayConfig(currentPath->initial() )<<std::endl;
+        std::cout<<"t=0  config : "<<hpp::pinocchio::displayConfig((*currentPath)(0.,successPath))<<std::endl;
         return false;
       }
       if(currentPath->end().head(idAcc) != (*currentPath)(currentPath->length(),successPath).head(idAcc)){
         std::cout<<"end config not equal to config at time length() at index "<<i<<std::endl;
-        std::cout<<"end  config : "<<pinocchio::displayConfig(currentPath->end() )<<std::endl;
-        std::cout<<"t=l  config : "<<pinocchio::displayConfig((*currentPath)(currentPath->length(),successPath))<<std::endl;
+        std::cout<<"end  config : "<<hpp::pinocchio::displayConfig(currentPath->end() )<<std::endl;
+        std::cout<<"t=l  config : "<<hpp::pinocchio::displayConfig((*currentPath)(currentPath->length(),successPath))<<std::endl;
         return false;
       }
       previousPath = currentPath;
