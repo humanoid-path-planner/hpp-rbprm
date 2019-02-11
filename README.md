@@ -1,5 +1,8 @@
 #  Humanoid Path Planner - RBPRM module
 
+[![Pipeline status](https://gepgitlab.laas.fr/humanoid-path-planner/hpp-rbprm/badges/master/pipeline.svg)](https://gepgitlab.laas.fr/humanoid-path-planner/hpp-rbprm/commits/master)
+[![Coverage report](https://gepgitlab.laas.fr/humanoid-path-planner/hpp-rbprm/badges/master/coverage.svg?job=doc-coverage)](http://projects.laas.fr/gepetto/doc/humanoid-path-planner/hpp-rbprm/master/coverage/)
+
 Copyright 2015 LAAS-CNRS
 
 Author: Steve Tonneau
