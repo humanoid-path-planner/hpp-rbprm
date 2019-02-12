@@ -249,7 +249,7 @@ namespace
                 core::segment_t interval(0, completePath->initial().rows()-1);
                 core::segments_t intervals;
                 intervals.push_back(interval);
-                core::segments_t velIntervals (1, core::segment_t (0, device->numberDof()));
+                core::segments_t velIntervals (1, core::segment_t (0, device->numberDof()-1));
                 PathPtr_t reducedPath = core::SubchainPath::create(completePath,intervals, velIntervals);
                 return reducedPath;
             }

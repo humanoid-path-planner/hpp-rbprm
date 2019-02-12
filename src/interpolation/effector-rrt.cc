@@ -705,7 +705,7 @@ buildPredefinedPath(endEffectorDevice,nextState.contactNormals_.at(effectorName)
         core::segment_t interval(0, fullBodyComPath->initial().rows()-1);
         core::segments_t intervals;
         intervals.push_back(interval);
-        core::segments_t velIntervals (1, core::segment_t (0, fullbody->device_->numberDof()));
+        core::segments_t velIntervals (1, core::segment_t (0, fullbody->device_->numberDof()-1));
         core::PathPtr_t reducedComPath = core::SubchainPath::create(fullBodyComPath,intervals,velIntervals);
         const pinocchio::Frame effector =  getEffector(fullbody, startState, nextState);
         DevicePtr_t endEffectorDevice = createFreeFlyerDevice();
