@@ -73,11 +73,11 @@ hpp::core::ProblemSolverPtr_t planDarpa(BindShooter& bShooter)
 }
 
 
-BOOST_AUTO_TEST_CASE (plan_path) {
+/*BOOST_AUTO_TEST_CASE (plan_path) {
     BindShooter bShooter;
     PathVectorPtr_t resPath = planDarpa(bShooter)->paths().back();
     // TODO CHECK COLLISION CONSTRAINTS
-}
+}*/
 
 
 BOOST_AUTO_TEST_CASE (interpolate_path) {
