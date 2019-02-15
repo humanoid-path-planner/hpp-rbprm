@@ -366,7 +366,7 @@ ProjectionReport maintain_contacts(ContactGenHelper &contactGenHelper)
     }
     else if (!contactGenHelper.candidates_.empty()){
         hppDout(notice,"candidate list already generated, take the next one.");
-        contactGenHelper.candidates_.pop(); // first candidate already treated.
+        //contactGenHelper.candidates_.pop(); // first candidate already treated.
         }
     hppDout(notice,"candidates OK");
     Q_State& candidates = contactGenHelper.candidates_;
