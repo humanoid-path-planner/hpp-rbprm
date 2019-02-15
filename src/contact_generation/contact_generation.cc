@@ -100,9 +100,9 @@ void maintain_contacts_combinatorial_rec(const hpp::rbprm::State& currentState, 
     std::queue<std::string> contactOrder = currentState.contactOrder_;
     // TEST CODE : reverse order of the queue :
     hppDout(notice,"Size of contact queue : "<<contactOrder.size());
-    hppDout(notice,"Reverse :");
-    reverse(contactOrder);
-    hppDout(notice,"Reverse done.");
+    //hppDout(notice,"Reverse :");
+   // reverse(contactOrder);
+    //hppDout(notice,"Reverse done.");
     size_type size = contactOrder.size(); int i = 0;
     while(!contactOrder.empty() && size != i)
     {
