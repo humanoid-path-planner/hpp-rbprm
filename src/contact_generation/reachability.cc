@@ -39,7 +39,7 @@ namespace hpp {
    void printQHullFile(const std::pair<MatrixXX, VectorX>& Ab,fcl::Vec3f intPoint,const std::string& fileName,bool clipZ = false){
         std::ofstream file;
         using std::endl;
-        std::string path("/local/fernbac/bench_iros18/constraints_obj/");
+        std::string path("/local/fernbach/qhull/constraints_obj/");
         path.append(fileName);
         hppDout(notice,"print to file : "<<path);
         file.open(path.c_str(),std::ios::out | std::ios::trunc);
@@ -63,14 +63,14 @@ namespace hpp {
    void printQHull(const std::pair<MatrixXX, VectorX>& Ab,fcl::Vec3f intPoint = fcl::Vec3f::Zero(),const std::string& fileName=std::string(),bool clipZ = false){
         using std::endl;
         std::stringstream ss;
-        //ss<<"qHull Output : use qhalf FP | qconvex Ft "<<endl;
+        ss<<"qHull Output : use qhalf FP | qconvex Ft "<<endl;
         ss<<"3 1"<<endl;
         ss<<"\t "<<intPoint[0]<<"\t"<<intPoint[1]<<"\t"<<intPoint[2]<<endl;
         ss<<"4"<<endl;
         for(size_type i = 0 ; i < Ab.first.rows() ; ++i){
             ss<<"\t"<<Ab.first(i,0)<<"\t"<<Ab.first(i,1)<<"\t"<<Ab.first(i,2)<<"\t"<<-Ab.second[i]-0.001<<endl;
         }
-        //hppDout(notice,ss.str());
+        hppDout(notice,ss.str());
         if(!fileName.empty())
             printQHullFile(Ab,intPoint,fileName,clipZ);
    }
