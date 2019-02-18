@@ -28,7 +28,7 @@ using namespace hpp::rbprm;
 using namespace hpp::rbprm::sampling;
 
 
-std::size_t ComputeLength(const pinocchio::JointPtr_t limb, const pinocchio::Frame effector)
+std::size_t ComputeLength(const hpp::pinocchio::JointPtr_t limb, const hpp::pinocchio::Frame effector)
 {
     std::size_t start = limb->rankInConfiguration();
     std::size_t end = effector.joint()->rankInConfiguration()
@@ -37,7 +37,7 @@ std::size_t ComputeLength(const pinocchio::JointPtr_t limb, const pinocchio::Fra
 }
 
 
-fcl::Vec3f ComputeEffectorPosition(const pinocchio::JointPtr_t limb, const pinocchio::Frame effector, const fcl::Vec3f& offset)
+fcl::Vec3f ComputeEffectorPosition(const hpp::pinocchio::JointPtr_t limb, const hpp::pinocchio::Frame effector, const fcl::Vec3f& offset)
 {
     const hpp::pinocchio::Transform3f& tf =effector.currentTransformation();
     const fcl::Transform3f transform (tf.rotation(),tf.translation());
@@ -55,7 +55,7 @@ fcl::Vec3f ComputeEffectorPosition(const pinocchio::JointPtr_t limb, const pinoc
  * @param offset
  * @return
  */
-fcl::Vec3f ComputeEffectorPositionInLimbFrame(const pinocchio::JointPtr_t limb, const pinocchio::Frame effector, const fcl::Vec3f& offset,const fcl::Vec3f&  limbOffset)
+fcl::Vec3f ComputeEffectorPositionInLimbFrame(const hpp::pinocchio::JointPtr_t limb, const hpp::pinocchio::Frame effector, const fcl::Vec3f& offset,const fcl::Vec3f&  limbOffset)
 {
     // we want to use the orientation expressed in the world frame, but with the origin in the limb's root :
     //hppDout(notice,"offset = "<<offset);
@@ -72,7 +72,7 @@ fcl::Vec3f ComputeEffectorPositionInLimbFrame(const pinocchio::JointPtr_t limb, 
     return (effTr-limbTr);
 }
 
-Eigen::MatrixXd Jacobian(const pinocchio::JointPtr_t limb, const pinocchio::Frame effector)
+Eigen::MatrixXd Jacobian(const hpp::pinocchio::JointPtr_t limb, const hpp::pinocchio::Frame effector)
 {
     return effector.jacobian().block(0,limb->rankInVelocity(),6, effector.joint()->rankInVelocity() - limb->rankInVelocity() + effector.joint()->numberDof());
 }
@@ -84,7 +84,7 @@ double Manipulability(const Eigen::MatrixXd& product)
     return det > 0 ? sqrt(det) : 0;
 }
 
-Sample::Sample(const pinocchio::JointPtr_t limb, const pinocchio::Frame effector, const fcl::Vec3f& offset,const fcl::Vec3f& limbOffset, std::size_t id)
+Sample::Sample(const hpp::pinocchio::JointPtr_t limb, const hpp::pinocchio::Frame effector, const fcl::Vec3f& offset,const fcl::Vec3f& limbOffset, std::size_t id)
     : startRank_(limb->rankInConfiguration())
     , length_ (ComputeLength(limb, effector))
     , configuration_ (limb->robot()->currentConfiguration().segment(startRank_, length_))
@@ -99,8 +99,8 @@ Sample::Sample(const pinocchio::JointPtr_t limb, const pinocchio::Frame effector
 }
 
 Sample::Sample(const std::size_t id, const std::size_t length, const std::size_t startRank, const double staticValue,
-               const fcl::Vec3f& effectorPosition,const fcl::Vec3f& effectorPositionInLimbFrame, const pinocchio::ConfigurationIn_t configuration, const Eigen::MatrixXd& jacobian,
-               const Eigen::Matrix <pinocchio::value_type, 6, 6>& jacobianProduct)
+               const fcl::Vec3f& effectorPosition,const fcl::Vec3f& effectorPositionInLimbFrame, const hpp::pinocchio::ConfigurationIn_t configuration, const Eigen::MatrixXd& jacobian,
+               const Eigen::Matrix <hpp::pinocchio::value_type, 6, 6>& jacobianProduct)
     : startRank_(startRank)
     , length_ (length)
     , configuration_ (configuration)
@@ -114,7 +114,7 @@ Sample::Sample(const std::size_t id, const std::size_t length, const std::size_t
     // NOTHING
 }
 
-Sample::Sample(const pinocchio::JointPtr_t limb, const pinocchio::Frame effector, pinocchio::ConfigurationIn_t configuration,  const fcl::Vec3f& offset,const fcl::Vec3f& limbOffset, std::size_t id)
+Sample::Sample(const hpp::pinocchio::JointPtr_t limb, const hpp::pinocchio::Frame effector, hpp::pinocchio::ConfigurationIn_t configuration,  const fcl::Vec3f& offset,const fcl::Vec3f& limbOffset, std::size_t id)
     : startRank_(limb->rankInConfiguration())
     , length_ (ComputeLength(limb, effector))
     , configuration_ (configuration)

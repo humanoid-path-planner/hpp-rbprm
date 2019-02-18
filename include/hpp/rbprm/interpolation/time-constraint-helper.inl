@@ -231,7 +231,8 @@ namespace
             return numValid;
         }
 
-        inline PathPtr_t ConcatenateAndResizePath(PathVectorPtr_t res[], std::size_t numValid, const bool keepExtraDof)
+        inline PathPtr_t ConcatenateAndResizePath(PathVectorPtr_t res[], std::size_t numValid, const bool keepExtraDof,
+                                                  hpp::pinocchio::DevicePtr_t device)
         {
             PathVectorPtr_t completePath = res[0];
             for(std::size_t i = 1; i < numValid; ++i)
@@ -248,7 +249,8 @@ namespace
                 core::segment_t interval(0, completePath->initial().rows()-1);
                 core::segments_t intervals;
                 intervals.push_back(interval);
-                PathPtr_t reducedPath = core::SubchainPath::create(completePath,intervals);
+                core::segments_t velIntervals (1, core::segment_t (0, device->numberDof()-1));
+                PathPtr_t reducedPath = core::SubchainPath::create(completePath,intervals, velIntervals);
                 return reducedPath;
             }
         }
@@ -325,7 +327,7 @@ namespace
             }
         }
         std::size_t numValid = checkPath(distance, valid);
-        return ConcatenateAndResizePath(res, numValid, keepExtraDof);
+        return ConcatenateAndResizePath(res, numValid, keepExtraDof, fullbody->device_);
     }
 
     template<class Helper_T, class ShooterFactory_T, typename ConstraintFactory_T>

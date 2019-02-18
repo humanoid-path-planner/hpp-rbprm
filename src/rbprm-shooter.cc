@@ -362,7 +362,7 @@ void RbPrmShooter::randConfigAtPos(const pinocchio::RbPrmDevicePtr_t robot, cons
     SampleRotation(eulerSo3, config);
 }
 
-fcl::Vec3f normalFromTriangleContact(const Contact& c, CollisionObjectConstPtr_t colObj)
+fcl::Vec3f normalFromTriangleContact(const Contact& c, hpp::core::CollisionObjectConstPtr_t colObj)
 {
     int i = c.b2;
     TrianglePoints tri;

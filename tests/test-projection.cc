@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE (projectToComPositionHyQ) {
   State s_init = createState(fullBody,q_ref,allLimbs);
   BOOST_CHECK_EQUAL(s_init.nbContacts,4);
   fullBody->device_->currentConfiguration(q_ref);
-  pinocchio::Computation_t newflag = static_cast <pinocchio::Computation_t> (pinocchio::JOINT_POSITION | pinocchio::JACOBIAN | pinocchio::COM);
+  hpp::pinocchio::Computation_t newflag = static_cast <hpp::pinocchio::Computation_t> (hpp::pinocchio::JOINT_POSITION | hpp::pinocchio::JACOBIAN | hpp::pinocchio::COM);
   fullBody->device_->controlComputation (newflag);
   fullBody->device_->computeForwardKinematics();
   fcl::Vec3f com_init  = fullBody->device_->positionCenterOfMass();
