@@ -297,6 +297,9 @@ namespace
                                               const pinocchio::value_type error_treshold = 0.001, const size_t maxIterations = 0)
     {
         hppDout(notice,"Begin interpolateStatesFromPathGetter :");
+        pinocchio::Computation_t flag = fullbody->device_->computationFlag();
+        pinocchio::Computation_t newflag = static_cast <pinocchio::Computation_t> (pinocchio::JOINT_POSITION | pinocchio::JACOBIAN | pinocchio::COM);
+        fullbody->device_->controlComputation (newflag);
         PathVectorPtr_t res[100];
         bool valid[100];
         std::size_t distance = std::distance(startState,endState);
