@@ -96,15 +96,13 @@ namespace interpolation {
         pinocchio::CenterOfMassComputationPtr_t comComp = pinocchio::CenterOfMassComputation::
           create (device);
         comComp->add (device->rootJoint());
-        //comComp->computeMass ();
         comComp->compute ();
-        PointComFunctionPtr_t comFunc = PointComFunction::create ("COM-walkgen",
+        PointComFunctionPtr_t comFunc = PointComFunction::create ("COM-constraint",
             device, /*10000 **/ PointCom::create (comComp));
-        ComparisonTypes_t comps; comps.push_back(constraints::Equality);
-        constraints::ImplicitPtr_t comEq = constraints::Implicit::create (comFunc, comps);
-        comEq->nonConstRightHandSide() = initTarget; // * 10000;
+        constraints::ComparisonTypes_t equals (3, constraints::Equality);
+        constraints::ImplicitPtr_t comEq = constraints::Implicit::create(comFunc, equals);
         proj->add(comEq);
-        //proj->updateRightHandSide();
+        proj->rightHandSide(comEq,initTarget);
         helper.steeringMethod_->tds_.push_back(TimeDependant(comEq, boost::shared_ptr<VecRightSide<Reference> >(new VecRightSide<Reference> (ref, 3, true))));
     }
 
