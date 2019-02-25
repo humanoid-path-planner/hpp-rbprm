@@ -27,7 +27,7 @@ namespace hpp {
 namespace rbprm {
 namespace interpolation {
     struct RightHandSideFunctor {
-        virtual void operator() (constraints::vectorOut_t output, const constraints::value_type& input, pinocchio::ConfigurationOut_t conf)
+        virtual void operator() (constraints::ImplicitPtr_t eq, const constraints::value_type& input, pinocchio::ConfigurationOut_t conf)
         const = 0;
     };
     typedef boost::shared_ptr <const RightHandSideFunctor> RightHandSideFunctorPtr_t;
@@ -36,7 +36,7 @@ namespace interpolation {
     {
         void operator() (const constraints::value_type s, pinocchio::ConfigurationOut_t conf) const
         {
-            (*rhsFunc_) (eq_->nonConstRightHandSide(), s, conf);
+            (*rhsFunc_) (eq_, s, conf);
         }
 
         TimeDependant (const constraints::ImplicitPtr_t& eq,
