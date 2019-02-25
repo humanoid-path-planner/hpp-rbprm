@@ -60,7 +60,7 @@ namespace interpolation {
          VecRightSide (const Reference ref, const int dim = 3, const bool times_ten = false) : ref_(ref), dim_(dim), times_ten_(times_ten)
          {}
         ~VecRightSide(){}
-        virtual void operator() (constraints::vectorOut_t output,
+        virtual void operator() (constraints::ImplicitPtr_t eq,
                                const constraints::value_type& normalized_input, pinocchio::ConfigurationOut_t /*conf*/) const
         {
           const std::pair<core::value_type, core::value_type>& tR (ref_->timeRange());
@@ -68,12 +68,12 @@ namespace interpolation {
           bool success;
           if(times_ten_)
           {
-              output = ref_->operator ()(unNormalized,success).head(dim_); // * (10000) ;
+              eq->rightHandSide(ref_->operator ()(unNormalized,success).head(dim_)); // * (10000) ;
               assert(success && "path operator () did not succeed");
           }
           else
           {
-            output = ref_->operator ()(unNormalized,success).head(dim_) ;
+            eq->rightHandSide(ref_->operator ()(unNormalized,success).head(dim_)) ;
             assert(success && "path operator () did not succeed");
           }
         }
@@ -234,13 +234,13 @@ namespace interpolation {
         {
             return ref_->timeRange ();
         }
-        void operator ()(constraints::vectorOut_t output,
+        void operator ()(constraints::ImplicitPtr_t eq,
                          const constraints::value_type& normalized_input, pinocchio::ConfigurationOut_t /*conf*/) const
         {
             const std::pair<core::value_type, core::value_type>& tR (ref_->timeRange());
             bool success;
             constraints::value_type unNormalized = (tR.second-tR.first)* normalized_input + tR.first;
-            output = method_->operator ()((ref_->operator ()(unNormalized,success))).vector();
+            eq->rightHandSide( method_->operator ()((ref_->operator ()(unNormalized,success))).vector());
             assert(success && "path operator () did not succeed");
         }
 
