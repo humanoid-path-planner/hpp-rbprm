@@ -210,16 +210,16 @@ namespace interpolation {
     template<class Helper_T, typename Reference>
     void CreateEffectorConstraint(Helper_T& helper, const Reference &ref,  const pinocchio::Frame effectorFr, const fcl::Vec3f& initTarget)
     {
-        pinocchio::DevicePtr_t device = helper.rootProblem_->robot();
-        ComparisonTypes_t comps; comps.push_back(constraints::Equality);
+        pinocchio::DevicePtr_t device = helper.rootProblem_.robot();
+        constraints::ComparisonTypes_t equals (3, constraints::Equality);
+
         core::ConfigProjectorPtr_t& proj = helper.proj_;
 
         pinocchio::Frame effectorFrame = device->getFrameByName(effectorFr.name());
         constraints::ImplicitPtr_t effEq = constraints::Implicit::create (
-                                    createPositionMethod(device,initTarget, effectorFrame), comps);
-        effEq->nonConstRightHandSide()[0] = initTarget[2];
+                                    createPositionMethod(device,initTarget, effectorFrame), equals);
         proj->add(effEq);
-        proj->rightHandSide(effEq->nonConstRightHandSide());
+        proj->rightHandSide(effEq,initTarget);
         helper.steeringMethod_->tds_.push_back(
                     TimeDependant(effEq, boost::shared_ptr<VecRightSide<Reference> >(new VecRightSide<Reference>(ref, 3))));
     }
