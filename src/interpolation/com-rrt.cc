@@ -122,6 +122,8 @@ using namespace core;
         core::PathPtr_t resPath = interpolateStatesFromPath<ComRRTHelper, ComRRTShooterFactory, SetComRRTConstraints>
               (fullbody, referenceProblem, shooterFactory, constraintFactory, comPath, stateFrames.begin(), stateFrames.begin()+1, numOptimizations, keepExtraDof,0.05,10000);
         hppDout(notice,"interpolateStatesFromPath end.");
+        PathVectorPtr_t pv = HPP_DYNAMIC_PTR_CAST(PathVector, resPath);
+        if(pv) hppDout(notice,"end of com-rrt, number of paths in pathVector : "<<pv->numberPaths());
 #ifdef PROFILE
     watch.stop("com_traj");
 #endif
