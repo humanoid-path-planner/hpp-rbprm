@@ -239,19 +239,25 @@ namespace
             {
                 completePath->concatenate(res[i]);
             }
+            PathVectorPtr_t flat = core::PathVector::create(completePath->outputSize(), completePath->outputDerivativeSize());
+            completePath->flatten(flat); // assure that there is no pathVector inside a pathVector
+            hppDout(notice,"end of interpolateStatesFromPath, number of paths in pathVector : "<<flat->numberPaths());
             if(keepExtraDof)
             {
-                return completePath;
+                return flat;
             }
             else
             {
-                // reducing path
-                core::segment_t interval(0, completePath->initial().rows()-1);
+                // reducing path (remove last value of the configuration)
+                core::segment_t interval(0, flat->initial().rows()-1);
                 core::segments_t intervals;
                 intervals.push_back(interval);
                 core::segments_t velIntervals (1, core::segment_t (0, device->numberDof()-1));
-                PathPtr_t reducedPath = core::SubchainPath::create(completePath,intervals, velIntervals);
-                return reducedPath;
+                PathVectorPtr_t reducedPV = core::PathVector::create(flat->outputSize()-1, flat->outputDerivativeSize()-1);
+                for(std::size_t pid = 0 ; pid < flat->numberPaths() ; ++pid){
+                  reducedPV->appendPath(core::SubchainPath::create(flat->pathAtRank(pid),intervals,velIntervals));
+                }
+                return reducedPV;
             }
         }
     }
