@@ -24,15 +24,15 @@ INCLUDE(cmake/boost.cmake)
 INCLUDE(cmake/hpp.cmake)
 INCLUDE(cmake/test.cmake)
 
-SET(PROJECT_ORG humanoid-path-planner)
 SET(PROJECT_NAME hpp-rbprm)
 SET(PROJECT_DESCRIPTION
   "Implementation of RB-PRM planner using hpp."
   )
-SET(PROJECT_URL "https://github.com/${PROJECT_ORG}/${PROJECT_NAME}")
 
+SETUP_HPP_PROJECT()
 
-SETUP_PROJECT()
+SET(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/find-external/CDD")
+FIND_PACKAGE(CDD REQUIRED)
 
 ADD_REQUIRED_DEPENDENCY("hpp-core >= 4.2")
 ADD_REQUIRED_DEPENDENCY("hpp-util >= 3")
