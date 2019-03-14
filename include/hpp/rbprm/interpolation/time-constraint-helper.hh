@@ -62,19 +62,19 @@ namespace hpp {
                               const pinocchio::value_type error_treshold = 1e-3)
              : fullbody_(fullbody)
              , fullBodyDevice_(fullbody->device_->clone())
-             , rootProblem_(fullBodyDevice_)
+             , rootProblem_(core::Problem::create(fullBodyDevice_))
              , refPath_(refPath)
              , shooterFactory_(shooterFactory)
              , constraintFactory_(constraintFactory)
          {
              // adding extra DOF for including time in sampling
              fullBodyDevice_->setDimensionExtraConfigSpace(fullBodyDevice_->extraConfigSpace().dimension()+1);             
-             proj_ = core::ConfigProjector::create(rootProblem_.robot(),"proj", error_treshold, 1000);
-             rootProblem_.collisionObstacles(referenceProblem->collisionObstacles());
-             steeringMethod_ = TimeConstraintSteering<Path_T>::create(&rootProblem_,fullBodyDevice_->configSize()-1);
-             rootProblem_.steeringMethod(steeringMethod_);             
-             ProgressivePtr_t pProj = Progressive::create(rootProblem_.distance(), steeringMethod_, 0.06);
-            // rootProblem_.pathProjector(pProj);
+             proj_ = core::ConfigProjector::create(rootProblem_->robot(),"proj", error_treshold, 1000);
+             rootProblem_->collisionObstacles(referenceProblem->collisionObstacles());
+             steeringMethod_ = TimeConstraintSteering<Path_T>::create(rootProblem_,fullBodyDevice_->configSize()-1);
+             rootProblem_->steeringMethod(steeringMethod_);             
+             ProgressivePtr_t pProj = Progressive::create(rootProblem_->distance(), steeringMethod_, 0.06);
+            // rootProblem_->pathProjector(pProj);
          }
 
         ~TimeConstraintHelper(){}
@@ -88,7 +88,7 @@ namespace hpp {
     public:
          RbPrmFullBodyPtr_t fullbody_;
          core::DevicePtr_t fullBodyDevice_;
-         core::Problem rootProblem_;
+         core::ProblemPtr_t rootProblem_;
          core::PathPlannerPtr_t planner_;
          core::PathPtr_t refPath_;
          core::ConfigProjectorPtr_t proj_;
