@@ -45,7 +45,7 @@ namespace hpp {
     {
         TimeConstraintPathValidationPtr_t pathVal = TimeConstraintPathValidation::create(
                     helper.fullBodyDevice_, 0.05,helper.fullBodyDevice_->configSize()-1);
-        helper.rootProblem_.pathValidation(pathVal);
+        helper.rootProblem_->pathValidation(pathVal);
     }
 
     template<class Helper_T>

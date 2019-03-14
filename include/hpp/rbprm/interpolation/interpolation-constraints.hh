@@ -90,7 +90,7 @@ namespace interpolation {
     template<class Helper_T, typename Reference>
     void CreateComConstraint(Helper_T& helper, const Reference &ref, const fcl::Vec3f& initTarget=fcl::Vec3f())
     {
-        pinocchio::DevicePtr_t device = helper.rootProblem_.robot();
+        pinocchio::DevicePtr_t device = helper.rootProblem_->robot();
         //constraints::ComparisonType equals = constraints::Equality;
         core::ConfigProjectorPtr_t& proj = helper.proj_;
         pinocchio::CenterOfMassComputationPtr_t comComp = pinocchio::CenterOfMassComputation::
@@ -110,7 +110,7 @@ namespace interpolation {
 
     template<class Helper_T, typename Reference>
     void CreatePosturalTaskConstraint(Helper_T& helper, const Reference &ref){
-      pinocchio::DevicePtr_t device = helper.rootProblem_.robot();
+      pinocchio::DevicePtr_t device = helper.rootProblem_->robot();
       //core::ComparisonTypePtr_t equals = core::Equality::create ();
       core::ConfigProjectorPtr_t& proj = helper.proj_;
       hppDout(notice,"create postural task, ref config = "<<pinocchio::displayConfig(ref));
@@ -212,7 +212,7 @@ namespace interpolation {
     template<class Helper_T, typename Reference>
     void CreateEffectorConstraint(Helper_T& helper, const Reference &ref,  const pinocchio::Frame effectorFr, const fcl::Vec3f& initTarget)
     {
-        pinocchio::DevicePtr_t device = helper.rootProblem_.robot();
+        pinocchio::DevicePtr_t device = helper.rootProblem_->robot();
         ComparisonTypes_t comps; comps.push_back(constraints::Equality);
         core::ConfigProjectorPtr_t& proj = helper.proj_;
 
@@ -254,7 +254,7 @@ namespace interpolation {
 
     template<class Helper_T, typename Reference>
     void CreateOrientationConstraint(Helper_T& helper, const Reference &ref,  const pinocchio::Frame effectorFr,const pinocchio::DevicePtr_t endEffectorDevice, const fcl::Transform3f& initTarget){
-        pinocchio::DevicePtr_t device = helper.rootProblem_.robot();
+        pinocchio::DevicePtr_t device = helper.rootProblem_->robot();
         ComparisonTypes_t equals; equals.push_back(constraints::Equality);
         core::ConfigProjectorPtr_t& proj = helper.proj_;
         pinocchio::Frame effectorFrame = device->getFrameByName(effectorFr.name());
@@ -274,7 +274,7 @@ namespace interpolation {
     void Create6DEffectorConstraint(Helper_T& helper, const Reference &ref,  const pinocchio::Frame effectorJoint, const fcl::Transform3f& initTarget)
     {
         //CreateEffectorConstraint(helper, ref, effectorJoint, initTarget.getTranslation());
-        pinocchio::DevicePtr_t device = helper.rootProblem_.robot();
+        pinocchio::DevicePtr_t device = helper.rootProblem_->robot();
         // reduce dof if reference path is of lower dimension
         bool success;
         if(ref->operator()(0,success).rows() < device->configSize())
@@ -301,7 +301,7 @@ namespace interpolation {
     template<class Helper_T>
     void CreateContactConstraints(Helper_T& helper, const State& from, const State& to)
     {
-        pinocchio::DevicePtr_t device = helper.rootProblem_.robot();
+        pinocchio::DevicePtr_t device = helper.rootProblem_->robot();
         std::vector<std::string> fixed = to.fixedContacts(from);
         addContactConstraints(helper.fullbody_, device, helper.proj_,from,fixed);
     }

@@ -82,23 +82,23 @@ using namespace core;
                 device->setDimensionExtraConfigSpace(device->extraConfigSpace().dimension()+1);
             }*/
             core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(device,"proj", 1e-3, 1000);
-            core::Problem rootProblem(device);
+            core::ProblemPtr_t rootProblem = core::Problem::create(device);
             for(std::vector<std::string>::const_iterator cit = fixed.begin();
                 cit != fixed.end(); ++cit)
             {
             }
-            rootProblem.configurationShooter(core::configurationShooter::Uniform::create(device));
-            rootProblem.pathValidation(pathValidation::Discretized::create(0.05));
-            core::ConstraintSetPtr_t cSet = core::ConstraintSet::create(rootProblem.robot(),"");
+            rootProblem->configurationShooter(core::configurationShooter::Uniform::create(device));
+            rootProblem->pathValidation(pathValidation::Discretized::create(0.05));
+            core::ConstraintSetPtr_t cSet = core::ConstraintSet::create(rootProblem->robot(),"");
             cSet->addConstraint(proj);
-            rootProblem.constraints(cSet);
+            rootProblem->constraints(cSet);
             ConfigurationPtr_t start =  ConfigurationPtr_t(new Configuration_t(startState.configuration_));
             ConfigurationPtr_t end =  ConfigurationPtr_t(new Configuration_t(nextState.configuration_));
-            rootProblem.initConfig(start);
-            BiRRTPlannerPtr_t planner = BiRRTPlanner::create(rootProblem);
-            ProblemTargetPtr_t target = problemTarget::GoalConfigurations::create (&rootProblem);
-            rootProblem.target (target);
-            rootProblem.addGoalConfig(end);
+            rootProblem->initConfig(start);
+            BiRRTPlannerPtr_t planner = BiRRTPlanner::create(*rootProblem);
+            ProblemTargetPtr_t target = problemTarget::GoalConfigurations::create (rootProblem);
+            rootProblem->target (target);
+            rootProblem->addGoalConfig(end);
             hppDout(notice,"Start solve");
 
             guidePath = planner->solve();
