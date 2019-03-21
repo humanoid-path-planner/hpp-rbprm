@@ -305,6 +305,16 @@ namespace interpolation {
     }
 
 
+    std::string getEffectorLimb(const  State &startState, const State &nextState);
+
+    fcl::Vec3f getNormal(const std::string& effector, const State &state, bool& found);
+
+    pinocchio::Frame getEffector(RbPrmFullBodyPtr_t fullbody,
+                           const  State &startState, const State &nextState);
+
+    DevicePtr_t createFreeFlyerDevice();
+
+
     } // namespace interpolation
   } // namespace rbprm
 } // namespace hpp
