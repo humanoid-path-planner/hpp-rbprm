@@ -393,7 +393,7 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     hppDout(notice,"IsReachableDynamic called : ");
     hppDout(notice,"Between configuration : "<<pinocchio::displayConfig(previous.configuration_));
     hppDout(notice,"and     configuration : "<<pinocchio::displayConfig(next.configuration_));
-
+    assert(fullbody->device_->extraConfigSpace().dimension() >= 6 && "You need to set at least 6 extraDOF to use the reachability methods.");
     if(previous.configuration_.head<3>() == next.configuration_.head<3>()){
         hppDout(notice,"Same root position, unable to compute");
         return Result(SAME_ROOT_POSITION);
@@ -546,7 +546,7 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     hppDout(notice,"dc1 = "<<pData.dc1_.transpose());
     hppDout(notice,"ddc0 = "<<pData.ddc0_.transpose());
     hppDout(notice,"ddc1 = "<<pData.ddc1_.transpose());
-
+    assert ((pData.contacts_.size() == 2 || pData.contacts_.size() == 3) && "Error in computation of contact constraints, must be only 2 or 3 phases.");
 
     // compute initial guess :
     //average of all contact point for the state with the less contacts, z = average of the CoM heigh between previous and next
@@ -570,59 +570,58 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     #endif
     hppDout(notice," timings provided size :  "<<timings.size());
     if(timings.size() != pData.contacts_.size()){
-        // build timing vector
-        // TODO : retrieve timing found by planning ?? how ?? (pass it as argument or store it inside the states ?)
+      // build timing vector
+      // TODO : retrieve timing found by planning ?? how ?? (pass it as argument or store it inside the states ?)
+      hppDout(notice,"Contact break and creation. Use hardcoded timing matrice");
+      #if FULL_TIME_SAMPLING
+        const double time_increment = 0.05;
+        const double min_SS = 0.6;
+        const double max_SS = 1.6;
+        const double min_DS = 0.3;
+        const double max_DS = 1.5;
         if(contactsBreak.size() == 1 && contactsCreation.size() == 1){
-            hppDout(notice,"Contact break and creation. Use hardcoded timing matrice");
-            #if FULL_TIME_SAMPLING
-            const double time_increment = 0.05;
-            const double min_SS = 0.6;
-            const double max_SS = 1.6;
-            const double min_DS = 0.3;
-            const double max_DS = 1.5;
-            current_timings = VectorX(3);
-            //current_timings<<0.6,0.4,0.6; //hrp2
-            //total_time = 1.6;
-            current_timings<<min_DS,min_SS,min_DS; // hrp2
-            #else
-            timings_matrix = MatrixXX(16,3); // contain the timings of the first 3 phases, the total time and the discretization step
-            timings_matrix <<
-                              0.8 , 0.7, 0.8,
-                              0.3 , 0.6, 0.3,
-                              0.5 , 0.6, 0.5,
-                              0.6 , 0.6, 0.6,
-                              0.8 , 0.6, 0.8,
-                            0.6, 1.2, 0.6,
-                            1. , 1.2, 1.,
-                            0.3 , 0.8, 0.3,
-                            0.3 , 0.7, 0.3,
-                            0.6 , 0.8, 0.6,
-                            1, 0.7, 1, // found with script
-                            1.5, 0.7, 1,
-                            0.8,0.8,0.8, // script good
-                            1. , 0.6, 1.,
-                            1.2 , 0.6, 1.2,
-                            1.5 , 0.6, 1.5;
-            current_timings = timings_matrix.block(0,0,1,pData.contacts_.size()).transpose();
-            #endif
-            total_time = 0;
-            for(size_t i = 0 ; i < pData.contacts_.size() ; ++ i ){
-                total_time += current_timings[i];
-            }
+          current_timings = VectorX(3);
+          //current_timings<<0.6,0.4,0.6; //hrp2
+          //total_time = 1.6;
+          current_timings<<min_DS,min_SS,min_DS; // hrp2
         }else{
-            hppDout(notice,"Only two phases.");
-            current_timings = VectorX(2);
-            current_timings<<1.,1.;
-            total_time = 2.;
+          hppDout(notice,"Only two phases.");
+          current_timings = VectorX(2);
+          current_timings<<1.,1.;
         }
+      #else
+        timings_matrix = MatrixXX(16,3); // contain the timings of the first 3 phases, the total time and the discretization step
+        timings_matrix <<
+                          0.8 , 0.7, 0.8,
+            0.3 , 0.6, 0.3,
+            0.5 , 0.6, 0.5,
+            0.6 , 0.6, 0.6,
+            0.8 , 0.6, 0.8,
+            0.6, 1.2, 0.6,
+            1. , 1.2, 1.,
+            0.3 , 0.8, 0.3,
+            0.3 , 0.7, 0.3,
+            0.6 , 0.8, 0.6,
+            1, 0.7, 1, // found with script
+            1.5, 0.7, 1,
+            0.8,0.8,0.8, // script good
+            1. , 0.6, 1.,
+            1.2 , 0.6, 1.2,
+            1.5 , 0.6, 1.5;
+        current_timings = timings_matrix.block(0,0,1,pData.contacts_.size()).transpose();
+      #endif
+      total_time = 0;
+      for(size_t i = 0 ; i < pData.contacts_.size() ; ++ i ){
+        total_time += current_timings[i];
+      }
     }else{
-        hppDout(notice,"Timing vector is provided");
-        current_timings = VectorX(timings.size());
-        for(size_t i = 0 ; i < timings.size() ; ++i){
-            current_timings[i] = timings[i];
-            total_time += timings[i];
-        }
-        timing_provided = true;
+      hppDout(notice,"Timing vector is provided");
+      current_timings = VectorX(timings.size());
+      for(size_t i = 0 ; i < timings.size() ; ++i){
+        current_timings[i] = timings[i];
+        total_time += timings[i];
+      }
+      timing_provided = true;
     }
 
     //pData.representation_ = bezier_com_traj::FORCE;

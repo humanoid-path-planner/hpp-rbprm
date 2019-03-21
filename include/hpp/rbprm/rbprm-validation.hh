@@ -25,6 +25,7 @@
 # include <hpp/core/problem-solver.hh>
 # include <hpp/rbprm/rbprm-rom-validation.hh>
 # include <hpp/rbprm/rbprm-device.hh>
+# include <hpp/rbprm/rbprm-validation-report.hh>
 # include <hpp/rbprm/config.hh>
 
 namespace hpp {
@@ -90,15 +91,6 @@ namespace hpp {
                  core::ValidationReportPtr_t& validationReport,
                  const std::vector<std::string>& filter);
 
-      /// Compute whether the configuration is valid for the root (collision and joint-bound)
-      ///
-      /// \param config the config to check for validity,
-      /// \retval validationReport report on validation (used only for rom shape). This parameter will
-      ///         dynamically cast into CollisionValidationReport type,
-      /// \return whether the whole config is valid.
-      virtual bool validateTrunk(const core::Configuration_t& config,
-                                             hpp::core::ValidationReportPtr_t &validationReport);
-
 
       /// Add an obstacle to validation
       /// \param object obstacle added
@@ -116,6 +108,26 @@ namespace hpp {
     (const core::JointPtr_t& joint, const core::CollisionObjectPtr_t& obstacle);
 
 
+      /// Rearrange the collisions pairs of all configValidation in a random manner
+      /// \brief randomnizeCollisionPairs
+      ///
+      virtual void randomnizeCollisionPairs();
+
+      /// \brief set if the collision validation should compute all the possible
+      /// contacts or stop after the first pairs in collision
+      /// This method set the parameter for all the romValidations_ objects (but not the trunk)
+      ///
+      void computeAllContacts(bool computeAllContacts);
+
+    private:
+      /// Compute whether the configuration is valid for the root (collision and joint-bound)
+      ///
+      /// \param config the config to check for validity,
+      /// \retval validationReport report on validation (used only for rom shape). This parameter will
+      ///         dynamically cast into CollisionValidationReport type,
+      /// \return whether the whole config is valid.
+      virtual bool validateTrunk(const core::Configuration_t& config,
+                                             hpp::core::ValidationReportPtr_t &validationReport);
 
       /// Compute whether the roms configurations are valid
       /// \param config the config to check for validity,
@@ -127,7 +139,7 @@ namespace hpp {
       /// \param validationReport the report (can be cast to rbprmValidationReport) with info on the trunk and ROM states,
       /// \return whether the whole config is valid.
       bool validateRoms(const core::Configuration_t& config,
-                         core::ValidationReportPtr_t &validationReport);
+                         core::RbprmValidationReportPtr_t &validationReport);
 
       /// Compute whether the roms configurations are valid
       /// \param config the config to check for validity,
@@ -143,19 +155,7 @@ namespace hpp {
       /// \return whether the whole config is valid.
       bool validateRoms(const core::Configuration_t& config,
                         const std::vector<std::string>& filter,
-                         core::ValidationReportPtr_t &validationReport);
-
-      /// Rearrange the collisions pairs of all configValidation in a random manner
-      /// \brief randomnizeCollisionPairs
-      ///
-      virtual void randomnizeCollisionPairs();
-
-      /// \brief set if the collision validation should compute all the possible
-      /// contacts or stop after the first pairs in collision
-      /// This method set the parameter for all the romValidations_ objects (but not the trunk)
-      ///
-      void computeAllContacts(bool computeAllContacts);
-
+                         core::RbprmValidationReportPtr_t &validationReport);
 
     public:
       /// CollisionValidation for the trunk

@@ -36,7 +36,7 @@ namespace geom
   /// vertices of a fcl::Triangle.
   struct TrianglePoints
   {
-    fcl::Vec3f p1, p2, p3;
+    hpp::fcl::Vec3f p1, p2, p3;
   };
 
 
@@ -44,7 +44,7 @@ namespace geom
   const double EPSILON = 1e-5;
   const double ZJUMP = 0.001; // value t for the floor in jump_easy_map
   
-  typedef fcl::BVHModel<fcl::OBBRSS> BVHModelOB;
+  typedef hpp::fcl::BVHModel<hpp::fcl::OBBRSS> BVHModelOB;
   typedef boost::shared_ptr<const BVHModelOB> BVHModelOBConst_Ptr_t;
 
   BVHModelOBConst_Ptr_t GetModel(const hpp::pinocchio::CollisionObjectConstPtr_t object, hpp::pinocchio::DeviceData &deviceData);
@@ -131,7 +131,7 @@ namespace geom
    * @param t 
    * @return 
    */
-  Point centerPlanar (T_Point points, const fcl::Vec3f &n, double t);
+  Point centerPlanar (T_Point points, const hpp::fcl::Vec3f &n, double t);
   
   /**
    * @brief center compute the center using average method
@@ -150,7 +150,7 @@ namespace geom
    * @param v point
    * @return distance
    */
-  double distanceToPlane(const fcl::Vec3f& n, double t, const fcl::Vec3f& v);
+  double distanceToPlane(const hpp::fcl::Vec3f& n, double t, const hpp::fcl::Vec3f& v);
 
   /**
    * @brief distanceToPlane compute the min distance from a point to an (infinite) plan
@@ -190,7 +190,7 @@ namespace geom
    * @param distance distance for vertice i
    * @param num_penetrating_points number of point with negative distance 
    */
-  void computeTrianglePlaneDistance(fcl::Vec3f* tri_point, const fcl::Vec3f& n, double t, fcl::Vec3f *distance, unsigned int* num_penetrating_points);
+  void computeTrianglePlaneDistance(hpp::fcl::Vec3f* tri_point, const hpp::fcl::Vec3f& n, double t, hpp::fcl::Vec3f *distance, unsigned int* num_penetrating_points);
   
   /**
    * @brief insideTriangle check if a point is inside a triangle
@@ -200,7 +200,7 @@ namespace geom
    * @param p the point
    * @return bool 
    */
-  bool insideTriangle(const fcl::Vec3f& a, const fcl::Vec3f& b, const fcl::Vec3f& c, const fcl::Vec3f&p);
+  bool insideTriangle(const hpp::fcl::Vec3f& a, const hpp::fcl::Vec3f& b, const hpp::fcl::Vec3f& c, const hpp::fcl::Vec3f&p);
   
   /**
    * @brief intersectGeoms compute intersection between 2 OBBRSS geometries
@@ -208,7 +208,7 @@ namespace geom
    * @param model2
    * @param result the collision report between the 2 geometries
    */
-  void intersect3DGeoms(BVHModelOBConst_Ptr_t model1,BVHModelOBConst_Ptr_t model2,fcl::CollisionResult result);
+  void intersect3DGeoms(BVHModelOBConst_Ptr_t model1,BVHModelOBConst_Ptr_t model2,hpp::fcl::CollisionResult result);
 
   /**
    * @brief intersectPolygonePlane Compute the intersection of a polygon and a plane
@@ -230,7 +230,7 @@ namespace geom
    * @param tri2 second triangle (used to compute the plane, the returned point belong to this triangle
    * @param ss 
    */
-  T_Point intersectTriangles(fcl::Vec3f* tri, fcl::Vec3f* tri2,std::ostringstream* ss=0);
+  T_Point intersectTriangles(hpp::fcl::Vec3f* tri, hpp::fcl::Vec3f* tri2,std::ostringstream* ss=0);
   
   /**
    * @brief intersectSegmentPlane compute the intersection between a segment and a plane (infinite)

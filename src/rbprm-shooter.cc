@@ -16,6 +16,7 @@
 
 #include <hpp/core/collision-validation-report.hh>
 #include <hpp/rbprm/rbprm-shooter.hh>
+#include <hpp/rbprm/rbprm-validation-report.hh>
 #include <hpp/pinocchio/liegroup-space.hh>
 #include <hpp/pinocchio/liegroup-element.hh>
 #include <pinocchio/algorithm/joint-configuration.hpp>
@@ -361,6 +362,20 @@ void RbPrmShooter::randConfigAtPos(const pinocchio::RbPrmDevicePtr_t robot, cons
     SampleRotation(eulerSo3, config);
 }
 
+fcl::Vec3f normalFromTriangleContact(const Contact& c, hpp::core::CollisionObjectConstPtr_t colObj)
+{
+    int i = c.b2;
+    TrianglePoints tri;
+    BVHModelOBConst_Ptr_t model =  GetModel(colObj->fcl()); // TODO NOT TRIANGLES
+
+    Triangle fcltri = model->tri_indices[i];
+    tri.p1 = colObj->fcl()->getRotation() * model->vertices[fcltri[0]] + colObj->fcl()->getTranslation();
+    tri.p2 = colObj->fcl()->getRotation() * model->vertices[fcltri[1]] + colObj->fcl()->getTranslation();
+    tri.p3 = colObj->fcl()->getRotation() * model->vertices[fcltri[2]] + colObj->fcl()->getTranslation();
+    fcl::Vec3f normal = (tri.p2 - tri.p1).cross(tri.p3 - tri.p1);
+    return normal.normalized();
+}
+
 hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
 {
     hppDout(notice,"!!! Random shoot");
@@ -383,21 +398,23 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
         r1 = ((double) rand() / (RAND_MAX)); r2 = ((double) rand() / (RAND_MAX));
         Vec3f p = (1 - sqrt(r1)) * tri.p1 + (sqrt(r1) * (1 - r2)) * tri.p2
                 + (sqrt(r1) * r2) * tri.p3;
+        const Vec3f& n = sampled->first;
 
         //set configuration position to sampled point
         randConfigAtPos(robot_,eulerSo3_,config,p);
         // rotate and translate randomly until valid configuration found or
         // no obstacle is reachable
-        ValidationReportPtr_t reportShPtr(new CollisionValidationReport);
+        ValidationReportPtr_t reportShPtr(new RbprmValidationReport);
         std::size_t limitDis = displacementLimit_;
-        Vec3f lastDirection(0,0,1);
+        Vec3f lastDirection = n;
         while(!found && limitDis >0)
         {
             HPP_START_TIMECOUNTER(SHOOT_COLLISION);
-            bool valid = validator_->validateTrunk(*config, reportShPtr);
-            found = valid && validator_->validateRoms(*config, filter_,reportShPtr);
+            found = validator_->validate(*config, reportShPtr, filter_);
+            RbprmValidationReportPtr_t report =
+                    boost::dynamic_pointer_cast<RbprmValidationReport>(reportShPtr);
+            bool valid = found || !report->trunkInCollision;
             HPP_STOP_TIMECOUNTER(SHOOT_COLLISION);
-            CollisionValidationReport* report = static_cast<CollisionValidationReport*>(reportShPtr.get());
 
             if(valid &!found)
             {
@@ -407,7 +424,7 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
                     //SampleRotation(eulerSo3_, config);
                     randConfigAtPos(robot_,eulerSo3_,config,p);
                     HPP_START_TIMECOUNTER(SHOOT_COLLISION);
-                    found = validator_->validate(*config, filter_);
+                    found = validator_->validate(*config, reportShPtr, filter_);
                     HPP_STOP_TIMECOUNTER(SHOOT_COLLISION);
                     if(!found)
                     {
@@ -415,8 +432,9 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
                                   0.2 * ((double) rand() / (RAND_MAX)));
                     }
                     HPP_START_TIMECOUNTER(SHOOT_COLLISION);
-                    valid = validator_->validateTrunk(*config, reportShPtr);
-                    found = valid && validator_->validateRoms(*config, filter_,reportShPtr);
+                    found = validator_->validate(*config, reportShPtr, filter_);
+                    report = boost::dynamic_pointer_cast<RbprmValidationReport>(reportShPtr);
+                    valid = found || !report->trunkInCollision;
                     //found = validator_->validate(*config, filter_);
                     HPP_STOP_TIMECOUNTER(SHOOT_COLLISION);
                 }
@@ -425,12 +443,9 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
             else if (!valid)// move out of collision
             {
                 // retrieve Contact information
-                lastDirection = -report->result.getContact(0).normal;
-                //hppDout(notice,"Shooter : lastDirection = "<<lastDirection.transpose());
-                // mouve out by penetration depth
-                // v0 move away from normal
-                //get normal from collision tri
-                //lastDirection = triangles_[report->result.getContact(0).b2].first;
+                report = boost::dynamic_pointer_cast<RbprmValidationReport>(reportShPtr);
+                lastDirection = normalFromTriangleContact(report->result.getContact(0),
+                                                          report->object2);
                 Translate(robot_,config, lastDirection *
                           (std::abs(report->result.getContact(0).penetration_depth) +0.03));
                  limitDis--;

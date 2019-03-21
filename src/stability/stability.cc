@@ -108,7 +108,7 @@ namespace stability{
 
     }
 
-    void computePointContact(const std::string& name, const RbPrmLimbPtr_t limb, const State& state, Ref_vector3 p)
+    Vector3 computePointContact(const std::string& name, const RbPrmLimbPtr_t limb, const State& state)
     {
         const fcl::Vec3f& position = state.contactPositions_.at(name);
         //create rotation matrix from normal
@@ -117,7 +117,7 @@ namespace stability{
         const fcl::Matrix3f alignRotation = tools::GetRotationMatrix(z_current,normal);
         const fcl::Matrix3f rotation = alignRotation * limb->effector_.currentTransformation().rotation();
         const fcl::Vec3f offset = rotation * limb->offset_;
-        p = position + offset;
+        return position + offset;
     }
 
     Equilibrium initLibrary(const RbPrmFullBodyPtr_t fullbody)
@@ -184,7 +184,7 @@ namespace stability{
             if(inc > 1)
                 computeRectangleContact(contacts[c], limb,state,positions.middleRows<4>(currentIndex),feetX,feetY);
             else
-                computePointContact(contacts[c], limb,state,positions.middleRows<1>(currentIndex,inc));
+                positions.middleRows<1>(currentIndex,inc) = computePointContact(contacts[c], limb,state);
             for(std::size_t i =0; i < inc; ++i)
             {
                 normals.middleRows<1>(currentIndex+i) = normal;
@@ -206,7 +206,7 @@ namespace stability{
                 if(inc > 1)
                     computeRectangleContact(graspscontacts[c], limb,state,positions.middleRows<4>(currentIndex));
                 else
-                    computePointContact(graspscontacts[c], limb,state,positions.middleRows<1>(currentIndex,inc));
+                    positions.middleRows<1>(currentIndex,inc) = computePointContact(graspscontacts[c], limb,state);
                 for(std::size_t i =0; i < inc; ++i)
                 {
                     normals.middleRows<1>(currentIndex+i) = normal;

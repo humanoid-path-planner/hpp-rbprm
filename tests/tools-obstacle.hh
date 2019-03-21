@@ -163,8 +163,8 @@ void loadObstacleWithAffordance(hpp::core::ProblemSolver& pSolver, std::string p
 
 void loadDarpa(hpp::core::ProblemSolver& pSolver)
 {
-    loadObstacleWithAffordance(pSolver, std::string("hpp-rbprm-corba"),
-                               std::string("darpa"),std::string("planning"));
+    loadObstacleWithAffordance(pSolver, std::string("hpp_environments"),
+                               std::string("multicontact/darpa"),std::string("planning"));
 }
 
 typedef hpp::core::Container <hpp::core::AffordanceObjects_t> affMap_t;

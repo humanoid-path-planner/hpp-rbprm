@@ -13,7 +13,7 @@ using core::value_type;
 
 BOOST_AUTO_TEST_SUITE( test_projection)
 
-BOOST_AUTO_TEST_CASE (projectToComPosition) {
+BOOST_AUTO_TEST_CASE (projectToComPositionHyQ) {
 
   RbPrmFullBodyPtr_t fullBody = loadHyQ();
 
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE (projectToComPosition) {
   State s_init = createState(fullBody,q_ref,allLimbs);
   BOOST_CHECK_EQUAL(s_init.nbContacts,4);
   fullBody->device_->currentConfiguration(q_ref);
-  pinocchio::Computation_t newflag = static_cast <pinocchio::Computation_t> (pinocchio::JOINT_POSITION | pinocchio::JACOBIAN | pinocchio::COM);
+  hpp::pinocchio::Computation_t newflag = static_cast <hpp::pinocchio::Computation_t> (hpp::pinocchio::JOINT_POSITION | hpp::pinocchio::JACOBIAN | hpp::pinocchio::COM);
   fullBody->device_->controlComputation (newflag);
   fullBody->device_->computeForwardKinematics();
   fcl::Vec3f com_init  = fullBody->device_->positionCenterOfMass();
@@ -147,6 +147,62 @@ BOOST_AUTO_TEST_CASE (projectToComPosition) {
   }
 }
 
+/*
+BOOST_AUTO_TEST_CASE (projectToComPositionSimpleHumanoid) {
 
+  RbPrmFullBodyPtr_t fullBody = loadSimpleHumanoid();
+  const std::string rLegId("rleg");
+  const std::string lLegId("lleg");
+
+  std::vector<std::string> allLimbs;
+  allLimbs.push_back(rLegId);
+  allLimbs.push_back(lLegId);
+
+  core::Configuration_t q_ref(fullBody->device_->neutralConfiguration());
+  std::cout<<"q ref = "<<q_ref<<std::endl;
+  State s_init = createState(fullBody,q_ref,allLimbs);
+  BOOST_CHECK_EQUAL(s_init.nbContacts,2);
+  fullBody->device_->currentConfiguration(q_ref);
+  pinocchio::Computation_t newflag = static_cast <pinocchio::Computation_t> (pinocchio::JOINT_POSITION | pinocchio::JACOBIAN | pinocchio::COM);
+  fullBody->device_->controlComputation (newflag);
+  fullBody->device_->computeForwardKinematics();
+  fcl::Vec3f com_init  = fullBody->device_->positionCenterOfMass();
+  std::cout<<"com_init = "<<com_init<<std::endl;
+  fcl::Vec3f com_pino,com_goal;
+  rbprm::projection::ProjectionReport rep;
+  srand((unsigned int)(time(NULL)));
+  for(size_t k = 0 ; k < 100 ; ++k){
+    //randomly sample CoM position close to the reference one :
+    com_goal[0] = com_init[0]-0.2 + 0.4*(value_type(rand()) / value_type(RAND_MAX));
+    com_goal[1] = com_init[1]-0.2 + 0.4*(value_type(rand()) / value_type(RAND_MAX));
+    com_goal[2] = com_init[2]-0.1 + 0.2*(value_type(rand()) / value_type(RAND_MAX));
+    // check if the projection is successfull and the new com is correct
+    rep = rbprm::projection::projectToComPosition(fullBody,com_goal,s_init);
+    if(rep.success_){
+      std::cout<<"com goal : "<<com_goal<<std::endl;
+      BOOST_CHECK_EQUAL(rep.result_.nbContacts,2);
+
+      fullBody->device_->currentConfiguration(rep.result_.configuration_);
+      fullBody->device_->computeForwardKinematics();
+      com_pino  = fullBody->device_->positionCenterOfMass();
+       std::cout<<"com pino : "<<com_pino<<std::endl;
+      for(size_t i = 0 ; i < 3 ; ++i)
+        BOOST_CHECK_SMALL(com_pino[i]-com_goal[i],1e-4); // precision should be the same as the error treshold of the config projector
+
+
+      // check if contact position are preserved :
+      for(std::vector<std::string>::const_iterator cit = allLimbs.begin(); cit != allLimbs.end(); ++cit)
+       {
+        rbprm::RbPrmLimbPtr_t limb = fullBody->GetLimbs().at(*cit);
+        const std::string& limbName = *cit;
+        const fcl::Vec3f position = limb->effector_.currentTransformation().translation();
+        for(size_t i = 0 ; i < 3 ; ++i)
+          BOOST_CHECK_SMALL(position[i] - s_init.contactPositions_[limbName][i],1e-4);
+      }
+    }
+  }
+}
+
+*/
 
 BOOST_AUTO_TEST_SUITE_END()

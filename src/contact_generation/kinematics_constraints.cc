@@ -47,28 +47,33 @@ VectorX triangleNormalTransform(const PolyhedronPtrType& obj, size_t index,fcl::
     return normal.normalized();
 }
 
-std::pair<MatrixX3, MatrixX3> loadConstraintsFromObj(const std::string& fileName, double minDistance){
+
+} // namespace reachability
+} // namespace rbprm
+} // namespace hpp
+
+std::pair<hpp::rbprm::MatrixX3, hpp::rbprm::MatrixX3> hpp::rbprm::reachability::loadConstraintsFromObj(const std::string& fileName, double minDistance){
     hppDout(notice,"Load constraints for filename : "<<fileName);
 
-    std::vector<std::string> package_dirs = se3::rosPaths();
-    std::string meshPath = se3::retrieveResourcePath(fileName, package_dirs);
+    std::vector<std::string> package_dirs = ::pinocchio::rosPaths();
+    std::string meshPath = ::pinocchio::retrieveResourcePath(fileName, package_dirs);
     if (meshPath == "")
     {
         hppDout(warning,"Unable to load kinematics constraints : "<<  "Mesh " << fileName << " could not be found.");
-        return std::pair<MatrixX3, MatrixX3>();
+        return std::pair<hpp::rbprm::MatrixX3, hpp::rbprm::MatrixX3>();
     }
 
     //pinocchio::urdf::Parser parser("anchor",pinocchio::DevicePtr_t());
-    PolyhedronPtrType  polyhedron (new PolyhedronType);
+    hpp::rbprm::reachability::PolyhedronPtrType  polyhedron (new hpp::rbprm::reachability::PolyhedronType);
     // name is stored in link->name
     try
     {
-        fcl::loadPolyhedronFromResource(meshPath, Vector3(1,1,1), polyhedron);
+        fcl::loadPolyhedronFromResource(meshPath, hpp::rbprm::Vector3(1,1,1), polyhedron);
     }
     catch (std::runtime_error e)
     {
         hppDout(warning,"Unable to load kinematics constraints : "<< e.what());
-        return std::pair<MatrixX3, MatrixX3>();
+        return std::pair<hpp::rbprm::MatrixX3, hpp::rbprm::MatrixX3>();
     }
 
     // iterate over all faces : for each faces add a line in A : normal and a value in b : position of a vertice.dot(normal)
@@ -77,15 +82,15 @@ std::pair<MatrixX3, MatrixX3> loadConstraintsFromObj(const std::string& fileName
     if(minDistance > 0){
         numIneq++;
     }
-    MatrixX3 N(numIneq,3);
-    MatrixX3 V(numIneq,3);
+    hpp::rbprm::MatrixX3 N(numIneq,3);
+    hpp::rbprm::MatrixX3 V(numIneq,3);
 
 
 
-    VectorX n,v;
+    hpp::rbprm::VectorX n,v;
     for (size_t fId = 0 ; fId < numFaces ; ++fId){
         //hppDout(notice,"For face : "<<fId);
-        n = triangleNormal(polyhedron,fId);
+        n = hpp::rbprm::reachability::triangleNormal(polyhedron,fId);
         v = polyhedron->vertices[polyhedron->tri_indices[fId][0]];
         //hppDout(notice,"normal : "<<n.transpose());
         //hppDout(notice,"vertice: "<<v.transpose());
@@ -94,19 +99,18 @@ std::pair<MatrixX3, MatrixX3> loadConstraintsFromObj(const std::string& fileName
     }
 
     if(minDistance > 0){
-        N.block<1,3>(numIneq-1,0) = Vector3(0,0,-1);
-        V.block<1,3>(numIneq-1,0) = Vector3(0,0,minDistance);
+        N.block<1,3>(numIneq-1,0) = hpp::rbprm::Vector3(0,0,-1);
+        V.block<1,3>(numIneq-1,0) = hpp::rbprm::Vector3(0,0,minDistance);
     }
     hppDout(notice,"End of loading kinematic constraints : ");
     //hppDout(notice,"N : "<<N);
     //hppDout(notice,"v : "<<V);
-
-
-
     return std::make_pair(N,V);
 }
 
-
+namespace hpp {
+  namespace rbprm {
+    namespace reachability {
 std::pair<MatrixX3, VectorX> computeAllKinematicsConstraints(const RbPrmFullBodyPtr_t& fullBody,const pinocchio::ConfigurationPtr_t& configuration){
     fullBody->device_->currentConfiguration(*configuration);
     fullBody->device_->computeForwardKinematics();
