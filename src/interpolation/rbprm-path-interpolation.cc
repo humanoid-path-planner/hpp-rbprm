@@ -338,8 +338,10 @@ if (nbFailures > 1)
         fout.close();
         */
         hppDout(notice,"Interpolate finished, filter and add goal : ");
-        states = FilterStates(states, filterStates);
-        states = addGoalConfig(states);
+        if(states.size() > 1){
+          states = FilterStates(states, filterStates);
+          states = addGoalConfig(states);
+        }
         return states;
     }
 
@@ -710,6 +712,10 @@ if (nbFailures > 1)
         //make sure they re ok
         hppDout(notice,"Begin filter states !");
         hppDout(notice,"Number of state before filtering : "<<originStates.size());
+        if(originStates.size() <= 2 ){
+          hppDout(notice,"Return original state list");
+          return originStates;
+        }
         T_StateFrame::const_iterator cit = originStates.begin();
         std::size_t idx = 0;
         for(T_StateFrame::const_iterator cit2 = originStates.begin()+1; cit2 != originStates.end()-1; ++cit, ++cit2, ++idx)
