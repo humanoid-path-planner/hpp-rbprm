@@ -54,7 +54,7 @@ public:
     virtual void oneStep ();
     /// Try to make direct connection between init and goal
     /// configurations, in order to avoid a random shoot.
-    virtual void tryDirectPath();
+    virtual void tryConnectInitAndGoals();
 
     // we need both method, because smart_pointer inheritance is not implemented (compiler don't know that rbprmRoadmapPtr_t derive from RoadmapPtr_t).
     virtual const core::RoadmapPtr_t& roadmap () const{
