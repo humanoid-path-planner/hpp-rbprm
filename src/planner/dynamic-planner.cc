@@ -461,7 +461,7 @@ namespace hpp {
 
 
     // re implement virtual method, same as base class but without the symetric edge (goal -> start)
-    void DynamicPlanner::tryDirectPath ()
+    void DynamicPlanner::tryConnectInitAndGoals ()
     {
       // call steering method here to build a direct conexion
       core::PathValidationPtr_t pathValidation (problem ().pathValidation ());
