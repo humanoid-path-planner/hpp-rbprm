@@ -576,9 +576,7 @@ if (nbFailures > 1)
             hppDout(notice,"contact to change : "<<contactCreate);
             fcl::Vec3f n = ci3.contactNormals_.at(contactCreate);
             fcl::Vec3f p = ci3.contactPositions_.at(contactCreate) + robot_->GetLimb(contactCreate)->offset_;
-            p -= n*10e-3 ; // FIXME see 'epsilon' in projection::computeProjectionMatrix, why is it added ?
             fcl::Vec3f p1 = ci1.contactPositions_.at(contactCreate) + robot_->GetLimb(contactCreate)->offset_;
-            p1 -= ci1.contactNormals_.at(contactCreate)*10e-3 ;
             hppDout(notice,"position : "<<p);
             hppDout(notice,"normal   : "<<n);
             hppDout(notice,"difference with previous position : "<<(p1-p).norm());
