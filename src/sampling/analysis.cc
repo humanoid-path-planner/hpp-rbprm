@@ -234,7 +234,36 @@ namespace
         return distance;
     }
 
+  /** compute default weight vector : (TODO add an API to set custom weight vector)
+  * FIXME : lot of assumptions are made here, but they are true for the most common robots used
+  * * the robot's limbs only contain revolute joint
+  * * the robot's root is oriented with x forward and z up (ie. the most common direction of deplacement is along x)
 
+  * by looking at the jacobian of each joint we can check around wich axis the joint is.
+  * We set the weight depending on the axis of each joint :
+  * y : used to move forward, low weight
+  * z : use to turn, medium weight
+  * x : only used for less common behaviour like straffing, high weight
+  * prismatic joint ?? high weight
+   */
+    Configuration_t computeWeightsFromAxis(rbprm::RbPrmLimbPtr_t limb,hpp::pinocchio::DevicePtr_t device){
+      Configuration_t weights = Configuration_t::Zero(limb->effector_.joint()->rankInVelocity() - limb->limb_->rankInVelocity()+1);
+      size_t i_weight = 0;
+      for (size_type i = limb->limb_->rankInVelocity() ; i <= limb->effector_.joint()->rankInVelocity() ; ++i){
+        hpp::pinocchio::vector_t jointJacobian= device->getJointAtVelocityRank(i)->jacobian().block<6,1>(0,i).transpose();
+        //hppDout(notice,"Jacobian of joint "<<device->getJointAtVelocityRank(i)->name()<<" at id = "<<i);
+        //hppDout(notice,"joint column : \n"<<jointJacobian);
+        if(fabs(jointJacobian[4]) > 0.5){ // rot y
+          weights[i_weight]=1.;
+        }else if(fabs(jointJacobian[5]) > 0.5){ // rot z
+          weights[i_weight]=10.;
+        }else{ // prismatic or rot x
+          weights[i_weight]=100.;
+        }
+        i_weight++;
+      }
+      return weights;
+    }
 
     /**
      * @brief referenceConfiguration
@@ -243,7 +272,7 @@ namespace
      * @param weights vector of size 3, value respectively for x,y,z, rotations
      * @return
      */
-    double referenceConfiguration(rbprm::RbPrmFullBodyPtr_t fullBody , const SampleDB& /*sampleDB*/, const sampling::Sample& sample, std::vector<value_type> weights){
+    double referenceConfiguration(rbprm::RbPrmFullBodyPtr_t fullBody , const SampleDB& /*sampleDB*/, const sampling::Sample& sample){
       // find limb name
       rbprm::RbPrmLimbPtr_t limb = getLimbFromStartRank(sample.startRank_,fullBody);
       hpp::pinocchio::DevicePtr_t device = fullBody->device_;
@@ -252,51 +281,22 @@ namespace
       //hppDout(notice,"Reference conf in analysis : "<<pinocchio::displayConfig(fullBody->referenceConfig()));
       double distance = 0;
       Configuration_t diff(device->numberDof());
-      Configuration_t weight = Configuration_t::Zero(limb->effector_.joint()->rankInVelocity() - limb->limb_->rankInVelocity()+1);
-
-      // compute default weight vector : (TODO add an API to set custom weight vector)
-      // FIXME : lot of assumptions are made here, but they are true for the most common robots used
-      // * the robot's limbs only contain revolute joint
-      // * the robot's root is oriented with x forward and z up (ie. the most common direction of deplacement is along x)
-
-      // by looking at the jacobian of each joint we can check around wich axis the joint is.
-      // We set the weight depending on the axis of each joint :
-      // y : used to move forward, low weight
-      // z : use to turn, medium weight
-      // x : only used for less common behaviour like straffing, high weight
-      // prismatic joint ?? high weight
-      size_t i_weight = 0;
-    /*  hppDout(notice,"effector : "<<limb->effector_->name());
-      hppDout(notice,"effector id vel= "<<limb->effector_->rankInVelocity());
-      hppDout(notice,"effector id pos= "<<limb->effector_->rankInConfiguration());
-      hppDout(notice,"joint at effector id vel : "<<device->getJointAtVelocityRank(limb->effector_->rankInVelocity())->name());
-      hppDout(notice,"joint at effector id pos : "<<device->getJointAtConfigRank(limb->effector_->rankInConfiguration())->name());
-
-      hppDout(notice,"limb     id vel= "<<limb->limb_->rankInVelocity());
-      hppDout(notice,"limb     id pos= "<<limb->limb_->rankInConfiguration());
-*/
-      for (size_type i = limb->limb_->rankInVelocity() ; i <= limb->effector_.joint()->rankInVelocity() ; ++i){
-          hpp::pinocchio::vector_t jointJacobian= device->getJointAtVelocityRank(i)->jacobian().block<6,1>(0,i).transpose();
-          //hppDout(notice,"Jacobian of joint "<<device->getJointAtVelocityRank(i)->name()<<" at id = "<<i);
-          //hppDout(notice,"joint column : \n"<<jointJacobian);
-          if(fabs(jointJacobian[4]) > 0.5){ // rot y
-            weight[i_weight]=weights[1];
-          }else if(fabs(jointJacobian[5]) > 0.5){ // rot z
-            weight[i_weight]=weights[2];
-          }else{ // prismatic or rot x
-            weight[i_weight]=weights[0];
-          }
-          i_weight++;
+      Configuration_t weights;
+      if(fullBody->postureWeights().size() == fullBody->device_->numberDof()){
+        weights = fullBody->postureWeights().segment(limb->limb_->rankInVelocity(),limb->effector_.joint()->rankInVelocity() - limb->limb_->rankInVelocity()+1);
+        //hppDout(notice,"Analysis : posture weight defined in fullbody : "<<hpp::pinocchio::displayConfig(weights));
+      }else{
+        weights = computeWeightsFromAxis(limb,device);
+        //hppDout(notice,"Analysis : posture weight not defined in fullbody, computed weight : "<<hpp::pinocchio::displayConfig(weights));
       }
-      //hppDout(notice,"Weight vector in reference analysis, for limb : "<<limb->limb_->name());
-      //hppDout(notice,""<<pinocchio::displayConfig(weight));
+
       hpp::pinocchio::difference (device, conf, fullBody->referenceConfig(), diff);
      // hppDout(notice,"Reference config in analysis : "<<pinocchio::displayConfig(fullBody->referenceConfig()));
       // the difference vector depend on the index in the velocity vector, not in the configuration
       // we only sum for the index of the current limb
      // hppDout(notice,"ref config rank: "<<cit->second->limb_->rankInVelocity()<<" ; "<<cit->second->effector_->rankInVelocity());
       for (size_type i = limb->limb_->rankInVelocity() ; i <= limb->effector_.joint()->rankInVelocity() ; ++i){
-        distance += (diff[i]*diff[i])*weight[i-limb->limb_->rankInVelocity()];
+        distance += (diff[i]*diff[i])*weights[i-limb->limb_->rankInVelocity()];
       }
       // This is an heuristic and not a cost, a null distance is the best result
       // TODO : replace hardcoded value with the real max
@@ -306,22 +306,6 @@ namespace
         hppDout(error,"WARNING : max distance to config not big enough");
       }
       return 100-(sqrt(distance));
-    }
-
-    double referenceConfiguration(rbprm::RbPrmFullBodyPtr_t fullBody , const SampleDB& sampleDB, const sampling::Sample& sample){
-      std::vector<value_type> weights;
-      weights.push_back(100.);
-      weights.push_back(1.);
-      weights.push_back(100.);
-      return referenceConfiguration(fullBody,sampleDB,sample,weights);
-    }
-
-    double referenceConfigurationWeightX(rbprm::RbPrmFullBodyPtr_t fullBody , const SampleDB& sampleDB, const sampling::Sample& sample) {
-      std::vector<value_type> weights;
-      weights.push_back(1.);
-      weights.push_back(10.);
-      weights.push_back(100.);
-      return referenceConfiguration(fullBody,sampleDB,sample,weights);
     }
 
 }
@@ -348,8 +332,6 @@ AnalysisFactory::AnalysisFactory(hpp::rbprm::RbPrmFullBodyPtr_t device)
     evaluate_.insert(std::make_pair("selfCollisionProbability", boost::bind(&selfCollisionProbability, boost::ref(device_), _1, _2)));
     evaluate_.insert(std::make_pair("jointLimitsDistance", boost::bind(&distanceToLimits, boost::ref(device_), _1, _2)));
     evaluate_.insert(std::make_pair("ReferenceConfiguration", boost::bind(&referenceConfiguration, boost::ref(device_), _1, _2)));
-    evaluate_.insert(std::make_pair("ReferenceConfigurationWeightX", boost::bind(&referenceConfigurationWeightX, boost::ref(device_), _1, _2)));
-
 
 }
 
