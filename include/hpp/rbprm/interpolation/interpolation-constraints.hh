@@ -210,7 +210,7 @@ namespace interpolation {
     template<class Helper_T, typename Reference>
     void CreateEffectorConstraint(Helper_T& helper, const Reference &ref,  const pinocchio::Frame effectorFr, const fcl::Vec3f& initTarget)
     {
-        pinocchio::DevicePtr_t device = helper.rootProblem_.robot();
+        pinocchio::DevicePtr_t device = helper.rootProblem_->robot();
         constraints::ComparisonTypes_t equals (3, constraints::Equality);
 
         core::ConfigProjectorPtr_t& proj = helper.proj_;

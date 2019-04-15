@@ -336,6 +336,7 @@ namespace
             }
         }
         std::size_t numValid = checkPath(distance, valid);
+        fullbody->device_->controlComputation (flag);
         return ConcatenateAndResizePath(res, numValid, keepExtraDof, fullbody->device_);
     }
 
