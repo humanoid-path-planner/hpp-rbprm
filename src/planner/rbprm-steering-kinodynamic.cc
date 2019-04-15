@@ -38,12 +38,14 @@ namespace hpp{
       totalTimeComputed_(0),totalTimeValidated_(0),dirValid_(0),dirTotal_(0),rejectedPath_(0),maxLength_(50),device_ (problem.robot ()),lastDirection_(),
        sEq_(new centroidal_dynamics::Equilibrium(problem_.robot()->name(), problem_.robot()->mass(),4,centroidal_dynamics::SOLVER_LP_QPOASES,true,10,false)),boundsUpToDate_(false), weak_ ()
     {
+      lastDirection_.setZero ();
     }
 
     /// Copy constructor
     SteeringMethodKinodynamic::SteeringMethodKinodynamic (const SteeringMethodKinodynamic& other) :
       core::steeringMethod::Kinodynamic (other),
-      totalTimeComputed_(0),totalTimeValidated_(0),dirValid_(0),dirTotal_(0),rejectedPath_(0),maxLength_(50),device_ (other.device_),lastDirection_(),
+      totalTimeComputed_(0),totalTimeValidated_(0),dirValid_(0),dirTotal_(0),rejectedPath_(0),maxLength_(50),device_ (other.device_),
+      lastDirection_(other.lastDirection_),
       sEq_(new centroidal_dynamics::Equilibrium(problem_.robot()->name(), problem_.robot()->mass(),4,centroidal_dynamics::SOLVER_LP_QPOASES,true,10,false)),boundsUpToDate_(false),weak_ ()
     {
     }
@@ -319,7 +321,7 @@ namespace hpp{
     }
 
     core::PathPtr_t SteeringMethodKinodynamic::setSteeringMethodBounds(const core::RbprmNodePtr_t& node, const core::ConfigurationIn_t target,bool reverse) {
-      Vector3 aMax ;
+      Vector3 aMax; aMax.setZero ();
 
       // ###################################
 #if ignore_acc_bound
