@@ -271,6 +271,11 @@ namespace hpp {
         }
     }
 
+    void RbPrmFullBody::postureWeights(pinocchio::Configuration_t postureWeights){
+      assert(postureWeights.size() == device_->numberDof() && "Posture weights must be the same size as device's degree of freedom");
+      postureWeights_ = postureWeights;
+    }
+
 
 
 
@@ -285,6 +290,7 @@ namespace hpp {
         , staticStability_(true)
         , mu_(0.5)
         , reference_(device_->neutralConfiguration())
+        , postureWeights_()
         , effectorsTrajectoriesMaps_()
         , weakPtr_()
     {
