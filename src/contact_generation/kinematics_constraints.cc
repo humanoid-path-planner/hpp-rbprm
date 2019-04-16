@@ -78,6 +78,7 @@ std::pair<hpp::rbprm::MatrixX3, hpp::rbprm::MatrixX3> hpp::rbprm::reachability::
 
     // iterate over all faces : for each faces add a line in A : normal and a value in b : position of a vertice.dot(normal)
     size_t numFaces = polyhedron->num_tris;
+    hppDout(notice,"Num faces : "<<numFaces);
     size_t numIneq = numFaces;
     if(minDistance > 0){
         numIneq++;
@@ -105,6 +106,7 @@ std::pair<hpp::rbprm::MatrixX3, hpp::rbprm::MatrixX3> hpp::rbprm::reachability::
     hppDout(notice,"End of loading kinematic constraints : ");
     //hppDout(notice,"N : "<<N);
     //hppDout(notice,"v : "<<V);
+
     return std::make_pair(N,V);
 }
 

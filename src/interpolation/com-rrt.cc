@@ -149,9 +149,9 @@ using namespace core;
         CreateContactConstraints<ComRRTHelper>(helper,model,model);
         CreateComConstraint<ComRRTHelper,core::PathPtr_t>(helper, helper.refPath_,targetCom);
 
-        Configuration_t refConfig = fullbody->referenceConfig();
-        CreatePosturalTaskConstraint<ComRRTHelper,Configuration_t>(helper, refConfig);
-        helper.proj_->lastIsOptional(true);
+       // Configuration_t refConfig = fullbody->referenceConfig();
+       // CreatePosturalTaskConstraint<ComRRTHelper,Configuration_t>(helper, refConfig);
+      //  helper.proj_->lastIsOptional(true);
         helper.proj_->maxIterations(100);
         //helper.proj_->lastAsCost(true);
         helper.proj_->errorThreshold(1e-3);

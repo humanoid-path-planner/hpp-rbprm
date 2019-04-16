@@ -134,6 +134,8 @@ namespace hpp {
         void setFriction(double mu){mu_ = mu;}
         pinocchio::Configuration_t referenceConfig(){return reference_;}
         void referenceConfig(pinocchio::Configuration_t referenceConfig);
+        pinocchio::Configuration_t postureWeights(){return postureWeights_;}
+        void postureWeights(pinocchio::Configuration_t postureWeights);
         bool addEffectorTrajectory(const size_t pathId,const std::string& effectorName,const bezier_Ptr& trajectory);
         bool addEffectorTrajectory(const size_t pathId, const std::string& effectorName, const std::vector<bezier_Ptr>& trajectories);
         bool getEffectorsTrajectories(const size_t pathId,EffectorTrajectoriesMap_t& result);
@@ -149,6 +151,7 @@ namespace hpp {
         bool staticStability_;
         double mu_;
         pinocchio::Configuration_t reference_;
+        pinocchio::Configuration_t postureWeights_; // weight used to compute the distance in the postural tasks
         std::map<size_t,EffectorTrajectoriesMap_t> effectorsTrajectoriesMaps_; // the map link the pathIndex (the same as in the wholeBody paths in problem solver) to a map of trajectories for each effectors.
     private:
         void AddLimbPrivate(rbprm::RbPrmLimbPtr_t limb, const std::string& id, const std::string& name,
