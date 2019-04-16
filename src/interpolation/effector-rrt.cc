@@ -111,6 +111,34 @@ using namespace core;
         result.segment<4>(3) = Transform3f::Quaternion(transform.rotation()).coeffs();
     }
 
+        DevicePtr_t createFreeFlyerDevice()
+    {
+        DevicePtr_t endEffectorDevice = hpp::core::Device_t::create("endEffector");
+        hpp::pinocchio::ModelPtr_t m =  hpp::pinocchio::ModelPtr_t(new hpp::pinocchio::Model());
+        hpp::pinocchio::GeomModelPtr_t gm =  hpp::pinocchio::GeomModelPtr_t(new hpp::pinocchio::GeomModel);
+        Transform3f mat; mat.setIdentity ();
+        endEffectorDevice->setModel(m);
+        endEffectorDevice->setGeomModel(gm);
+        endEffectorDevice->model().addJoint(0, ::pinocchio::JointModelFreeFlyer(),mat,"freeflyer");
+        return endEffectorDevice;
+    }
+
+        fcl::Vec3f getNormal(const std::string& effector, const State &state, bool& found)
+    {
+        std::map<std::string, fcl::Vec3f>::const_iterator cit = state.contactNormals_.find(effector);
+        if(cit != state.contactNormals_.end())
+        {
+            found = true;
+            return cit->second;
+        }
+        else
+        {
+            found = false;
+            return fcl::Vec3f(0.,0.,1.);
+        }
+    }
+
+
     T_Waypoint getWayPoints(pinocchio::DevicePtr_t device, core::PathPtr_t path,
                          const pinocchio::Frame effector, const value_type effectorDistance, bool& isLine)
     {
@@ -173,26 +201,6 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         return res;
     }
 
-    std::string getEffectorLimb(const  State &startState, const State &nextState)
-    {
-        return nextState.contactCreations(startState).front();
-    }
-
-    fcl::Vec3f getNormal(const std::string& effector, const State &state, bool& found)
-    {
-        std::map<std::string, fcl::Vec3f>::const_iterator cit = state.contactNormals_.find(effector);
-        if(cit != state.contactNormals_.end())
-        {
-            found = true;
-            return cit->second;
-        }
-        else
-        {
-            found = false;
-            return fcl::Vec3f(0.,0.,1.);
-        }
-    }
-
     value_type genHeight(const bool normalFound)
     {
         if(normalFound)
@@ -201,13 +209,6 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
             return 0.;
     }
 
-
-    pinocchio::Frame getEffector(RbPrmFullBodyPtr_t fullbody,
-                           const  State &startState, const State &nextState)
-    {
-        std::string effectorVar = getEffectorLimb(startState, nextState);
-        return fullbody->device_->getFrameByName(fullbody->GetLimbs().at(effectorVar)->effector_.name());
-    }
 
     exact_cubic_Ptr splineFromEffectorTraj(RbPrmFullBodyPtr_t fullbody, const pinocchio::Frame effector, core::PathPtr_t path,
                                           const  State &startState, const State &nextState, bool& isLine)
@@ -382,27 +383,7 @@ BezierPath::create(endEffectorDevice,refEffectorMidBezier,refEffectorTakeoff->en
         double timeMid= (t_total - (2*t_predef))/2.;
         posOffset = p_max / (1. + 4.*timeMid/t_predef + 6.*timeMid*timeMid/(t_predef*t_predef) - (timeMid*timeMid*timeMid)/(t_predef*t_predef*t_predef));
     }
-} //namespace interpolation
-} //namespace rbprm
-} // namespace hp
-    hpp::DevicePtr_t createFreeFlyerDevice()
-    {
-        hpp::DevicePtr_t endEffectorDevice = hpp::core::Device_t::create("endEffector");
-        hpp::pinocchio::ModelPtr_t m =  hpp::pinocchio::ModelPtr_t(new hpp::pinocchio::Model());
-        hpp::pinocchio::GeomModelPtr_t gm =  hpp::pinocchio::GeomModelPtr_t(new hpp::pinocchio::GeomModel);
-        hpp::Transform3f mat; mat.setIdentity ();
-        endEffectorDevice->setModel(m);
-        endEffectorDevice->setGeomModel(gm);
-        endEffectorDevice->model().addJoint(0, pinocchio::JointModelFreeFlyer(),mat,"freeflyer");
-        return endEffectorDevice;
-    }
 
-namespace hpp
-{
-namespace rbprm
-{
-namespace interpolation
-{
     core::PathPtr_t generateEndEffectorBezier(RbPrmFullBodyPtr_t fullbody, core::ProblemSolverPtr_t problemSolver, const PathPtr_t comPath,
     const State &startState, const State &nextState){
         pinocchio::Frame effector =  getEffector(fullbody, startState, nextState);

@@ -60,7 +60,7 @@ namespace interpolation {
          VecRightSide (const Reference ref, const int dim = 3, const bool times_ten = false) : ref_(ref), dim_(dim), times_ten_(times_ten)
          {}
         ~VecRightSide(){}
-        virtual void operator() (constraints::vectorOut_t output,
+        virtual void operator() (constraints::ImplicitPtr_t eq,
                                const constraints::value_type& normalized_input, pinocchio::ConfigurationOut_t /*conf*/) const
         {
           const std::pair<core::value_type, core::value_type>& tR (ref_->timeRange());
@@ -68,12 +68,12 @@ namespace interpolation {
           bool success;
           if(times_ten_)
           {
-              output = ref_->operator ()(unNormalized,success).head(dim_); // * (10000) ;
+              eq->rightHandSide(ref_->operator ()(unNormalized,success).head(dim_)); // * (10000) ;
               assert(success && "path operator () did not succeed");
           }
           else
           {
-            output = ref_->operator ()(unNormalized,success).head(dim_) ;
+            eq->rightHandSide(ref_->operator ()(unNormalized,success).head(dim_)) ;
             assert(success && "path operator () did not succeed");
           }
         }
@@ -96,15 +96,13 @@ namespace interpolation {
         pinocchio::CenterOfMassComputationPtr_t comComp = pinocchio::CenterOfMassComputation::
           create (device);
         comComp->add (device->rootJoint());
-        //comComp->computeMass ();
         comComp->compute ();
-        PointComFunctionPtr_t comFunc = PointComFunction::create ("COM-walkgen",
+        PointComFunctionPtr_t comFunc = PointComFunction::create ("COM-constraint",
             device, /*10000 **/ PointCom::create (comComp));
-        ComparisonTypes_t comps; comps.push_back(constraints::Equality);
-        constraints::ImplicitPtr_t comEq = constraints::Implicit::create (comFunc, comps);
-        comEq->nonConstRightHandSide() = initTarget; // * 10000;
+        constraints::ComparisonTypes_t equals (3, constraints::Equality);
+        constraints::ImplicitPtr_t comEq = constraints::Implicit::create(comFunc, equals);
         proj->add(comEq);
-        //proj->updateRightHandSide();
+        proj->rightHandSide(comEq,initTarget);
         helper.steeringMethod_->tds_.push_back(TimeDependant(comEq, boost::shared_ptr<VecRightSide<Reference> >(new VecRightSide<Reference> (ref, 3, true))));
     }
 
@@ -213,15 +211,15 @@ namespace interpolation {
     void CreateEffectorConstraint(Helper_T& helper, const Reference &ref,  const pinocchio::Frame effectorFr, const fcl::Vec3f& initTarget)
     {
         pinocchio::DevicePtr_t device = helper.rootProblem_->robot();
-        ComparisonTypes_t comps; comps.push_back(constraints::Equality);
+        constraints::ComparisonTypes_t equals (3, constraints::Equality);
+
         core::ConfigProjectorPtr_t& proj = helper.proj_;
 
         pinocchio::Frame effectorFrame = device->getFrameByName(effectorFr.name());
         constraints::ImplicitPtr_t effEq = constraints::Implicit::create (
-                                    createPositionMethod(device,initTarget, effectorFrame), comps);
-        effEq->nonConstRightHandSide()[0] = initTarget[2];
+                                    createPositionMethod(device,initTarget, effectorFrame), equals);
         proj->add(effEq);
-        proj->rightHandSide(effEq->nonConstRightHandSide());
+        proj->rightHandSide(effEq,initTarget);
         helper.steeringMethod_->tds_.push_back(
                     TimeDependant(effEq, boost::shared_ptr<VecRightSide<Reference> >(new VecRightSide<Reference>(ref, 3))));
     }
@@ -236,13 +234,13 @@ namespace interpolation {
         {
             return ref_->timeRange ();
         }
-        void operator ()(constraints::vectorOut_t output,
+        void operator ()(constraints::ImplicitPtr_t eq,
                          const constraints::value_type& normalized_input, pinocchio::ConfigurationOut_t /*conf*/) const
         {
             const std::pair<core::value_type, core::value_type>& tR (ref_->timeRange());
             bool success;
             constraints::value_type unNormalized = (tR.second-tR.first)* normalized_input + tR.first;
-            output = method_->operator ()((ref_->operator ()(unNormalized,success))).vector();
+            eq->rightHandSide( method_->operator ()((ref_->operator ()(unNormalized,success))).vector());
             assert(success && "path operator () did not succeed");
         }
 
@@ -305,6 +303,16 @@ namespace interpolation {
         std::vector<std::string> fixed = to.fixedContacts(from);
         addContactConstraints(helper.fullbody_, device, helper.proj_,from,fixed);
     }
+
+
+    std::string getEffectorLimb(const  State &startState, const State &nextState);
+
+    fcl::Vec3f getNormal(const std::string& effector, const State &state, bool& found);
+
+    pinocchio::Frame getEffector(RbPrmFullBodyPtr_t fullbody,
+                           const  State &startState, const State &nextState);
+
+    DevicePtr_t createFreeFlyerDevice();
 
 
     } // namespace interpolation

@@ -51,6 +51,22 @@ namespace hpp {
           }
       }
   }
+
+      std::string getEffectorLimb(const  State &startState, const State &nextState)
+    {
+        return nextState.contactCreations(startState).front();
+    }
+
+    pinocchio::Frame getEffector(RbPrmFullBodyPtr_t fullbody,
+                           const  State &startState, const State &nextState)
+    {
+        std::string effectorVar = getEffectorLimb(startState, nextState);
+        return fullbody->device_->getFrameByName(fullbody->GetLimbs().at(effectorVar)->effector_.name());
+    }
+
+
+
+
   } //   namespace interpolation
   } //   namespace rbprm
 } // namespace hpp
