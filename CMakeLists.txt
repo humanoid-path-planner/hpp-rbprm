@@ -46,6 +46,7 @@ ADD_REQUIRED_DEPENDENCY("hpp-centroidal-dynamics")
 ADD_REQUIRED_DEPENDENCY("hpp-affordance")
 ADD_REQUIRED_DEPENDENCY("hpp-spline")
 ADD_REQUIRED_DEPENDENCY("hpp-rbprm-robot-data")
+ADD_REQUIRED_DEPENDENCY("hpp-environments")
 
 FIND_PACKAGE( OpenMP REQUIRED)
 find_package(Boost)
