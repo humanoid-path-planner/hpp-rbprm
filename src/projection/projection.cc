@@ -126,10 +126,8 @@ void CreateComPosConstraint(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const fcl::
 }
 
 void CreatePosturalTaskConstraint(hpp::rbprm::RbPrmFullBodyPtr_t fullBody,core::ConfigProjectorPtr_t proj){
-  hppDout(notice,"create postural task, in projection.cc, ref config = "<<pinocchio::displayConfig(fullBody->referenceConfig()));
+  //hppDout(notice,"create postural task, in projection.cc, ref config = "<<pinocchio::displayConfig(fullBody->referenceConfig()));
   std::vector <bool> mask (fullBody->device_->numberDof(),false);
-  Configuration_t weight(fullBody->device_->numberDof());
-
   // mask : 0 for the freeflyer and the extraDoFs :
   for(size_t i = 0 ; i < 3 ; i++){
     mask[i]=false;
@@ -138,34 +136,22 @@ void CreatePosturalTaskConstraint(hpp::rbprm::RbPrmFullBodyPtr_t fullBody,core::
     mask[i]=false;
   }
 
-
-
-
-  // create a weight vector
-  for(size_type i = 0 ; i < fullBody->device_->numberDof() ; ++i){
-    weight[i] = 1.;
-  }
-  // TODO : retrieve it from somewhere, store it in fullbody ?
-  // value here for hrp2, from Justin
-  // : chest
-  weight[6]= 10.;
-  //head :
-  for(size_type i = 7 ; i <= 9 ; i++)
-    weight[i] = 1.;
-
-  // root's orientation
-  for(size_type i = 3 ; i < 6 ; i++){
-    weight[i] = 50.;
-  }
-
   /*for(size_t i = 3 ; i <= 9 ; i++){
     mask[i] = true;
   }*/
  // mask[5] = false; // z root rotation ????
 
+  Configuration_t weight(fullBody->device_->numberDof());
+  if(fullBody->postureWeights().size() == fullBody->device_->numberDof()){
+    weight = fullBody->postureWeights();
+  }else{
+    for(size_type i = 0 ; i < fullBody->device_->numberDof() ; ++i)
+      weight[i] = 1.;
+  }
+
 
   // normalize weight array :
-  value_type moy =0;
+  /*value_type moy =0;
   int num_active = 0;
   for (size_type i = 0 ; i < weight.size() ; i++){
     if(mask[i]){
@@ -177,12 +163,13 @@ void CreatePosturalTaskConstraint(hpp::rbprm::RbPrmFullBodyPtr_t fullBody,core::
   for (size_type i = 0 ; i < weight.size() ; i++)
     weight[i] = weight[i]/moy;
 
+  */
 
-  /*std::ostringstream oss;
-  for (size_type i=0; i < mask.size (); ++i){
-    oss << mask [i] << ",";
+  std::ostringstream oss;
+  for (size_type i=0; i < weight.size (); ++i){
+    oss << weight [i] << ",";
   }
-  hppDout(notice,"mask = "<<oss.str());*/
+  //hppDout(notice,"weight postural task = "<<oss.str());
 
   //constraints::ConfigurationConstraintPtr_t postFunc = constraints::ConfigurationConstraint::create("Postural_Task",fullBody->device_,fullBody->referenceConfig(),weight,mask);
   constraints::ConfigurationConstraintPtr_t postFunc = constraints::ConfigurationConstraint::create("Postural_Task",fullBody->device_,fullBody->referenceConfig(),weight);
