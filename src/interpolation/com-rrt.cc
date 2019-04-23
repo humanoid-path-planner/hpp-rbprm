@@ -36,7 +36,7 @@ using namespace core;
     void SetComRRTConstraints::operator ()(ComRRTHelper& helper, const State& from, const State& to) const
     {
         CreateContactConstraints<ComRRTHelper>(helper, from, to);
-        CreateComConstraint<ComRRTHelper,core::PathPtr_t>(helper, helper.refPath_);
+        //CreateComConstraint<ComRRTHelper,core::PathPtr_t>(helper, helper.refPath_);
         // add postural task to respect the constraint during all the motion but greatly increase computation time
         // FIXME : can lead to discontinuities ...
       /*  Configuration_t refConfig = helper.fullbody_->referenceConfig();
