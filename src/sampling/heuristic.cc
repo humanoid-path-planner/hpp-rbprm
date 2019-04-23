@@ -189,18 +189,18 @@ double fixedStepHeuristic(const sampling::Sample& sample,
     tRootTarget.setTranslation(fcl::Vec3f(q_target.head<3>()));
     fcl::Quaternion3f quatRoot(q_target[6],q_target[3],q_target[4],q_target[5]);
     tRootTarget.setQuatRotation(quatRoot);
-    //hppDout(notice,"heuristic : tRootTarget = "<<tRootTarget.getRotation());
+   // hppDout(notice,"heuristic : tRootTarget = "<<tRootTarget.getRotation());
     //hppDout(notice,"heuristic : tRootTarget = "<<tRootTarget.getTranslation());
-   // hppDout(notice,"heuristic : limbRef     = "<<params.limbReferenceOffset_);
+    //hppDout(notice,"heuristic : limbRef     = "<<params.limbReferenceOffset_);
     fcl::Vec3f pTarget = (tRootTarget * params.limbReferenceOffset_).getTranslation();
     //hppDout(notice,"heuristic : pTarget = ["<<pTarget[0]<<","<<pTarget[1]<<","<<pTarget[2]<<"]");
     // FIXME : we could factorize all of the above and only do it once for each position of the CoM. But this require to know t_step in contact_generation::generate_contact ...
     fcl::Vec3f pSample = (params.tfWorldRoot_ * sample.effectorPosition_).getTranslation();
-/*    hppDout(notice,"Heuristic : norm     = "<<(pSample-pTarget).squaredNorm());
+  /*  hppDout(notice,"Heuristic : norm     = "<<(pSample-pTarget).squaredNorm());
     hppDout(notice,"Heuristic : 5 - norm = "<<5-(pSample-pTarget).squaredNorm());
     hppDout(notice,"Heuristic : static   = "<<sample.staticValue_);
     hppDout(notice,"Heuritic :           = "<<(5.-(pSample-pTarget).squaredNorm()) + sample.staticValue_);
- */
+*/
     if((pSample-pTarget).squaredNorm() > 1)
         hppDout(warning,"WARNING : In fixed step heuristic, norm is too high. You should change the hardcoded max value ");
     return (1.-(pSample-pTarget).squaredNorm()) + 1.*sample.staticValue_; // 1 - because it's an heuristic and not a cost
