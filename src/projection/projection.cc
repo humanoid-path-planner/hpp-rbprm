@@ -335,6 +335,11 @@ ProjectionReport projectEffector(hpp::core::ConfigProjectorPtr_t proj, const hpp
                                                                                       rotation,
                                                                                       rotationFilter)));
     }
+
+    CreatePosturalTaskConstraint(body,proj);
+    proj->lastIsOptional(true);
+
+
 #ifdef PROFILE
     RbPrmProfiler& watch = getRbPrmProfiler();
     watch.start("ik");
