@@ -290,6 +290,7 @@ std::vector<bool> setRotationConstraints()
     {
         res.push_back(true);
     }
+    res[2] = false; // test
     return res;
 }
 
