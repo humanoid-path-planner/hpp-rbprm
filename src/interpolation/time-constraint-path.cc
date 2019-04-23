@@ -146,10 +146,14 @@ namespace hpp {
       Configuration_t endc = end();
       vector_t errr;
       updateConstraints(initc);
+      hppDout(notice,"Check path, init = "<<pinocchio::displayConfig(initc));
+      hppDout(notice,"Check path, end  = "<<pinocchio::displayConfig(endc));
+
       if (constraints()) {
         if (!constraints()->isSatisfied (initial(),errr)) {
             device_->currentConfiguration(initc);
             device_->computeForwardKinematics();
+            hppDout(notice,"Ini com : "<<device_->positionCenterOfMass()<<"  error : "<<errr);
 //std::cout << "init conf " <<  device_->positionCenterOfMass() << "\n error \n" << errr << std::endl;
 /*device_->currentConfiguration(initc);
 device_->computeForwardKinematics();
@@ -165,13 +169,15 @@ std::cout <<  device_->getJointByName("rh_foot_joint")->currentTransformation().
 std::cout << "lh_foot_joint  " << std::endl;
 std::cout <<  device_->getJointByName("lh_foot_joint")->currentTransformation().getTranslation() << std::endl;*/
           hppDout (error,"Initial configuration of path does not satisfy the constraints" << pinocchio::displayConfig(initial()));
-          hppDout(info,"Error = "<<errr);
           throw projection_error ("Initial configuration of path does not satisfy "
               "the constraints");
         }
         updateConstraints(endc);
-        if (constraints() && !constraints()->isSatisfied (end())) {
+        if (constraints() && !constraints()->isSatisfied (end(),errr)) {
 //std::cout << "end conf " <<  initc << std::endl;
+          device_->currentConfiguration(endc);
+          device_->computeForwardKinematics();
+          hppDout(notice,"End com : "<<device_->positionCenterOfMass()<<"  error : "<<errr);
           hppDout (error,"End configuration of path does not satisfy the constraints"<< pinocchio::displayConfig(end()));
           throw projection_error ("End configuration of path does not satisfy "
               "the constraints");
