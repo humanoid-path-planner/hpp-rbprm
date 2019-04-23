@@ -590,15 +590,15 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
           current_timings<<1.,1.;
         }
       #else
-        timings_matrix = MatrixXX(16,3); // contain the timings of the first 3 phases, the total time and the discretization step
+        timings_matrix = MatrixXX(18,3); // contain the timings of the first 3 phases, the total time and the discretization step
         timings_matrix <<
-                          0.8 , 0.7, 0.8,
+            0.6, 1.2, 0.6,
+             1. , 1.2, 1.,
+            0.8 , 0.7, 0.8,
             0.3 , 0.6, 0.3,
             0.5 , 0.6, 0.5,
             0.6 , 0.6, 0.6,
             0.8 , 0.6, 0.8,
-            0.6, 1.2, 0.6,
-            1. , 1.2, 1.,
             0.3 , 0.8, 0.3,
             0.3 , 0.7, 0.3,
             0.6 , 0.8, 0.6,
@@ -607,7 +607,9 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
             0.8,0.8,0.8, // script good
             1. , 0.6, 1.,
             1.2 , 0.6, 1.2,
-            1.5 , 0.6, 1.5;
+            1.5 , 0.6, 1.5,
+            0.1 , 0.2, 0.1,
+            0.2, 0.3, 0.2;
         current_timings = timings_matrix.block(0,0,1,pData.contacts_.size()).transpose();
       #endif
       total_time = 0;
