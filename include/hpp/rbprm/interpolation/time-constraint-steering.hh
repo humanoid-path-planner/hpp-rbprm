@@ -35,7 +35,7 @@ namespace hpp {
     /// Apply some configuration validation algorithms at discretized values
     /// of the path parameter.
     template<class Path_T>
-    class TimeConstraintSteering: public hpp::core::SteeringMethod
+    class TimeConstraintSteering: public hpp::core::steeringMethod::Straight
     {
     typedef Path_T path_t;
     typedef boost::shared_ptr <TimeConstraintSteering> TimeConstraintSteeringPtr_t;
@@ -98,7 +98,7 @@ namespace hpp {
       /// Weighed distance is created from robot
       TimeConstraintSteering (const core::ProblemPtr_t& problem,
                        const std::size_t pathDofRank) :
-    SteeringMethod (*problem), pathDofRank_(pathDofRank), weak_ () {}
+    core::steeringMethod::Straight(*problem), pathDofRank_(pathDofRank), weak_ () {}
 
       /*/// Constructor with weighed distance
       TimeConstraintSteering (const core::DevicePtr_t& device,
@@ -110,12 +110,12 @@ namespace hpp {
       }*/
       /// Copy constructor
       TimeConstraintSteering (const TimeConstraintSteering& other) :
-    SteeringMethod (other), pathDofRank_(other.pathDofRank_), weak_ (), tds_(other.tds_) {}
+    core::steeringMethod::Straight (other), pathDofRank_(other.pathDofRank_), weak_ (), tds_(other.tds_) {}
 
       /// Store weak pointer to itself
       void init (TimeConstraintSteeringWkPtr_t weak)
       {
-    SteeringMethod::init (weak);
+    core::steeringMethod::Straight::init (weak);
     weak_ = weak;
       }
 
