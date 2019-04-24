@@ -63,15 +63,15 @@ namespace interpolation {
     template<class Path_T, class ShooterFactory_T, typename ConstraintFactory_T>
     void TimeConstraintHelper<Path_T, ShooterFactory_T, ConstraintFactory_T>::InitConstraints()
     {
-        core::ConstraintSetPtr_t cSet = core::ConstraintSet::create(rootProblem_.robot(),"");
+        core::ConstraintSetPtr_t cSet = core::ConstraintSet::create(rootProblem_->robot(),"");
         cSet->addConstraint(proj_);
-        rootProblem_.constraints(cSet);
+        rootProblem_->constraints(cSet);
     }
 
     template<class Path_T, class ShooterFactory_T, typename ConstraintFactory_T>
     void TimeConstraintHelper<Path_T, ShooterFactory_T, ConstraintFactory_T>::SetConfigShooter(const hpp::rbprm::State &from, const hpp::rbprm::State &to)
     {
-        rootProblem_.configurationShooter(shooterFactory_(fullbody_, refPath_, fullBodyDevice_->configSize()-1, from, to,
+        rootProblem_->configurationShooter(shooterFactory_(fullbody_, refPath_, fullBodyDevice_->configSize()-1, from, to,
                                                           steeringMethod_->tds_, proj_));
     }
 
@@ -143,7 +143,7 @@ namespace
         std::vector<std::string> variations = to.allVariations(from, extractEffectorsName(limbs));
         if(!variations.empty())
         {
-            DisableUnNecessaryCollisions(rootProblem_, variations, limbs);
+            DisableUnNecessaryCollisions(*rootProblem_, variations, limbs);
         }
         // TODO IS THIS REDUNDANT ?
         /*for(rbprm::CIT_Limb lit = limbs.begin(); lit != limbs.end(); ++lit)
@@ -152,8 +152,8 @@ namespace
                                                                  lit->second->limb_->name()) == variations.end())
             {
                 hpp::tools::RemoveEffectorCollision<core::Problem>(rootProblem_,
-                                                                   rootProblem_.robot()->getJointByName(lit->second->effector_->name()),
-                                                                   rootProblem_.collisionObstacles());
+                                                                   rootProblem_->robot()->getJointByName(lit->second->effector_->name()),
+                                                                   rootProblem_->collisionObstacles());
             }
         }*/
         SetConfigShooter(from, to);
@@ -163,12 +163,12 @@ namespace
         hppDout(notice,"Run : start config = r(["<<pinocchio::displayConfig(*start)<<"])");
         hppDout(notice,"Run : end   config = r(["<<pinocchio::displayConfig(*end)<<"])");
 
-        rootProblem_.initConfig(start);
-        BiRRTPlannerPtr_t planner = BiRRTPlanner::create(rootProblem_);
+        rootProblem_->initConfig(start);
+        BiRRTPlannerPtr_t planner = BiRRTPlanner::create(*rootProblem_);
         //ProblemTargetPtr_t target = problemTarget::GoalConfigurations::create (planner);
-        ProblemTargetPtr_t target = problemTarget::GoalConfigurations::create (&rootProblem_);
-        rootProblem_.target (target);
-        rootProblem_.addGoalConfig(end);
+        ProblemTargetPtr_t target = problemTarget::GoalConfigurations::create (rootProblem_);
+        rootProblem_->target (target);
+        rootProblem_->addGoalConfig(end);
         InitConstraints();
         if(maxIterations>0)
             planner->maxIterations(maxIterations);
@@ -186,7 +186,7 @@ namespace
             res = PathVectorPtr_t();
         }
 
-        rootProblem_.resetGoalConfigs();
+        rootProblem_->resetGoalConfigs();
         return res;
     }
 
@@ -196,13 +196,13 @@ namespace
         template<class Helper_T>
         PathVectorPtr_t optimize(Helper_T& helper, PathVectorPtr_t partialPath, const std::size_t numOptimizations)
         {
-            core::pathOptimization::RandomShortcutPtr_t rs = core::pathOptimization::RandomShortcut::create(helper.rootProblem_);
+            core::pathOptimization::RandomShortcutPtr_t rs = core::pathOptimization::RandomShortcut::create(*helper.rootProblem_);
             for(std::size_t j=0; j<numOptimizations;++j)
             {
                 hppDout(notice,"Optimize random shortucut, iter : "<<j);
                 partialPath = rs->optimize(partialPath);
             }
-            core::pathOptimization::PartialShortcutPtr_t rs2 = core::pathOptimization::PartialShortcut::create(helper.rootProblem_);
+            core::pathOptimization::PartialShortcutPtr_t rs2 = core::pathOptimization::PartialShortcut::create(*helper.rootProblem_);
             for(std::size_t j=0; j<numOptimizations;++j)
             {
                 hppDout(notice,"Optimize partial shortcut, iter : "<<j);
@@ -239,19 +239,25 @@ namespace
             {
                 completePath->concatenate(res[i]);
             }
+            PathVectorPtr_t flat = core::PathVector::create(completePath->outputSize(), completePath->outputDerivativeSize());
+            completePath->flatten(flat); // assure that there is no pathVector inside a pathVector
+            hppDout(notice,"end of interpolateStatesFromPath, number of paths in pathVector : "<<flat->numberPaths());
             if(keepExtraDof)
             {
-                return completePath;
+                return flat;
             }
             else
             {
-                // reducing path
-                core::segment_t interval(0, completePath->initial().rows()-1);
+                // reducing path (remove last value of the configuration)
+                core::segment_t interval(0, flat->initial().rows()-1);
                 core::segments_t intervals;
                 intervals.push_back(interval);
                 core::segments_t velIntervals (1, core::segment_t (0, device->numberDof()-1));
-                PathPtr_t reducedPath = core::SubchainPath::create(completePath,intervals, velIntervals);
-                return reducedPath;
+                PathVectorPtr_t reducedPV = core::PathVector::create(flat->outputSize()-1, flat->outputDerivativeSize()-1);
+                for(std::size_t pid = 0 ; pid < flat->numberPaths() ; ++pid){
+                  reducedPV->appendPath(core::SubchainPath::create(flat->pathAtRank(pid),intervals,velIntervals));
+                }
+                return reducedPV;
             }
         }
     }
@@ -297,6 +303,9 @@ namespace
                                               const pinocchio::value_type error_treshold = 0.001, const size_t maxIterations = 0)
     {
         hppDout(notice,"Begin interpolateStatesFromPathGetter :");
+        pinocchio::Computation_t flag = fullbody->device_->computationFlag();
+        pinocchio::Computation_t newflag = static_cast <pinocchio::Computation_t> (pinocchio::JOINT_POSITION | pinocchio::JACOBIAN | pinocchio::COM);
+        fullbody->device_->controlComputation (newflag);
         PathVectorPtr_t res[100];
         bool valid[100];
         std::size_t distance = std::distance(startState,endState);
@@ -327,6 +336,7 @@ namespace
             }
         }
         std::size_t numValid = checkPath(distance, valid);
+        fullbody->device_->controlComputation (flag);
         return ConcatenateAndResizePath(res, numValid, keepExtraDof, fullbody->device_);
     }
 

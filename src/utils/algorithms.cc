@@ -420,7 +420,10 @@ namespace geom
       double d;
       Point proj;
       Point c = center(plan.begin(),plan.end());
-      for(CIT_Point e = plan.begin() ; e != plan.end() ; ++e){
+      // look for the intersection between the lines (proj_ortho -> center of the intersection) and each edge of 'plan'
+      // return the intersection point which lead to the smallest distance (original point -> intersection)
+      // plan is a convexHull, the first point and the last points are equal so we don't need specific case to handle the last point
+      for(CIT_Point e = plan.begin() ; e != plan.end()-1 ; ++e){
         proj = lineSect3D(proj_ortho,c,*e,*(e+1));
         d = fabs((proj-point).norm());
         if(d < d_min){

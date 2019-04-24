@@ -38,12 +38,14 @@ namespace hpp{
       totalTimeComputed_(0),totalTimeValidated_(0),dirValid_(0),dirTotal_(0),rejectedPath_(0),maxLength_(50),device_ (problem.robot ()),lastDirection_(),
        sEq_(new centroidal_dynamics::Equilibrium(problem_.robot()->name(), problem_.robot()->mass(),4,centroidal_dynamics::SOLVER_LP_QPOASES,true,10,false)),boundsUpToDate_(false), weak_ ()
     {
+      lastDirection_.setZero ();
     }
 
     /// Copy constructor
     SteeringMethodKinodynamic::SteeringMethodKinodynamic (const SteeringMethodKinodynamic& other) :
       core::steeringMethod::Kinodynamic (other),
-      totalTimeComputed_(0),totalTimeValidated_(0),dirValid_(0),dirTotal_(0),rejectedPath_(0),maxLength_(50),device_ (other.device_),lastDirection_(),
+      totalTimeComputed_(0),totalTimeValidated_(0),dirValid_(0),dirTotal_(0),rejectedPath_(0),maxLength_(50),device_ (other.device_),
+      lastDirection_(other.lastDirection_),
       sEq_(new centroidal_dynamics::Equilibrium(problem_.robot()->name(), problem_.robot()->mass(),4,centroidal_dynamics::SOLVER_LP_QPOASES,true,10,false)),boundsUpToDate_(false),weak_ ()
     {
     }
@@ -297,7 +299,6 @@ namespace hpp{
     }
 
     core::PathPtr_t SteeringMethodKinodynamic::computeDirection(const core::ConfigurationIn_t from, const core::ConfigurationIn_t to,bool reverse){
-      setAmax(Vector3::Ones(3)*aMaxFixed_);
       hppDout(notice,"Compute direction ");
       core::PathPtr_t path;
       if(reverse)
@@ -319,15 +320,10 @@ namespace hpp{
     }
 
     core::PathPtr_t SteeringMethodKinodynamic::setSteeringMethodBounds(const core::RbprmNodePtr_t& node, const core::ConfigurationIn_t target,bool reverse) {
-      Vector3 aMax ;
-
-      // ###################################
-#if ignore_acc_bound
-      aMax = Vector3::Ones(3)*aMaxFixed_;
+      Vector3 aMax=Vector3::Ones(3)*aMaxFixed_ ;
+      aMax[2]=aMaxFixed_Z_;
       setAmax(aMax);
-      return node;
-#endif
-      // ####################################
+
 
       hppDout(notice,"Set bounds between : ");
       if(reverse){
@@ -401,21 +397,21 @@ namespace hpp{
         alpha0 -= 0.01; // FIXME : hardcoded "robustness" value to avoid hitting the bounds
         hppDout(info,"Amax after min : "<<alpha0);
         aMax = alpha0*lastDirection_;
+        for(size_t i = 0 ; i < 3 ; ++i)
+          aMax[i] = fabs(aMax[i]); // aMax store the amplitude
         boundsUpToDate_ = false;
       }
       else{
-        alpha0 = aMaxFixed_;
         boundsUpToDate_=true;
+        hppDout(notice,"Bounds already up to date, return the path");
       }
-
-      for(size_t i = 0 ; i < 3 ; ++i)
-        aMax[i] = fabs(aMax[i]); // aMax store the amplitude
 
 
       if((aMax[2] < aMaxFixed_Z_))
         aMax[2] = aMaxFixed_Z_;
+      hppDout(info,"Amax vector : "<<aMax.transpose());
       setAmax(aMax);
-      hppDout(info,"Amax vector : "<<aMax_.transpose());
+      hppDout(info,"Amax vector in SM : "<<aMax_.transpose());
       //setVmax(2*Vector3::Ones(3)); //FIXME: read it from somewhere ?
 
       return path;
