@@ -108,21 +108,6 @@ namespace hpp {
           mu_ = problem.getParameter (std::string("DynamicPlanner/friction")).floatValue();
           hppDout(notice,"mu define in python : "<<mu_);
 
-          // create the map of end effector reference position in root frame
-          pinocchio::RbPrmDevicePtr_t rbDevice = boost::dynamic_pointer_cast<pinocchio::RbPrmDevice>(problem.robot());
-          for(pinocchio::T_Rom::const_iterator itr = rbDevice->robotRoms_.begin() ; itr != rbDevice->robotRoms_.end() ; ++itr){
-            core::Configuration_t pos(3);
-            try{
-                pos[0] = problem.getParameter (std::string(itr->first+"_ref_x")).floatValue();
-                pos[1] = problem.getParameter (std::string(itr->first+"_ref_y")).floatValue();
-                pos[2] = problem.getParameter (std::string(itr->first+"_ref_z")).floatValue();
-            }catch (const std::exception& e) {
-                hppDout(notice,"No reference position for end effector contact defined for the ROM "<<itr->first);
-            }
-            rom_ref_endEffector_.insert(std::make_pair(itr->first,pos));
-            hppDout(notice,"Reference end effector position for rom : "<<itr->first);
-            hppDout(notice,""<<pinocchio::displayConfig(pos));
-          }
 
 
     }
@@ -153,22 +138,6 @@ namespace hpp {
       mu_ = problem.getParameter (std::string("DynamicPlanner/friction")).floatValue();
       hppDout(notice,"mu define in python : "<<mu_);
 
-
-      // create the map of end effector reference position in root frame
-      pinocchio::RbPrmDevicePtr_t rbDevice = boost::dynamic_pointer_cast<pinocchio::RbPrmDevice>(problem.robot());
-      for(pinocchio::T_Rom::const_iterator itr = rbDevice->robotRoms_.begin() ; itr != rbDevice->robotRoms_.end() ; ++itr){
-        fcl::Vec3f pos = fcl::Vec3f::Zero();
-        try{
-            pos[0] = problem.getParameter (std::string(itr->first+"_ref_x")).floatValue();
-            pos[1] = problem.getParameter (std::string(itr->first+"_ref_y")).floatValue();
-            pos[2] = problem.getParameter (std::string(itr->first+"_ref_z")).floatValue();
-        }catch (const std::exception& e) {
-            hppDout(notice,"No reference position for end effector contact defined for the ROM "<<itr->first);
-        }
-        rom_ref_endEffector_.insert(std::make_pair(itr->first,pos));
-        hppDout(notice,"Reference end effector position for rom : "<<itr->first);
-        hppDout(notice,""<<pos);
-      }
 
     }
 
