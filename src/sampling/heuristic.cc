@@ -222,6 +222,11 @@ double fixedStep06Heuristic(const sampling::Sample& sample,
     return fixedStepHeuristic(sample,direction,normal,params,0.6);
 }
 
+double fixedStep04Heuristic(const sampling::Sample& sample,
+                      const Eigen::Vector3d& direction, const Eigen::Vector3d& normal, const HeuristicParam & params){
+    return fixedStepHeuristic(sample,direction,normal,params,0.4);
+}
+
 
 double BackwardHeuristic(const sampling::Sample& sample,
                       const Eigen::Vector3d& direction, const Eigen::Vector3d& normal, const HeuristicParam & /*params*/)
@@ -275,6 +280,7 @@ HeuristicFactory::HeuristicFactory()
     heuristics_.insert(std::make_pair("fixedStep1", &fixedStep1Heuristic));
     heuristics_.insert(std::make_pair("fixedStep08", &fixedStep08Heuristic));
     heuristics_.insert(std::make_pair("fixedStep06", &fixedStep06Heuristic));
+    heuristics_.insert(std::make_pair("fixedStep04", &fixedStep04Heuristic));
 }
 
 HeuristicFactory::~HeuristicFactory(){}
