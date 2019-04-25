@@ -217,6 +217,8 @@ Result isReachableIntermediate(const RbPrmFullBodyPtr_t& fullbody,State &previou
 
 Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& next,const fcl::Vec3f& acc){
     hppStartBenchmark(IS_REACHABLE);
+    assert(previous.nbContacts > 0 && "Reachability : previous state have less than 1 contact.");
+    assert(next.nbContacts > 0 && "Reachability : next state have less than 1 contact.");
     std::vector<std::string> contactsCreation, contactsBreak;
     next.contactBreaks(previous,contactsBreak);
     next.contactCreations(previous,contactsCreation);
