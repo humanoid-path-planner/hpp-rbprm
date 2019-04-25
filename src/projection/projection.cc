@@ -337,6 +337,7 @@ ProjectionReport projectEffector(hpp::core::ConfigProjectorPtr_t proj, const hpp
     }
 
     CreatePosturalTaskConstraint(body,proj);
+    proj->errorThreshold(1e-3);
     proj->lastIsOptional(true);
 
 
