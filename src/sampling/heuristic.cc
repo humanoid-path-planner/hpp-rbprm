@@ -203,7 +203,7 @@ double fixedStepHeuristic(const sampling::Sample& sample,
 */
     if((pSample-pTarget).squaredNorm() > 1)
         hppDout(warning,"WARNING : In fixed step heuristic, norm is too high. You should change the hardcoded max value ");
-    return (1.-(pSample-pTarget).squaredNorm()) + 0.01*sample.staticValue_; // 1 - because it's an heuristic and not a cost
+    return (1.-(pSample-pTarget).squaredNorm()) + 0.1*sample.staticValue_; // 1 - because it's an heuristic and not a cost
 }
 
 
