@@ -565,20 +565,23 @@ ProjectionReport projectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& b
 }
 
 ProjectionReport projectStateToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
-                                        const hpp::rbprm::State& current, const fcl::Vec3f &normal, const fcl::Vec3f &position)
+                                        const hpp::rbprm::State& current, const fcl::Vec3f &normal, const fcl::Vec3f &position, bool lockOtherJoints)
 {
    // core::CollisionValidationPtr_t dummy = core::CollisionValidation::create(body->device_);
-    return projectStateToObstacle(body, limbId, limb, current, normal, position, body->GetCollisionValidation());
+    return projectStateToObstacle(body, limbId, limb, current, normal, position, body->GetCollisionValidation(),lockOtherJoints);
 }
 
 ProjectionReport projectStateToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
-                                        const hpp::rbprm::State& current, const fcl::Vec3f &normal, const fcl::Vec3f &position, core::CollisionValidationPtr_t validation)
+                                        const hpp::rbprm::State& current, const fcl::Vec3f &normal, const fcl::Vec3f &position, core::CollisionValidationPtr_t validation, bool lockOtherJoints)
 {
     hpp::rbprm::State state = current;
     state.RemoveContact(limbId);
     pinocchio::Configuration_t configuration = current.configuration_;
     core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 1000);
     interpolation::addContactConstraints(body, body->device_,proj, state, state.fixedContacts(state));
+    if(lockOtherJoints){ // lock all joints expect the ones of the moving limb
+        hpp::tools::LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
+    }
     // get current normal orientation
     return projectToObstacle(proj, body, limbId, limb, validation, configuration, state, normal, position);
 }
