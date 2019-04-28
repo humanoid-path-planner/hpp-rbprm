@@ -290,7 +290,6 @@ std::vector<bool> setRotationConstraints()
     {
         res.push_back(true);
     }
-    res[2] = false; // test
     return res;
 }
 
@@ -305,7 +304,7 @@ std::vector<bool> setTranslationConstraints()
 }
 ProjectionReport projectEffector(hpp::core::ConfigProjectorPtr_t proj, const hpp::rbprm::RbPrmFullBodyPtr_t& body, const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
                           core::CollisionValidationPtr_t validation, pinocchio::ConfigurationOut_t configuration,
-                          const fcl::Matrix3f& rotationTarget, const std::vector<bool> &rotationFilter, const fcl::Vec3f& positionTarget, const fcl::Vec3f& normal,
+                          const fcl::Matrix3f& rotationTarget, std::vector<bool> rotationFilter, const fcl::Vec3f& positionTarget, const fcl::Vec3f& normal,
                           const hpp::rbprm::State& current)
 {
     //hppDout(notice,"Project effector : ");
@@ -315,6 +314,8 @@ ProjectionReport projectEffector(hpp::core::ConfigProjectorPtr_t proj, const hpp
     rep.result_ = current;
     // Add constraints to resolve Ik
 
+    if(body->usePosturalTaskContactCreation())
+      rotationFilter[2] = false;
 
     const pinocchio::Frame effectorFrame = body->device_->getFrameByName(limb->effector_.name());
     pinocchio::JointPtr_t effectorJoint = effectorFrame.joint();
@@ -336,9 +337,11 @@ ProjectionReport projectEffector(hpp::core::ConfigProjectorPtr_t proj, const hpp
                                                                                       rotationFilter)));
     }
 
-    CreatePosturalTaskConstraint(body,proj);
-    proj->errorThreshold(1e-3);
-    proj->lastIsOptional(true);
+    if(body->usePosturalTaskContactCreation()){
+      CreatePosturalTaskConstraint(body,proj);
+      proj->errorThreshold(1e-3);
+      proj->lastIsOptional(true);
+    }
 
 
 #ifdef PROFILE

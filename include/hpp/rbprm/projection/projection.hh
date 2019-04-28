@@ -82,9 +82,9 @@ ProjectionReport HPP_RBPRM_DLLAPI projectSampleToObstacle(const hpp::rbprm::RbPr
                                                  const sampling::OctreeReport& report, core::CollisionValidationPtr_t validation,
                                                  pinocchio::ConfigurationOut_t configuration, const hpp::rbprm::State& current);
 
-ProjectionReport HPP_RBPRM_DLLAPI projectEffector(core::ConfigProjectorPtr_t proj, const hpp::rbprm::RbPrmFullBodyPtr_t& body,const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
+ProjectionReport HPP_RBPRM_DLLAPI projectEffector(core::ConfigProjectorPtr_t proj, const hpp::rbprm::RbPrmFullBodyPtr_t& body, const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
                                            core::CollisionValidationPtr_t validation, pinocchio::ConfigurationOut_t configuration,
-                                           const fcl::Matrix3f& rotationTarget, const std::vector<bool>& rotationFilter, const fcl::Vec3f& positionTarget, const fcl::Vec3f& normal,
+                                           const fcl::Matrix3f& rotationTarget, std::vector<bool> rotationFilter, const fcl::Vec3f& positionTarget, const fcl::Vec3f& normal,
                                            const hpp::rbprm::State& current);
 
 fcl::Transform3f HPP_RBPRM_DLLAPI  computeProjectionMatrix(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const hpp::rbprm::RbPrmLimbPtr_t& limb, const pinocchio::ConfigurationIn_t configuration,
