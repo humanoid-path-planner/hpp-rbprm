@@ -340,6 +340,7 @@ ProjectionReport projectEffector(hpp::core::ConfigProjectorPtr_t proj, const hpp
     if(body->usePosturalTaskContactCreation()){
       CreatePosturalTaskConstraint(body,proj);
       proj->errorThreshold(1e-3);
+      proj->maxIterations(1000);
       proj->lastIsOptional(true);
     }
 
