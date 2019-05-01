@@ -137,7 +137,6 @@ namespace hpp {
         rbprm::T_StateFrame results(states.begin(),states.end()); // copy input states
         State lastState = states.back().second;
 
-
         std::vector<std::string> variationsGoal(lastState.contactVariations(end_)); // all limb that must be moved to reach the goal configuration
         if(variationsGoal.size() ==0){
           hppDout(notice,"no contact variation, return input list");
@@ -147,6 +146,8 @@ namespace hpp {
           results.push_back(std::make_pair(states.back().first,end_)); // there will be 2 states at the same time index ...
           return results;
         }
+        const bool usePosturalTask = robot_->usePosturalTaskContactCreation();
+        robot_->usePosturalTaskContactCreation(false); // temporary disable this setting for projecting exactly on the goal config
         // Last state and end are not adjacent, we keep lastState in the list and produce intermediate states for each contact transition
         hppDout(notice," Last state and end are not adjacent, try to add intermediate state");
         // for each different contact, try to replace to it's position in end_ and add an intermediate state
@@ -157,6 +158,7 @@ namespace hpp {
         }else{
           hppDout(notice,"LastState is still not adjacent to goal, contact sequence do not end with the goal state");
         }
+        robot_->usePosturalTaskContactCreation(usePosturalTask); // put back previous setting
         return results;
     }
 
