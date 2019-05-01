@@ -468,13 +468,8 @@ namespace hpp {
          // roadmap ()->addEdge (initNode, *itn, validPath);  // (TODO a supprimer)display the path no matter if it's successful or not
 
           if (pathValid && validPath->timeRange ().second !=
-              path->timeRange ().first) {
-            if(validPath->end() == *((*itn)->configuration())){
+              path->timeRange ().first) { // connection to goal config successfull, add the edge
               roadmap ()->addEdge (initNode, *itn, projPath);
-            }else{
-              core::ConfigurationPtr_t q_jump(new core::Configuration_t(validPath->end()));
-              roadmap()->addNodeAndEdge(initNode,q_jump,validPath);
-            }
           }else if (validPath){
             if(tryJump_){
               std::vector<std::string> filter;
@@ -495,7 +490,7 @@ namespace hpp {
               }else{
                 hppDout(notice,"trunk in collision");
               }
-            }else if(validPath->timeRange ().second !=  path->timeRange ().first){
+            }else if(validPath->timeRange ().second !=  path->timeRange ().first){ // add the last valid configu reached to the roadmap
               core::ConfigurationPtr_t q_new(new core::Configuration_t(validPath->end()));
               core::NodePtr_t x_new = roadmap()->addNodeAndEdge(initNode,q_new,validPath);
               computeGIWC(x_new);
