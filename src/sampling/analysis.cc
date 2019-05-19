@@ -138,16 +138,17 @@ namespace
             hpp::pinocchio::Configuration_t save(device->currentConfiguration());
             core::CollisionValidationPtr_t colVal = core::CollisionValidation::create(device);
             std::size_t i = nbSamples - fullBodyConfigs_.size();
+            hpp::pinocchio::Configuration_t conf;
             while(i>0)
             {
-                hpp::pinocchio::ConfigurationPtr_t conf = shooter->shoot();
-                device->currentConfiguration(*conf);
+                shooter->shoot(conf);
+                device->currentConfiguration(conf);
                 device->computeForwardKinematics();
                 core::ValidationReportPtr_t colRep(new core::CollisionValidationReport);
 
-                if (colVal->validate(*conf,colRep))
+                if (colVal->validate(conf,colRep))
                 {
-                    fullBodyConfigs_.push_back(*conf);
+                    fullBodyConfigs_.push_back(conf);
                     --i;
                 }
             }

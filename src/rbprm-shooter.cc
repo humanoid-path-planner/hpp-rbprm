@@ -76,22 +76,22 @@ namespace
         return res;
     }
 
-    void SetConfigTranslation(const pinocchio::RbPrmDevicePtr_t robot, ConfigurationPtr_t config, const Vec3f& translation)
+    void SetConfigTranslation(const pinocchio::RbPrmDevicePtr_t robot, Configuration_t& config, const Vec3f& translation)
     {
         std::vector<double> bounds = getTranslationBounds(robot);
         for(std::size_t i =0; i<3; ++i)
         {
-            (*config)(i)= std::min(bounds[2*i+1], std::max(bounds[2*i], translation[i]));
+            config(i)= std::min(bounds[2*i+1], std::max(bounds[2*i], translation[i]));
         }
     }
 
-    void Translate(const pinocchio::RbPrmDevicePtr_t robot, ConfigurationPtr_t config, const Vec3f& translation)
+    void Translate(const pinocchio::RbPrmDevicePtr_t robot, Configuration_t& config, const Vec3f& translation)
     {
         // bound to positions limits
         std::vector<double> bounds = getTranslationBounds(robot);
         for(int i =0; i<3; ++i)
         {
-            (*config)(i)=std::min(bounds[2*i+1], std::max(bounds[2*i], (*config)(i)+translation[i]));
+            config(i)=std::min(bounds[2*i+1], std::max(bounds[2*i], config(i)+translation[i]));
         }
     }
 
@@ -108,7 +108,7 @@ namespace
             SampleRotationRec(config,jv,current);
     }*/
 
-    void SampleRotation(const std::vector<double>& so3, ConfigurationPtr_t config)
+    void SampleRotation(const std::vector<double>& so3, Configuration_t& config)
     {
         if (so3.empty())
             return;
@@ -126,12 +126,9 @@ namespace
         std::size_t rank = 3;
         /*for(std::size_t i = 0; i <4; ++i)
         {
-            (*config)(rank+i) = qt.coeffs()(i);
+            config(rank+i) = qt.coeffs()(i);
         }*/
-        (*config)(rank+0) = qt.x();
-        (*config)(rank+1) = qt.y();
-        (*config)(rank+2) = qt.z();
-        (*config)(rank+3) = qt.w();
+        config.segment<4>(rank) = qt.coeffs();
     }
 
     /*void SampleRotation(pinocchio::DevicePtr_t so3, ConfigurationPtr_t config, JointVector_t& jv)
@@ -355,9 +352,9 @@ namespace
       return triangles_[triangles_.size()-1]; // not supposed to happen
   }
 
-void RbPrmShooter::randConfigAtPos(const pinocchio::RbPrmDevicePtr_t robot, const std::vector<double>& eulerSo3, ConfigurationPtr_t config, const Vec3f p) const
+void RbPrmShooter::randConfigAtPos(const pinocchio::RbPrmDevicePtr_t robot, const std::vector<double>& eulerSo3, Configuration_t& config, const Vec3f p) const
 {
-    (*config) = *(uniformShooter_->shoot());
+    uniformShooter_->shoot (config);
     SetConfigTranslation(robot,config, p);
     SampleRotation(eulerSo3, config);
 }
@@ -376,11 +373,11 @@ fcl::Vec3f normalFromTriangleContact(const Contact& c, hpp::core::CollisionObjec
     return normal.normalized();
 }
 
-hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
+void RbPrmShooter::shoot (hpp::core::Configuration_t& config) const
 {
     hppDout(notice,"!!! Random shoot");
     HPP_DEFINE_TIMECOUNTER(SHOOT_COLLISION);
-    ConfigurationPtr_t config = uniformShooter_->shoot();
+    uniformShooter_->shoot (config);
     std::size_t limit = shootLimit_;
     bool found(false);
     while(limit >0 && !found)
@@ -410,7 +407,7 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
         while(!found && limitDis >0)
         {
             HPP_START_TIMECOUNTER(SHOOT_COLLISION);
-            found = validator_->validate(*config, reportShPtr, filter_);
+            found = validator_->validate(config, reportShPtr, filter_);
             RbprmValidationReportPtr_t report =
                     boost::dynamic_pointer_cast<RbprmValidationReport>(reportShPtr);
             bool valid = found || !report->trunkInCollision;
@@ -424,7 +421,7 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
                     //SampleRotation(eulerSo3_, config);
                     randConfigAtPos(robot_,eulerSo3_,config,p);
                     HPP_START_TIMECOUNTER(SHOOT_COLLISION);
-                    found = validator_->validate(*config, reportShPtr, filter_);
+                    found = validator_->validate(config, reportShPtr, filter_);
                     HPP_STOP_TIMECOUNTER(SHOOT_COLLISION);
                     if(!found)
                     {
@@ -432,10 +429,10 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
                                   0.2 * ((double) rand() / (RAND_MAX)));
                     }
                     HPP_START_TIMECOUNTER(SHOOT_COLLISION);
-                    found = validator_->validate(*config, reportShPtr, filter_);
+                    found = validator_->validate(config, reportShPtr, filter_);
                     report = boost::dynamic_pointer_cast<RbprmValidationReport>(reportShPtr);
                     valid = found || !report->trunkInCollision;
-                    //found = validator_->validate(*config, filter_);
+                    //found = validator_->validate(config, filter_);
                     HPP_STOP_TIMECOUNTER(SHOOT_COLLISION);
                 }
                 if(!found) break;
@@ -454,9 +451,8 @@ hpp::core::ConfigurationPtr_t RbPrmShooter::shoot () const
         limit--;
     }
     if (!found) std::cout << "no config found" << std::endl;
-    hppDout(info,"shoot : "<<pinocchio::displayConfig(*config));
+    hppDout(info,"shoot : "<<pinocchio::displayConfig(config));
     HPP_DISPLAY_TIMECOUNTER(SHOOT_COLLISION);
-    return config;
 }
 
     void RbPrmShooter::sampleExtraDOF(bool sampleExtraDOF){
