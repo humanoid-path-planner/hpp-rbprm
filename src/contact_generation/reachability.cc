@@ -98,12 +98,10 @@ std::pair<MatrixXX, VectorX> computeDistanceCost(const fcl::Vec3f& c0){
     return std::make_pair(H,g);
 }
 
-bool intersectionExist(const std::pair<MatrixXX, VectorX> &Ab, const fcl::Vec3f& c0, const fcl::Vec3f& c1, fcl::Vec3f& c_out){
-    fcl::Vec3f init = (c0+c1)/2.;
-
+bool intersectionExist(const std::pair<MatrixXX, VectorX> &Ab, const fcl::Vec3f& c, fcl::Vec3f& c_out){
     hppDout(notice,"Call solveur solveIntersection");
-    hppDout(notice,"init = "<<init);
-    bezier_com_traj::ResultData res = bezier_com_traj::solve(Ab,computeDistanceCost(c0),init);
+    hppDout(notice,"init = "<<c);
+    bezier_com_traj::ResultData res = bezier_com_traj::solve(Ab,computeDistanceCost(c),c);
     c_out = res.x;
     hppDout(notice,"success Solveur solveIntersection = "<<res.success_);
     hppDout(notice,"x = ["<<c_out[0]<<","<<c_out[1]<<","<<c_out[2]<<"]");
@@ -324,7 +322,7 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
 
     fcl::Vec3f x;
     hppStartBenchmark(QP_REACHABLE);
-    success = intersectionExist(Ab,com_previous,com_next,x);
+    success = intersectionExist(Ab,(com_previous+com_next)/2.,x);
     hppStopBenchmark(QP_REACHABLE);
     hppDisplayBenchmark(QP_REACHABLE);
     if(success){
