@@ -69,7 +69,7 @@ namespace hpp {
                                          const std::map<std::string, std::vector<std::string> >& affFilters = std::map<std::string, std::vector<std::string> >(),
                                          const std::size_t shootLimit = 10000,
                                          const std::size_t displacementLimit = 100);
-    virtual core::ConfigurationPtr_t shoot () const;
+    virtual void shoot (core::Configuration_t& q) const;
 
 
     public:
@@ -110,7 +110,7 @@ namespace hpp {
         void InitWeightedTriangles (const core::ObjectStdVector_t &geometries);
         const T_TriangleNormal& RandomPointIntriangle () const;
         const T_TriangleNormal& WeightedTriangle () const;
-        void randConfigAtPos(const pinocchio::RbPrmDevicePtr_t robot, const std::vector<double>& eulerSo3, core::ConfigurationPtr_t config, const fcl::Vec3f p) const;
+        void randConfigAtPos(const pinocchio::RbPrmDevicePtr_t robot, const std::vector<double>& eulerSo3, core::Configuration_t& config, const fcl::Vec3f p) const;
 
 
     private:

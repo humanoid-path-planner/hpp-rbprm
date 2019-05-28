@@ -153,7 +153,7 @@ hpp::rbprm::sampling::SampleVector_t hpp::rbprm::sampling::GenerateSamples(const
 {
     SampleVector_t result; result.reserve(nbSamples);
     pinocchio::DevicePtr_t device (model->robot()->clone());
-    ConfigurationPtr_t config;
+    Configuration_t config;
     JointPtr_t clone = device->getJointByName(model->name());
     Frame effectorClone = device->getFrameByName(effector);
     std::size_t startRank_(model->rankInConfiguration());
@@ -164,7 +164,7 @@ hpp::rbprm::sampling::SampleVector_t hpp::rbprm::sampling::GenerateSamples(const
     result.push_back(Sample(clone,effectorClone,configRef.segment(startRank_,length_),offset,limbOffset,0));
     for(std::size_t i = 1; i< nbSamples; ++i)
     {
-        config = shooter->shoot();
+        shooter->shoot(config);
         //clone->configuration ()->uniformlySample (clone->rankInConfiguration (), config);
         /*Joint* current = clone;
         while(current->numberChildJoints() !=0)
@@ -172,9 +172,9 @@ hpp::rbprm::sampling::SampleVector_t hpp::rbprm::sampling::GenerateSamples(const
             current = current->childJoint(0);
             current->configuration ()->uniformlySample (current->rankInConfiguration(), config);
         }*/
-        device->currentConfiguration (*config);
+        device->currentConfiguration (config);
         device->computeForwardKinematics();
-        result.push_back(Sample(clone, effectorClone, config->segment(startRank_, length_), offset,limbOffset, i));
+        result.push_back(Sample(clone, effectorClone, config.segment(startRank_, length_), offset,limbOffset, i));
     }
     return result;
 }

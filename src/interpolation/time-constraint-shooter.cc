@@ -62,24 +62,24 @@ using namespace core;
         // NOTHING
     }
 
-    hpp::core::ConfigurationPtr_t TimeConstraintShooter::shoot () const
+    void TimeConstraintShooter::shoot (Configuration_t& config) const
     {
         // edit path sampling dof
         value_type a = rootPath_->timeRange().first; value_type b = rootPath_->timeRange().second;
         value_type u = value_type(rand()) / value_type(RAND_MAX);
         value_type pathDofVal = (b-a)* u + a;
-        ConfigurationPtr_t config (new Configuration_t(configSize_));
+        config.resize (configSize_);
         bool successPathoperator;
-        config->head(configSize_-1) =  (*rootPath_)(pathDofVal,successPathoperator);
+        config.head(configSize_-1) =  (*rootPath_)(pathDofVal,successPathoperator);
         assert(successPathoperator && "path operator () did not succeed");
-        (*config) [pathDofRank_] = u;
+        config [pathDofRank_] = u;
         /*if(freeLimbs_.empty())
         {
             JointVector_t jv = device_->getJointVector ();
             for (JointVector_t::const_iterator itJoint = jv.begin ();
                  itJoint != jv.end (); itJoint++) {
               std::size_t rank = (*itJoint)->rankInConfiguration ();
-              (*itJoint)->configuration ()->uniformlySample (rank, *config);
+              (*itJoint)->configuration ()->uniformlySample (rank, config);
             }
         }
         else*/
@@ -90,11 +90,10 @@ using namespace core;
                 const rbprm::RbPrmLimbPtr_t limb = cit->second;
                 const int rand_int = (rand() % (int) (limb->sampleContainer_.samples_.size() -1));
                 const sampling::Sample& sample = *(limb->sampleContainer_.samples_.begin() + rand_int);
-                sampling::Load(sample,*config);
+                sampling::Load(sample,config);
             }
         }
-        UpdateConstraints(*config, tds_, pathDofRank_);
-        return config;
+        UpdateConstraints(config, tds_, pathDofRank_);
     }
   }// namespace interpolation
   }// namespace rbprm

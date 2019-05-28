@@ -58,7 +58,7 @@ namespace hpp {
                                                             core::ConfigProjectorPtr_t projector,
                                                             const rbprm::T_Limb freeLimbs);
 
-        virtual core::ConfigurationPtr_t shoot () const;
+        virtual void shoot (core::Configuration_t& q) const;
 
     public:
         const hpp::core::PathPtr_t rootPath_;
