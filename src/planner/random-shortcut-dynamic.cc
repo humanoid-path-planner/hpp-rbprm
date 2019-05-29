@@ -157,7 +157,7 @@ namespace hpp{
           straight [i] = steer (q[i], q[i+1]);
           if (!straight [i]) valid[i] = false;
           else { // with kinodynamic path, we are not assured that a 'straight line' is shorter than the previously found path
-            valid[i] = (straight[i]->length() < PathLength<true>::run (tmpPath->extract(make_pair <value_type, value_type> (t[i], t[i+1]))->as <PathVector> (), problem ().distance ()));
+            valid[i] = (straight[i]->length() < PathLength<true>::run (tmpPath->extract(make_pair (t[i], t[i+1]))->as <PathVector> (), problem ().distance ()));
             if(valid[i])
               valid[i] = problem ().pathValidation ()->validate(straight [i], false, validPart, report);
           }
@@ -176,7 +176,7 @@ namespace hpp{
             if (valid [i])
               result->appendPath (straight[i]);
             else
-              result->concatenate (tmpPath->extract(make_pair <value_type, value_type> (t[i], t[i+1]))->as <PathVector> ());
+              result->concatenate (tmpPath->extract(make_pair (t[i], t[i+1]))->as <PathVector> ());
           } catch (const core::projection_error& e) {
             hppDout (error, "Caught exception at with time " << t[i] << " and " <<
                                                                         t[i+1] << ": " << e.what ());
