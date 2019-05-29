@@ -1,0 +1,23 @@
+                                                                -*- outline -*-
+New in 4.6.0
+* Fix some uninitialized variables.
+* ProblemPtr_t is now a shared_ptr
+* Update to API change of configuration shooters.
+* [contact generation] do not reverse the contact order queue anymore
+* [contact generation] do not remove the first candidate of the list in maintain contact
+* [projection] comment postural task in projectOnCom method
+* [contact generation]  check size of states list before calling filterStates
+* [contact generation] remove now useless 'epsilon' in tryReplaceState
+* [contact generation] fix deprecated warning for fcl collisionRequest
+* [limb-rrt] add debug message
+* [limb-rrt] set computationflag for forward kinematic in time-constraint-helper
+* [limb-rrt] fix createComConstraint method
+* [limb-rrt] fix createEffectorConstraint method
+* update RightHandSideFunctor to changes in hpp-constraints
+* [com-rrt] changes needed to access the real pathVector in corba (and not hide it inside another Path object)
+* [effector] move helper method from effector-rrt to interpolation-constraints
+* [effector] fix compilation error and warning from the update
+* [steering method kino] correctly reset aMax before computing direction
+* add a member 'postureWeights' to fullBody
+* [contact generation] update analysis referenceConfig to use the 'fullBody->postureWeights'
+* fix projectPointInsidePlan (access iterator after end)
