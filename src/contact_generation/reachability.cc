@@ -333,9 +333,28 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
     fcl::Vec3f com_next = fullbody->device_->positionCenterOfMass();
     fullbody->device_->controlComputation (flag);
 
+    // compute the position in the middle of the most constrained support polygon (used for the cost function):
+    State smaller_state;
+    if(contactsBreak.size() == 1 && contactsCreation.size() == 1){
+      smaller_state = intermediate;
+    }
+    else if(contactsBreak.size() > 0){//next have the smaller support polygone
+      smaller_state = next;
+    }else{ // previous have the smaller support polygon
+      smaller_state = previous;
+    }
+    fcl::Vec3f c_robust = fcl::Vec3f::Zero();
+    for(std::map<std::string,fcl::Vec3f>::const_iterator cit = smaller_state.contactPositions_.begin();
+          cit!=smaller_state.contactPositions_.end(); ++ cit)
+    {
+      c_robust += cit->second;
+    }
+    c_robust /=(fcl::FCL_REAL)smaller_state.contactPositions_.size();
+    c_robust[2] = (com_previous[2] + com_next[2])/2.;
+
     fcl::Vec3f x;
     hppStartBenchmark(QP_REACHABLE);
-    success = intersectionExist(Ab,(com_previous+com_next)/2.,x);
+    success = intersectionExist(Ab,c_robust,x);
     hppStopBenchmark(QP_REACHABLE);
     hppDisplayBenchmark(QP_REACHABLE);
     if(success){
