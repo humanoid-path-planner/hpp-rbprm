@@ -213,7 +213,7 @@ Result isReachableIntermediate(const RbPrmFullBodyPtr_t& fullbody,State &previou
     return res;
 }
 
-Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& next,const fcl::Vec3f& acc){
+Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& next, const fcl::Vec3f& acc, bool useIntermediateState){
     hppStartBenchmark(IS_REACHABLE);
     assert(previous.nbContacts > 0 && "Reachability : previous state have less than 1 contact.");
     assert(next.nbContacts > 0 && "Reachability : next state have less than 1 contact.");
@@ -237,13 +237,17 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
         hppDout(notice,"Too many contact variation, abort.");
         return Result(TOO_MANY_CONTACTS_VARIATION);
     }
+    State intermediate;
     if(contactsBreak.size() == 1 && contactsCreation.size() == 1){
         if(next.contactVariations(previous).size() == 1){ // there is 1 contact repositionning between previous and next
             // we need to create the intermediate state, and call is reachable for the 3 states.
-            State intermediate(previous);
+            intermediate = State(previous);
             intermediate.RemoveContact(contactsBreak[0]);
-            hppDout(notice,"Contact repositionning between the 2 states, create intermediate state and call isReachable");
-            return isReachableIntermediate(fullbody,previous,intermediate,next);
+            hppDout(notice,"Contact repositionning between the 2 states, create intermediate state");
+            if(useIntermediateState){
+              hppDout(notice,"call isReachableIntermediate.");
+              return isReachableIntermediate(fullbody,previous,intermediate,next);
+             }
         }else{
             hppDout(notice,"Contact break and creation are different. You need to call isReachable with 2 adjacent states");
             return Result(TOO_MANY_CONTACTS_VARIATION);
@@ -254,9 +258,18 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
     bool successCone;
     Result res;
     std::pair<MatrixXX,VectorX> Ab,K_p,K_n,A_p,A_n;
+    if(contactsBreak.size() == 1 && contactsCreation.size() == 1){
+       A_p = computeConstraintsForState(fullbody,previous,successCone);
+      if(!successCone)
+        return Result(UNABLE_TO_COMPUTE);
+      A_n = computeConstraintsForState(fullbody,next,successCone);
+      if(!successCone)
+        return Result(UNABLE_TO_COMPUTE);
+      Ab = stackConstraints(A_p,A_n);
+    }
     // there is only one contact creation OR (exclusive) break between the two states
     // test C_p \inter C_n (ie : A_p \inter K_p \inter A_n \inter K_n), with simplifications du to relations between the constraints :
-    if(contactsBreak.size() > 0){ // next have one less contact than previous
+    else if(contactsBreak.size() > 0){ // next have one less contact than previous
         hppDout(notice,"Contact break between previous and next state");
         // A_n \inside A_p, thus  A_p is redunbdant
         // K_p \inside K_n, thus  K_n is redunbdant

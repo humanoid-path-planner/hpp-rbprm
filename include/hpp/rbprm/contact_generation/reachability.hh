@@ -82,7 +82,7 @@ namespace hpp {
 
 std::pair<MatrixXX, VectorX> stackConstraints(const std::pair<MatrixXX, VectorX> &Ab, const std::pair<MatrixXX, VectorX> &Cd);
 
-bool intersectionExist(const std::pair<MatrixXX, VectorX>& Ab, const fcl::Vec3f& c0, const fcl::Vec3f& c1, fcl::Vec3f &c_out);
+bool intersectionExist(const std::pair<MatrixXX, VectorX>& Ab, const fcl::Vec3f& c, fcl::Vec3f &c_out);
 
 std::pair<MatrixXX, VectorX> computeStabilityConstraints(const centroidal_dynamics::Equilibrium& contactPhase,const fcl::Vec3f& int_point = fcl::Vec3f(0,0,0),const fcl::Vec3f& acc = fcl::Vec3f(0,0,0));
 
@@ -90,7 +90,17 @@ std::pair<MatrixXX, VectorX> computeStabilityConstraintsForState(const RbPrmFull
 
 std::pair<MatrixXX, VectorX> computeConstraintsForState(const RbPrmFullBodyPtr_t& fullbody, State &state,bool& success);
 
-Result isReachable(const RbPrmFullBodyPtr_t& fullbody,State &previous, State& next,const fcl::Vec3f& acc = fcl::Vec3f::Zero());
+/**
+ * @brief isReachable Compute the feasibility of the contact transition between the two state, with the quasiStatic formulation of 2-PAC (https://hal.archives-ouvertes.fr/hal-01609055)
+ * @param fullbody
+ * @param previous the first state of the transition
+ * @param next the last state of the transition
+ * @param acc the CoM acceleration
+ * @param useIntermediateState boolean only relevant in the case of a contact repositionning. If true, use an intermediate state such that there is only one contact change between each state.
+ *                              (and thus compute two intersection between 3 set of constrants). If false it only compute one intersection between two set of constraints.
+ * @return
+ */
+Result isReachable(const RbPrmFullBodyPtr_t& fullbody,State &previous, State& next,const fcl::Vec3f& acc = fcl::Vec3f::Zero(), bool useIntermediateState = false);
 
 Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& next, bool tryQuasiStatic = false, std::vector<double> timings = std::vector<double>(), int numPointsPerPhases = 0);
 
