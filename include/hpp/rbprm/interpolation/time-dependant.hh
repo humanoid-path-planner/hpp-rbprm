@@ -26,19 +26,39 @@
 namespace hpp {
 namespace rbprm {
 namespace interpolation {
+
+    /// Time varying right hand side of constraint
     struct RightHandSideFunctor {
+        /// Compute and set right hand side of constraint
+        /// \param eq Implicit constraint,
+        /// \param input real valued parameter between 0 and 1.
         virtual void operator() (constraints::ImplicitPtr_t eq, const constraints::value_type& input, pinocchio::ConfigurationOut_t conf)
         const = 0;
     };
     typedef boost::shared_ptr <const RightHandSideFunctor> RightHandSideFunctorPtr_t;
 
+    /// Set time varying right hand side of a constraint (constraints::Implicit)
+    ///
+    /// This class stores
+    ///  \li an instance of implicit constraint and
+    ///  \li an instance of time varying right hand side (RightHandSideFunctor)
+    ///
+    /// Call to operator () set the right hand side of the constraint to the
+    /// value at a given time.
+    /// \note Parameterization may be normalized between 0 and 1
+    /// (see interpolation::funEvaluator for an example).
     struct TimeDependant
     {
+        /// Set time varying right hand side
+        /// \param s time value in interval [0,1],
         void operator() (const constraints::value_type s, pinocchio::ConfigurationOut_t conf) const
         {
             (*rhsFunc_) (eq_, s, conf);
         }
 
+        /// Constructor
+        /// \param eq implicit constraint,
+        /// \param rhs time-varying right hand side.
         TimeDependant (const constraints::ImplicitPtr_t& eq,
           const RightHandSideFunctorPtr_t rhs):
         eq_ (eq), rhsFunc_ (rhs)

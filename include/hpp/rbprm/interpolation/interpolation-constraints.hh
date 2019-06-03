@@ -54,12 +54,36 @@ namespace interpolation {
 
     // Implementation
 
+    /// Time varying right hand side of constraint
+    /// \tparam Reference type of shared pointer to Path.
+    ///
+    /// This class compute the right hand side of a
+    /// constraints::Implicit instance as a mapping from interval
+    /// [0,1] to a vector space called reference.
     template<class Reference>
     struct VecRightSide : public RightHandSideFunctor
     {
+         /// Constructor
+         /// \param ref mapping defining the varying right hand side,
+         ///        the definition interval may not be [0,1] and will be
+         ///        normalized at evaluation.
+         /// \param dim dimension of the right hand side. If the dimension of
+         ///        the output of ref is bigger than dim, only the first
+         ///        coefficients will be used.
          VecRightSide (const Reference ref, const int dim = 3, const bool times_ten = false) : ref_(ref), dim_(dim), times_ten_(times_ten)
          {}
         ~VecRightSide(){}
+        /// Compute and set right hand side of constraint.
+        /// \param eq Implicit constraint,
+        /// \param normalized_input real valued parameter between 0 and 1,
+        ///        mapped in an affine way to a value in the definition interval
+        ///        of the reference path.
+        ///
+        /// If \f$u\in[0,1]\f$ is the normalized input and \f$[a,b]\f$ the
+        /// definition interval of \f$\mathbf{ref}\f$, then
+        /// \f[
+        /// \mathbf{rhs} = \mathbf{ref} (a + u (b-a))
+        /// \f]
         virtual void operator() (constraints::ImplicitPtr_t eq,
                                const constraints::value_type& normalized_input, pinocchio::ConfigurationOut_t /*conf*/) const
         {
@@ -77,7 +101,9 @@ namespace interpolation {
             assert(success && "path operator () did not succeed");
           }
         }
+        /// Reference path of the right hand side of the constraint
         const Reference ref_;
+        /// Dimension of the right hand side of the constraint
         const int dim_;
         const bool times_ten_;
     };
@@ -224,21 +250,46 @@ namespace interpolation {
                     TimeDependant(effEq, boost::shared_ptr<VecRightSide<Reference> >(new VecRightSide<Reference>(ref, 3))));
     }
 
-
+    /// Time varying right hand side of constraint
+    /// \tparam Reference type of shared pointer to Path.
+    /// \tparam method modifying the right hand side
+    ///
+    /// This class compute the right hand side of a
+    /// constraints::Implicit instance as the composition of a mapping called
+    /// method with a mapping from interval [0,1] to a vector space called
+    /// reference.
     template<typename Reference, typename fun>
     struct funEvaluator : public RightHandSideFunctor
     {
+        /// Constructor
+        /// \param ref Reference path of right hand side.
+        /// \param method mapping from the output space of ref to a vector
+        ///        space of dimension the right hand side of the constraint.
         funEvaluator(const Reference& ref, const fun& method) : ref_(ref), method_(method),
         dim_(method_->inputSize ()){}
+        /// Time range of reference path of right hand side
         const std::pair<core::value_type, core::value_type> timeRange ()
         {
             return ref_->timeRange ();
         }
+        /// Compute and set right hand side of constraint
+        /// \param eq Implicit constraint,
+        /// \param normalized_input real valued parameter between 0 and 1,
+        ///        mapped in an affine way to a value in the definition interval
+        ///        of the reference path.
+        ///
+        /// If \f$u\in[0,1]\f$ is the normalized input and \f$[a,b]\f$ the
+        /// definition interval of \f$\mathbf{ref}\f$, then
+        /// \f[
+        /// \mathbf{rhs} = \mathbf{M} \left(\mathbf{ref} (a + u (b-a))\right)
+        /// \f]
+        /// where \f$\mathbf{M}\f$ is the method provided to the constructor.
         void operator ()(constraints::ImplicitPtr_t eq,
                          const constraints::value_type& normalized_input, pinocchio::ConfigurationOut_t /*conf*/) const
         {
             const std::pair<core::value_type, core::value_type>& tR (ref_->timeRange());
             bool success;
+            // maps from interval [0,1] to definition interval.
             constraints::value_type unNormalized = (tR.second-tR.first)* normalized_input + tR.first;
             eq->rightHandSide( method_->operator ()((ref_->operator ()(unNormalized,success))).vector());
             assert(success && "path operator () did not succeed");
