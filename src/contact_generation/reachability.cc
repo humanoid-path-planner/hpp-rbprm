@@ -347,7 +347,9 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
     for(std::map<std::string,fcl::Vec3f>::const_iterator cit = smaller_state.contactPositions_.begin();
           cit!=smaller_state.contactPositions_.end(); ++ cit)
     {
-      c_robust += cit->second;
+      fcl::Transform3f jointT( smaller_state.contactRotation_.at(cit->first), cit->second);
+      fcl::Vec3f position =  jointT.transform(fullbody->GetLimb(cit->first)->offset_);
+      c_robust += position;
     }
     c_robust /=(fcl::FCL_REAL)smaller_state.contactPositions_.size();
     c_robust[2] = (com_previous[2] + com_next[2])/2.;
