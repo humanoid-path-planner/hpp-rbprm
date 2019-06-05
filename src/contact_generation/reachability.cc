@@ -384,10 +384,10 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
     else{
         if(contactsBreak.size() > 0){
             int_pt_kin = com_previous;
-            intersectionExist(A_n,com_previous,com_next,int_pt_stab);
+            intersectionExist(A_n,(com_previous+com_next)/2.,int_pt_stab);
         }else{
             int_pt_kin = com_next;
-            intersectionExist(A_p,com_previous,com_next,int_pt_stab);
+            intersectionExist(A_p,(com_previous+com_next)/2.,int_pt_stab);
         }
     }
 
