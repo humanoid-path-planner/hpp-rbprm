@@ -515,6 +515,7 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
                         reachability::Result resReachability;
                         if(contactGenHelper.quasiStatic_){
                             resReachability = reachability::isReachable(contactGenHelper.fullBody_,intermediateState,rep.result_);
+                            //resReachability = reachability::isReachable(contactGenHelper.fullBody_,previous,rep.result_); // TODO : use a parameter to choose between both cases
                         }else{
                             hppStartBenchmark(REACHABILITY_CONTACT);
                             resReachability = reachability::isReachableDynamic(contactGenHelper.fullBody_,previous,rep.result_,contactGenHelper.tryQuasiStatic_,std::vector<double>(),contactGenHelper.reachabilityPointPerPhases_);
