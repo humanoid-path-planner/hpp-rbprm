@@ -189,21 +189,21 @@ double fixedStepHeuristic(const sampling::Sample& sample,
     tRootTarget.setTranslation(fcl::Vec3f(q_target.head<3>()));
     fcl::Quaternion3f quatRoot(q_target[6],q_target[3],q_target[4],q_target[5]);
     tRootTarget.setQuatRotation(quatRoot);
-    //hppDout(notice,"heuristic : tRootTarget = "<<tRootTarget.getRotation());
+   // hppDout(notice,"heuristic : tRootTarget = "<<tRootTarget.getRotation());
     //hppDout(notice,"heuristic : tRootTarget = "<<tRootTarget.getTranslation());
-   // hppDout(notice,"heuristic : limbRef     = "<<params.limbReferenceOffset_);
+    //hppDout(notice,"heuristic : limbRef     = "<<params.limbReferenceOffset_);
     fcl::Vec3f pTarget = (tRootTarget * params.limbReferenceOffset_).getTranslation();
     //hppDout(notice,"heuristic : pTarget = ["<<pTarget[0]<<","<<pTarget[1]<<","<<pTarget[2]<<"]");
     // FIXME : we could factorize all of the above and only do it once for each position of the CoM. But this require to know t_step in contact_generation::generate_contact ...
     fcl::Vec3f pSample = (params.tfWorldRoot_ * sample.effectorPosition_).getTranslation();
-/*    hppDout(notice,"Heuristic : norm     = "<<(pSample-pTarget).squaredNorm());
+  /*  hppDout(notice,"Heuristic : norm     = "<<(pSample-pTarget).squaredNorm());
     hppDout(notice,"Heuristic : 5 - norm = "<<5-(pSample-pTarget).squaredNorm());
     hppDout(notice,"Heuristic : static   = "<<sample.staticValue_);
     hppDout(notice,"Heuritic :           = "<<(5.-(pSample-pTarget).squaredNorm()) + sample.staticValue_);
- */
+*/
     if((pSample-pTarget).squaredNorm() > 1)
         hppDout(warning,"WARNING : In fixed step heuristic, norm is too high. You should change the hardcoded max value ");
-    return (1.-(pSample-pTarget).squaredNorm()) + 1.*sample.staticValue_; // 1 - because it's an heuristic and not a cost
+    return (1.-(pSample-pTarget).squaredNorm()) + 0.1*sample.staticValue_; // 1 - because it's an heuristic and not a cost
 }
 
 
@@ -220,6 +220,11 @@ double fixedStep08Heuristic(const sampling::Sample& sample,
 double fixedStep06Heuristic(const sampling::Sample& sample,
                       const Eigen::Vector3d& direction, const Eigen::Vector3d& normal, const HeuristicParam & params){
     return fixedStepHeuristic(sample,direction,normal,params,0.6);
+}
+
+double fixedStep04Heuristic(const sampling::Sample& sample,
+                      const Eigen::Vector3d& direction, const Eigen::Vector3d& normal, const HeuristicParam & params){
+    return fixedStepHeuristic(sample,direction,normal,params,0.4);
 }
 
 
@@ -275,6 +280,7 @@ HeuristicFactory::HeuristicFactory()
     heuristics_.insert(std::make_pair("fixedStep1", &fixedStep1Heuristic));
     heuristics_.insert(std::make_pair("fixedStep08", &fixedStep08Heuristic));
     heuristics_.insert(std::make_pair("fixedStep06", &fixedStep06Heuristic));
+    heuristics_.insert(std::make_pair("fixedStep04", &fixedStep04Heuristic));
 }
 
 HeuristicFactory::~HeuristicFactory(){}

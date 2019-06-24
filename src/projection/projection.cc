@@ -126,10 +126,8 @@ void CreateComPosConstraint(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const fcl::
 }
 
 void CreatePosturalTaskConstraint(hpp::rbprm::RbPrmFullBodyPtr_t fullBody,core::ConfigProjectorPtr_t proj){
-  hppDout(notice,"create postural task, in projection.cc, ref config = "<<pinocchio::displayConfig(fullBody->referenceConfig()));
+  //hppDout(notice,"create postural task, in projection.cc, ref config = "<<pinocchio::displayConfig(fullBody->referenceConfig()));
   std::vector <bool> mask (fullBody->device_->numberDof(),false);
-  Configuration_t weight(fullBody->device_->numberDof());
-
   // mask : 0 for the freeflyer and the extraDoFs :
   for(size_t i = 0 ; i < 3 ; i++){
     mask[i]=false;
@@ -138,34 +136,22 @@ void CreatePosturalTaskConstraint(hpp::rbprm::RbPrmFullBodyPtr_t fullBody,core::
     mask[i]=false;
   }
 
-
-
-
-  // create a weight vector
-  for(size_type i = 0 ; i < fullBody->device_->numberDof() ; ++i){
-    weight[i] = 1.;
-  }
-  // TODO : retrieve it from somewhere, store it in fullbody ?
-  // value here for hrp2, from Justin
-  // : chest
-  weight[6]= 10.;
-  //head :
-  for(size_type i = 7 ; i <= 9 ; i++)
-    weight[i] = 1.;
-
-  // root's orientation
-  for(size_type i = 3 ; i < 6 ; i++){
-    weight[i] = 50.;
-  }
-
   /*for(size_t i = 3 ; i <= 9 ; i++){
     mask[i] = true;
   }*/
  // mask[5] = false; // z root rotation ????
 
+  Configuration_t weight(fullBody->device_->numberDof());
+  if(fullBody->postureWeights().size() == fullBody->device_->numberDof()){
+    weight = fullBody->postureWeights();
+  }else{
+    for(size_type i = 0 ; i < fullBody->device_->numberDof() ; ++i)
+      weight[i] = 1.;
+  }
+
 
   // normalize weight array :
-  value_type moy =0;
+  /*value_type moy =0;
   int num_active = 0;
   for (size_type i = 0 ; i < weight.size() ; i++){
     if(mask[i]){
@@ -177,12 +163,13 @@ void CreatePosturalTaskConstraint(hpp::rbprm::RbPrmFullBodyPtr_t fullBody,core::
   for (size_type i = 0 ; i < weight.size() ; i++)
     weight[i] = weight[i]/moy;
 
+  */
 
-  /*std::ostringstream oss;
-  for (size_type i=0; i < mask.size (); ++i){
-    oss << mask [i] << ",";
+  std::ostringstream oss;
+  for (size_type i=0; i < weight.size (); ++i){
+    oss << weight [i] << ",";
   }
-  hppDout(notice,"mask = "<<oss.str());*/
+  //hppDout(notice,"weight postural task = "<<oss.str());
 
   //constraints::ConfigurationConstraintPtr_t postFunc = constraints::ConfigurationConstraint::create("Postural_Task",fullBody->device_,fullBody->referenceConfig(),weight,mask);
   constraints::ConfigurationConstraintPtr_t postFunc = constraints::ConfigurationConstraint::create("Postural_Task",fullBody->device_,fullBody->referenceConfig(),weight);
@@ -317,16 +304,18 @@ std::vector<bool> setTranslationConstraints()
 }
 ProjectionReport projectEffector(hpp::core::ConfigProjectorPtr_t proj, const hpp::rbprm::RbPrmFullBodyPtr_t& body, const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
                           core::CollisionValidationPtr_t validation, pinocchio::ConfigurationOut_t configuration,
-                          const fcl::Matrix3f& rotationTarget, const std::vector<bool> &rotationFilter, const fcl::Vec3f& positionTarget, const fcl::Vec3f& normal,
+                          const fcl::Matrix3f& rotationTarget, std::vector<bool> rotationFilter, const fcl::Vec3f& positionTarget, const fcl::Vec3f& normal,
                           const hpp::rbprm::State& current)
 {
-    hppDout(notice,"Project effector : ");
+    //hppDout(notice,"Project effector : ");
     ProjectionReport rep;
     // Add constraints to resolve Ik
     rep.success_ = false;
     rep.result_ = current;
     // Add constraints to resolve Ik
 
+    if(body->usePosturalTaskContactCreation())
+      rotationFilter[2] = false;
 
     const pinocchio::Frame effectorFrame = body->device_->getFrameByName(limb->effector_.name());
     pinocchio::JointPtr_t effectorJoint = effectorFrame.joint();
@@ -347,6 +336,15 @@ ProjectionReport projectEffector(hpp::core::ConfigProjectorPtr_t proj, const hpp
                                                                                       rotation,
                                                                                       rotationFilter)));
     }
+
+    if(body->usePosturalTaskContactCreation()){
+      CreatePosturalTaskConstraint(body,proj);
+      proj->errorThreshold(1e-3);
+      proj->maxIterations(1000);
+      proj->lastIsOptional(true);
+    }
+
+
 #ifdef PROFILE
     RbPrmProfiler& watch = getRbPrmProfiler();
     watch.start("ik");
@@ -401,18 +399,18 @@ ProjectionReport projectEffector(hpp::core::ConfigProjectorPtr_t proj, const hpp
 fcl::Transform3f computeProjectionMatrix(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const hpp::rbprm::RbPrmLimbPtr_t& limb, const pinocchio::ConfigurationIn_t configuration,
                                          const fcl::Vec3f& normal, const fcl::Vec3f& position)
 {
-    hppDout(notice,"computeProjection matrice : normal = "<<normal.transpose());
+   // hppDout(notice,"computeProjection matrice : normal = "<<normal.transpose());
     body->device_->currentConfiguration(configuration);
     body->device_->computeForwardKinematics();
     // the normal is given by the normal of the contacted object
-    hppDout(notice,"effector rot : \n"<<limb->effector_.currentTransformation().rotation());
-    hppDout(notice,"limb normal : "<<limb->normal_.transpose());
+    //hppDout(notice,"effector rot : \n"<<limb->effector_.currentTransformation().rotation());
+    //hppDout(notice,"limb normal : "<<limb->normal_.transpose());
     const fcl::Vec3f z = limb->effector_.currentTransformation().rotation() * limb->normal_;
-    hppDout(notice,"z = "<<z.transpose());
+   // hppDout(notice,"z = "<<z.transpose());
     const fcl::Matrix3f alignRotation = tools::GetRotationMatrix(z,normal);
-    hppDout(notice,"alignRotation : \n"<<alignRotation);
+    //hppDout(notice,"alignRotation : \n"<<alignRotation);
     const fcl::Matrix3f rotation = alignRotation * limb->effector_.currentTransformation().rotation();
-    hppDout(notice,"rotation : \n"<<rotation);
+    //hppDout(notice,"rotation : \n"<<rotation);
     fcl::Vec3f posOffset = position - rotation * limb->offset_;
     posOffset = posOffset + normal * epsilon;
     return fcl::Transform3f(rotation,posOffset);
@@ -556,7 +554,9 @@ ProjectionReport projectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& b
     const fcl::Vec3f pEndEff = (rootT.act(report.sample_->effectorPosition_)); // compute absolute position (in world frame)
     fcl::Vec3f pos = pEndEff-(normal.dot(pEndEff-report.v1_))*normal; // orthogonal projection on the obstacle surface
     // make sure contact pos is actually on triangle, and take 1 cm margin ...
+    //hppDout(notice,"projectSampleToObstacle,                              pos = "<<pos.transpose());
     pos = closestPointInTriangle(pEndEff,report.v1_, report.v2_, report.v3_, 0.01);
+    //hppDout(notice,"projectSampleToObstacle, pos after projection in triangle = "<<pos.transpose());
     //hppDout(notice,"Effector position : "<<report.sample_->effectorPosition_);
     //hppDout(notice,"pEndEff = ["<<pEndEff[0]<<","<<pEndEff[1]<<","<<pEndEff[2]<<"]");
     //hppDout(notice,"pos = ["<<pos[0]<<","<<pos[1]<<","<<pos[2]<<"]");
@@ -566,20 +566,23 @@ ProjectionReport projectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& b
 }
 
 ProjectionReport projectStateToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
-                                        const hpp::rbprm::State& current, const fcl::Vec3f &normal, const fcl::Vec3f &position)
+                                        const hpp::rbprm::State& current, const fcl::Vec3f &normal, const fcl::Vec3f &position, bool lockOtherJoints)
 {
    // core::CollisionValidationPtr_t dummy = core::CollisionValidation::create(body->device_);
-    return projectStateToObstacle(body, limbId, limb, current, normal, position, body->GetCollisionValidation());
+    return projectStateToObstacle(body, limbId, limb, current, normal, position, body->GetCollisionValidation(),lockOtherJoints);
 }
 
 ProjectionReport projectStateToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,
-                                        const hpp::rbprm::State& current, const fcl::Vec3f &normal, const fcl::Vec3f &position, core::CollisionValidationPtr_t validation)
+                                        const hpp::rbprm::State& current, const fcl::Vec3f &normal, const fcl::Vec3f &position, core::CollisionValidationPtr_t validation, bool lockOtherJoints)
 {
     hpp::rbprm::State state = current;
     state.RemoveContact(limbId);
     pinocchio::Configuration_t configuration = current.configuration_;
     core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(body->device_,"proj", 1e-4, 1000);
     interpolation::addContactConstraints(body, body->device_,proj, state, state.fixedContacts(state));
+    if(lockOtherJoints){ // lock all joints expect the ones of the moving limb
+        hpp::tools::LockJointRec(limb->limb_->name(), body->device_->rootJoint(), proj);
+    }
     // get current normal orientation
     return projectToObstacle(proj, body, limbId, limb, validation, configuration, state, normal, position);
 }

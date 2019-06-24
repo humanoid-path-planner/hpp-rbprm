@@ -143,7 +143,13 @@ Q_State maintain_contacts_combinatorial(const hpp::rbprm::State& currentState, c
 {
     T_DepthState res(maxBrokenContacts+1);
     hppDout(notice,"maintain contact combinatorial : ");
-    maintain_contacts_combinatorial_rec(currentState, 0, maxBrokenContacts,res);
+    if(currentState.nbContacts == 1){
+      res[0].push_back(currentState);
+      hppDout(warning,"Maintain_contacts_combinatorial called with a state with only 1 contact. FIXME, why does it happen ? ");
+    }
+    else{
+      maintain_contacts_combinatorial_rec(currentState, 0, maxBrokenContacts,res);
+     }
     return flatten(res);
 }
 
@@ -509,6 +515,7 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
                         reachability::Result resReachability;
                         if(contactGenHelper.quasiStatic_){
                             resReachability = reachability::isReachable(contactGenHelper.fullBody_,intermediateState,rep.result_);
+                            //resReachability = reachability::isReachable(contactGenHelper.fullBody_,previous,rep.result_); // TODO : use a parameter to choose between both cases
                         }else{
                             hppStartBenchmark(REACHABILITY_CONTACT);
                             resReachability = reachability::isReachableDynamic(contactGenHelper.fullBody_,previous,rep.result_,contactGenHelper.tryQuasiStatic_,std::vector<double>(),contactGenHelper.reachabilityPointPerPhases_);

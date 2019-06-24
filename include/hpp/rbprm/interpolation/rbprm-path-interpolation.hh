@@ -93,6 +93,8 @@ namespace hpp {
         /// \return the input list with the last states modified and the goal state added
         ///
         rbprm::T_StateFrame addGoalConfig(const rbprm::T_StateFrame& states);
+        rbprm::T_StateFrame addGoalConfigRec(const rbprm::T_StateFrame& states,const std::vector<std::string> variations);
+
 
     public:
         const core::PathVectorConstPtr_t path_;

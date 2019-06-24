@@ -81,15 +81,64 @@ namespace hpp {
         return Interpolate(affordances, affFilters, configs, robustnessTreshold, timeStep, range.first, filterStates);
     }
 
+    ///
+    /// \brief replaceLimbContactForState Try to create a state with all the contacts of stateCurrent, except for LimbId which have the contact of stateGoal
+    /// \param robot
+    /// \param stateCurrent
+    /// \param stateGoal
+    /// \param limbId
+    /// \return a projection report
+    ///
+    projection::ProjectionReport replaceLimbContactForState(RbPrmFullBodyPtr_t robot, State stateCurrent, State stateGoal,std::string limbId){
+      stateCurrent.RemoveContact(limbId);
+      hppDout(notice,"Try to replace contact for limb : "<<limbId);
+      pinocchio::Configuration_t configuration = stateCurrent.configuration_;
+      core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(robot->device_,"proj", 1e-4, 1000);
+      interpolation::addContactConstraints(robot, robot->device_,proj, stateCurrent, stateCurrent.fixedContacts(stateCurrent));
+      std::vector<bool> rotationMaskGoal;
+      for(std::size_t i =0; i <3; ++i)
+      {
+          rotationMaskGoal.push_back(true);
+      }
+      return projection::projectEffector(proj,robot,limbId,robot->GetLimb(limbId),robot->GetCollisionValidation(),configuration,stateGoal.contactRotation_.at(limbId),rotationMaskGoal,stateGoal.contactPositions_.at(limbId),stateGoal.contactNormals_.at(limbId),stateCurrent);
+    }
+
+    // greedy algorithm to try the combination of order to move the legs until a successfull one is found
+    rbprm::T_StateFrame RbPrmInterpolation::addGoalConfigRec(const rbprm::T_StateFrame& states, const std::vector<std::string> variations){
+        hppDout(notice,"addGoalConfigRec, variations size : "<<variations.size());
+        if(variations.size() == 1){
+          return states;
+        }
+        State midStateGoal(states.back().second);
+        projection::ProjectionReport projReport;
+        for(size_t id = 0 ; id < variations.size() ; ++id){
+            std::string limbId(variations[id]);
+            hppDout(notice,"addGoalConfigRec, try to move limb : "<<limbId);
+            projReport = replaceLimbContactForState(robot_,midStateGoal,end_,limbId);
+            // If projection was successful, we add the new intermediate state to the results
+            if(projReport.success_){
+                hppDout(notice,"projection of contact successful");
+                hppDout(notice,"New intermediate state : "<<pinocchio::displayConfig(projReport.result_.configuration_));
+                rbprm::T_StateFrame results(states.begin(),states.end()); // copy input states
+                results.push_back(std::make_pair(states.back().first,projReport.result_)); // there will be 2 states at the same time index ...
+                std::vector<std::string> remainingVariations(variations);
+                remainingVariations.erase(remainingVariations.begin()+id);
+                return addGoalConfigRec(results,remainingVariations);
+            }else{
+              hppDout(notice,"addGoalConfigRec projection failed for limb "<<limbId);
+            }
+        } // all projections failed, return original list
+        return states;
+    }
+
+    // Try to add the desired final configuration at the end of the current contact sequence, while guaranteing that there is always only one contact variation between states
     rbprm::T_StateFrame RbPrmInterpolation::addGoalConfig(const rbprm::T_StateFrame& states){
         hppDout(notice,"AddGoalConfig, size of state list : "<<states.size());
-        // First, we change the contact created between the last and last-1 state to match the contact position of the specified goal state :
-        rbprm::T_StateFrame results(states.begin(),states.end()); // copy input states exept the last one
+        rbprm::T_StateFrame results(states.begin(),states.end()); // copy input states
         State lastState = states.back().second;
 
-
-        std::vector<std::string> variationsGoal(lastState.contactVariations(end_));
-        if(variationsGoal.size() <1){
+        std::vector<std::string> variationsGoal(lastState.contactVariations(end_)); // all limb that must be moved to reach the goal configuration
+        if(variationsGoal.size() ==0){
           hppDout(notice,"no contact variation, return input list");
           return results;
         }else if(variationsGoal.size() == 1){
@@ -97,40 +146,19 @@ namespace hpp {
           results.push_back(std::make_pair(states.back().first,end_)); // there will be 2 states at the same time index ...
           return results;
         }
-        core::ConfigProjectorPtr_t proj;
-        pinocchio::Configuration_t configuration;
-        projection::ProjectionReport projReport;
+        const bool usePosturalTask = robot_->usePosturalTaskContactCreation();
+        robot_->usePosturalTaskContactCreation(false); // temporary disable this setting for projecting exactly on the goal config
         // Last state and end are not adjacent, we keep lastState in the list and produce intermediate states for each contact transition
         hppDout(notice," Last state and end are not adjacent, try to add intermediate state");
-        for(size_t id = 0 ; id < variationsGoal.size()-1 ; ++id){
-          // for each different contact, try to replace to it's position in end_ and add an intermediate state
-          // FIXME: to be complete, the combinatorial of the order of projection in case of failure should be implemented ...
-          std::string limbIdGoal(variationsGoal[id]);
-          State midStateGoal(results.back().second);
-          midStateGoal.RemoveContact(limbIdGoal);
-          hppDout(notice,"Try to replace contact for limb : "<<limbIdGoal);
-          configuration = midStateGoal.configuration_;
-          proj = core::ConfigProjector::create(robot_->device_,"proj", 1e-4, 1000);
-          interpolation::addContactConstraints(robot_, robot_->device_,proj, midStateGoal, midStateGoal.fixedContacts(midStateGoal));
-          std::vector<bool> rotationMaskGoal;
-          for(std::size_t i =0; i <3; ++i)
-          {
-              rotationMaskGoal.push_back(true);
-          }
-          projReport = projection::projectEffector(proj,robot_,limbIdGoal,robot_->GetLimb(limbIdGoal),robot_->GetCollisionValidation(),configuration,end_.contactRotation_.at(limbIdGoal),rotationMaskGoal,end_.contactPositions_.at(limbIdGoal),end_.contactNormals_.at(limbIdGoal),midStateGoal);
-          // If projection was successful, we add the new intermediate state to the results
-          if(projReport.success_){
-              hppDout(notice,"projection of contact successful");
-              hppDout(notice,"New intermediate state : "<<pinocchio::displayConfig(projReport.result_.configuration_));
-              results.push_back(std::make_pair(states.back().first,projReport.result_)); // there will be 2 states at the same time index ...
-          }
-        }
+        // for each different contact, try to replace to it's position in end_ and add an intermediate state
+        results = addGoalConfigRec(states,variationsGoal);
         if((results.back().second.contactVariations(end_)).size() == 1){
           hppDout(notice,"LastState is adjacent to goal, add it to the list and return");
           results.push_back(std::make_pair(path_->timeRange().second,end_));
         }else{
           hppDout(notice,"LastState is still not adjacent to goal, contact sequence do not end with the goal state");
         }
+        robot_->usePosturalTaskContactCreation(usePosturalTask); // put back previous setting
         return results;
     }
 

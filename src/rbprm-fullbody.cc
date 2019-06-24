@@ -291,6 +291,7 @@ namespace hpp {
         , mu_(0.5)
         , reference_(device_->neutralConfiguration())
         , postureWeights_()
+        , usePosturalTaskContactCreation_(false)
         , effectorsTrajectoriesMaps_()
         , weakPtr_()
     {
