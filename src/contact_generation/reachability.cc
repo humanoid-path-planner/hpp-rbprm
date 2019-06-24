@@ -98,12 +98,10 @@ std::pair<MatrixXX, VectorX> computeDistanceCost(const fcl::Vec3f& c0){
     return std::make_pair(H,g);
 }
 
-bool intersectionExist(const std::pair<MatrixXX, VectorX> &Ab, const fcl::Vec3f& c0, const fcl::Vec3f& c1, fcl::Vec3f& c_out){
-    fcl::Vec3f init = (c0+c1)/2.;
-
+bool intersectionExist(const std::pair<MatrixXX, VectorX> &Ab, const fcl::Vec3f& c, fcl::Vec3f& c_out){
     hppDout(notice,"Call solveur solveIntersection");
-    hppDout(notice,"init = "<<init);
-    bezier_com_traj::ResultData res = bezier_com_traj::solve(Ab,computeDistanceCost(c0),init);
+    hppDout(notice,"init = "<<c);
+    bezier_com_traj::ResultData res = bezier_com_traj::solve(Ab,computeDistanceCost(c),c);
     c_out = res.x;
     hppDout(notice,"success Solveur solveIntersection = "<<res.success_);
     hppDout(notice,"x = ["<<c_out[0]<<","<<c_out[1]<<","<<c_out[2]<<"]");
@@ -215,8 +213,10 @@ Result isReachableIntermediate(const RbPrmFullBodyPtr_t& fullbody,State &previou
     return res;
 }
 
-Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& next,const fcl::Vec3f& acc){
+Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& next, const fcl::Vec3f& acc, bool useIntermediateState){
     hppStartBenchmark(IS_REACHABLE);
+    assert(previous.nbContacts > 0 && "Reachability : previous state have less than 1 contact.");
+    assert(next.nbContacts > 0 && "Reachability : next state have less than 1 contact.");
     std::vector<std::string> contactsCreation, contactsBreak;
     next.contactBreaks(previous,contactsBreak);
     next.contactCreations(previous,contactsCreation);
@@ -237,13 +237,17 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
         hppDout(notice,"Too many contact variation, abort.");
         return Result(TOO_MANY_CONTACTS_VARIATION);
     }
+    State intermediate;
     if(contactsBreak.size() == 1 && contactsCreation.size() == 1){
         if(next.contactVariations(previous).size() == 1){ // there is 1 contact repositionning between previous and next
             // we need to create the intermediate state, and call is reachable for the 3 states.
-            State intermediate(previous);
+            intermediate = State(previous);
             intermediate.RemoveContact(contactsBreak[0]);
-            hppDout(notice,"Contact repositionning between the 2 states, create intermediate state and call isReachable");
-            return isReachableIntermediate(fullbody,previous,intermediate,next);
+            hppDout(notice,"Contact repositionning between the 2 states, create intermediate state");
+            if(useIntermediateState){
+              hppDout(notice,"call isReachableIntermediate.");
+              return isReachableIntermediate(fullbody,previous,intermediate,next);
+             }
         }else{
             hppDout(notice,"Contact break and creation are different. You need to call isReachable with 2 adjacent states");
             return Result(TOO_MANY_CONTACTS_VARIATION);
@@ -254,9 +258,18 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
     bool successCone;
     Result res;
     std::pair<MatrixXX,VectorX> Ab,K_p,K_n,A_p,A_n;
+    if(contactsBreak.size() == 1 && contactsCreation.size() == 1){
+       A_p = computeConstraintsForState(fullbody,previous,successCone);
+      if(!successCone)
+        return Result(UNABLE_TO_COMPUTE);
+      A_n = computeConstraintsForState(fullbody,next,successCone);
+      if(!successCone)
+        return Result(UNABLE_TO_COMPUTE);
+      Ab = stackConstraints(A_p,A_n);
+    }
     // there is only one contact creation OR (exclusive) break between the two states
     // test C_p \inter C_n (ie : A_p \inter K_p \inter A_n \inter K_n), with simplifications du to relations between the constraints :
-    if(contactsBreak.size() > 0){ // next have one less contact than previous
+    else if(contactsBreak.size() > 0){ // next have one less contact than previous
         hppDout(notice,"Contact break between previous and next state");
         // A_n \inside A_p, thus  A_p is redunbdant
         // K_p \inside K_n, thus  K_n is redunbdant
@@ -320,9 +333,30 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
     fcl::Vec3f com_next = fullbody->device_->positionCenterOfMass();
     fullbody->device_->controlComputation (flag);
 
+    // compute the position in the middle of the most constrained support polygon (used for the cost function):
+    State smaller_state;
+    if(contactsBreak.size() == 1 && contactsCreation.size() == 1){
+      smaller_state = intermediate;
+    }
+    else if(contactsBreak.size() > 0){//next have the smaller support polygone
+      smaller_state = next;
+    }else{ // previous have the smaller support polygon
+      smaller_state = previous;
+    }
+    fcl::Vec3f c_robust = fcl::Vec3f::Zero();
+    for(std::map<std::string,fcl::Vec3f>::const_iterator cit = smaller_state.contactPositions_.begin();
+          cit!=smaller_state.contactPositions_.end(); ++ cit)
+    {
+      fcl::Transform3f jointT( smaller_state.contactRotation_.at(cit->first), cit->second);
+      fcl::Vec3f position =  jointT.transform(fullbody->GetLimb(cit->first)->offset_);
+      c_robust += position;
+    }
+    c_robust /=(fcl::FCL_REAL)smaller_state.contactPositions_.size();
+    c_robust[2] = (com_previous[2] + com_next[2])/2.;
+
     fcl::Vec3f x;
     hppStartBenchmark(QP_REACHABLE);
-    success = intersectionExist(Ab,com_previous,com_next,x);
+    success = intersectionExist(Ab,c_robust,x);
     hppStopBenchmark(QP_REACHABLE);
     hppDisplayBenchmark(QP_REACHABLE);
     if(success){
@@ -350,10 +384,10 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
     else{
         if(contactsBreak.size() > 0){
             int_pt_kin = com_previous;
-            intersectionExist(A_n,com_previous,com_next,int_pt_stab);
+            intersectionExist(A_n,(com_previous+com_next)/2.,int_pt_stab);
         }else{
             int_pt_kin = com_next;
-            intersectionExist(A_p,com_previous,com_next,int_pt_stab);
+            intersectionExist(A_p,(com_previous+com_next)/2.,int_pt_stab);
         }
     }
 
@@ -535,8 +569,8 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
     pData.dc1_ = next.configuration_.segment<3>(id_velocity);
     pData.ddc0_ = previous.configuration_.segment<3>(id_velocity+3); // unused for now
     pData.ddc1_ = next.configuration_.segment<3>(id_velocity+3);
-    pData.dc0_ = fcl::Vec3f::Zero();
-    pData.dc1_ = fcl::Vec3f::Zero();
+    //pData.dc0_ = fcl::Vec3f::Zero();
+   // pData.dc1_ = fcl::Vec3f::Zero();
     pData.ddc0_ = fcl::Vec3f::Zero();
     pData.ddc1_ = fcl::Vec3f::Zero();
     hppDout(notice,"Build pData : ");
@@ -590,15 +624,15 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
           current_timings<<1.,1.;
         }
       #else
-        timings_matrix = MatrixXX(16,3); // contain the timings of the first 3 phases, the total time and the discretization step
+        timings_matrix = MatrixXX(18,3); // contain the timings of the first 3 phases, the total time and the discretization step
         timings_matrix <<
-                          0.8 , 0.7, 0.8,
+            0.6, 1.2, 0.6,
+             1. , 1.2, 1.,
+            0.8 , 0.7, 0.8,
             0.3 , 0.6, 0.3,
             0.5 , 0.6, 0.5,
             0.6 , 0.6, 0.6,
             0.8 , 0.6, 0.8,
-            0.6, 1.2, 0.6,
-            1. , 1.2, 1.,
             0.3 , 0.8, 0.3,
             0.3 , 0.7, 0.3,
             0.6 , 0.8, 0.6,
@@ -607,7 +641,9 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
             0.8,0.8,0.8, // script good
             1. , 0.6, 1.,
             1.2 , 0.6, 1.2,
-            1.5 , 0.6, 1.5;
+            1.5 , 0.6, 1.5,
+            0.1 , 0.2, 0.1,
+            0.2, 0.3, 0.2;
         current_timings = timings_matrix.block(0,0,1,pData.contacts_.size()).transpose();
       #endif
       total_time = 0;
