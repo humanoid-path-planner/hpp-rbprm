@@ -332,7 +332,7 @@ ProjectionReport projectEffector(hpp::core::ConfigProjectorPtr_t proj, const hpp
     rep.success_ = false;
     rep.result_ = current;
     // Add constraints to resolve Ik
-
+    hppDout(notice,"Project effector to position : "<<positionTarget);
     if(body->usePosturalTaskContactCreation())
       rotationFilter[2] = false;
 
@@ -464,6 +464,7 @@ double clamp( const double& val, const double& lo, const double& hi)
 
 fcl::Vec3f closestPointInTriangle(const fcl::Vec3f& sourcePosition, const fcl::Vec3f& t0, const fcl::Vec3f& t1, const fcl::Vec3f& t2, const double epsilon =0. )
 {
+    hppDout(notice,"closestPointInTriangle : t0 = "<<t0.transpose()<<" ; t1 = "<<t1.transpose()<<" ; t2 = "<<t2.transpose());
     const fcl::Vec3f edge0 = t1 - t0;
     const fcl::Vec3f edge1 = t2 - t0;
     const fcl::Vec3f v0 = t0 - sourcePosition;
@@ -576,9 +577,12 @@ ProjectionReport projectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& b
     //compute the orthogonal projection of the end effector on the plan :
     const fcl::Vec3f pEndEff = (rootT.act(report.sample_->effectorPosition_)); // compute absolute position (in world frame)
     fcl::Vec3f pos = pEndEff-(normal.dot(pEndEff-report.v1_))*normal; // orthogonal projection on the obstacle surface
+    hppDout(notice,"project sample to obstacle : orthogonal projection = "<<pos);
     // make sure contact pos is actually on triangle, and take 1 cm margin ...
     //hppDout(notice,"projectSampleToObstacle,                              pos = "<<pos.transpose());
     pos = closestPointInTriangle(pEndEff,report.v1_, report.v2_, report.v3_, 0.01);
+    hppDout(notice,"project sample to obstacle : after project inside triangle = "<<pos);
+
     //hppDout(notice,"projectSampleToObstacle, pos after projection in triangle = "<<pos.transpose());
     //hppDout(notice,"Effector position : "<<report.sample_->effectorPosition_);
     //hppDout(notice,"pEndEff = ["<<pEndEff[0]<<","<<pEndEff[1]<<","<<pEndEff[2]<<"]");
