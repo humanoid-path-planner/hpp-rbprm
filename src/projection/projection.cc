@@ -568,6 +568,7 @@ ProjectionReport projectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& b
     sampling::Load(*report.sample_, configuration);
     fcl::Vec3f normal = report.normal_;
     normal.normalize();
+    value_type epsilon = 0.01;
    // hppDout(notice,"contact normal = "<<normal);
     Transform3f rootT;
     if (body->GetLimb(limbId)->limb_->parentJoint())
@@ -580,9 +581,10 @@ ProjectionReport projectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& b
     hppDout(notice,"project sample to obstacle : orthogonal projection = "<<pos);
     // make sure contact pos is actually on triangle, and take 1 cm margin ...
     //hppDout(notice,"projectSampleToObstacle,                              pos = "<<pos.transpose());
-    pos = closestPointInTriangle(pEndEff,report.v1_, report.v2_, report.v3_, 0.01);
+    pos = closestPointInTriangle(pEndEff,report.v1_, report.v2_, report.v3_, 0.);
     hppDout(notice,"project sample to obstacle : after project inside triangle = "<<pos);
-
+    pos += normal*epsilon;
+    hppDout(notice,"project sample to obstacle : after epsilon = "<<pos);
     //hppDout(notice,"projectSampleToObstacle, pos after projection in triangle = "<<pos.transpose());
     //hppDout(notice,"Effector position : "<<report.sample_->effectorPosition_);
     //hppDout(notice,"pEndEff = ["<<pEndEff[0]<<","<<pEndEff[1]<<","<<pEndEff[2]<<"]");
