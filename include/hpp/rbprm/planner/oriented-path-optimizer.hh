@@ -68,6 +68,7 @@ namespace hpp {
       bool rectangularContact_;
       bool tryJump_;
       double mu_;
+      bool orientationIgnoreZValue_;
 
 
     };//class oriented-path-optimizer
