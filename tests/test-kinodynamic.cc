@@ -114,8 +114,8 @@ BOOST_AUTO_TEST_CASE (load_abstract_model_hyq) {
     //BOOST_CHECK_CLOSE(rbprmDevice->mass(),70.,1e-2); // FIXME : need to investigate and open an issue
     hpp::core::ProblemSolverPtr_t ps = hpp::core::ProblemSolver::create();
     ps->robot(rbprmDevice);
-    BOOST_CHECK_CLOSE(rbprmDevice->mass(),50.26,1e-2);
-    BOOST_CHECK_CLOSE(ps->robot()->mass(),50.26,1e-2);
+    BOOST_CHECK_CLOSE(rbprmDevice->mass(),76.07,1e-2);
+    BOOST_CHECK_CLOSE(ps->robot()->mass(),76.07,1e-2);
     //for(size_t i = 0 ; i < rbprmDevice->data().mass.size() ; ++i)
     //  std::cout<<"mass : "<<i<<" = "<<rbprmDevice->data().mass[i]<<std::endl;
 }
@@ -1130,7 +1130,7 @@ BOOST_AUTO_TEST_CASE (nav_bauzil_hyq) {
 
     pSolver.initConfig(ConfigurationPtr_t(new core::Configuration_t(q_init)));
     pSolver.addGoalConfig(ConfigurationPtr_t(new core::Configuration_t(q_goal)));
-    BOOST_CHECK_CLOSE(pSolver.robot()->mass(),50.26,1e-2);
+    BOOST_CHECK_CLOSE(pSolver.robot()->mass(),76.07,1e-2);
 
     pSolver.solve();
     BOOST_CHECK_EQUAL(pSolver.paths().size(),2);
@@ -1211,7 +1211,7 @@ BOOST_AUTO_TEST_CASE (nav_bauzil_oriented_hyq) {
 
     pSolver.initConfig(ConfigurationPtr_t(new core::Configuration_t(q_init)));
     pSolver.addGoalConfig(ConfigurationPtr_t(new core::Configuration_t(q_goal)));
-    BOOST_CHECK_CLOSE(pSolver.robot()->mass(),50.26,1e-2);
+    BOOST_CHECK_CLOSE(pSolver.robot()->mass(),76.07,1e-2);
 
     pSolver.solve();
     BOOST_CHECK_EQUAL(pSolver.paths().size(),2);
