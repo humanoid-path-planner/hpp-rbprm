@@ -74,6 +74,8 @@ namespace hpp{
       hppDout(notice,"tryJump in steering method = "<<tryJump_);
       mu_ = problem.getParameter (std::string("DynamicPlanner/friction")).floatValue();
       hppDout(notice,"mu define in python : "<<mu_);
+      orientationIgnoreZValue_ =  problem.getParameter(std::string("Kinodynamic/forceYawOrientation")).boolValue();
+      hppDout(notice,"oriented path only constraint yaw (ignore z value) : "<<orientationIgnoreZValue_);
 
     }
 
@@ -100,7 +102,7 @@ namespace hpp{
         castedPath = boost::dynamic_pointer_cast<KinodynamicPath>(element);
         if(castedPath){
           resultPaths[i] = castedPath;
-          orientedPaths[i] = core::KinodynamicOrientedPath::create(castedPath);
+          orientedPaths[i] = core::KinodynamicOrientedPath::create(castedPath,orientationIgnoreZValue_);
           if(orientedPaths[i]){
             orientedValid[i] = rbprmPathValidation_->validate(orientedPaths[i], false, unusedValidPart, unusedReport);
           }

@@ -942,7 +942,7 @@ BOOST_AUTO_TEST_CASE (nav_bauzil_oriented) {
     double vMax = 0.3;
     pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"),core::Parameter(vMax));
     pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"),core::Parameter(aMax));
-    pSolver.problem()->setParameter(std::string("Kinodynamic/forceOrientation"),core::Parameter(true));
+    pSolver.problem()->setParameter(std::string("Kinodynamic/forceAllOrientation"),core::Parameter(true));
     pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"),core::Parameter(0.2));
     pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"),core::Parameter(0.12));
     pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),core::Parameter(0.5));
@@ -1021,7 +1021,7 @@ BOOST_AUTO_TEST_CASE (nav_bauzil_oriented_kino) {
     double vMax = 0.3;
     pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"),core::Parameter(vMax));
     pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"),core::Parameter(aMax));
-    pSolver.problem()->setParameter(std::string("Kinodynamic/forceOrientation"),core::Parameter(true));
+    pSolver.problem()->setParameter(std::string("Kinodynamic/forceAllOrientation"),core::Parameter(true));
     pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"),core::Parameter(0.2));
     pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"),core::Parameter(0.12));
     pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),core::Parameter(0.5));
@@ -1182,7 +1182,7 @@ BOOST_AUTO_TEST_CASE (nav_bauzil_oriented_hyq) {
     double vMax = 0.3;
     pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"),core::Parameter(vMax));
     pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"),core::Parameter(aMax));
-    pSolver.problem()->setParameter(std::string("Kinodynamic/forceOrientation"),core::Parameter(true));
+    pSolver.problem()->setParameter(std::string("Kinodynamic/forceAllOrientation"),core::Parameter(true));
     pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"),core::Parameter(0.01));
     pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"),core::Parameter(0.01));
     pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),core::Parameter(0.5));
@@ -1269,7 +1269,7 @@ BOOST_AUTO_TEST_CASE (nav_bauzil_hard) {
     double vMax = 0.3;
     pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"),core::Parameter(vMax));
     pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"),core::Parameter(aMax));
-    pSolver.problem()->setParameter(std::string("Kinodynamic/forceOrientation"),core::Parameter(true));
+    pSolver.problem()->setParameter(std::string("Kinodynamic/forceAllOrientation"),core::Parameter(true));
     pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"),core::Parameter(0.2));
     pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"),core::Parameter(0.12));
     pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),core::Parameter(0.5));
