@@ -339,20 +339,21 @@ ProjectionReport projectEffector(hpp::core::ConfigProjectorPtr_t proj, const hpp
     const pinocchio::Frame effectorFrame = body->device_->getFrameByName(limb->effector_.name());
     pinocchio::JointPtr_t effectorJoint = effectorFrame.joint();
     Transform3f localFrame(1), globalFrame(1);
+    localFrame = effectorFrame.pinocchio().placement * localFrame;
     globalFrame.translation(positionTarget);
     proj->add(constraints::Implicit::create (constraints::Position::create("",body->device_,
                                                                                effectorJoint,
-                                                                               effectorFrame.pinocchio().placement * localFrame,
+                                                                               localFrame,
                                                                                globalFrame,
                                                                                setTranslationConstraints())));
     if(limb->contactType_ == hpp::rbprm::_6_DOF)
     {
-        Transform3f rotation(1);
-        //rotation.rotation(rotationTarget);
-        rotation.rotation(rotationTarget * effectorFrame.pinocchio().placement.rotation().transpose());
+        //localFrame.rotation(effectorFrame.pinocchio().placement.rotation() * rotationTarget.transpose());
+        globalFrame.rotation(rotationTarget);
         proj->add(constraints::Implicit::create (constraints::Orientation::create("",body->device_,
                                                                                       effectorJoint,
-                                                                                      rotation,
+                                                                                      localFrame,
+                                                                                      globalFrame,
                                                                                       rotationFilter)));
     }
 
