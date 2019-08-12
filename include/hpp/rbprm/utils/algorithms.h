@@ -7,6 +7,7 @@
 #include <Eigen/Dense>
 #include <Eigen/src/Core/util/Macros.h>
 #include <vector>
+#include <pinocchio/fwd.hpp>
 #include <hpp/fcl/collision_object.h>
 #include <hpp/fcl/collision_data.h>
 #include <hpp/fcl/BVH/BVH_model.h>
