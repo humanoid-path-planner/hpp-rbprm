@@ -154,7 +154,10 @@ namespace hpp {
         results = addGoalConfigRec(states,variationsGoal);
         if((results.back().second.contactVariations(end_)).size() == 1){
           hppDout(notice,"LastState is adjacent to goal, add it to the list and return");
-          results.push_back(std::make_pair(path_->timeRange().second,end_));
+          if  (path_)
+            results.push_back(std::make_pair(path_->timeRange().second,end_));
+          else
+              results.push_back(std::make_pair(results.back().first,end_));
         }else{
           hppDout(notice,"LastState is still not adjacent to goal, contact sequence do not end with the goal state");
         }
@@ -282,16 +285,16 @@ if (nbFailures > 1)
                 fout<<"failed, too much repositionning"<<std::endl;
                 fout.close();
                 */
-				std::cout<<"failed, too much repositionning"<<std::endl;
-				#ifdef PROFILE
-					watch.stop("complete generation");
-					watch.add_to_count("planner failed", 1);
-					std::ofstream fout;
-					fout.open("log.txt", std::fstream::out | std::fstream::app);
-					std::ostream* fp = &fout;
-					watch.report_count(*fp);
-					fout.close();
-				#endif
+                std::cout<<"failed, too much repositionning"<<std::endl;
+                #ifdef PROFILE
+                    watch.stop("complete generation");
+                    watch.add_to_count("planner failed", 1);
+                    std::ofstream fout;
+                    fout.open("log.txt", std::fstream::out | std::fstream::app);
+                    std::ostream* fp = &fout;
+                    watch.report_count(*fp);
+                    fout.close();
+                #endif
                     hppDout(notice,"Abort interpolate, too much repositionning");
                     return FilterStates(states, filterStates);
                 }
@@ -456,7 +459,7 @@ if (nbFailures > 1)
             repositionnedStates.push_back(std::make_pair((from+1)->first, (from+1)->second));
             std::vector<std::string> limbsNames = current.contactCreations(current_m1);
             StateFrame bestState = findBestRepositionState(repositionnedStates,limbsNames);
-            */            
+            */
             res.push_back(std::make_pair((from+1)->first, (from+1)->second));
             FilterRepositioning(from+2, to, res);
         }
