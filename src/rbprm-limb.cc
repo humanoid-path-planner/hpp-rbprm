@@ -131,7 +131,9 @@ namespace hpp {
 
     pinocchio::Transform3f RbPrmLimb::octreeRoot() const
     {
-        return limb_->parentJoint()->currentTransformation();
+        if (limb_->parentJoint())
+            return limb_->parentJoint()->currentTransformation();
+        return limb_->currentTransformation();
     }
 
     bool saveLimbInfoAndDatabase(const hpp::rbprm::RbPrmLimbPtr_t limb, std::ofstream& fp)

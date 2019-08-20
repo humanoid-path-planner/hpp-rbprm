@@ -142,7 +142,7 @@ namespace hpp {
         bool addEffectorTrajectory(const size_t pathId, const std::string& effectorName, const std::vector<bezier_Ptr>& trajectories);
         bool getEffectorsTrajectories(const size_t pathId,EffectorTrajectoriesMap_t& result);
         bool getEffectorTrajectory(const size_t pathId,const std::string& effectorName,std::vector<bezier_Ptr>& result);
-
+        bool toggleNonContactingLimb(std::string name);
     private:
         core::CollisionValidationPtr_t collisionValidation_;
         std::map<std::string, core::CollisionValidationPtr_t> limbcollisionValidations_;
