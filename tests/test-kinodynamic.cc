@@ -18,6 +18,7 @@
 
 
 #define BOOST_TEST_MODULE test-kinodynamic
+#include <pinocchio/fwd.hpp>
 #include <boost/test/included/unit_test.hpp>
 
 #include <hpp/core/problem-solver.hh>
