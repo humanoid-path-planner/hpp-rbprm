@@ -41,7 +41,11 @@ fcl::Vec3f ComputeEffectorPosition(const hpp::pinocchio::JointPtr_t limb, const 
 {
     const hpp::pinocchio::Transform3f& tf =effector.currentTransformation();
     const fcl::Transform3f transform (tf.rotation(),tf.translation());
-    const hpp::pinocchio::Transform3f& tfParent = limb->parentJoint()->currentTransformation();
+    hpp::pinocchio::Transform3f tfParent;
+    if  (limb->parentJoint())
+        tfParent = limb->parentJoint()->currentTransformation();
+    else
+        tfParent = limb->currentTransformation();
     fcl::Transform3f parentT = fcl::inverse(fcl::Transform3f(tfParent.rotation(), tfParent.translation()));
     fcl::Vec3f tr (transform.getTranslation() + offset);
     return (parentT * tr).getTranslation();

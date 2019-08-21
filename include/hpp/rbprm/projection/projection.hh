@@ -60,9 +60,10 @@ ProjectionReport HPP_RBPRM_DLLAPI projectToColFreeComPosition(hpp::rbprm::RbPrmF
 /// \param fullBody target Robot
 /// \param target, desired root position
 /// \param currentState current state of the robot (configuration and contacts)
+/// \param offset location in root frame. If different than zero orientation of root is ignored
 /// \return projection report containing the state projected
 ProjectionReport HPP_RBPRM_DLLAPI projectToRootConfiguration(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const pinocchio::ConfigurationIn_t conf,
-                                           const hpp::rbprm::State& currentState);
+                                           const hpp::rbprm::State& currentState, const Vector3 offset = Vector3::Zero());
 
 /// Project a configuration such that a given limb configuration is collision free
 /// \param fullBody target Robot

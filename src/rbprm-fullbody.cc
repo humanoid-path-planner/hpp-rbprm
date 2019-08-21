@@ -246,6 +246,27 @@ namespace hpp {
         return true;
     }
 
+    bool RbPrmFullBody::toggleNonContactingLimb(std::string name)
+    {
+        CIT_Limb cit = limbs_.find(name);
+        if(cit != limbs_.end())
+        {
+            nonContactingLimbs_.insert(std::make_pair(cit->first, cit->second));
+            limbs_.erase(cit->first);
+            std::cout << "j enleve " << std::endl;
+            return true;
+        }
+        cit = nonContactingLimbs_.find(name);
+        if(cit != nonContactingLimbs_.end())
+        {
+            limbs_.insert(std::make_pair(cit->first, cit->second));
+            nonContactingLimbs_.erase(cit->first);
+            std::cout << "j ajoute " << std::endl;
+            return true;
+        }
+        return false;
+    }
+
     void RbPrmFullBody::referenceConfig(pinocchio::Configuration_t referenceConfig)
     {
         reference_ = referenceConfig;

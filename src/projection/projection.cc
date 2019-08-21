@@ -234,12 +234,31 @@ void LockFromRoot(hpp::pinocchio::DevicePtr_t device, const rbprm::T_Limb& limbs
 
 
 ProjectionReport projectToRootConfiguration(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const pinocchio::ConfigurationIn_t conf,
-                                           const hpp::rbprm::State& currentState)
+                                           const hpp::rbprm::State& currentState, const Vector3 offset)
 {
     ProjectionReport res;
     core::ConfigProjectorPtr_t proj = core::ConfigProjector::create(fullBody->device_,"proj", 1e-4, 100);
     CreateContactConstraints(fullBody, currentState, proj);
-    LockFromRoot(fullBody->device_, fullBody->GetLimbs(), conf, proj);
+    if (offset == Vector3::Zero())
+        LockFromRoot(fullBody->device_, fullBody->GetLimbs(), conf, proj);
+    else
+    {
+        const std::string rootJointName("root_joint");
+        const fcl::Vec3f ppos  = conf.head<3>();
+        const pinocchio::Frame effectorFrame = fullBody->device_->getFrameByName(rootJointName);
+        pinocchio::JointPtr_t effectorJoint = effectorFrame.joint();
+
+        std::vector<bool> mask; mask.push_back(true); mask.push_back(true); mask.push_back(true);
+        pinocchio::Transform3f localFrame(1), globalFrame(1);
+        localFrame.translation(offset);
+        globalFrame.translation(ppos);
+        proj->add(constraints::Implicit::create( constraints::Position::create(rootJointName,fullBody->device_,
+                                             effectorJoint,
+                                             effectorFrame.pinocchio().placement * localFrame,
+                                             globalFrame,
+                                             mask)));
+
+    }
     pinocchio::Configuration_t configuration = currentState.configuration_;
     res.success_ = proj->apply(configuration);
     res.result_ = currentState;
@@ -549,7 +568,11 @@ ProjectionReport projectSampleToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& b
     fcl::Vec3f normal = report.normal_;
     normal.normalize();
    // hppDout(notice,"contact normal = "<<normal);
-    Transform3f rootT = body->GetLimb(limbId)->limb_->parentJoint()->currentTransformation();
+    Transform3f rootT;
+    if (body->GetLimb(limbId)->limb_->parentJoint())
+        rootT = body->GetLimb(limbId)->limb_->parentJoint()->currentTransformation();
+    else
+        rootT = body->GetLimb(limbId)->limb_->currentTransformation();
     //compute the orthogonal projection of the end effector on the plan :
     const fcl::Vec3f pEndEff = (rootT.act(report.sample_->effectorPosition_)); // compute absolute position (in world frame)
     fcl::Vec3f pos = pEndEff-(normal.dot(pEndEff-report.v1_))*normal; // orthogonal projection on the obstacle surface
