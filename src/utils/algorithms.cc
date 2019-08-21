@@ -1,3 +1,4 @@
+#include <pinocchio/fwd.hpp>
 #include "hpp/rbprm/utils/algorithms.h"
 #include <hpp/fcl/intersect.h>
 #include <hpp/util/debug.hh>
