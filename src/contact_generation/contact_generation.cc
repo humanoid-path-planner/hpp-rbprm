@@ -459,7 +459,7 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
                         RbPrmLimbPtr_t limb, core::CollisionValidationPtr_t validation, bool& found_sample,bool& found_stable,
                                      bool& unstableContact, const sampling::HeuristicParam & params, const sampling::heuristic evaluate = 0)
 {
-    State current = contactGenHelper.workingState_;
+    State current(contactGenHelper.workingState_);
     current.stable = false;
     State intermediateState(current); // state before new contact creation
     State previous(contactGenHelper.previousState_); // previous state, before contact break
@@ -605,6 +605,15 @@ hpp::rbprm::State findValidCandidate(const ContactGenHelper &contactGenHelper, c
     fout<<"evaluatedCandidates "<<evaluatedCandidates<<std::endl;
     fout.close();
 */
+    if(contactGenHelper.fullBody_->usePosturalTaskContactCreation() && !found_sample){
+      // as the contact generator is not complete when usePosturalTaskContactCreation==True, if it fail we retry without this option
+      contactGenHelper.fullBody_->usePosturalTaskContactCreation(false);
+      current =findValidCandidate(contactGenHelper,limbId,
+                                  limb, validation,found_sample,found_stable,
+                                  unstableContact,params,evaluate);
+      contactGenHelper.fullBody_->usePosturalTaskContactCreation(true);
+
+    }
 
     return current;
 }

@@ -287,6 +287,8 @@ namespace
     : shootLimit_(shootLimit)
     , displacementLimit_(displacementLimit)
     , filter_(filter)
+    , weights_()
+    , triangles_()
     , robot_ (robot)
     , validator_(rbprm::RbPrmValidation::create(robot_, filter, affFilters,
                                                 affordances, geometries))
@@ -317,19 +319,22 @@ namespace
                 tri.p2 = colObj->getRotation() * model->vertices[fcltri[1]] + colObj->getTranslation();
                 tri.p3 = colObj->getRotation() * model->vertices[fcltri[2]] + colObj->getTranslation();
                 double weight = TriangleArea(tri);
+                hppDout(notice,"Area of triangle = "<<weight);
                 sum += weight;
                 weights_.push_back(weight);
                 fcl::Vec3f normal = (tri.p2 - tri.p1).cross(tri.p3 - tri.p1);
                 normal.normalize();
                 triangles_.push_back(std::make_pair(normal,tri));
             }
-            double previousWeight = 0;
-            for(std::vector<double>::iterator wit = weights_.begin();
-                wit != weights_.end(); ++wit)
-            {
-                previousWeight += (*wit) / sum;
-                (*wit) = previousWeight;
-            }
+        }
+        double previousWeight = 0;
+        hppDout(notice,"Sum of all areas of triangles : "<<sum);
+        for(std::vector<double>::iterator wit = weights_.begin();
+            wit != weights_.end(); ++wit)
+        {
+            previousWeight += (*wit) / sum;
+            (*wit) = previousWeight;
+            hppDout(notice,"current weight = "<<previousWeight);
         }
         hppDout(notice,"number of triangle for the shooter : "<<triangles_.size());
     }

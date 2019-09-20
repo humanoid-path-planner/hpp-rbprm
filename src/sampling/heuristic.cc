@@ -175,11 +175,29 @@ double DynamicWalkHeuristic(const sampling::Sample& sample,
 }
 
 
+double StaticHeuristic(const sampling::Sample& sample,
+                      const Eigen::Vector3d& /*direction*/, const Eigen::Vector3d& /*normal*/, const HeuristicParam & /*params*/)
+{
+    /*hppDout(info,"sample : ");
+    hppDout(info,"sample : "<<&sample);
+    hppDout(info,"id = "<<sample.id_);
+    hppDout(info,"length = "<<sample.length_);
+    hppDout(info,"startRank = "<<sample.startRank_);
+    hppDout(info,"effectorPosition = "<<sample.effectorPosition_);
+    hppDout(info,"configuration = "<<sample.configuration_);
+    hppDout(info,"staticValue = "<<sample.staticValue_);
+    */
+    return sample.staticValue_;
+
+}
+
+
+
 double fixedStepHeuristic(const sampling::Sample& sample,
                       const Eigen::Vector3d& direction, const Eigen::Vector3d& normal, const HeuristicParam & params,const double t_step){
     if(! params.comPath_){
-        hppDout(notice,"In heuristic : comPath was not provided, use default heuristic");
-        return DynamicWalkHeuristic(sample,direction,normal,params);
+        hppDout(notice,"In heuristic : comPath was not provided, use only current analysis score");
+        return StaticHeuristic(sample,direction,normal,params);
     }
     //hppDout(notice,"FixedStep heuristic : comPath exist");
     bool success;
@@ -232,22 +250,6 @@ double BackwardHeuristic(const sampling::Sample& sample,
                       const Eigen::Vector3d& direction, const Eigen::Vector3d& normal, const HeuristicParam & /*params*/)
 {
     return sample.staticValue_ * 10000 * Eigen::Vector3d::UnitZ().dot(normal) - 100  * sample.effectorPosition_.dot(fcl::Vec3f(direction(0),direction(1),direction(2))) + ((double)rand()) / ((double)(RAND_MAX));
-}
-
-double StaticHeuristic(const sampling::Sample& sample,
-                      const Eigen::Vector3d& /*direction*/, const Eigen::Vector3d& /*normal*/, const HeuristicParam & /*params*/)
-{
-    /*hppDout(info,"sample : ");
-    hppDout(info,"sample : "<<&sample);
-    hppDout(info,"id = "<<sample.id_);
-    hppDout(info,"length = "<<sample.length_);
-    hppDout(info,"startRank = "<<sample.startRank_);
-    hppDout(info,"effectorPosition = "<<sample.effectorPosition_);
-    hppDout(info,"configuration = "<<sample.configuration_);
-    hppDout(info,"staticValue = "<<sample.staticValue_);
-    */
-    return sample.staticValue_;
-
 }
 
 

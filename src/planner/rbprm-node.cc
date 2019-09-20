@@ -340,7 +340,7 @@ void RbprmNode::chooseBestContactSurface(ValidationReportPtr_t report, pinocchio
           geom::Point normal,proj;
           double minDistance = std::numeric_limits<double>::max();
           double distance;
-          CollisionValidationReportPtr_t bestReport;
+          CollisionValidationReportPtr_t bestReport(romReports->collisionReports.front());
           bool successInter;
           geom::T_Point intersection;
           hppDout(notice,"Number of possible surfaces for rom : "<<romReports->collisionReports.size());
