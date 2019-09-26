@@ -175,27 +175,27 @@ struct BindShooter
         : shootLimit_(shootLimit)
         , displacementLimit_(displacementLimit) {}
 
-    hpp::rbprm::RbPrmShooterPtr_t create (/*const hpp::pinocchio::DevicePtr_t& robot,*/ const hpp::core::Problem& problem)
+    hpp::rbprm::RbPrmShooterPtr_t create (/*const hpp::pinocchio::DevicePtr_t& robot,*/ const hpp::core::Problem& problem,const hpp::core::ProblemSolverPtr_t problemSolver)
     {
 
-        hpp::core::Container <hpp::core::AffordanceObjects_t> affMap_ = ProblemSolver::latest()->affordanceObjects;
-        affMap_ = ProblemSolver::latest()->affordanceObjects;
+        hpp::core::Container <hpp::core::AffordanceObjects_t> affMap_ = problemSolver->affordanceObjects;
+        affMap_ = problemSolver->affordanceObjects;
         hpp::pinocchio::RbPrmDevicePtr_t robotcast = boost::static_pointer_cast<hpp::pinocchio::RbPrmDevice>(problem.robot());
             if (affMap_.map.empty ()) {
             throw std::runtime_error ("No affordances found. Unable to create shooter object.");
               }
         rbprm::RbPrmShooterPtr_t shooter = hpp::rbprm::RbPrmShooter::create
-                (robotcast, ProblemSolver::latest()->problem ()->collisionObstacles(), affMap_,
+                (robotcast, problemSolver->problem ()->collisionObstacles(), affMap_,
                                                                             romFilter_,affFilter_,shootLimit_,displacementLimit_);
         if(!so3Bounds_.empty())
             shooter->BoundSO3(so3Bounds_);
         return shooter;
     }
 
-    hpp::core::PathValidationPtr_t createPathValidation (const hpp::pinocchio::DevicePtr_t& robot, const hpp::pinocchio::value_type& val)
+    hpp::core::PathValidationPtr_t createPathValidation (const hpp::pinocchio::DevicePtr_t& robot, const hpp::pinocchio::value_type& val,const hpp::core::ProblemSolverPtr_t problemSolver)
     {
         hpp::pinocchio::RbPrmDevicePtr_t robotcast = boost::static_pointer_cast<hpp::pinocchio::RbPrmDevice>(robot);
-        hpp::core::Container <hpp::core::AffordanceObjects_t> affMap_ = ProblemSolver::latest()->affordanceObjects;
+        hpp::core::Container <hpp::core::AffordanceObjects_t> affMap_ = problemSolver->affordanceObjects;
         if (affMap_.map.empty ()) {
             throw std::runtime_error ("No affordances found. Unable to create Path Validaton object.");
               }
@@ -203,15 +203,15 @@ struct BindShooter
           (hpp::rbprm::RbPrmValidation::create(robotcast, romFilter_, affFilter_, affMap_));
         hpp::rbprm::RbPrmPathValidationPtr_t collisionChecking = hpp::rbprm::RbPrmPathValidation::create(robot,val);
         collisionChecking->add (validation);
-        ProblemSolver::latest()->problem()->configValidation(core::ConfigValidations::create ());
-        ProblemSolver::latest()->problem()->configValidations()->add(validation);
+        problemSolver->problem()->configValidation(core::ConfigValidations::create ());
+        problemSolver->problem()->configValidations()->add(validation);
         return collisionChecking;
     }
 
-    hpp::core::PathValidationPtr_t createDynamicPathValidation (const hpp::pinocchio::DevicePtr_t& robot, const hpp::pinocchio::value_type& val)
+    hpp::core::PathValidationPtr_t createDynamicPathValidation ( const hpp::pinocchio::DevicePtr_t& robot, const hpp::pinocchio::value_type& val,const hpp::core::ProblemSolverPtr_t problemSolver)
     {
       hpp::pinocchio::RbPrmDevicePtr_t robotcast = boost::static_pointer_cast<hpp::pinocchio::RbPrmDevice>(robot);
-      hpp::core::Container <hpp::core::AffordanceObjects_t> affMap_ = ProblemSolver::latest()->affordanceObjects;
+      hpp::core::Container <hpp::core::AffordanceObjects_t> affMap_ = problemSolver->affordanceObjects;
       if (affMap_.map.empty ()) {
         throw std::runtime_error ("No affordances found. Unable to create Path Validaton object.");
       }
@@ -219,19 +219,19 @@ struct BindShooter
         (hpp::rbprm::RbPrmValidation::create(robotcast, romFilter_, affFilter_, affMap_));
       hpp::rbprm::DynamicPathValidationPtr_t collisionChecking = hpp::rbprm::DynamicPathValidation::create(robot,val);
       collisionChecking->add (validation);
-      ProblemSolver::latest()->problem()->configValidation(core::ConfigValidations::create ());
-      ProblemSolver::latest()->problem()->configValidations()->add(validation);
+      problemSolver->problem()->configValidation(core::ConfigValidations::create ());
+      problemSolver->problem()->configValidations()->add(validation);
       // build the dynamicValidation :
       double sizeFootX,sizeFootY,mass,mu;
       bool rectangularContact;
-      sizeFootX = ProblemSolver::latest()->problem()->getParameter (std::string("DynamicPlanner/sizeFootX")).floatValue()/2.;
-      sizeFootY = ProblemSolver::latest()->problem()->getParameter (std::string("DynamicPlanner/sizeFootY")).floatValue()/2.;
+      sizeFootX = problemSolver->problem()->getParameter (std::string("DynamicPlanner/sizeFootX")).floatValue()/2.;
+      sizeFootY = problemSolver->problem()->getParameter (std::string("DynamicPlanner/sizeFootY")).floatValue()/2.;
       if(sizeFootX > 0. && sizeFootY > 0.)
         rectangularContact = 1;
       else
         rectangularContact = 0;
       mass = robot->mass();
-      mu = ProblemSolver::latest()->problem()->getParameter (std::string("DynamicPlanner/friction")).floatValue();
+      mu = problemSolver->problem()->getParameter (std::string("DynamicPlanner/friction")).floatValue();
       hppDout(notice,"mu define in python : "<<mu);
       DynamicValidationPtr_t dynamicVal = DynamicValidation::create(rectangularContact,sizeFootX,sizeFootY,mass,mu,robot);
       collisionChecking->addDynamicValidator(dynamicVal);
@@ -276,11 +276,11 @@ hpp::core::ProblemSolverPtr_t  configureRbprmProblemSolverForSupportLimbs(const 
 
     ps->robot(robot);
     ps->configurationShooters.add("RbprmShooter",
-                                               boost::bind(&BindShooter::create, boost::ref(bShooter), _1));
+                                               boost::bind(&BindShooter::create, boost::ref(bShooter), _1,ps));
     ps->pathValidations.add("RbprmPathValidation",
-                                               boost::bind(&BindShooter::createPathValidation, boost::ref(bShooter), _1, _2));
+                                               boost::bind(&BindShooter::createPathValidation, boost::ref(bShooter), _1, _2,ps));
     ps->pathValidations.add("RbprmDynamicPathValidation",
-                                               boost::bind(&BindShooter::createDynamicPathValidation, boost::ref(bShooter), _1, _2));
+                                               boost::bind(&BindShooter::createDynamicPathValidation, boost::ref(bShooter), _1, _2,ps));
     ps->pathPlanners.add("DynamicPlanner",DynamicPlanner::createWithRoadmap);
     ps->steeringMethods.add("RBPRMKinodynamic", SteeringMethodKinodynamic::create);
     ps->pathOptimizers.add("RandomShortcutDynamic", RandomShortcutDynamic::create);
