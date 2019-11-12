@@ -40,9 +40,17 @@ namespace
 		
     BVHModelOBConst_Ptr_t GetModel(const pinocchio::FclConstCollisionObjectPtr_t object)
     {
-        assert(object->collisionGeometry()->getNodeType() == BV_OBBRSS);
+        if(object->collisionGeometry()->getNodeType() != BV_OBBRSS){
+          hppDout(warning,"Collision geometry in shooter is not a BV_OBBRSS, cannot get the model.");
+          return BVHModelOBConst_Ptr_t();
+        }
+        //assert(object->collisionGeometry()->getNodeType() == BV_OBBRSS);
         const BVHModelOBConst_Ptr_t model = boost::static_pointer_cast<const BVHModelOB>(object->collisionGeometry());
-        assert(model->getModelType() == BVH_MODEL_TRIANGLES);
+        //assert(model->getModelType() == BVH_MODEL_TRIANGLES);
+        if(model->getModelType() != BVH_MODEL_TRIANGLES){
+          hppDout(warning,"Collision model is not of type BVH_MODEL_TRIANGLES.");
+          return BVHModelOBConst_Ptr_t();
+        }
         return model;
     }
 
@@ -369,13 +377,19 @@ fcl::Vec3f normalFromTriangleContact(const Contact& c, hpp::core::CollisionObjec
     int i = c.b2;
     TrianglePoints tri;
     BVHModelOBConst_Ptr_t model =  GetModel(colObj->fcl()); // TODO NOT TRIANGLES
-
-    Triangle fcltri = model->tri_indices[i];
-    tri.p1 = colObj->fcl()->getRotation() * model->vertices[fcltri[0]] + colObj->fcl()->getTranslation();
-    tri.p2 = colObj->fcl()->getRotation() * model->vertices[fcltri[1]] + colObj->fcl()->getTranslation();
-    tri.p3 = colObj->fcl()->getRotation() * model->vertices[fcltri[2]] + colObj->fcl()->getTranslation();
-    fcl::Vec3f normal = (tri.p2 - tri.p1).cross(tri.p3 - tri.p1);
+    fcl::Vec3f normal;
+    if(model){
+      Triangle fcltri = model->tri_indices[i];
+      tri.p1 = colObj->fcl()->getRotation() * model->vertices[fcltri[0]] + colObj->fcl()->getTranslation();
+      tri.p2 = colObj->fcl()->getRotation() * model->vertices[fcltri[1]] + colObj->fcl()->getTranslation();
+      tri.p3 = colObj->fcl()->getRotation() * model->vertices[fcltri[2]] + colObj->fcl()->getTranslation();
+      normal = (tri.p2 - tri.p1).cross(tri.p3 - tri.p1);
+    }else{
+      hppDout(warning,"In shooter : cannot get contact normal, use z axis by default.");
+      normal = fcl::Vec3f(0,0,1);
+    }
     return normal.normalized();
+
 }
 
 void RbPrmShooter::shoot (hpp::core::Configuration_t& config) const
