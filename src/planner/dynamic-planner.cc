@@ -35,7 +35,6 @@
 #include <hpp/core/kinodynamic-distance.hh>
 #include <hpp/rbprm/planner/rbprm-steering-kinodynamic.hh>
 #include <hpp/fcl/collision_data.h>
-#include <hpp/fcl/intersect.h>
 #include "hpp/rbprm/utils/algorithms.h"
 #include <hpp/core/path-projector.hh>
 #include <hpp/rbprm/planner/rbprm-roadmap.hh>
