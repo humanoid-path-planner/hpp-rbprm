@@ -17,19 +17,19 @@
 # hpp-core  If not, see
 # <http://www.gnu.org/licenses/>.
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
-SET(CXX_DISABLE_WERROR TRUE)
-INCLUDE(cmake/base.cmake)
-INCLUDE(cmake/boost.cmake)
-INCLUDE(cmake/hpp.cmake)
-INCLUDE(cmake/test.cmake)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 SET(PROJECT_NAME hpp-rbprm)
-SET(PROJECT_DESCRIPTION
-  "Implementation of RB-PRM planner using hpp."
-  )
+SET(PROJECT_DESCRIPTION "Implementation of RB-PRM planner using hpp.")
 
-SETUP_HPP_PROJECT()
+SET(CXX_DISABLE_WERROR TRUE)
+INCLUDE(cmake/hpp.cmake)
+INCLUDE(cmake/boost.cmake)
+INCLUDE(cmake/test.cmake)
+
+
+COMPUTE_PROJECT_ARGS(PROJECT_ARGS LANGUAGES CXX)
+PROJECT(${PROJECT_NAME} ${PROJECT_ARGS})
 
 SET(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/find-external/CDD")
 FIND_PACKAGE(CDD REQUIRED)
@@ -85,5 +85,3 @@ ADD_SUBDIRECTORY(src)
 ADD_SUBDIRECTORY(tests)
 
 PKG_CONFIG_APPEND_LIBS(${PROJECT_NAME})
-
-SETUP_PROJECT_FINALIZE()
