@@ -19,6 +19,8 @@
 #ifndef HPP_RBPRM_TOOLS_HH
 # define HPP_RBPRM_TOOLS_HH
 
+# include <iostream>
+
 # include <hpp/core/config-validation.hh>
 # include <hpp/pinocchio/joint.hh>
 # include <hpp/rbprm/config.hh>
