@@ -93,8 +93,7 @@ namespace stability{
         else
         {
             fcl::Vec3f z_axis(0,0,1);
-            fcl::Matrix3f rotationLocal = tools::GetRotationMatrix(z_axis, limb->normal_);
-            rotationLocal.inverse();
+            fcl::Matrix3f rotationLocal = tools::GetRotationMatrix(z_axis, limb->normal_).inverse();
             fcl::Transform3f roWorld;
             roWorld.setRotation(state.contactRotation_.at(name));
             roWorld.setTranslation(position);

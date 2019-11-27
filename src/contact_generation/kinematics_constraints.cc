@@ -194,7 +194,7 @@ std::pair<MatrixX3, VectorX> getInequalitiesAtTransform(const std::pair<MatrixX3
     VectorX n,v;
     for(size_t i = 0 ; i < numIneq ; ++i){
         n = transform.getRotation()*(NV.first.block<1,3>(i,0).transpose());
-        v = transform.transform(NV.second.block<1,3>(i,0));
+        v = transform.transform(NV.second.block<1,3>(i,0).transpose());
         A.block<1,3>(i,0) = n;
         b[i] = v.dot(n);
     }

@@ -22,6 +22,9 @@
 # include <hpp/core/path-validation/discretized.hh>
 # include <hpp/core/steering-method/straight.hh>
 # include <hpp/core/straight-path.hh>
+# include <hpp/core/problem.hh>
+# include <hpp/core/distance.hh>
+# include <hpp/core/config-projector.hh>
 # include <hpp/rbprm/interpolation/time-constraint-path.hh>
 # include <hpp/rbprm/interpolation/time-dependant.hh>
 

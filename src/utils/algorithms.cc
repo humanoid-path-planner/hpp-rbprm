@@ -1,6 +1,5 @@
 #include <pinocchio/fwd.hpp>
 #include "hpp/rbprm/utils/algorithms.h"
-#include <hpp/fcl/intersect.h>
 #include <hpp/util/debug.hh>
 #include <hpp/pinocchio/collision-object.hh>
 #include <pinocchio/multibody/geometry.hpp>
@@ -494,9 +493,10 @@ namespace geom
 
   T_Point intersectTriangles(fcl::Vec3f* tri, fcl::Vec3f* tri2,std::ostringstream* ss){
     T_Point res;
-    fcl::Vec3f n2(fcl::Vec3f::Zero());
-    fcl::FCL_REAL t2=0;
-    fcl::Intersect::buildTrianglePlane(tri2[0],tri2[1],tri2[2], &n2, &t2);
+
+    fcl::Vec3f n2 = (tri2[1] - tri2[0]).cross(tri2[2] - tri2[0]).normalized();
+    fcl::FCL_REAL t2 = n2.dot(tri2[0]);
+
     fcl::Vec3f distance;
     unsigned int num_penetrating_points=0;
 
