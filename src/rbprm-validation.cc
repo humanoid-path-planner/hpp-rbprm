@@ -24,8 +24,14 @@ namespace
 {
   hpp::core::CollisionValidationPtr_t tuneFclValidation(const hpp::pinocchio::RbPrmDevicePtr_t& robot)
   {
+    typedef hpp::core::ObstacleUser::CollisionRequests_t CollisionRequests_t;
     hpp::core::CollisionValidationPtr_t validation = hpp::core::CollisionValidation::create(robot);
-    validation->collisionRequest_.enable_contact = true;
+    // enable contact for all collision pairs
+    CollisionRequests_t req (validation->requests ());
+    for (CollisionRequests_t::iterator it (req.begin ()); it != req.end ();
+         ++it) {
+      it->enable_contact = true;
+    }
     return validation;
   }
 

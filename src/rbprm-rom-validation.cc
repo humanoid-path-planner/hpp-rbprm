@@ -70,8 +70,9 @@ namespace hpp {
           CollisionObjectConstPtr_t obj2 = romCollisionReport->object2;
           CollisionPair_t colPair;
           bool first(true);
-          CollisionPairs_t::iterator it = collisionPairs_.begin();
-          for(; it != collisionPairs_.end() ; ++it){
+          hpp::core::ObstacleUser::CollisionPairs_t::iterator
+            it (pairs().begin());
+          for(; it != pairs().end() ; ++it){
             if(it->second == obj2){
               colPair = *it;
               break;
@@ -80,8 +81,8 @@ namespace hpp {
           }
 
           if(!first){
-            collisionPairs_.erase(it);
-            collisionPairs_.insert(collisionPairs_.begin(),colPair);
+            pairs().erase(it);
+            pairs().insert(pairs().begin(),colPair);
           }
 
         }else{
@@ -100,11 +101,11 @@ namespace hpp {
 
     void RbPrmRomValidation::randomnizeCollisionPairs(){
       std::vector<CollisionPair_t> v;
-      v.reserve(collisionPairs_.size());
-      v.insert(v.end(),collisionPairs_.begin(),collisionPairs_.end());
+      v.reserve(pairs().size());
+      v.insert(v.end(),pairs().begin(),pairs().end());
       std::random_shuffle(v.begin(), v.end());
-      collisionPairs_.clear();
-      collisionPairs_.insert(collisionPairs_.end(),v.begin(),v.end());
+      pairs().clear();
+      pairs().insert(pairs().end(),v.begin(),v.end());
     }
 
 
