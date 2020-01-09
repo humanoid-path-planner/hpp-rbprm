@@ -62,29 +62,23 @@ namespace hpp {
       }
       if(collision){
         if(rbprmReport ){  // if the report is a correct rbprm report, we add the rom information
-          core::CollisionValidationReportPtr_t romCollisionReport = boost::dynamic_pointer_cast<CollisionValidationReport>(romReport);
+          core::CollisionValidationReportPtr_t romCollisionReport =
+            HPP_DYNAMIC_PTR_CAST(CollisionValidationReport, romReport);
           rbprmReport->ROMReports.insert(std::make_pair(robot_->name(),romCollisionReport));
 
           // re arrange the collision pair such that the first one is the pair in collision
           // (allow us to maintain the contact with the same obstacle as long as possible)
           CollisionObjectConstPtr_t obj2 = romCollisionReport->object2;
-          CollisionPair_t colPair;
           bool first(true);
-          hpp::core::ObstacleUser::CollisionPairs_t::iterator
-            it (pairs().begin());
-          for(; it != pairs().end() ; ++it){
-            if(it->second == obj2){
-              colPair = *it;
+          std::size_t i = 0;
+          for(; i < pairs().size() ; ++i)
+            if(pairs()[i].second == obj2)
               break;
-            }
-            first=false;
-          }
 
-          if(!first){
-            pairs().erase(it);
-            pairs().insert(pairs().begin(),colPair);
+          if(i != 0 && !pairs().empty()) {
+            std::swap(pairs()    [0], pairs()   [i]);
+            std::swap(requests() [0], requests()[i]);
           }
-
         }else{
           validationReport = romReport;
         }
@@ -100,12 +94,15 @@ namespace hpp {
 
 
     void RbPrmRomValidation::randomnizeCollisionPairs(){
-      std::vector<CollisionPair_t> v;
-      v.reserve(pairs().size());
-      v.insert(v.end(),pairs().begin(),pairs().end());
-      std::random_shuffle(v.begin(), v.end());
-      pairs().clear();
-      pairs().insert(pairs().end(),v.begin(),v.end());
+      for (std::size_t i = 0; i < pairs().size(); ++i)
+      {
+        // XXX rand() % N is not uniformly distributed
+        std::size_t j = std::rand() % (i + 1);
+        if (i != j) {
+          std::swap(pairs()   [i], pairs()   [j]);
+          std::swap(requests()[i], requests()[j]);
+        }
+      }
     }
 
 
