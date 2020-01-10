@@ -32,6 +32,7 @@ namespace
          ++it) {
       it->enable_contact = true;
     }
+    validation->defaultRequest().enable_contact = true;
     return validation;
   }
 
