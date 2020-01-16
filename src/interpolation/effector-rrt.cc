@@ -26,8 +26,8 @@
 #include <hpp/constraints/generic-transformation.hh>
 #include <hpp/bezier-com-traj/solve_end_effector.hh>
 #include <hpp/core/problem-solver.hh>
-#include <hpp/spline/helpers/effector_spline.h>
-#include <hpp/spline/bezier_curve.h>
+#include <curves/helpers/effector_spline.h>
+#include <curves/bezier_curve.h>
 #include <hpp/pinocchio/joint-collection.hh>
 
 
@@ -223,14 +223,14 @@ value_type max_height = effectorDistance < 0.1 ? 0.03 : std::min( 0.07, std::max
         fcl::Vec3f n2 = getNormal(effLimb, nextState, found);
         value_type h2 = genHeight(found);
         std::cout << "AM I CALLED " << n1 << "\n" <<  n2 << "\n h1 " << h1 << "\n h2 " << h2 <<  std::endl;
-       /* exact_cubic_Ptr ptr = exact_cubic_Ptr(spline::helpers::effector_spline(
+       /* exact_cubic_Ptr ptr = exact_cubic_Ptr(curves::helpers::effector_spline(
                                                   wayPoints.begin(),
                                                   wayPoints.end(),
                                                   n1, n2,
                                                   h1, h2,
                                                   h1, h2));
                                                   */
-        //exact_cubic_Ptr ptr = exact_cubic_Ptr(new spline_deriv_constraint_t(wayPoints.begin(), wayPoints.end()));
+        //exact_cubic_Ptr ptr = exact_cubic_Ptr(new curve_constraint_t(wayPoints.begin(), wayPoints.end()));
         exact_cubic_Ptr ptr = exact_cubic_Ptr(new exact_cubic_t(wayPoints.begin(), wayPoints.end()));
         isLine = true;
         //exact_cubic_Ptr ptr = exact_cubic_Ptr(new exact_cubic_t(wayPoints.begin(), wayPoints.end()));
