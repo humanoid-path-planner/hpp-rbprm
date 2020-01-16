@@ -31,7 +31,7 @@ namespace interpolation {
     HPP_PREDEF_CLASS (PolynomTrajectory);
     typedef boost::shared_ptr <PolynomTrajectory>
     PolynomTrajectoryPtr_t;
-    typedef curves::curve_abc<core::value_type, core::value_type, false, Eigen::Vector3d> Polynom;
+    typedef curves::curve_abc<core::value_type, core::value_type, true, Eigen::Vector3d> Polynom;
     typedef boost::shared_ptr <Polynom> PolynomPtr_t;
     /// Linear interpolation between two configurations
     ///
