@@ -34,6 +34,8 @@ FOREACH(NAME ${${PROJECT_NAME}_TESTS})
   PKG_CONFIG_USE_DEPENDENCY(${NAME} hpp-core)
   PKG_CONFIG_USE_DEPENDENCY(${NAME} hpp-fcl)
   PKG_CONFIG_USE_DEPENDENCY(${NAME} hpp-affordance)
+  PKG_CONFIG_USE_DEPENDENCY(${NAME} curves)
+
   TARGET_LINK_LIBRARIES(${NAME} hpp-affordance)
 
   # Link against Boost and project library.
