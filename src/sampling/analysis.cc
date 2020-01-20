@@ -194,7 +194,7 @@ namespace
             val= (val - lb) * (ub - val) / ((ub - lb) * (ub - lb));
             currentDistance = std::min(currentDistance, val);
         }
-        if(lastJoint == currentJoint->name())
+        if(lastJoint == currentJoint->name() || currentJoint->numberChildJoints() == 0)
             return;
         else return distanceRec(conf, lastJoint, currentJoint->childJoint(0),currentDistance);
     }
