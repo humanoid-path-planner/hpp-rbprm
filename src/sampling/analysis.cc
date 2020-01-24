@@ -194,7 +194,7 @@ namespace
             val= (val - lb) * (ub - val) / ((ub - lb) * (ub - lb));
             currentDistance = std::min(currentDistance, val);
         }
-        if(lastJoint == currentJoint->name())
+        if(lastJoint == currentJoint->name() || currentJoint->numberChildJoints() == 0)
             return;
         else return distanceRec(conf, lastJoint, currentJoint->childJoint(0),currentDistance);
     }
@@ -290,8 +290,8 @@ namespace
         weights = computeWeightsFromAxis(limb,device);
         //hppDout(notice,"Analysis : posture weight not defined in fullbody, computed weight : "<<hpp::pinocchio::displayConfig(weights));
       }
-
-      hpp::pinocchio::difference (device, conf, fullBody->referenceConfig(), diff);
+      const int nq = device->configSize() - device->extraConfigSpace().dimension();
+      hpp::pinocchio::difference (device, conf.segment(0,nq), fullBody->referenceConfig().segment(0,nq), diff);
      // hppDout(notice,"Reference config in analysis : "<<pinocchio::displayConfig(fullBody->referenceConfig()));
       // the difference vector depend on the index in the velocity vector, not in the configuration
       // we only sum for the index of the current limb

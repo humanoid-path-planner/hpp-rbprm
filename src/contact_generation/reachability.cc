@@ -110,8 +110,6 @@ bool intersectionExist(const std::pair<MatrixXX, VectorX> &Ab, const fcl::Vec3f&
 
 
 std::pair<MatrixXX, VectorX> computeStabilityConstraints(const centroidal_dynamics::Equilibrium& contactPhase, const fcl::Vec3f &int_point, const fcl::Vec3f &acc){
-    MatrixXX A;
-    VectorX b;
     // gravity vector
     hppDout(notice,"Compute stability constraints");
     hppDout(notice,"With acceleration = "<<acc);
@@ -120,7 +118,13 @@ std::pair<MatrixXX, VectorX> computeStabilityConstraints(const centroidal_dynami
     const Matrix3 accSkew = bezier_com_traj::skew(acc);
     // compute GIWC
     centroidal_dynamics::MatrixXX Hrow; VectorX h;
-    contactPhase.getPolytopeInequalities(Hrow,h);
+    centroidal_dynamics::LP_status status =  contactPhase.getPolytopeInequalities(Hrow,h);
+    if(status != centroidal_dynamics::LP_STATUS_OPTIMAL){
+      hppDout(warning,"getPolytopeInequalities failed, lp status : "+ status);
+      MatrixXX A(MatrixXX::Zero(0,0));
+      VectorX b(VectorX::Zero(0));
+      return std::make_pair(A,b);
+    }
    // hppDout(notice,"Hrow : \n"<<Hrow);
     MatrixXX H = -Hrow;
     H.rowwise().normalize();
@@ -131,8 +135,9 @@ std::pair<MatrixXX, VectorX> computeStabilityConstraints(const centroidal_dynami
     // constraints : mH[:,3:6] g^  x <= h + mH[:,0:3]g
     // A = mH g^
     // b = h + mHg
-    A = mH.block(0,3,dimH,3) * (gSkew - accSkew);
-    b = h+mH.block(0,0,dimH,3)*(g - acc);
+
+    MatrixXX A(mH.block(0,3,dimH,3) * (gSkew - accSkew));
+    VectorX b(h+mH.block(0,0,dimH,3)*(g - acc));
    /* hppDout(notice,"Stability constraints matrices : ");
     hppDout(notice,"Interior point : \n"<<int_point);
     hppDout(notice,"A = \n"<<A);
@@ -165,12 +170,27 @@ centroidal_dynamics::Equilibrium computeContactConeForState(const RbPrmFullBodyP
 std::pair<MatrixXX, VectorX> computeStabilityConstraintsForState(const RbPrmFullBodyPtr_t& fullbody, State &state,bool& success, const fcl::Vec3f& acc){
     hppDout(notice,"contact order : ");
     hppDout(notice,"  "<<state.contactOrder_.front());
-    return computeStabilityConstraints(computeContactConeForState(fullbody,state,success),state.contactPositions_.at(state.contactOrder_.front()),
+    centroidal_dynamics::Equilibrium cone(computeContactConeForState(fullbody,state,success));
+    std::pair<MatrixXX, VectorX> Ab;
+    if(success){
+      Ab =  computeStabilityConstraints(cone,state.contactPositions_.at(state.contactOrder_.front()),
                                        acc.isZero() ? state.configuration_.tail<3>() : acc);
+      if(Ab.first.cols() == 0 || Ab.first.rows() ==0)
+        success = false;
+    }else{
+      MatrixXX A(MatrixXX::Zero(0,0));
+      VectorX b(VectorX::Zero(0));
+      Ab = std::make_pair(A,b);
+    }
+    return Ab;
 }
 
 std::pair<MatrixXX, VectorX> computeConstraintsForState(const RbPrmFullBodyPtr_t& fullbody, State &state,bool& success){
-    return stackConstraints(computeKinematicsConstraintsForState(fullbody,state),computeStabilityConstraintsForState(fullbody,state,success));
+    std::pair<MatrixXX, VectorX> Ab = computeStabilityConstraintsForState(fullbody,state,success);
+    if(success)
+      return stackConstraints(computeKinematicsConstraintsForState(fullbody,state),Ab);
+    else
+      return Ab;
 }
 
 Result isReachableIntermediate(const RbPrmFullBodyPtr_t& fullbody,State &previous,State &intermediate, State& next){
@@ -260,11 +280,15 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
     std::pair<MatrixXX,VectorX> Ab,K_p,K_n,A_p,A_n;
     if(contactsBreak.size() == 1 && contactsCreation.size() == 1){
        A_p = computeConstraintsForState(fullbody,previous,successCone);
-      if(!successCone)
+      if(!successCone){
+        hppDout(warning,"Unable to compute computeStabilityConstraintsForState.");
         return Result(UNABLE_TO_COMPUTE);
+      }
       A_n = computeConstraintsForState(fullbody,next,successCone);
-      if(!successCone)
+      if(!successCone){
+        hppDout(warning,"Unable to compute computeStabilityConstraintsForState.");
         return Result(UNABLE_TO_COMPUTE);
+      }
       Ab = stackConstraints(A_p,A_n);
     }
     // there is only one contact creation OR (exclusive) break between the two states
@@ -281,8 +305,10 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
         // develloped computation, needed to display the differents constraints :
         hppStartBenchmark(REACHABLE_STABILITY);
         A_n = computeStabilityConstraintsForState(fullbody,next,successCone,acc);
-        if(!successCone)
+        if(!successCone){
+            hppDout(warning,"Unable to compute computeStabilityConstraintsForState.");
             return Result(UNABLE_TO_COMPUTE);
+        }
 
         hppStopBenchmark(REACHABLE_STABILITY);
         hppDisplayBenchmark(REACHABLE_STABILITY);
@@ -305,8 +331,10 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
         //Ab = stackConstraints(C_p,K_n_m);
         hppStartBenchmark(REACHABLE_STABILITY);
         A_p = computeStabilityConstraintsForState(fullbody,previous,successCone,acc);
-        if(!successCone)
+        if(!successCone){
+            hppDout(warning,"Unable to compute computeStabilityConstraintsForState.");
             return Result(UNABLE_TO_COMPUTE);
+        }
         hppStopBenchmark(REACHABLE_STABILITY);
         hppDisplayBenchmark(REACHABLE_STABILITY);
         //K_p = computeKinematicsConstraintsForState(fullbody,previous);
