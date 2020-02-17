@@ -282,7 +282,7 @@ ProjectionReport setCollisionFree(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const
     }
 
     RbPrmLimbPtr_t limb = fullBody->GetLimb(limbName);
-    sampling::T_Sample samples(limb->sampleContainer_.samples_);
+    sampling::T_Sample& samples = limb->sampleContainer_.samples_;
     if(sort){
         sampling::sample_greater sortAlgo;
         std::sort(samples.begin(),samples.end(),sortAlgo);
