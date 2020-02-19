@@ -119,9 +119,6 @@ namespace hpp {
             group.push_back(id);
             limbGroups_.insert(std::make_pair(name, group));
         }
-        sampling::T_Sample& samples = limb->sampleContainer_.samples_;
-        sampling::sample_greater sortAlgo;
-        std::sort(samples.begin(),samples.end(),sortAlgo);
     }
 
     std::map<std::string, const sampling::heuristic>::const_iterator checkLimbData(const std::string& id, const rbprm::T_Limb& limbs, const rbprm::sampling::HeuristicFactory& factory, const std::string& heuristicName)
