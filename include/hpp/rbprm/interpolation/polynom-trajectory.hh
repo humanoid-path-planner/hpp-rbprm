@@ -23,7 +23,7 @@
 # include <hpp/core/config.hh>
 # include <hpp/core/path.hh>
 # include <hpp/rbprm/interpolation/time-dependant.hh>
-# include <hpp/spline/curve_abc.h>
+# include <curves/curve_abc.h>
 
 namespace hpp {
 namespace rbprm {
@@ -31,7 +31,7 @@ namespace interpolation {
     HPP_PREDEF_CLASS (PolynomTrajectory);
     typedef boost::shared_ptr <PolynomTrajectory>
     PolynomTrajectoryPtr_t;
-    typedef spline::curve_abc<core::value_type, core::value_type, 3, false, Eigen::Vector3d> Polynom;
+    typedef curves::curve_abc<core::value_type, core::value_type, true, Eigen::Vector3d> Polynom;
     typedef boost::shared_ptr <Polynom> PolynomPtr_t;
     /// Linear interpolation between two configurations
     ///

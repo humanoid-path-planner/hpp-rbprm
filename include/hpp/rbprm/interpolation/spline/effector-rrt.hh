@@ -32,9 +32,9 @@
 # include <hpp/core/problem.hh>
 # include <hpp/core/config-projector.hh>
 # include <hpp/rbprm/interpolation/spline/bezier-path.hh>
-# include <hpp/spline/exact_cubic.h>
-# include <hpp/spline/bezier_curve.h>
-# include <hpp/spline/spline_deriv_constraint.h>
+# include <curves/exact_cubic.h>
+# include <curves/bezier_curve.h>
+# include <curves/curve_constraint.h>
 # include <vector>
 # include <map>
 
@@ -118,8 +118,8 @@ namespace interpolation {
      */
     std::vector<core::PathVectorPtr_t> fitBeziersToPath(RbPrmFullBodyPtr_t fullbody,const pinocchio::Frame& effector, const value_type comPathLength,const PathPtr_t fullBodyComPath, const State &startState, const State &nextState);
 
-    typedef spline::exact_cubic<double, double, 3, true, Eigen::Matrix<value_type, 3, 1> > exact_cubic_t;
-    typedef spline::spline_deriv_constraint<double, double, 3, true, Eigen::Matrix<value_type, 3, 1> > spline_deriv_constraint_t;
+    typedef curves::exact_cubic<double, double, true, Eigen::Matrix<value_type, 3, 1> > exact_cubic_t;
+    typedef curves::curve_constraints<Eigen::Matrix<value_type, 3, 1> > curve_constraint_t;
     typedef boost::shared_ptr<exact_cubic_t> exact_cubic_Ptr;
 
 

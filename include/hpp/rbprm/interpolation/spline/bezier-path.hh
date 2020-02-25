@@ -20,7 +20,7 @@
 #ifndef HPP_RBPRM_BEZIER_PATH_HH
 #define HPP_RBPRM_BEZIER_PATH_HH
 
-# include <hpp/spline/bezier_curve.h>
+# include <curves/bezier_curve.h>
 # include <hpp/core/path.hh>
 # include <vector>
 # include <map>
@@ -28,7 +28,7 @@
 namespace hpp {
 namespace rbprm {
 
-typedef spline::bezier_curve  <double, double, 3, true, Eigen::Vector3d > bezier_t;
+typedef curves::bezier_curve  <double, double, true, Eigen::Vector3d > bezier_t;
 typedef boost::shared_ptr<bezier_t> bezier_Ptr;
 HPP_PREDEF_CLASS (BezierPath);
 typedef boost::shared_ptr <BezierPath> BezierPathPtr_t;
