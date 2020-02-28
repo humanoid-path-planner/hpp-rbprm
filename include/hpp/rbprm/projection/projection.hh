@@ -68,9 +68,8 @@ ProjectionReport HPP_RBPRM_DLLAPI projectToRootConfiguration(hpp::rbprm::RbPrmFu
 /// Project a configuration such that a given limb configuration is collision free
 /// \param fullBody target Robot
 /// \param limb considered limb
-/// \param sort if true, the samples are first sorted with thier static value, such that the returned collision free configuration is the one with the best value
 /// \return projection report containing the state projected
-ProjectionReport  HPP_RBPRM_DLLAPI setCollisionFree(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const core::CollisionValidationPtr_t &validation, const std::string& limb, const hpp::rbprm::State& currentState,bool sort = true);
+ProjectionReport  HPP_RBPRM_DLLAPI setCollisionFree(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const core::CollisionValidationPtr_t &validation, const std::string& limb, const hpp::rbprm::State& currentState);
 
 
 ProjectionReport HPP_RBPRM_DLLAPI projectStateToObstacle(const hpp::rbprm::RbPrmFullBodyPtr_t& body, const std::string& limbId, const hpp::rbprm::RbPrmLimbPtr_t& limb,

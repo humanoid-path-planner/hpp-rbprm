@@ -267,7 +267,7 @@ ProjectionReport projectToRootConfiguration(hpp::rbprm::RbPrmFullBodyPtr_t fullB
 }
 
 ProjectionReport setCollisionFree(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const core::CollisionValidationPtr_t& validation ,
-                                  const std::string& limbName,const hpp::rbprm::State& currentState,bool sort)
+                                  const std::string& limbName,const hpp::rbprm::State& currentState)
 {
     ProjectionReport res;
     res.result_ = currentState;
@@ -282,11 +282,7 @@ ProjectionReport setCollisionFree(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const
     }
 
     RbPrmLimbPtr_t limb = fullBody->GetLimb(limbName);
-    sampling::T_Sample samples(limb->sampleContainer_.samples_);
-    if(sort){
-        sampling::sample_greater sortAlgo;
-        std::sort(samples.begin(),samples.end(),sortAlgo);
-    }
+    sampling::T_Sample& samples = limb->sampleContainer_.samples_;
     for(sampling::SampleVector_t::const_iterator cit = samples.begin();cit != samples.end(); ++cit)
     {
         sampling::Load(*cit, configuration);
