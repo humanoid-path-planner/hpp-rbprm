@@ -63,7 +63,7 @@ ContactGenHelper::ContactGenHelper(RbPrmFullBodyPtr_t fb, const State& ps, pinoc
 , testReachability_(true)
 , maximiseContacts_(true)
 , accept_unreachable_(false)
-, tryQuasiStatic_(false)
+, tryQuasiStatic_(fb->staticStability())
 , reachabilityPointPerPhases_(0)
 {
     workingState_.configuration_ = configuration;

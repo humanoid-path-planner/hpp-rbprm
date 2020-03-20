@@ -529,7 +529,7 @@ Result isReachableDynamic(const RbPrmFullBodyPtr_t& fullbody, State &previous, S
             wps.push_back(com_previous);
             wps.push_back(quasiStaticResult.x);
             wps.push_back(com_next);
-            bezier_Ptr bezierCurve=bezier_Ptr(new bezier_t(wps.begin(),wps.end(),1.));
+            bezier_Ptr bezierCurve=bezier_Ptr(new bezier_t(wps.begin(), wps.end()));
             quasiStaticResult.path_ = BezierPath::create(fullbody->device_,bezierCurve,previous.configuration_,next.configuration_, core::interval_t(0.,1));
             quasiStaticSucces = true;
             #if !STAT_TIMINGS
