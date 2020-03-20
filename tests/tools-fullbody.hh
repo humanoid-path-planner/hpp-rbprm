@@ -156,6 +156,99 @@ RbPrmFullBodyPtr_t loadHRP2(){
 
 }
 
+
+RbPrmFullBodyPtr_t loadTalos(){
+    const std::string robotName("talos");
+    const std::string rootJointType ("freeflyer");
+    const std::string packageName ("talos_data");
+    const std::string modelName ("talos");
+    const std::string urdfSuffix ("_reduced");
+    const std::string srdfSuffix ("");
+
+    hpp::pinocchio::DevicePtr_t device = hpp::pinocchio::Device::create (robotName);
+    hpp::pinocchio::urdf::loadRobotModel(device, rootJointType, packageName, modelName,
+    urdfSuffix, srdfSuffix);
+    device->rootJoint()->lowerBound(0, -2);
+    device->rootJoint()->lowerBound(1, -2);
+    device->rootJoint()->lowerBound(2, 0.6);
+    device->rootJoint()->upperBound(0,  2);
+    device->rootJoint()->upperBound(1,  2);
+    device->rootJoint()->upperBound(2,  1.3);
+
+    device->setDimensionExtraConfigSpace(6); // used by kinodynamic methods
+    for(size_type i = 0 ; i < 6 ; ++i){
+      device->extraConfigSpace().lower(i)=-5;
+      device->extraConfigSpace().upper(i)=5;
+    }
+
+    RbPrmFullBodyPtr_t fullBody = RbPrmFullBody::create(device);
+
+    core::Configuration_t q_ref(device->configSize());
+    q_ref<<0.0,
+            0.0,
+            1.02127,
+            0.0,
+            0.0,
+            0.0,
+            1.,
+            0.0,
+            0.0,
+            -0.411354,
+            0.859395,
+            -0.448041,
+            -0.001708,
+            0.0,
+            0.0,
+            -0.411354,
+            0.859395,
+            -0.448041,
+            -0.001708,
+            0.0,
+            0.006761,
+            0.25847,
+            0.173046,
+            -0.0002,
+            -0.525366,
+            0.0,
+            -0.0,
+            0.1,
+            -0.005,
+            -0.25847,
+            -0.173046,
+            0.0002,
+            -0.525366,
+            0.0,
+            0.0,
+            0.1,
+            -0.005,
+            0.,
+            0.;
+
+    fullBody->referenceConfig(q_ref);
+
+     // add limbs :
+    const std::string rLegId("talos_rleg_rom");
+    const std::string rLeg("leg_right_1_joint");
+    const std::string rfeet("leg_right_sole_fix_joint");
+    fcl::Vec3f rLegOffset( 0., 0., 0);
+    fcl::Vec3f rLegLimbOffset(0., 0., 0);
+    fcl::Vec3f rLegNormal(0,0,1);
+    double legX = 0.09;
+    double legY = 0.05;
+    fullBody->AddLimb(rLegId,rLeg,rfeet,rLegOffset,rLegLimbOffset,rLegNormal,legX,legY,hpp::core::ObjectStdVector_t(),1000,"fixedStep1",0.01,hpp::rbprm::_6_DOF,false,false,std::string(),0.3);
+
+    const std::string lLegId("talos_lleg_rom");
+    const std::string lLeg("leg_left_1_joint");
+    const std::string lfeet("leg_left_sole_fix_joint");
+    fcl::Vec3f lLegOffset(0., 0., 0.0);
+    fcl::Vec3f lLegLimbOffset(0., 0., 0);
+    fcl::Vec3f lLegNormal(0,0,1);
+    fullBody->AddLimb(lLegId,lLeg,lfeet,lLegOffset,lLegLimbOffset,lLegNormal,legX,legY,hpp::core::ObjectStdVector_t(),1000,"fixedStep1",0.01,hpp::rbprm::_6_DOF,false,false,std::string(),0.3);
+
+    return fullBody;
+
+}
+
 void loadRom(hpp::pinocchio::T_Rom& romDevices, const std::string romName, const std::string packageName)
 {
     std::string rootJointType   ("freeflyer"),
