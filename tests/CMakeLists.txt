@@ -28,6 +28,10 @@ SET(${PROJECT_NAME}_TESTS
   kinodynamic
   )
 
+ADD_REQUIRED_DEPENDENCY("hpp-rbprm-robot-data")
+ADD_REQUIRED_DEPENDENCY("talos_data")
+ADD_REQUIRED_DEPENDENCY("hpp-environments")
+
 FOREACH(NAME ${${PROJECT_NAME}_TESTS})
   ADD_UNIT_TEST(${NAME} "test-${NAME}")
 
