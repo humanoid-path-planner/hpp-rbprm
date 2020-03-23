@@ -26,6 +26,7 @@ SET(${PROJECT_NAME}_TESTS
   rbrrt
   projection
   kinodynamic
+  limb-rrt
   )
 
 ADD_REQUIRED_DEPENDENCY("hpp-rbprm-robot-data")
