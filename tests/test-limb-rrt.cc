@@ -57,8 +57,6 @@ BOOST_AUTO_TEST_CASE (limbRRTflat) {
     // build a CoM reference Path in the problem solver
     // first define a list of c, dc, ddc :
     T_Configuration c_t, dc_t, ddc_t;
-    c_t.push_back(Vector3(-0.007943484443356734, 0.05084911890550107, 0.8539953226873321));
-    c_t.push_back(Vector3(-0.007702107182372493, 0.053721420891477904, 0.8544320991466636));
     c_t.push_back(Vector3(-0.007335037762674138, 0.056386684822780066, 0.8548761161600128));
     c_t.push_back(Vector3(-0.0068282315994240075, 0.05880884353484932, 0.8553261738101325));
     c_t.push_back(Vector3(-0.006166712140232212, 0.0609516642750017, 0.8557810761994065));
@@ -76,11 +74,7 @@ BOOST_AUTO_TEST_CASE (limbRRTflat) {
     c_t.push_back(Vector3(0.021063027700722402, 0.051360596017010034, 0.8611845081427736));
     c_t.push_back(Vector3(0.02574093440691642, 0.04643655974634927, 0.8615937133499726));
     c_t.push_back(Vector3(0.031160741135083655, 0.04035013641071752, 0.8619827292958794));
-    c_t.push_back(Vector3(0.03796234956159587, 0.03243507620290736, 0.8623205217664784));
-    c_t.push_back(Vector3(0.04644442990824303, 0.022449299460199693, 0.8625781572904632));
 
-    dc_t.push_back(Vector3(0.0015542379517443012, 0.030139481152738012, 0.004306342512950106));
-    dc_t.push_back(Vector3(0.0027111346598062505, 0.028250363043244152, 0.004387379576365649));
     dc_t.push_back(Vector3(0.004002077423403626, 0.026090015253394872, 0.0044567812068005115));
     dc_t.push_back(Vector3(0.005435676129913748, 0.02356858910290817, 0.004514194745513037));
     dc_t.push_back(Vector3(0.0070214921041798824, 0.02068440331545588, 0.004559658436728889));
@@ -97,11 +91,7 @@ BOOST_AUTO_TEST_CASE (limbRRTflat) {
     dc_t.push_back(Vector3(0.03842747786592224, -0.03570971233435052, 0.004274055822285332));
     dc_t.push_back(Vector3(0.04304207466852871, -0.04316778244974884, 0.004176213721910038));
     dc_t.push_back(Vector3(0.04805970704538201, -0.051431625515619264, 0.00406146148090171));
-    dc_t.push_back(Vector3(0.05675924620602364, -0.0645273224980335, 0.0038134410292982534));
-    dc_t.push_back(Vector3(0.07242237195913928, -0.08469006832418327, 0.0031871525146046405));
 
-    ddc_t.push_back(Vector3(0.010612515393288542, -0.032395302510792034, 0.0008039018284138923));
-    ddc_t.push_back(Vector3(0.011894030934649956, -0.018904595930797352, 0.0007842096502575294));
     ddc_t.push_back(Vector3(0.013254873206397372, -0.022504259983497088, 0.0006639920340443563));
     ddc_t.push_back(Vector3(0.014704118285834341, -0.0261189460959399, 0.0005442167026611065));
     ddc_t.push_back(Vector3(0.016251431848449092, -0.029751047009470705, 0.0004248038695311637));
@@ -118,10 +108,9 @@ BOOST_AUTO_TEST_CASE (limbRRTflat) {
     ddc_t.push_back(Vector3(0.043317571383828524, -0.07155758713223562, -0.0008875174965792404));
     ddc_t.push_back(Vector3(0.047113866126768794, -0.07559249359936515, -0.001008774893639288));
     ddc_t.push_back(Vector3(0.05122445891168781, -0.08764816999729377, -0.001225393708891645));
-    ddc_t.push_back(Vector3(0.10244536383249014, -0.14652131374488397, -0.003070631880628385));
-    ddc_t.push_back(Vector3(0.17625150702966053, -0.22157835598829556, -0.007632964107111657));
 
     const double dt = 0.1;
+    const double duration = 1.6;
     // build a path in the problem solver from this list of points and derivatives
     core::PathVectorPtr_t res = core::PathVector::create(3, 3);
     CIT_Configuration cit = c_t.begin();
@@ -133,35 +122,71 @@ BOOST_AUTO_TEST_CASE (limbRRTflat) {
     }
     size_t com_path_id = ps->addPath(res);
     core::PathPtr_t com_path = ps->paths()[com_path_id];
-    BOOST_CHECK_CLOSE(com_path->length(), 2., 0.001); // check duration of the com trajectory created
+    BOOST_CHECK_CLOSE(com_path->length(), duration, 0.001); // check duration of the com trajectory created
 
 
     // solve limb rrt :
-    core::PathPtr_t eff_path = interpolation::comRRT(fullBody, ps, com_path, s_init, s_goal, 5, false);
+    core::PathPtr_t eff_path = interpolation::comRRT(fullBody, ps, com_path, s_init, s_goal, 5, true);
 
     // test the resulting path
-    bool success;
     BOOST_CHECK_CLOSE(eff_path->length(), 1., 1.); // results of limb-rrt should always be defined on [0;1]
-    Configuration_t p0(eff_path->operator()(0, success));
+    bool success;
+    double t_id = eff_path->operator()(0, success)[configSize];
+    BOOST_CHECK(success);
+    BOOST_CHECK_EQUAL(t_id, 0.);
+    t_id = eff_path->operator()(eff_path->length(), success)[configSize];
+    BOOST_CHECK(success);
+    BOOST_CHECK_CLOSE(t_id, 1., 1e-6);
+
+    // check that path begin and end at the correct configurations
+    Configuration_t p0(eff_path->operator()(0, success).head(configSize));
     BOOST_CHECK(success);
     BOOST_CHECK(p0.isApprox(q_init));
     fullBody->device_->currentConfiguration(p0);
     fullBody->device_->computeForwardKinematics();
     Transform3f rf_pose = fullBody->device_->getFrameByName(rf_joint_name).currentTransformation();
     BOOST_CHECK(rf_pose.translation().isApprox(Vector3(-0.00884695,  -0.0851828,  0.00345772), 1e-3));
-    Transform3f lf_pose = fullBody->device_->getFrameByName(lf_joint_name).currentTransformation();
-    BOOST_CHECK(lf_pose.translation().isApprox(Vector3(-0.00884695,   0.0848172,  0.00199798), 1e-3));
 
-    Configuration_t p1(eff_path->operator()(eff_path->length(), success));
+    Configuration_t p1(eff_path->operator()(eff_path->length(), success).head(configSize));
     BOOST_CHECK(success);
     BOOST_CHECK(p1.isApprox(q_goal));
     fullBody->device_->currentConfiguration(p1);
     fullBody->device_->computeForwardKinematics();
     rf_pose = fullBody->device_->getFrameByName(rf_joint_name).currentTransformation();
     BOOST_CHECK(rf_pose.translation().isApprox(Vector3(0.141153, -0.0851828, 0.00345772), 1e-3));
-    lf_pose = fullBody->device_->getFrameByName(lf_joint_name).currentTransformation();
-    BOOST_CHECK(lf_pose.translation().isApprox(Vector3(-0.00884695,   0.0848172,  0.00199798), 1e-3));
 
+    // check that the left foot position is constant during all the motion:
+    double t = 0.;
+    while(t <= eff_path->length()){
+        fullBody->device_->currentConfiguration(eff_path->operator()(t, success).head(configSize));
+        BOOST_CHECK(success);
+        fullBody->device_->computeForwardKinematics();
+        Transform3f lf_pose = fullBody->device_->getFrameByName(lf_joint_name).currentTransformation();
+        BOOST_CHECK(lf_pose.translation().isApprox(Vector3(-0.00884695,   0.0848172,  0.00199798), 1e-2));
+        t += 0.01;
+    }
+
+    // check if CoM reference is followed:
+    fullBody->device_->controlComputation (hpp::pinocchio::COMPUTE_ALL);
+    Configuration_t com(3), com_ref(3);
+    Configuration_t q(configSize + 1);
+    t = 0.;
+    while(t <= eff_path->length()){
+        q = eff_path->operator()(t, success);
+        BOOST_CHECK(success);
+        t_id = q[configSize];
+        fullBody->device_->currentConfiguration(q.head(configSize));
+        fullBody->device_->computeForwardKinematics();
+        com = fullBody->device_->positionCenterOfMass();
+        com_ref = com_path->operator()(t_id * duration, success);
+        BOOST_CHECK(success);
+        //std::cout<<" t   = "<< t <<std::endl;
+        //std::cout<<" t id= "<< t_id <<std::endl;
+        //std::cout<<" com     = "<<com.transpose()<<std::endl;
+        //std::cout<<" com ref = "<<com_ref.transpose()<<std::endl;
+        //BOOST_CHECK(com.isApprox(com_ref, 1e-2));
+        t += 0.05;
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
