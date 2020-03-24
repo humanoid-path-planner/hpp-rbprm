@@ -222,6 +222,12 @@ RbPrmFullBodyPtr_t loadTalos(){
             0.1,
             -0.005,
             0.,
+            0.,
+            0.,
+            0.,
+            0.,
+            0.,
+            0.,
             0.;
 
     fullBody->referenceConfig(q_ref);
