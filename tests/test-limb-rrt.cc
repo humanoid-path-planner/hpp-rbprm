@@ -184,6 +184,7 @@ BOOST_AUTO_TEST_CASE (limbRRTflat) {
         //std::cout<<" t id= "<< t_id <<std::endl;
         //std::cout<<" com     = "<<com.transpose()<<std::endl;
         //std::cout<<" com ref = "<<com_ref.transpose()<<std::endl;
+        // FIXME, see https://github.com/humanoid-path-planner/hpp-rbprm/issues/46
         //BOOST_CHECK(com.isApprox(com_ref, 1e-2));
         t += 0.05;
     }
