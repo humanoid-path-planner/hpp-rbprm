@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with hpp-core.  If not, see <http://www.gnu.org/licenses/>.
 
-#define BOOST_TEST_MODULE test - reachability
+#define BOOST_TEST_MODULE test-reachability
 
 #include <hpp/rbprm/contact_generation/reachability.hh>
 #include "tools-fullbody.hh"

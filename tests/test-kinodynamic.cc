@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with hpp-core.  If not, see <http://www.gnu.org/licenses/>.
 
-#define BOOST_TEST_MODULE test - kinodynamic
+#define BOOST_TEST_MODULE test-kinodynamic
 #include <pinocchio/fwd.hpp>
 #include <boost/test/included/unit_test.hpp>
 

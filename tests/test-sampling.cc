@@ -22,7 +22,7 @@
 #include <hpp/fcl/distance.h>
 #include <hpp/fcl/collision.h>
 
-#define BOOST_TEST_MODULE test - sampling
+#define BOOST_TEST_MODULE test-sampling
 #include <boost/test/included/unit_test.hpp>
 
 using namespace hpp;
