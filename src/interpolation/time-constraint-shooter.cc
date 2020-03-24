@@ -88,6 +88,9 @@ using namespace core;
             for(rbprm::CIT_Limb cit = freeLimbs_.begin(); cit != freeLimbs_.end(); ++cit)
             {
                 const rbprm::RbPrmLimbPtr_t limb = cit->second;
+                if(limb->sampleContainer_.samples_.size() <= 1){
+                    throw std::runtime_error("In time-constraint-shooter: Limbs database should have more than 1 samples.");
+                }
                 const int rand_int = (rand() % (int) (limb->sampleContainer_.samples_.size() -1));
                 const sampling::Sample& sample = *(limb->sampleContainer_.samples_.begin() + rand_int);
                 sampling::Load(sample,config);
