@@ -229,7 +229,23 @@ const fcl::Vec3f comfcl = comcptr->com();*/
         hppDout(notice,"Setup cone contacts : ");
         hppDout(notice,"position : \n"<<positions);
         hppDout(notice,"normal : \n"<<normals);
-        bool success = sEq.setNewContacts(positions,normals,friction,alg);
+        int attempts = 10;
+        const double eps = 1.e-3;
+        bool success(false);
+        while(!success && attempts > 0){
+            success = sEq.setNewContacts(positions,normals,friction,alg);
+            attempts--;
+            if(!success){
+                hppDout(notice, "setNewContacts failed, introduce perturbation in the normals.");
+                // degenerate case for cdd, introduce small perturbation in the normals angles and retry
+                for(size_t i = 0 ; i < nbContactPoints ; ++i){
+                    Vector3 normal_perturbed(normals.middleRows<1>(i));
+                    normal_perturbed[2] += ((rand() / value_type(RAND_MAX)) * 2. * eps) - eps;
+                    normal_perturbed.normalize();
+                    normals.middleRows<1>(i) = normal_perturbed;
+                }
+            }
+        }
         if (!success)
             throw std::runtime_error("Error in centroidal-dynamic lib while computing new contacts");
         return com;
