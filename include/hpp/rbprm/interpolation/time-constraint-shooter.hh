@@ -58,8 +58,6 @@ namespace hpp {
                                                             core::ConfigProjectorPtr_t projector,
                                                             const rbprm::T_Limb freeLimbs);
 
-        virtual void shoot (core::Configuration_t& q) const;
-
     public:
         const hpp::core::PathPtr_t rootPath_;
         const std::size_t pathDofRank_;
@@ -84,6 +82,8 @@ namespace hpp {
                         const rbprm::T_Limb freeLimbs);
 
         void init (const TimeConstraintShooterPtr_t& self);
+
+        virtual void impl_shoot (core::Configuration_t& q) const;
     }; // class TimeConstraintShooter
 /// \}
     } // namespace interpolation
