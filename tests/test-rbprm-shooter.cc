@@ -27,104 +27,96 @@
 using namespace hpp;
 using namespace rbprm;
 
-BOOST_AUTO_TEST_SUITE( test_rbprm_shooter )
+BOOST_AUTO_TEST_SUITE(test_rbprm_shooter)
 
+BOOST_AUTO_TEST_CASE(shooterCreation) {
+  RbPrmDevicePtr_t robot = initRbPrmDeviceTest();
+  RbPrmValidationPtr_t validator(RbPrmValidation::create(robot));
 
-BOOST_AUTO_TEST_CASE (shooterCreation) {
-    RbPrmDevicePtr_t robot = initRbPrmDeviceTest();
-    RbPrmValidationPtr_t validator(RbPrmValidation::create(robot));
+  CollisionObjectPtr_t colObject = MeshObstacleBox();
+  colObject->move(fcl::Vec3f(11.3, 0, 0));
+  validator->addObstacle(colObject);
 
-    CollisionObjectPtr_t colObject = MeshObstacleBox();
-    colObject->move(fcl::Vec3f(11.3,0,0));
-    validator->addObstacle(colObject);
-
-    core::ObjectStdVector_t collisionObjects;
-    collisionObjects.push_back(colObject);
-    RbPrmShooterPtr_t shooter = RbPrmShooter::create(robot, collisionObjects);
-    for(int i =0; i< 100; ++i)
-    {
-        BOOST_CHECK_MESSAGE (validator->validate(*(shooter->shoot())),
-                                                  "Reachability condition should be verified by shooter");
-    }
+  core::ObjectStdVector_t collisionObjects;
+  collisionObjects.push_back(colObject);
+  RbPrmShooterPtr_t shooter = RbPrmShooter::create(robot, collisionObjects);
+  for (int i = 0; i < 100; ++i) {
+    BOOST_CHECK_MESSAGE(validator->validate(*(shooter->shoot())),
+                        "Reachability condition should be verified by shooter");
+  }
 }
 
-BOOST_AUTO_TEST_CASE (shooterCreationWithFilters) {
-    RbPrmDevicePtr_t robot = initRbPrmDeviceTest();
-    RbPrmValidationPtr_t validator(RbPrmValidation::create(robot));
+BOOST_AUTO_TEST_CASE(shooterCreationWithFilters) {
+  RbPrmDevicePtr_t robot = initRbPrmDeviceTest();
+  RbPrmValidationPtr_t validator(RbPrmValidation::create(robot));
 
-    CollisionObjectPtr_t colObject = MeshObstacleBox();
-    colObject->move(fcl::Vec3f(11.3,0,0));
-    validator->addObstacle(colObject);
+  CollisionObjectPtr_t colObject = MeshObstacleBox();
+  colObject->move(fcl::Vec3f(11.3, 0, 0));
+  validator->addObstacle(colObject);
 
-    core::ObjectStdVector_t collisionObjects;
-    collisionObjects.push_back(colObject);
+  core::ObjectStdVector_t collisionObjects;
+  collisionObjects.push_back(colObject);
 
-    std::vector<std::string> filter;
+  std::vector<std::string> filter;
 
-    RbPrmShooterPtr_t shooter = RbPrmShooter::create(robot, collisionObjects, filter);
-    for(int i =0; i< 100; ++i)
-    {
-        BOOST_CHECK_MESSAGE (validator->validate(*(shooter->shoot()),validationReport, filter),
-                                                  "Reachability condition should be verified by shooter");
-    }
+  RbPrmShooterPtr_t shooter = RbPrmShooter::create(robot, collisionObjects, filter);
+  for (int i = 0; i < 100; ++i) {
+    BOOST_CHECK_MESSAGE(validator->validate(*(shooter->shoot()), validationReport, filter),
+                        "Reachability condition should be verified by shooter");
+  }
 
-    filter.push_back("rom");
-    shooter = RbPrmShooter::create(robot, collisionObjects, filter);
-    for(int i =0; i< 100; ++i)
-    {
-        BOOST_CHECK_MESSAGE (validator->validate(*(shooter->shoot()),validationReport, filter),
-                                                  "Reachability condition should be verified by shooter");
-    }
+  filter.push_back("rom");
+  shooter = RbPrmShooter::create(robot, collisionObjects, filter);
+  for (int i = 0; i < 100; ++i) {
+    BOOST_CHECK_MESSAGE(validator->validate(*(shooter->shoot()), validationReport, filter),
+                        "Reachability condition should be verified by shooter");
+  }
 
+  filter.push_back("rom2");
+  shooter = RbPrmShooter::create(robot, collisionObjects, filter);
+  for (int i = 0; i < 100; ++i) {
+    BOOST_CHECK_MESSAGE(validator->validate(*(shooter->shoot()), validationReport, filter),
+                        "Reachability condition should be verified by shooter");
+  }
 
-    filter.push_back("rom2");
-    shooter = RbPrmShooter::create(robot, collisionObjects, filter);
-    for(int i =0; i< 100; ++i)
-    {
-        BOOST_CHECK_MESSAGE (validator->validate(*(shooter->shoot()),validationReport, filter),
-                                                  "Reachability condition should be verified by shooter");
-    }
-
-    filter.clear();
-    filter.push_back("rom2");
-    shooter = RbPrmShooter::create(robot, collisionObjects, filter);
-    for(int i =0; i< 100; ++i)
-    {
-        BOOST_CHECK_MESSAGE (validator->validate(*(shooter->shoot()),validationReport, filter),
-                                                  "Reachability condition should be verified by shooter");
-    }
+  filter.clear();
+  filter.push_back("rom2");
+  shooter = RbPrmShooter::create(robot, collisionObjects, filter);
+  for (int i = 0; i < 100; ++i) {
+    BOOST_CHECK_MESSAGE(validator->validate(*(shooter->shoot()), validationReport, filter),
+                        "Reachability condition should be verified by shooter");
+  }
 }
 
 // TODO: how to assert other than 0 angle?
-BOOST_AUTO_TEST_CASE (shooterCreationWithSO3Limits) {
-    RbPrmDevicePtr_t robot = initRbPrmDeviceTest();
+BOOST_AUTO_TEST_CASE(shooterCreationWithSO3Limits) {
+  RbPrmDevicePtr_t robot = initRbPrmDeviceTest();
 
-    CollisionObjectPtr_t colObject = MeshObstacleBox();
-    colObject->move(fcl::Vec3f(11.3,0,0));
+  CollisionObjectPtr_t colObject = MeshObstacleBox();
+  colObject->move(fcl::Vec3f(11.3, 0, 0));
 
-    core::ObjectStdVector_t collisionObjects;
-    collisionObjects.push_back(colObject);
+  core::ObjectStdVector_t collisionObjects;
+  collisionObjects.push_back(colObject);
 
-    std::vector<std::string> filter;
+  std::vector<std::string> filter;
 
-    RbPrmShooterPtr_t shooter = RbPrmShooter::create(robot, collisionObjects, filter);
-    std::vector<double> bounds;
-    bounds.push_back(0);bounds.push_back(0);
-    //bounds.push_back(-1);bounds.push_back(1);
-    bounds.push_back(0);bounds.push_back(0);
-    bounds.push_back(-1);bounds.push_back(1);
-    //bounds.push_back(0);bounds.push_back(0);
-    shooter->BoundSO3(bounds);
-    for(int i =0; i< 100; ++i)
-    {
-        Eigen::VectorXd config =  *(shooter->shoot()) ;
-        Eigen::Quaterniond q(config(3),config(4),config(5),config(6));
-        //Eigen::Vector3d ea = q.toRotationMatrix().eulerAngles(2, 1, 0);
-        //std::cout << "q " << config << "\n ea " << ea << std::endl;
-    }
+  RbPrmShooterPtr_t shooter = RbPrmShooter::create(robot, collisionObjects, filter);
+  std::vector<double> bounds;
+  bounds.push_back(0);
+  bounds.push_back(0);
+  // bounds.push_back(-1);bounds.push_back(1);
+  bounds.push_back(0);
+  bounds.push_back(0);
+  bounds.push_back(-1);
+  bounds.push_back(1);
+  // bounds.push_back(0);bounds.push_back(0);
+  shooter->BoundSO3(bounds);
+  for (int i = 0; i < 100; ++i) {
+    Eigen::VectorXd config = *(shooter->shoot());
+    Eigen::Quaterniond q(config(3), config(4), config(5), config(6));
+    // Eigen::Vector3d ea = q.toRotationMatrix().eulerAngles(2, 1, 0);
+    // std::cout << "q " << config << "\n ea " << ea << std::endl;
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-
-

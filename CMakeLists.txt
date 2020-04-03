@@ -45,8 +45,6 @@ ADD_REQUIRED_DEPENDENCY("hpp-bezier-com-traj")
 ADD_REQUIRED_DEPENDENCY("hpp-centroidal-dynamics")
 ADD_REQUIRED_DEPENDENCY("hpp-affordance")
 ADD_REQUIRED_DEPENDENCY("curves >= 0.3")
-ADD_REQUIRED_DEPENDENCY("hpp-rbprm-robot-data")
-ADD_REQUIRED_DEPENDENCY("hpp-environments")
 
 FIND_PACKAGE( OpenMP REQUIRED)
 find_package(Boost)
