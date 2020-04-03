@@ -153,7 +153,7 @@ std::pair<MatrixXX, VectorX> computeStabilityConstraints(const centroidal_dynami
 
 centroidal_dynamics::Equilibrium computeContactConeForState(const RbPrmFullBodyPtr_t& fullbody, State &state, bool& success){
     hppStartBenchmark(REACHABLE_CALL_CENTROIDAL);
-    centroidal_dynamics::Equilibrium contactCone(fullbody->device_->name(), fullbody->device_->mass(),4,centroidal_dynamics::SOLVER_LP_QPOASES,true,100,false);
+    centroidal_dynamics::Equilibrium contactCone(fullbody->device_->name(), fullbody->device_->mass(),4,centroidal_dynamics::SOLVER_LP_QPOASES,true,1000,false);
     centroidal_dynamics::EquilibriumAlgorithm alg = centroidal_dynamics::EQUILIBRIUM_ALGORITHM_PP;
     try{
         stability::setupLibrary(fullbody,state,contactCone,alg,fullbody->getFriction(),0.05,0.05); // 0.01 : 'safe' support zone, under the flexibility
@@ -167,14 +167,13 @@ centroidal_dynamics::Equilibrium computeContactConeForState(const RbPrmFullBodyP
     return contactCone;
 }
 
-std::pair<MatrixXX, VectorX> computeStabilityConstraintsForState(const RbPrmFullBodyPtr_t& fullbody, State &state,bool& success, const fcl::Vec3f& acc){
+std::pair<MatrixXX, VectorX> computeStabilityConstraintsForState(const RbPrmFullBodyPtr_t& fullbody, State &state, bool& success, const fcl::Vec3f& acc){
     hppDout(notice,"contact order : ");
     hppDout(notice,"  "<<state.contactOrder_.front());
     centroidal_dynamics::Equilibrium cone(computeContactConeForState(fullbody,state,success));
     std::pair<MatrixXX, VectorX> Ab;
     if(success){
-      Ab =  computeStabilityConstraints(cone,state.contactPositions_.at(state.contactOrder_.front()),
-                                       acc.isZero() ? state.configuration_.tail<3>() : acc);
+      Ab =  computeStabilityConstraints(cone,state.contactPositions_.at(state.contactOrder_.front()), acc);
       if(Ab.first.cols() == 0 || Ab.first.rows() ==0)
         success = false;
     }else{
@@ -185,8 +184,8 @@ std::pair<MatrixXX, VectorX> computeStabilityConstraintsForState(const RbPrmFull
     return Ab;
 }
 
-std::pair<MatrixXX, VectorX> computeConstraintsForState(const RbPrmFullBodyPtr_t& fullbody, State &state,bool& success){
-    std::pair<MatrixXX, VectorX> Ab = computeStabilityConstraintsForState(fullbody,state,success);
+std::pair<MatrixXX, VectorX> computeConstraintsForState(const RbPrmFullBodyPtr_t& fullbody, State &state,bool& success, const fcl::Vec3f& acc){
+    std::pair<MatrixXX, VectorX> Ab = computeStabilityConstraintsForState(fullbody,state,success, acc);
     if(success)
       return stackConstraints(computeKinematicsConstraintsForState(fullbody,state),Ab);
     else
@@ -279,12 +278,12 @@ Result isReachable(const RbPrmFullBodyPtr_t& fullbody, State &previous, State& n
     Result res;
     std::pair<MatrixXX,VectorX> Ab,K_p,K_n,A_p,A_n;
     if(contactsBreak.size() == 1 && contactsCreation.size() == 1){
-       A_p = computeConstraintsForState(fullbody,previous,successCone);
+       A_p = computeConstraintsForState(fullbody,previous,successCone, acc);
       if(!successCone){
         hppDout(warning,"Unable to compute computeStabilityConstraintsForState.");
         return Result(UNABLE_TO_COMPUTE);
       }
-      A_n = computeConstraintsForState(fullbody,next,successCone);
+      A_n = computeConstraintsForState(fullbody,next,successCone, acc);
       if(!successCone){
         hppDout(warning,"Unable to compute computeStabilityConstraintsForState.");
         return Result(UNABLE_TO_COMPUTE);
