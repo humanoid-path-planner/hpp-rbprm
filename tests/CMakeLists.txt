@@ -1,6 +1,6 @@
-# Copyright 2012, 2013, 2014 CNRS-LAAS
+# Copyright 2012-2014, 2020 CNRS-LAAS
 #
-# Author: Mathieu Geisert
+# Author: Mathieu Geisert, Guilhem Saurel
 #
 # This file is part of hpp-core
 # hpp-model-urdf is free software: you can redistribute it and/or modify
@@ -29,25 +29,8 @@ SET(${PROJECT_NAME}_TESTS
   limb-rrt
   )
 
-ADD_REQUIRED_DEPENDENCY("hpp-rbprm-robot-data")
-ADD_REQUIRED_DEPENDENCY("talos_data")
-ADD_REQUIRED_DEPENDENCY("hpp-environments")
 
 FOREACH(NAME ${${PROJECT_NAME}_TESTS})
   ADD_UNIT_TEST(${NAME} "test-${NAME}")
-
-  PKG_CONFIG_USE_DEPENDENCY(${NAME} hpp-core)
-  PKG_CONFIG_USE_DEPENDENCY(${NAME} hpp-fcl)
-  PKG_CONFIG_USE_DEPENDENCY(${NAME} hpp-affordance)
-  PKG_CONFIG_USE_DEPENDENCY(${NAME} curves)
-
-  TARGET_LINK_LIBRARIES(${NAME} hpp-affordance)
-
-  # Link against Boost and project library.
-  TARGET_LINK_LIBRARIES(${NAME}
-    ${Boost_LIBRARIES}
-    ${PROJECT_NAME}
-    hpp-centroidal-dynamics
-    hpp-bezier-com-traj
-    )
+  TARGET_LINK_LIBRARIES(${NAME} ${Boost_LIBRARIES} ${PROJECT_NAME})
 ENDFOREACH(NAME ${${PROJECT_NAME}_TESTS})
