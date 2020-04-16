@@ -62,7 +62,7 @@ using namespace core;
         // NOTHING
     }
 
-    void TimeConstraintShooter::shoot (Configuration_t& config) const
+    void TimeConstraintShooter::impl_shoot (Configuration_t& config) const
     {
         // edit path sampling dof
         value_type a = rootPath_->timeRange().first; value_type b = rootPath_->timeRange().second;

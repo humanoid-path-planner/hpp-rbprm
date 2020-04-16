@@ -392,7 +392,7 @@ fcl::Vec3f normalFromTriangleContact(const Contact& c, hpp::core::CollisionObjec
 
 }
 
-void RbPrmShooter::shoot (hpp::core::Configuration_t& config) const
+void RbPrmShooter::impl_shoot (hpp::core::Configuration_t& config) const
 {
     hppDout(notice,"!!! Random shoot");
     HPP_DEFINE_TIMECOUNTER(SHOOT_COLLISION);

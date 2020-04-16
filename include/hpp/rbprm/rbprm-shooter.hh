@@ -69,8 +69,6 @@ namespace hpp {
                                          const std::map<std::string, std::vector<std::string> >& affFilters = std::map<std::string, std::vector<std::string> >(),
                                          const std::size_t shootLimit = 10000,
                                          const std::size_t displacementLimit = 100);
-    virtual void shoot (core::Configuration_t& q) const;
-
 
     public:
         /// Sets limits on robot orientation, described according to Euler's ZYX rotation order
@@ -105,6 +103,8 @@ namespace hpp {
                   const std::size_t displacementLimit = 100);
 
     void init (const RbPrmShooterPtr_t& self);
+
+    virtual void impl_shoot (core::Configuration_t& q) const;
 
     private:
         void InitWeightedTriangles (const core::ObjectStdVector_t &geometries);
