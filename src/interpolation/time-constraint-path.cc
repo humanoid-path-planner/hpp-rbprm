@@ -106,7 +106,7 @@ namespace hpp {
                 u = 0;
             else
                 u = (param - timeRange ().first) / (timeRange ().second - timeRange().first);
-            pinocchio::interpolate (device_, initial_, end_, u, result);
+            device_->RnxSOnConfigSpace()->interpolate(initial_, end_, u, result);
             pinocchio::value_type dof = ComputeExtraDofValue(pathDofRank_,initial_, end_, u);
             result[pathDofRank_] = dof;
         }
