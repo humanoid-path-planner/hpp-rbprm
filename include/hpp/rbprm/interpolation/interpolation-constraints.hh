@@ -34,7 +34,7 @@
 namespace hpp {
 namespace rbprm {
 namespace interpolation {
-
+  using constraints::ComparisonTypes_t;
     // declaration of available constraints
 
     template<class Helper_T>
@@ -125,7 +125,7 @@ namespace interpolation {
         comComp->compute ();
         PointComFunctionPtr_t comFunc = PointComFunction::create ("COM-constraint",
             device, /*10000 **/ PointCom::create (comComp));
-        constraints::ComparisonTypes_t equals (3, constraints::Equality);
+        ComparisonTypes_t equals (3, constraints::Equality);
         constraints::ImplicitPtr_t comEq = constraints::Implicit::create(comFunc, equals);
         proj->add(comEq);
         proj->rightHandSide(comEq,initTarget);
@@ -237,7 +237,7 @@ namespace interpolation {
     void CreateEffectorConstraint(Helper_T& helper, const Reference &ref,  const pinocchio::Frame effectorFr, const fcl::Vec3f& initTarget)
     {
         pinocchio::DevicePtr_t device = helper.rootProblem_->robot();
-        constraints::ComparisonTypes_t equals (3, constraints::Equality);
+        ComparisonTypes_t equals (3, constraints::Equality);
 
         core::ConfigProjectorPtr_t& proj = helper.proj_;
 
