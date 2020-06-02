@@ -163,13 +163,15 @@ RbPrmFullBodyPtr_t loadHRP2() {
 RbPrmFullBodyPtr_t loadTalos() {
   const std::string robotName("talos");
   const std::string rootJointType("freeflyer");
-  const std::string packageName("talos_data");
-  const std::string modelName("talos");
-  const std::string urdfSuffix("_reduced");
-  const std::string srdfSuffix("");
+  const std::string prefix("");
+  const std::string urdfPath("package://example-robot-data/robots/talos_data"
+                             "/robots/talos_reduced.urdf");
+  const std::string srdfPath("package://example-robot-data/robots/talos_data"
+                             "/srdf/talos.srdf");
 
   hpp::pinocchio::DevicePtr_t device = hpp::pinocchio::Device::create(robotName);
-  hpp::pinocchio::urdf::loadRobotModel(device, rootJointType, packageName, modelName, urdfSuffix, srdfSuffix);
+  hpp::pinocchio::urdf::loadModel(device, 0, prefix, rootJointType, urdfPath,
+                                  srdfPath);
   device->rootJoint()->lowerBound(0, -2);
   device->rootJoint()->lowerBound(1, -2);
   device->rootJoint()->lowerBound(2, 0.6);
