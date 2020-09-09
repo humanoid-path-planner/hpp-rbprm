@@ -222,9 +222,9 @@ namespace
                     break;
                }
             }
-            if (numValid==0)
-                throw std::runtime_error("No path found at state 0");
-            else if(numValid != distance)
+            //if (numValid==0)
+            //    throw std::runtime_error("No path found at state 0");
+            /*else */if(numValid != distance)
             {
                 std::cout << "No path found at state " << numValid << std::endl;
             }
@@ -313,29 +313,33 @@ namespace
         // treat each interpolation between two states separatly
         // in a different thread
         hppDout(notice,"InterpolateStates from path : distance = "<<distance);
-        #pragma omp parallel for
-        for(std::size_t i = 0; i < distance; ++i)
-        {
-            StateIterator_T a, b;
-            a = (startState+i);
-            b = (startState+i+1);
-            Helper_T helper(fullbody, shooterFactory, constraintFactory, referenceProblem, pathGetter(a,b),error_treshold); // 0.1 : error
-            helper.SetConstraints(get(a), get(b));
-            hppDout(notice,"Start helper.run :");
-            PathVectorPtr_t partialPath = helper.Run(get(a), get(b),maxIterations);
-            hppDout(notice,"helper.run done.");
-            if(partialPath)
+        std::size_t numValid;
+        do{
+            #pragma omp parallel for
+            for(std::size_t i = 0; i < distance; ++i)
             {
-                res[i] = optimize(helper,partialPath, numOptimizations);
-                valid[i]=true;
+                StateIterator_T a, b;
+                a = (startState+i);
+                b = (startState+i+1);
+                Helper_T helper(fullbody, shooterFactory, constraintFactory, referenceProblem, pathGetter(a,b),error_treshold); // 0.1 : error
+                helper.SetConstraints(get(a), get(b));
+                hppDout(notice,"Start helper.run :");
+                PathVectorPtr_t partialPath = helper.Run(get(a), get(b),maxIterations);
+                hppDout(notice,"helper.run done.");
+                if(partialPath)
+                {
+                    res[i] = optimize(helper,partialPath, numOptimizations);
+                    valid[i]=true;
+                }
+                else
+                {
+                    hppDout(notice,"InterpolateStates : helper.run returned an empty path");
+                    valid[i] = false;
+                }
             }
-            else
-            {
-                hppDout(notice,"InterpolateStates : helper.run returned an empty path");
-                valid[i] = false;
-            }
-        }
-        std::size_t numValid = checkPath(distance, valid);
+            numValid = checkPath(distance, valid);
+        }while(numValid < distance);
+
         fullbody->device_->controlComputation (flag);
         return ConcatenateAndResizePath(res, numValid, keepExtraDof, fullbody->device_);
     }
