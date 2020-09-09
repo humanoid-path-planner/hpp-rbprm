@@ -88,16 +88,19 @@ BOOST_AUTO_TEST_CASE(interpolate_path) {
   allLimbs.push_back(lhLegId);
   allLimbs.push_back(lLegId);
   allLimbs.push_back(rhLegId);
-
+  bool success;
+  Configuration_t root_init = resPath->operator()(0., success).head<3>();
+  q.head<3>() = root_init;
   startState = createState(fullBody, q, allLimbs);
-  q[0] = 3;
+  Configuration_t root_end = resPath->operator()(resPath->length(), success).head<3>();
+  q.head<3>() = root_end;
   endState = createState(fullBody, q, allLimbs);
 
   hpp::rbprm::interpolation::RbPrmInterpolationPtr_t interpolator =
       rbprm::interpolation::RbPrmInterpolation::create(fullBody, startState, endState, resPath, false, true);
 
   rbprm::T_StateFrame frams = interpolator->Interpolate(ps->affordanceObjects, bShooter.affFilter_, 0.01, 8, false);
-  BOOST_CHECK(frams.back().second.configuration_[0] > 2.8);
+  BOOST_CHECK(frams.back().second.configuration_[0] > (root_end[0] - 0.1));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
