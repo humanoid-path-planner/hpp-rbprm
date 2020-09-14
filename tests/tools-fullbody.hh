@@ -164,14 +164,15 @@ RbPrmFullBodyPtr_t loadTalos() {
   const std::string robotName("talos");
   const std::string rootJointType("freeflyer");
   const std::string prefix("");
-  const std::string urdfPath("package://example-robot-data/robots/talos_data"
-                             "/robots/talos_reduced.urdf");
-  const std::string srdfPath("package://example-robot-data/robots/talos_data"
-                             "/srdf/talos.srdf");
+  const std::string urdfPath(
+      "package://example-robot-data/robots/talos_data"
+      "/robots/talos_reduced.urdf");
+  const std::string srdfPath(
+      "package://example-robot-data/robots/talos_data"
+      "/srdf/talos.srdf");
 
   hpp::pinocchio::DevicePtr_t device = hpp::pinocchio::Device::create(robotName);
-  hpp::pinocchio::urdf::loadModel(device, 0, prefix, rootJointType, urdfPath,
-                                  srdfPath);
+  hpp::pinocchio::urdf::loadModel(device, 0, prefix, rootJointType, urdfPath, srdfPath);
   device->rootJoint()->lowerBound(0, -2);
   device->rootJoint()->lowerBound(1, -2);
   device->rootJoint()->lowerBound(2, 0.6);
@@ -264,13 +265,13 @@ hpp::pinocchio::RbPrmDevicePtr_t loadHyQAbsract() {
   return device;
 }
 
-hpp::pinocchio::RbPrmDevicePtr_t loadsimpleHumanoidAbsract() {
+hpp::pinocchio::RbPrmDevicePtr_t loadSimpleHumanoidAbsract() {
   hpp::pinocchio::T_Rom romDevices_;
-  const std::string packageName("simpleHumanoid-rbprm");
-  loadRom(romDevices_, std::string("simpleHumanoid_lleg_rom"), packageName);
-  loadRom(romDevices_, std::string("simpleHumanoid_rleg_rom"), packageName);
+  const std::string packageName("simple-humanoid-rbprm");
+  loadRom(romDevices_, std::string("simple_humanoid_lleg_rom"), packageName);
+  loadRom(romDevices_, std::string("simple_humanoid_rleg_rom"), packageName);
   hpp::pinocchio::RbPrmDevicePtr_t device =
-      loadAbstractRobot(romDevices_, std::string("simpleHumanoid_trunk"), packageName);
+      loadAbstractRobot(romDevices_, std::string("simple_humanoid_trunk"), packageName);
   device->rootJoint()->lowerBound(0, -5);
   device->rootJoint()->lowerBound(1, -5);
   device->rootJoint()->lowerBound(2, 0.3);
@@ -279,8 +280,8 @@ hpp::pinocchio::RbPrmDevicePtr_t loadsimpleHumanoidAbsract() {
   device->rootJoint()->upperBound(2, 1);
   hpp::core::vector3_t p_lLeg(0., 0.1, -1.);
   hpp::core::vector3_t p_rLeg(0., -0.1, -1.);
-  device->setEffectorReference("simpleHumanoid_lleg_rom", p_lLeg);
-  device->setEffectorReference("simpleHumanoid_rleg_rom", p_rLeg);
+  device->setEffectorReference("simple_humanoid_lleg_rom", p_lLeg);
+  device->setEffectorReference("simple_humanoid_rleg_rom", p_rLeg);
   return device;
 }
 
@@ -304,9 +305,9 @@ hpp::pinocchio::RbPrmDevicePtr_t loadTalosLEGAbsract() {
 RbPrmFullBodyPtr_t loadHyQ() {
   const std::string robotName("hyq");
   const std::string rootJointType("freeflyer");
-  const std::string packageName("hyq_description");
+  const std::string packageName("example-robot-data/robots/hyq_description");
   const std::string modelName("hyq");
-  const std::string urdfSuffix("");
+  const std::string urdfSuffix("_no_sensors");
   const std::string srdfSuffix("");
 
   hpp::pinocchio::DevicePtr_t device = hpp::pinocchio::Device::create(robotName);

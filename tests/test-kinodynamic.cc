@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with hpp-core.  If not, see <http://www.gnu.org/licenses/>.
 
-#define BOOST_TEST_MODULE test-kinodynamic
+#define BOOST_TEST_MODULE test - kinodynamic
 #include <pinocchio/fwd.hpp>
 #include <boost/test/included/unit_test.hpp>
 
@@ -114,8 +114,8 @@ BOOST_AUTO_TEST_CASE(load_abstract_model_hyq) {
   //  std::cout<<"mass : "<<i<<" = "<<rbprmDevice->data().mass[i]<<std::endl;
 }
 
-BOOST_AUTO_TEST_CASE(load_abstract_model_simpleHumanoid) {
-  hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadsimpleHumanoidAbsract();
+BOOST_AUTO_TEST_CASE(load_abstract_model_SimpleHumanoid) {
+  hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadSimpleHumanoidAbsract();
   // for(size_t i = 0 ; i < rbprmDevice->data().mass.size() ; ++i)
   //  std::cout<<"mass : "<<i<<" = "<<rbprmDevice->data().mass[i]<<std::endl;
   // BOOST_CHECK_CLOSE(rbprmDevice->mass(),70.,1e-2); // FIXME : need to investigate and open an issue
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(load_abstract_model_simpleHumanoid) {
 }
 
 BOOST_AUTO_TEST_CASE(straight_line) {
-  hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadsimpleHumanoidAbsract();
+  hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadSimpleHumanoidAbsract();
   rbprmDevice->setDimensionExtraConfigSpace(6);
   BindShooter bShooter;
   std::vector<double> boundsSO3;
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(straight_line) {
 }
 
 BOOST_AUTO_TEST_CASE(square_v0) {
-  hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadsimpleHumanoidAbsract();
+  hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadSimpleHumanoidAbsract();
   rbprmDevice->setDimensionExtraConfigSpace(6);
   BindShooter bShooter;
   std::vector<double> boundsSO3;
@@ -376,7 +376,7 @@ BOOST_AUTO_TEST_CASE(square_v0) {
 }
 
 BOOST_AUTO_TEST_CASE(straight_velocity) {
-  hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadsimpleHumanoidAbsract();
+  hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadSimpleHumanoidAbsract();
   rbprmDevice->setDimensionExtraConfigSpace(6);
   BindShooter bShooter;
   std::vector<double> boundsSO3;
@@ -495,7 +495,7 @@ BOOST_AUTO_TEST_CASE(straight_velocity) {
 }
 
 BOOST_AUTO_TEST_CASE(straight_line_amax_mu05) {
-  hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadsimpleHumanoidAbsract();
+  hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadSimpleHumanoidAbsract();
   rbprmDevice->setDimensionExtraConfigSpace(6);
   BindShooter bShooter;
   std::vector<double> boundsSO3;
@@ -559,7 +559,7 @@ BOOST_AUTO_TEST_CASE(straight_line_amax_mu05) {
 }
 
 BOOST_AUTO_TEST_CASE(straight_line_amax_mu005) {
-  hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadsimpleHumanoidAbsract();
+  hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadSimpleHumanoidAbsract();
   rbprmDevice->setDimensionExtraConfigSpace(6);
   BindShooter bShooter;
   std::vector<double> boundsSO3;
@@ -623,7 +623,7 @@ BOOST_AUTO_TEST_CASE(straight_line_amax_mu005) {
 }
 
 BOOST_AUTO_TEST_CASE(straight_line_amax_mu001) {
-  hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadsimpleHumanoidAbsract();
+  hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadSimpleHumanoidAbsract();
   rbprmDevice->setDimensionExtraConfigSpace(6);
   BindShooter bShooter;
   std::vector<double> boundsSO3;
@@ -687,7 +687,7 @@ BOOST_AUTO_TEST_CASE(straight_line_amax_mu001) {
 }
 
 BOOST_AUTO_TEST_CASE(straight_line_amax_mu5) {
-  hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadsimpleHumanoidAbsract();
+  hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadSimpleHumanoidAbsract();
   rbprmDevice->setDimensionExtraConfigSpace(6);
   BindShooter bShooter;
   std::vector<double> boundsSO3;
@@ -751,7 +751,7 @@ BOOST_AUTO_TEST_CASE(straight_line_amax_mu5) {
 }
 
 BOOST_AUTO_TEST_CASE(straight_line_amax_feetChange) {
-  hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadsimpleHumanoidAbsract();
+  hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadSimpleHumanoidAbsract();
   rbprmDevice->setDimensionExtraConfigSpace(6);
   BindShooter bShooter;
   std::vector<double> boundsSO3;
@@ -817,7 +817,7 @@ BOOST_AUTO_TEST_CASE(straight_line_amax_feetChange) {
 BOOST_AUTO_TEST_CASE(nav_bauzil) {
   std::cout << "start nav_bauzil test case, this may take a couple of minutes ..." << std::endl;
   // this test case may take up to a minute to execute. Usually after ~5 minutes it should be considered as a failure.
-  hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadsimpleHumanoidAbsract();
+  hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadSimpleHumanoidAbsract();
   rbprmDevice->setDimensionExtraConfigSpace(6);
   BindShooter bShooter;
   std::vector<double> boundsSO3;
@@ -893,7 +893,7 @@ BOOST_AUTO_TEST_CASE(nav_bauzil) {
 BOOST_AUTO_TEST_CASE(nav_bauzil_oriented) {
   std::cout << "start nav_bauzil_oriented test case, this may take a couple of minutes ..." << std::endl;
   // this test case may take up to a minute to execute. Usually after ~5 minutes it should be considered as a failure.
-  hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadsimpleHumanoidAbsract();
+  hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadSimpleHumanoidAbsract();
   rbprmDevice->setDimensionExtraConfigSpace(6);
   BindShooter bShooter;
   std::vector<double> boundsSO3;
@@ -970,7 +970,7 @@ BOOST_AUTO_TEST_CASE(nav_bauzil_oriented) {
 BOOST_AUTO_TEST_CASE(nav_bauzil_oriented_kino) {
   std::cout << "start nav_bauzil_oriented_kino test case, this may take a couple of minutes ..." << std::endl;
   // this test case may take up to a minute to execute. Usually after ~5 minutes it should be considered as a failure.
-  hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadsimpleHumanoidAbsract();
+  hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadSimpleHumanoidAbsract();
   rbprmDevice->setDimensionExtraConfigSpace(6);
   BindShooter bShooter;
   std::vector<double> boundsSO3;
@@ -1206,7 +1206,7 @@ BOOST_AUTO_TEST_CASE(nav_bauzil_oriented_hyq) {
 BOOST_AUTO_TEST_CASE (nav_bauzil_hard) {
     std::cout<<"start nav_bauzil_hard test case, this may take several minutes ..."<<std::endl;
   // this test case may take up to 5 minute to execute. Usually after ~10 minutes it should be considered as a failure.
-    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadsimpleHumanoidAbsract();
+    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadSimpleHumanoidAbsract();
     rbprmDevice->rootJoint()->lowerBound(0, -2.3);
     rbprmDevice->rootJoint()->lowerBound(1, -1.5);
     rbprmDevice->rootJoint()->lowerBound(2, 0.98);
