@@ -39,9 +39,9 @@ BOOST_AUTO_TEST_CASE(projectToComPositionHyQ) {
   fullBody->device_->computeForwardKinematics();
   fcl::Vec3f com_init = fullBody->device_->positionCenterOfMass();
   // com position with reference configuration given
-  BOOST_CHECK_CLOSE(com_init[0], -0.01892558812361088, 1e-6);
-  BOOST_CHECK_CLOSE(com_init[1], -0.00125656290165268, 1e-6);
-  BOOST_CHECK_CLOSE(com_init[2], 0.654578955965801, 1e-6);
+  BOOST_CHECK_CLOSE(com_init[0], 0.038820542472487805, 1e-6);
+  BOOST_CHECK_CLOSE(com_init[1], 0.013905920702454319, 1e-6);
+  BOOST_CHECK_CLOSE(com_init[2], 0.64079567046650698, 1e-6);
 
   fcl::Vec3f com_goal = com_init;
   // set an easy com goal position, close to the reference one
