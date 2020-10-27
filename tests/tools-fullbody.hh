@@ -305,15 +305,12 @@ hpp::pinocchio::RbPrmDevicePtr_t loadTalosLEGAbsract() {
 RbPrmFullBodyPtr_t loadHyQ() {
   const std::string robotName("hyq");
   const std::string rootJointType("freeflyer");
-  const std::string packageName("example-robot-data/robots/hyq_description");
-  const std::string modelName("hyq");
-  const std::string urdfSuffix("_no_sensors");
-  const std::string srdfSuffix("");
 
   hpp::pinocchio::DevicePtr_t device = hpp::pinocchio::Device::create(robotName);
-  // hpp::pinocchio:: (device,rootJointType, packageName, modelName, urdfSuffix,srdfSuffix);
 
-  hpp::pinocchio::urdf::loadRobotModel(device, rootJointType, packageName, modelName, urdfSuffix, srdfSuffix);
+  hpp::pinocchio::urdf::loadModel(device, 0, "", rootJointType,
+                                  "package://example-robot-data/robots/hyq_description/robots/hyq_no_sensors.urdf",
+                                  "package://example-robot-data/robots/hyq_description/srdf/hyq.srdf");
   // [-2,5, -1, 1, 0.3, 4]
 
   /*DevicePtr_t robot =
