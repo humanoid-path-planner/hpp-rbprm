@@ -17,7 +17,7 @@
 // <http://www.gnu.org/licenses/>.
 
 #ifndef HPP_RBPRM_DEVICE_HH
-# define HPP_RBPRM_DEVICE_HH
+#define HPP_RBPRM_DEVICE_HH
 
 #include <hpp/rbprm/config.hh>
 #include <hpp/pinocchio/device.hh>
@@ -26,82 +26,78 @@
 
 namespace hpp {
 
-  namespace pinocchio {
-    HPP_PREDEF_CLASS(RbPrmDevice);
+namespace pinocchio {
+HPP_PREDEF_CLASS(RbPrmDevice);
 
-    typedef std::map<std::string, DevicePtr_t> T_Rom;
+typedef std::map<std::string, DevicePtr_t> T_Rom;
 
-    /// Dual representation of a robot for Reachability Based planning:
-    /// Collision free part of the robot vs Range Of Motion of the limbs.
-    /// Used by RB-PRM in the initial planning phase.
-    /// Configurations are valid if the Device is collision free,
-    /// but the robotRoms are in collision. Exact conditions for validation
-    /// can be parametrized.
-    ///
-    class RbPrmDevice;
-    typedef boost::shared_ptr <RbPrmDevice> RbPrmDevicePtr_t;
+/// Dual representation of a robot for Reachability Based planning:
+/// Collision free part of the robot vs Range Of Motion of the limbs.
+/// Used by RB-PRM in the initial planning phase.
+/// Configurations are valid if the Device is collision free,
+/// but the robotRoms are in collision. Exact conditions for validation
+/// can be parametrized.
+///
+class RbPrmDevice;
+typedef boost::shared_ptr<RbPrmDevice> RbPrmDevicePtr_t;
 
-    class HPP_RBPRM_DLLAPI RbPrmDevice : public Device
-    {
-    public:
-        /// Creates a RbPrmDevice
-        ///
-        /// \param name: the name of the Device
-        /// \param robotRom: a Device describe the range of motion of one
-        /// limb of the robot.
-        /// \return a smart pointer to the created RbPrmDevice
-        static RbPrmDevicePtr_t create (const std::string& name, DevicePtr_t& robotRom);
+class HPP_RBPRM_DLLAPI RbPrmDevice : public Device {
+ public:
+  /// Creates a RbPrmDevice
+  ///
+  /// \param name: the name of the Device
+  /// \param robotRom: a Device describe the range of motion of one
+  /// limb of the robot.
+  /// \return a smart pointer to the created RbPrmDevice
+  static RbPrmDevicePtr_t create(const std::string& name, DevicePtr_t& robotRom);
 
-        /// Creates a RbPrmDevice
-        ///
-        /// \param name: the name of the Device
-        /// \param robotRoms: list of devices, indexed by an identifiant
-        /// \return a smart pointer to the created RbPrmDevice
-        static RbPrmDevicePtr_t create (const std::string& name, const T_Rom& robotRoms);
+  /// Creates a RbPrmDevice
+  ///
+  /// \param name: the name of the Device
+  /// \param robotRoms: list of devices, indexed by an identifiant
+  /// \return a smart pointer to the created RbPrmDevice
+  static RbPrmDevicePtr_t create(const std::string& name, const T_Rom& robotRoms);
 
-    public:
-        virtual ~RbPrmDevice();
+ public:
+  virtual ~RbPrmDevice();
 
-    public:
-        /// Sets the current configuration of the Device, and propagates it
-        /// to the ROMs of the Device.
-        virtual bool currentConfiguration (ConfigurationIn_t configuration);
+ public:
+  /// Sets the current configuration of the Device, and propagates it
+  /// to the ROMs of the Device.
+  virtual bool currentConfiguration(ConfigurationIn_t configuration);
 
+  virtual void setDimensionExtraConfigSpace(const size_type& dimension);
 
-        virtual void setDimensionExtraConfigSpace (const size_type& dimension);
+  ///
+  /// \brief setEffectorReference set a 3D position reference for the end effector of the given ROM
+  /// \param romName
+  /// \param ref
+  ///
+  virtual void setEffectorReference(std::string romName, vector3_t ref);
 
-        ///
-        /// \brief setEffectorReference set a 3D position reference for the end effector of the given ROM
-        /// \param romName
-        /// \param ref
-        ///
-        virtual void setEffectorReference(std::string romName, vector3_t ref);
+  ///
+  /// \brief getEffectorReference get the reference position of the given ROM, return (0,0,0) if the reference was
+  /// never set \param romName \return
+  ///
+  virtual vector3_t getEffectorReference(std::string romName);
 
-        ///
-        /// \brief getEffectorReference get the reference position of the given ROM, return (0,0,0) if the reference was never set
-        /// \param romName
-        /// \return
-        ///
-        virtual vector3_t getEffectorReference(std::string romName);
+ public:
+  /// Range Of Motion of the robot
+  const T_Rom robotRoms_;
 
+ protected:
+  RbPrmDevice(const std::string& name, const T_Rom& robotRoms);
 
-    public:
-      /// Range Of Motion of the robot
-      const T_Rom robotRoms_;
+  ///
+  /// \brief Initialization.
+  ///
+  void init(const RbPrmDeviceWkPtr_t& weakPtr);
 
-    protected:
-      RbPrmDevice (const std::string& name, const T_Rom& robotRoms);
+ private:
+  std::map<std::string, vector3_t> effectorsReferences_;
+  RbPrmDeviceWkPtr_t weakPtr_;
+};  // class RbPrmDevice
+}  // namespace pinocchio
+}  // namespace hpp
 
-      ///
-      /// \brief Initialization.
-      ///
-      void init (const RbPrmDeviceWkPtr_t& weakPtr);
-
-    private:
-      std::map<std::string, vector3_t> effectorsReferences_;
-      RbPrmDeviceWkPtr_t weakPtr_;
-    }; // class RbPrmDevice
-  } // namespace rbprm
-} // namespace hpp
-
-#endif // HPP_RBPRM_DEVICE_HH
+#endif  // HPP_RBPRM_DEVICE_HH

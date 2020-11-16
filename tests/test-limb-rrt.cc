@@ -18,7 +18,7 @@
 
 //#include "test-tools.hh"
 
-#define BOOST_TEST_MODULE test-limb-rrt
+#define BOOST_TEST_MODULE test - limb - rrt
 #include <hpp/rbprm/interpolation/rbprm-path-interpolation.hh>
 #include <hpp/rbprm/interpolation/com-trajectory.hh>
 #include <hpp/rbprm/interpolation/com-rrt.hh>

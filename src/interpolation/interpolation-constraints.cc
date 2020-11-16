@@ -21,53 +21,41 @@
 using namespace hpp::core;
 
 namespace hpp {
-  namespace rbprm {
-  namespace interpolation{
+namespace rbprm {
+namespace interpolation {
 
-  void addContactConstraints(rbprm::RbPrmFullBodyPtr_t fullBody, pinocchio::DevicePtr_t device, core::ConfigProjectorPtr_t projector, const State& state, const std::vector<std::string> active)
-  {
-      std::vector<bool> cosntraintsR = setMaintainRotationConstraints();
-      for(std::vector<std::string>::const_iterator cit = active.begin();
-          cit != active.end(); ++cit)
-      {
-          RbPrmLimbPtr_t limb = fullBody->GetLimbs().at(*cit);
-          //const fcl::Vec3f& ppos  = state.contactPositions_.at(*cit);
-          pinocchio::Transform3f localFrame(1), globalFrame(1);
-          globalFrame.translation(state.contactPositions_.at(*cit));
-          //const fcl::Matrix3f& rotation = state.contactRotation_.at(*cit);
-          const pinocchio::Frame effectorFrame = device->getFrameByName(limb->effector_.name());
-          pinocchio::JointPtr_t effectorJoint = effectorFrame.joint();
-          projector->add(constraints::Implicit::create (
-                                  constraints::Position::create("",device,
-                                                                effectorJoint, effectorFrame.pinocchio().placement * localFrame, globalFrame)));
-          if(limb->contactType_ == hpp::rbprm::_6_DOF)
-          {
-              pinocchio::Transform3f rotation(1);
-              rotation.rotation(state.contactRotation_.at(*cit) * effectorFrame.pinocchio().placement.rotation().transpose());
-              projector->add(constraints::Implicit::create (constraints::Orientation::create("", device,
-                                                                                effectorJoint,
-                                                                                rotation,
-                                                                                cosntraintsR)));
-          }
-      }
+void addContactConstraints(rbprm::RbPrmFullBodyPtr_t fullBody, pinocchio::DevicePtr_t device,
+                           core::ConfigProjectorPtr_t projector, const State &state,
+                           const std::vector<std::string> active) {
+  std::vector<bool> cosntraintsR = setMaintainRotationConstraints();
+  for (std::vector<std::string>::const_iterator cit = active.begin(); cit != active.end(); ++cit) {
+    RbPrmLimbPtr_t limb = fullBody->GetLimbs().at(*cit);
+    // const fcl::Vec3f& ppos  = state.contactPositions_.at(*cit);
+    pinocchio::Transform3f localFrame(1), globalFrame(1);
+    globalFrame.translation(state.contactPositions_.at(*cit));
+    // const fcl::Matrix3f& rotation = state.contactRotation_.at(*cit);
+    const pinocchio::Frame effectorFrame = device->getFrameByName(limb->effector_.name());
+    pinocchio::JointPtr_t effectorJoint = effectorFrame.joint();
+    projector->add(constraints::Implicit::create(constraints::Position::create(
+        "", device, effectorJoint, effectorFrame.pinocchio().placement * localFrame, globalFrame)));
+    if (limb->contactType_ == hpp::rbprm::_6_DOF) {
+      pinocchio::Transform3f rotation(1);
+      rotation.rotation(state.contactRotation_.at(*cit) * effectorFrame.pinocchio().placement.rotation().transpose());
+      projector->add(constraints::Implicit::create(
+          constraints::Orientation::create("", device, effectorJoint, rotation, cosntraintsR)));
+    }
   }
+}
 
-      std::string getEffectorLimb(const  State &startState, const State &nextState)
-    {
-        return nextState.contactCreations(startState).front();
-    }
+std::string getEffectorLimb(const State &startState, const State &nextState) {
+  return nextState.contactCreations(startState).front();
+}
 
-    pinocchio::Frame getEffector(RbPrmFullBodyPtr_t fullbody,
-                           const  State &startState, const State &nextState)
-    {
-        std::string effectorVar = getEffectorLimb(startState, nextState);
-        return fullbody->device_->getFrameByName(fullbody->GetLimbs().at(effectorVar)->effector_.name());
-    }
+pinocchio::Frame getEffector(RbPrmFullBodyPtr_t fullbody, const State &startState, const State &nextState) {
+  std::string effectorVar = getEffectorLimb(startState, nextState);
+  return fullbody->device_->getFrameByName(fullbody->GetLimbs().at(effectorVar)->effector_.name());
+}
 
-
-
-
-  } //   namespace interpolation
-  } //   namespace rbprm
-} // namespace hpp
-
+}  //   namespace interpolation
+}  //   namespace rbprm
+}  // namespace hpp

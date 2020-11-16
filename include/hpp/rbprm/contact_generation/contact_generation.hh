@@ -17,68 +17,59 @@
 // <http://www.gnu.org/licenses/>.
 
 #ifndef HPP_RBPRM_CONTACT_GENERATION_HH
-# define HPP_RBPRM_CONTACT_GENERATION_HH
+#define HPP_RBPRM_CONTACT_GENERATION_HH
 
-# include <hpp/rbprm/rbprm-state.hh>
-# include <hpp/rbprm/rbprm-fullbody.hh>
-# include <hpp/rbprm/projection/projection.hh>
-# include <queue>
+#include <hpp/rbprm/rbprm-state.hh>
+#include <hpp/rbprm/rbprm-fullbody.hh>
+#include <hpp/rbprm/projection/projection.hh>
+#include <queue>
 
 namespace hpp {
 namespace rbprm {
-namespace contact{
+namespace contact {
 
 typedef std::queue<hpp::rbprm::State> Q_State;
-typedef std::pair <hpp::rbprm::State, std::vector<std::string> > ContactState;
+typedef std::pair<hpp::rbprm::State, std::vector<std::string> > ContactState;
 typedef std::queue<ContactState> T_ContactState;
 
-struct ContactGenHelper
-{
-     ContactGenHelper(RbPrmFullBodyPtr_t fb, const State& ps,
-                      pinocchio::ConfigurationIn_t configuration,
-                      const affMap_t& affordances,
-                      const std::map<std::string, std::vector<std::string> >& affFilters,
-                      const double robustnessTreshold = 0,
-                      const std::size_t maxContactBreaks = 1,
-                      const std::size_t maxContactCreations = 1,
-                      const bool checkStabilityMaintain = false,
-                      const bool checkStabilityGenerate = true,
-                      const fcl::Vec3f& direction = fcl::Vec3f(0,0,1),
-                      const fcl::Vec3f& acceleration = fcl::Vec3f(0,0,0),
-                      const bool contactIfFails = false,
-                      const bool stableForOneContact = false,
-                      const core::PathConstPtr_t& comPath=core::PathConstPtr_t(),
-                      const double currentPathId=0);
-    ~ContactGenHelper(){}
-    hpp::rbprm::RbPrmFullBodyPtr_t fullBody_;
-    const hpp::rbprm::State previousState_;
-    const bool checkStabilityMaintain_;
-    bool contactIfFails_;
-    const bool stableForOneContact_;
-    const fcl::Vec3f acceleration_;
-    const fcl::Vec3f direction_;
-    const double robustnessTreshold_;
-    const std::size_t maxContactBreaks_;
-    const std::size_t maxContactCreations_;
-    const affMap_t& affordances_;
-    const std::map<std::string, std::vector<std::string> >& affFilters_;
-    hpp::rbprm::State workingState_;
-    bool checkStabilityGenerate_;
-    Q_State candidates_;
-    const core::PathConstPtr_t comPath_;
-    const double currentPathId_;
-    bool quasiStatic_;
-    bool testReachability_;
-    const bool maximiseContacts_;
-    const bool accept_unreachable_;
-    const bool tryQuasiStatic_;
-    const int reachabilityPointPerPhases_;
-
+struct ContactGenHelper {
+  ContactGenHelper(RbPrmFullBodyPtr_t fb, const State& ps, pinocchio::ConfigurationIn_t configuration,
+                   const affMap_t& affordances, const std::map<std::string, std::vector<std::string> >& affFilters,
+                   const double robustnessTreshold = 0, const std::size_t maxContactBreaks = 1,
+                   const std::size_t maxContactCreations = 1, const bool checkStabilityMaintain = false,
+                   const bool checkStabilityGenerate = true, const fcl::Vec3f& direction = fcl::Vec3f(0, 0, 1),
+                   const fcl::Vec3f& acceleration = fcl::Vec3f(0, 0, 0), const bool contactIfFails = false,
+                   const bool stableForOneContact = false,
+                   const core::PathConstPtr_t& comPath = core::PathConstPtr_t(), const double currentPathId = 0);
+  ~ContactGenHelper() {}
+  hpp::rbprm::RbPrmFullBodyPtr_t fullBody_;
+  const hpp::rbprm::State previousState_;
+  const bool checkStabilityMaintain_;
+  bool contactIfFails_;
+  const bool stableForOneContact_;
+  const fcl::Vec3f acceleration_;
+  const fcl::Vec3f direction_;
+  const double robustnessTreshold_;
+  const std::size_t maxContactBreaks_;
+  const std::size_t maxContactCreations_;
+  const affMap_t& affordances_;
+  const std::map<std::string, std::vector<std::string> >& affFilters_;
+  hpp::rbprm::State workingState_;
+  bool checkStabilityGenerate_;
+  Q_State candidates_;
+  const core::PathConstPtr_t comPath_;
+  const double currentPathId_;
+  bool quasiStatic_;
+  bool testReachability_;
+  const bool maximiseContacts_;
+  const bool accept_unreachable_;
+  const bool tryQuasiStatic_;
+  const int reachabilityPointPerPhases_;
 };
 
-
-std::vector<hpp::pinocchio::CollisionObjectPtr_t> HPP_RBPRM_DLLAPI getAffObjectsForLimb(const std::string& limb,
-    const affMap_t& affordances, const std::map<std::string, std::vector<std::string> >& affFilters);
+std::vector<hpp::pinocchio::CollisionObjectPtr_t> HPP_RBPRM_DLLAPI
+getAffObjectsForLimb(const std::string& limb, const affMap_t& affordances,
+                     const std::map<std::string, std::vector<std::string> >& affFilters);
 
 /// Generates all potentially valid cases of valid contact maintenance
 /// given a previous configuration.
@@ -88,7 +79,8 @@ std::vector<hpp::pinocchio::CollisionObjectPtr_t> HPP_RBPRM_DLLAPI getAffObjects
 /// \param maxBrokenContacts max number of contacts that can be broken in the process
 /// \return a queue of contact states candidates for maintenance, ordered by number of contacts broken
 /// and priority in the list wrt the contact order
-Q_State maintain_contacts_combinatorial(const hpp::rbprm::State& currentState, const std::size_t maxBrokenContacts=1);
+Q_State maintain_contacts_combinatorial(const hpp::rbprm::State& currentState,
+                                        const std::size_t maxBrokenContacts = 1);
 
 /// Generates all potentially valid cases of valid contact creation by removing the top state of the priority
 /// stack
@@ -97,7 +89,8 @@ Q_State maintain_contacts_combinatorial(const hpp::rbprm::State& currentState, c
 /// \param maxCreatedContacts max number of contacts that can be created in the process
 /// \return a QUEUE of contact states candidates for maintenance, ordered by number of contacts broken
 /// and priority in the list wrt the contact order
-T_ContactState gen_contacts_combinatorial(const std::vector<std::string>& freeEffectors, const State& previous, const std::size_t maxCreatedContacts, const bool maximiseContacts=false);
+T_ContactState gen_contacts_combinatorial(const std::vector<std::string>& freeEffectors, const State& previous,
+                                          const std::size_t maxCreatedContacts, const bool maximiseContacts = false);
 
 /// Given a combinatorial of possible contacts, generate
 /// the first "valid" configuration, that is the first kinematic
@@ -111,7 +104,8 @@ projection::ProjectionReport maintain_contacts(ContactGenHelper& contactGenHelpe
 /// \param ContactGenHelper parametrization of the planner
 /// \param limb the limb to create a contact with
 /// \return the best candidate wrt the priority in the list and the contact order
-projection::ProjectionReport generate_contact(const ContactGenHelper& contactGenHelper, const std::string& limb, sampling::HeuristicParam &params,
+projection::ProjectionReport generate_contact(const ContactGenHelper& contactGenHelper, const std::string& limb,
+                                              sampling::HeuristicParam& params,
                                               const sampling::heuristic evaluate = 0);
 
 /// Given a combinatorial of possible contacts, generate
@@ -126,7 +120,7 @@ projection::ProjectionReport gen_contacts(ContactGenHelper& contactGenHelper);
 /// \param ContactGenHelper parametrization of the planner
 /// \return the best candidate wrt the priority in the list and the contact order
 projection::ProjectionReport repositionContacts(ContactGenHelper& contactGenHelper);
-    } // namespace projection
-  } // namespace rbprm
-} // namespace hpp
-#endif // HPP_RBPRM_CONTACT_GENERATION_HH
+}  // namespace contact
+}  // namespace rbprm
+}  // namespace hpp
+#endif  // HPP_RBPRM_CONTACT_GENERATION_HH

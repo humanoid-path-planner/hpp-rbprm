@@ -17,7 +17,7 @@
 // <http://www.gnu.org/licenses/>.
 
 #ifndef HPP_ANALYSIS_HH
-# define HPP_ANALYSIS_HH
+#define HPP_ANALYSIS_HH
 
 #include <hpp/rbprm/sampling/sample.hh>
 #include <hpp/rbprm/sampling/sample-db.hh>
@@ -25,22 +25,20 @@
 
 #include <map>
 
-
 namespace hpp {
 
-  namespace rbprm {
-  namespace sampling{
+namespace rbprm {
+namespace sampling {
 
-  struct HPP_RBPRM_DLLAPI AnalysisFactory
-  {
-       AnalysisFactory(hpp::rbprm::RbPrmFullBodyPtr_t device);
-      ~AnalysisFactory();
+struct HPP_RBPRM_DLLAPI AnalysisFactory {
+  AnalysisFactory(hpp::rbprm::RbPrmFullBodyPtr_t device);
+  ~AnalysisFactory();
 
-       bool AddAnalysis(const std::string& name, const evaluate func);
-       T_evaluate evaluate_;
-       rbprm::RbPrmFullBodyPtr_t device_;
-  };
-  } // namespace sampling
-} // namespace rbprm
-} // namespace hpp
-#endif // HPP_ANALYSIS_HH
+  bool AddAnalysis(const std::string& name, const evaluate func);
+  T_evaluate evaluate_;
+  rbprm::RbPrmFullBodyPtr_t device_;
+};
+}  // namespace sampling
+}  // namespace rbprm
+}  // namespace hpp
+#endif  // HPP_ANALYSIS_HH

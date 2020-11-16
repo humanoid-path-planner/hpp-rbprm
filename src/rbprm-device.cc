@@ -17,82 +17,69 @@
 #include <hpp/rbprm/rbprm-device.hh>
 
 namespace hpp {
-  namespace pinocchio {
+namespace pinocchio {
 
-    RbPrmDevicePtr_t RbPrmDevice::create (const std::string& name, DevicePtr_t& robotRom)
-    {
-        hpp::pinocchio::T_Rom roms;
-        roms.insert(std::make_pair(robotRom->name(),robotRom));
-        RbPrmDevice* rbprmDevice = new RbPrmDevice(name, roms);
-        RbPrmDevicePtr_t res (rbprmDevice);
-        res->init (res);
-        return res;
-    }
+RbPrmDevicePtr_t RbPrmDevice::create(const std::string& name, DevicePtr_t& robotRom) {
+  hpp::pinocchio::T_Rom roms;
+  roms.insert(std::make_pair(robotRom->name(), robotRom));
+  RbPrmDevice* rbprmDevice = new RbPrmDevice(name, roms);
+  RbPrmDevicePtr_t res(rbprmDevice);
+  res->init(res);
+  return res;
+}
 
-    RbPrmDevicePtr_t RbPrmDevice::create (const std::string& name, const hpp::pinocchio::T_Rom &robotRoms)
-    {
-        RbPrmDevice* rbprmDevice = new RbPrmDevice(name, robotRoms);
-        RbPrmDevicePtr_t res (rbprmDevice);
-        res->init (res);
-        return res;
-    }
+RbPrmDevicePtr_t RbPrmDevice::create(const std::string& name, const hpp::pinocchio::T_Rom& robotRoms) {
+  RbPrmDevice* rbprmDevice = new RbPrmDevice(name, robotRoms);
+  RbPrmDevicePtr_t res(rbprmDevice);
+  res->init(res);
+  return res;
+}
 
-    RbPrmDevice::~RbPrmDevice()
-    {
-        // NOTHING
-    }
+RbPrmDevice::~RbPrmDevice() {
+  // NOTHING
+}
 
-    // ========================================================================
+// ========================================================================
 
-    void RbPrmDevice::init(const RbPrmDeviceWkPtr_t& weakPtr)
-    {
-        Device::init (weakPtr);
-        weakPtr_ = weakPtr;
-    }
+void RbPrmDevice::init(const RbPrmDeviceWkPtr_t& weakPtr) {
+  Device::init(weakPtr);
+  weakPtr_ = weakPtr;
+}
 
-    bool RbPrmDevice::currentConfiguration (ConfigurationIn_t configuration)
-    {
-        for(hpp::pinocchio::T_Rom::const_iterator cit = robotRoms_.begin();
-            cit != robotRoms_.end(); ++cit)
-        {
-            cit->second->currentConfiguration(configuration);
-        }
-        return Device::currentConfiguration(configuration);
-    }
+bool RbPrmDevice::currentConfiguration(ConfigurationIn_t configuration) {
+  for (hpp::pinocchio::T_Rom::const_iterator cit = robotRoms_.begin(); cit != robotRoms_.end(); ++cit) {
+    cit->second->currentConfiguration(configuration);
+  }
+  return Device::currentConfiguration(configuration);
+}
 
-    void RbPrmDevice::setDimensionExtraConfigSpace (const size_type& dimension)
-    {
-      Device::setDimensionExtraConfigSpace(dimension); // call inherited method
-      // call method for each robotRoms :
-      for(hpp::pinocchio::T_Rom::const_iterator cit = robotRoms_.begin();
-          cit != robotRoms_.end(); ++cit){
-          cit->second->setDimensionExtraConfigSpace(dimension);
-        }
-    }
+void RbPrmDevice::setDimensionExtraConfigSpace(const size_type& dimension) {
+  Device::setDimensionExtraConfigSpace(dimension);  // call inherited method
+  // call method for each robotRoms :
+  for (hpp::pinocchio::T_Rom::const_iterator cit = robotRoms_.begin(); cit != robotRoms_.end(); ++cit) {
+    cit->second->setDimensionExtraConfigSpace(dimension);
+  }
+}
 
-    vector3_t RbPrmDevice::getEffectorReference(std::string romName){
-      std::map<std::string, vector3_t>::iterator it = effectorsReferences_.find(romName);
-      if(it == effectorsReferences_.end())
-        return vector3_t();
-      else
-        return it->second;
-    }
+vector3_t RbPrmDevice::getEffectorReference(std::string romName) {
+  std::map<std::string, vector3_t>::iterator it = effectorsReferences_.find(romName);
+  if (it == effectorsReferences_.end())
+    return vector3_t();
+  else
+    return it->second;
+}
 
-    void RbPrmDevice::setEffectorReference(std::string romName,vector3_t ref){
-      std::map<std::string, vector3_t>::iterator it = effectorsReferences_.find(romName);
-      if(it == effectorsReferences_.end())
-        effectorsReferences_.insert(std::make_pair(romName,ref));
-      else
-        it->second = ref;
-    }
+void RbPrmDevice::setEffectorReference(std::string romName, vector3_t ref) {
+  std::map<std::string, vector3_t>::iterator it = effectorsReferences_.find(romName);
+  if (it == effectorsReferences_.end())
+    effectorsReferences_.insert(std::make_pair(romName, ref));
+  else
+    it->second = ref;
+}
 
-    RbPrmDevice::RbPrmDevice (const std::string& name, const hpp::pinocchio::T_Rom &robotRoms)
-        : Device(name)
-        , robotRoms_(robotRoms)
-        , effectorsReferences_()
-        , weakPtr_()
-    {
-        // NOTHING
-    }
-  } // model
-} //hpp
+RbPrmDevice::RbPrmDevice(const std::string& name, const hpp::pinocchio::T_Rom& robotRoms)
+    : Device(name), robotRoms_(robotRoms), effectorsReferences_(), weakPtr_() {
+  // NOTHING
+}
+}  // namespace pinocchio
+}  // namespace hpp

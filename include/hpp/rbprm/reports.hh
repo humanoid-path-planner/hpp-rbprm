@@ -17,7 +17,7 @@
 // <http://www.gnu.org/licenses/>.
 
 #ifndef HPP_RBPRM_CONTACT_REPORT_HH
-# define HPP_RBPRM_CONTACT_REPORT_HH
+#define HPP_RBPRM_CONTACT_REPORT_HH
 
 #include <hpp/rbprm/config.hh>
 #include <hpp/rbprm/rbprm-state.hh>
@@ -25,40 +25,37 @@
 namespace hpp {
 namespace rbprm {
 
-
-enum HPP_RBPRM_DLLAPI ContactComputationStatus
-{
+enum HPP_RBPRM_DLLAPI ContactComputationStatus {
   NO_CONTACT = 0,
   UNSTABLE_CONTACT = 1,
   STABLE_CONTACT = 2,
-  REACHABLE_CONTACT =3 // in current implementation REACHABLE is always STABLE ... we might need to use mask for futur developpement
+  REACHABLE_CONTACT =
+      3  // in current implementation REACHABLE is always STABLE ... we might need to use mask for futur developpement
 };
 
-namespace projection{
-struct HPP_RBPRM_DLLAPI ProjectionReport
-{
-     ProjectionReport(): success_ (false), status_(NO_CONTACT){}
-     ProjectionReport(const ProjectionReport&);
-    ~ProjectionReport(){}
-    bool success_;
-    hpp::rbprm::State result_;
-    ContactComputationStatus status_;
+namespace projection {
+struct HPP_RBPRM_DLLAPI ProjectionReport {
+  ProjectionReport() : success_(false), status_(NO_CONTACT) {}
+  ProjectionReport(const ProjectionReport&);
+  ~ProjectionReport() {}
+  bool success_;
+  hpp::rbprm::State result_;
+  ContactComputationStatus status_;
 };
 
-}
+}  // namespace projection
 
-namespace contact{
+namespace contact {
 
-struct HPP_RBPRM_DLLAPI ContactReport : public projection::ProjectionReport
-{
-    ContactReport();
-    ContactReport(const projection::ProjectionReport&);
-    bool contactMaintained_;
-    bool multipleBreaks_;
-    bool contactCreated_;
-    bool repositionedInPlace_;
+struct HPP_RBPRM_DLLAPI ContactReport : public projection::ProjectionReport {
+  ContactReport();
+  ContactReport(const projection::ProjectionReport&);
+  bool contactMaintained_;
+  bool multipleBreaks_;
+  bool contactCreated_;
+  bool repositionedInPlace_;
 };
-} // namespace contact
-} // namespace rbprm
-} // namespace hpp
-#endif // HPP_RBPRM_ALGORITHM_HH
+}  // namespace contact
+}  // namespace rbprm
+}  // namespace hpp
+#endif  // HPP_RBPRM_ALGORITHM_HH

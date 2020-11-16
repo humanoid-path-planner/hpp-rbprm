@@ -21,7 +21,7 @@
 
 #include <Eigen/Geometry>
 
-#define BOOST_TEST_MODULE test-rbprm-shooter
+#define BOOST_TEST_MODULE test - rbprm - shooter
 #include <boost/test/included/unit_test.hpp>
 
 using namespace hpp;

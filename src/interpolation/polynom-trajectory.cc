@@ -26,63 +26,49 @@
 using namespace hpp::core;
 
 namespace hpp {
-  namespace rbprm {
-  namespace interpolation{
-    PolynomTrajectory::PolynomTrajectory (PolynomPtr_t polynom,
-                                          core::value_type subSetStart,
-                                          core::value_type subSetEnd) :
-        parent_t (interval_t (0, subSetEnd - subSetStart), 3,3),
-        polynom_ (polynom),
-        subSetStart_(subSetStart),
-        subSetEnd_(subSetEnd),
-        length_(subSetEnd - subSetStart)
-      {
-        timeRange(interval_t(subSetStart_, subSetEnd_));
-        assert (length_ >= 0);
-        assert (!constraints ());
-      }
+namespace rbprm {
+namespace interpolation {
+PolynomTrajectory::PolynomTrajectory(PolynomPtr_t polynom, core::value_type subSetStart, core::value_type subSetEnd)
+    : parent_t(interval_t(0, subSetEnd - subSetStart), 3, 3),
+      polynom_(polynom),
+      subSetStart_(subSetStart),
+      subSetEnd_(subSetEnd),
+      length_(subSetEnd - subSetStart) {
+  timeRange(interval_t(subSetStart_, subSetEnd_));
+  assert(length_ >= 0);
+  assert(!constraints());
+}
 
+pinocchio::value_type normalize(const PolynomTrajectory& path, pinocchio::value_type param) {
+  value_type u;
+  if (path.timeRange().second == 0)
+    u = 0;
+  else
+    u = (param - path.timeRange().first) / (path.timeRange().second - path.timeRange().first);
+  return u;
+}
 
-    pinocchio::value_type normalize(const PolynomTrajectory& path, pinocchio::value_type param)
-    {
-        value_type u;
-        if (path.timeRange ().second == 0)
-            u = 0;
-        else
-            u = (param - path.timeRange ().first) / (path.timeRange ().second - path.timeRange().first);
-        return u;
-    }
+PolynomTrajectory::PolynomTrajectory(const PolynomTrajectory& path)
+    : parent_t(interval_t(0, path.length_), 3, 3),
+      polynom_(path.polynom_),
+      subSetStart_(path.subSetStart_),
+      subSetEnd_(path.subSetEnd_),
+      length_(path.length_) {
+  timeRange(path.timeRange());
+}
 
-    PolynomTrajectory::PolynomTrajectory (const PolynomTrajectory& path) :
-        parent_t (interval_t (0, path.length_), 3,3),
-        polynom_ (path.polynom_),
-        subSetStart_(path.subSetStart_),
-        subSetEnd_(path.subSetEnd_),
-        length_(path.length_)
-    {
-        timeRange(path.timeRange());
-    }
+bool PolynomTrajectory::impl_compute(ConfigurationOut_t result, value_type param) const {
+  if (param == timeRange().first || timeRange().second == 0) {
+    result = initial();
+  } else {
+    result = polynom_->operator()(param);
+  }
+  return true;
+}
 
-    bool PolynomTrajectory::impl_compute (ConfigurationOut_t result,
-				     value_type param) const
-    {
-        if (param == timeRange ().first || timeRange ().second == 0)
-        {
-            result = initial();
-        }
-        else
-        {
-            result = polynom_->operator ()(param);
-        }
-        return true;
-    }
-
-    PathPtr_t PolynomTrajectory::extract (const interval_t& subInterval) const
-      throw (projection_error)
-    {
-        return PolynomTrajectory::create (polynom_,subInterval.first, subInterval.second);
-    }
-  } //   namespace interpolation
-  } //   namespace rbprm
-} // namespace hpp
-
+PathPtr_t PolynomTrajectory::extract(const interval_t& subInterval) const throw(projection_error) {
+  return PolynomTrajectory::create(polynom_, subInterval.first, subInterval.second);
+}
+}  //   namespace interpolation
+}  //   namespace rbprm
+}  // namespace hpp

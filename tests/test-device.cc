@@ -18,7 +18,7 @@
 
 #include "test-tools.hh"
 
-#define BOOST_TEST_MODULE test-device
+#define BOOST_TEST_MODULE test - device
 #include <boost/test/included/unit_test.hpp>
 
 BOOST_AUTO_TEST_SUITE(test_rbprm)

@@ -23,128 +23,108 @@
 #include <hpp/rbprm/planner/rbprm-node.hh>
 
 namespace hpp {
-  namespace rbprm {
+namespace rbprm {
 
-    using core::Problem;
-    using core::ConfigurationIn_t;
-    using core::Path;
+using core::ConfigurationIn_t;
+using core::Path;
+using core::Problem;
 
-    HPP_PREDEF_CLASS (SteeringMethodKinodynamic);
-    typedef boost::shared_ptr <SteeringMethodKinodynamic> SteeringMethodKinodynamicPtr_t;
+HPP_PREDEF_CLASS(SteeringMethodKinodynamic);
+typedef boost::shared_ptr<SteeringMethodKinodynamic> SteeringMethodKinodynamicPtr_t;
 
-    class HPP_RBPRM_DLLAPI SteeringMethodKinodynamic : public core::steeringMethod::Kinodynamic{
+class HPP_RBPRM_DLLAPI SteeringMethodKinodynamic : public core::steeringMethod::Kinodynamic {
+ public:
+  core::PathPtr_t operator()(core::ConfigurationIn_t q1, const core::NodePtr_t x) {
+    try {
+      return impl_compute(q1, x);
+    } catch (const core::projection_error& e) {
+      hppDout(info, "Could not build path: " << e.what());
+    }
+    return core::PathPtr_t();
+  }
 
-    public:
+  core::PathPtr_t operator()(const core::NodePtr_t x, core::ConfigurationIn_t q2) {
+    try {
+      return impl_compute(x, q2);
+    } catch (const core::projection_error& e) {
+      hppDout(info, "Could not build path: " << e.what());
+    }
+    return core::PathPtr_t();
+  }
+  /// Create an instance
+  static SteeringMethodKinodynamicPtr_t create(const core::Problem& problem) {
+    SteeringMethodKinodynamic* ptr = new SteeringMethodKinodynamic(problem);
+    SteeringMethodKinodynamicPtr_t shPtr(ptr);
+    ptr->init(shPtr);
+    return shPtr;
+  }
 
+  /// Copy instance and return shared pointer
+  static SteeringMethodKinodynamicPtr_t createCopy(const SteeringMethodKinodynamicPtr_t& other) {
+    SteeringMethodKinodynamic* ptr = new SteeringMethodKinodynamic(*other);
+    SteeringMethodKinodynamicPtr_t shPtr(ptr);
+    ptr->init(shPtr);
+    return shPtr;
+  }
 
-      core::PathPtr_t operator() (core::ConfigurationIn_t q1,
-                                  const core::NodePtr_t x)
-      {
-        try {
-          return impl_compute (q1, x);
-        } catch (const core::projection_error& e) {
-          hppDout (info, "Could not build path: " << e.what());
-        }
-        return core::PathPtr_t ();
-      }
+  /// Copy instance and return shared pointer
+  virtual core::SteeringMethodPtr_t copy() const { return createCopy(weak_.lock()); }
 
-      core::PathPtr_t operator() (const core::NodePtr_t x,
-                            core::ConfigurationIn_t q2)
-      {
-        try {
-          return impl_compute (x, q2);
-        } catch (const core::projection_error& e) {
-          hppDout (info, "Could not build path: " << e.what());
-        }
-        return core::PathPtr_t ();
-      }
-      /// Create an instance
-      static SteeringMethodKinodynamicPtr_t create (const core::Problem& problem)
-      {
-        SteeringMethodKinodynamic* ptr = new SteeringMethodKinodynamic (problem);
-        SteeringMethodKinodynamicPtr_t shPtr (ptr);
-        ptr->init (shPtr);
-        return shPtr;
-      }
+  /// create a path between two configurations
+  virtual core::PathPtr_t impl_compute(core::ConfigurationIn_t q1, core::ConfigurationIn_t q2) const;
 
-      /// Copy instance and return shared pointer
-      static SteeringMethodKinodynamicPtr_t createCopy
-      (const SteeringMethodKinodynamicPtr_t& other)
-      {
-        SteeringMethodKinodynamic* ptr = new SteeringMethodKinodynamic (*other);
-        SteeringMethodKinodynamicPtr_t shPtr (ptr);
-        ptr->init (shPtr);
-        return shPtr;
-      }
+  core::PathPtr_t impl_compute(core::NodePtr_t x, core::ConfigurationIn_t q2);
 
-      /// Copy instance and return shared pointer
-      virtual core::SteeringMethodPtr_t copy () const
-      {
-        return createCopy (weak_.lock ());
-      }
+  core::PathPtr_t impl_compute(core::ConfigurationIn_t q1, core::NodePtr_t x);
 
-      /// create a path between two configurations
-      virtual core::PathPtr_t impl_compute (core::ConfigurationIn_t q1,
-                                      core::ConfigurationIn_t q2) const;
+  double totalTimeComputed_;
+  double totalTimeValidated_;
+  int dirValid_;
+  int dirTotal_;
+  int rejectedPath_;
+  const double maxLength_;
 
-      core::PathPtr_t impl_compute (core::NodePtr_t x,
-                                            core::ConfigurationIn_t q2);
+ protected:
+  /// Constructor
+  SteeringMethodKinodynamic(const core::Problem& problem);
 
-      core::PathPtr_t impl_compute (core::ConfigurationIn_t q1,core::NodePtr_t x);
+  /// Copy constructor
+  SteeringMethodKinodynamic(const SteeringMethodKinodynamic& other);
 
-      double totalTimeComputed_;
-      double totalTimeValidated_;
-      int dirValid_;
-      int dirTotal_;
-      int rejectedPath_;
-      const double maxLength_;
+  /// Store weak pointer to itself
+  void init(SteeringMethodKinodynamicWkPtr_t weak) {
+    core::SteeringMethod::init(weak);
+    weak_ = weak;
+  }
 
-    protected:
+  /**
+   * @brief computeDirection compute the direction that the steering method will choose in order to connect from to to
+   * @param from
+   * @param to
+   * @return
+   */
+  core::PathPtr_t computeDirection(const core::ConfigurationIn_t from, const core::ConfigurationIn_t to, bool reverse);
 
-      /// Constructor
-      SteeringMethodKinodynamic (const core::Problem& problem);
+  /**
+   * @brief setSteeringMethodBounds Compute the maximal acceleration on a direction from near to target,
+   *                                and send it to the steering method
+   * @param near the node from where we take the the information about contact and position
+   * @param target the target configuration
+   * @param reverse if true, we compute the acceleration from target to near, with the information from near
+   * @return the node casted from near
+   */
+  core::PathPtr_t setSteeringMethodBounds(const core::RbprmNodePtr_t& near, const core::ConfigurationIn_t target,
+                                          bool reverse);
 
-      /// Copy constructor
-      SteeringMethodKinodynamic (const SteeringMethodKinodynamic& other);
+ private:
+  core::DeviceWkPtr_t device_;
+  centroidal_dynamics::Vector3 lastDirection_;
+  centroidal_dynamics::Equilibrium* sEq_;
+  bool boundsUpToDate_;
+  SteeringMethodKinodynamicWkPtr_t weak_;
 
-      /// Store weak pointer to itself
-      void init (SteeringMethodKinodynamicWkPtr_t weak)
-      {
-        core::SteeringMethod::init (weak);
-        weak_ = weak;
-      }
+};  // class rbprm-kinodynamic
+}  // namespace rbprm
+}  // namespace hpp
 
-      /**
-       * @brief computeDirection compute the direction that the steering method will choose in order to connect from to to
-       * @param from
-       * @param to
-       * @return
-       */
-      core::PathPtr_t computeDirection(const core::ConfigurationIn_t from, const core::ConfigurationIn_t to, bool reverse);
-
-      /**
-       * @brief setSteeringMethodBounds Compute the maximal acceleration on a direction from near to target,
-       *                                and send it to the steering method
-       * @param near the node from where we take the the information about contact and position
-       * @param target the target configuration
-       * @param reverse if true, we compute the acceleration from target to near, with the information from near
-       * @return the node casted from near
-       */
-      core::PathPtr_t setSteeringMethodBounds(const core::RbprmNodePtr_t& near, const core::ConfigurationIn_t target,bool reverse);
-
-
-
-
-    private:
-      core::DeviceWkPtr_t device_;
-      centroidal_dynamics::Vector3 lastDirection_;
-      centroidal_dynamics::Equilibrium* sEq_;
-      bool boundsUpToDate_;
-      SteeringMethodKinodynamicWkPtr_t weak_;
-
-    }; // class rbprm-kinodynamic
-  } // namespace hpp
-} // namespace rbprm
-
-
-#endif // HPP_RBPRM_STEERING_METHOD_KINODYNAMIC_HH
+#endif  // HPP_RBPRM_STEERING_METHOD_KINODYNAMIC_HH

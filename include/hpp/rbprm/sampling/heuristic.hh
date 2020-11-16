@@ -17,43 +17,40 @@
 // <http://www.gnu.org/licenses/>.
 
 #ifndef HPP_HEURISTIC_HH
-# define HPP_HEURISTIC_HH
+#define HPP_HEURISTIC_HH
 
 #include <hpp/rbprm/sampling/sample.hh>
 
 #include <map>
 
-
 namespace hpp {
 
-  namespace rbprm {
-  namespace sampling{
+namespace rbprm {
+namespace sampling {
 
-  struct HeuristicParam;
+struct HeuristicParam;
 
+/// Defines a heuristic method to sort samples
+/// the higher the score, the better the sample
+/// in presented joint
+/// \param sample sample candidate
+/// \param direction overall direction of motion
+/// \param normal contact surface normal relatively to the candidate
+typedef double (*heuristic)(const sampling::Sample& sample, const Eigen::Vector3d& direction,
+                            const Eigen::Vector3d& normal, const HeuristicParam& params);
 
-  /// Defines a heuristic method to sort samples
-  /// the higher the score, the better the sample
-  /// in presented joint
-  /// \param sample sample candidate
-  /// \param direction overall direction of motion
-  /// \param normal contact surface normal relatively to the candidate
-  typedef double (*heuristic) (const sampling::Sample& sample,
-                               const Eigen::Vector3d& direction, const Eigen::Vector3d& normal, const HeuristicParam & params);
+/// Defines a set of existing heuristics for biasing the sample candidate selection
+///
+/// This class defines two heuristics by default. "EFORT" and "manipulability".
+struct HPP_RBPRM_DLLAPI HeuristicFactory {
+  HeuristicFactory();
+  ~HeuristicFactory();
 
-  /// Defines a set of existing heuristics for biasing the sample candidate selection
-  ///
-  /// This class defines two heuristics by default. "EFORT" and "manipulability".
-  struct HPP_RBPRM_DLLAPI HeuristicFactory
-  {
-       HeuristicFactory();
-      ~HeuristicFactory();
+  bool AddHeuristic(const std::string& name, const heuristic func);
+  std::map<std::string, const heuristic> heuristics_;
+};
 
-       bool AddHeuristic(const std::string& name, const heuristic func);
-       std::map<std::string, const heuristic> heuristics_;
-  };
-
-  } // namespace sampling
-} // namespace rbprm
-} // namespace hpp
-#endif // HPP_HEURISTIC_HH
+}  // namespace sampling
+}  // namespace rbprm
+}  // namespace hpp
+#endif  // HPP_HEURISTIC_HH

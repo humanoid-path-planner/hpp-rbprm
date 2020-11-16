@@ -27,158 +27,156 @@ using namespace hpp::pinocchio;
 using namespace hpp::rbprm;
 using namespace hpp::rbprm::sampling;
 
-
-std::size_t ComputeLength(const hpp::pinocchio::JointPtr_t limb, const hpp::pinocchio::Frame effector)
-{
-    std::size_t start = limb->rankInConfiguration();
-    std::size_t end = effector.joint()->rankInConfiguration()
-            + effector.joint()->configSize(); //neutralConfiguration().rows();
-    return end - start;
+std::size_t ComputeLength(const hpp::pinocchio::JointPtr_t limb, const hpp::pinocchio::Frame effector) {
+  std::size_t start = limb->rankInConfiguration();
+  std::size_t end =
+      effector.joint()->rankInConfiguration() + effector.joint()->configSize();  // neutralConfiguration().rows();
+  return end - start;
 }
 
-
-fcl::Vec3f ComputeEffectorPosition(const hpp::pinocchio::JointPtr_t limb, const hpp::pinocchio::Frame effector, const fcl::Vec3f& offset)
-{
-    const hpp::pinocchio::Transform3f& tf =effector.currentTransformation();
-    const fcl::Transform3f transform (tf.rotation(),tf.translation());
-    hpp::pinocchio::Transform3f tfParent;
-    if  (limb->parentJoint())
-        tfParent = limb->parentJoint()->currentTransformation();
-    else
-        tfParent = limb->currentTransformation();
-    fcl::Transform3f parentT = fcl::Transform3f(tfParent.rotation(), tfParent.translation()).inverse();
-    fcl::Vec3f tr (transform.getTranslation() + offset);
-    return (parentT * tr).getTranslation();
+fcl::Vec3f ComputeEffectorPosition(const hpp::pinocchio::JointPtr_t limb, const hpp::pinocchio::Frame effector,
+                                   const fcl::Vec3f& offset) {
+  const hpp::pinocchio::Transform3f& tf = effector.currentTransformation();
+  const fcl::Transform3f transform(tf.rotation(), tf.translation());
+  hpp::pinocchio::Transform3f tfParent;
+  if (limb->parentJoint())
+    tfParent = limb->parentJoint()->currentTransformation();
+  else
+    tfParent = limb->currentTransformation();
+  fcl::Transform3f parentT = fcl::Transform3f(tfParent.rotation(), tfParent.translation()).inverse();
+  fcl::Vec3f tr(transform.getTranslation() + offset);
+  return (parentT * tr).getTranslation();
 }
 
 /**
- * @brief ComputeEffectorPositionInLimbFrame compute the position of the end effector in the frame defined by the world orientation
- * but with the origin at the root of the limb
+ * @brief ComputeEffectorPositionInLimbFrame compute the position of the end effector in the frame defined by the world
+ * orientation but with the origin at the root of the limb
  * @param limb
  * @param effector
  * @param offset
  * @return
  */
-fcl::Vec3f ComputeEffectorPositionInLimbFrame(const hpp::pinocchio::JointPtr_t limb, const hpp::pinocchio::Frame effector, const fcl::Vec3f& offset,const fcl::Vec3f&  limbOffset)
-{
-    // we want to use the orientation expressed in the world frame, but with the origin in the limb's root :
-    //hppDout(notice,"offset = "<<offset);
-    //hppDout(notice,"limbOffset = "<<limbOffset);
-    const hpp::pinocchio::Transform3f& transformLimbPin = limb->currentTransformation();
-    const fcl::Transform3f transformLimb(transformLimbPin.rotation(),transformLimbPin.translation());
-    fcl::Transform3f transformOffset;
-    transformOffset.setTranslation(limbOffset);
-    fcl::Vec3f effTr = effector.currentTransformation().translation() + offset;
-    fcl::Vec3f limbTr = (transformLimb*transformOffset).getTranslation();
-   /* hppDout(notice,"effTr = "<<effTr);
-    hppDout(notice,"limbTr = "<<limbTr);
-    hppDout(notice,"res = "<<effTr-limbTr);*/
-    return (effTr-limbTr);
+fcl::Vec3f ComputeEffectorPositionInLimbFrame(const hpp::pinocchio::JointPtr_t limb,
+                                              const hpp::pinocchio::Frame effector, const fcl::Vec3f& offset,
+                                              const fcl::Vec3f& limbOffset) {
+  // we want to use the orientation expressed in the world frame, but with the origin in the limb's root :
+  // hppDout(notice,"offset = "<<offset);
+  // hppDout(notice,"limbOffset = "<<limbOffset);
+  const hpp::pinocchio::Transform3f& transformLimbPin = limb->currentTransformation();
+  const fcl::Transform3f transformLimb(transformLimbPin.rotation(), transformLimbPin.translation());
+  fcl::Transform3f transformOffset;
+  transformOffset.setTranslation(limbOffset);
+  fcl::Vec3f effTr = effector.currentTransformation().translation() + offset;
+  fcl::Vec3f limbTr = (transformLimb * transformOffset).getTranslation();
+  /* hppDout(notice,"effTr = "<<effTr);
+   hppDout(notice,"limbTr = "<<limbTr);
+   hppDout(notice,"res = "<<effTr-limbTr);*/
+  return (effTr - limbTr);
 }
 
-Eigen::MatrixXd Jacobian(const hpp::pinocchio::JointPtr_t limb, const hpp::pinocchio::Frame effector)
-{
-    return effector.jacobian().block(0,limb->rankInVelocity(),6, effector.joint()->rankInVelocity() - limb->rankInVelocity() + effector.joint()->numberDof());
+Eigen::MatrixXd Jacobian(const hpp::pinocchio::JointPtr_t limb, const hpp::pinocchio::Frame effector) {
+  return effector.jacobian().block(
+      0, limb->rankInVelocity(), 6,
+      effector.joint()->rankInVelocity() - limb->rankInVelocity() + effector.joint()->numberDof());
 }
 
-
-double Manipulability(const Eigen::MatrixXd& product)
-{
-    double det = product.determinant();
-    return det > 0 ? sqrt(det) : 0;
+double Manipulability(const Eigen::MatrixXd& product) {
+  double det = product.determinant();
+  return det > 0 ? sqrt(det) : 0;
 }
 
-Sample::Sample(const hpp::pinocchio::JointPtr_t limb, const hpp::pinocchio::Frame effector, const fcl::Vec3f& offset,const fcl::Vec3f& limbOffset, std::size_t id)
-    : startRank_(limb->rankInConfiguration())
-    , length_ (ComputeLength(limb, effector))
-    , configuration_ (limb->robot()->currentConfiguration().segment(startRank_, length_))
-    , effectorPosition_(ComputeEffectorPosition(limb, effector,offset))
-    , effectorPositionInLimbFrame_(ComputeEffectorPositionInLimbFrame(limb,effector,offset,limbOffset))
-    , jacobian_(Jacobian(limb, effector))
-    , jacobianProduct_(jacobian_*jacobian_.transpose())
-    , id_(id)
-    , staticValue_(Manipulability(jacobianProduct_))
-{
-    // NOTHING
+Sample::Sample(const hpp::pinocchio::JointPtr_t limb, const hpp::pinocchio::Frame effector, const fcl::Vec3f& offset,
+               const fcl::Vec3f& limbOffset, std::size_t id)
+    : startRank_(limb->rankInConfiguration()),
+      length_(ComputeLength(limb, effector)),
+      configuration_(limb->robot()->currentConfiguration().segment(startRank_, length_)),
+      effectorPosition_(ComputeEffectorPosition(limb, effector, offset)),
+      effectorPositionInLimbFrame_(ComputeEffectorPositionInLimbFrame(limb, effector, offset, limbOffset)),
+      jacobian_(Jacobian(limb, effector)),
+      jacobianProduct_(jacobian_ * jacobian_.transpose()),
+      id_(id),
+      staticValue_(Manipulability(jacobianProduct_)) {
+  // NOTHING
 }
 
 Sample::Sample(const std::size_t id, const std::size_t length, const std::size_t startRank, const double staticValue,
-               const fcl::Vec3f& effectorPosition,const fcl::Vec3f& effectorPositionInLimbFrame, const hpp::pinocchio::ConfigurationIn_t configuration, const Eigen::MatrixXd& jacobian,
-               const Eigen::Matrix <hpp::pinocchio::value_type, 6, 6>& jacobianProduct)
-    : startRank_(startRank)
-    , length_ (length)
-    , configuration_ (configuration)
-    , effectorPosition_(effectorPosition)
-    , effectorPositionInLimbFrame_(effectorPositionInLimbFrame)
-    , jacobian_(jacobian)
-    , jacobianProduct_(jacobianProduct)
-    , id_(id)
-    , staticValue_(staticValue)
-{
-    // NOTHING
+               const fcl::Vec3f& effectorPosition, const fcl::Vec3f& effectorPositionInLimbFrame,
+               const hpp::pinocchio::ConfigurationIn_t configuration, const Eigen::MatrixXd& jacobian,
+               const Eigen::Matrix<hpp::pinocchio::value_type, 6, 6>& jacobianProduct)
+    : startRank_(startRank),
+      length_(length),
+      configuration_(configuration),
+      effectorPosition_(effectorPosition),
+      effectorPositionInLimbFrame_(effectorPositionInLimbFrame),
+      jacobian_(jacobian),
+      jacobianProduct_(jacobianProduct),
+      id_(id),
+      staticValue_(staticValue) {
+  // NOTHING
 }
 
-Sample::Sample(const hpp::pinocchio::JointPtr_t limb, const hpp::pinocchio::Frame effector, hpp::pinocchio::ConfigurationIn_t configuration,  const fcl::Vec3f& offset,const fcl::Vec3f& limbOffset, std::size_t id)
-    : startRank_(limb->rankInConfiguration())
-    , length_ (ComputeLength(limb, effector))
-    , configuration_ (configuration)
-    , effectorPosition_(ComputeEffectorPosition(limb,effector,offset))
-    , effectorPositionInLimbFrame_(ComputeEffectorPositionInLimbFrame(limb,effector,offset,limbOffset))
-    , jacobian_(Jacobian(limb,effector))
-    , jacobianProduct_(jacobian_*jacobian_.transpose())
-    , id_(id)
-    , staticValue_(Manipulability(jacobianProduct_))
-{
-    // NOTHING
+Sample::Sample(const hpp::pinocchio::JointPtr_t limb, const hpp::pinocchio::Frame effector,
+               hpp::pinocchio::ConfigurationIn_t configuration, const fcl::Vec3f& offset, const fcl::Vec3f& limbOffset,
+               std::size_t id)
+    : startRank_(limb->rankInConfiguration()),
+      length_(ComputeLength(limb, effector)),
+      configuration_(configuration),
+      effectorPosition_(ComputeEffectorPosition(limb, effector, offset)),
+      effectorPositionInLimbFrame_(ComputeEffectorPositionInLimbFrame(limb, effector, offset, limbOffset)),
+      jacobian_(Jacobian(limb, effector)),
+      jacobianProduct_(jacobian_ * jacobian_.transpose()),
+      id_(id),
+      staticValue_(Manipulability(jacobianProduct_)) {
+  // NOTHING
 }
 
-Sample::Sample(const Sample &clone)
+Sample::Sample(const Sample& clone)
 
-    : startRank_(clone.startRank_)
-    , length_ (clone.length_)
-    , configuration_ (clone.configuration_)
-    , effectorPosition_(clone.effectorPosition_)
-    , effectorPositionInLimbFrame_(clone.effectorPositionInLimbFrame_)
-    , jacobian_(clone.jacobian_)
-    , jacobianProduct_(clone.jacobianProduct_)
-    , id_(clone.id_)
-    , staticValue_(clone.staticValue_)
-{
-    // NOTHING
+    : startRank_(clone.startRank_),
+      length_(clone.length_),
+      configuration_(clone.configuration_),
+      effectorPosition_(clone.effectorPosition_),
+      effectorPositionInLimbFrame_(clone.effectorPositionInLimbFrame_),
+      jacobian_(clone.jacobian_),
+      jacobianProduct_(clone.jacobianProduct_),
+      id_(clone.id_),
+      staticValue_(clone.staticValue_) {
+  // NOTHING
 }
 
-void hpp::rbprm::sampling::Load(const Sample& sample, ConfigurationOut_t configuration)
-{
-    configuration.segment(sample.startRank_, sample.length_) = sample.configuration_;
+void hpp::rbprm::sampling::Load(const Sample& sample, ConfigurationOut_t configuration) {
+  configuration.segment(sample.startRank_, sample.length_) = sample.configuration_;
 }
 
-hpp::rbprm::sampling::SampleVector_t hpp::rbprm::sampling::GenerateSamples(const pinocchio::JointPtr_t model, const std::string& effector
-                                                         , const std::size_t nbSamples, const fcl::Vec3f& offset,const fcl::Vec3f& limbOffset)
-{
-    SampleVector_t result; result.reserve(nbSamples);
-    pinocchio::DevicePtr_t device (model->robot()->clone());
-    Configuration_t config;
-    JointPtr_t clone = device->getJointByName(model->name());
-    Frame effectorClone = device->getFrameByName(effector);
-    std::size_t startRank_(model->rankInConfiguration());
-    std::size_t length_ (ComputeLength(model, effectorClone));
-    Configuration_t configRef(model->robot()->neutralConfiguration());
-    hppDout(notice,"TEST REF CONFIG IN LIMB DB : "<<pinocchio::displayConfig(configRef));
-    core::configurationShooter::UniformPtr_t shooter = core::configurationShooter::Uniform::create(device);
-    result.push_back(Sample(clone,effectorClone,configRef.segment(startRank_,length_),offset,limbOffset,0));
-    for(std::size_t i = 1; i< nbSamples; ++i)
+hpp::rbprm::sampling::SampleVector_t hpp::rbprm::sampling::GenerateSamples(const pinocchio::JointPtr_t model,
+                                                                           const std::string& effector,
+                                                                           const std::size_t nbSamples,
+                                                                           const fcl::Vec3f& offset,
+                                                                           const fcl::Vec3f& limbOffset) {
+  SampleVector_t result;
+  result.reserve(nbSamples);
+  pinocchio::DevicePtr_t device(model->robot()->clone());
+  Configuration_t config;
+  JointPtr_t clone = device->getJointByName(model->name());
+  Frame effectorClone = device->getFrameByName(effector);
+  std::size_t startRank_(model->rankInConfiguration());
+  std::size_t length_(ComputeLength(model, effectorClone));
+  Configuration_t configRef(model->robot()->neutralConfiguration());
+  hppDout(notice, "TEST REF CONFIG IN LIMB DB : " << pinocchio::displayConfig(configRef));
+  core::configurationShooter::UniformPtr_t shooter = core::configurationShooter::Uniform::create(device);
+  result.push_back(Sample(clone, effectorClone, configRef.segment(startRank_, length_), offset, limbOffset, 0));
+  for (std::size_t i = 1; i < nbSamples; ++i) {
+    shooter->shoot(config);
+    // clone->configuration ()->uniformlySample (clone->rankInConfiguration (), config);
+    /*Joint* current = clone;
+    while(current->numberChildJoints() !=0)
     {
-        shooter->shoot(config);
-        //clone->configuration ()->uniformlySample (clone->rankInConfiguration (), config);
-        /*Joint* current = clone;
-        while(current->numberChildJoints() !=0)
-        {
-            current = current->childJoint(0);
-            current->configuration ()->uniformlySample (current->rankInConfiguration(), config);
-        }*/
-        device->currentConfiguration (config);
-        device->computeForwardKinematics();
-        result.push_back(Sample(clone, effectorClone, config.segment(startRank_, length_), offset,limbOffset, i));
-    }
-    return result;
+        current = current->childJoint(0);
+        current->configuration ()->uniformlySample (current->rankInConfiguration(), config);
+    }*/
+    device->currentConfiguration(config);
+    device->computeForwardKinematics();
+    result.push_back(Sample(clone, effectorClone, config.segment(startRank_, length_), offset, limbOffset, i));
+  }
+  return result;
 }

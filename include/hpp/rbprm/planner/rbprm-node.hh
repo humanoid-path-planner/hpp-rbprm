@@ -5,111 +5,93 @@
 #include <hpp/rbprm/rbprm-validation-report.hh>
 #include <hpp/centroidal-dynamics/centroidal_dynamics.hh>
 
-
 namespace hpp {
-  namespace pinocchio {
-    class RbPrmDevice; //fwd declaration of  rbprmDevice class
-    typedef boost::shared_ptr <RbPrmDevice> RbPrmDevicePtr_t;
+namespace pinocchio {
+class RbPrmDevice;  // fwd declaration of  rbprmDevice class
+typedef boost::shared_ptr<RbPrmDevice> RbPrmDevicePtr_t;
+}  // namespace pinocchio
+namespace core {
+
+HPP_PREDEF_CLASS(RbprmNode);
+typedef RbprmNode* RbprmNodePtr_t;
+
+typedef centroidal_dynamics::MatrixXX MatrixXX;
+typedef centroidal_dynamics::Matrix6X Matrix6X;
+typedef centroidal_dynamics::Matrix63 Matrix63;
+typedef centroidal_dynamics::Vector6 Vector6;
+class HPP_CORE_DLLAPI RbprmNode : public Node {
+ public:
+  /// Constructor
+  /// \param configuration configuration stored in the new node
+  /// \note A new connected component is created. For consistency, the
+  ///       new node is not registered in the connected component.
+  RbprmNode(const ConfigurationPtr_t& configuration) : Node(configuration) {}
+  /// Constructor
+  /// \param configuration configuration stored in the new node
+  /// \param connectedComponent connected component the node belongs to.
+  RbprmNode(const ConfigurationPtr_t& configuration, ConnectedComponentPtr_t connectedComponent)
+      : Node(configuration, connectedComponent) {}
+
+  fcl::Vec3f getNormal() { return normal_; }
+
+  void normal(double x, double y, double z) {
+    fcl::Vec3f n(x, y, z);
+    normal_ = n;
   }
-  namespace core {
 
-    HPP_PREDEF_CLASS (RbprmNode);
-    typedef RbprmNode* RbprmNodePtr_t;
+  void normal(fcl::Vec3f n) { normal_ = n; }
 
-    typedef centroidal_dynamics::MatrixXX MatrixXX;
-    typedef centroidal_dynamics::Matrix6X Matrix6X;
-    typedef centroidal_dynamics::Matrix63 Matrix63;
-    typedef centroidal_dynamics::Vector6 Vector6;
-    class HPP_CORE_DLLAPI RbprmNode : public Node
-    {
-    public :
-      /// Constructor
-      /// \param configuration configuration stored in the new node
-      /// \note A new connected component is created. For consistency, the
-      ///       new node is not registered in the connected component.
-      RbprmNode (const ConfigurationPtr_t& configuration):
-        Node(configuration)
-      {}
-      /// Constructor
-      /// \param configuration configuration stored in the new node
-      /// \param connectedComponent connected component the node belongs to.
-      RbprmNode (const ConfigurationPtr_t& configuration,
-      ConnectedComponentPtr_t connectedComponent):
-        Node(configuration,connectedComponent)
-      {}
+  RbprmValidationReportPtr_t getReport() { return collisionReport_; }
 
-      fcl::Vec3f getNormal(){
-        return normal_;
-      }
+  void collisionReport(RbprmValidationReportPtr_t report) { collisionReport_ = report; }
 
-      void normal(double x, double y, double z){
-        fcl::Vec3f n(x,y,z);
-        normal_=n;
-      }
+  void setV(MatrixXX V) { V_ = V; }
 
-      void normal(fcl::Vec3f n){
-        normal_ = n;
-      }
+  MatrixXX getV() { return V_; }
 
-      RbprmValidationReportPtr_t getReport(){
-        return collisionReport_;
-      }
+  void setIPHat(Matrix6X m) { IP_hat_ = m; }
 
-      void collisionReport(RbprmValidationReportPtr_t report){
-        collisionReport_ = report;
-      }
+  Matrix6X getIPhat() { return IP_hat_; }
 
+  void setG(Matrix6X G) { G_ = G; }
 
+  Matrix6X getG() { return G_; }
 
+  void setH(Matrix63 H) { H_ = H; }
 
-      void setV(MatrixXX V){V_ = V;}
+  Matrix63 getH() { return H_; }
 
-      MatrixXX getV(){return V_;}
+  void seth(Vector6 h) { h_ = h; }
 
-      void setIPHat(Matrix6X m){IP_hat_=m;}
+  Vector6 geth() { return h_; }
 
-      Matrix6X getIPhat(){return IP_hat_;}
+  void setNumberOfContacts(size_type n) { numberOfContacts_ = n; }
 
-      void setG(Matrix6X G){G_=G;}
+  size_type getNumberOfContacts() { return numberOfContacts_; }
 
-      Matrix6X getG(){return G_;}
+  void fillNodeMatrices(ValidationReportPtr_t report, bool rectangularContact, double sizeFootx, double sizeFooty,
+                        double m, double mu, pinocchio::RbPrmDevicePtr_t device);
 
-      void setH(Matrix63 H){H_=H;}
+  void chooseBestContactSurface(ValidationReportPtr_t report, hpp::pinocchio::RbPrmDevicePtr_t device);
 
-      Matrix63 getH(){return H_;}
+  Eigen::Quaterniond getQuaternion();
 
-      void seth(Vector6 h){h_=h;}
+ private:
+  fcl::Vec3f normal_;
+  RbprmValidationReportPtr_t collisionReport_;
+  //  const polytope::ProjectedCone* giwc_; // useless now ?
+  //  polytope::T_rotation_t rotContact_;
+  //  polytope::vector_t posContact_;
+  MatrixXX V_;
+  Matrix6X IP_hat_;
+  Matrix6X G_;  // not initialized yet
+  Matrix63 H_;
+  Vector6 h_;
+  size_type numberOfContacts_;
 
-      Vector6 geth(){return h_;}
+};  // class
 
-      void setNumberOfContacts(size_type n){numberOfContacts_ = n;}
+}  // namespace core
+}  // namespace hpp
 
-      size_type getNumberOfContacts(){return numberOfContacts_;}
-
-      void fillNodeMatrices(ValidationReportPtr_t report,bool rectangularContact, double sizeFootx, double sizeFooty, double m,double mu,pinocchio::RbPrmDevicePtr_t device);
-
-      void chooseBestContactSurface(ValidationReportPtr_t report, hpp::pinocchio::RbPrmDevicePtr_t device );
-
-
-      Eigen::Quaterniond getQuaternion();
-    private:
-      fcl::Vec3f normal_;
-      RbprmValidationReportPtr_t collisionReport_;
-    //  const polytope::ProjectedCone* giwc_; // useless now ?
-    //  polytope::T_rotation_t rotContact_;
-    //  polytope::vector_t posContact_;
-      MatrixXX V_;
-      Matrix6X IP_hat_;
-      Matrix6X G_; // not initialized yet
-      Matrix63 H_;
-      Vector6 h_;
-      size_type numberOfContacts_;
-
-
-    }; // class
-
-  }//core
-}//hpp
-
-
-#endif // HPP_RBPRM_NODE_HH
+#endif  // HPP_RBPRM_NODE_HH

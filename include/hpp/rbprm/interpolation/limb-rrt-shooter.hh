@@ -17,30 +17,29 @@
 // <http://www.gnu.org/licenses/>.
 
 #ifndef HPP_RBPRM_LIMB_RRT_SHOOTER_HH
-# define HPP_RBPRM_LIMB_RRT_SHOOTER_HH
+#define HPP_RBPRM_LIMB_RRT_SHOOTER_HH
 
-# include <hpp/rbprm/config.hh>
-# include <hpp/rbprm/interpolation/time-constraint-shooter.hh>
-# include <hpp/rbprm/rbprm-fullbody.hh>
-# include <hpp/core/path.hh>
-# include <hpp/pinocchio/device.hh>
+#include <hpp/rbprm/config.hh>
+#include <hpp/rbprm/interpolation/time-constraint-shooter.hh>
+#include <hpp/rbprm/rbprm-fullbody.hh>
+#include <hpp/core/path.hh>
+#include <hpp/pinocchio/device.hh>
 
-# include <vector>
-
+#include <vector>
 
 namespace hpp {
-    namespace rbprm {
-    namespace interpolation {
-    struct LimbRRTShooterFactory
-    {
-        TimeConstraintShooterPtr_t operator()(const RbPrmFullBodyPtr_t fullBody, const hpp::core::PathPtr_t path,
-                        const std::size_t pathDofRank, const hpp::rbprm::State &from, const hpp::rbprm::State &to,
-                                              const T_TimeDependant& tds, core::ConfigProjectorPtr_t projector) const;
-    };
+namespace rbprm {
+namespace interpolation {
+struct LimbRRTShooterFactory {
+  TimeConstraintShooterPtr_t operator()(const RbPrmFullBodyPtr_t fullBody, const hpp::core::PathPtr_t path,
+                                        const std::size_t pathDofRank, const hpp::rbprm::State &from,
+                                        const hpp::rbprm::State &to, const T_TimeDependant &tds,
+                                        core::ConfigProjectorPtr_t projector) const;
+};
 
 /// \}
-    } // namespace interpolation
-    } // namespace rbprm
-} // namespace hpp
+}  // namespace interpolation
+}  // namespace rbprm
+}  // namespace hpp
 
-#endif // HPP_RBPRM_LIMB_RRT_SHOOTER_HH
+#endif  // HPP_RBPRM_LIMB_RRT_SHOOTER_HH

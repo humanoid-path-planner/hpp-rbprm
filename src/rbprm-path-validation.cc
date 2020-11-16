@@ -23,101 +23,93 @@
 #include <hpp/core/validation-report.hh>
 #include <hpp/core/collision-path-validation-report.hh>
 
+namespace hpp {
+namespace rbprm {
 
-namespace hpp{
-  namespace rbprm {
+using core::Configuration_t;
+using core::value_type;
 
-    using core::value_type;
-    using core::Configuration_t;
+RbPrmPathValidationPtr_t RbPrmPathValidation::create(const core::DevicePtr_t& robot,
+                                                     const core::value_type& stepSize) {
+  RbPrmPathValidation* ptr(new RbPrmPathValidation(robot, stepSize));
+  RbPrmPathValidationPtr_t shPtr(ptr);
+  return shPtr;
+}
 
-    RbPrmPathValidationPtr_t RbPrmPathValidation::create (const core::DevicePtr_t& robot, const core::value_type& stepSize)
-    {
-      RbPrmPathValidation* ptr (new RbPrmPathValidation(robot, stepSize));
-      RbPrmPathValidationPtr_t shPtr (ptr);
-      return shPtr;
-    }
+RbPrmPathValidation::RbPrmPathValidation(const core::DevicePtr_t& /*robot*/, const core::value_type& stepSize)
+    : core::pathValidation::Discretized(stepSize) {}
 
+void RbPrmPathValidation::add(const core::ConfigValidationPtr_t& configValidation) {
+  core::pathValidation::Discretized::add(configValidation);
+  rbprmValidation_ = boost::dynamic_pointer_cast<RbPrmValidation>(configValidation);
+}
 
-    RbPrmPathValidation::RbPrmPathValidation(const core::DevicePtr_t &/*robot*/, const core::value_type &stepSize) :
-      core::pathValidation::Discretized(stepSize)
-    {}
-
-    void RbPrmPathValidation::add(const core::ConfigValidationPtr_t& configValidation)
-    {
-      core::pathValidation::Discretized::add (configValidation);
-      rbprmValidation_ = boost::dynamic_pointer_cast<RbPrmValidation>(configValidation);
-    }
-
-
-    bool RbPrmPathValidation::validate
-    (const core::PathPtr_t& path, bool reverse, core::PathPtr_t& validPart,
-     core::PathValidationReportPtr_t& validationReport,const std::vector<std::string>& filter)
-    {
-      core::ValidationReportPtr_t configReport;
-      assert (path);
-      bool valid = true;
-      if (reverse) {
-        value_type tmin = path->timeRange ().first;
-        value_type tmax = path->timeRange ().second;
-        value_type lastValidTime = tmax;
-        value_type t = tmax;
-        unsigned finished = 0;
-        Configuration_t q (path->outputSize());
-        while (finished < 2 && valid) {
-          bool success = (*path) (q, t);
-          if (!success || !rbprmValidation_->validate (q, configReport,filter)) {
-            validationReport = core::CollisionPathValidationReportPtr_t
-                (new core::CollisionPathValidationReport (t, configReport));
-            valid = false;
-          } else {
-            lastValidTime = t;
-            t -= stepSize_;
-          }
-          if (t < tmin) {
-            t = tmin;
-            finished++;
-          }
-        }
-        if (valid) {
-          validPart = path;
-          return true;
-        } else {
-          validPart = path->extract (std::make_pair (lastValidTime, tmax));
-          return false;
-        }
+bool RbPrmPathValidation::validate(const core::PathPtr_t& path, bool reverse, core::PathPtr_t& validPart,
+                                   core::PathValidationReportPtr_t& validationReport,
+                                   const std::vector<std::string>& filter) {
+  core::ValidationReportPtr_t configReport;
+  assert(path);
+  bool valid = true;
+  if (reverse) {
+    value_type tmin = path->timeRange().first;
+    value_type tmax = path->timeRange().second;
+    value_type lastValidTime = tmax;
+    value_type t = tmax;
+    unsigned finished = 0;
+    Configuration_t q(path->outputSize());
+    while (finished < 2 && valid) {
+      bool success = (*path)(q, t);
+      if (!success || !rbprmValidation_->validate(q, configReport, filter)) {
+        validationReport =
+            core::CollisionPathValidationReportPtr_t(new core::CollisionPathValidationReport(t, configReport));
+        valid = false;
       } else {
-        value_type tmin = path->timeRange ().first;
-        value_type tmax = path->timeRange ().second;
-        value_type lastValidTime = tmin;
-        value_type t = tmin;
-        unsigned finished = 0;
-        Configuration_t q (path->outputSize());
-        while (finished < 2 && valid) {
-          bool success = (*path) (q, t);
-          if (!success || !rbprmValidation_->validate (q, configReport,filter)) {
-            validationReport = core::CollisionPathValidationReportPtr_t
-                (new core::CollisionPathValidationReport (t, configReport));
-            valid = false;
-          } else {
-            lastValidTime = t;
-            t += stepSize_;
-          }
-          if (t > tmax) {
-            t = tmax;
-            finished ++;
-          }
-        }
-        if (valid) {
-          validPart = path;
-          return true;
-        } else {
-          validPart = path->extract (std::make_pair (tmin, lastValidTime));
-          return false;
-        }
+        lastValidTime = t;
+        t -= stepSize_;
+      }
+      if (t < tmin) {
+        t = tmin;
+        finished++;
       }
     }
+    if (valid) {
+      validPart = path;
+      return true;
+    } else {
+      validPart = path->extract(std::make_pair(lastValidTime, tmax));
+      return false;
+    }
+  } else {
+    value_type tmin = path->timeRange().first;
+    value_type tmax = path->timeRange().second;
+    value_type lastValidTime = tmin;
+    value_type t = tmin;
+    unsigned finished = 0;
+    Configuration_t q(path->outputSize());
+    while (finished < 2 && valid) {
+      bool success = (*path)(q, t);
+      if (!success || !rbprmValidation_->validate(q, configReport, filter)) {
+        validationReport =
+            core::CollisionPathValidationReportPtr_t(new core::CollisionPathValidationReport(t, configReport));
+        valid = false;
+      } else {
+        lastValidTime = t;
+        t += stepSize_;
+      }
+      if (t > tmax) {
+        t = tmax;
+        finished++;
+      }
+    }
+    if (valid) {
+      validPart = path;
+      return true;
+    } else {
+      validPart = path->extract(std::make_pair(tmin, lastValidTime));
+      return false;
+    }
+  }
+}
 
-
-
-  }//namespace rbprm
-} //namespace hpp
+}  // namespace rbprm
+}  // namespace hpp

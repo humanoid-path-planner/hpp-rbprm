@@ -24,56 +24,43 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
 
-
 #ifndef RBPRM_PROFILER_H
 #define RBPRM_PROFILER_H
 
 #include "hpp/rbprm/utils/stop-watch.hh"
 
 class RbPrmProfiler : public Stopwatch {
-public:
-
+ public:
   /** Constructor */
-  RbPrmProfiler(StopwatchMode _mode=NONE) : Stopwatch(_mode) {}
+  RbPrmProfiler(StopwatchMode _mode = NONE) : Stopwatch(_mode) {}
 
   /** Destructor */
-  ~RbPrmProfiler(){}
+  ~RbPrmProfiler() {}
 
-  void add_to_count(const std::string& event, int nbOcc=1)
-  {
-      std::map<std::string, int>::iterator it = count_.find(event);
-      if(it == count_.end())
-      {
-          count_.insert(std::make_pair(event,nbOcc));
-      }
-      else
-      {
-          it->second += nbOcc;
-      }
+  void add_to_count(const std::string& event, int nbOcc = 1) {
+    std::map<std::string, int>::iterator it = count_.find(event);
+    if (it == count_.end()) {
+      count_.insert(std::make_pair(event, nbOcc));
+    } else {
+      it->second += nbOcc;
+    }
   }
 
-
-  void report_count(std::ostream& output = std::cout)
-  {
-      for(std::map<std::string, int>::iterator it = count_.begin();
-          it != count_.end(); ++it)
-      {
-          output << it->first << ": " << it->second << std::endl;
-      }
+  void report_count(std::ostream& output = std::cout) {
+    for (std::map<std::string, int>::iterator it = count_.begin(); it != count_.end(); ++it) {
+      output << it->first << ": " << it->second << std::endl;
+    }
   }
 
-  void report_all_and_count(int precision=2, std::ostream& output = std::cout)
-  {
-      report_all(precision,output);
-      report_count(output);
+  void report_all_and_count(int precision = 2, std::ostream& output = std::cout) {
+    report_all(precision, output);
+    report_count(output);
   }
 
-
-private:
+ private:
   std::map<std::string, int> count_;
 };
 
 RbPrmProfiler& getRbPrmProfiler();
-
 
 #endif

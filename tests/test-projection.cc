@@ -1,4 +1,4 @@
-#define BOOST_TEST_MODULE test-projection
+#define BOOST_TEST_MODULE test - projection
 #include <pinocchio/fwd.hpp>
 #include <boost/test/included/unit_test.hpp>
 

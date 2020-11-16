@@ -17,66 +17,65 @@
 // <http://www.gnu.org/licenses/>.
 
 #ifndef HPP_RBPRM_ROM_VALIDATION_HH
-# define HPP_RBPRM_ROM_VALIDATION_HH
+#define HPP_RBPRM_ROM_VALIDATION_HH
 
-# include <hpp/core/collision-validation.hh>
-# include <hpp/rbprm/rbprm-device.hh>
-# include <hpp/rbprm/config.hh>
+#include <hpp/core/collision-validation.hh>
+#include <hpp/rbprm/rbprm-device.hh>
+#include <hpp/rbprm/config.hh>
 
 namespace hpp {
-  namespace rbprm {
+namespace rbprm {
 
-    class RbPrmRomValidation;
-    typedef boost::shared_ptr <RbPrmRomValidation> RbPrmRomValidationPtr_t;
+class RbPrmRomValidation;
+typedef boost::shared_ptr<RbPrmRomValidation> RbPrmRomValidationPtr_t;
 
-    /// \addtogroup validation
-    /// \{
+/// \addtogroup validation
+/// \{
 
-    /// Validate a Rom configuration with respect to the reachability condition;
-    /// a Rom Configuration is valid the object linked to it is colliding
-    /// with the environment. A normal filter can be optionnaly specified
-    /// to only accept collision with obstacles aligned with special normal surfaces.
-    ///
-    class HPP_RBPRM_DLLAPI RbPrmRomValidation : public core::CollisionValidation
-    {
-    public:
-      static RbPrmRomValidationPtr_t create (const pinocchio::DevicePtr_t& robot,
-                                             const std::vector<std::string>& affFilters
-																						 	= std::vector<std::string>());
+/// Validate a Rom configuration with respect to the reachability condition;
+/// a Rom Configuration is valid the object linked to it is colliding
+/// with the environment. A normal filter can be optionnaly specified
+/// to only accept collision with obstacles aligned with special normal surfaces.
+///
+class HPP_RBPRM_DLLAPI RbPrmRomValidation : public core::CollisionValidation {
+ public:
+  static RbPrmRomValidationPtr_t create(const pinocchio::DevicePtr_t& robot,
+                                        const std::vector<std::string>& affFilters = std::vector<std::string>());
 
-      /// Compute whether the configuration is valid
-      ///
-      /// \param config the config to check for validity
-      /// \return whether the whole config is valid.
-      virtual bool validate (const core::Configuration_t& config);
+  /// Compute whether the configuration is valid
+  ///
+  /// \param config the config to check for validity
+  /// \return whether the whole config is valid.
+  virtual bool validate(const core::Configuration_t& config);
 
-      /// Compute whether the configuration is valid
-      ///
-      /// \param config the config to check for validity,
-      /// \retval validationReport report on validation (used only for rom shape). This parameter will
-      ///         dynamically cast into CollisionValidationReport type,
-      /// \return whether the whole config is valid.
-      virtual bool validate (const core::Configuration_t& config, core::ValidationReportPtr_t& validationReport);
+  /// Compute whether the configuration is valid
+  ///
+  /// \param config the config to check for validity,
+  /// \retval validationReport report on validation (used only for rom shape). This parameter will
+  ///         dynamically cast into CollisionValidationReport type,
+  /// \return whether the whole config is valid.
+  virtual bool validate(const core::Configuration_t& config, core::ValidationReportPtr_t& validationReport);
 
-      /// Rearrange the collisions pairs of all configValidation in a random manner
-      /// \brief randomnizeCollisionPairs
-      ///
-      virtual void randomnizeCollisionPairs();
+  /// Rearrange the collisions pairs of all configValidation in a random manner
+  /// \brief randomnizeCollisionPairs
+  ///
+  virtual void randomnizeCollisionPairs();
 
-    public:
-      const std::vector<std::string> filter_;
+ public:
+  const std::vector<std::string> filter_;
 
-      void setOptional(bool optional){optional_ = optional;}
-    protected:
-      RbPrmRomValidation (const pinocchio::DevicePtr_t &robot,
-                       const std::vector<std::string>& affFilters);
-    private:
-      core::ValidationReportPtr_t unusedReport_;
-      bool optional_;
+  void setOptional(bool optional) { optional_ = optional; }
 
-    }; // class RbPrmValidation
-    /// \}
-  } // namespace rbprm
-} // namespace hpp
+ protected:
+  RbPrmRomValidation(const pinocchio::DevicePtr_t& robot, const std::vector<std::string>& affFilters);
 
-#endif // HPP_RBPRM_ROM_VALIDATION_HH
+ private:
+  core::ValidationReportPtr_t unusedReport_;
+  bool optional_;
+
+};  // class RbPrmValidation
+/// \}
+}  // namespace rbprm
+}  // namespace hpp
+
+#endif  // HPP_RBPRM_ROM_VALIDATION_HH
