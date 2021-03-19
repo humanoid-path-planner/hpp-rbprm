@@ -26,8 +26,8 @@
 #include <hpp/constraints/generic-transformation.hh>
 #include <hpp/bezier-com-traj/solve_end_effector.hh>
 #include <hpp/core/problem-solver.hh>
-#include <curves/helpers/effector_spline.h>
-#include <curves/bezier_curve.h>
+#include <ndcurves/helpers/effector_spline.h>
+#include <ndcurves/bezier_curve.h>
 #include <hpp/pinocchio/joint-collection.hh>
 
 namespace hpp {

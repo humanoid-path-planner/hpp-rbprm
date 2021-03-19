@@ -32,9 +32,9 @@
 #include <hpp/core/problem.hh>
 #include <hpp/core/config-projector.hh>
 #include <hpp/rbprm/interpolation/spline/bezier-path.hh>
-#include <curves/exact_cubic.h>
-#include <curves/bezier_curve.h>
-#include <curves/curve_constraint.h>
+#include <ndcurves/exact_cubic.h>
+#include <ndcurves/bezier_curve.h>
+#include <ndcurves/curve_constraint.h>
 #include <vector>
 #include <map>
 
@@ -123,8 +123,8 @@ std::vector<core::PathVectorPtr_t> fitBeziersToPath(RbPrmFullBodyPtr_t fullbody,
                                                     const value_type comPathLength, const PathPtr_t fullBodyComPath,
                                                     const State& startState, const State& nextState);
 
-typedef curves::exact_cubic<double, double, true, Eigen::Matrix<value_type, 3, 1> > exact_cubic_t;
-typedef curves::curve_constraints<Eigen::Matrix<value_type, 3, 1> > curve_constraint_t;
+typedef ndcurves::exact_cubic<double, double, true, Eigen::Matrix<value_type, 3, 1> > exact_cubic_t;
+typedef ndcurves::curve_constraints<Eigen::Matrix<value_type, 3, 1> > curve_constraint_t;
 typedef boost::shared_ptr<exact_cubic_t> exact_cubic_Ptr;
 
 struct SetEffectorRRTConstraints {
