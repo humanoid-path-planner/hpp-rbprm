@@ -1102,6 +1102,7 @@ BOOST_AUTO_TEST_CASE(nav_bauzil_hyq) {
   q_init << -0.2, 1.9, 0.62, 0.0, 0.0, 0.0, 1.0, 0.05, 0, 0, 0.0, 0.0, 0.0;
   core::Configuration_t q_goal(rbprmDevice->configSize());
   q_goal << 3.7, 0., 0.62, 0, 0, -0.7071, 0.7071, 0., -0.1, 0, 0.0, 0.0, 0.0;
+  hpp::pinocchio::normalize(rbprmDevice, q_goal.head(rbprmDevice->model().nq));
 
   pSolver.initConfig(ConfigurationPtr_t(new core::Configuration_t(q_init)));
   pSolver.addGoalConfig(ConfigurationPtr_t(new core::Configuration_t(q_goal)));
@@ -1181,6 +1182,7 @@ BOOST_AUTO_TEST_CASE(nav_bauzil_oriented_hyq) {
   q_init << -0.2, 1.9, 0.62, 0.0, 0.0, 0.0, 1.0, 0.05, 0, 0, 0.0, 0.0, 0.0;
   core::Configuration_t q_goal(rbprmDevice->configSize());
   q_goal << 3.7, 0., 0.62, 0, 0, -0.7071, 0.7071, 0., -0.1, 0, 0.0, 0.0, 0.0;
+  hpp::pinocchio::normalize(rbprmDevice, q_goal.head(rbprmDevice->model().nq));
 
   pSolver.initConfig(ConfigurationPtr_t(new core::Configuration_t(q_init)));
   pSolver.addGoalConfig(ConfigurationPtr_t(new core::Configuration_t(q_goal)));
