@@ -38,6 +38,13 @@
 #include <hpp/rbprm/planner/oriented-path-optimizer.hh>
 #include <hpp/rbprm/dynamic/dynamic-path-validation.hh>
 
+#if BOOST_VERSION / 100 % 1000 >= 60
+#include <boost/bind/bind.hpp>
+using namespace boost::placeholders;
+#else
+#include <boost/bind.hpp>
+#endif
+
 using namespace hpp;
 using namespace hpp::core;
 
