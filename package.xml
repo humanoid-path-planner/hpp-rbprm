@@ -1,7 +1,7 @@
 <?xml version='1.0'?>
 <package format='2'>
     <name>hpp-rbprm</name>
-    <version>4.10.0</version>
+    <version>4.11.0</version>
     <description>RB-PRM planner for HPP</description>
 
     <maintainer email='guilhem.saurel@laas.fr'>Guilhem Saurel</maintainer>
