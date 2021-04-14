@@ -90,7 +90,7 @@ core::PathPtr_t comRRT(RbPrmFullBodyPtr_t fullbody, ProblemPtr_t referenceProble
     ConfigurationPtr_t start = ConfigurationPtr_t(new Configuration_t(startState.configuration_));
     ConfigurationPtr_t end = ConfigurationPtr_t(new Configuration_t(nextState.configuration_));
     rootProblem->initConfig(start);
-    BiRRTPlannerPtr_t planner = BiRRTPlanner::create(*rootProblem);
+    BiRRTPlannerPtr_t planner = BiRRTPlanner::create(rootProblem);
     ProblemTargetPtr_t target = problemTarget::GoalConfigurations::create(rootProblem);
     rootProblem->target(target);
     rootProblem->addGoalConfig(end);

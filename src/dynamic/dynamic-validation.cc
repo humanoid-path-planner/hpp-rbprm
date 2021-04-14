@@ -36,7 +36,7 @@ bool DynamicValidation::validate(const core::Configuration_t& config, core::Vali
   // hppStartBenchmark(DYNAMIC_VALIDATION);
   // test if the same number of ROM are in collision :
   core::RbprmValidationReportPtr_t rbReport =
-      boost::dynamic_pointer_cast<core::RbprmValidationReport>(validationReport);
+      std::dynamic_pointer_cast<core::RbprmValidationReport>(validationReport);
   if (!rbReport) {
     hppDout(error, "error while casting the report");
     // hppStopBenchmark(DYNAMIC_VALIDATION);
@@ -113,7 +113,7 @@ bool DynamicValidation::validate(const core::Configuration_t& config, core::Vali
 }
 
 void DynamicValidation::setInitialReport(core::ValidationReportPtr_t initialReport) {
-  core::RbprmValidationReportPtr_t rbReport = boost::dynamic_pointer_cast<core::RbprmValidationReport>(initialReport);
+  core::RbprmValidationReportPtr_t rbReport = std::dynamic_pointer_cast<core::RbprmValidationReport>(initialReport);
   if (rbReport) {
     lastReport_ = rbReport;
     initContacts_ = true;
@@ -128,7 +128,7 @@ DynamicValidation::DynamicValidation(bool rectangularContact, double sizeFootX, 
       sizeFootY_(sizeFootY),
       mass_(mass),
       mu_(mu),
-      robot_(boost::dynamic_pointer_cast<pinocchio::RbPrmDevice>(robot)),
+      robot_(std::dynamic_pointer_cast<pinocchio::RbPrmDevice>(robot)),
       sEq_(new centroidal_dynamics::Equilibrium("dynamic_val", mass, 4, centroidal_dynamics::SOLVER_LP_QPOASES, true,
                                                 10, false)) {
   assert(robot_ && "Error in dynamic cast of problem device to rbprmDevice");

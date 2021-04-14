@@ -43,7 +43,7 @@ HPP_PREDEF_CLASS(RbPrmFullBody);
 /// collisions and balance criteria for generating their subconfigurations.
 ///
 class RbPrmFullBody;
-typedef boost::shared_ptr<RbPrmFullBody> RbPrmFullBodyPtr_t;
+typedef std::shared_ptr<RbPrmFullBody> RbPrmFullBodyPtr_t;
 typedef hpp::core::Container<hpp::core::AffordanceObjects_t> affMap_t;
 typedef std::map<std::string, std::vector<bezier_Ptr> > EffectorTrajectoriesMap_t;
 

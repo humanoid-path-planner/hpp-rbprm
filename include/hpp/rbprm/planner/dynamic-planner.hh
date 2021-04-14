@@ -31,7 +31,7 @@ namespace rbprm {
 // forward declaration of class Planner
 HPP_PREDEF_CLASS(DynamicPlanner);
 // Planner objects are manipulated only via shared pointers
-typedef boost::shared_ptr<DynamicPlanner> DynamicPlannerPtr_t;
+typedef std::shared_ptr<DynamicPlanner> DynamicPlannerPtr_t;
 
 using core::Configuration_t;
 using core::Path;
@@ -44,9 +44,9 @@ using core::RoadmapPtr_t;
 class DynamicPlanner : public core::BiRRTPlanner {
  public:
   /// Return shared pointer to new object.
-  static DynamicPlannerPtr_t createWithRoadmap(const Problem& problem, const RoadmapPtr_t& roadmap);
+  static DynamicPlannerPtr_t createWithRoadmap(core::ProblemConstPtr_t problem, const RoadmapPtr_t& roadmap);
   /// Return shared pointer to new object.
-  static DynamicPlannerPtr_t create(const Problem& problem);
+  static DynamicPlannerPtr_t create(core::ProblemConstPtr_t problem);
   /// One step of extension.
   virtual void oneStep();
   /// Try to make direct connection between init and goal
@@ -61,9 +61,9 @@ class DynamicPlanner : public core::BiRRTPlanner {
 
  protected:
   /// Constructor
-  DynamicPlanner(const Problem& problem, const RoadmapPtr_t& roadmap);
+  DynamicPlanner(core::ProblemConstPtr_t problem, const RoadmapPtr_t& roadmap);
   /// Constructor with roadmap
-  DynamicPlanner(const Problem& problem);
+  DynamicPlanner(core::ProblemConstPtr_t problem);
   /// Store weak pointer to itself
   void init(const DynamicPlannerWkPtr_t& weak);
 

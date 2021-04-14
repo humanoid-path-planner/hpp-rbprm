@@ -19,6 +19,10 @@
 #ifndef HPP_RBPRM_INTERPOLATION_CONSTRAINTS_HH
 #define HPP_RBPRM_INTERPOLATION_CONSTRAINTS_HH
 
+
+#include <pinocchio/fwd.hpp>
+#include <pinocchio/multibody/frame.hpp>
+
 #include <hpp/rbprm/interpolation/time-dependant.hh>
 #include <hpp/rbprm/interpolation/time-constraint-utils.hh>
 #include <hpp/core/path.hh>
@@ -30,7 +34,6 @@
 #include <hpp/constraints/configuration-constraint.hh>
 #include <hpp/pinocchio/configuration.hh>
 #include <hpp/pinocchio/frame.hh>
-#include <pinocchio/multibody/frame.hpp>
 namespace hpp {
 namespace rbprm {
 namespace interpolation {
@@ -127,7 +130,7 @@ void CreateComConstraint(Helper_T& helper, const Reference& ref, const fcl::Vec3
   proj->add(comEq);
   proj->rightHandSide(comEq, initTarget);
   helper.steeringMethod_->tds_.push_back(
-      TimeDependant(comEq, boost::shared_ptr<VecRightSide<Reference> >(new VecRightSide<Reference>(ref, 3, true))));
+      TimeDependant(comEq, std::shared_ptr<VecRightSide<Reference> >(new VecRightSide<Reference>(ref, 3, true))));
 }
 
 template <class Helper_T, typename Reference>
@@ -193,7 +196,7 @@ void CreatePosturalTaskConstraint(Helper_T& helper, const Reference& ref) {
   ComparisonTypes_t comps;
   comps.push_back(constraints::Equality);
   const constraints::ImplicitPtr_t posturalTask = constraints::Implicit::create(postFunc, comps);
-  proj->add(posturalTask, segments_t(0), 1);
+  proj->add(posturalTask, 1);
   // proj->updateRightHandSide();
 }
 
@@ -241,7 +244,7 @@ void CreateEffectorConstraint(Helper_T& helper, const Reference& ref, const pino
   proj->add(effEq);
   proj->rightHandSide(effEq, initTarget);
   helper.steeringMethod_->tds_.push_back(
-      TimeDependant(effEq, boost::shared_ptr<VecRightSide<Reference> >(new VecRightSide<Reference>(ref, 3))));
+      TimeDependant(effEq, std::shared_ptr<VecRightSide<Reference> >(new VecRightSide<Reference>(ref, 3))));
 }
 
 /// Time varying right hand side of constraint
@@ -306,7 +309,7 @@ void CreateOrientationConstraint(Helper_T& helper, const Reference& ref, const p
   constraints::ImplicitPtr_t effEq = constraints::Implicit::create(orCons, equals);
   proj->add(effEq);
   // proj->updateRightHandSide();
-  boost::shared_ptr<funEvaluator<Reference, constraints::OrientationPtr_t> > orEv(
+  std::shared_ptr<funEvaluator<Reference, constraints::OrientationPtr_t> > orEv(
       new funEvaluator<Reference, constraints::OrientationPtr_t>(ref, orConsRef));
   helper.steeringMethod_->tds_.push_back(TimeDependant(effEq, orEv));
 }
@@ -330,7 +333,7 @@ void Create6DEffectorConstraint(Helper_T& helper, const Reference& ref, const pi
   constraints::ImplicitPtr_t effEq = constraints::Implicit::create(orCons, equals);
   proj->add(effEq);
   // proj->updateRightHandSide();
-  boost::shared_ptr<funEvaluator<Reference, constraints::OrientationPtr_t> > orEv(
+  std::shared_ptr<funEvaluator<Reference, constraints::OrientationPtr_t> > orEv(
       new funEvaluator<Reference, constraints::OrientationPtr_t>(ref, orCons));
   helper.steeringMethod_->tds_.push_back(TimeDependant(effEq, orEv));
 }

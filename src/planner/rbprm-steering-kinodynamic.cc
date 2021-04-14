@@ -33,7 +33,7 @@ namespace rbprm {
 using centroidal_dynamics::MatrixXX;
 using centroidal_dynamics::Vector3;
 
-SteeringMethodKinodynamic::SteeringMethodKinodynamic(const core::Problem& problem)
+SteeringMethodKinodynamic::SteeringMethodKinodynamic(core::ProblemConstPtr_t problem)
     : core::steeringMethod::Kinodynamic(problem),
       totalTimeComputed_(0),
       totalTimeValidated_(0),
@@ -41,9 +41,9 @@ SteeringMethodKinodynamic::SteeringMethodKinodynamic(const core::Problem& proble
       dirTotal_(0),
       rejectedPath_(0),
       maxLength_(50),
-      device_(problem.robot()),
+      device_(problem->robot()),
       lastDirection_(),
-      sEq_(new centroidal_dynamics::Equilibrium(problem_.robot()->name(), problem_.robot()->mass(), 4,
+      sEq_(new centroidal_dynamics::Equilibrium(problem->robot()->name(), problem->robot()->mass(), 4,
                                                 centroidal_dynamics::SOLVER_LP_QPOASES, true, 10, false)),
       boundsUpToDate_(false),
       weak_() {
@@ -61,7 +61,7 @@ SteeringMethodKinodynamic::SteeringMethodKinodynamic(const SteeringMethodKinodyn
       maxLength_(50),
       device_(other.device_),
       lastDirection_(other.lastDirection_),
-      sEq_(new centroidal_dynamics::Equilibrium(problem_.robot()->name(), problem_.robot()->mass(), 4,
+      sEq_(new centroidal_dynamics::Equilibrium(problem()->robot()->name(), problem()->robot()->mass(), 4,
                                                 centroidal_dynamics::SOLVER_LP_QPOASES, true, 10, false)),
       boundsUpToDate_(false),
       weak_() {}
@@ -90,7 +90,7 @@ core::PathPtr_t SteeringMethodKinodynamic::impl_compute(core::NodePtr_t x, core:
   hppStopBenchmark(steering_kino);
   hppDisplayBenchmark(steering_kino);
   if (!path) return core::PathPtr_t();
-  core::KinodynamicPathPtr_t kinoPath = boost::dynamic_pointer_cast<core::KinodynamicPath>(path);
+  core::KinodynamicPathPtr_t kinoPath = std::dynamic_pointer_cast<core::KinodynamicPath>(path);
   if (kinoPath->length() > maxLength_) {
     rejectedPath_++;
     return core::PathPtr_t();
@@ -104,7 +104,7 @@ core::PathPtr_t SteeringMethodKinodynamic::impl_compute(core::NodePtr_t x, core:
   hppDout(notice, "TotaltimeComputed = " << totalTimeComputed_);
 
   assert(path && "Error while casting path shared ptr");  // really usefull ? should never happen
-  core::size_type configSize = problem_.robot()->configSize() - problem_.robot()->extraConfigSpace().dimension();
+  core::size_type configSize = problem()->robot()->configSize() - problem()->robot()->extraConfigSpace().dimension();
 
 #if !ignore_acc_bound
   // check if acceleration is valid after each sign change :
@@ -113,7 +113,7 @@ core::PathPtr_t SteeringMethodKinodynamic::impl_compute(core::NodePtr_t x, core:
   core::vector_t t1 = kinoPath->getT1();
   core::vector_t tv = kinoPath->getTv();
   double t = 0;
-  core::ConfigurationPtr_t q(new core::Configuration_t(problem_.robot()->configSize()));
+  core::ConfigurationPtr_t q(new core::Configuration_t(problem()->robot()->configSize()));
   core::vector3_t a;
   bool aValid;
   double maxT = kinoPath->length();
@@ -201,7 +201,7 @@ core::PathPtr_t SteeringMethodKinodynamic::impl_compute(core::ConfigurationIn_t 
   hppDisplayBenchmark(steering_kino);
 
   if (!path) return core::PathPtr_t();
-  core::KinodynamicPathPtr_t kinoPath = boost::dynamic_pointer_cast<core::KinodynamicPath>(path);
+  core::KinodynamicPathPtr_t kinoPath = std::dynamic_pointer_cast<core::KinodynamicPath>(path);
   if (kinoPath->length() > maxLength_) {
     rejectedPath_++;
     return core::PathPtr_t();
@@ -215,13 +215,13 @@ core::PathPtr_t SteeringMethodKinodynamic::impl_compute(core::ConfigurationIn_t 
   hppStartBenchmark(INTERMEDIATE_ACCELERATION_CHECKS);
   hppDout(notice, "TotaltimeComputed = " << totalTimeComputed_);
   assert(path && "Error while casting path shared ptr");  // really usefull ? should never happen
-  core::size_type configSize = problem_.robot()->configSize() - problem_.robot()->extraConfigSpace().dimension();
+  core::size_type configSize = problem()->robot()->configSize() - problem()->robot()->extraConfigSpace().dimension();
   // check if acceleration is valid after each sign change :
   core::vector_t t0 = kinoPath->getT0();
   core::vector_t t1 = kinoPath->getT1();
   core::vector_t tv = kinoPath->getTv();
   double t = 0;
-  core::ConfigurationPtr_t q(new core::Configuration_t(problem_.robot()->configSize()));
+  core::ConfigurationPtr_t q(new core::Configuration_t(problem()->robot()->configSize()));
   core::vector3_t a;
   bool aValid;
   double minT = 0;
@@ -303,7 +303,7 @@ core::PathPtr_t SteeringMethodKinodynamic::computeDirection(const core::Configur
   Vector3 direction;
   direction = Vector3(0, 0, 0);
   if (path) {
-    core::KinodynamicPathPtr_t kinoPath = boost::dynamic_pointer_cast<core::KinodynamicPath>(path);
+    core::KinodynamicPathPtr_t kinoPath = std::dynamic_pointer_cast<core::KinodynamicPath>(path);
     if (kinoPath) {
       direction = kinoPath->getA1();
       direction.normalize();
@@ -332,9 +332,9 @@ core::PathPtr_t SteeringMethodKinodynamic::setSteeringMethodBounds(const core::R
   double alpha0 = 1.;  // main variable of our LP problem
                        /*     Vector3 toP,fromP,dPosition;
                             Vector3 toV,fromV,dVelocity;
-                            const pinocchio::size_type indexECS =problem_.robot()->configSize() -
-                          problem_.robot()->extraConfigSpace().dimension (); // ecs index
-                     
+                            const pinocchio::size_type indexECS =problem()->robot()->configSize() -
+                          problem()->robot()->extraConfigSpace().dimension (); // ecs index
+
                             hppDout(notice,"near = "<<pinocchio::displayConfig((*(node->configuration()))));
                             hppDout(notice,"target = "<<pinocchio::displayConfig(target));
                             if(reverse){

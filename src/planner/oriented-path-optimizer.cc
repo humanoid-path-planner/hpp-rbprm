@@ -47,30 +47,30 @@ using core::PathVectorPtr_t;
 using core::Problem;
 using pinocchio::value_type;
 
-OrientedPathOptimizerPtr_t OrientedPathOptimizer::create(const Problem& problem) {
+OrientedPathOptimizerPtr_t OrientedPathOptimizer::create(core::ProblemConstPtr_t problem) {
   OrientedPathOptimizer* ptr = new OrientedPathOptimizer(problem);
   return OrientedPathOptimizerPtr_t(ptr);
 }
 
-OrientedPathOptimizer::OrientedPathOptimizer(const Problem& problem)
+OrientedPathOptimizer::OrientedPathOptimizer(core::ProblemConstPtr_t problem)
     : PathOptimizer(problem),
-      sm_(boost::dynamic_pointer_cast<SteeringMethodKinodynamic>(problem.steeringMethod())),
-      rbprmPathValidation_(boost::dynamic_pointer_cast<RbPrmPathValidation>(problem.pathValidation())) {
+      sm_(std::dynamic_pointer_cast<SteeringMethodKinodynamic>(problem->steeringMethod())),
+      rbprmPathValidation_(std::dynamic_pointer_cast<RbPrmPathValidation>(problem->pathValidation())) {
   assert(sm_ && "Random-shortcut-dynamic must use a kinodynamic-steering-method");
   assert(rbprmPathValidation_ && "Path validation should be a RbPrmPathValidation class for this solver");
 
   // retrieve parameters from problem :
-  sizeFootX_ = problem.getParameter(std::string("DynamicPlanner/sizeFootX")).floatValue() / 2.;
-  sizeFootY_ = problem.getParameter(std::string("DynamicPlanner/sizeFootY")).floatValue() / 2.;
+  sizeFootX_ = problem->getParameter(std::string("DynamicPlanner/sizeFootX")).floatValue() / 2.;
+  sizeFootY_ = problem->getParameter(std::string("DynamicPlanner/sizeFootY")).floatValue() / 2.;
   if (sizeFootX_ > 0. && sizeFootY_ > 0.)
     rectangularContact_ = 1;
   else
     rectangularContact_ = 0;
-  tryJump_ = problem.getParameter(std::string("DynamicPlanner/tryJump")).boolValue();
+  tryJump_ = problem->getParameter(std::string("DynamicPlanner/tryJump")).boolValue();
   hppDout(notice, "tryJump in steering method = " << tryJump_);
-  mu_ = problem.getParameter(std::string("DynamicPlanner/friction")).floatValue();
+  mu_ = problem->getParameter(std::string("DynamicPlanner/friction")).floatValue();
   hppDout(notice, "mu define in python : " << mu_);
-  orientationIgnoreZValue_ = problem.getParameter(std::string("Kinodynamic/forceYawOrientation")).boolValue();
+  orientationIgnoreZValue_ = problem->getParameter(std::string("Kinodynamic/forceYawOrientation")).boolValue();
   hppDout(notice, "oriented path only constraint yaw (ignore z value) : " << orientationIgnoreZValue_);
 }
 
@@ -92,7 +92,7 @@ PathVectorPtr_t OrientedPathOptimizer::optimize(const PathVectorPtr_t& path) {
   for (std::size_t i = 0; i < numPaths; ++i) {
     orientedValid[i] = false;
     const PathPtr_t& element(path->pathAtRank(i));
-    castedPath = boost::dynamic_pointer_cast<KinodynamicPath>(element);
+    castedPath = std::dynamic_pointer_cast<KinodynamicPath>(element);
     if (castedPath) {
       resultPaths[i] = castedPath;
       orientedPaths[i] = core::KinodynamicOrientedPath::create(castedPath, orientationIgnoreZValue_);
@@ -204,11 +204,11 @@ core::PathPtr_t OrientedPathOptimizer::steer(ConfigurationIn_t q1, Configuration
   core::RbprmNodePtr_t x1(new core::RbprmNode(ConfigurationPtr_t(new Configuration_t(q1))));
   core::ValidationReportPtr_t report;
   rbprmPathValidation_->getValidator()->computeAllContacts(true);
-  problem().configValidations()->validate(q1, report);
+  problem()->configValidations()->validate(q1, report);
   rbprmPathValidation_->getValidator()->computeAllContacts(false);
   hppDout(notice, "Random shortucut, fillNodeMatrices : ");
-  x1->fillNodeMatrices(report, rectangularContact_, sizeFootX_, sizeFootY_, problem().robot()->mass(), mu_,
-                       boost::dynamic_pointer_cast<pinocchio::RbPrmDevice>(problem().robot()));
+  x1->fillNodeMatrices(report, rectangularContact_, sizeFootX_, sizeFootY_, problem()->robot()->mass(), mu_,
+                       std::dynamic_pointer_cast<pinocchio::RbPrmDevice>(problem()->robot()));
 
   // call steering method kinodynamic with the newly created node
   hppDout(notice, "Random shortucut, steering method  : ");
@@ -223,9 +223,9 @@ core::PathPtr_t OrientedPathOptimizer::steer(ConfigurationIn_t q1, Configuration
       hppDout(notice, "Path length < epsilon");
       return PathPtr_t();
     }
-    if (!problem().pathProjector()) return dp;
+    if (!problem()->pathProjector()) return dp;
     PathPtr_t pp;
-    if (problem().pathProjector()->apply(dp, pp)) return pp;
+    if (problem()->pathProjector()->apply(dp, pp)) return pp;
   }
   return PathPtr_t();
 }

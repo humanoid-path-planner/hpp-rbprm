@@ -21,7 +21,7 @@
 
 namespace {
 hpp::core::CollisionValidationPtr_t tuneFclValidation(const hpp::pinocchio::RbPrmDevicePtr_t& robot) {
-  typedef hpp::core::ObstacleUser::CollisionRequests_t CollisionRequests_t;
+  typedef hpp::core::CollisionRequests_t CollisionRequests_t;
   hpp::core::CollisionValidationPtr_t validation = hpp::core::CollisionValidation::create(robot);
   // enable contact for all collision pairs
   CollisionRequests_t& req(validation->requests());
@@ -161,7 +161,7 @@ bool RbPrmValidation::validate(const Configuration_t& config, const std::vector<
 
 bool RbPrmValidation::validate(const Configuration_t& config, hpp::core::ValidationReportPtr_t& validationReport,
                                const std::vector<std::string>& filter) {
-  CollisionValidationReportPtr_t colReport = boost::dynamic_pointer_cast<CollisionValidationReport>(validationReport);
+  CollisionValidationReportPtr_t colReport = std::dynamic_pointer_cast<CollisionValidationReport>(validationReport);
   if (colReport) colReport->result.clear();
 
   RbprmValidationReportPtr_t rbprmReport(new RbprmValidationReport);
@@ -170,7 +170,7 @@ bool RbPrmValidation::validate(const Configuration_t& config, hpp::core::Validat
   if (success) {
     rbprmReport->trunkInCollision = false;
   } else {
-    colReport = boost::dynamic_pointer_cast<CollisionValidationReport>(validationReport);
+    colReport = std::dynamic_pointer_cast<CollisionValidationReport>(validationReport);
     rbprmReport->object1 = colReport->object1;
     rbprmReport->object2 = colReport->object2;
     rbprmReport->result = colReport->result;

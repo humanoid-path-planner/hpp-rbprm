@@ -48,28 +48,28 @@ using core::PathVectorPtr_t;
 using core::Problem;
 using pinocchio::value_type;
 
-RandomShortcutDynamicPtr_t RandomShortcutDynamic::create(const Problem& problem) {
+RandomShortcutDynamicPtr_t RandomShortcutDynamic::create(core::ProblemConstPtr_t problem) {
   RandomShortcutDynamic* ptr = new RandomShortcutDynamic(problem);
   return RandomShortcutDynamicPtr_t(ptr);
 }
 
-RandomShortcutDynamic::RandomShortcutDynamic(const Problem& problem)
+RandomShortcutDynamic::RandomShortcutDynamic(core::ProblemConstPtr_t problem)
     : RandomShortcut(problem),
-      sm_(boost::dynamic_pointer_cast<SteeringMethodKinodynamic>(problem.steeringMethod())),
-      rbprmPathValidation_(boost::dynamic_pointer_cast<RbPrmPathValidation>(problem.pathValidation())) {
+      sm_(std::dynamic_pointer_cast<SteeringMethodKinodynamic>(problem->steeringMethod())),
+      rbprmPathValidation_(std::dynamic_pointer_cast<RbPrmPathValidation>(problem->pathValidation())) {
   assert(sm_ && "Random-shortcut-dynamic must use a kinodynamic-steering-method");
   assert(rbprmPathValidation_ && "Path validation should be a RbPrmPathValidation class for this solver");
 
   // retrieve parameters from problem :
-  sizeFootX_ = problem.getParameter(std::string("DynamicPlanner/sizeFootX")).floatValue() / 2.;
-  sizeFootY_ = problem.getParameter(std::string("DynamicPlanner/sizeFootY")).floatValue() / 2.;
+  sizeFootX_ = problem->getParameter(std::string("DynamicPlanner/sizeFootX")).floatValue() / 2.;
+  sizeFootY_ = problem->getParameter(std::string("DynamicPlanner/sizeFootY")).floatValue() / 2.;
   if (sizeFootX_ > 0. && sizeFootY_ > 0.)
     rectangularContact_ = 1;
   else
     rectangularContact_ = 0;
-  tryJump_ = problem.getParameter(std::string("DynamicPlanner/tryJump")).boolValue();
+  tryJump_ = problem->getParameter(std::string("DynamicPlanner/tryJump")).boolValue();
   hppDout(notice, "tryJump in steering method = " << tryJump_);
-  mu_ = problem.getParameter(std::string("DynamicPlanner/friction")).floatValue();
+  mu_ = problem->getParameter(std::string("DynamicPlanner/friction")).floatValue();
   hppDout(notice, "mu define in python : " << mu_);
 }
 
@@ -104,10 +104,10 @@ PathVectorPtr_t RandomShortcutDynamic::optimize(const PathVectorPtr_t& path) {
   PathVectorPtr_t tmpPath = path;
 
   // Maximal number of iterations without improvements
-  std::size_t n = problem().getParameter("PathOptimization/RandomShortcut/NumberOfLoops").intValue();
+  std::size_t n = problem()->getParameter("PathOptimization/RandomShortcut/NumberOfLoops").intValue();
   std::size_t projectionError = n;
   std::deque<value_type> length(n - 1, numeric_limits<value_type>::infinity());
-  length.push_back(PathLength<>::run(tmpPath, problem().distance()));
+  length.push_back(PathLength<>::run(tmpPath, problem()->distance()));
   PathVectorPtr_t result;
   Configuration_t q1(path->outputSize()), q2(path->outputSize());
 
@@ -158,8 +158,8 @@ PathVectorPtr_t RandomShortcutDynamic::optimize(const PathVectorPtr_t& path) {
               // path
         valid[i] = (straight[i]->length() <
                     PathLength<true>::run(tmpPath->extract(make_pair(t[i], t[i + 1]))->as<PathVector>(),
-                                          problem().distance()));
-        if (valid[i]) valid[i] = problem().pathValidation()->validate(straight[i], false, validPart, report);
+                                          problem()->distance()));
+        if (valid[i]) valid[i] = problem()->pathValidation()->validate(straight[i], false, validPart, report);
       }
     }
     hppDout(notice, "t0 = " << t[0] << " ; t1 = " << t[1] << " ; t2 = " << t[2] << " ; t3 = " << t[3]);
@@ -183,7 +183,7 @@ PathVectorPtr_t RandomShortcutDynamic::optimize(const PathVectorPtr_t& path) {
         continue;
       }
     }
-    core::value_type newLength = PathLength<>::run(result, problem().distance());
+    core::value_type newLength = PathLength<>::run(result, problem()->distance());
     if ((length[n - 1] - newLength) <= 10. * std::numeric_limits<core::value_type>::epsilon()) {
       hppDout(info, "the length would increase:" << length[n - 1] << " " << newLength);
       result = tmpPath;
@@ -214,11 +214,11 @@ PathPtr_t RandomShortcutDynamic::steer(ConfigurationIn_t q1, ConfigurationIn_t q
   core::RbprmNodePtr_t x1(new core::RbprmNode(ConfigurationPtr_t(new Configuration_t(q1))));
   core::ValidationReportPtr_t report;
   rbprmPathValidation_->getValidator()->computeAllContacts(true);
-  problem().configValidations()->validate(q1, report);
+  problem()->configValidations()->validate(q1, report);
   rbprmPathValidation_->getValidator()->computeAllContacts(false);
   hppDout(notice, "Random shortucut, fillNodeMatrices : ");
-  x1->fillNodeMatrices(report, rectangularContact_, sizeFootX_, sizeFootY_, problem().robot()->mass(), mu_,
-                       boost::dynamic_pointer_cast<pinocchio::RbPrmDevice>(problem().robot()));
+  x1->fillNodeMatrices(report, rectangularContact_, sizeFootX_, sizeFootY_, problem()->robot()->mass(), mu_,
+                       std::dynamic_pointer_cast<pinocchio::RbPrmDevice>(problem()->robot()));
   // call steering method kinodynamic with the newly created node
   hppDout(notice, "Random shortucut, steering method  : ");
   PathPtr_t dp = (*sm_)(x1, q2);
@@ -232,9 +232,9 @@ PathPtr_t RandomShortcutDynamic::steer(ConfigurationIn_t q1, ConfigurationIn_t q
       hppDout(notice, "Path length < epsilon");
       return PathPtr_t();
     }
-    if (!problem().pathProjector()) return dp;
+    if (!problem()->pathProjector()) return dp;
     PathPtr_t pp;
-    if (problem().pathProjector()->apply(dp, pp)) {
+    if (problem()->pathProjector()->apply(dp, pp)) {
       hppDout(notice, "Path projector exist in random-shortcut");
       return pp;
     }

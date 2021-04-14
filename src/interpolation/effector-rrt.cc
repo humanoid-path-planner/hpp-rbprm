@@ -758,9 +758,9 @@ core::PathPtr_t effectorRRTFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemSo
       size_t pathId = problemSolver->paths().size();
       hppDout(notice, "Add trajectories for path = " << pathId << " and effector = " << effector.name());
       assert(solutionPath->numberPaths() == 3 && "Solution pathVector should have 3 paths (takeoff, mid, landing)");
-      BezierPathPtr_t takeoffPath = boost::dynamic_pointer_cast<BezierPath>(solutionPath->pathAtRank(0));
-      BezierPathPtr_t midPath = boost::dynamic_pointer_cast<BezierPath>(solutionPath->pathAtRank(1));
-      BezierPathPtr_t landingPath = boost::dynamic_pointer_cast<BezierPath>(solutionPath->pathAtRank(2));
+      BezierPathPtr_t takeoffPath = std::dynamic_pointer_cast<BezierPath>(solutionPath->pathAtRank(0));
+      BezierPathPtr_t midPath = std::dynamic_pointer_cast<BezierPath>(solutionPath->pathAtRank(1));
+      BezierPathPtr_t landingPath = std::dynamic_pointer_cast<BezierPath>(solutionPath->pathAtRank(2));
       std::vector<bezier_Ptr> allRefEffector;
       allRefEffector.push_back(takeoffPath->getBezier());
       allRefEffector.push_back(midPath->getBezier());

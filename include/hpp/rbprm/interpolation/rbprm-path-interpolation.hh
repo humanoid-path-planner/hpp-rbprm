@@ -37,7 +37,7 @@ HPP_PREDEF_CLASS(RbPrmInterpolation);
 /// a discrete sequence of balanced contact configurations.
 ///
 class RbPrmInterpolation;
-typedef boost::shared_ptr<RbPrmInterpolation> RbPrmInterpolationPtr_t;
+typedef std::shared_ptr<RbPrmInterpolation> RbPrmInterpolationPtr_t;
 
 class HPP_RBPRM_DLLAPI RbPrmInterpolation {
  public:

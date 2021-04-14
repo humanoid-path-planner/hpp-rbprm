@@ -10,7 +10,7 @@ namespace rbprm {
 
 HPP_PREDEF_CLASS(RbPrmFullBody);
 class RbPrmFullBody;
-typedef boost::shared_ptr<RbPrmFullBody> RbPrmFullBodyPtr_t;
+typedef std::shared_ptr<RbPrmFullBody> RbPrmFullBodyPtr_t;
 
 namespace reachability {
 

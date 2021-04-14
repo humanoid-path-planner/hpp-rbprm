@@ -205,7 +205,7 @@ rbprm::T_StateFrame RbPrmInterpolation::Interpolate(const affMap_t& affordances,
   bool allowFailure = true;
   Eigen::Vector3d dir, acc;
   acc = Eigen::Vector3d::Zero();
-  const PathConstPtr_t comPath = boost::dynamic_pointer_cast<const core::Path>(path_);
+  const PathConstPtr_t comPath = std::dynamic_pointer_cast<const core::Path>(path_);
 #ifdef PROFILE
   RbPrmProfiler& watch = getRbPrmProfiler();
   watch.reset_all();

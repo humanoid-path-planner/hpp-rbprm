@@ -43,18 +43,18 @@ namespace rbprm {
 // forward declaration
 HPP_PREDEF_CLASS(RandomShortcutDynamic);
 // Planner objects are manipulated only via shared pointers
-typedef boost::shared_ptr<RandomShortcutDynamic> RandomShortcutDynamicPtr_t;
+typedef std::shared_ptr<RandomShortcutDynamic> RandomShortcutDynamicPtr_t;
 
 class RandomShortcutDynamic : public core::pathOptimization::RandomShortcut {
  public:
   /// Return shared pointer to new object.
-  static RandomShortcutDynamicPtr_t create(const core::Problem& problem);
+  static RandomShortcutDynamicPtr_t create(core::ProblemConstPtr_t problem);
 
   /// Optimize path
   virtual core::PathVectorPtr_t optimize(const core::PathVectorPtr_t& path);
 
  protected:
-  RandomShortcutDynamic(const core::Problem& problem);
+  RandomShortcutDynamic(core::ProblemConstPtr_t problem);
 
   core::PathPtr_t steer(core::ConfigurationIn_t q1, core::ConfigurationIn_t q2) const;
 

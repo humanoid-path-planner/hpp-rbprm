@@ -39,7 +39,7 @@ typedef std::map<std::string, DevicePtr_t> T_Rom;
 /// can be parametrized.
 ///
 class RbPrmDevice;
-typedef boost::shared_ptr<RbPrmDevice> RbPrmDevicePtr_t;
+typedef std::shared_ptr<RbPrmDevice> RbPrmDevicePtr_t;
 
 class HPP_RBPRM_DLLAPI RbPrmDevice : public Device {
  public:

@@ -40,18 +40,18 @@ namespace rbprm {
 // forward declaration
 HPP_PREDEF_CLASS(OrientedPathOptimizer);
 // Planner objects are manipulated only via shared pointers
-typedef boost::shared_ptr<OrientedPathOptimizer> OrientedPathOptimizerPtr_t;
+typedef std::shared_ptr<OrientedPathOptimizer> OrientedPathOptimizerPtr_t;
 
 class OrientedPathOptimizer : public core::PathOptimizer {
  public:
   /// Return shared pointer to new object.
-  static OrientedPathOptimizerPtr_t create(const core::Problem& problem);
+  static OrientedPathOptimizerPtr_t create(core::ProblemConstPtr_t problem);
 
   /// Optimize path
   virtual core::PathVectorPtr_t optimize(const core::PathVectorPtr_t& path);
 
  protected:
-  OrientedPathOptimizer(const core::Problem& problem);
+  OrientedPathOptimizer(core::ProblemConstPtr_t problem);
   bool checkReplaceOrientation(const size_t index, const size_t lastIndex, std::vector<bool> replaceValid,
                                std::vector<bool> orientedValid,
                                std::vector<core::KinodynamicOrientedPathPtr_t> orientedPaths,

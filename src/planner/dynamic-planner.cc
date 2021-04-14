@@ -68,65 +68,65 @@ typedef centroidal_dynamics::Matrix63 Matrix63;
 typedef centroidal_dynamics::Vector6 Vector6;
 typedef centroidal_dynamics::VectorX VectorX;
 
-DynamicPlannerPtr_t DynamicPlanner::createWithRoadmap(const Problem& problem, const RoadmapPtr_t& roadmap) {
+DynamicPlannerPtr_t DynamicPlanner::createWithRoadmap(core::ProblemConstPtr_t problem, const RoadmapPtr_t& roadmap) {
   DynamicPlanner* ptr = new DynamicPlanner(problem, roadmap);
   return DynamicPlannerPtr_t(ptr);
 }
 
-DynamicPlannerPtr_t DynamicPlanner::create(const Problem& problem) {
+DynamicPlannerPtr_t DynamicPlanner::create(core::ProblemConstPtr_t problem) {
   DynamicPlanner* ptr = new DynamicPlanner(problem);
   return DynamicPlannerPtr_t(ptr);
 }
 
-DynamicPlanner::DynamicPlanner(const Problem& problem)
+DynamicPlanner::DynamicPlanner(core::ProblemConstPtr_t problem)
     : BiRRTPlanner(problem),
-      qProj_(new core::Configuration_t(problem.robot()->configSize())),
+      qProj_(new core::Configuration_t(problem->robot()->configSize())),
       roadmap_(
-          boost::dynamic_pointer_cast<core::Roadmap>(core::RbprmRoadmap::create(problem.distance(), problem.robot()))),
-      sm_(boost::dynamic_pointer_cast<SteeringMethodKinodynamic>(problem.steeringMethod())),
+          std::dynamic_pointer_cast<core::Roadmap>(core::RbprmRoadmap::create(problem->distance(), problem->robot()))),
+      sm_(std::dynamic_pointer_cast<SteeringMethodKinodynamic>(problem->steeringMethod())),
       smParabola_(rbprm::SteeringMethodParabola::create(problem)),
-      rbprmPathValidation_(boost::dynamic_pointer_cast<RbPrmPathValidation>(problem.pathValidation())) {
+      rbprmPathValidation_(std::dynamic_pointer_cast<RbPrmPathValidation>(problem->pathValidation())) {
   assert(sm_ && "steering method should be a kinodynamic steering method for this solver");
   assert(rbprmPathValidation_ && "Path validation should be a RbPrmPathValidation class for this solver");
-  assert(problem.robot()->mass() > 0. && "When using dynamic planner, the robot mass should be correctly defined.");
-  hppDout(notice, "number of affordances objects : " << problem.collisionObstacles().size());
+  assert(problem->robot()->mass() > 0. && "When using dynamic planner, the robot mass should be correctly defined.");
+  hppDout(notice, "number of affordances objects : " << problem->collisionObstacles().size());
 
-  sizeFootX_ = problem.getParameter(std::string("DynamicPlanner/sizeFootX")).floatValue() / 2.;
-  sizeFootY_ = problem.getParameter(std::string("DynamicPlanner/sizeFootY")).floatValue() / 2.;
+  sizeFootX_ = problem->getParameter(std::string("DynamicPlanner/sizeFootX")).floatValue() / 2.;
+  sizeFootY_ = problem->getParameter(std::string("DynamicPlanner/sizeFootY")).floatValue() / 2.;
   if (sizeFootX_ > 0. && sizeFootY_ > 0.)
     rectangularContact_ = 1;
   else
     rectangularContact_ = 0;
 
-  tryJump_ = problem.getParameter(std::string("DynamicPlanner/tryJump")).boolValue();
+  tryJump_ = problem->getParameter(std::string("DynamicPlanner/tryJump")).boolValue();
   hppDout(notice, "tryJump in dynamic planner = " << tryJump_);
-  mu_ = problem.getParameter(std::string("DynamicPlanner/friction")).floatValue();
+  mu_ = problem->getParameter(std::string("DynamicPlanner/friction")).floatValue();
   hppDout(notice, "mu define in python : " << mu_);
 }
 
-DynamicPlanner::DynamicPlanner(const Problem& problem, const RoadmapPtr_t& roadmap)
+DynamicPlanner::DynamicPlanner(core::ProblemConstPtr_t problem, const RoadmapPtr_t& roadmap)
     : BiRRTPlanner(problem, roadmap),
-      qProj_(new core::Configuration_t(problem.robot()->configSize())),
+      qProj_(new core::Configuration_t(problem->robot()->configSize())),
       roadmap_(
-          boost::dynamic_pointer_cast<core::Roadmap>(core::RbprmRoadmap::create(problem.distance(), problem.robot()))),
-      sm_(boost::dynamic_pointer_cast<SteeringMethodKinodynamic>(problem.steeringMethod())),
+          std::dynamic_pointer_cast<core::Roadmap>(core::RbprmRoadmap::create(problem->distance(), problem->robot()))),
+      sm_(std::dynamic_pointer_cast<SteeringMethodKinodynamic>(problem->steeringMethod())),
       smParabola_(rbprm::SteeringMethodParabola::create(problem)),
-      rbprmPathValidation_(boost::dynamic_pointer_cast<RbPrmPathValidation>(problem.pathValidation())) {
+      rbprmPathValidation_(std::dynamic_pointer_cast<RbPrmPathValidation>(problem->pathValidation())) {
   assert(sm_ && "steering method should be a kinodynamic steering method for this solver");
   assert(rbprmPathValidation_ && "Path validation should be a RbPrmPathValidation class for this solver");
-  assert(problem.robot()->mass() > 0. && "When using dynamic planner, the robot mass should be correctly defined.");
+  assert(problem->robot()->mass() > 0. && "When using dynamic planner, the robot mass should be correctly defined.");
 
-  hppDout(notice, "number of affordances objects : " << problem.collisionObstacles().size());
-  sizeFootX_ = problem.getParameter(std::string("DynamicPlanner/sizeFootX")).floatValue() / 2.;
-  sizeFootY_ = problem.getParameter(std::string("DynamicPlanner/sizeFootY")).floatValue() / 2.;
+  hppDout(notice, "number of affordances objects : " << problem->collisionObstacles().size());
+  sizeFootX_ = problem->getParameter(std::string("DynamicPlanner/sizeFootX")).floatValue() / 2.;
+  sizeFootY_ = problem->getParameter(std::string("DynamicPlanner/sizeFootY")).floatValue() / 2.;
   if (sizeFootX_ > 0. && sizeFootY_ > 0.)
     rectangularContact_ = 1;
   else
     rectangularContact_ = 0;
 
-  tryJump_ = problem.getParameter(std::string("DynamicPlanner/tryJump")).boolValue();
+  tryJump_ = problem->getParameter(std::string("DynamicPlanner/tryJump")).boolValue();
   hppDout(notice, "tryJump in dynamic planner = " << tryJump_);
-  mu_ = problem.getParameter(std::string("DynamicPlanner/friction")).floatValue();
+  mu_ = problem->getParameter(std::string("DynamicPlanner/friction")).floatValue();
   hppDout(notice, "mu define in python : " << mu_);
 }
 
@@ -157,7 +157,7 @@ core::PathPtr_t DynamicPlanner::extendInternal(core::ConfigurationPtr_t& qProj_,
 
 core::PathPtr_t DynamicPlanner::extendParabola(const core::ConfigurationPtr_t& from,
                                                const core::ConfigurationPtr_t& target, bool reverse) {
-  const core::SteeringMethodPtr_t& sm(problem().steeringMethod());
+  const core::SteeringMethodPtr_t& sm(problem()->steeringMethod());
   const core::ConstraintSetPtr_t& constraints(sm->constraints());
   core::PathPtr_t path;
   if (constraints) {
@@ -188,11 +188,11 @@ bool DynamicPlanner::tryParabolaPath(const core::NodePtr_t& x_near, core::Config
                                      const core::ConfigurationPtr_t& target, bool reverse, core::NodePtr_t& x_jump,
                                      core::NodePtr_t& x_new, core::PathPtr_t& kinoPath, core::PathPtr_t& paraPath) {
   bool success(false);
-  core::PathValidationPtr_t pathValidation(problem().pathValidation());
+  core::PathValidationPtr_t pathValidation(problem()->pathValidation());
   core::PathPtr_t validPath;
   core::PathValidationReportPtr_t report;
   const size_type indexECS =
-      problem().robot()->configSize() - problem().robot()->extraConfigSpace().dimension();  // ecs index
+      problem()->robot()->configSize() - problem()->robot()->extraConfigSpace().dimension();  // ecs index
   bool kinoPathValid(false);
   hppDout(notice, "!! begin tryParabolaPath");
 
@@ -203,7 +203,7 @@ bool DynamicPlanner::tryParabolaPath(const core::NodePtr_t& x_near, core::Config
     if (paraPath->length() >
         0) {  // only add if the full path is valid (because we can't extract a subpath of a parabola path)
       hppDout(notice, "!! parabola path valid !");
-      ParabolaPathPtr_t parabolaPath = boost::dynamic_pointer_cast<ParabolaPath>(paraPath);
+      ParabolaPathPtr_t parabolaPath = std::dynamic_pointer_cast<ParabolaPath>(paraPath);
       core::ConfigurationPtr_t q_new(new core::Configuration_t(parabolaPath->end()));
       core::ConfigurationPtr_t q_jump(new core::Configuration_t(parabolaPath->initial()));
       // 2. update q_jump with the correct initial velocity needed for the computed parabola
@@ -259,7 +259,7 @@ bool DynamicPlanner::tryParabolaPath(const core::NodePtr_t& x_near, core::Config
 void DynamicPlanner::oneStep() {
   hppDout(info, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ new Step ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
   PathPtr_t validPath, path;
-  core::PathValidationPtr_t pathValidation(problem().pathValidation());
+  core::PathValidationPtr_t pathValidation(problem()->pathValidation());
   value_type distance;
   core::NodePtr_t near, reachedNodeFromStart;
   bool startComponentConnected(false), pathValidFromStart(false), pathValidFromEnd(false);
@@ -369,11 +369,11 @@ void DynamicPlanner::computeGIWC(const core::NodePtr_t x, bool use_bestReport) {
   rbprmPathValidation_->getValidator()->computeAllContacts(true);
   hppDout(notice,
           "Compute GIWC, call validate for configuration : " << pinocchio::displayConfig(*(x->configuration())));
-  problem().configValidations()->validate(*(x->configuration()), report);
+  problem()->configValidations()->validate(*(x->configuration()), report);
   rbprmPathValidation_->getValidator()->computeAllContacts(false);
   if (use_bestReport) {
     core::RbprmNodePtr_t node = static_cast<core::RbprmNodePtr_t>(x);
-    node->chooseBestContactSurface(report, boost::dynamic_pointer_cast<pinocchio::RbPrmDevice>(problem().robot()));
+    node->chooseBestContactSurface(report, std::dynamic_pointer_cast<pinocchio::RbPrmDevice>(problem()->robot()));
   }
   computeGIWC(x, report);
 }
@@ -391,15 +391,15 @@ void DynamicPlanner::computeGIWC(const core::NodePtr_t xNode, core::ValidationRe
   }
 
   hppDout(info, "~~ q = " << displayConfig(*q));
-  node->fillNodeMatrices(report, rectangularContact_, sizeFootX_, sizeFootY_, problem().robot()->mass(), mu_,
-                         boost::dynamic_pointer_cast<pinocchio::RbPrmDevice>(problem().robot()));
+  node->fillNodeMatrices(report, rectangularContact_, sizeFootX_, sizeFootY_, problem()->robot()->mass(), mu_,
+                         std::dynamic_pointer_cast<pinocchio::RbPrmDevice>(problem()->robot()));
 }  // computeGIWC
 
 // re implement virtual method, same as base class but without the symetric edge (goal -> start)
 void DynamicPlanner::tryConnectInitAndGoals() {
   // call steering method here to build a direct conexion
-  core::PathValidationPtr_t pathValidation(problem().pathValidation());
-  core::PathProjectorPtr_t pathProjector(problem().pathProjector());
+  core::PathValidationPtr_t pathValidation(problem()->pathValidation());
+  core::PathProjectorPtr_t pathProjector(problem()->pathProjector());
   core::PathPtr_t validPath, projPath, path, kinoPath, paraPath;
   core::NodePtr_t initNode = roadmap()->initNode();
   core::NodePtr_t x_jump;
@@ -442,7 +442,7 @@ void DynamicPlanner::tryConnectInitAndGoals() {
           core::ValidationReportPtr_t valReport;
           // check if the validation fail because of the ROM or because of the trunk
           RbPrmPathValidationPtr_t rbprmPathValidation =
-              boost::dynamic_pointer_cast<RbPrmPathValidation>(pathValidation);
+              std::dynamic_pointer_cast<RbPrmPathValidation>(pathValidation);
           bool successPathOperator;
           bool trunkValid = rbprmPathValidation->getValidator()->validate(
               (*projPath)(report->parameter, successPathOperator), valReport, filter);

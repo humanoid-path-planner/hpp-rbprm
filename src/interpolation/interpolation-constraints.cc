@@ -36,13 +36,17 @@ void addContactConstraints(rbprm::RbPrmFullBodyPtr_t fullBody, pinocchio::Device
     // const fcl::Matrix3f& rotation = state.contactRotation_.at(*cit);
     const pinocchio::Frame effectorFrame = device->getFrameByName(limb->effector_.name());
     pinocchio::JointPtr_t effectorJoint = effectorFrame.joint();
-    projector->add(constraints::Implicit::create(constraints::Position::create(
-        "", device, effectorJoint, effectorFrame.pinocchio().placement * localFrame, globalFrame)));
+    const constraints::DifferentiableFunctionPtr_t& function = constraints::Position::create(
+        "", device, effectorJoint, effectorFrame.pinocchio().placement * localFrame, globalFrame);
+    constraints::ComparisonTypes_t comp (function->outputDerivativeSize(), constraints::EqualToZero);
+    projector->add(constraints::Implicit::create(function, comp));
     if (limb->contactType_ == hpp::rbprm::_6_DOF) {
       pinocchio::Transform3f rotation(1);
       rotation.rotation(state.contactRotation_.at(*cit) * effectorFrame.pinocchio().placement.rotation().transpose());
+      const constraints::DifferentiableFunctionPtr_t& function_ = constraints::Orientation::create("", device, effectorJoint, rotation, cosntraintsR);
+      constraints::ComparisonTypes_t comp_ (function_->outputDerivativeSize(), constraints::EqualToZero);
       projector->add(constraints::Implicit::create(
-          constraints::Orientation::create("", device, effectorJoint, rotation, cosntraintsR)));
+          function_, comp_));
     }
   }
 }

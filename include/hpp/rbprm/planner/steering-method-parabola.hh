@@ -34,14 +34,14 @@ using core::vector_t;
 // forward declaration of class
 HPP_PREDEF_CLASS(SteeringMethodParabola);
 // Planner objects are manipulated only via shared pointers
-typedef boost::shared_ptr<SteeringMethodParabola> SteeringMethodParabolaPtr_t;
+typedef std::shared_ptr<SteeringMethodParabola> SteeringMethodParabolaPtr_t;
 
 /// Steering method that creates StraightPath instances
 ///
 class HPP_CORE_DLLAPI SteeringMethodParabola : public core::SteeringMethod {
  public:
   /// Create instance and return shared pointer
-  static SteeringMethodParabolaPtr_t create(const core::Problem& problem) {
+  static SteeringMethodParabolaPtr_t create(core::ProblemConstPtr_t problem) {
     SteeringMethodParabola* ptr = new SteeringMethodParabola(problem);
     SteeringMethodParabolaPtr_t shPtr(ptr);
     ptr->init(shPtr);
@@ -89,7 +89,7 @@ class HPP_CORE_DLLAPI SteeringMethodParabola : public core::SteeringMethod {
  protected:
   /// Constructor with problem
   /// Robot and weighed distance are created from problem
-  SteeringMethodParabola(const core::Problem& problem);
+  SteeringMethodParabola(core::ProblemConstPtr_t problem);
 
   /// Copy constructor
   SteeringMethodParabola(const SteeringMethodParabola& other)

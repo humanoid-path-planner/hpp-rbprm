@@ -28,10 +28,10 @@ namespace hpp {
 namespace rbprm {
 
 typedef ndcurves::bezier_curve<double, double, true, Eigen::Vector3d> bezier_t;
-typedef boost::shared_ptr<bezier_t> bezier_Ptr;
+typedef std::shared_ptr<bezier_t> bezier_Ptr;
 HPP_PREDEF_CLASS(BezierPath);
-typedef boost::shared_ptr<BezierPath> BezierPathPtr_t;
-typedef boost::shared_ptr<const BezierPath> BezierPathConstPtr_t;
+typedef std::shared_ptr<BezierPath> BezierPathPtr_t;
+typedef std::shared_ptr<const BezierPath> BezierPathConstPtr_t;
 
 /// \addtogroup path
 /// \{

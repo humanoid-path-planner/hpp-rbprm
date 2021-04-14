@@ -28,7 +28,7 @@ namespace hpp {
 namespace rbprm {
 namespace interpolation {
 HPP_PREDEF_CLASS(TimeConstraintPath);
-typedef boost::shared_ptr<TimeConstraintPath> TimeConstraintPathPtr_t;
+typedef std::shared_ptr<TimeConstraintPath> TimeConstraintPathPtr_t;
 /// Linear interpolation between two configurations
 ///
 /// Degrees of freedom are interpolated depending on the type of

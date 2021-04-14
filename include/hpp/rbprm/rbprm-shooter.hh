@@ -34,7 +34,7 @@ struct TrianglePoints {
   fcl::Vec3f p1, p2, p3;
 };
 HPP_PREDEF_CLASS(RbPrmShooter);
-typedef boost::shared_ptr<RbPrmShooter> RbPrmShooterPtr_t;
+typedef std::shared_ptr<RbPrmShooter> RbPrmShooterPtr_t;
 typedef hpp::core::Container<hpp::core::AffordanceObjects_t> affMap_t;
 
 /// \addtogroup configuration_sampling

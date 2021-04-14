@@ -30,7 +30,7 @@ using core::Path;
 using core::Problem;
 
 HPP_PREDEF_CLASS(SteeringMethodKinodynamic);
-typedef boost::shared_ptr<SteeringMethodKinodynamic> SteeringMethodKinodynamicPtr_t;
+typedef std::shared_ptr<SteeringMethodKinodynamic> SteeringMethodKinodynamicPtr_t;
 
 class HPP_RBPRM_DLLAPI SteeringMethodKinodynamic : public core::steeringMethod::Kinodynamic {
  public:
@@ -52,7 +52,7 @@ class HPP_RBPRM_DLLAPI SteeringMethodKinodynamic : public core::steeringMethod::
     return core::PathPtr_t();
   }
   /// Create an instance
-  static SteeringMethodKinodynamicPtr_t create(const core::Problem& problem) {
+  static SteeringMethodKinodynamicPtr_t create(core::ProblemConstPtr_t problem) {
     SteeringMethodKinodynamic* ptr = new SteeringMethodKinodynamic(problem);
     SteeringMethodKinodynamicPtr_t shPtr(ptr);
     ptr->init(shPtr);
@@ -86,7 +86,7 @@ class HPP_RBPRM_DLLAPI SteeringMethodKinodynamic : public core::steeringMethod::
 
  protected:
   /// Constructor
-  SteeringMethodKinodynamic(const core::Problem& problem);
+  SteeringMethodKinodynamic(core::ProblemConstPtr_t problem);
 
   /// Copy constructor
   SteeringMethodKinodynamic(const SteeringMethodKinodynamic& other);

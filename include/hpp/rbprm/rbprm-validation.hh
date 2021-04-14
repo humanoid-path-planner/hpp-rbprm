@@ -32,7 +32,7 @@ namespace hpp {
 namespace rbprm {
 
 class RbPrmValidation;
-typedef boost::shared_ptr<RbPrmValidation> RbPrmValidationPtr_t;
+typedef std::shared_ptr<RbPrmValidation> RbPrmValidationPtr_t;
 typedef std::map<std::string, RbPrmRomValidationPtr_t> T_RomValidation;
 typedef hpp::core::Container<hpp::core::AffordanceObjects_t> affMap_t;
 

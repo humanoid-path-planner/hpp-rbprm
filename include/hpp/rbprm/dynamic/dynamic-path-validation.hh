@@ -26,7 +26,7 @@ namespace rbprm {
 // forward declaration
 HPP_PREDEF_CLASS(DynamicPathValidation);
 // Planner objects are manipulated only via shared pointers
-typedef boost::shared_ptr<DynamicPathValidation> DynamicPathValidationPtr_t;
+typedef std::shared_ptr<DynamicPathValidation> DynamicPathValidationPtr_t;
 
 class HPP_RBPRM_DLLAPI DynamicPathValidation : public RbPrmPathValidation {
  public:

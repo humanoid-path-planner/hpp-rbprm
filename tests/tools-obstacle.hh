@@ -152,12 +152,12 @@ struct BindShooter {
   BindShooter(const std::size_t shootLimit = 10000, const std::size_t displacementLimit = 100)
       : shootLimit_(shootLimit), displacementLimit_(displacementLimit) {}
 
-  hpp::rbprm::RbPrmShooterPtr_t create(/*const hpp::pinocchio::DevicePtr_t& robot,*/ const hpp::core::Problem& problem,
+  hpp::rbprm::RbPrmShooterPtr_t create(/*const hpp::pinocchio::DevicePtr_t& robot,*/ core::ProblemConstPtr_t problem,
                                        const hpp::core::ProblemSolverPtr_t problemSolver) {
     hpp::core::Container<hpp::core::AffordanceObjects_t> affMap_ = problemSolver->affordanceObjects;
     affMap_ = problemSolver->affordanceObjects;
     hpp::pinocchio::RbPrmDevicePtr_t robotcast =
-        boost::static_pointer_cast<hpp::pinocchio::RbPrmDevice>(problem.robot());
+        std::static_pointer_cast<hpp::pinocchio::RbPrmDevice>(problem->robot());
     if (affMap_.map.empty()) {
       throw std::runtime_error("No affordances found. Unable to create shooter object.");
     }
@@ -171,7 +171,7 @@ struct BindShooter {
   hpp::core::PathValidationPtr_t createPathValidation(const hpp::pinocchio::DevicePtr_t& robot,
                                                       const hpp::pinocchio::value_type& val,
                                                       const hpp::core::ProblemSolverPtr_t problemSolver) {
-    hpp::pinocchio::RbPrmDevicePtr_t robotcast = boost::static_pointer_cast<hpp::pinocchio::RbPrmDevice>(robot);
+    hpp::pinocchio::RbPrmDevicePtr_t robotcast = std::static_pointer_cast<hpp::pinocchio::RbPrmDevice>(robot);
     hpp::core::Container<hpp::core::AffordanceObjects_t> affMap_ = problemSolver->affordanceObjects;
     if (affMap_.map.empty()) {
       throw std::runtime_error("No affordances found. Unable to create Path Validaton object.");
@@ -188,7 +188,7 @@ struct BindShooter {
   hpp::core::PathValidationPtr_t createDynamicPathValidation(const hpp::pinocchio::DevicePtr_t& robot,
                                                              const hpp::pinocchio::value_type& val,
                                                              const hpp::core::ProblemSolverPtr_t problemSolver) {
-    hpp::pinocchio::RbPrmDevicePtr_t robotcast = boost::static_pointer_cast<hpp::pinocchio::RbPrmDevice>(robot);
+    hpp::pinocchio::RbPrmDevicePtr_t robotcast = std::static_pointer_cast<hpp::pinocchio::RbPrmDevice>(robot);
     hpp::core::Container<hpp::core::AffordanceObjects_t> affMap_ = problemSolver->affordanceObjects;
     if (affMap_.map.empty()) {
       throw std::runtime_error("No affordances found. Unable to create Path Validaton object.");
@@ -241,7 +241,7 @@ hpp::core::ProblemSolverPtr_t configureRbprmProblemSolverForSupportLimbs(const D
   hpp::core::ProblemSolverPtr_t ps = hpp::core::ProblemSolver::create();
 
   /*bind shooter init*/
-  hpp::pinocchio::RbPrmDevicePtr_t robotcast = boost::static_pointer_cast<hpp::pinocchio::RbPrmDevice>(robot);
+  hpp::pinocchio::RbPrmDevicePtr_t robotcast = std::static_pointer_cast<hpp::pinocchio::RbPrmDevice>(robot);
   std::vector<std::string> affNames;
   affNames.push_back(std::string("Support"));
   for (std::map<std::string, DevicePtr_t>::const_iterator cit = robotcast->robotRoms_.begin();

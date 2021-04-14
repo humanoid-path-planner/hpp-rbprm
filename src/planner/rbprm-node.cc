@@ -208,7 +208,7 @@ void RbprmNode::fillNodeMatrices(ValidationReportPtr_t report, bool rectangularC
   assert(device && "Error in dynamic cast of problem device to rbprmDevice");
   hppStartBenchmark(FILL_NODE_MATRICE);
 
-  core::RbprmValidationReportPtr_t rbReport = boost::dynamic_pointer_cast<core::RbprmValidationReport>(report);
+  core::RbprmValidationReportPtr_t rbReport = std::dynamic_pointer_cast<core::RbprmValidationReport>(report);
   // checks : (use assert ? )
   if (!rbReport) {
     hppDout(error, "~~ Validation Report cannot be cast");
@@ -306,11 +306,11 @@ void RbprmNode::fillNodeMatrices(ValidationReportPtr_t report, bool rectangularC
 
 void RbprmNode::chooseBestContactSurface(ValidationReportPtr_t report, pinocchio::RbPrmDevicePtr_t device) {
   assert(device && "Error in dynamic cast of problem device to rbprmDevice");
-  core::RbprmValidationReportPtr_t rbReport = boost::dynamic_pointer_cast<core::RbprmValidationReport>(report);
+  core::RbprmValidationReportPtr_t rbReport = std::dynamic_pointer_cast<core::RbprmValidationReport>(report);
   for (std::map<std::string, core::CollisionValidationReportPtr_t>::const_iterator it = rbReport->ROMReports.begin();
        it != rbReport->ROMReports.end(); ++it) {
     core::AllCollisionsValidationReportPtr_t romReports =
-        boost::dynamic_pointer_cast<core::AllCollisionsValidationReport>(it->second);
+        std::dynamic_pointer_cast<core::AllCollisionsValidationReport>(it->second);
     if (!romReports) {
       hppDout(warning, "For rom : " << it->first
                                     << " unable to cast in a AllCollisionsValidationReport, did you correctly call "

@@ -62,8 +62,10 @@ void CreateContactConstraints(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const hpp
     mask.push_back(true);
     pinocchio::Transform3f localFrame(1), globalFrame(1);
     globalFrame.translation(ppos);
-    proj->add(constraints::Implicit::create(constraints::Position::create(
-        effector, device, effectorJoint, effectorFrame.pinocchio().placement * localFrame, globalFrame, mask)));
+    const constraints::DifferentiableFunctionPtr_t& function = constraints::Position::create(
+        effector, device, effectorJoint, effectorFrame.pinocchio().placement * localFrame, globalFrame, mask);
+    constraints::ComparisonTypes_t comp (function->outputDerivativeSize(), constraints::EqualToZero);
+    proj->add(constraints::Implicit::create(function, comp));
 
     /*proj->add(constraints::Implicit::create (
                             constraints:::Position::create("",device,
@@ -72,8 +74,10 @@ void CreateContactConstraints(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const hpp
       pinocchio::Transform3f rotation(1);
       rotation.rotation(currentState.contactRotation_.at(effector) *
                         effectorFrame.pinocchio().placement.rotation().transpose());
-      proj->add(constraints::Implicit::create(
-          constraints::Orientation::create("", device, effectorJoint, rotation, cosntraintsR)));
+      const constraints::DifferentiableFunctionPtr_t& function_ = constraints::Orientation::create(
+              "", device, effectorJoint, rotation, cosntraintsR);
+      constraints::ComparisonTypes_t comp_ (function_->outputDerivativeSize(), constraints::EqualToZero);
+      proj->add(constraints::Implicit::create(function_, comp_));
 
       // const fcl::Matrix3f& rotation = currentState.contactRotation_.at(effector);
       /*proj->add(constraints::Implicit::create (constraints::deprecated::Orientation::create("", device,
@@ -88,8 +92,10 @@ void CreateRootPosConstraint(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const fcl:
                              core::ConfigProjectorPtr_t proj) {
   pinocchio::Transform3f position(1);
   position.translation(target);
-  proj->add(constraints::Implicit::create(constraints::Position::create(
-      "", fullBody->device_, fullBody->device_->rootJoint(), pinocchio::Transform3f(1), position)));
+  const constraints::DifferentiableFunctionPtr_t& function = constraints::Position::create(
+      "", fullBody->device_, fullBody->device_->rootJoint(), pinocchio::Transform3f(1), position);
+  constraints::ComparisonTypes_t comp (function->outputDerivativeSize(), constraints::EqualToZero);
+  proj->add(constraints::Implicit::create(function, comp));
 }
 
 typedef constraints::PointCom PointCom;
@@ -162,7 +168,7 @@ void CreatePosturalTaskConstraint(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, core:
   ComparisonTypes_t comps;
   comps.push_back(constraints::Equality);
   const constraints::ImplicitPtr_t posturalTask = constraints::Implicit::create(postFunc, comps);
-  proj->add(posturalTask, segments_t(0), 1);
+  proj->add(posturalTask, 1);
   // proj->updateRightHandSide();
 }
 
@@ -236,9 +242,11 @@ ProjectionReport projectToRootConfiguration(hpp::rbprm::RbPrmFullBodyPtr_t fullB
     pinocchio::Transform3f localFrame(1), globalFrame(1);
     localFrame.translation(offset);
     globalFrame.translation(ppos);
-    proj->add(constraints::Implicit::create(
+    const constraints::DifferentiableFunctionPtr_t& function =
         constraints::Position::create(rootJointName, fullBody->device_, effectorJoint,
-                                      effectorFrame.pinocchio().placement * localFrame, globalFrame, mask)));
+                                      effectorFrame.pinocchio().placement * localFrame, globalFrame, mask);
+    constraints::ComparisonTypes_t comp (function->outputDerivativeSize(), constraints::EqualToZero);
+    proj->add(constraints::Implicit::create(function, comp));
   }
   pinocchio::Configuration_t configuration = currentState.configuration_;
   res.success_ = proj->apply(configuration);
@@ -311,13 +319,17 @@ ProjectionReport projectEffector(hpp::core::ConfigProjectorPtr_t proj, const hpp
   Transform3f localFrame(1), globalFrame(1);
   localFrame = effectorFrame.pinocchio().placement * localFrame;
   globalFrame.translation(positionTarget);
-  proj->add(constraints::Implicit::create(constraints::Position::create("", body->device_, effectorJoint, localFrame,
-                                                                        globalFrame, setTranslationConstraints())));
+  const constraints::DifferentiableFunctionPtr_t& function = constraints::Position::create("", body->device_, effectorJoint, localFrame,
+                                                                        globalFrame, setTranslationConstraints());
+  constraints::ComparisonTypes_t comp (function->outputDerivativeSize(), constraints::EqualToZero);
+  proj->add(constraints::Implicit::create(function, comp));
   if (limb->contactType_ == hpp::rbprm::_6_DOF) {
     // localFrame.rotation(effectorFrame.pinocchio().placement.rotation() * rotationTarget.transpose());
     globalFrame.rotation(rotationTarget);
-    proj->add(constraints::Implicit::create(
-        constraints::Orientation::create("", body->device_, effectorJoint, localFrame, globalFrame, rotationFilter)));
+    const constraints::DifferentiableFunctionPtr_t& function_ = constraints::Orientation::create(
+            "", body->device_, effectorJoint, localFrame, globalFrame, rotationFilter);
+    constraints::ComparisonTypes_t comp_ (function_->outputDerivativeSize(), constraints::EqualToZero);
+    proj->add(constraints::Implicit::create( function_, comp_));
   }
 
   if (body->usePosturalTaskContactCreation()) {
@@ -628,7 +640,7 @@ ProjectionReport projectToColFreeComPosition(hpp::rbprm::RbPrmFullBodyPtr_t full
       res.success_ = fullBody->GetCollisionValidation()->validate(configuration, report);
       hppDout(notice, "project to col free, collision test : " << res.success_);
       if (!res.success_) {
-        CollisionValidationReportPtr_t repCast = boost::dynamic_pointer_cast<CollisionValidationReport>(report);
+        CollisionValidationReportPtr_t repCast = std::dynamic_pointer_cast<CollisionValidationReport>(report);
         hppDout(notice, "collision between " << repCast->object1->name() << " and " << repCast->object2->name());
       }
     }

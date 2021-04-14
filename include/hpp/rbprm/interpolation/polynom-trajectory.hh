@@ -29,9 +29,9 @@ namespace hpp {
 namespace rbprm {
 namespace interpolation {
 HPP_PREDEF_CLASS(PolynomTrajectory);
-typedef boost::shared_ptr<PolynomTrajectory> PolynomTrajectoryPtr_t;
+typedef std::shared_ptr<PolynomTrajectory> PolynomTrajectoryPtr_t;
 typedef ndcurves::curve_abc<core::value_type, core::value_type, true, Eigen::Vector3d> Polynom;
-typedef boost::shared_ptr<Polynom> PolynomPtr_t;
+typedef std::shared_ptr<Polynom> PolynomPtr_t;
 /// Linear interpolation between two configurations
 ///
 /// Degrees of freedom are interpolated depending on the type of

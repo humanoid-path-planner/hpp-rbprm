@@ -35,7 +35,7 @@ HPP_PREDEF_CLASS(Sample);
 /// in an octree and used for proximity requests for contact creation.
 /// assumes that joints are compact, ie they all are consecutive in configuration.
 class Sample;
-typedef boost::shared_ptr<Sample> SamplePtr_t;
+typedef std::shared_ptr<Sample> SamplePtr_t;
 
 class HPP_RBPRM_DLLAPI Sample {
  public:

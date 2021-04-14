@@ -40,8 +40,8 @@ namespace interpolation {
 template <class Path_T>
 class TimeConstraintSteering : public hpp::core::steeringMethod::Straight {
   typedef Path_T path_t;
-  typedef boost::shared_ptr<TimeConstraintSteering> TimeConstraintSteeringPtr_t;
-  typedef boost::weak_ptr<TimeConstraintSteering> TimeConstraintSteeringWkPtr_t;
+  typedef std::shared_ptr<TimeConstraintSteering> TimeConstraintSteeringPtr_t;
+  typedef std::weak_ptr<TimeConstraintSteering> TimeConstraintSteeringWkPtr_t;
 
  public:
   /// Create instance and return shared pointer
@@ -72,7 +72,7 @@ class TimeConstraintSteering : public hpp::core::steeringMethod::Straight {
 
   /// create a path between two configurations
   virtual core::PathPtr_t impl_compute(core::ConfigurationIn_t q1, core::ConfigurationIn_t q2) const {
-    core::value_type length = problem_.distance()->operator()(q1, q2);
+    core::value_type length = problem()->distance()->operator()(q1, q2);
     core::ConstraintSetPtr_t c;
     if (constraints() && constraints()->configProjector()) {
       c = HPP_STATIC_PTR_CAST(core::ConstraintSet, constraints()->copy());
@@ -80,7 +80,7 @@ class TimeConstraintSteering : public hpp::core::steeringMethod::Straight {
     } else {
       c = constraints();
     }
-    core::PathPtr_t path = path_t::create(problem_.robot(), q1, q2, length, c, pathDofRank_, tds_);
+    core::PathPtr_t path = path_t::create(problem()->robot(), q1, q2, length, c, pathDofRank_, tds_);
     return path;
   }
 
@@ -88,7 +88,7 @@ class TimeConstraintSteering : public hpp::core::steeringMethod::Straight {
   /// Constructor with robot
   /// Weighed distance is created from robot
   TimeConstraintSteering(const core::ProblemPtr_t& problem, const std::size_t pathDofRank)
-      : core::steeringMethod::Straight(*problem), pathDofRank_(pathDofRank), weak_() {}
+      : core::steeringMethod::Straight(problem), pathDofRank_(pathDofRank), weak_() {}
 
   /*/// Constructor with weighed distance
   TimeConstraintSteering (const core::DevicePtr_t& device,
@@ -96,7 +96,7 @@ class TimeConstraintSteering : public hpp::core::steeringMethod::Straight {
                    const std::size_t pathDofRank) :
 SteeringMethod (new core::Problem (device)), pathDofRank_(pathDofRank), weak_ ()
   {
-    problem_.distance (distance);
+    problem().distance (distance);
   }*/
   /// Copy constructor
   TimeConstraintSteering(const TimeConstraintSteering& other)

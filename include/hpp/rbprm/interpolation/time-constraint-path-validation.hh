@@ -27,7 +27,7 @@ namespace interpolation {
 HPP_PREDEF_CLASS(TimeConstraintPathValidation);
 
 class TimeConstraintPathValidation;
-typedef boost::shared_ptr<TimeConstraintPathValidation> TimeConstraintPathValidationPtr_t;
+typedef std::shared_ptr<TimeConstraintPathValidation> TimeConstraintPathValidationPtr_t;
 /// \addtogroup validation
 /// \{
 

@@ -164,7 +164,7 @@ namespace
         hppDout(notice,"Run : end   config = r(["<<pinocchio::displayConfig(*end)<<"])");
 
         rootProblem_->initConfig(start);
-        BiRRTPlannerPtr_t planner = BiRRTPlanner::create(*rootProblem_);
+        BiRRTPlannerPtr_t planner = BiRRTPlanner::create(rootProblem_);
         //ProblemTargetPtr_t target = problemTarget::GoalConfigurations::create (planner);
         ProblemTargetPtr_t target = problemTarget::GoalConfigurations::create (rootProblem_);
         rootProblem_->target (target);
@@ -196,13 +196,13 @@ namespace
         template<class Helper_T>
         PathVectorPtr_t optimize(Helper_T& helper, PathVectorPtr_t partialPath, const std::size_t numOptimizations)
         {
-            core::pathOptimization::RandomShortcutPtr_t rs = core::pathOptimization::RandomShortcut::create(*helper.rootProblem_);
+            core::pathOptimization::RandomShortcutPtr_t rs = core::pathOptimization::RandomShortcut::create(helper.rootProblem_);
             for(std::size_t j=0; j<numOptimizations;++j)
             {
                 hppDout(notice,"Optimize random shortucut, iter : "<<j);
                 partialPath = rs->optimize(partialPath);
             }
-            core::pathOptimization::PartialShortcutPtr_t rs2 = core::pathOptimization::PartialShortcut::create(*helper.rootProblem_);
+            core::pathOptimization::PartialShortcutPtr_t rs2 = core::pathOptimization::PartialShortcut::create(helper.rootProblem_);
             for(std::size_t j=0; j<numOptimizations;++j)
             {
                 hppDout(notice,"Optimize partial shortcut, iter : "<<j);
@@ -367,7 +367,7 @@ namespace
                                 const std::size_t numOptimizations, const bool keepExtraDof,
                                 const value_type error_treshold,
                                 const size_t maxIterations)
-    {        
+    {
         GenPath genPath(*referenceProblem);
         return interpolateStatesFromPathGetter<Helper_T, StateConstIterator, ShooterFactory_T, ConstraintFactory_T, GenPath>
                 (fullbody,referenceProblem, shooterFactory, constraintFactory,

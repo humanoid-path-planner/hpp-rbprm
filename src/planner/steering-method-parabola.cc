@@ -35,10 +35,10 @@ using core::value_type;
 using core::vector_t;
 using pinocchio::size_type;
 
-SteeringMethodParabola::SteeringMethodParabola(const core::Problem &problem)
+SteeringMethodParabola::SteeringMethodParabola(core::ProblemConstPtr_t problem)
     : SteeringMethod(problem),
-      device_(problem.robot()),
-      distance_(core::WeighedDistance::create(problem.robot())),
+      device_(problem->robot()),
+      distance_(core::WeighedDistance::create(problem->robot())),
       weak_(),
       g_(9.81),
       V0max_(1.),
@@ -50,7 +50,7 @@ SteeringMethodParabola::SteeringMethodParabola(const core::Problem &problem)
       V0_(vector_t(3)),
       Vimp_(vector_t(3)) {
   hppDout(notice, "Constructor steering-method-parabola");
-  V0max_ = problem.getParameter(std::string("Kinodynamic/velocityBound")).floatValue();
+  V0max_ = problem->getParameter(std::string("Kinodynamic/velocityBound")).floatValue();
   Vimpmax_ = V0max_;
 }
 
@@ -66,9 +66,9 @@ core::PathPtr_t SteeringMethodParabola::impl_compute(core::ConfigurationIn_t q1,
 core::PathPtr_t SteeringMethodParabola::compute_3D_path(core::ConfigurationIn_t q1, core::ConfigurationIn_t q2) const {
   std::vector<std::string> filter;
   core::PathPtr_t validPart;
-  const core::PathValidationPtr_t pathValidation(problem_.pathValidation());
-  RbPrmPathValidationPtr_t rbPathValidation = boost::dynamic_pointer_cast<RbPrmPathValidation>(pathValidation);
-  pinocchio::RbPrmDevicePtr_t rbDevice = boost::dynamic_pointer_cast<pinocchio::RbPrmDevice>(device_.lock());
+  const core::PathValidationPtr_t pathValidation(problem()->pathValidation());
+  RbPrmPathValidationPtr_t rbPathValidation = std::dynamic_pointer_cast<RbPrmPathValidation>(pathValidation);
+  pinocchio::RbPrmDevicePtr_t rbDevice = std::dynamic_pointer_cast<pinocchio::RbPrmDevice>(device_.lock());
   core::PathValidationReportPtr_t pathReport;
   if (!rbDevice) hppDout(error, "Device cannot be cast");
   if (!rbPathValidation) hppDout(error, "PathValidation cannot be cast");
@@ -327,8 +327,8 @@ core::PathPtr_t SteeringMethodParabola::compute_3D_path(core::ConfigurationIn_t 
 // From Pierre
 core::PathPtr_t SteeringMethodParabola::compute_random_3D_path(core::ConfigurationIn_t q1, core::ConfigurationIn_t q2,
                                                                value_type *alpha0, value_type *v0) const {
-  const core::PathValidationPtr_t pathValidation(problem_.pathValidation());
-  RbPrmPathValidationPtr_t rbPathValidation = boost::dynamic_pointer_cast<RbPrmPathValidation>(pathValidation);
+  const core::PathValidationPtr_t pathValidation(problem()->pathValidation());
+  RbPrmPathValidationPtr_t rbPathValidation = std::dynamic_pointer_cast<RbPrmPathValidation>(pathValidation);
   std::vector<std::string> filter;
   core::PathValidationReportPtr_t report;
   core::PathPtr_t validPart;
@@ -776,8 +776,8 @@ value_type SteeringMethodParabola::dichotomy(value_type a_inf, value_type a_plus
 void SteeringMethodParabola::fillROMnames(core::ConfigurationIn_t q, std::vector<std::string> *ROMnames) const {
   core::ValidationReportPtr_t report;
   const core::Configuration_t config = q;
-  problem_.configValidations()->validate(config, report);
-  core::RbprmValidationReportPtr_t rbReport = boost::dynamic_pointer_cast<core::RbprmValidationReport>(report);
+  problem()->configValidations()->validate(config, report);
+  core::RbprmValidationReportPtr_t rbReport = std::dynamic_pointer_cast<core::RbprmValidationReport>(report);
   if (rbReport) {
     hppDout(info, "nbROM= " << rbReport->ROMReports.size());
     for (std::map<std::string, core::CollisionValidationReportPtr_t>::const_iterator it = rbReport->ROMReports.begin();

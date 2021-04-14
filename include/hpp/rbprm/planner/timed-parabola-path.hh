@@ -27,7 +27,7 @@ namespace rbprm {
 // forward declaration of class
 HPP_PREDEF_CLASS(TimedParabolaPath);
 // Planner objects are manipulated only via shared pointers
-typedef boost::shared_ptr<TimedParabolaPath> TimedParabolaPathPtr_t;
+typedef std::shared_ptr<TimedParabolaPath> TimedParabolaPathPtr_t;
 
 /// ballistic path between 2 configurations
 ///

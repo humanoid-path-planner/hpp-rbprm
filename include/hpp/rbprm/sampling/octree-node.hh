@@ -33,7 +33,7 @@ HPP_PREDEF_CLASS(OctreeNode);
 /// and an octree for spatial requests.
 /// indexes of the octree corresponds to end effector positions.
 class OctreeNode;
-typedef boost::shared_ptr<OctreeNode> OctreeNodePtr_t;
+typedef std::shared_ptr<OctreeNode> OctreeNodePtr_t;
 
 class HPP_RBPRM_DLLAPI OctreeNode {
  public:
@@ -52,7 +52,7 @@ class HPP_RBPRM_DLLAPI OctreeNode {
 
  private:
   fcl::OcTree* octree_;  // deleted with geometry_
-  const boost::shared_ptr<fcl::CollisionGeometry> geometry_;
+  const std::shared_ptr<fcl::CollisionGeometry> geometry_;
 
  public:
   const fcl::CollisionObject treeObject_;

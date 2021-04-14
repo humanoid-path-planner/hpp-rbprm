@@ -382,7 +382,7 @@ void RbPrmShooter::impl_shoot(hpp::core::Configuration_t& config) const {
     while (!found && limitDis > 0) {
       HPP_START_TIMECOUNTER(SHOOT_COLLISION);
       found = validator_->validate(config, reportShPtr, filter_);
-      RbprmValidationReportPtr_t report = boost::dynamic_pointer_cast<RbprmValidationReport>(reportShPtr);
+      RbprmValidationReportPtr_t report = std::dynamic_pointer_cast<RbprmValidationReport>(reportShPtr);
       bool valid = found || !report->trunkInCollision;
       HPP_STOP_TIMECOUNTER(SHOOT_COLLISION);
 
@@ -399,7 +399,7 @@ void RbPrmShooter::impl_shoot(hpp::core::Configuration_t& config) const {
           }
           HPP_START_TIMECOUNTER(SHOOT_COLLISION);
           found = validator_->validate(config, reportShPtr, filter_);
-          report = boost::dynamic_pointer_cast<RbprmValidationReport>(reportShPtr);
+          report = std::dynamic_pointer_cast<RbprmValidationReport>(reportShPtr);
           valid = found || !report->trunkInCollision;
           // found = validator_->validate(config, filter_);
           HPP_STOP_TIMECOUNTER(SHOOT_COLLISION);
@@ -408,7 +408,7 @@ void RbPrmShooter::impl_shoot(hpp::core::Configuration_t& config) const {
       } else if (!valid)  // move out of collision
       {
         // retrieve Contact information
-        report = boost::dynamic_pointer_cast<RbprmValidationReport>(reportShPtr);
+        report = std::dynamic_pointer_cast<RbprmValidationReport>(reportShPtr);
         lastDirection = normalFromTriangleContact(report->result.getContact(0), report->object2);
         Translate(robot_, config, lastDirection * (std::abs(report->result.getContact(0).penetration_depth) + 0.03));
         limitDis--;

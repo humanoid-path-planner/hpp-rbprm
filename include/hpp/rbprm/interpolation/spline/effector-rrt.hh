@@ -125,7 +125,7 @@ std::vector<core::PathVectorPtr_t> fitBeziersToPath(RbPrmFullBodyPtr_t fullbody,
 
 typedef ndcurves::exact_cubic<double, double, true, Eigen::Matrix<value_type, 3, 1> > exact_cubic_t;
 typedef ndcurves::curve_constraints<Eigen::Matrix<value_type, 3, 1> > curve_constraint_t;
-typedef boost::shared_ptr<exact_cubic_t> exact_cubic_Ptr;
+typedef std::shared_ptr<exact_cubic_t> exact_cubic_Ptr;
 
 struct SetEffectorRRTConstraints {
   SetEffectorRRTConstraints(const core::PathPtr_t refCom, const core::PathPtr_t refEff,
