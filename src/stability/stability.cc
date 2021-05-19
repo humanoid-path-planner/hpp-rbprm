@@ -129,7 +129,7 @@ const std::vector<std::size_t> numContactPoints(const T_Limb& limbs, const std::
 
 centroidal_dynamics::Vector3 setupLibrary(const RbPrmFullBodyPtr_t fullbody, State& state, Equilibrium& sEq,
                                           EquilibriumAlgorithm& alg, core::value_type friction, const double feetX,
-                                          const double feetY) throw(std::runtime_error) {
+                                          const double feetY) {
   friction = fullbody->getFriction();
   hppDout(notice, "Setup centroidal dynamic lib, friction = " << friction);
   const rbprm::T_Limb& limbs = fullbody->GetLimbs();

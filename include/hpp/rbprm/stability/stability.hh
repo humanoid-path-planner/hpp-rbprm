@@ -61,7 +61,7 @@ centroidal_dynamics::Vector3 setupLibrary(const RbPrmFullBodyPtr_t fullbody, Sta
                                           centroidal_dynamics::Equilibrium& sEq,
                                           centroidal_dynamics::EquilibriumAlgorithm& alg,
                                           core::value_type friction = 0.6, const double feetX = 0,
-                                          const double feetY = 0) throw(std::runtime_error);
+                                          const double feetY = 0);
 
 }  // namespace stability
 }  // namespace rbprm
