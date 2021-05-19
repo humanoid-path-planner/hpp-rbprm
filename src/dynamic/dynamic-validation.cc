@@ -35,8 +35,7 @@ bool DynamicValidation::validate(const core::Configuration_t& config, core::Vali
   hppDout(notice, "Begin dynamic validation");
   // hppStartBenchmark(DYNAMIC_VALIDATION);
   // test if the same number of ROM are in collision :
-  core::RbprmValidationReportPtr_t rbReport =
-      std::dynamic_pointer_cast<core::RbprmValidationReport>(validationReport);
+  core::RbprmValidationReportPtr_t rbReport = std::dynamic_pointer_cast<core::RbprmValidationReport>(validationReport);
   if (!rbReport) {
     hppDout(error, "error while casting the report");
     // hppStopBenchmark(DYNAMIC_VALIDATION);
