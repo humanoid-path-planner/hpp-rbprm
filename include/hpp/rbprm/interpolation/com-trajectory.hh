@@ -42,7 +42,7 @@ class HPP_CORE_DLLAPI ComTrajectory : public core::Path {
  public:
   typedef Path parent_t;
   /// Destructor
-  virtual ~ComTrajectory() throw() {}
+  virtual ~ComTrajectory() {}
 
   /// Create instance and return shared pointer
   /// \param device Robot corresponding to configurations
@@ -77,7 +77,7 @@ class HPP_CORE_DLLAPI ComTrajectory : public core::Path {
   /// \param subInterval interval of definition of the extract path
   /// If upper bound of subInterval is smaller than lower bound,
   /// result is reversed.
-  virtual core::PathPtr_t extract(const core::interval_t& subInterval) const throw(core::projection_error);
+  virtual core::PathPtr_t extract(const core::interval_t& subInterval) const;
 
   /// Get the initial configuration
   core::Configuration_t initial() const { return initial_; }

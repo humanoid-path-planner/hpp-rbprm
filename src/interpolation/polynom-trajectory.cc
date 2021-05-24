@@ -66,7 +66,7 @@ bool PolynomTrajectory::impl_compute(ConfigurationOut_t result, value_type param
   return true;
 }
 
-PathPtr_t PolynomTrajectory::extract(const interval_t& subInterval) const throw(projection_error) {
+PathPtr_t PolynomTrajectory::extract(const interval_t& subInterval) const {
   return PolynomTrajectory::create(polynom_, subInterval.first, subInterval.second);
 }
 }  //   namespace interpolation

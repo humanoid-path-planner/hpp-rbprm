@@ -102,7 +102,7 @@ bool TimeConstraintPath::impl_compute(ConfigurationOut_t result, value_type para
   return true;
 }
 
-PathPtr_t TimeConstraintPath::extract(const interval_t& subInterval) const throw(projection_error) {
+PathPtr_t TimeConstraintPath::extract(const interval_t& subInterval) const {
   // Length is assumed to be proportional to interval range
   value_type l = fabs(subInterval.second - subInterval.first);
 
@@ -123,7 +123,7 @@ PathPtr_t TimeConstraintPath::extract(const interval_t& subInterval) const throw
 
 DevicePtr_t TimeConstraintPath::device() const { return device_; }
 
-void TimeConstraintPath::checkPath() const throw(projection_error) {
+void TimeConstraintPath::checkPath() const {
   Configuration_t initc = initial();
   Configuration_t endc = end();
   vector_t errr;

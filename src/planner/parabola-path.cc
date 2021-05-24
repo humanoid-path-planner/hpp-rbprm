@@ -137,7 +137,7 @@ bool ParabolaPath::impl_compute(core::ConfigurationOut_t result, value_type para
   return true;
 }
 
-core::PathPtr_t ParabolaPath::extract(const interval_t& subInterval) const throw(hpp::core::projection_error) {
+core::PathPtr_t ParabolaPath::extract(const interval_t& subInterval) const {
   hppDout(error, "path extract is not recommended on parabola path");
   bool success;
   core::Configuration_t q1((*this)(subInterval.first, success));   // straight

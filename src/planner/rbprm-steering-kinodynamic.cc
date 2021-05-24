@@ -334,7 +334,7 @@ core::PathPtr_t SteeringMethodKinodynamic::setSteeringMethodBounds(const core::R
                             Vector3 toV,fromV,dVelocity;
                             const pinocchio::size_type indexECS =problem()->robot()->configSize() -
                           problem()->robot()->extraConfigSpace().dimension (); // ecs index
-
+                     
                             hppDout(notice,"near = "<<pinocchio::displayConfig((*(node->configuration()))));
                             hppDout(notice,"target = "<<pinocchio::displayConfig(target));
                             if(reverse){

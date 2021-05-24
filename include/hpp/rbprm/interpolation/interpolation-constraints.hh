@@ -19,7 +19,6 @@
 #ifndef HPP_RBPRM_INTERPOLATION_CONSTRAINTS_HH
 #define HPP_RBPRM_INTERPOLATION_CONSTRAINTS_HH
 
-
 #include <pinocchio/fwd.hpp>
 #include <pinocchio/multibody/frame.hpp>
 

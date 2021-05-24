@@ -36,7 +36,7 @@ class TimedParabolaPath : public ParabolaPath {
  public:
   typedef ParabolaPath parent_t;
   /// Destructor
-  virtual ~TimedParabolaPath() throw() {}
+  virtual ~TimedParabolaPath() {}
 
   /// Create instance and return shared pointer
   /// \param device Robot corresponding to configurations
@@ -121,7 +121,7 @@ class TimedParabolaPath : public ParabolaPath {
   /// \param subInterval interval of definition of the extract path
   /// If upper bound of subInterval is smaller than lower bound,
   /// result is reversed.
-  virtual core::PathPtr_t extract(const core::interval_t& subInterval) const throw(core::projection_error);
+  virtual core::PathPtr_t extract(const core::interval_t& subInterval) const;
 
   /// Reversion of a path
   /// \return a new path that is this one reversed.

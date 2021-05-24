@@ -71,7 +71,7 @@ bool ComTrajectory::impl_compute(ConfigurationOut_t result, value_type param) co
   return true;
 }
 
-PathPtr_t ComTrajectory::extract(const interval_t& subInterval) const throw(projection_error) {
+PathPtr_t ComTrajectory::extract(const interval_t& subInterval) const {
   // Length is assumed to be proportional to interval range
   value_type l = std::min(fabs(subInterval.second - subInterval.first), length_);
 

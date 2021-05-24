@@ -64,7 +64,7 @@ void CreateContactConstraints(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const hpp
     globalFrame.translation(ppos);
     const constraints::DifferentiableFunctionPtr_t& function = constraints::Position::create(
         effector, device, effectorJoint, effectorFrame.pinocchio().placement * localFrame, globalFrame, mask);
-    constraints::ComparisonTypes_t comp (function->outputDerivativeSize(), constraints::EqualToZero);
+    constraints::ComparisonTypes_t comp(function->outputDerivativeSize(), constraints::EqualToZero);
     proj->add(constraints::Implicit::create(function, comp));
 
     /*proj->add(constraints::Implicit::create (
@@ -74,9 +74,9 @@ void CreateContactConstraints(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const hpp
       pinocchio::Transform3f rotation(1);
       rotation.rotation(currentState.contactRotation_.at(effector) *
                         effectorFrame.pinocchio().placement.rotation().transpose());
-      const constraints::DifferentiableFunctionPtr_t& function_ = constraints::Orientation::create(
-              "", device, effectorJoint, rotation, cosntraintsR);
-      constraints::ComparisonTypes_t comp_ (function_->outputDerivativeSize(), constraints::EqualToZero);
+      const constraints::DifferentiableFunctionPtr_t& function_ =
+          constraints::Orientation::create("", device, effectorJoint, rotation, cosntraintsR);
+      constraints::ComparisonTypes_t comp_(function_->outputDerivativeSize(), constraints::EqualToZero);
       proj->add(constraints::Implicit::create(function_, comp_));
 
       // const fcl::Matrix3f& rotation = currentState.contactRotation_.at(effector);
@@ -94,7 +94,7 @@ void CreateRootPosConstraint(hpp::rbprm::RbPrmFullBodyPtr_t fullBody, const fcl:
   position.translation(target);
   const constraints::DifferentiableFunctionPtr_t& function = constraints::Position::create(
       "", fullBody->device_, fullBody->device_->rootJoint(), pinocchio::Transform3f(1), position);
-  constraints::ComparisonTypes_t comp (function->outputDerivativeSize(), constraints::EqualToZero);
+  constraints::ComparisonTypes_t comp(function->outputDerivativeSize(), constraints::EqualToZero);
   proj->add(constraints::Implicit::create(function, comp));
 }
 
@@ -245,7 +245,7 @@ ProjectionReport projectToRootConfiguration(hpp::rbprm::RbPrmFullBodyPtr_t fullB
     const constraints::DifferentiableFunctionPtr_t& function =
         constraints::Position::create(rootJointName, fullBody->device_, effectorJoint,
                                       effectorFrame.pinocchio().placement * localFrame, globalFrame, mask);
-    constraints::ComparisonTypes_t comp (function->outputDerivativeSize(), constraints::EqualToZero);
+    constraints::ComparisonTypes_t comp(function->outputDerivativeSize(), constraints::EqualToZero);
     proj->add(constraints::Implicit::create(function, comp));
   }
   pinocchio::Configuration_t configuration = currentState.configuration_;
@@ -319,17 +319,17 @@ ProjectionReport projectEffector(hpp::core::ConfigProjectorPtr_t proj, const hpp
   Transform3f localFrame(1), globalFrame(1);
   localFrame = effectorFrame.pinocchio().placement * localFrame;
   globalFrame.translation(positionTarget);
-  const constraints::DifferentiableFunctionPtr_t& function = constraints::Position::create("", body->device_, effectorJoint, localFrame,
-                                                                        globalFrame, setTranslationConstraints());
-  constraints::ComparisonTypes_t comp (function->outputDerivativeSize(), constraints::EqualToZero);
+  const constraints::DifferentiableFunctionPtr_t& function = constraints::Position::create(
+      "", body->device_, effectorJoint, localFrame, globalFrame, setTranslationConstraints());
+  constraints::ComparisonTypes_t comp(function->outputDerivativeSize(), constraints::EqualToZero);
   proj->add(constraints::Implicit::create(function, comp));
   if (limb->contactType_ == hpp::rbprm::_6_DOF) {
     // localFrame.rotation(effectorFrame.pinocchio().placement.rotation() * rotationTarget.transpose());
     globalFrame.rotation(rotationTarget);
-    const constraints::DifferentiableFunctionPtr_t& function_ = constraints::Orientation::create(
-            "", body->device_, effectorJoint, localFrame, globalFrame, rotationFilter);
-    constraints::ComparisonTypes_t comp_ (function_->outputDerivativeSize(), constraints::EqualToZero);
-    proj->add(constraints::Implicit::create( function_, comp_));
+    const constraints::DifferentiableFunctionPtr_t& function_ =
+        constraints::Orientation::create("", body->device_, effectorJoint, localFrame, globalFrame, rotationFilter);
+    constraints::ComparisonTypes_t comp_(function_->outputDerivativeSize(), constraints::EqualToZero);
+    proj->add(constraints::Implicit::create(function_, comp_));
   }
 
   if (body->usePosturalTaskContactCreation()) {

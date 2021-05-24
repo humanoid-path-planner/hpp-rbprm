@@ -42,7 +42,7 @@ class HPP_CORE_DLLAPI TimeConstraintPath : public core::Path {
  public:
   typedef Path parent_t;
   /// Destructor
-  virtual ~TimeConstraintPath() throw() {}
+  virtual ~TimeConstraintPath() {}
 
   /// Create instance and return shared pointer
   /// \param device Robot corresponding to configurations
@@ -114,7 +114,7 @@ class HPP_CORE_DLLAPI TimeConstraintPath : public core::Path {
   /// \param subInterval interval of definition of the extract path
   /// If upper bound of subInterval is smaller than lower bound,
   /// result is reversed.
-  virtual core::PathPtr_t extract(const core::interval_t& subInterval) const throw(core::projection_error);
+  virtual core::PathPtr_t extract(const core::interval_t& subInterval) const;
 
   /// Modify initial configuration
   /// \param initial new initial configuration
@@ -147,7 +147,7 @@ class HPP_CORE_DLLAPI TimeConstraintPath : public core::Path {
   /// Get the final configuration
   core::Configuration_t end() const { return end_; }
 
-  virtual void checkPath() const throw(core::projection_error);
+  virtual void checkPath() const;
 
  protected:
   /// Print path in a stream

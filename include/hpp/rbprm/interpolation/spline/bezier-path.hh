@@ -44,7 +44,7 @@ class BezierPath : public core::Path {
  public:
   typedef Path parent_t;
   /// Destructor
-  virtual ~BezierPath() throw() {}
+  virtual ~BezierPath() {}
 
   /// Create instance and return shared pointer
   /// \param device Robot corresponding to configurations

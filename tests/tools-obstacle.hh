@@ -49,8 +49,7 @@ using namespace hpp;
 using namespace hpp::core;
 
 void addAffObjects(hpp::core::ProblemSolver& problemSolver, const affordance::OperationBases_t& ops,
-                   const std::vector<affordance::CollisionObjects_t>& affObjs,
-                   const std::string obstacleNameNonAff) throw(std::runtime_error) {
+                   const std::vector<affordance::CollisionObjects_t>& affObjs, const std::string obstacleNameNonAff) {
   const std::string affSuffix = "aff";
   std::string obstacleName(obstacleNameNonAff);
   obstacleName += affSuffix;
@@ -92,7 +91,7 @@ void affordanceAnalysis(ProblemSolver& problemSolver, const std::string& obstacl
   }
 }
 
-affordance::OperationBases_t createOperations(hpp::core::ProblemSolver& pSolver) throw(std::runtime_error) {
+affordance::OperationBases_t createOperations(hpp::core::ProblemSolver& pSolver) {
   pSolver.affordanceConfigs.add("Support", vector3_t(0.3, 0.3, 0.05));
   pSolver.affordanceConfigs.add("Lean", vector3_t(0.1, 0.3, 0.05));
   pSolver.affordanceConfigs.add("Support45", vector3_t(0.1, 0.3, 0.05));

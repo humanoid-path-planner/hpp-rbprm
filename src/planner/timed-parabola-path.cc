@@ -82,8 +82,7 @@ TimedParabolaPath::TimedParabolaPath(const TimedParabolaPath& path)
 /// \param subInterval interval of definition of the extract path
 /// If upper bound of subInterval is smaller than lower bound,
 /// result is reversed.
-core::PathPtr_t TimedParabolaPath::extract(const core::interval_t& /*subInterval*/) const
-    throw(core::projection_error) {
+core::PathPtr_t TimedParabolaPath::extract(const core::interval_t& /*subInterval*/) const {
   // TODO
   throw core::projection_error("Extract is not implemented for parabola paths");
 }
