@@ -35,7 +35,7 @@ using namespace fcl;
 namespace {
 static const int SIZE_EULER = 6;
 typedef fcl::BVHModel<OBBRSS> BVHModelOB;
-typedef boost::shared_ptr<const BVHModelOB> BVHModelOBConst_Ptr_t;
+typedef shared_ptr<const BVHModelOB> BVHModelOBConst_Ptr_t;
 
 BVHModelOBConst_Ptr_t GetModel(const pinocchio::FclConstCollisionObjectPtr_t object) {
   if (object->collisionGeometry()->getNodeType() != BV_OBBRSS) {

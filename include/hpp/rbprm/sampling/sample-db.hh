@@ -93,9 +93,9 @@ class HPP_RBPRM_DLLAPI SampleDB {
  public:
   double resolution_;
   T_Sample samples_;
-  boost::shared_ptr<const octomap::OcTree> octomapTree_;
+  hpp::fcl::shared_ptr<const octomap::OcTree> octomapTree_;
   fcl::OcTree* octree_;  // deleted with geometry_
-  boost::shared_ptr<fcl::CollisionGeometry> geometry_;
+  hpp::fcl::shared_ptr<fcl::CollisionGeometry> geometry_;
   T_Values values_;
   T_ValueBound valueBounds_;
   T_VoxelSampleId samplesInVoxels_;

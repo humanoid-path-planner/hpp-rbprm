@@ -13,7 +13,7 @@ namespace rbprm {
 namespace reachability {
 
 typedef fcl::BVHModel<fcl::OBBRSS> PolyhedronType;
-typedef boost::shared_ptr<PolyhedronType> PolyhedronPtrType;
+typedef fcl::shared_ptr<PolyhedronType> PolyhedronPtrType;
 
 VectorX triangleNormal(const PolyhedronPtrType& obj, size_t index) {
   VectorX normal(3);

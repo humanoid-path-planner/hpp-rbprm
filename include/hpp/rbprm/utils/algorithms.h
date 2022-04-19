@@ -40,7 +40,7 @@ const double EPSILON = 1e-5;
 const double ZJUMP = 0.001;  // value t for the floor in jump_easy_map
 
 typedef hpp::fcl::BVHModel<hpp::fcl::OBBRSS> BVHModelOB;
-typedef boost::shared_ptr<const BVHModelOB> BVHModelOBConst_Ptr_t;
+typedef hpp::fcl::shared_ptr<const BVHModelOB> BVHModelOBConst_Ptr_t;
 
 BVHModelOBConst_Ptr_t GetModel(const hpp::pinocchio::CollisionObjectConstPtr_t object,
                                hpp::pinocchio::DeviceData& deviceData);
