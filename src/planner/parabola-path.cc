@@ -16,13 +16,13 @@
 // hpp-core  If not, see
 // <http://www.gnu.org/licenses/>.
 
-#include <hpp/util/debug.hh>
+#include <hpp/core/config-projector.hh>
+#include <hpp/core/straight-path.hh>
 #include <hpp/pinocchio/configuration.hh>
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/joint.hh>
-#include <hpp/core/config-projector.hh>
 #include <hpp/rbprm/planner/parabola-path.hh>
-#include <hpp/core/straight-path.hh>
+#include <hpp/util/debug.hh>
 
 namespace hpp {
 namespace rbprm {
@@ -32,9 +32,12 @@ using core::value_type;
 using core::vector_t;
 using pinocchio::displayConfig;
 
-ParabolaPath::ParabolaPath(const core::DevicePtr_t& device, core::ConfigurationIn_t init, core::ConfigurationIn_t end,
-                           value_type length, vector_t coefs)
-    : parent_t(interval_t(0, length), device->configSize(), device->numberDof()),
+ParabolaPath::ParabolaPath(const core::DevicePtr_t& device,
+                           core::ConfigurationIn_t init,
+                           core::ConfigurationIn_t end, value_type length,
+                           vector_t coefs)
+    : parent_t(interval_t(0, length), device->configSize(),
+               device->numberDof()),
       V0_(vector_t(3)),
       Vimp_(vector_t(3)),
       device_(device),
@@ -50,10 +53,14 @@ ParabolaPath::ParabolaPath(const core::DevicePtr_t& device, core::ConfigurationI
   endROMnames_.reserve(10);
 }
 
-ParabolaPath::ParabolaPath(const core::DevicePtr_t& device, core::ConfigurationIn_t init, core::ConfigurationIn_t end,
-                           value_type length, vector_t coefs, vector_t V0, vector_t Vimp,
-                           std::vector<std::string> initialROMnames, std::vector<std::string> endROMnames)
-    : parent_t(interval_t(0, length), device->configSize(), device->numberDof()),
+ParabolaPath::ParabolaPath(const core::DevicePtr_t& device,
+                           core::ConfigurationIn_t init,
+                           core::ConfigurationIn_t end, value_type length,
+                           vector_t coefs, vector_t V0, vector_t Vimp,
+                           std::vector<std::string> initialROMnames,
+                           std::vector<std::string> endROMnames)
+    : parent_t(interval_t(0, length), device->configSize(),
+               device->numberDof()),
       V0_(V0),
       Vimp_(Vimp),
       initialROMnames_(initialROMnames),
@@ -84,7 +91,8 @@ ParabolaPath::ParabolaPath(const ParabolaPath& path)
   hppDout(info, "initialROMnames size= " << initialROMnames_.size());
 }
 
-bool ParabolaPath::impl_compute(core::ConfigurationOut_t result, value_type param) const {
+bool ParabolaPath::impl_compute(core::ConfigurationOut_t result,
+                                value_type param) const {
   if (param == 0 || initial_(0) == end_(0)) {
     result = initial_;
     return true;
@@ -105,18 +113,19 @@ bool ParabolaPath::impl_compute(core::ConfigurationOut_t result, value_type para
        sin(theta)*initial_ (1);
    const value_type x_theta_end = cos(theta)*end_ (0) +
        sin(theta)*end_ (1);
-   const bool tanThetaNotDefined = (theta < M_PI/2 + 1e-2 && theta > M_PI/2 - 1e-2) || (theta > -M_PI/2 - 1e-2 && theta
-   < -M_PI/2 + 1e-2);
+   const bool tanThetaNotDefined = (theta < M_PI/2 + 1e-2 && theta > M_PI/2 -
+   1e-2) || (theta > -M_PI/2 - 1e-2 && theta < -M_PI/2 + 1e-2);
 */
   result(0) = initial_(0) + u * length_ * cos(theta);
   result(1) = initial_(1) + u * length_ * sin(theta);
   const value_type x_theta = cos(theta) * result(0) + sin(theta) * result(1);
-  result(2) = coefficients_(0) * x_theta * x_theta + coefficients_(1) * x_theta + coefficients_(2);
+  result(2) = coefficients_(0) * x_theta * x_theta +
+              coefficients_(1) * x_theta + coefficients_(2);
 
   pinocchio::interpolate(device_, initial_, end_, u, result);
   /* Quaternions interpolation */
-  /*const core::JointPtr_t SO3joint = device_->getJointByName ("base_joint_SO3");
-  const std::size_t rank = SO3joint->rankInConfiguration ();
+  /*const core::JointPtr_t SO3joint = device_->getJointByName
+  ("base_joint_SO3"); const std::size_t rank = SO3joint->rankInConfiguration ();
   const core::size_type dimSO3 = SO3joint->configSize ();
   SO3joint->configuration ()->interpolate
       (initial_, end_, u, rank, result);
@@ -142,8 +151,9 @@ core::PathPtr_t ParabolaPath::extract(const interval_t& subInterval) const {
   bool success;
   core::Configuration_t q1((*this)(subInterval.first, success));   // straight
   core::Configuration_t q2((*this)(subInterval.second, success));  // straight
-  ParabolaPathPtr_t result = rbprm::ParabolaPath::create(device_, q1, q2, computeLength(q1, q2), coefficients_, V0_,
-                                                         Vimp_, initialROMnames_, endROMnames_);
+  ParabolaPathPtr_t result = rbprm::ParabolaPath::create(
+      device_, q1, q2, computeLength(q1, q2), coefficients_, V0_, Vimp_,
+      initialROMnames_, endROMnames_);
   hppDout(info, "initialROMnames size= " << (*result).initialROMnames_.size());
   return result;
 }
@@ -154,12 +164,17 @@ core::PathPtr_t ParabolaPath::reverse() const {
   core::Configuration_t q1((*this)(length_, success));
   core::Configuration_t q2((*this)(0, success));
   ParabolaPathPtr_t result =
-      ParabolaPath::create(device_, q1, q2, length_, coefficients_, Vimp_, V0_, endROMnames_, initialROMnames_);
+      ParabolaPath::create(device_, q1, q2, length_, coefficients_, Vimp_, V0_,
+                           endROMnames_, initialROMnames_);
   hppDout(info, "V0_= " << V0_.transpose() << " Vimp_= " << Vimp_.transpose());
-  hppDout(info, "result V0_= " << (*result).V0_.transpose() << " result Vimp_= " << (*result).Vimp_.transpose());
-  hppDout(info, "path->initialROMnames size= " << (*result).initialROMnames_.size());
-  hppDout(info, "this->initialROMnames size= " << (*this).initialROMnames_.size());
-  hppDout(info, "result->initialROMnames size= " << (*result).initialROMnames_.size());
+  hppDout(info, "result V0_= " << (*result).V0_.transpose() << " result Vimp_= "
+                               << (*result).Vimp_.transpose());
+  hppDout(info,
+          "path->initialROMnames size= " << (*result).initialROMnames_.size());
+  hppDout(info,
+          "this->initialROMnames size= " << (*this).initialROMnames_.size());
+  hppDout(info, "result->initialROMnames size= "
+                    << (*result).initialROMnames_.size());
   return result;
 }
 
@@ -174,7 +189,8 @@ core::DevicePtr_t ParabolaPath::device() const { return device_; }
     const value_type theta = coefficients_ (3);
     value_type x1 = cos(theta) * q1 (0)  + sin(theta) * q1 (1); // x_theta_0
     value_type x2 = cos(theta) * q2 (0) + sin(theta) * q2 (1); // x_theta_imp
-    hppDout(notice,"xTheta0 = "<<x1 << " , "<<coefficients_[6]<<"   xThetaImp = "<<x2);
+    hppDout(notice,"xTheta0 = "<<x1 << " , "<<coefficients_[6]<<"   xThetaImp =
+  "<<x2);
 
     // Define integration bounds
     if (x1 > x2) { // re-order integration bounds
@@ -195,7 +211,8 @@ core::DevicePtr_t ParabolaPath::device() const { return device_; }
   }*/
 
 // test (pierre) :
-value_type ParabolaPath::computeLength(const core::ConfigurationIn_t q1, const core::ConfigurationIn_t q2) const {
+value_type ParabolaPath::computeLength(const core::ConfigurationIn_t q1,
+                                       const core::ConfigurationIn_t q2) const {
   const value_type theta = coefficients_(3);
   const value_type X = q2[0] - q1[0];
   const value_type Y = q2[1] - q1[1];
@@ -208,7 +225,8 @@ value_type ParabolaPath::computeLength(const core::ConfigurationIn_t q1, const c
 // Function equivalent to sqrt( 1 + f'(x)^2 )
 value_type ParabolaPath::lengthFunction(const value_type x) const {
   const value_type y =
-      sqrt(1 + (2 * coefficients_(0) * x + coefficients_(1)) * (2 * coefficients_(0) * x + coefficients_(1)));
+      sqrt(1 + (2 * coefficients_(0) * x + coefficients_(1)) *
+                   (2 * coefficients_(0) * x + coefficients_(1)));
   return y;
 }
 
@@ -224,7 +242,8 @@ vector_t ParabolaPath::evaluateVelocity(const value_type t) const {
   const value_type x_theta = q[0] * cos(theta) + q[1] * sin(theta);
   vel[0] = x_theta_0_dot * cos(theta);
   vel[1] = x_theta_0_dot * sin(theta);
-  vel[2] = x_theta_0_dot * (-9.81 * (x_theta - x_theta_0) * inv_x_theta_0_dot_sq + tan(alpha));
+  vel[2] = x_theta_0_dot *
+           (-9.81 * (x_theta - x_theta_0) * inv_x_theta_0_dot_sq + tan(alpha));
   return vel;
 }
 

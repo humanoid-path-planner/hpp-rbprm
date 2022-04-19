@@ -19,13 +19,14 @@
 #ifndef HPP_RBPRM_SAMPLEDB_HH
 #define HPP_RBPRM_SAMPLEDB_HH
 
-#include <hpp/rbprm/config.hh>
-#include <hpp/rbprm/sampling/sample.hh>
-#include <hpp/rbprm/sampling/heuristic.hh>
 #include <hpp/fcl/octree.h>
+
 #include <boost/function.hpp>
-#include <vector>
+#include <hpp/rbprm/config.hh>
+#include <hpp/rbprm/sampling/heuristic.hh>
+#include <hpp/rbprm/sampling/sample.hh>
 #include <map>
+#include <vector>
 
 namespace hpp {
 
@@ -35,8 +36,10 @@ namespace sampling {
 /// Collision report for a Sample for which the octree node is
 /// colliding with the environment.
 struct OctreeReport {
-  OctreeReport(const Sample*, const fcl::Contact, const double, const fcl::Vec3f& normal, const fcl::Vec3f& v1,
-               const fcl::Vec3f& v2, const fcl::Vec3f& v3);  // vertices of triangle collided
+  OctreeReport(const Sample*, const fcl::Contact, const double,
+               const fcl::Vec3f& normal, const fcl::Vec3f& v1,
+               const fcl::Vec3f& v2,
+               const fcl::Vec3f& v3);  // vertices of triangle collided
   /// Sample considered for contact generation
   const Sample* sample_;
   /// Contact information returned from fcl
@@ -51,7 +54,9 @@ struct OctreeReport {
 /// Used to sort the contact candidates depending
 /// on their heuristic value
 struct sample_compare {
-  bool operator()(const OctreeReport& lhs, const OctreeReport& rhs) const { return lhs.value_ > rhs.value_; }
+  bool operator()(const OctreeReport& lhs, const OctreeReport& rhs) const {
+    return lhs.value_ > rhs.value_;
+  }
 };
 
 typedef std::multiset<OctreeReport, sample_compare> T_OctreeReport;
@@ -66,8 +71,11 @@ typedef sampling::SampleVector_t T_Sample;
 /// \param SampleDB used database with already computed values
 /// \param sample sample candidate
 /// \param normal contact surface normal relatively to the candidate
-// typedef double (*evaluate) (const SampleDB& sampleDB, const sampling::Sample& sample);
-typedef boost::function<double(const SampleDB& sampleDB, const sampling::Sample& sample)> evaluate;
+// typedef double (*evaluate) (const SampleDB& sampleDB, const sampling::Sample&
+// sample);
+typedef boost::function<double(const SampleDB& sampleDB,
+                               const sampling::Sample& sample)>
+    evaluate;
 typedef std::map<std::string, evaluate> T_evaluate;
 // first sample index, number of samples
 typedef std::pair<std::size_t, std::size_t> VoxelSampleId;
@@ -77,13 +85,17 @@ typedef std::map<std::string, ValueBound> T_ValueBound;
 
 /// Sample configuration for a robot limb, stored
 /// in an octree and used for proximity requests for contact creation.
-/// assumes that joints are compact, ie they all are consecutive in configuration.
+/// assumes that joints are compact, ie they all are consecutive in
+/// configuration.
 class HPP_RBPRM_DLLAPI SampleDB {
  public:
   SampleDB(std::ifstream& databaseStream, bool loadValues = true);
-  SampleDB(const pinocchio::JointPtr_t limb, const std::string& effector, const std::size_t nbSamples,
-           const fcl::Vec3f& offset = fcl::Vec3f(0, 0, 0), const fcl::Vec3f& limbOffset = fcl::Vec3f(0, 0, 0),
-           const double resolution = 0.1, const T_evaluate& data = T_evaluate(), const std::string& staticValue = "");
+  SampleDB(const pinocchio::JointPtr_t limb, const std::string& effector,
+           const std::size_t nbSamples,
+           const fcl::Vec3f& offset = fcl::Vec3f(0, 0, 0),
+           const fcl::Vec3f& limbOffset = fcl::Vec3f(0, 0, 0),
+           const double resolution = 0.1, const T_evaluate& data = T_evaluate(),
+           const std::string& staticValue = "");
   ~SampleDB();
   /*
       private:
@@ -106,9 +118,13 @@ class HPP_RBPRM_DLLAPI SampleDB {
 
 };  // class SampleDB
 
-HPP_RBPRM_DLLAPI SampleDB& addValue(SampleDB& database, const std::string& valueName, const evaluate eval,
-                                    bool isStaticValue = true, bool sortSamples = true);
-HPP_RBPRM_DLLAPI bool saveLimbDatabase(const SampleDB& database, std::ofstream& dbFile);
+HPP_RBPRM_DLLAPI SampleDB& addValue(SampleDB& database,
+                                    const std::string& valueName,
+                                    const evaluate eval,
+                                    bool isStaticValue = true,
+                                    bool sortSamples = true);
+HPP_RBPRM_DLLAPI bool saveLimbDatabase(const SampleDB& database,
+                                       std::ofstream& dbFile);
 
 /// Given the current position of a robot, returns a set
 /// of candidate sample configurations for contact generation.
@@ -117,14 +133,13 @@ HPP_RBPRM_DLLAPI bool saveLimbDatabase(const SampleDB& database, std::ofstream& 
 ///
 /// \param sc the SampleDB containing all the samples for a given limb
 /// \param treeTrf the current transformation of the root of the robot
-/// \param direction the current direction of motion, used to evaluate the sample
-/// heuristically
-/// \param evaluate heuristic used to sort candidates
+/// \param direction the current direction of motion, used to evaluate the
+/// sample heuristically \param evaluate heuristic used to sort candidates
 /// \return a set of OctreeReport with all the possible candidates for contact
-HPP_RBPRM_DLLAPI T_OctreeReport GetCandidates(const SampleDB& sc, const fcl::Transform3f& treeTrf,
-                                              const hpp::pinocchio::CollisionObjectPtr_t& o2,
-                                              const fcl::Vec3f& direction, const HeuristicParam& params,
-                                              const heuristic evaluate = 0);
+HPP_RBPRM_DLLAPI T_OctreeReport GetCandidates(
+    const SampleDB& sc, const fcl::Transform3f& treeTrf,
+    const hpp::pinocchio::CollisionObjectPtr_t& o2, const fcl::Vec3f& direction,
+    const HeuristicParam& params, const heuristic evaluate = 0);
 
 /// Given the current position of a robot, returns a set
 /// of candidate sample configurations for contact generation.
@@ -133,15 +148,15 @@ HPP_RBPRM_DLLAPI T_OctreeReport GetCandidates(const SampleDB& sc, const fcl::Tra
 ///
 /// \param sc the SampleDB containing all the samples for a given limb
 /// \param treeTrf the current transformation of the root of the robot
-/// \param direction the current direction of motion, used to evaluate the sample
-/// heuristically
-/// \param a set of OctreeReport updated as the samples are explored
-/// \param evaluate heuristic used to sort candidates
-/// \return true if at least one candidate was found
-HPP_RBPRM_DLLAPI bool GetCandidates(const SampleDB& sc, const fcl::Transform3f& treeTrf,
-                                    const hpp::pinocchio::CollisionObjectPtr_t& o2, const fcl::Vec3f& direction,
-                                    T_OctreeReport& report, const HeuristicParam& params,
-                                    const heuristic evaluate = 0);
+/// \param direction the current direction of motion, used to evaluate the
+/// sample heuristically \param a set of OctreeReport updated as the samples are
+/// explored \param evaluate heuristic used to sort candidates \return true if
+/// at least one candidate was found
+HPP_RBPRM_DLLAPI bool GetCandidates(
+    const SampleDB& sc, const fcl::Transform3f& treeTrf,
+    const hpp::pinocchio::CollisionObjectPtr_t& o2, const fcl::Vec3f& direction,
+    T_OctreeReport& report, const HeuristicParam& params,
+    const heuristic evaluate = 0);
 
 }  // namespace sampling
 }  // namespace rbprm

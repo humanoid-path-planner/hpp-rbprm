@@ -19,8 +19,9 @@
 #ifndef HPP_OCTREE_NODE_HH
 #define HPP_OCTREE_NODE_HH
 
-#include <hpp/rbprm/sampling/sample.hh>
 #include <hpp/fcl/octree.h>
+
+#include <hpp/rbprm/sampling/sample.hh>
 
 namespace hpp {
 
@@ -42,7 +43,8 @@ class HPP_RBPRM_DLLAPI OctreeNode {
   /// \param limb root joint for the considered limb
   /// \param nbSamples number of samples to generate
   /// \param resolution, resolution of the octree voxels
-  OctreeNode(const pinocchio::JointPtr_t limb, const std::size_t nbSamples, const double resolution = 0.1);
+  OctreeNode(const pinocchio::JointPtr_t limb, const std::size_t nbSamples,
+             const double resolution = 0.1);
   ~OctreeNode();
 
  private:

@@ -1,12 +1,13 @@
+#include <hpp/fcl/BVH/BVH_model.h>
+#include <hpp/fcl/mesh_loader/assimp.h>
+
+#include <hpp/pinocchio/urdf/util.hh>
 #include <hpp/rbprm/contact_generation/kinematics_constraints.hh>
 #include <hpp/rbprm/rbprm-device.hh>
 #include <hpp/rbprm/rbprm-fullbody.hh>
-#include <hpp/fcl/BVH/BVH_model.h>
-#include <hpp/fcl/mesh_loader/assimp.h>
-#include <hpp/pinocchio/urdf/util.hh>
-#include <pinocchio/utils/file-explorer.hpp>
-#include <pinocchio/parsers/utils.hpp>
 #include <pinocchio/multibody/geometry.hpp>
+#include <pinocchio/parsers/utils.hpp>
+#include <pinocchio/utils/file-explorer.hpp>
 
 namespace hpp {
 namespace rbprm {
@@ -24,12 +25,15 @@ VectorX triangleNormal(const PolyhedronPtrType& obj, size_t index) {
   hppDout(notice,"1 - "<<obj->vertices[obj->tri_indices[index][1]]);
   hppDout(notice,"2 - "<<obj->vertices[obj->tri_indices[index][2]]);
   */
-  normal = (obj->vertices[obj->tri_indices[index][1]] - obj->vertices[obj->tri_indices[index][0]])
-               .cross(obj->vertices[obj->tri_indices[index][2]] - obj->vertices[obj->tri_indices[index][0]]);
+  normal = (obj->vertices[obj->tri_indices[index][1]] -
+            obj->vertices[obj->tri_indices[index][0]])
+               .cross(obj->vertices[obj->tri_indices[index][2]] -
+                      obj->vertices[obj->tri_indices[index][0]]);
   return normal.normalized();
 }
 
-VectorX triangleNormalTransform(const PolyhedronPtrType& obj, size_t index, fcl::Transform3f T) {
+VectorX triangleNormalTransform(const PolyhedronPtrType& obj, size_t index,
+                                fcl::Transform3f T) {
   VectorX normal(3);
   // access a vertice of faceId with : obj->vertices[obj->tri_indices[index](i)]
   // outward normal of triangle : (tri.p2 - tri.p1).cross(tri.p3 - tri.p1);
@@ -50,12 +54,14 @@ VectorX triangleNormalTransform(const PolyhedronPtrType& obj, size_t index, fcl:
 }  // namespace rbprm
 }  // namespace hpp
 
-std::pair<hpp::rbprm::MatrixX3, hpp::rbprm::MatrixX3> hpp::rbprm::reachability::loadConstraintsFromObj(
-    const std::string& fileName, double minDistance) {
+std::pair<hpp::rbprm::MatrixX3, hpp::rbprm::MatrixX3>
+hpp::rbprm::reachability::loadConstraintsFromObj(const std::string& fileName,
+                                                 double minDistance) {
   hppDout(notice, "Load constraints for filename : " << fileName);
 
   std::vector<std::string> package_dirs = ::pinocchio::rosPaths();
-  std::string meshPath = ::pinocchio::retrieveResourcePath(fileName, package_dirs);
+  std::string meshPath =
+      ::pinocchio::retrieveResourcePath(fileName, package_dirs);
   if (meshPath == "") {
     hppDout(warning, "Unable to load kinematics constraints : "
                          << "Mesh " << fileName << " could not be found.");
@@ -63,17 +69,19 @@ std::pair<hpp::rbprm::MatrixX3, hpp::rbprm::MatrixX3> hpp::rbprm::reachability::
   }
 
   // pinocchio::urdf::Parser parser("anchor",pinocchio::DevicePtr_t());
-  hpp::rbprm::reachability::PolyhedronPtrType polyhedron(new hpp::rbprm::reachability::PolyhedronType);
+  hpp::rbprm::reachability::PolyhedronPtrType polyhedron(
+      new hpp::rbprm::reachability::PolyhedronType);
   // name is stored in link->name
   try {
-    fcl::loadPolyhedronFromResource(meshPath, hpp::rbprm::Vector3(1, 1, 1), polyhedron);
+    fcl::loadPolyhedronFromResource(meshPath, hpp::rbprm::Vector3(1, 1, 1),
+                                    polyhedron);
   } catch (std::runtime_error e) {
     hppDout(warning, "Unable to load kinematics constraints : " << e.what());
     return std::pair<hpp::rbprm::MatrixX3, hpp::rbprm::MatrixX3>();
   }
 
-  // iterate over all faces : for each faces add a line in A : normal and a value in b : position of a
-  // vertice.dot(normal)
+  // iterate over all faces : for each faces add a line in A : normal and a
+  // value in b : position of a vertice.dot(normal)
   size_t numFaces = polyhedron->num_tris;
   hppDout(notice, "Num faces : " << numFaces);
   size_t numIneq = numFaces;
@@ -108,23 +116,27 @@ std::pair<hpp::rbprm::MatrixX3, hpp::rbprm::MatrixX3> hpp::rbprm::reachability::
 namespace hpp {
 namespace rbprm {
 namespace reachability {
-std::pair<MatrixX3, VectorX> computeAllKinematicsConstraints(const RbPrmFullBodyPtr_t& fullBody,
-                                                             const pinocchio::ConfigurationPtr_t& configuration) {
+std::pair<MatrixX3, VectorX> computeAllKinematicsConstraints(
+    const RbPrmFullBodyPtr_t& fullBody,
+    const pinocchio::ConfigurationPtr_t& configuration) {
   fullBody->device_->currentConfiguration(*configuration);
   fullBody->device_->computeForwardKinematics();
   // first loop to compute size required :
   size_t numIneq = 0;
-  for (CIT_Limb lit = fullBody->GetLimbs().begin(); lit != fullBody->GetLimbs().end(); ++lit) {
+  for (CIT_Limb lit = fullBody->GetLimbs().begin();
+       lit != fullBody->GetLimbs().end(); ++lit) {
     numIneq += lit->second->kinematicConstraints_.first.rows();
   }
   MatrixX3 A(numIneq, 3);
   VectorX b(numIneq);
   std::pair<MatrixX3, VectorX> Ab_limb;
   size_t currentId = 0;
-  for (CIT_Limb lit = fullBody->GetLimbs().begin(); lit != fullBody->GetLimbs().end(); ++lit) {
+  for (CIT_Limb lit = fullBody->GetLimbs().begin();
+       lit != fullBody->GetLimbs().end(); ++lit) {
     if (lit->second->kinematicConstraints_.first.size() > 0) {
-      Ab_limb = getInequalitiesAtTransform(lit->second->kinematicConstraints_,
-                                           lit->second->effector_.currentTransformation());
+      Ab_limb = getInequalitiesAtTransform(
+          lit->second->kinematicConstraints_,
+          lit->second->effector_.currentTransformation());
       A.block(currentId, 0, Ab_limb.first.rows(), 3) = Ab_limb.first;
       b.segment(currentId, Ab_limb.first.rows()) = Ab_limb.second;
       currentId += Ab_limb.first.rows();
@@ -134,17 +146,19 @@ std::pair<MatrixX3, VectorX> computeAllKinematicsConstraints(const RbPrmFullBody
   return std::make_pair(A, b);
 }
 
-std::pair<MatrixX3, VectorX> computeKinematicsConstraintsForState(const RbPrmFullBodyPtr_t& fullBody,
-                                                                  const State& state) {
+std::pair<MatrixX3, VectorX> computeKinematicsConstraintsForState(
+    const RbPrmFullBodyPtr_t& fullBody, const State& state) {
   fullBody->device_->currentConfiguration(state.configuration_);
   fullBody->device_->computeForwardKinematics();
   hppDout(notice, "Compute kinematics constraints :");
   // first loop to compute size required :
   size_t numIneq = 0;
-  for (std::map<std::string, bool>::const_iterator cit = state.contacts_.begin(); cit != state.contacts_.end();
-       ++cit) {
+  for (std::map<std::string, bool>::const_iterator cit =
+           state.contacts_.begin();
+       cit != state.contacts_.end(); ++cit) {
     if (cit->second) {  // limb with name cit->first is in contact
-      numIneq += fullBody->GetLimb(cit->first)->kinematicConstraints_.first.rows();
+      numIneq +=
+          fullBody->GetLimb(cit->first)->kinematicConstraints_.first.rows();
       hppDout(notice, "Limb : " << cit->first << " is in contact.");
     }
   }
@@ -153,22 +167,26 @@ std::pair<MatrixX3, VectorX> computeKinematicsConstraintsForState(const RbPrmFul
   std::pair<MatrixX3, VectorX> Ab_limb;
   size_t currentId = 0;
   RbPrmLimbPtr_t limb;
-  for (std::map<std::string, bool>::const_iterator cit = state.contacts_.begin(); cit != state.contacts_.end();
-       ++cit) {
+  for (std::map<std::string, bool>::const_iterator cit =
+           state.contacts_.begin();
+       cit != state.contacts_.end(); ++cit) {
     if (cit->second) {  // limb with name cit->first is in contact
       limb = fullBody->GetLimb(cit->first);
-      Ab_limb = getInequalitiesAtTransform(limb->kinematicConstraints_, limb->effector_.currentTransformation());
+      Ab_limb = getInequalitiesAtTransform(
+          limb->kinematicConstraints_, limb->effector_.currentTransformation());
       A.block(currentId, 0, Ab_limb.first.rows(), 3) = Ab_limb.first;
       b.segment(currentId, Ab_limb.first.rows()) = Ab_limb.second;
       currentId += Ab_limb.first.rows();
     }
   }
-  hppDout(notice, "End of kinematics constraints, A size : (" << A.rows() << "," << A.cols() << ")");
+  hppDout(notice, "End of kinematics constraints, A size : ("
+                      << A.rows() << "," << A.cols() << ")");
   return std::make_pair(A, b);
 }
 
-std::pair<MatrixX3, VectorX> computeKinematicsConstraintsForLimb(const RbPrmFullBodyPtr_t& fullBody,
-                                                                 const State& state, const std::string& limbName) {
+std::pair<MatrixX3, VectorX> computeKinematicsConstraintsForLimb(
+    const RbPrmFullBodyPtr_t& fullBody, const State& state,
+    const std::string& limbName) {
   fullBody->device_->currentConfiguration(state.configuration_);
   fullBody->device_->computeForwardKinematics();
   hppDout(notice, "Compute kinematics constraints for limb :" << limbName);
@@ -178,17 +196,21 @@ std::pair<MatrixX3, VectorX> computeKinematicsConstraintsForLimb(const RbPrmFull
     return std::pair<MatrixX3, VectorX>();
   }
   if (!state.contacts_.at(limbName)) {
-    hppDout(warning, "Limb " << limbName << " is not in contact for current state");
+    hppDout(warning,
+            "Limb " << limbName << " is not in contact for current state");
     return std::pair<MatrixX3, VectorX>();
   }
 
   RbPrmLimbPtr_t limb = fullBody->GetLimb(limbName);
-  return getInequalitiesAtTransform(limb->kinematicConstraints_, limb->effector_.currentTransformation());
+  return getInequalitiesAtTransform(limb->kinematicConstraints_,
+                                    limb->effector_.currentTransformation());
 }
 
-std::pair<MatrixX3, VectorX> getInequalitiesAtTransform(const std::pair<MatrixX3, MatrixX3>& NV,
-                                                        const hpp::pinocchio::Transform3f& transformPin) {
-  fcl::Transform3f transform(transformPin.rotation(), transformPin.translation());
+std::pair<MatrixX3, VectorX> getInequalitiesAtTransform(
+    const std::pair<MatrixX3, MatrixX3>& NV,
+    const hpp::pinocchio::Transform3f& transformPin) {
+  fcl::Transform3f transform(transformPin.rotation(),
+                             transformPin.translation());
   size_t numIneq = NV.first.rows();
   MatrixX3 A(numIneq, 3);
   VectorX b(numIneq);
@@ -205,12 +227,15 @@ std::pair<MatrixX3, VectorX> getInequalitiesAtTransform(const std::pair<MatrixX3
   return std::make_pair(A, b);
 }
 
-bool verifyKinematicConstraints(const std::pair<MatrixX3, MatrixX3>& NV, const hpp::pinocchio::Transform3f& transform,
+bool verifyKinematicConstraints(const std::pair<MatrixX3, MatrixX3>& NV,
+                                const hpp::pinocchio::Transform3f& transform,
                                 const fcl::Vec3f& point) {
-  return verifyKinematicConstraints(getInequalitiesAtTransform(NV, transform), point);
+  return verifyKinematicConstraints(getInequalitiesAtTransform(NV, transform),
+                                    point);
 }
 
-bool verifyKinematicConstraints(const std::pair<MatrixX3, VectorX>& Ab, const fcl::Vec3f& point) {
+bool verifyKinematicConstraints(const std::pair<MatrixX3, VectorX>& Ab,
+                                const fcl::Vec3f& point) {
   hppDout(notice, "verify kinematic constraints : point = " << point);
   for (size_type i = 0; i < Ab.second.size(); ++i) {
     hppDout(notice, "for i = " << i);
@@ -224,8 +249,10 @@ bool verifyKinematicConstraints(const std::pair<MatrixX3, VectorX>& Ab, const fc
   return true;
 }
 
-bool verifyKinematicConstraints(const RbPrmFullBodyPtr_t& fullbody, const State& state, fcl::Vec3f point) {
-  return verifyKinematicConstraints(computeKinematicsConstraintsForState(fullbody, state), point);
+bool verifyKinematicConstraints(const RbPrmFullBodyPtr_t& fullbody,
+                                const State& state, fcl::Vec3f point) {
+  return verifyKinematicConstraints(
+      computeKinematicsConstraintsForState(fullbody, state), point);
 }
 
 }  // namespace reachability

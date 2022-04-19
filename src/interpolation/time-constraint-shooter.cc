@@ -14,23 +14,23 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-rbprm. If not, see <http://www.gnu.org/licenses/>.
 
+#include <hpp/pinocchio/joint.hh>
 #include <hpp/rbprm/interpolation/com-rrt-shooter.hh>
 #include <hpp/rbprm/interpolation/time-constraint-utils.hh>
 #include <hpp/rbprm/rbprm-limb.hh>
 #include <hpp/rbprm/sampling/sample.hh>
-#include <hpp/pinocchio/joint.hh>
 
 namespace hpp {
 using namespace core;
 namespace rbprm {
 namespace interpolation {
 
-TimeConstraintShooterPtr_t TimeConstraintShooter::create(const core::DevicePtr_t device,
-                                                         const hpp::core::PathPtr_t rootPath,
-                                                         const std::size_t pathDofRank, const T_TimeDependant& tds,
-                                                         core::ConfigProjectorPtr_t projector,
-                                                         const rbprm::T_Limb freeLimbs) {
-  TimeConstraintShooter* ptr = new TimeConstraintShooter(device, rootPath, pathDofRank, tds, projector, freeLimbs);
+TimeConstraintShooterPtr_t TimeConstraintShooter::create(
+    const core::DevicePtr_t device, const hpp::core::PathPtr_t rootPath,
+    const std::size_t pathDofRank, const T_TimeDependant& tds,
+    core::ConfigProjectorPtr_t projector, const rbprm::T_Limb freeLimbs) {
+  TimeConstraintShooter* ptr = new TimeConstraintShooter(
+      device, rootPath, pathDofRank, tds, projector, freeLimbs);
   TimeConstraintShooterPtr_t shPtr(ptr);
   ptr->init(shPtr);
   return shPtr;
@@ -41,9 +41,10 @@ void TimeConstraintShooter::init(const TimeConstraintShooterPtr_t& self) {
   weak_ = self;
 }
 
-TimeConstraintShooter::TimeConstraintShooter(const core::DevicePtr_t device, const hpp::core::PathPtr_t rootPath,
-                                             const std::size_t pathDofRank, const T_TimeDependant& tds,
-                                             core::ConfigProjectorPtr_t projector, const hpp::rbprm::T_Limb freeLimbs)
+TimeConstraintShooter::TimeConstraintShooter(
+    const core::DevicePtr_t device, const hpp::core::PathPtr_t rootPath,
+    const std::size_t pathDofRank, const T_TimeDependant& tds,
+    core::ConfigProjectorPtr_t projector, const hpp::rbprm::T_Limb freeLimbs)
     : core::ConfigurationShooter(),
       rootPath_(rootPath),
       pathDofRank_(pathDofRank),
@@ -78,13 +79,18 @@ void TimeConstraintShooter::impl_shoot(Configuration_t& config) const {
   else*/
   {
     // choose random limb configuration
-    for (rbprm::CIT_Limb cit = freeLimbs_.begin(); cit != freeLimbs_.end(); ++cit) {
+    for (rbprm::CIT_Limb cit = freeLimbs_.begin(); cit != freeLimbs_.end();
+         ++cit) {
       const rbprm::RbPrmLimbPtr_t limb = cit->second;
       if (limb->sampleContainer_.samples_.size() <= 1) {
-        throw std::runtime_error("In time-constraint-shooter: Limbs database should have more than 1 samples.");
+        throw std::runtime_error(
+            "In time-constraint-shooter: Limbs database should have more than "
+            "1 samples.");
       }
-      const int rand_int = (rand() % (int)(limb->sampleContainer_.samples_.size() - 1));
-      const sampling::Sample& sample = *(limb->sampleContainer_.samples_.begin() + rand_int);
+      const int rand_int =
+          (rand() % (int)(limb->sampleContainer_.samples_.size() - 1));
+      const sampling::Sample& sample =
+          *(limb->sampleContainer_.samples_.begin() + rand_int);
       sampling::Load(sample, config);
     }
   }

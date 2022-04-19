@@ -16,16 +16,16 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with hpp-core.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <boost/assign.hpp>
+#include <hpp/fcl/BVH/BVH_model.h>
+#include <hpp/fcl/shape/geometric_shapes.h>
 
+#include <boost/assign.hpp>
+#include <hpp/fcl/fwd.hh>
+#include <hpp/model/body.hh>
+#include <hpp/model/collision-object.hh>
+#include <hpp/model/joint.hh>
 #include <hpp/rbprm/rbprm-device.hh>
 #include <hpp/rbprm/rbprm-validation.hh>
-#include <hpp/model/joint.hh>
-#include <hpp/fcl/fwd.hh>
-#include <hpp/fcl/shape/geometric_shapes.h>
-#include <hpp/fcl/BVH/BVH_model.h>
-#include <hpp/model/collision-object.hh>
-#include <hpp/model/body.hh>
 
 using fcl::BVHModel;
 using fcl::CollisionGeometry;
@@ -47,15 +47,19 @@ using hpp::rbprm::RbPrmValidation;
 using hpp::rbprm::RbPrmValidationPtr_t;
 
 namespace {
-void InitGeometries(JointPtr_t romJoint, JointPtr_t romJoint2, JointPtr_t trunkJoint) {
+void InitGeometries(JointPtr_t romJoint, JointPtr_t romJoint2,
+                    JointPtr_t trunkJoint) {
   CollisionGeometryPtr_t trunk(new fcl::Box(1, 1, 1));
-  CollisionObjectPtr_t obstacleTrunk = CollisionObject::create(trunk, fcl::Transform3f(), "trunkbox");
+  CollisionObjectPtr_t obstacleTrunk =
+      CollisionObject::create(trunk, fcl::Transform3f(), "trunkbox");
 
   CollisionGeometryPtr_t rom(new fcl::Box(1, 1, 1));
-  CollisionObjectPtr_t obstacleRom = CollisionObject::create(rom, fcl::Transform3f(), "rombox");
+  CollisionObjectPtr_t obstacleRom =
+      CollisionObject::create(rom, fcl::Transform3f(), "rombox");
 
   CollisionGeometryPtr_t rom2(new fcl::Box(2.3, 1, 1));
-  CollisionObjectPtr_t obstacleRom2 = CollisionObject::create(rom2, fcl::Transform3f(), "rombox2");
+  CollisionObjectPtr_t obstacleRom2 =
+      CollisionObject::create(rom2, fcl::Transform3f(), "rombox2");
 
   obstacleTrunk->move(fcl::Vec3f(0, 0, 0));
   obstacleRom->move(fcl::Vec3f(0.5, 0, 0));
@@ -103,7 +107,8 @@ RbPrmDevicePtr_t initRbPrmDeviceTest() {
   jointSO3Rom->lowerBound(2, -3.);
   jointSO3Rom->upperBound(2, 3.);
 
-  JointTranslation<3>* jointTrTrunk = new JointTranslation<3>(fcl::Transform3f());
+  JointTranslation<3>* jointTrTrunk =
+      new JointTranslation<3>(fcl::Transform3f());
   JointTranslation<3>* jointTrRom = new JointTranslation<3>(fcl::Transform3f());
 
   jointTrTrunk->isBounded(0, true);
@@ -216,7 +221,8 @@ DevicePtr_t initDevice() {
   jointSO3Rom->addChildJoint(jointSO3Rom2);
 
   CollisionGeometryPtr_t romcg(new fcl::Box(1, 1, 1));
-  CollisionObjectPtr_t obstacleRom = CollisionObject::create(romcg, fcl::Transform3f(), "rombox");
+  CollisionObjectPtr_t obstacleRom =
+      CollisionObject::create(romcg, fcl::Transform3f(), "rombox");
 
   obstacleRom->move(fcl::Vec3f(0, 0, 0));
   BodyPtr_t body = new Body;

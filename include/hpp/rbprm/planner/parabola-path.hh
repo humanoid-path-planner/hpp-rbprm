@@ -19,8 +19,8 @@
 #ifndef HPP_RBPRM_PARABOLA_PATH_HH
 #define HPP_RBPRM_PARABOLA_PATH_HH
 
-#include <hpp/core/fwd.hh>
 #include <hpp/core/config.hh>
+#include <hpp/core/fwd.hh>
 #include <hpp/core/path.hh>
 
 namespace hpp {
@@ -51,9 +51,13 @@ class ParabolaPath : public core::Path {
   /// \param device Robot corresponding to configurations
   /// \param init, end Start and end configurations of the path
   /// \param length Distance between the configurations.
-  static ParabolaPathPtr_t create(const core::DevicePtr_t& device, core::ConfigurationIn_t init,
-                                  core::ConfigurationIn_t end, core::value_type length, core::vector_t coefficients) {
-    ParabolaPath* ptr = new ParabolaPath(device, init, end, length, coefficients);
+  static ParabolaPathPtr_t create(const core::DevicePtr_t& device,
+                                  core::ConfigurationIn_t init,
+                                  core::ConfigurationIn_t end,
+                                  core::value_type length,
+                                  core::vector_t coefficients) {
+    ParabolaPath* ptr =
+        new ParabolaPath(device, init, end, length, coefficients);
     ParabolaPathPtr_t shPtr(ptr);
     ptr->init(shPtr);
     return shPtr;
@@ -65,12 +69,17 @@ class ParabolaPath : public core::Path {
   /// \param length Distance between the configurations.
   /// \param V0, Vimp initial and final velocity vectors
   /// \param initialROMnames, endROMnames initial and final ROM names
-  static ParabolaPathPtr_t create(const core::DevicePtr_t& device, core::ConfigurationIn_t init,
-                                  core::ConfigurationIn_t end, core::value_type length, core::vector_t coefficients,
-                                  core::vector_t V0, core::vector_t Vimp, std::vector<std::string> initialROMnames,
+  static ParabolaPathPtr_t create(const core::DevicePtr_t& device,
+                                  core::ConfigurationIn_t init,
+                                  core::ConfigurationIn_t end,
+                                  core::value_type length,
+                                  core::vector_t coefficients,
+                                  core::vector_t V0, core::vector_t Vimp,
+                                  std::vector<std::string> initialROMnames,
                                   std::vector<std::string> endROMnames) {
     ParabolaPath* ptr =
-        new ParabolaPath(device, init, end, length, coefficients, V0, Vimp, initialROMnames, endROMnames);
+        new ParabolaPath(device, init, end, length, coefficients, V0, Vimp,
+                         initialROMnames, endROMnames);
     ParabolaPathPtr_t shPtr(ptr);
     ptr->init(shPtr);
     return shPtr;
@@ -89,7 +98,9 @@ class ParabolaPath : public core::Path {
   /// \param path path to copy
   /// \param constraints the path is subject to
   /// <!> constraints part NOT IMPLEMENTED YET
-  static ParabolaPathPtr_t createCopy(const ParabolaPathPtr_t& path, const core::ConstraintSetPtr_t& /*constraints*/) {
+  static ParabolaPathPtr_t createCopy(
+      const ParabolaPathPtr_t& path,
+      const core::ConstraintSetPtr_t& /*constraints*/) {
     // ParabolaPath* ptr = new ParabolaPath (*path, constraints);
     ParabolaPath* ptr = new ParabolaPath(*path);
     ParabolaPathPtr_t shPtr(ptr);
@@ -107,7 +118,8 @@ class ParabolaPath : public core::Path {
   ///
   /// \param constraints constraints to apply to the copy
   /// \precond *this should not have constraints.
-  virtual core::PathPtr_t copy(const core::ConstraintSetPtr_t& constraints) const {
+  virtual core::PathPtr_t copy(
+      const core::ConstraintSetPtr_t& constraints) const {
     return createCopy(weak_.lock(), constraints);
   }
 
@@ -159,7 +171,8 @@ class ParabolaPath : public core::Path {
   /// Get path coefficients
   core::vector_t coefficients() const { return coefficients_; }
 
-  virtual core::value_type computeLength(const core::ConfigurationIn_t q1, const core::ConfigurationIn_t q2) const;
+  virtual core::value_type computeLength(
+      const core::ConfigurationIn_t q1, const core::ConfigurationIn_t q2) const;
 
   /// Evaluate velocity vector at path abcissa t
   core::vector_t evaluateVelocity(const core::value_type t) const;
@@ -178,19 +191,23 @@ class ParabolaPath : public core::Path {
   /// Print path in a stream
   virtual std::ostream& print(std::ostream& os) const {
     os << "ParabolaPath:" << std::endl;
-    os << "interval: [ " << timeRange().first << ", " << timeRange().second << " ]" << std::endl;
+    os << "interval: [ " << timeRange().first << ", " << timeRange().second
+       << " ]" << std::endl;
     os << "initial configuration: " << initial_.transpose() << std::endl;
     os << "final configuration:   " << end_.transpose() << std::endl;
     return os;
   }
   /// Constructor
-  ParabolaPath(const core::DevicePtr_t& robot, core::ConfigurationIn_t init, core::ConfigurationIn_t end,
-               core::value_type length, core::vector_t coefficients);
+  ParabolaPath(const core::DevicePtr_t& robot, core::ConfigurationIn_t init,
+               core::ConfigurationIn_t end, core::value_type length,
+               core::vector_t coefficients);
 
   /// Constructor with velocities and ROMnames
-  ParabolaPath(const core::DevicePtr_t& device, core::ConfigurationIn_t init, core::ConfigurationIn_t end,
-               core::value_type length, core::vector_t coefs, core::vector_t V0_, core::vector_t Vimp,
-               std::vector<std::string> initialROMnames, std::vector<std::string> endROMnames);
+  ParabolaPath(const core::DevicePtr_t& device, core::ConfigurationIn_t init,
+               core::ConfigurationIn_t end, core::value_type length,
+               core::vector_t coefs, core::vector_t V0_, core::vector_t Vimp,
+               std::vector<std::string> initialROMnames,
+               std::vector<std::string> endROMnames);
 
   /// Copy constructor
   ParabolaPath(const ParabolaPath& path);
@@ -213,7 +230,8 @@ class ParabolaPath : public core::Path {
   /// Finally:
   /// config(0) = x(param) = (1 - param/length)*x1 + param/length*x2
   /// config(1) = coefs(0)*x(param)^2 + coefs(1)*x(param) + coefs(2)
-  virtual bool impl_compute(core::ConfigurationOut_t result, core::value_type param) const;
+  virtual bool impl_compute(core::ConfigurationOut_t result,
+                            core::value_type param) const;
 
  private:
   core::DevicePtr_t device_;

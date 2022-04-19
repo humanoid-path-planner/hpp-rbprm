@@ -16,12 +16,12 @@
 // hpp-core  If not, see
 // <http://www.gnu.org/licenses/>.
 
-#include <hpp/pinocchio/device.hh>
 #include <hpp/core/collision-path-validation-report.hh>
-#include <hpp/core/joint-bound-validation.hh>
 #include <hpp/core/collision-validation.hh>
 #include <hpp/core/config-validations.hh>
+#include <hpp/core/joint-bound-validation.hh>
 #include <hpp/core/path.hh>
+#include <hpp/pinocchio/device.hh>
 #include <hpp/rbprm/interpolation/time-constraint-path-validation.hh>
 
 namespace hpp {
@@ -29,17 +29,20 @@ using namespace core;
 namespace rbprm {
 namespace interpolation {
 
-TimeConstraintPathValidationPtr_t TimeConstraintPathValidation::create(const DevicePtr_t& robot,
-                                                                       const value_type& stepSize,
-                                                                       const std::size_t pathDofRank) {
-  TimeConstraintPathValidation* ptr = new TimeConstraintPathValidation(robot, stepSize, pathDofRank);
+TimeConstraintPathValidationPtr_t TimeConstraintPathValidation::create(
+    const DevicePtr_t& robot, const value_type& stepSize,
+    const std::size_t pathDofRank) {
+  TimeConstraintPathValidation* ptr =
+      new TimeConstraintPathValidation(robot, stepSize, pathDofRank);
   return TimeConstraintPathValidationPtr_t(ptr);
 }
 
-bool TimeConstraintPathValidation::validate(const PathPtr_t& path, bool reverse, PathPtr_t& validPart,
-                                            PathValidationReportPtr_t& validationReport) {
+bool TimeConstraintPathValidation::validate(
+    const PathPtr_t& path, bool reverse, PathPtr_t& validPart,
+    PathValidationReportPtr_t& validationReport) {
   if (path->initial()[pathDofRank_] > path->end()[pathDofRank_]) {
-    validPart = path->extract(interval_t(path->timeRange().first, path->timeRange().first));
+    validPart = path->extract(
+        interval_t(path->timeRange().first, path->timeRange().first));
     return false;
   }
   // to limit discontinuities, try to check that variation is not too important
@@ -58,15 +61,18 @@ bool TimeConstraintPathValidation::validate(const PathPtr_t& path, bool reverse,
     double distance = (last_q.tail(dim) - q.tail(dim)).norm();
     last_q = q;
     if (distance / totalDistance > 0.2) {
-      validPart = path->extract(interval_t(path->timeRange().first, path->timeRange().first));
+      validPart = path->extract(
+          interval_t(path->timeRange().first, path->timeRange().first));
       return false;
     }
   }
-  return core::pathValidation::Discretized::validate(path, reverse, validPart, validationReport);
+  return core::pathValidation::Discretized::validate(path, reverse, validPart,
+                                                     validationReport);
 }
 
-TimeConstraintPathValidation::TimeConstraintPathValidation(const DevicePtr_t& robot, const value_type& stepSize,
-                                                           const std::size_t pathDofRank)
+TimeConstraintPathValidation::TimeConstraintPathValidation(
+    const DevicePtr_t& robot, const value_type& stepSize,
+    const std::size_t pathDofRank)
     : core::pathValidation::Discretized(stepSize), pathDofRank_(pathDofRank) {
   add(CollisionValidation::create(robot));
   add(JointBoundValidation::create(robot));

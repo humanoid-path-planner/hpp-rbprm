@@ -17,13 +17,13 @@
 // along with hpp-core.  If not, see <http://www.gnu.org/licenses/>.
 
 #define BOOST_TEST_MODULE test - rbrrt
-#include <pinocchio/fwd.hpp>
 #include <boost/test/included/unit_test.hpp>
-
-#include <hpp/core/problem-solver.hh>
 #include <hpp/core/path-vector.hh>
-#include <hpp/rbprm/rbprm-device.hh>
+#include <hpp/core/problem-solver.hh>
 #include <hpp/rbprm/interpolation/rbprm-path-interpolation.hh>
+#include <hpp/rbprm/rbprm-device.hh>
+#include <pinocchio/fwd.hpp>
+
 #include "tools-fullbody.hh"
 #include "tools-obstacle.hh"
 
@@ -32,12 +32,15 @@ using namespace rbprm;
 
 BOOST_AUTO_TEST_SUITE(rbrrt_quasiStatic)
 
-BOOST_AUTO_TEST_CASE(load_abstract_model) { hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadHyQAbsract(); }
+BOOST_AUTO_TEST_CASE(load_abstract_model) {
+  hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadHyQAbsract();
+}
 
 hpp::core::ProblemSolverPtr_t planDarpa(BindShooter& bShooter) {
   hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadHyQAbsract();
   bShooter.so3Bounds_ = addSo3LimitsHyQ();
-  hpp::core::ProblemSolverPtr_t ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
+  hpp::core::ProblemSolverPtr_t ps =
+      configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
   hpp::core::ProblemSolver& pSolver = *ps;
   loadDarpa(pSolver);
 
@@ -92,14 +95,17 @@ BOOST_AUTO_TEST_CASE(interpolate_path) {
   Configuration_t root_init = resPath->operator()(0., success).head<3>();
   q.head<3>() = root_init;
   startState = createState(fullBody, q, allLimbs);
-  Configuration_t root_end = resPath->operator()(resPath->length(), success).head<3>();
+  Configuration_t root_end =
+      resPath->operator()(resPath->length(), success).head<3>();
   q.head<3>() = root_end;
   endState = createState(fullBody, q, allLimbs);
 
   hpp::rbprm::interpolation::RbPrmInterpolationPtr_t interpolator =
-      rbprm::interpolation::RbPrmInterpolation::create(fullBody, startState, endState, resPath, false, true);
+      rbprm::interpolation::RbPrmInterpolation::create(
+          fullBody, startState, endState, resPath, false, true);
 
-  rbprm::T_StateFrame frams = interpolator->Interpolate(ps->affordanceObjects, bShooter.affFilter_, 0.01, 8, false);
+  rbprm::T_StateFrame frams = interpolator->Interpolate(
+      ps->affordanceObjects, bShooter.affFilter_, 0.01, 8, false);
   BOOST_CHECK(frams.back().second.configuration_[0] > (root_end[0] - 0.1));
 }
 

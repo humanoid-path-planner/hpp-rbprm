@@ -2,9 +2,9 @@
 #define HPP_RBPRM_ROADMAP_HH
 
 #include <hpp/core/roadmap.hh>
+#include <hpp/pinocchio/configuration.hh>
 #include <hpp/rbprm/planner/rbprm-node.hh>
 #include <hpp/util/debug.hh>
-#include <hpp/pinocchio/configuration.hh>
 
 namespace hpp {
 namespace core {
@@ -15,7 +15,8 @@ typedef std::shared_ptr<RbprmRoadmap> RbprmRoadmapPtr_t;
 class HPP_CORE_DLLAPI RbprmRoadmap : public Roadmap {
  public:
   /// Return shared pointer to new instance.
-  static RbprmRoadmapPtr_t create(const DistancePtr_t& distance, const DevicePtr_t& robot) {
+  static RbprmRoadmapPtr_t create(const DistancePtr_t& distance,
+                                  const DevicePtr_t& robot) {
     RbprmRoadmap* ptr = new RbprmRoadmap(distance, robot);
     return RbprmRoadmapPtr_t(ptr);
   }
@@ -54,12 +55,14 @@ class HPP_CORE_DLLAPI RbprmRoadmap : public Roadmap {
  protected:
   /// Constructor
   /// \param distance distance function for nearest neighbor computations
-  RbprmRoadmap(const DistancePtr_t& distance, const DevicePtr_t& robot) : Roadmap(distance, robot) {}
+  RbprmRoadmap(const DistancePtr_t& distance, const DevicePtr_t& robot)
+      : Roadmap(distance, robot) {}
 
   /// Node factory
   /// Reimplement the function if you want to create an instance of a
   /// child class of Node
-  virtual RbprmNodePtr_t createNode(const ConfigurationPtr_t& configuration) const {
+  virtual RbprmNodePtr_t createNode(
+      const ConfigurationPtr_t& configuration) const {
     return RbprmNodePtr_t(new RbprmNode(configuration));
   }
 

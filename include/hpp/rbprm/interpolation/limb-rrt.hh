@@ -19,19 +19,18 @@
 #ifndef HPP_RBPRM_LIMB_RRT_HH
 #define HPP_RBPRM_LIMB_RRT_HH
 
-#include <hpp/rbprm/config.hh>
-#include <hpp/rbprm/rbprm-fullbody.hh>
-#include <hpp/rbprm/rbprm-state.hh>
-#include <hpp/rbprm/rbprm-device.hh>
-#include <hpp/rbprm/interpolation/time-constraint-steering.hh>
-#include <hpp/rbprm/interpolation/time-constraint-helper.hh>
-#include <hpp/rbprm/interpolation/limb-rrt-shooter.hh>
+#include <hpp/core/config-projector.hh>
 #include <hpp/core/path.hh>
 #include <hpp/core/problem.hh>
-#include <hpp/core/config-projector.hh>
-
-#include <vector>
+#include <hpp/rbprm/config.hh>
+#include <hpp/rbprm/interpolation/limb-rrt-shooter.hh>
+#include <hpp/rbprm/interpolation/time-constraint-helper.hh>
+#include <hpp/rbprm/interpolation/time-constraint-steering.hh>
+#include <hpp/rbprm/rbprm-device.hh>
+#include <hpp/rbprm/rbprm-fullbody.hh>
+#include <hpp/rbprm/rbprm-state.hh>
 #include <map>
+#include <vector>
 
 namespace hpp {
 namespace rbprm {
@@ -39,18 +38,27 @@ namespace interpolation {
 
 struct SetLimbRRTConstraints;
 
-typedef TimeConstraintHelper<TimeConstraintPath, LimbRRTShooterFactory, SetLimbRRTConstraints> LimbRRTHelper;
+typedef TimeConstraintHelper<TimeConstraintPath, LimbRRTShooterFactory,
+                             SetLimbRRTConstraints>
+    LimbRRTHelper;
 struct SetLimbRRTConstraints {
-  void operator()(LimbRRTHelper &helper, const State &from, const State &to) const;
+  void operator()(LimbRRTHelper &helper, const State &from,
+                  const State &to) const;
 };
 
-core::PathPtr_t limbRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
-                        const rbprm::CIT_State &startState, const rbprm::CIT_State &endState,
-                        const std::size_t numOptimizations, const std::size_t maxIteration = 0);
+core::PathPtr_t limbRRT(RbPrmFullBodyPtr_t fullbody,
+                        core::ProblemPtr_t referenceProblem,
+                        const rbprm::CIT_State &startState,
+                        const rbprm::CIT_State &endState,
+                        const std::size_t numOptimizations,
+                        const std::size_t maxIteration = 0);
 
-core::PathPtr_t limbRRTFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
-                                const PathPtr_t refPath, const CIT_StateFrame &startState,
-                                const CIT_StateFrame &endState, const std::size_t numOptimizations);
+core::PathPtr_t limbRRTFromPath(RbPrmFullBodyPtr_t fullbody,
+                                core::ProblemPtr_t referenceProblem,
+                                const PathPtr_t refPath,
+                                const CIT_StateFrame &startState,
+                                const CIT_StateFrame &endState,
+                                const std::size_t numOptimizations);
 }  // namespace interpolation
 }  // namespace rbprm
 }  // namespace hpp

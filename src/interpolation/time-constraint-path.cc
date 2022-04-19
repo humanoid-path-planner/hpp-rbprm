@@ -16,21 +16,25 @@
 // hpp-core  If not, see
 // <http://www.gnu.org/licenses/>.
 
+#include <hpp/constraints/locked-joint.hh>
+#include <hpp/core/config-projector.hh>
+#include <hpp/pinocchio/configuration.hh>
+#include <hpp/pinocchio/device.hh>
 #include <hpp/rbprm/interpolation/time-constraint-path.hh>
 #include <hpp/rbprm/interpolation/time-constraint-utils.hh>
-#include <hpp/pinocchio/device.hh>
-#include <hpp/pinocchio/configuration.hh>
-#include <hpp/core/config-projector.hh>
-#include <hpp/constraints/locked-joint.hh>
 
 using namespace hpp::core;
 
 namespace hpp {
 namespace rbprm {
 namespace interpolation {
-TimeConstraintPath::TimeConstraintPath(const DevicePtr_t& device, ConfigurationIn_t init, ConfigurationIn_t end,
-                                       value_type length, const std::size_t pathDofRank, const T_TimeDependant& tds)
-    : parent_t(interval_t(0, length), device->configSize(), device->numberDof()),
+TimeConstraintPath::TimeConstraintPath(const DevicePtr_t& device,
+                                       ConfigurationIn_t init,
+                                       ConfigurationIn_t end, value_type length,
+                                       const std::size_t pathDofRank,
+                                       const T_TimeDependant& tds)
+    : parent_t(interval_t(0, length), device->configSize(),
+               device->numberDof()),
       device_(device),
       initial_(init),
       end_(end),
@@ -41,10 +45,14 @@ TimeConstraintPath::TimeConstraintPath(const DevicePtr_t& device, ConfigurationI
   assert(!constraints());
 }
 
-TimeConstraintPath::TimeConstraintPath(const DevicePtr_t& device, ConfigurationIn_t init, ConfigurationIn_t end,
-                                       value_type length, ConstraintSetPtr_t constraints,
-                                       const std::size_t pathDofRank, const T_TimeDependant& tds)
-    : parent_t(interval_t(0, length), device->configSize(), device->numberDof(), constraints),
+TimeConstraintPath::TimeConstraintPath(const DevicePtr_t& device,
+                                       ConfigurationIn_t init,
+                                       ConfigurationIn_t end, value_type length,
+                                       ConstraintSetPtr_t constraints,
+                                       const std::size_t pathDofRank,
+                                       const T_TimeDependant& tds)
+    : parent_t(interval_t(0, length), device->configSize(), device->numberDof(),
+               constraints),
       device_(device),
       initial_(init),
       end_(end),
@@ -62,7 +70,8 @@ TimeConstraintPath::TimeConstraintPath(const TimeConstraintPath& path)
       pathDofRank_(path.pathDofRank_),
       tds_(path.tds_) {}
 
-TimeConstraintPath::TimeConstraintPath(const TimeConstraintPath& path, const ConstraintSetPtr_t& constraints)
+TimeConstraintPath::TimeConstraintPath(const TimeConstraintPath& path,
+                                       const ConstraintSetPtr_t& constraints)
     : parent_t(path, constraints),
       device_(path.device_),
       initial_(path.initial_),
@@ -70,20 +79,23 @@ TimeConstraintPath::TimeConstraintPath(const TimeConstraintPath& path, const Con
       pathDofRank_(path.pathDofRank_),
       tds_(path.tds_) {}
 
-pinocchio::value_type ComputeExtraDofValue(const std::size_t dofRank, const Configuration_t init,
-                                           const Configuration_t end, const pinocchio::value_type normalizedValue) {
+pinocchio::value_type ComputeExtraDofValue(
+    const std::size_t dofRank, const Configuration_t init,
+    const Configuration_t end, const pinocchio::value_type normalizedValue) {
   double a = init[dofRank];
   double b = end[dofRank];
   return (b - a) * normalizedValue + a;
 }
 
-void TimeConstraintPath::updateConstraints(core::ConfigurationOut_t configuration) const {
+void TimeConstraintPath::updateConstraints(
+    core::ConfigurationOut_t configuration) const {
   if (constraints() && constraints()->configProjector()) {
     UpdateConstraints(configuration, tds_, pathDofRank_);
   }
 }
 
-bool TimeConstraintPath::impl_compute(ConfigurationOut_t result, value_type param) const {
+bool TimeConstraintPath::impl_compute(ConfigurationOut_t result,
+                                      value_type param) const {
   if (param == timeRange().first || timeRange().second == 0) {
     result = initial();
   } else if (param == timeRange().second) {
@@ -93,9 +105,11 @@ bool TimeConstraintPath::impl_compute(ConfigurationOut_t result, value_type para
     if (timeRange().second == 0)
       u = 0;
     else
-      u = (param - timeRange().first) / (timeRange().second - timeRange().first);
+      u = (param - timeRange().first) /
+          (timeRange().second - timeRange().first);
     device_->RnxSOnConfigSpace()->interpolate(initial_, end_, u, result);
-    pinocchio::value_type dof = ComputeExtraDofValue(pathDofRank_, initial_, end_, u);
+    pinocchio::value_type dof =
+        ComputeExtraDofValue(pathDofRank_, initial_, end_, u);
     result[pathDofRank_] = dof;
   }
   updateConstraints(result);
@@ -108,16 +122,23 @@ PathPtr_t TimeConstraintPath::extract(const interval_t& subInterval) const {
 
   bool success;
   Configuration_t q1((*this)(subInterval.first, success));
-  if (!success) throw projection_error("Failed to apply constraints in StraightPath::extract");
+  if (!success)
+    throw projection_error(
+        "Failed to apply constraints in StraightPath::extract");
   q1[pathDofRank_] =
       ComputeExtraDofValue(pathDofRank_, initial_, end_,
-                           (subInterval.first - timeRange().first) / (timeRange().second - timeRange().first));
+                           (subInterval.first - timeRange().first) /
+                               (timeRange().second - timeRange().first));
   Configuration_t q2((*this)(subInterval.second, success));
-  if (!success) throw projection_error("Failed to apply constraints in StraightPath::extract");
+  if (!success)
+    throw projection_error(
+        "Failed to apply constraints in StraightPath::extract");
   q2[pathDofRank_] =
       ComputeExtraDofValue(pathDofRank_, initial_, end_,
-                           (subInterval.second - timeRange().first) / (timeRange().second - timeRange().first));
-  PathPtr_t result = TimeConstraintPath::create(device_, q1, q2, l, constraints(), pathDofRank_, tds_);
+                           (subInterval.second - timeRange().first) /
+                               (timeRange().second - timeRange().first));
+  PathPtr_t result = TimeConstraintPath::create(
+      device_, q1, q2, l, constraints(), pathDofRank_, tds_);
   return result;
 }
 
@@ -135,23 +156,34 @@ void TimeConstraintPath::checkPath() const {
     if (!constraints()->isSatisfied(initial(), errr)) {
       device_->currentConfiguration(initc);
       device_->computeForwardKinematics();
-      hppDout(notice, "Ini com : " << device_->positionCenterOfMass() << "  error : " << errr);
-      // std::cout << "init conf " <<  device_->positionCenterOfMass() << "\n error \n" << errr << std::endl;
+      hppDout(notice, "Ini com : " << device_->positionCenterOfMass()
+                                   << "  error : " << errr);
+      // std::cout << "init conf " <<  device_->positionCenterOfMass() << "\n
+      // error \n" << errr << std::endl;
       /*device_->currentConfiguration(initc);
       device_->computeForwardKinematics();
       std::cout << "rf_foot_joint  " << std::endl;
-      std::cout <<  device_->getJointByName("rf_foot_joint")->currentTransformation().getTranslation() << std::endl;
+      std::cout <<
+      device_->getJointByName("rf_foot_joint")->currentTransformation().getTranslation()
+      << std::endl;
 
       std::cout << "lf_foot_joint "  << std::endl;
-      std::cout <<  device_->getJointByName("lf_foot_joint")->currentTransformation().getTranslation() << std::endl;
+      std::cout <<
+      device_->getJointByName("lf_foot_joint")->currentTransformation().getTranslation()
+      << std::endl;
 
       std::cout << "rh_foot_joint  " << std::endl;
-      std::cout <<  device_->getJointByName("rh_foot_joint")->currentTransformation().getTranslation() << std::endl;
+      std::cout <<
+      device_->getJointByName("rh_foot_joint")->currentTransformation().getTranslation()
+      << std::endl;
 
       std::cout << "lh_foot_joint  " << std::endl;
-      std::cout <<  device_->getJointByName("lh_foot_joint")->currentTransformation().getTranslation() << std::endl;*/
+      std::cout <<
+      device_->getJointByName("lh_foot_joint")->currentTransformation().getTranslation()
+      << std::endl;*/
       hppDout(error,
-              "Initial configuration of path does not satisfy the constraints" << pinocchio::displayConfig(initial()));
+              "Initial configuration of path does not satisfy the constraints"
+                  << pinocchio::displayConfig(initial()));
       throw projection_error(
           "Initial configuration of path does not satisfy "
           "the constraints");
@@ -161,8 +193,11 @@ void TimeConstraintPath::checkPath() const {
       // std::cout << "end conf " <<  initc << std::endl;
       device_->currentConfiguration(endc);
       device_->computeForwardKinematics();
-      hppDout(notice, "End com : " << device_->positionCenterOfMass() << "  error : " << errr);
-      hppDout(error, "End configuration of path does not satisfy the constraints" << pinocchio::displayConfig(end()));
+      hppDout(notice, "End com : " << device_->positionCenterOfMass()
+                                   << "  error : " << errr);
+      hppDout(error,
+              "End configuration of path does not satisfy the constraints"
+                  << pinocchio::displayConfig(end()));
       throw projection_error(
           "End configuration of path does not satisfy "
           "the constraints");

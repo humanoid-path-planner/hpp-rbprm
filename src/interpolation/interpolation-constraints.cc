@@ -24,28 +24,39 @@ namespace hpp {
 namespace rbprm {
 namespace interpolation {
 
-void addContactConstraints(rbprm::RbPrmFullBodyPtr_t fullBody, pinocchio::DevicePtr_t device,
-                           core::ConfigProjectorPtr_t projector, const State &state,
+void addContactConstraints(rbprm::RbPrmFullBodyPtr_t fullBody,
+                           pinocchio::DevicePtr_t device,
+                           core::ConfigProjectorPtr_t projector,
+                           const State &state,
                            const std::vector<std::string> active) {
   std::vector<bool> cosntraintsR = setMaintainRotationConstraints();
-  for (std::vector<std::string>::const_iterator cit = active.begin(); cit != active.end(); ++cit) {
+  for (std::vector<std::string>::const_iterator cit = active.begin();
+       cit != active.end(); ++cit) {
     RbPrmLimbPtr_t limb = fullBody->GetLimbs().at(*cit);
     // const fcl::Vec3f& ppos  = state.contactPositions_.at(*cit);
     pinocchio::Transform3f localFrame(1), globalFrame(1);
     globalFrame.translation(state.contactPositions_.at(*cit));
     // const fcl::Matrix3f& rotation = state.contactRotation_.at(*cit);
-    const pinocchio::Frame effectorFrame = device->getFrameByName(limb->effector_.name());
+    const pinocchio::Frame effectorFrame =
+        device->getFrameByName(limb->effector_.name());
     pinocchio::JointPtr_t effectorJoint = effectorFrame.joint();
-    const constraints::DifferentiableFunctionPtr_t &function = constraints::Position::create(
-        "", device, effectorJoint, effectorFrame.pinocchio().placement * localFrame, globalFrame);
-    constraints::ComparisonTypes_t comp(function->outputDerivativeSize(), constraints::EqualToZero);
+    const constraints::DifferentiableFunctionPtr_t &function =
+        constraints::Position::create(
+            "", device, effectorJoint,
+            effectorFrame.pinocchio().placement * localFrame, globalFrame);
+    constraints::ComparisonTypes_t comp(function->outputDerivativeSize(),
+                                        constraints::EqualToZero);
     projector->add(constraints::Implicit::create(function, comp));
     if (limb->contactType_ == hpp::rbprm::_6_DOF) {
       pinocchio::Transform3f rotation(1);
-      rotation.rotation(state.contactRotation_.at(*cit) * effectorFrame.pinocchio().placement.rotation().transpose());
+      rotation.rotation(
+          state.contactRotation_.at(*cit) *
+          effectorFrame.pinocchio().placement.rotation().transpose());
       const constraints::DifferentiableFunctionPtr_t &function_ =
-          constraints::Orientation::create("", device, effectorJoint, rotation, cosntraintsR);
-      constraints::ComparisonTypes_t comp_(function_->outputDerivativeSize(), constraints::EqualToZero);
+          constraints::Orientation::create("", device, effectorJoint, rotation,
+                                           cosntraintsR);
+      constraints::ComparisonTypes_t comp_(function_->outputDerivativeSize(),
+                                           constraints::EqualToZero);
       projector->add(constraints::Implicit::create(function_, comp_));
     }
   }
@@ -55,9 +66,11 @@ std::string getEffectorLimb(const State &startState, const State &nextState) {
   return nextState.contactCreations(startState).front();
 }
 
-pinocchio::Frame getEffector(RbPrmFullBodyPtr_t fullbody, const State &startState, const State &nextState) {
+pinocchio::Frame getEffector(RbPrmFullBodyPtr_t fullbody,
+                             const State &startState, const State &nextState) {
   std::string effectorVar = getEffectorLimb(startState, nextState);
-  return fullbody->device_->getFrameByName(fullbody->GetLimbs().at(effectorVar)->effector_.name());
+  return fullbody->device_->getFrameByName(
+      fullbody->GetLimbs().at(effectorVar)->effector_.name());
 }
 
 }  //   namespace interpolation

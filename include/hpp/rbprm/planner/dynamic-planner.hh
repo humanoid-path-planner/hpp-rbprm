@@ -44,7 +44,8 @@ using core::RoadmapPtr_t;
 class DynamicPlanner : public core::BiRRTPlanner {
  public:
   /// Return shared pointer to new object.
-  static DynamicPlannerPtr_t createWithRoadmap(core::ProblemConstPtr_t problem, const RoadmapPtr_t& roadmap);
+  static DynamicPlannerPtr_t createWithRoadmap(core::ProblemConstPtr_t problem,
+                                               const RoadmapPtr_t& roadmap);
   /// Return shared pointer to new object.
   static DynamicPlannerPtr_t create(core::ProblemConstPtr_t problem);
   /// One step of extension.
@@ -53,8 +54,8 @@ class DynamicPlanner : public core::BiRRTPlanner {
   /// configurations, in order to avoid a random shoot.
   virtual void tryConnectInitAndGoals();
 
-  // we need both method, because smart_pointer inheritance is not implemented (compiler don't know that
-  // rbprmRoadmapPtr_t derive from RoadmapPtr_t).
+  // we need both method, because smart_pointer inheritance is not implemented
+  // (compiler don't know that rbprmRoadmapPtr_t derive from RoadmapPtr_t).
   virtual const core::RoadmapPtr_t& roadmap() const { return roadmap_; }
 
   virtual core::PathVectorPtr_t finishSolve(const core::PathVectorPtr_t& path);
@@ -68,27 +69,33 @@ class DynamicPlanner : public core::BiRRTPlanner {
   void init(const DynamicPlannerWkPtr_t& weak);
 
   /**
-   * @brief computeGIWC compute the GIWC for the node configuration and fill the node attribut
+   * @brief computeGIWC compute the GIWC for the node configuration and fill the
+   * node attribut
    * @param x the node
    * @param report the RBPRM report corresponding to the node's configuration
    */
   void computeGIWC(const core::NodePtr_t x, core::ValidationReportPtr_t report);
 
   /**
-   * @brief computeGIWC compute the GIWC for the node configuration and fill the node attribut, get validation report
-   * and call the second method
+   * @brief computeGIWC compute the GIWC for the node configuration and fill the
+   * node attribut, get validation report and call the second method
    * @param x the node
    */
   void computeGIWC(const core::NodePtr_t x, bool use_bestReport = true);
 
-  core::PathPtr_t extendInternal(core::ConfigurationPtr_t& qProj_, const core::NodePtr_t& near,
-                                 const core::ConfigurationPtr_t& target, bool reverse = false);
+  core::PathPtr_t extendInternal(core::ConfigurationPtr_t& qProj_,
+                                 const core::NodePtr_t& near,
+                                 const core::ConfigurationPtr_t& target,
+                                 bool reverse = false);
 
-  bool tryParabolaPath(const core::NodePtr_t& near, core::ConfigurationPtr_t q_jump,
-                       const core::ConfigurationPtr_t& target, bool reverse, core::NodePtr_t& x_jump,
-                       core::NodePtr_t& nodeReached, core::PathPtr_t& kinoPath, core::PathPtr_t& paraPath);
+  bool tryParabolaPath(const core::NodePtr_t& near,
+                       core::ConfigurationPtr_t q_jump,
+                       const core::ConfigurationPtr_t& target, bool reverse,
+                       core::NodePtr_t& x_jump, core::NodePtr_t& nodeReached,
+                       core::PathPtr_t& kinoPath, core::PathPtr_t& paraPath);
 
-  core::PathPtr_t extendParabola(const core::ConfigurationPtr_t& from, const core::ConfigurationPtr_t& target,
+  core::PathPtr_t extendParabola(const core::ConfigurationPtr_t& from,
+                                 const core::ConfigurationPtr_t& target,
                                  bool reverse);
 
  private:

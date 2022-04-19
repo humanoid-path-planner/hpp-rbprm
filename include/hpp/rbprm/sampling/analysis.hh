@@ -19,10 +19,9 @@
 #ifndef HPP_ANALYSIS_HH
 #define HPP_ANALYSIS_HH
 
-#include <hpp/rbprm/sampling/sample.hh>
-#include <hpp/rbprm/sampling/sample-db.hh>
 #include <hpp/rbprm/rbprm-fullbody.hh>
-
+#include <hpp/rbprm/sampling/sample-db.hh>
+#include <hpp/rbprm/sampling/sample.hh>
 #include <map>
 
 namespace hpp {

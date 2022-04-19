@@ -30,7 +30,8 @@ enum HPP_RBPRM_DLLAPI ContactComputationStatus {
   UNSTABLE_CONTACT = 1,
   STABLE_CONTACT = 2,
   REACHABLE_CONTACT =
-      3  // in current implementation REACHABLE is always STABLE ... we might need to use mask for futur developpement
+      3  // in current implementation REACHABLE is always STABLE ... we might
+         // need to use mask for futur developpement
 };
 
 namespace projection {

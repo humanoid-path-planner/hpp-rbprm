@@ -19,8 +19,8 @@
 #ifndef HPP_RBPRM_COM_TRAJECTORY_HH
 #define HPP_RBPRM_COM_TRAJECTORY_HH
 
-#include <hpp/core/fwd.hh>
 #include <hpp/core/config.hh>
+#include <hpp/core/fwd.hh>
 #include <hpp/core/path.hh>
 #include <hpp/rbprm/interpolation/time-dependant.hh>
 
@@ -48,9 +48,13 @@ class HPP_CORE_DLLAPI ComTrajectory : public core::Path {
   /// \param device Robot corresponding to configurations
   /// \param init, end Start and end configurations of the path
   /// \param length Distance between the configurations.
-  static ComTrajectoryPtr_t create(pinocchio::vector3_t init, pinocchio::vector3_t end, pinocchio::vector3_t initSpeed,
-                                   pinocchio::vector3_t acceleration, core::value_type length) {
-    ComTrajectory* ptr = new ComTrajectory(init, end, initSpeed, acceleration, length);
+  static ComTrajectoryPtr_t create(pinocchio::vector3_t init,
+                                   pinocchio::vector3_t end,
+                                   pinocchio::vector3_t initSpeed,
+                                   pinocchio::vector3_t acceleration,
+                                   core::value_type length) {
+    ComTrajectory* ptr =
+        new ComTrajectory(init, end, initSpeed, acceleration, length);
     ComTrajectoryPtr_t shPtr(ptr);
     ptr->init(shPtr);
     ptr->checkPath();
@@ -91,7 +95,8 @@ class HPP_CORE_DLLAPI ComTrajectory : public core::Path {
   /// Print path in a stream
   virtual std::ostream& print(std::ostream& os) const {
     os << "ComTrajectory:" << std::endl;
-    os << "interval: [ " << timeRange().first << ", " << timeRange().second << " ]" << std::endl;
+    os << "interval: [ " << timeRange().first << ", " << timeRange().second
+       << " ]" << std::endl;
     os << "initial configuration: " << initial_ << std::endl;
     os << "final configuration:   " << end_ << std::endl;
     os << "init speed:   " << initSpeed_ << std::endl;
@@ -99,7 +104,8 @@ class HPP_CORE_DLLAPI ComTrajectory : public core::Path {
     return os;
   }
   /// Constructor
-  ComTrajectory(pinocchio::vector3_t init, pinocchio::vector3_t end, pinocchio::vector3_t initSpeed,
+  ComTrajectory(pinocchio::vector3_t init, pinocchio::vector3_t end,
+                pinocchio::vector3_t initSpeed,
                 pinocchio::vector3_t acceleration, core::value_type length);
 
   /// Copy constructor
@@ -110,7 +116,8 @@ class HPP_CORE_DLLAPI ComTrajectory : public core::Path {
     weak_ = self;
   }
 
-  virtual bool impl_compute(core::ConfigurationOut_t result, core::value_type param) const;
+  virtual bool impl_compute(core::ConfigurationOut_t result,
+                            core::value_type param) const;
 
   virtual core::PathPtr_t copy(const core::ConstraintSetPtr_t&) const { throw; }
 

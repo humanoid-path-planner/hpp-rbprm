@@ -16,8 +16,8 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with hpp-core.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "test-tools.hh"
 #include "hpp/rbprm/contact_generation/contact_generation.hh"
+#include "test-tools.hh"
 
 #define BOOST_TEST_MODULE test - fullbody
 #include <boost/test/included/unit_test.hpp>
@@ -37,7 +37,9 @@ void AddToState(const std::string& name, State& state) {
   state.contactOrder_.push(name);
 }
 
-void addState(const State& s1, T_StateFrame& states) { states.push_back(std::make_pair(states.size(), s1)); }
+void addState(const State& s1, T_StateFrame& states) {
+  states.push_back(std::make_pair(states.size(), s1));
+}
 
 void __debug_print(const T_ContactState& que) {
   T_ContactState q = que;
@@ -46,7 +48,8 @@ void __debug_print(const T_ContactState& que) {
     ContactState cs = q.front();
     q.pop();
     std::cout << "\t one state " << std::endl;
-    for (std::vector<std::string>::const_iterator cit = cs.second.begin(); cit != cs.second.end(); ++cit) {
+    for (std::vector<std::string>::const_iterator cit = cs.second.begin();
+         cit != cs.second.end(); ++cit) {
       std::cout << "\t \t " << *cit << std::endl;
     }
     std::cout << "\t END one state " << std::endl;

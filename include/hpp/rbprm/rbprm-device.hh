@@ -19,9 +19,8 @@
 #ifndef HPP_RBPRM_DEVICE_HH
 #define HPP_RBPRM_DEVICE_HH
 
-#include <hpp/rbprm/config.hh>
 #include <hpp/pinocchio/device.hh>
-
+#include <hpp/rbprm/config.hh>
 #include <map>
 
 namespace hpp {
@@ -49,14 +48,16 @@ class HPP_RBPRM_DLLAPI RbPrmDevice : public Device {
   /// \param robotRom: a Device describe the range of motion of one
   /// limb of the robot.
   /// \return a smart pointer to the created RbPrmDevice
-  static RbPrmDevicePtr_t create(const std::string& name, DevicePtr_t& robotRom);
+  static RbPrmDevicePtr_t create(const std::string& name,
+                                 DevicePtr_t& robotRom);
 
   /// Creates a RbPrmDevice
   ///
   /// \param name: the name of the Device
   /// \param robotRoms: list of devices, indexed by an identifiant
   /// \return a smart pointer to the created RbPrmDevice
-  static RbPrmDevicePtr_t create(const std::string& name, const T_Rom& robotRoms);
+  static RbPrmDevicePtr_t create(const std::string& name,
+                                 const T_Rom& robotRoms);
 
  public:
   virtual ~RbPrmDevice();
@@ -69,15 +70,14 @@ class HPP_RBPRM_DLLAPI RbPrmDevice : public Device {
   virtual void setDimensionExtraConfigSpace(const size_type& dimension);
 
   ///
-  /// \brief setEffectorReference set a 3D position reference for the end effector of the given ROM
-  /// \param romName
-  /// \param ref
+  /// \brief setEffectorReference set a 3D position reference for the end
+  /// effector of the given ROM \param romName \param ref
   ///
   virtual void setEffectorReference(std::string romName, vector3_t ref);
 
   ///
-  /// \brief getEffectorReference get the reference position of the given ROM, return (0,0,0) if the reference was
-  /// never set \param romName \return
+  /// \brief getEffectorReference get the reference position of the given ROM,
+  /// return (0,0,0) if the reference was never set \param romName \return
   ///
   virtual vector3_t getEffectorReference(std::string romName);
 

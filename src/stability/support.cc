@@ -1,5 +1,6 @@
 
 #include "hpp/rbprm/stability/support.hh"
+
 #include <math.h>
 
 using namespace Eigen;
@@ -19,7 +20,8 @@ typedef std::vector<Vector3d, Eigen::aligned_allocator<Vector3d> > T_Point;
 //            <0 for P2 right of the line
 //    See: the January 201 Algorithm "Area of 2D and 3D Triangles and Polygons"
 double isLeft(const Vector3d& P0, const Vector3d& P1, const Vector3d& P2) {
-  return ((P1.x() - P0.x()) * (P2.y() - P0.y()) - (P2.x() - P0.x()) * (P1.y() - P0.y()));
+  return ((P1.x() - P0.x()) * (P2.y() - P0.y()) -
+          (P2.x() - P0.x()) * (P1.y() - P0.y()));
 }
 
 const Vector3d& LeftMost(const T_Point& points) {
@@ -55,7 +57,8 @@ T_Point ConvexHull(const T_Point& points) {
   return res;
 }
 
-double DistancePointSegment(const Vector3d& pt, const Vector2d& A, const Vector2d& B) {
+double DistancePointSegment(const Vector3d& pt, const Vector2d& A,
+                            const Vector2d& B) {
   Vector2d point(pt.x(), pt.y());
   // first coefficient director
   double a = (A.y() - B.y()) / (A.x() - B.x());
@@ -80,7 +83,8 @@ double DistancePointSegment(const Vector3d& pt, const Vector2d& A, const Vector2
   }
 }
 
-// source http://softsurfer.com/Archive/algorithm_0103/algorithm_0103.htm#wn_PinPolygon()
+// source
+// http://softsurfer.com/Archive/algorithm_0103/algorithm_0103.htm#wn_PinPolygon()
 // wn_PnPoly(): winding double test for a Vector3 in a polygon
 //      Input:   P = a Vector3,
 //               points_ = Point vector of size n+1 with points_[n]=points_[0]
@@ -106,13 +110,13 @@ bool InPolygon(const T_Point& points, const Vector3d& P) {
       if (points[i + 1].y() > P.y())  // an upward crossing
       {
         if (isLeft(points[i], points[i + 1], P) > 0)  // P left of edge
-          ++wn;                                       // have a valid up intersect
+          ++wn;  // have a valid up intersect
       }
     } else {                           // start y > P.y() (no test needed)
       if (points[i + 1].y() <= P.y())  // a downward crossing
       {
         if (isLeft(points[i], points[i + 1], P) < 0)  // P right of edge
-          --wn;                                       // have a valid down intersect
+          --wn;  // have a valid down intersect
       }
     }
   }
@@ -121,9 +125,10 @@ bool InPolygon(const T_Point& points, const Vector3d& P) {
 
 using namespace hpp::rbprm::stability;
 
-bool hpp::rbprm::stability::Contains(const Eigen::Matrix<double, Eigen::Dynamic, 1> support,
-                                     const Eigen::Vector3d& aPoint, const Eigen::VectorXd& xs,
-                                     const Eigen::VectorXd& ys) {
+bool hpp::rbprm::stability::Contains(
+    const Eigen::Matrix<double, Eigen::Dynamic, 1> support,
+    const Eigen::Vector3d& aPoint, const Eigen::VectorXd& xs,
+    const Eigen::VectorXd& ys) {
   T_Point points;
   int nbPoints = (int)support.rows() / 3;
   if (nbPoints < 1) return false;

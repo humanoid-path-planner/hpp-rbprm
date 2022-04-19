@@ -19,18 +19,21 @@
 #ifndef HPP_RBPRM_POLYNOM_TRAJECTORY_HH
 #define HPP_RBPRM_POLYNOM_TRAJECTORY_HH
 
-#include <hpp/core/fwd.hh>
+#include <ndcurves/curve_abc.h>
+
 #include <hpp/core/config.hh>
+#include <hpp/core/fwd.hh>
 #include <hpp/core/path.hh>
 #include <hpp/rbprm/interpolation/time-dependant.hh>
-#include <ndcurves/curve_abc.h>
 
 namespace hpp {
 namespace rbprm {
 namespace interpolation {
 HPP_PREDEF_CLASS(PolynomTrajectory);
 typedef std::shared_ptr<PolynomTrajectory> PolynomTrajectoryPtr_t;
-typedef ndcurves::curve_abc<core::value_type, core::value_type, true, Eigen::Vector3d> Polynom;
+typedef ndcurves::curve_abc<core::value_type, core::value_type, true,
+                            Eigen::Vector3d>
+    Polynom;
 typedef std::shared_ptr<Polynom> PolynomPtr_t;
 /// Linear interpolation between two configurations
 ///
@@ -51,9 +54,11 @@ class HPP_CORE_DLLAPI PolynomTrajectory : public core::Path {
   /// \param device Robot corresponding to configurations
   /// \param init, end Start and end configurations of the path
   /// \param length Distance between the configurations.
-  static PolynomTrajectoryPtr_t create(PolynomPtr_t polynom, core::value_type subSetStart = 0,
+  static PolynomTrajectoryPtr_t create(PolynomPtr_t polynom,
+                                       core::value_type subSetStart = 0,
                                        core::value_type subSetEnd = 1) {
-    PolynomTrajectory* ptr = new PolynomTrajectory(polynom, subSetStart, subSetEnd);
+    PolynomTrajectory* ptr =
+        new PolynomTrajectory(polynom, subSetStart, subSetEnd);
     PolynomTrajectoryPtr_t shPtr(ptr);
     ptr->init(shPtr);
     ptr->checkPath();
@@ -83,7 +88,9 @@ class HPP_CORE_DLLAPI PolynomTrajectory : public core::Path {
   virtual core::PathPtr_t extract(const core::interval_t& subInterval) const;
 
   /// Get the initial configuration
-  core::Configuration_t initial() const { return polynom_->operator()(subSetStart_); }
+  core::Configuration_t initial() const {
+    return polynom_->operator()(subSetStart_);
+  }
 
   /// Get the final configuration
   core::Configuration_t end() const { return polynom_->operator()(subSetEnd_); }
@@ -94,13 +101,15 @@ class HPP_CORE_DLLAPI PolynomTrajectory : public core::Path {
   /// Print path in a stream
   virtual std::ostream& print(std::ostream& os) const {
     os << "PolynomTrajectory:" << std::endl;
-    os << "interval: [ " << timeRange().first << ", " << timeRange().second << " ]" << std::endl;
+    os << "interval: [ " << timeRange().first << ", " << timeRange().second
+       << " ]" << std::endl;
     os << "initial configuration: " << initial() << std::endl;
     os << "final configuration:   " << end() << std::endl;
     return os;
   }
   /// Constructor
-  PolynomTrajectory(PolynomPtr_t polynom, core::value_type subSetStart, core::value_type subSetEnd);
+  PolynomTrajectory(PolynomPtr_t polynom, core::value_type subSetStart,
+                    core::value_type subSetEnd);
 
   /// Copy constructor
   PolynomTrajectory(const PolynomTrajectory& path);
@@ -110,7 +119,8 @@ class HPP_CORE_DLLAPI PolynomTrajectory : public core::Path {
     weak_ = self;
   }
 
-  virtual bool impl_compute(core::ConfigurationOut_t result, core::value_type param) const;
+  virtual bool impl_compute(core::ConfigurationOut_t result,
+                            core::value_type param) const;
 
   virtual core::PathPtr_t copy(const core::ConstraintSetPtr_t&) const { throw; }
 

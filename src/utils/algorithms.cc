@@ -1,7 +1,8 @@
-#include <pinocchio/fwd.hpp>
 #include "hpp/rbprm/utils/algorithms.h"
-#include <hpp/util/debug.hh>
+
 #include <hpp/pinocchio/collision-object.hh>
+#include <hpp/util/debug.hh>
+#include <pinocchio/fwd.hpp>
 #include <pinocchio/multibody/geometry.hpp>
 
 using namespace hpp;
@@ -17,16 +18,19 @@ Point TriangleNormal(TrianglePoints& tri) {
   // hppDout(notice,"normal, in geom :: "<<normal.transpose());
   return normal;
 }
-BVHModelOBConst_Ptr_t GetModel(const hpp::pinocchio::CollisionObjectConstPtr_t object,
-                               hpp::pinocchio::DeviceData& deviceData) {
+BVHModelOBConst_Ptr_t GetModel(
+    const hpp::pinocchio::CollisionObjectConstPtr_t object,
+    hpp::pinocchio::DeviceData& deviceData) {
   assert(object->fcl()->collisionGeometry()->getNodeType() == fcl::BV_OBBRSS);
   const BVHModelOBConst_Ptr_t model =
-      boost::static_pointer_cast<const hpp::fcl::BVHModel<hpp::fcl::OBBRSS> >(object->fcl()->collisionGeometry());
+      boost::static_pointer_cast<const hpp::fcl::BVHModel<hpp::fcl::OBBRSS> >(
+          object->fcl()->collisionGeometry());
   assert(model->getModelType() == hpp::fcl::BVH_MODEL_TRIANGLES);
   // todo avoid recopy, but if we keep the same ptr the geometry is changed
   const BVHModelOBConst_Ptr_t modelTransform(new BVHModelOB(*model));
   for (int i = 0; i < model->num_vertices; i++) {
-    modelTransform->vertices[i] = object->fcl(deviceData)->getTransform().transform(model->vertices[i]);
+    modelTransform->vertices[i] =
+        object->fcl(deviceData)->getTransform().transform(model->vertices[i]);
   }
   return modelTransform;
 }
@@ -55,7 +59,8 @@ double area(CIT_Point pointsBegin, CIT_Point pointsEnd) {
   for (CIT_Point it = pointsBegin + 1; it != pointsEnd - 1; ++it) {
     a += (*it)[0] * ((*(it + 1))[1] - (*(it - 1))[1]);
   }
-  a += (*(pointsEnd - 1))[0] * ((*(pointsBegin + 1))[1] - (*(pointsEnd - 2))[1]);
+  a +=
+      (*(pointsEnd - 1))[0] * ((*(pointsBegin + 1))[1] - (*(pointsEnd - 2))[1]);
   a /= 2;
   return fabs(a);
 }
@@ -87,8 +92,10 @@ Point centroid(CIT_Point pointsBegin, CIT_Point pointsEnd, double& area) {
 
   for (CIT_Point pit = pointsBegin; pit != pointsEnd - 1; ++pit) {
     area += ((*pit)[0] * (*(pit + 1))[1]) - (((*(pit + 1))[0]) * ((*pit)[1]));
-    cx += ((*pit)[0] + (*(pit + 1))[0]) * ((*pit)[0] * (*(pit + 1))[1] - (*(pit + 1))[0] * (*pit)[1]);
-    cy += ((*pit)[1] + (*(pit + 1))[1]) * ((*pit)[0] * (*(pit + 1))[1] - (*(pit + 1))[0] * (*pit)[1]);
+    cx += ((*pit)[0] + (*(pit + 1))[0]) *
+          ((*pit)[0] * (*(pit + 1))[1] - (*(pit + 1))[0] * (*pit)[1]);
+    cy += ((*pit)[1] + (*(pit + 1))[1]) *
+          ((*pit)[0] * (*(pit + 1))[1] - (*(pit + 1))[0] * (*pit)[1]);
   }
   area = area / 2.;
   cx = cx / (6. * area);
@@ -104,13 +111,18 @@ Point centerPlanar(T_Point points, const fcl::Vec3f& n, double t) {
   double cy = 0;
   double a = area(points.begin(), points.end());
   for (size_t i = 0; i < (points.size() - 1); ++i) {
-    cx += (points[i][0] + points[i + 1][0]) * ((points[i][0] * points[i + 1][1]) - (points[i + 1][0] * points[i][1]));
-    cy += (points[i][1] + points[i + 1][1]) * ((points[i][0] * points[i + 1][1]) - (points[i + 1][0] * points[i][1]));
+    cx +=
+        (points[i][0] + points[i + 1][0]) *
+        ((points[i][0] * points[i + 1][1]) - (points[i + 1][0] * points[i][1]));
+    cy +=
+        (points[i][1] + points[i + 1][1]) *
+        ((points[i][0] * points[i + 1][1]) - (points[i + 1][0] * points[i][1]));
   }
 
   cx = cx / (6 * a);
   cy = cy / (6 * a);
-  double cz = -(n[0] * cx + n[1] * cy + t) / n[3];  // deduce z from x,y and the plan equation
+  double cz = -(n[0] * cx + n[1] * cy + t) /
+              n[3];  // deduce z from x,y and the plan equation
   return Point(cx, cy, cz);
 }
 
@@ -128,15 +140,18 @@ T_Point convexHull(CIT_Point pointsBegin, CIT_Point pointsEnd) {
   do {
     lastPoint = *pointsBegin;
     for (CIT_Point current = pointsBegin + 1; current != pointsEnd; ++current) {
-      if ((lastPoint == pointOnHull) || (isLeft(pointOnHull, lastPoint, *current) > 0)) {
+      if ((lastPoint == pointOnHull) ||
+          (isLeft(pointOnHull, lastPoint, *current) > 0)) {
         if ((std::find(res.begin(), res.end(), *current) == res.end()) ||
-            ((*current) == (*(res.begin()))))  // only selected it if not on the list (or the first)
+            ((*current) == (*(res.begin()))))  // only selected it if not on the
+                                               // list (or the first)
           lastPoint = *current;
       }
     }
     res.insert(res.end(), pointOnHull);
     pointOnHull = lastPoint;
-  } while (lastPoint != *res.begin());  // infinite loop with fcl types (instead of eigen)
+  } while (lastPoint !=
+           *res.begin());  // infinite loop with fcl types (instead of eigen)
   res.insert(res.end(), lastPoint);
   return res;
 }
@@ -239,7 +254,8 @@ Point lineSect3D(CPointRef p1, CPointRef p2, CPointRef p3, CPointRef p4) {
   return res;
 }
 
-T_Point compute2DIntersection(CIT_Point subBegin, CIT_Point subEndHull, CIT_Point clipBegin, CIT_Point clipEndHull) {
+T_Point compute2DIntersection(CIT_Point subBegin, CIT_Point subEndHull,
+                              CIT_Point clipBegin, CIT_Point clipEndHull) {
   T_Point outputList, inputList;
   CIT_Point from = subBegin, to = subEndHull;
   for (CIT_Point edge = clipBegin; edge != clipEndHull - 1; ++edge) {
@@ -252,15 +268,18 @@ T_Point compute2DIntersection(CIT_Point subBegin, CIT_Point subEndHull, CIT_Poin
         if (dirS < 0)
           outputList.insert(outputList.end(), *S);
         else
-          outputList.insert(outputList.end(), lineSect(*S, *E, *edge, *(edge + 1)));
+          outputList.insert(outputList.end(),
+                            lineSect(*S, *E, *edge, *(edge + 1)));
       } else if (dirS < 0) {
-        outputList.insert(outputList.end(), lineSect(*S, *E, *edge, *(edge + 1)));
+        outputList.insert(outputList.end(),
+                          lineSect(*S, *E, *edge, *(edge + 1)));
         outputList.insert(outputList.end(), *S);
       }
     }
     if (outputList.empty()) return outputList;
     inputList = outputList;
-    if (inputList.size() > 3) inputList.insert(inputList.end(), *(inputList.begin()));
+    if (inputList.size() > 3)
+      inputList.insert(inputList.end(), *(inputList.begin()));
     from = inputList.begin();
     to = inputList.end();
     outputList.clear();
@@ -272,7 +291,8 @@ T_Point compute2DIntersection(T_Point subPolygon, T_Point clipPolygon) {
   T_Point outputList, inputList;
   double dirE, dirS;
   outputList = subPolygon;
-  for (CIT_Point edge = clipPolygon.begin(); edge != clipPolygon.end() - 1; ++edge) {
+  for (CIT_Point edge = clipPolygon.begin(); edge != clipPolygon.end() - 1;
+       ++edge) {
     inputList = outputList;
     outputList.clear();
     CIT_Point s = inputList.end() - 1;
@@ -283,12 +303,14 @@ T_Point compute2DIntersection(T_Point subPolygon, T_Point clipPolygon) {
       {
         if (dirS > 0)  // s not inside
         {
-          outputList.insert(outputList.end(), lineSect(*s, *e, *edge, *(edge + 1)));
+          outputList.insert(outputList.end(),
+                            lineSect(*s, *e, *edge, *(edge + 1)));
         }
         outputList.insert(outputList.end(), *e);
       } else if (dirS <= 0)  // s is inside
       {
-        outputList.insert(outputList.end(), lineSect(*s, *e, *edge, *(edge + 1)));
+        outputList.insert(outputList.end(),
+                          lineSect(*s, *e, *edge, *(edge + 1)));
       }
       s = e;
       dirS = dirE;
@@ -301,7 +323,8 @@ T_Point compute3DIntersection(T_Point subPolygon, T_Point clipPolygon) {
   T_Point outputList, inputList;
   double dirE, dirS;
   outputList = subPolygon;
-  for (CIT_Point edge = clipPolygon.begin(); edge != clipPolygon.end() - 1; ++edge) {
+  for (CIT_Point edge = clipPolygon.begin(); edge != clipPolygon.end() - 1;
+       ++edge) {
     inputList = outputList;
     outputList.clear();
     CIT_Point s = inputList.end() - 1;
@@ -312,12 +335,14 @@ T_Point compute3DIntersection(T_Point subPolygon, T_Point clipPolygon) {
       {
         if (dirS > 0)  // s not inside
         {
-          outputList.insert(outputList.end(), lineSect3D(*s, *e, *edge, *(edge + 1)));
+          outputList.insert(outputList.end(),
+                            lineSect3D(*s, *e, *edge, *(edge + 1)));
         }
         outputList.insert(outputList.end(), *e);
       } else if (dirS <= 0)  // s is inside
       {
-        outputList.insert(outputList.end(), lineSect3D(*s, *e, *edge, *(edge + 1)));
+        outputList.insert(outputList.end(),
+                          lineSect3D(*s, *e, *edge, *(edge + 1)));
       }
       s = e;
       dirS = dirE;
@@ -342,7 +367,9 @@ T_Point compute3DIntersection(T_Point subPolygon, T_Point clipPolygon) {
   return outputList;
 }
 
-double distanceToPlane(const fcl::Vec3f& n, double t, const fcl::Vec3f& v) { return n.dot(v) - t; }
+double distanceToPlane(const fcl::Vec3f& n, double t, const fcl::Vec3f& v) {
+  return n.dot(v) - t;
+}
 
 double distanceToPlane(CPointRef point, CPointRef Pn, CPointRef P0) {
   Point v = point - P0;
@@ -354,28 +381,33 @@ Point projectPointOnPlane(CPointRef point, CPointRef Pn, CPointRef P0) {
   double d = v.dot(Pn);
   // hppDout(notice,"project point on plane, signed distance = "<<d);
   Point proj = point - d * Pn;
-  // hppDout(notice,"projected point from "<<point.transpose()<<" to "<<proj.transpose());
+  // hppDout(notice,"projected point from "<<point.transpose()<<" to
+  // "<<proj.transpose());
   return proj;
 }
 
-double projectPointInsidePlan(T_Point plan, CPointRef point, CPointRef Pn, CPointRef P0, Eigen::Ref<Point> res) {
-  // hppDout(notice,"project point "<<point.transpose()<<" inside plan, with normal "<<Pn.transpose()<<" and point in
-  // plan : "<<P0.transpose()); hppDout(notice,"number of points defining the plan : "<<plan.size());
+double projectPointInsidePlan(T_Point plan, CPointRef point, CPointRef Pn,
+                              CPointRef P0, Eigen::Ref<Point> res) {
+  // hppDout(notice,"project point "<<point.transpose()<<" inside plan, with
+  // normal "<<Pn.transpose()<<" and point in plan : "<<P0.transpose());
+  // hppDout(notice,"number of points defining the plan : "<<plan.size());
   Point proj_ortho = projectPointOnPlane(point, Pn, P0);
   if (containsHull(plan, proj_ortho, 1e-4)) {
     // hppDout(notice,"orthogonal projection is already inside the plan.");
     res = proj_ortho;
     return fabs((proj_ortho - point).norm());
   } else {
-    // hppDout(notice,"orthogonal projection is not inside the plan, compute the closest point inside the plan :");
+    // hppDout(notice,"orthogonal projection is not inside the plan, compute the
+    // closest point inside the plan :");
     double d_min = std::numeric_limits<double>::max();
     double d;
     Point proj;
     Point c = center(plan.begin(), plan.end());
-    // look for the intersection between the lines (proj_ortho -> center of the intersection) and each edge of 'plan'
-    // return the intersection point which lead to the smallest distance (original point -> intersection)
-    // plan is a convexHull, the first point and the last points are equal so we don't need specific case to handle the
-    // last point
+    // look for the intersection between the lines (proj_ortho -> center of the
+    // intersection) and each edge of 'plan' return the intersection point which
+    // lead to the smallest distance (original point -> intersection) plan is a
+    // convexHull, the first point and the last points are equal so we don't
+    // need specific case to handle the last point
     for (CIT_Point e = plan.begin(); e != plan.end() - 1; ++e) {
       proj = lineSect3D(proj_ortho, c, *e, *(e + 1));
       d = fabs((proj - point).norm());
@@ -384,12 +416,14 @@ double projectPointInsidePlan(T_Point plan, CPointRef point, CPointRef Pn, CPoin
         res = proj;
       }
     }
-    // hppDout(notice,"new proj with min distance : "<<d_min<<"   : "<<res.transpose());
+    // hppDout(notice,"new proj with min distance : "<<d_min<<"   :
+    // "<<res.transpose());
     return d_min;
   }
 }
 
-void computeTrianglePlaneDistance(fcl::Vec3f* tri_point, const fcl::Vec3f& n, double t, fcl::Vec3f* distance,
+void computeTrianglePlaneDistance(fcl::Vec3f* tri_point, const fcl::Vec3f& n,
+                                  double t, fcl::Vec3f* distance,
                                   unsigned int* num_penetrating_points) {
   *num_penetrating_points = 0;
 
@@ -401,7 +435,8 @@ void computeTrianglePlaneDistance(fcl::Vec3f* tri_point, const fcl::Vec3f& n, do
   }
 }
 
-bool insideTriangle(const fcl::Vec3f& a, const fcl::Vec3f& b, const fcl::Vec3f& c, const fcl::Vec3f& p) {
+bool insideTriangle(const fcl::Vec3f& a, const fcl::Vec3f& b,
+                    const fcl::Vec3f& c, const fcl::Vec3f& p) {
   fcl::Vec3f ab = b - a;
   fcl::Vec3f ac = c - a;
   fcl::Vec3f n = ab.cross(ac);
@@ -417,7 +452,9 @@ bool insideTriangle(const fcl::Vec3f& a, const fcl::Vec3f& b, const fcl::Vec3f& 
   return true;
 }
 
-void intersect3DGeoms(BVHModelOBConst_Ptr_t model1, BVHModelOBConst_Ptr_t model2, fcl::CollisionResult result) {
+void intersect3DGeoms(BVHModelOBConst_Ptr_t model1,
+                      BVHModelOBConst_Ptr_t model2,
+                      fcl::CollisionResult result) {
   std::ostringstream ss7;
   ss7 << "[";
 
@@ -425,9 +462,11 @@ void intersect3DGeoms(BVHModelOBConst_Ptr_t model1, BVHModelOBConst_Ptr_t model2
     int i = result.getContact(c).b1;  // triangle index
     int j = result.getContact(c).b2;
 
-    fcl::Vec3f tri[3] = {model1->vertices[model1->tri_indices[i][0]], model1->vertices[model1->tri_indices[i][1]],
+    fcl::Vec3f tri[3] = {model1->vertices[model1->tri_indices[i][0]],
+                         model1->vertices[model1->tri_indices[i][1]],
                          model1->vertices[model1->tri_indices[i][2]]};
-    fcl::Vec3f tri2[3] = {model2->vertices[model2->tri_indices[j][0]], model2->vertices[model2->tri_indices[j][1]],
+    fcl::Vec3f tri2[3] = {model2->vertices[model2->tri_indices[j][0]],
+                          model2->vertices[model2->tri_indices[j][1]],
                           model2->vertices[model2->tri_indices[j][2]]};
 
     intersectTriangles(tri, tri2, &ss7);
@@ -439,7 +478,8 @@ void intersect3DGeoms(BVHModelOBConst_Ptr_t model1, BVHModelOBConst_Ptr_t model2
   // std::cout<<ss7.str()<<std::endl;
 }
 
-T_Point intersectTriangles(fcl::Vec3f* tri, fcl::Vec3f* tri2, std::ostringstream* ss) {
+T_Point intersectTriangles(fcl::Vec3f* tri, fcl::Vec3f* tri2,
+                           std::ostringstream* ss) {
   T_Point res;
 
   fcl::Vec3f n2 = (tri2[1] - tri2[0]).cross(tri2[2] - tri2[0]).normalized();
@@ -448,19 +488,22 @@ T_Point intersectTriangles(fcl::Vec3f* tri, fcl::Vec3f* tri2, std::ostringstream
   fcl::Vec3f distance;
   unsigned int num_penetrating_points = 0;
 
-  geom::computeTrianglePlaneDistance(tri, n2, t2, &distance, &num_penetrating_points);
+  geom::computeTrianglePlaneDistance(tri, n2, t2, &distance,
+                                     &num_penetrating_points);
   /*
   hppDout(notice,"Intersection between triangles : ");
   hppDout(notice,"[["<<tri[0][0]<<","<<tri[0][1]<<","<<tri[0][2]<<"],["<<tri[1][0]<<","<<tri[1][1]<<","<<tri[1][2]<<"],["<<tri[2][0]<<","<<tri[2][1]<<","<<tri[2][2]<<"],["<<tri[0][0]<<","<<tri[0][1]<<","<<tri[0][2]<<"]]");
   hppDout(notice,"[["<<tri2[0][0]<<","<<tri2[0][1]<<","<<tri2[0][2]<<"],["<<tri2[1][0]<<","<<tri2[1][1]<<","<<tri2[1][2]<<"],["<<tri2[2][0]<<","<<tri2[2][1]<<","<<tri2[2][2]<<"],["<<tri2[0][0]<<","<<tri2[0][1]<<","<<tri2[0][2]<<"]]");
   */
   if (num_penetrating_points > 2) {
-    hppDout(error, "triangle in the wrong side of the plane");  // shouldn't happen
+    hppDout(error,
+            "triangle in the wrong side of the plane");  // shouldn't happen
     return res;
   }
   if (num_penetrating_points == 2)
-    distance = -distance;  // like this we always work with the same case for later computation (one point of the
-                           // triangle inside the plan)
+    distance =
+        -distance;  // like this we always work with the same case for later
+                    // computation (one point of the triangle inside the plan)
 
   // distance have one and only one negative distance, we want to separate them
   double dneg = 0;
@@ -487,24 +530,29 @@ T_Point intersectTriangles(fcl::Vec3f* tri, fcl::Vec3f* tri2, std::ostringstream
   fcl::Vec3f i2 = pneg + (ppos[1] - pneg) * s2;
   if (geom::insideTriangle(tri2[0], tri2[1], tri2[2], i1)) {
     res.push_back(Eigen::Vector3d(i1[0], i1[1], i1[2]));
-    // hppDout(notice,"first intersection : "<<"["<<i1[0]<<","<<i1[1]<<","<<i1[2]<<"]");
+    // hppDout(notice,"first intersection :
+    // "<<"["<<i1[0]<<","<<i1[1]<<","<<i1[2]<<"]");
     if (ss) *ss << "[" << i1[0] << "," << i1[1] << "," << i1[2] << "],";
   }
   if (geom::insideTriangle(tri2[0], tri2[1], tri2[2], i2)) {
     res.push_back(Eigen::Vector3d(i2[0], i2[1], i2[2]));
-    // hppDout(notice,"second intersection : "<<"["<<i2[0]<<","<<i2[1]<<","<<i2[2]<<"]");
+    // hppDout(notice,"second intersection :
+    // "<<"["<<i2[0]<<","<<i2[1]<<","<<i2[2]<<"]");
     if (ss) *ss << "[" << i2[0] << "," << i2[1] << "," << i2[2] << "],";
   }
   return res;
 }
 /*
-T_Point intersectPolygonePlane(BVHModelOBConst_Ptr_t polygone, BVHModelOBConst_Ptr_t model2, fcl::Vec3f n , double t,
-fcl::CollisionResult result, bool useT, double epsilon){ T_Point res,triRes,sortedRes; std::ostringstream ss; ss<<"[";
+T_Point intersectPolygonePlane(BVHModelOBConst_Ptr_t polygone,
+BVHModelOBConst_Ptr_t model2, fcl::Vec3f n , double t, fcl::CollisionResult
+result, bool useT, double epsilon){ T_Point res,triRes,sortedRes;
+std::ostringstream ss; ss<<"[";
 
 
   for(size_t c = 0 ; c < result.numContacts() ; ++c){
   //  hppDout(info,"normal = "<<result.getContact(c).normal);
-    if(result.getContact(c).normal.equal(-n,epsilon)){ // only compute intersection for contact with the plane
+    if(result.getContact(c).normal.equal(-n,epsilon)){ // only compute
+intersection for contact with the plane
       // need the -n because .normal are oriented from o1 to o2
       int i = result.getContact(c).b1;  // triangle index
       int j = result.getContact(c).b2;
@@ -519,8 +567,8 @@ fcl::CollisionResult result, bool useT, double epsilon){ T_Point res,triRes,sort
       fcl::Intersect::buildTrianglePlane(tri2[0],tri2[1],tri2[2], &n2, &t2);
     //  hppDout(info,"n = "<<n2);
      // hppDout(info,"t = "<<t2);
-      if(n2.equal(n,epsilon) && ((!useT) ||((t2 + EPSILON >= t ) && (t2-EPSILON <= t )))){
-        triRes = intersectTriangles(tri,tri2);
+      if(n2.equal(n,epsilon) && ((!useT) ||((t2 + EPSILON >= t ) && (t2-EPSILON
+<= t )))){ triRes = intersectTriangles(tri,tri2);
         res.insert(res.end(),triRes.begin(),triRes.end());
         triRes = intersectTriangles(tri2,tri);
         res.insert(res.end(),triRes.begin(),triRes.end());
@@ -551,7 +599,8 @@ fcl::CollisionResult result, bool useT, double epsilon){ T_Point res,triRes,sort
 */
 
 // cf http://geomalgorithms.com/a05-_intersect-1.html
-T_Point intersectSegmentPlane(Point s0, Point s1, Eigen::Vector3d pn, Point p0) {
+T_Point intersectSegmentPlane(Point s0, Point s1, Eigen::Vector3d pn,
+                              Point p0) {
   T_Point res;
   Point u = s1 - s0;
   Point w = s0 - p0;
@@ -576,25 +625,32 @@ T_Point intersectSegmentPlane(Point s0, Point s1, Eigen::Vector3d pn, Point p0) 
   return res;
 }
 
-T_Point intersectPolygonePlane(BVHModelOBConst_Ptr_t polygone, BVHModelOBConst_Ptr_t plane, Eigen::Ref<Point> Pn) {
+T_Point intersectPolygonePlane(BVHModelOBConst_Ptr_t polygone,
+                               BVHModelOBConst_Ptr_t plane,
+                               Eigen::Ref<Point> Pn) {
   T_Point res, sortedRes;
   T_Point intersection;
   // compute plane equation (normal, point inside the plan)
   Point P0;
   computePlanEquation(plane, Pn, P0);
   for (int i = 0; i < polygone->num_tris;
-       i++) {  // FIXME : can test 2 times the same line (in both triangles), avoid this ?
+       i++) {  // FIXME : can test 2 times the same line (in both triangles),
+               // avoid this ?
     // hppDout(info,"triangle : "<<i);
     for (int j = 0; j < 3; j++) {
       // hppDout(info,"couple : "<<j);
-      intersection =
-          intersectSegmentPlane(polygone->vertices[polygone->tri_indices[i][j]],
-                                polygone->vertices[polygone->tri_indices[i][((j == 2) ? 0 : (j + 1))]], Pn, P0);
-      if (intersection.size() > 0) res.insert(res.end(), intersection.begin(), intersection.end());
+      intersection = intersectSegmentPlane(
+          polygone->vertices[polygone->tri_indices[i][j]],
+          polygone
+              ->vertices[polygone->tri_indices[i][((j == 2) ? 0 : (j + 1))]],
+          Pn, P0);
+      if (intersection.size() > 0)
+        res.insert(res.end(), intersection.begin(), intersection.end());
     }
   }
 
-  // ordonate the point in the vector (clockwise) first point and last point are the same
+  // ordonate the point in the vector (clockwise) first point and last point are
+  // the same
   if (res.size() == 0) return res;
   sortedRes = convexHull(res.begin(), res.end());
   /* hppDout(notice,"clipped point : ");
@@ -616,15 +672,20 @@ T_Point intersectPolygonePlane(BVHModelOBConst_Ptr_t polygone, BVHModelOBConst_P
 T_Point convertBVH(BVHModelOBConst_Ptr_t obj) {
   T_Point result;
   for (int i = 0; i < obj->num_vertices; ++i) {
-    result.push_back(Eigen::Vector3d(obj->vertices[i][0], obj->vertices[i][1], obj->vertices[i][2]));
+    result.push_back(Eigen::Vector3d(obj->vertices[i][0], obj->vertices[i][1],
+                                     obj->vertices[i][2]));
   }
 
   return convexHull(result.begin(), result.end());
 }
 
-void computePlanEquation(BVHModelOBConst_Ptr_t plane, Eigen::Ref<Point> Pn, Eigen::Ref<Point> P0) {
+void computePlanEquation(BVHModelOBConst_Ptr_t plane, Eigen::Ref<Point> Pn,
+                         Eigen::Ref<Point> P0) {
   TrianglePoints triPlane;
-  triPlane.p1 = plane->vertices[plane->tri_indices[0][0]];  // FIXME : always use the first triangle, is it an issue ?
+  triPlane.p1 =
+      plane
+          ->vertices[plane->tri_indices[0][0]];  // FIXME : always use the first
+                                                 // triangle, is it an issue ?
   triPlane.p2 = plane->vertices[plane->tri_indices[0][1]];
   triPlane.p3 = plane->vertices[plane->tri_indices[0][2]];
   Pn = TriangleNormal(triPlane);

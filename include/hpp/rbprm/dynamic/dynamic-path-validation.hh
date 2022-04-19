@@ -18,8 +18,8 @@
 
 #ifndef HPP_RBPRM_DYNAMIC_PATH_VALIDATION_HH
 #define HPP_RBPRM_DYNAMIC_PATH_VALIDATION_HH
-#include <hpp/rbprm/rbprm-path-validation.hh>
 #include <hpp/rbprm/dynamic/dynamic-validation.hh>
+#include <hpp/rbprm/rbprm-path-validation.hh>
 namespace hpp {
 namespace rbprm {
 
@@ -31,13 +31,17 @@ typedef std::shared_ptr<DynamicPathValidation> DynamicPathValidationPtr_t;
 class HPP_RBPRM_DLLAPI DynamicPathValidation : public RbPrmPathValidation {
  public:
   /// Create an instance and return a shared pointer to the instance
-  static DynamicPathValidationPtr_t create(const core::DevicePtr_t& robot, const core::value_type& stepSize);
+  static DynamicPathValidationPtr_t create(const core::DevicePtr_t& robot,
+                                           const core::value_type& stepSize);
 
   /// validate with custom filter for the rom validation
-  virtual bool validate(const core::PathPtr_t& path, bool reverse, core::PathPtr_t& validPart,
-                        core::PathValidationReportPtr_t& report, const std::vector<std::string>& filter);
+  virtual bool validate(const core::PathPtr_t& path, bool reverse,
+                        core::PathPtr_t& validPart,
+                        core::PathValidationReportPtr_t& report,
+                        const std::vector<std::string>& filter);
 
-  virtual bool validate(const core::PathPtr_t& path, bool reverse, core::PathPtr_t& validPart,
+  virtual bool validate(const core::PathPtr_t& path, bool reverse,
+                        core::PathPtr_t& validPart,
                         core::PathValidationReportPtr_t& report);
 
   void addDynamicValidator(const DynamicValidationPtr_t& dynamicValidation) {
@@ -48,7 +52,8 @@ class HPP_RBPRM_DLLAPI DynamicPathValidation : public RbPrmPathValidation {
  protected:
   /// Protected constructor
   /// Users need to call RbPrmPlanner::create in order to create instances.
-  DynamicPathValidation(const core::DevicePtr_t& robot, const core::value_type& stepSize);
+  DynamicPathValidation(const core::DevicePtr_t& robot,
+                        const core::value_type& stepSize);
 
  private:
   DynamicValidationPtr_t dynamicValidation_;

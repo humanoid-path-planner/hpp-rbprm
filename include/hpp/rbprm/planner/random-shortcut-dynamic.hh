@@ -56,7 +56,8 @@ class RandomShortcutDynamic : public core::pathOptimization::RandomShortcut {
  protected:
   RandomShortcutDynamic(core::ProblemConstPtr_t problem);
 
-  core::PathPtr_t steer(core::ConfigurationIn_t q1, core::ConfigurationIn_t q2) const;
+  core::PathPtr_t steer(core::ConfigurationIn_t q1,
+                        core::ConfigurationIn_t q2) const;
 
  private:
   const SteeringMethodKinodynamicPtr_t sm_;

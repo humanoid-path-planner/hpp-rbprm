@@ -19,50 +19,60 @@
 #ifndef HPP_SPLINE_EFFECTOR_RRT_HH
 #define HPP_SPLINE_EFFECTOR_RRT_HH
 
-#include <hpp/rbprm/config.hh>
-#include <hpp/rbprm/rbprm-fullbody.hh>
-#include <hpp/rbprm/rbprm-state.hh>
-#include <hpp/rbprm/rbprm-device.hh>
-#include <hpp/rbprm/interpolation/time-constraint-steering.hh>
-#include <hpp/rbprm/interpolation/time-constraint-helper.hh>
-#include <hpp/rbprm/interpolation/time-constraint-path.hh>
-#include <hpp/rbprm/interpolation/interpolation-constraints.hh>
-#include <hpp/rbprm/interpolation/com-rrt.hh>
-#include <hpp/core/path.hh>
-#include <hpp/core/problem.hh>
-#include <hpp/core/config-projector.hh>
-#include <hpp/rbprm/interpolation/spline/bezier-path.hh>
-#include <ndcurves/exact_cubic.h>
 #include <ndcurves/bezier_curve.h>
 #include <ndcurves/curve_constraint.h>
-#include <vector>
+#include <ndcurves/exact_cubic.h>
+
+#include <hpp/core/config-projector.hh>
+#include <hpp/core/path.hh>
+#include <hpp/core/problem.hh>
+#include <hpp/rbprm/config.hh>
+#include <hpp/rbprm/interpolation/com-rrt.hh>
+#include <hpp/rbprm/interpolation/interpolation-constraints.hh>
+#include <hpp/rbprm/interpolation/spline/bezier-path.hh>
+#include <hpp/rbprm/interpolation/time-constraint-helper.hh>
+#include <hpp/rbprm/interpolation/time-constraint-path.hh>
+#include <hpp/rbprm/interpolation/time-constraint-steering.hh>
+#include <hpp/rbprm/rbprm-device.hh>
+#include <hpp/rbprm/rbprm-fullbody.hh>
+#include <hpp/rbprm/rbprm-state.hh>
 #include <map>
+#include <vector>
 
 namespace hpp {
 namespace rbprm {
 namespace interpolation {
 struct SetEffectorRRTConstraints;
 
-typedef TimeConstraintHelper<TimeConstraintPath, EffectorRRTShooterFactory, SetEffectorRRTConstraints>
+typedef TimeConstraintHelper<TimeConstraintPath, EffectorRRTShooterFactory,
+                             SetEffectorRRTConstraints>
     EffectorRRTHelper;
 
-core::PathPtr_t effectorRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemSolverPtr_t problemSolver,
-                            const PathPtr_t comPath, const State& startState, const State& nextState,
-                            const std::size_t numOptimizations, const bool keepExtraDof);
+core::PathPtr_t effectorRRT(RbPrmFullBodyPtr_t fullbody,
+                            core::ProblemSolverPtr_t problemSolver,
+                            const PathPtr_t comPath, const State& startState,
+                            const State& nextState,
+                            const std::size_t numOptimizations,
+                            const bool keepExtraDof);
 
-core::PathPtr_t effectorRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemSolverPtr_t problemSolver,
-                            const PathPtr_t comPath, const State& startState, const State& nextState,
-                            const std::size_t numOptimizations, const bool keepExtraDof,
-                            const std::vector<std::string>& constrainedJointPos = std::vector<std::string>(),
-                            const std::vector<std::string>& constrainedLockedJoints = std::vector<std::string>());
+core::PathPtr_t effectorRRT(
+    RbPrmFullBodyPtr_t fullbody, core::ProblemSolverPtr_t problemSolver,
+    const PathPtr_t comPath, const State& startState, const State& nextState,
+    const std::size_t numOptimizations, const bool keepExtraDof,
+    const std::vector<std::string>& constrainedJointPos =
+        std::vector<std::string>(),
+    const std::vector<std::string>& constrainedLockedJoints =
+        std::vector<std::string>());
 
-core::PathPtr_t generateEndEffectorBezier(RbPrmFullBodyPtr_t fullbody, core::ProblemSolverPtr_t problemSolver,
-                                          const PathPtr_t comPath, const State& startState, const State& nextState);
+core::PathPtr_t generateEndEffectorBezier(
+    RbPrmFullBodyPtr_t fullbody, core::ProblemSolverPtr_t problemSolver,
+    const PathPtr_t comPath, const State& startState, const State& nextState);
 
 /**
- * @brief effectorRRTFromPath Call comRRT to compute a whole body path between two states, then compute an
- * end-effector's trajectory with  a bezier curve that fit the initial path found by the rrt, and recompute the whole
- * body trajectory that follow the end effector constraint
+ * @brief effectorRRTFromPath Call comRRT to compute a whole body path between
+ * two states, then compute an end-effector's trajectory with  a bezier curve
+ * that fit the initial path found by the rrt, and recompute the whole body
+ * trajectory that follow the end effector constraint
  * @param fullbody
  * @param referenceProblem
  * @param comPath reference path for the center of mass
@@ -70,47 +80,57 @@ core::PathPtr_t generateEndEffectorBezier(RbPrmFullBodyPtr_t fullbody, core::Pro
  * @param startState
  * @param nextState
  * @param numOptimizations
- * @param keepExtraDof if false, remove the additionnal extraDoF introduced by comRRT
- * @param pathId the Id of the returned path in the problem-solver. Usef to match with the end-effector path indice
- * stored in fullBody
+ * @param keepExtraDof if false, remove the additionnal extraDoF introduced by
+ * comRRT
+ * @param pathId the Id of the returned path in the problem-solver. Usef to
+ * match with the end-effector path indice stored in fullBody
  * @param refFullBodyPath
  * @param constrainedJointPos
  * @param constrainedLockedJoints
  * @return the fullBody path
  */
-PathPtr_t effectorRRTFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemSolverPtr_t problemSolver,
-                              const PathPtr_t comPath, const PathPtr_t fullBodyComPath, const State& startState,
-                              const State& nextState, const std::size_t numOptimizations, const bool keepExtraDof,
-                              const PathPtr_t refPath, const std::vector<std::string>& constrainedJointPos,
-                              const std::vector<std::string>& constrainedLockedJoints);
+PathPtr_t effectorRRTFromPath(
+    RbPrmFullBodyPtr_t fullbody, core::ProblemSolverPtr_t problemSolver,
+    const PathPtr_t comPath, const PathPtr_t fullBodyComPath,
+    const State& startState, const State& nextState,
+    const std::size_t numOptimizations, const bool keepExtraDof,
+    const PathPtr_t refPath,
+    const std::vector<std::string>& constrainedJointPos,
+    const std::vector<std::string>& constrainedLockedJoints);
 
 /**
- * @brief effectorRRTFromPath Call comRRT to compute a whole body path between two states, then compute an
- * end-effector's trajectory with  a bezier curve that fit the initial path found by the rrt, and recompute the whole
- * body trajectory that follow the end effector constraint
+ * @brief effectorRRTFromPath Call comRRT to compute a whole body path between
+ * two states, then compute an end-effector's trajectory with  a bezier curve
+ * that fit the initial path found by the rrt, and recompute the whole body
+ * trajectory that follow the end effector constraint
  * @param fullbody
  * @param referenceProblem
  * @param comPath reference path for the center of mass
  * @param startState
  * @param nextState
  * @param numOptimizations
- * @param keepExtraDof if false, remove the additionnal extraDoF introduced by comRRT
- * @param pathId the Id of the returned path in the problem-solver. Usef to match with the end-effector path indice
- * stored in fullBody
+ * @param keepExtraDof if false, remove the additionnal extraDoF introduced by
+ * comRRT
+ * @param pathId the Id of the returned path in the problem-solver. Usef to
+ * match with the end-effector path indice stored in fullBody
  * @param refFullBodyPath
  * @param constrainedJointPos
  * @param constrainedLockedJoints
  * @return the fullBody path
  */
 core::PathPtr_t effectorRRTFromPath(
-    RbPrmFullBodyPtr_t fullbody, core::ProblemSolverPtr_t problemSolver, const PathPtr_t comPath,
-    const State& startState, const State& nextState, const std::size_t numOptimizations, const bool keepExtraDof,
-    const PathPtr_t refFullBodyPath, const std::vector<std::string>& constrainedJointPos = std::vector<std::string>(),
-    const std::vector<std::string>& constrainedLockedJoints = std::vector<std::string>());
+    RbPrmFullBodyPtr_t fullbody, core::ProblemSolverPtr_t problemSolver,
+    const PathPtr_t comPath, const State& startState, const State& nextState,
+    const std::size_t numOptimizations, const bool keepExtraDof,
+    const PathPtr_t refFullBodyPath,
+    const std::vector<std::string>& constrainedJointPos =
+        std::vector<std::string>(),
+    const std::vector<std::string>& constrainedLockedJoints =
+        std::vector<std::string>());
 
 /**
- * @brief fitBeziersToPath generate a vector of pathVector : each pathVector containt BezierPath, computed with varying
- * value of weight-rrt
+ * @brief fitBeziersToPath generate a vector of pathVector : each pathVector
+ * containt BezierPath, computed with varying value of weight-rrt
  * @param fullbody
  * @param effector
  * @param comPathLength
@@ -119,20 +139,25 @@ core::PathPtr_t effectorRRTFromPath(
  * @param nextState
  * @return
  */
-std::vector<core::PathVectorPtr_t> fitBeziersToPath(RbPrmFullBodyPtr_t fullbody, const pinocchio::Frame& effector,
-                                                    const value_type comPathLength, const PathPtr_t fullBodyComPath,
-                                                    const State& startState, const State& nextState);
+std::vector<core::PathVectorPtr_t> fitBeziersToPath(
+    RbPrmFullBodyPtr_t fullbody, const pinocchio::Frame& effector,
+    const value_type comPathLength, const PathPtr_t fullBodyComPath,
+    const State& startState, const State& nextState);
 
-typedef ndcurves::exact_cubic<double, double, true, Eigen::Matrix<value_type, 3, 1> > exact_cubic_t;
-typedef ndcurves::curve_constraints<Eigen::Matrix<value_type, 3, 1> > curve_constraint_t;
+typedef ndcurves::exact_cubic<double, double, true,
+                              Eigen::Matrix<value_type, 3, 1> >
+    exact_cubic_t;
+typedef ndcurves::curve_constraints<Eigen::Matrix<value_type, 3, 1> >
+    curve_constraint_t;
 typedef std::shared_ptr<exact_cubic_t> exact_cubic_Ptr;
 
 struct SetEffectorRRTConstraints {
-  SetEffectorRRTConstraints(const core::PathPtr_t refCom, const core::PathPtr_t refEff,
-                            const core::PathPtr_t refFullbody, const pinocchio::Frame effector,
-                            const pinocchio::DevicePtr_t endEffectorDevice,
-                            const std::vector<pinocchio::JointPtr_t>& constrainedJointPos,
-                            const std::vector<pinocchio::JointPtr_t>& constrainedLockedJoints)
+  SetEffectorRRTConstraints(
+      const core::PathPtr_t refCom, const core::PathPtr_t refEff,
+      const core::PathPtr_t refFullbody, const pinocchio::Frame effector,
+      const pinocchio::DevicePtr_t endEffectorDevice,
+      const std::vector<pinocchio::JointPtr_t>& constrainedJointPos,
+      const std::vector<pinocchio::JointPtr_t>& constrainedLockedJoints)
       : refCom_(refCom),
         refFullbody_(refFullbody),
         refEff_(refEff),
@@ -141,7 +166,8 @@ struct SetEffectorRRTConstraints {
         constrainedJointPos_(constrainedJointPos),
         constrainedLockedJoints_(constrainedLockedJoints) {}
 
-  void operator()(EffectorRRTHelper& helper, const State& from, const State& to) const;
+  void operator()(EffectorRRTHelper& helper, const State& from,
+                  const State& to) const;
   const core::PathPtr_t refCom_;
   const core::PathPtr_t refFullbody_;
   const core::PathPtr_t refEff_;
@@ -152,12 +178,14 @@ struct SetEffectorRRTConstraints {
 };
 
 struct EndEffectorPath {
-  EndEffectorPath(const DevicePtr_t device, const pinocchio::Frame& effector, const PathPtr_t path,
+  EndEffectorPath(const DevicePtr_t device, const pinocchio::Frame& effector,
+                  const PathPtr_t path,
                   const fcl::Vec3f& offset = fcl::Vec3f(0, 0, 0))
       : device_(device),
         effector_(effector),
         fullBodyPath_(path),
-        positionConstraint_(createPositionMethod(device, fcl::Vec3f(), effector)),
+        positionConstraint_(
+            createPositionMethod(device, fcl::Vec3f(), effector)),
         offset_(offset),
         length_(path->length()) {}
   vector_t operator()(value_type t) const;

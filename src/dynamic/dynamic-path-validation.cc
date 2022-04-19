@@ -16,16 +16,16 @@
 // hpp-core  If not, see
 // <http://www.gnu.org/licenses/>.
 
-#include <hpp/rbprm/dynamic/dynamic-path-validation.hh>
-#include <hpp/core/path.hh>
-#include <hpp/rbprm/rbprm-validation.hh>
+#include <hpp/core/collision-path-validation-report.hh>
 #include <hpp/core/config-validation.hh>
 #include <hpp/core/config-validations.hh>
 #include <hpp/core/path-validation-report.hh>
+#include <hpp/core/path.hh>
 #include <hpp/core/validation-report.hh>
-#include <hpp/core/collision-path-validation-report.hh>
-#include <hpp/util/debug.hh>
 #include <hpp/pinocchio/configuration.hh>
+#include <hpp/rbprm/dynamic/dynamic-path-validation.hh>
+#include <hpp/rbprm/rbprm-validation.hh>
+#include <hpp/util/debug.hh>
 #include <hpp/util/timer.hh>
 
 namespace hpp {
@@ -33,20 +33,22 @@ namespace rbprm {
 using core::Configuration_t;
 using core::value_type;
 
-DynamicPathValidationPtr_t DynamicPathValidation::create(const core::DevicePtr_t& robot,
-                                                         const core::value_type& stepSize) {
+DynamicPathValidationPtr_t DynamicPathValidation::create(
+    const core::DevicePtr_t& robot, const core::value_type& stepSize) {
   DynamicPathValidation* ptr(new DynamicPathValidation(robot, stepSize));
   DynamicPathValidationPtr_t shPtr(ptr);
   return shPtr;
 }
 
-DynamicPathValidation::DynamicPathValidation(const core::DevicePtr_t& robot, const core::value_type& stepSize)
+DynamicPathValidation::DynamicPathValidation(const core::DevicePtr_t& robot,
+                                             const core::value_type& stepSize)
     : RbPrmPathValidation(robot, stepSize) {}
 
 /// validate with custom filter for the rom validation
-bool DynamicPathValidation::validate(const core::PathPtr_t& path, bool reverse, core::PathPtr_t& validPart,
-                                     core::PathValidationReportPtr_t& validationReport,
-                                     const std::vector<std::string>& filter) {
+bool DynamicPathValidation::validate(
+    const core::PathPtr_t& path, bool reverse, core::PathPtr_t& validPart,
+    core::PathValidationReportPtr_t& validationReport,
+    const std::vector<std::string>& filter) {
   hppDout(notice, "dynamic path validation called with filters");
   hppStartBenchmark(PATH_VALIDATION);
   core::ValidationReportPtr_t configReport;
@@ -73,8 +75,8 @@ bool DynamicPathValidation::validate(const core::PathPtr_t& path, bool reverse, 
       bool success = (*path)(q, t);
       if (!success || !rbprmValidation_->validate(q, configReport, filter) ||
           !dynamicValidation_->validate(q, configReport)) {
-        validationReport =
-            core::CollisionPathValidationReportPtr_t(new core::CollisionPathValidationReport(t, configReport));
+        validationReport = core::CollisionPathValidationReportPtr_t(
+            new core::CollisionPathValidationReport(t, configReport));
         valid = false;
       } else {
         lastValidTime = t;
@@ -107,8 +109,8 @@ bool DynamicPathValidation::validate(const core::PathPtr_t& path, bool reverse, 
       bool success = (*path)(q, t);
       if (!success || !rbprmValidation_->validate(q, configReport, filter) ||
           !dynamicValidation_->validate(q, configReport)) {
-        validationReport =
-            core::CollisionPathValidationReportPtr_t(new core::CollisionPathValidationReport(t, configReport));
+        validationReport = core::CollisionPathValidationReportPtr_t(
+            new core::CollisionPathValidationReport(t, configReport));
         valid = false;
       } else {
         lastValidTime = t;
@@ -135,8 +137,9 @@ bool DynamicPathValidation::validate(const core::PathPtr_t& path, bool reverse, 
   hppDisplayBenchmark(PATH_VALIDATION);
 }
 
-bool DynamicPathValidation::validate(const core::PathPtr_t& path, bool reverse, core::PathPtr_t& validPart,
-                                     core::PathValidationReportPtr_t& validationReport) {
+bool DynamicPathValidation::validate(
+    const core::PathPtr_t& path, bool reverse, core::PathPtr_t& validPart,
+    core::PathValidationReportPtr_t& validationReport) {
   hppDout(info, "dynamic path validation called");
   hppDout(info, "path begin : " << path->timeRange().first);
   hppDout(info, "path end : " << path->timeRange().second);
@@ -154,7 +157,8 @@ bool DynamicPathValidation::validate(const core::PathPtr_t& path, bool reverse, 
   hppDout(info, "rbprmValidation called");
   dynamicValidation_->setInitialReport(configReport);
   hppDout(info, "dynamic validation set initial report OK");
-  bool valid = core::pathValidation::Discretized::validate(path, reverse, validPart, validationReport);
+  bool valid = core::pathValidation::Discretized::validate(
+      path, reverse, validPart, validationReport);
   hppStopBenchmark(PATH_VALIDATION);
   hppDisplayBenchmark(PATH_VALIDATION);
   return valid;

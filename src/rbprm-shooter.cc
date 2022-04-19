@@ -14,20 +14,21 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-rbprm. If not, see <http://www.gnu.org/licenses/>.
 
+#include <hpp/fcl/BVH/BVH_model.h>
+#include <hpp/fcl/collision_object.h>
+
+#include <Eigen/Geometry>
 #include <hpp/core/collision-validation-report.hh>
+#include <hpp/core/collision-validation.hh>
+#include <hpp/core/configuration-shooter/uniform.hh>
+#include <hpp/core/problem.hh>
+#include <hpp/pinocchio/configuration.hh>
+#include <hpp/pinocchio/liegroup-element.hh>
+#include <hpp/pinocchio/liegroup-space.hh>
 #include <hpp/rbprm/rbprm-shooter.hh>
 #include <hpp/rbprm/rbprm-validation-report.hh>
-#include <hpp/pinocchio/liegroup-space.hh>
-#include <hpp/pinocchio/liegroup-element.hh>
-#include <pinocchio/algorithm/joint-configuration.hpp>
-#include <hpp/core/configuration-shooter/uniform.hh>
-#include <hpp/fcl/collision_object.h>
-#include <hpp/fcl/BVH/BVH_model.h>
-#include <hpp/core/collision-validation.hh>
-#include <Eigen/Geometry>
-#include <hpp/pinocchio/configuration.hh>
 #include <hpp/util/timer.hh>
-#include <hpp/core/problem.hh>
+#include <pinocchio/algorithm/joint-configuration.hpp>
 
 namespace hpp {
 using namespace core;
@@ -37,13 +38,17 @@ static const int SIZE_EULER = 6;
 typedef fcl::BVHModel<OBBRSS> BVHModelOB;
 typedef shared_ptr<const BVHModelOB> BVHModelOBConst_Ptr_t;
 
-BVHModelOBConst_Ptr_t GetModel(const pinocchio::FclConstCollisionObjectPtr_t object) {
+BVHModelOBConst_Ptr_t GetModel(
+    const pinocchio::FclConstCollisionObjectPtr_t object) {
   if (object->collisionGeometry()->getNodeType() != BV_OBBRSS) {
-    hppDout(warning, "Collision geometry in shooter is not a BV_OBBRSS, cannot get the model.");
+    hppDout(warning,
+            "Collision geometry in shooter is not a BV_OBBRSS, cannot get the "
+            "model.");
     return BVHModelOBConst_Ptr_t();
   }
   // assert(object->collisionGeometry()->getNodeType() == BV_OBBRSS);
-  const BVHModelOBConst_Ptr_t model = boost::static_pointer_cast<const BVHModelOB>(object->collisionGeometry());
+  const BVHModelOBConst_Ptr_t model =
+      boost::static_pointer_cast<const BVHModelOB>(object->collisionGeometry());
   // assert(model->getModelType() == BVH_MODEL_TRIANGLES);
   if (model->getModelType() != BVH_MODEL_TRIANGLES) {
     hppDout(warning, "Collision model is not of type BVH_MODEL_TRIANGLES.");
@@ -61,7 +66,8 @@ double TriangleArea(rbprm::TrianglePoints& tri) {
   return sqrt(s * (s - a) * (s - b) * (s - c));
 }
 
-std::vector<double> getTranslationBounds(const pinocchio::RbPrmDevicePtr_t robot) {
+std::vector<double> getTranslationBounds(
+    const pinocchio::RbPrmDevicePtr_t robot) {
   const JointPtr_t root = robot->Device::rootJoint();
   std::vector<double> res;
   for (std::size_t i = 0; i < 3; ++i) {
@@ -76,22 +82,27 @@ std::vector<double> getTranslationBounds(const pinocchio::RbPrmDevicePtr_t robot
   return res;
 }
 
-void SetConfigTranslation(const pinocchio::RbPrmDevicePtr_t robot, Configuration_t& config, const Vec3f& translation) {
+void SetConfigTranslation(const pinocchio::RbPrmDevicePtr_t robot,
+                          Configuration_t& config, const Vec3f& translation) {
   std::vector<double> bounds = getTranslationBounds(robot);
   for (std::size_t i = 0; i < 3; ++i) {
-    config(i) = std::min(bounds[2 * i + 1], std::max(bounds[2 * i], translation[i]));
+    config(i) =
+        std::min(bounds[2 * i + 1], std::max(bounds[2 * i], translation[i]));
   }
 }
 
-void Translate(const pinocchio::RbPrmDevicePtr_t robot, Configuration_t& config, const Vec3f& translation) {
+void Translate(const pinocchio::RbPrmDevicePtr_t robot, Configuration_t& config,
+               const Vec3f& translation) {
   // bound to positions limits
   std::vector<double> bounds = getTranslationBounds(robot);
   for (int i = 0; i < 3; ++i) {
-    config(i) = std::min(bounds[2 * i + 1], std::max(bounds[2 * i], config(i) + translation[i]));
+    config(i) = std::min(bounds[2 * i + 1],
+                         std::max(bounds[2 * i], config(i) + translation[i]));
   }
 }
 
-/*void SampleRotationRec(ConfigurationPtr_t config, JointVector_t& jv, std::size_t& current)
+/*void SampleRotationRec(ConfigurationPtr_t config, JointVector_t& jv,
+std::size_t& current)
 {
     JointPtr_t joint = jv[current++];
     std::size_t rank = joint->rankInConfiguration ();
@@ -124,7 +135,8 @@ void SampleRotation(const std::vector<double>& so3, Configuration_t& config) {
   config.segment<4>(rank) = qt.coeffs();
 }
 
-/*void SampleRotation(pinocchio::DevicePtr_t so3, ConfigurationPtr_t config, JointVector_t& jv)
+/*void SampleRotation(pinocchio::DevicePtr_t so3, ConfigurationPtr_t config,
+JointVector_t& jv)
 {
     std::size_t id = 1;
     if(so3->rootJoint())
@@ -137,7 +149,8 @@ void SampleRotation(const std::vector<double>& so3, Configuration_t& config) {
             joint->configuration()->uniformlySample (i, confso3);
             joint = joint->numberChildJoints() > 0 ? joint->childJoint(0) : 0;
         }
-        Eigen::Quaterniond qt = Eigen::AngleAxisd(confso3(0), Eigen::Vector3d::UnitZ())
+        Eigen::Quaterniond qt = Eigen::AngleAxisd(confso3(0),
+Eigen::Vector3d::UnitZ())
           * Eigen::AngleAxisd(confso3(1), Eigen::Vector3d::UnitY())
           * Eigen::AngleAxisd(confso3(2), Eigen::Vector3d::UnitX());
         std::size_t rank = 3;
@@ -164,7 +177,8 @@ void SampleRotation(const std::vector<double>& so3, Configuration_t& config) {
     return res;
 }*/
 
-void seRotationtLimits(std::vector<double>& so3Robot, const std::vector<double>& limitszyx) {
+void seRotationtLimits(std::vector<double>& so3Robot,
+                       const std::vector<double>& limitszyx) {
   assert(SIZE_EULER == limitszyx.size());
   so3Robot = limitszyx;
   /*pinocchio::Joint* previous = so3Robot->rootJoint();
@@ -172,8 +186,9 @@ void seRotationtLimits(std::vector<double>& so3Robot, const std::vector<double>&
   {
       // init joints
       previous = new pinocchio::jointRotation::Bounded(fcl::Transform3f());
-      pinocchio::Joint * jy = new pinocchio::jointRotation::Bounded(fcl::Transform3f());
-      pinocchio::Joint * jx = new pinocchio::jointRotation::Bounded(fcl::Transform3f());
+      pinocchio::Joint * jy = new
+  pinocchio::jointRotation::Bounded(fcl::Transform3f()); pinocchio::Joint * jx =
+  new pinocchio::jointRotation::Bounded(fcl::Transform3f());
       so3Robot->rootJoint(previous);
       previous->addChildJoint (jy);
       jy->addChildJoint (jx);
@@ -195,7 +210,8 @@ void seRotationtLimits(std::vector<double>& so3Robot, const std::vector<double>&
       else
       {
           current->upperBound(0, *cit);
-          current = current->numberChildJoints() > 0 ? current->childJoint(0) : 0;
+          current = current->numberChildJoints() > 0 ? current->childJoint(0) :
+  0;
       }
   }*/
 }
@@ -204,15 +220,18 @@ void seRotationtLimits(std::vector<double>& so3Robot, const std::vector<double>&
 
 namespace rbprm {
 
-RbPrmShooterPtr_t RbPrmShooter::create(const pinocchio::RbPrmDevicePtr_t& robot, const ObjectStdVector_t& geometries,
-                                       const affMap_t& affordances, const std::vector<std::string>& filter,
-                                       const std::map<std::string, std::vector<std::string> >& affFilters,
-                                       const std::size_t shootLimit, const std::size_t displacementLimit) {
+RbPrmShooterPtr_t RbPrmShooter::create(
+    const pinocchio::RbPrmDevicePtr_t& robot,
+    const ObjectStdVector_t& geometries, const affMap_t& affordances,
+    const std::vector<std::string>& filter,
+    const std::map<std::string, std::vector<std::string> >& affFilters,
+    const std::size_t shootLimit, const std::size_t displacementLimit) {
   unsigned int seed = (unsigned int)(time(NULL));
   srand(seed);
   hppDout(notice, "&&&&&& SEED = " << seed);
   RbPrmShooter* ptr =
-      new RbPrmShooter(robot, geometries, affordances, filter, affFilters, shootLimit, displacementLimit);
+      new RbPrmShooter(robot, geometries, affordances, filter, affFilters,
+                       shootLimit, displacementLimit);
 
   RbPrmShooterPtr_t shPtr(ptr);
   ptr->init(shPtr);
@@ -224,33 +243,42 @@ void RbPrmShooter::init(const RbPrmShooterPtr_t& self) {
   weak_ = self;
 }
 
-void RbPrmShooter::BoundSO3(const std::vector<double>& limitszyx) { seRotationtLimits(eulerSo3_, limitszyx); }
+void RbPrmShooter::BoundSO3(const std::vector<double>& limitszyx) {
+  seRotationtLimits(eulerSo3_, limitszyx);
+}
 
 /**
- * @brief getUsedSurfaces produce a list of CollisionObject from the affordances list :
- *  use all objects corresponding to at least one affordance filter set.
+ * @brief getUsedSurfaces produce a list of CollisionObject from the affordances
+ * list : use all objects corresponding to at least one affordance filter set.
  * @param affordances
  * @param affFilters
  * @return
  */
-hpp::core::ObjectStdVector_t getUsedSurfaces(const affMap_t& affordances,
-                                             const std::map<std::string, std::vector<std::string> >& affFilters) {
+hpp::core::ObjectStdVector_t getUsedSurfaces(
+    const affMap_t& affordances,
+    const std::map<std::string, std::vector<std::string> >& affFilters) {
   core::ObjectStdVector_t surfaces;
   std::set<std::string> addedTypes;
   hppDout(notice, "Begin getUsedSurfaces from affordances");
-  for (std::map<std::string, std::vector<std::string> >::const_iterator itFilter = affFilters.begin();
+  for (std::map<std::string, std::vector<std::string> >::const_iterator
+           itFilter = affFilters.begin();
        itFilter != affFilters.end(); ++itFilter) {  // for each roms
     hppDout(notice, "For rom : " << itFilter->first);
-    for (std::vector<std::string>::const_iterator itType = itFilter->second.begin(); itType != itFilter->second.end();
-         ++itType) {
+    for (std::vector<std::string>::const_iterator itType =
+             itFilter->second.begin();
+         itType != itFilter->second.end(); ++itType) {
       hppDout(notice, "aff type : " << *itType);
-      if (addedTypes.empty() || (addedTypes.find(*itType) == addedTypes.end())) {
-        hppDout(notice, "new type of affordance, add corresponding collision objects to the list");
+      if (addedTypes.empty() ||
+          (addedTypes.find(*itType) == addedTypes.end())) {
+        hppDout(notice,
+                "new type of affordance, add corresponding collision objects "
+                "to the list");
         addedTypes.insert(*itType);
         if (affordances.map.find(*itType) != affordances.map.end()) {
           affMap_t::const_iterator itAff = affordances.map.find(*itType);
-          for (AffordanceObjects_t::const_iterator itObj = itAff->second.begin(); itObj != itAff->second.end();
-               ++itObj) {
+          for (AffordanceObjects_t::const_iterator itObj =
+                   itAff->second.begin();
+               itObj != itAff->second.end(); ++itObj) {
             surfaces.push_back(itObj->second);
           }
         }
@@ -263,36 +291,45 @@ hpp::core::ObjectStdVector_t getUsedSurfaces(const affMap_t& affordances,
 
 // TODO: outward
 
-RbPrmShooter::RbPrmShooter(const pinocchio::RbPrmDevicePtr_t& robot, const hpp::core::ObjectStdVector_t& geometries,
-                           const affMap_t& affordances, const std::vector<std::string>& filter,
-                           const std::map<std::string, std::vector<std::string> >& affFilters,
-                           const std::size_t shootLimit, const std::size_t displacementLimit)
+RbPrmShooter::RbPrmShooter(
+    const pinocchio::RbPrmDevicePtr_t& robot,
+    const hpp::core::ObjectStdVector_t& geometries, const affMap_t& affordances,
+    const std::vector<std::string>& filter,
+    const std::map<std::string, std::vector<std::string> >& affFilters,
+    const std::size_t shootLimit, const std::size_t displacementLimit)
     : shootLimit_(shootLimit),
       displacementLimit_(displacementLimit),
       filter_(filter),
       weights_(),
       triangles_(),
       robot_(robot),
-      validator_(rbprm::RbPrmValidation::create(robot_, filter, affFilters, affordances, geometries)),
+      validator_(rbprm::RbPrmValidation::create(robot_, filter, affFilters,
+                                                affordances, geometries)),
       uniformShooter_(core::configurationShooter::Uniform::create(robot)),
       ratioWeighted_(0.3) {
-  for (hpp::core::ObjectStdVector_t::const_iterator cit = geometries.begin(); cit != geometries.end(); ++cit) {
+  for (hpp::core::ObjectStdVector_t::const_iterator cit = geometries.begin();
+       cit != geometries.end(); ++cit) {
     validator_->addObstacle(*cit);
   }
   this->InitWeightedTriangles(getUsedSurfaces(affordances, affFilters));
 }
 
-void RbPrmShooter::InitWeightedTriangles(const core::ObjectStdVector_t& geometries) {
+void RbPrmShooter::InitWeightedTriangles(
+    const core::ObjectStdVector_t& geometries) {
   double sum = 0;
-  for (core::ObjectStdVector_t::const_iterator objit = geometries.begin(); objit != geometries.end(); ++objit) {
+  for (core::ObjectStdVector_t::const_iterator objit = geometries.begin();
+       objit != geometries.end(); ++objit) {
     const pinocchio::FclConstCollisionObjectPtr_t colObj = (*objit)->fcl();
     BVHModelOBConst_Ptr_t model = GetModel(colObj);  // TODO NOT TRIANGLES
     for (int i = 0; i < model->num_tris; ++i) {
       TrianglePoints tri;
       Triangle fcltri = model->tri_indices[i];
-      tri.p1 = colObj->getRotation() * model->vertices[fcltri[0]] + colObj->getTranslation();
-      tri.p2 = colObj->getRotation() * model->vertices[fcltri[1]] + colObj->getTranslation();
-      tri.p3 = colObj->getRotation() * model->vertices[fcltri[2]] + colObj->getTranslation();
+      tri.p1 = colObj->getRotation() * model->vertices[fcltri[0]] +
+               colObj->getTranslation();
+      tri.p2 = colObj->getRotation() * model->vertices[fcltri[1]] +
+               colObj->getTranslation();
+      tri.p3 = colObj->getRotation() * model->vertices[fcltri[2]] +
+               colObj->getTranslation();
       double weight = TriangleArea(tri);
       hppDout(notice, "Area of triangle = " << weight);
       sum += weight;
@@ -304,7 +341,8 @@ void RbPrmShooter::InitWeightedTriangles(const core::ObjectStdVector_t& geometri
   }
   double previousWeight = 0;
   hppDout(notice, "Sum of all areas of triangles : " << sum);
-  for (std::vector<double>::iterator wit = weights_.begin(); wit != weights_.end(); ++wit) {
+  for (std::vector<double>::iterator wit = weights_.begin();
+       wit != weights_.end(); ++wit) {
     previousWeight += (*wit) / sum;
     (*wit) = previousWeight;
     hppDout(notice, "current weight = " << previousWeight);
@@ -312,39 +350,48 @@ void RbPrmShooter::InitWeightedTriangles(const core::ObjectStdVector_t& geometri
   hppDout(notice, "number of triangle for the shooter : " << triangles_.size());
 }
 
-const RbPrmShooter::T_TriangleNormal& RbPrmShooter::RandomPointIntriangle() const {
+const RbPrmShooter::T_TriangleNormal& RbPrmShooter::RandomPointIntriangle()
+    const {
   return triangles_[rand() % triangles_.size()];
 }
 
 const RbPrmShooter::T_TriangleNormal& RbPrmShooter::WeightedTriangle() const {
   double r = ((double)rand() / (RAND_MAX));
   std::vector<T_TriangleNormal>::const_iterator trit = triangles_.begin();
-  for (std::vector<double>::const_iterator wit = weights_.begin(); wit != weights_.end(); ++wit, ++trit) {
+  for (std::vector<double>::const_iterator wit = weights_.begin();
+       wit != weights_.end(); ++wit, ++trit) {
     if (*wit >= r) return *trit;
   }
   return triangles_[triangles_.size() - 1];  // not supposed to happen
 }
 
-void RbPrmShooter::randConfigAtPos(const pinocchio::RbPrmDevicePtr_t robot, const std::vector<double>& eulerSo3,
-                                   Configuration_t& config, const Vec3f p) const {
+void RbPrmShooter::randConfigAtPos(const pinocchio::RbPrmDevicePtr_t robot,
+                                   const std::vector<double>& eulerSo3,
+                                   Configuration_t& config,
+                                   const Vec3f p) const {
   uniformShooter_->shoot(config);
   SetConfigTranslation(robot, config, p);
   SampleRotation(eulerSo3, config);
 }
 
-fcl::Vec3f normalFromTriangleContact(const Contact& c, hpp::core::CollisionObjectConstPtr_t colObj) {
+fcl::Vec3f normalFromTriangleContact(
+    const Contact& c, hpp::core::CollisionObjectConstPtr_t colObj) {
   int i = c.b2;
   TrianglePoints tri;
   BVHModelOBConst_Ptr_t model = GetModel(colObj->fcl());  // TODO NOT TRIANGLES
   fcl::Vec3f normal;
   if (model) {
     Triangle fcltri = model->tri_indices[i];
-    tri.p1 = colObj->fcl()->getRotation() * model->vertices[fcltri[0]] + colObj->fcl()->getTranslation();
-    tri.p2 = colObj->fcl()->getRotation() * model->vertices[fcltri[1]] + colObj->fcl()->getTranslation();
-    tri.p3 = colObj->fcl()->getRotation() * model->vertices[fcltri[2]] + colObj->fcl()->getTranslation();
+    tri.p1 = colObj->fcl()->getRotation() * model->vertices[fcltri[0]] +
+             colObj->fcl()->getTranslation();
+    tri.p2 = colObj->fcl()->getRotation() * model->vertices[fcltri[1]] +
+             colObj->fcl()->getTranslation();
+    tri.p3 = colObj->fcl()->getRotation() * model->vertices[fcltri[2]] +
+             colObj->fcl()->getTranslation();
     normal = (tri.p2 - tri.p1).cross(tri.p3 - tri.p1);
   } else {
-    hppDout(warning, "In shooter : cannot get contact normal, use z axis by default.");
+    hppDout(warning,
+            "In shooter : cannot get contact normal, use z axis by default.");
     normal = fcl::Vec3f(0, 0, 1);
   }
   return normal.normalized();
@@ -369,7 +416,8 @@ void RbPrmShooter::impl_shoot(hpp::core::Configuration_t& config) const {
     double r1, r2;
     r1 = ((double)rand() / (RAND_MAX));
     r2 = ((double)rand() / (RAND_MAX));
-    Vec3f p = (1 - sqrt(r1)) * tri.p1 + (sqrt(r1) * (1 - r2)) * tri.p2 + (sqrt(r1) * r2) * tri.p3;
+    Vec3f p = (1 - sqrt(r1)) * tri.p1 + (sqrt(r1) * (1 - r2)) * tri.p2 +
+              (sqrt(r1) * r2) * tri.p3;
     const Vec3f& n = sampled->first;
 
     // set configuration position to sampled point
@@ -382,7 +430,8 @@ void RbPrmShooter::impl_shoot(hpp::core::Configuration_t& config) const {
     while (!found && limitDis > 0) {
       HPP_START_TIMECOUNTER(SHOOT_COLLISION);
       found = validator_->validate(config, reportShPtr, filter_);
-      RbprmValidationReportPtr_t report = std::dynamic_pointer_cast<RbprmValidationReport>(reportShPtr);
+      RbprmValidationReportPtr_t report =
+          std::dynamic_pointer_cast<RbprmValidationReport>(reportShPtr);
       bool valid = found || !report->trunkInCollision;
       HPP_STOP_TIMECOUNTER(SHOOT_COLLISION);
 
@@ -395,11 +444,13 @@ void RbPrmShooter::impl_shoot(hpp::core::Configuration_t& config) const {
           found = validator_->validate(config, reportShPtr, filter_);
           HPP_STOP_TIMECOUNTER(SHOOT_COLLISION);
           if (!found) {
-            Translate(robot_, config, -lastDirection * 0.2 * ((double)rand() / (RAND_MAX)));
+            Translate(robot_, config,
+                      -lastDirection * 0.2 * ((double)rand() / (RAND_MAX)));
           }
           HPP_START_TIMECOUNTER(SHOOT_COLLISION);
           found = validator_->validate(config, reportShPtr, filter_);
-          report = std::dynamic_pointer_cast<RbprmValidationReport>(reportShPtr);
+          report =
+              std::dynamic_pointer_cast<RbprmValidationReport>(reportShPtr);
           valid = found || !report->trunkInCollision;
           // found = validator_->validate(config, filter_);
           HPP_STOP_TIMECOUNTER(SHOOT_COLLISION);
@@ -409,8 +460,13 @@ void RbPrmShooter::impl_shoot(hpp::core::Configuration_t& config) const {
       {
         // retrieve Contact information
         report = std::dynamic_pointer_cast<RbprmValidationReport>(reportShPtr);
-        lastDirection = normalFromTriangleContact(report->result.getContact(0), report->object2);
-        Translate(robot_, config, lastDirection * (std::abs(report->result.getContact(0).penetration_depth) + 0.03));
+        lastDirection = normalFromTriangleContact(report->result.getContact(0),
+                                                  report->object2);
+        Translate(
+            robot_, config,
+            lastDirection *
+                (std::abs(report->result.getContact(0).penetration_depth) +
+                 0.03));
         limitDis--;
       }
     }
@@ -421,14 +477,17 @@ void RbPrmShooter::impl_shoot(hpp::core::Configuration_t& config) const {
   HPP_DISPLAY_TIMECOUNTER(SHOOT_COLLISION);
 }
 
-void RbPrmShooter::sampleExtraDOF(bool sampleExtraDOF) { uniformShooter_->sampleExtraDOF(sampleExtraDOF); }
+void RbPrmShooter::sampleExtraDOF(bool sampleExtraDOF) {
+  uniformShooter_->sampleExtraDOF(sampleExtraDOF);
+}
 
 HPP_START_PARAMETER_DECLARATION(RbprmShooter)
-Problem::declareParameter(
-    core::ParameterDescription(core::Parameter::FLOAT, "RbprmShooter/ratioWeighted",
-                               "The ratio used to select a random triangle with a weight proportional to it's area. "
-                               "Otherwise the triangles are choosed uniformly. ",
-                               core::Parameter(0.3)));
+Problem::declareParameter(core::ParameterDescription(
+    core::Parameter::FLOAT, "RbprmShooter/ratioWeighted",
+    "The ratio used to select a random triangle with a weight proportional to "
+    "it's area. "
+    "Otherwise the triangles are choosed uniformly. ",
+    core::Parameter(0.3)));
 HPP_END_PARAMETER_DECLARATION(RbprmShooter)
 
 }  // namespace rbprm

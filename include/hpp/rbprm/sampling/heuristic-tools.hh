@@ -1,8 +1,8 @@
 #ifndef HPP_HEURISTIC_TOOLS_HH
 #define HPP_HEURISTIC_TOOLS_HH
 
-#include <hpp/pinocchio/device.hh>  // way to get the includes of fcl, ...
 #include <hpp/core/path.hh>
+#include <hpp/pinocchio/device.hh>  // way to get the includes of fcl, ...
 #include <map>
 
 namespace hpp {
@@ -11,20 +11,28 @@ namespace sampling {
 
 /// Defines a parameters set for the ZMP-based heuristic
 struct HeuristicParam {
-  std::map<std::string, fcl::Vec3f> contactPositions_;  // to get the others contacts (without the considered sample)
-  fcl::Vec3f comPosition_;                              // The CoM position
-  fcl::Vec3f comSpeed_;                                 // The CoM speed
-  fcl::Vec3f comAcceleration_;                          // The CoM acceleration
-  std::string sampleLimbName_;                          // The name of the considered sample
-  fcl::Transform3f tfWorldRoot_;    // The transform between the world coordinate system and the root of the robot
-  core::PathConstPtr_t comPath_;    // path followed by the CoM (found by planning)
-  double currentPathId_;            // current id inside comPath (comPath(currentPathId) == comPosition
-  fcl::Vec3f limbReferenceOffset_;  // offset between position of the root and position of the end effector in the
-                                    // reference config
+  std::map<std::string, fcl::Vec3f>
+      contactPositions_;  // to get the others contacts (without the considered
+                          // sample)
+  fcl::Vec3f comPosition_;        // The CoM position
+  fcl::Vec3f comSpeed_;           // The CoM speed
+  fcl::Vec3f comAcceleration_;    // The CoM acceleration
+  std::string sampleLimbName_;    // The name of the considered sample
+  fcl::Transform3f tfWorldRoot_;  // The transform between the world coordinate
+                                  // system and the root of the robot
+  core::PathConstPtr_t
+      comPath_;           // path followed by the CoM (found by planning)
+  double currentPathId_;  // current id inside comPath (comPath(currentPathId)
+                          // == comPosition
+  fcl::Vec3f
+      limbReferenceOffset_;  // offset between position of the root and position
+                             // of the end effector in the reference config
 
   HeuristicParam() {}
-  HeuristicParam(const std::map<std::string, fcl::Vec3f>& cp, const fcl::Vec3f& comPos, const fcl::Vec3f& comSp,
-                 const fcl::Vec3f& comAcc, const std::string& sln, const fcl::Transform3f& tf);
+  HeuristicParam(const std::map<std::string, fcl::Vec3f>& cp,
+                 const fcl::Vec3f& comPos, const fcl::Vec3f& comSp,
+                 const fcl::Vec3f& comAcc, const std::string& sln,
+                 const fcl::Transform3f& tf);
   HeuristicParam(const HeuristicParam& zhp);
 
   HeuristicParam& operator=(const HeuristicParam& zhp);
@@ -36,7 +44,8 @@ struct HeuristicParam {
 /// \param tr The translation to apply
 /// \param ro The rotation to apply
 /// \return The transformed point
-fcl::Vec3f transform(const fcl::Vec3f& p, const fcl::Vec3f& tr, const fcl::Matrix3f& ro);
+fcl::Vec3f transform(const fcl::Vec3f& p, const fcl::Vec3f& tr,
+                     const fcl::Matrix3f& ro);
 
 /// Data structure to store 2-dimensional informations (2D vectors)
 struct Vec2D {
@@ -64,14 +73,16 @@ bool contains(const std::vector<T>& vect, const T& val) {
   return found;
 }
 
-/// Data structure to define a plane corresponding to the following equation : ax + by + cz + d = 0
+/// Data structure to define a plane corresponding to the following equation :
+/// ax + by + cz + d = 0
 struct Plane {
   double a;
   double b;
   double c;
   double d;
   Plane() : a(0), b(0), c(1), d(0) {}
-  Plane(double aa, double bb, double cc, double dd) : a(aa), b(bb), c(cc), d(dd) {}
+  Plane(double aa, double bb, double cc, double dd)
+      : a(aa), b(bb), c(cc), d(dd) {}
   Plane(const Plane& pe) : a(pe.a), b(pe.b), c(pe.c), d(pe.d) {}
   Plane& operator=(const Plane& pe);
 };
@@ -87,8 +98,10 @@ double computeAngle(const Vec2D& center, const Vec2D& end1, const Vec2D& end2);
 /// Computes the support polygon
 ///
 /// \param contactPositions The map of the contact positions
-/// \return The support polygon (orthogonal projection of the contact positions in the ground plane)
-std::vector<Vec2D> computeSupportPolygon(const std::map<std::string, fcl::Vec3f>& contactPositions);
+/// \return The support polygon (orthogonal projection of the contact positions
+/// in the ground plane)
+std::vector<Vec2D> computeSupportPolygon(
+    const std::map<std::string, fcl::Vec3f>& contactPositions);
 
 /// Computes the convex hull of a set
 ///
@@ -97,16 +110,18 @@ std::vector<Vec2D> computeSupportPolygon(const std::map<std::string, fcl::Vec3f>
 std::vector<Vec2D> convexHull(std::vector<Vec2D> set);
 
 /// Computes the weighted centroid of a convex polygon
-/// This is the "real (visual) center" of a polygon (an approximation of it in the worst case)
+/// This is the "real (visual) center" of a polygon (an approximation of it in
+/// the worst case)
 ///
-/// \param convexPolygon The convex polygon to whom we want to find the weighted centroid
-/// \return The weighted centroid of the specified convex polygon
+/// \param convexPolygon The convex polygon to whom we want to find the weighted
+/// centroid \return The weighted centroid of the specified convex polygon
 Vec2D weightedCentroidConvex2D(const std::vector<Vec2D>& convexPolygon);
 
 /// Remove the contacts that does not belong to the "ground"
 ///
 /// \param contacts The considered contacts map
-void removeNonGroundContacts(std::map<std::string, fcl::Vec3f>& contacts, double groundThreshold);
+void removeNonGroundContacts(std::map<std::string, fcl::Vec3f>& contacts,
+                             double groundThreshold);
 
 }  // namespace sampling
 }  // namespace rbprm

@@ -31,7 +31,8 @@ namespace rbprm {
 /// Oriented Path Optimizer
 ///
 /// Optimizer that try to use OrientedKinodynamicPath along the computed path
-/// Only use oriented path if it's collision free and if the previous/next path can be adjusted
+/// Only use oriented path if it's collision free and if the previous/next path
+/// can be adjusted
 ///  to the new orientation
 ///
 /// \note The optimizer assumes that the input path is a vector of optimal
@@ -52,12 +53,14 @@ class OrientedPathOptimizer : public core::PathOptimizer {
 
  protected:
   OrientedPathOptimizer(core::ProblemConstPtr_t problem);
-  bool checkReplaceOrientation(const size_t index, const size_t lastIndex, std::vector<bool> replaceValid,
-                               std::vector<bool> orientedValid,
-                               std::vector<core::KinodynamicOrientedPathPtr_t> orientedPaths,
-                               std::vector<core::KinodynamicPathPtr_t> resultPaths);
+  bool checkReplaceOrientation(
+      const size_t index, const size_t lastIndex,
+      std::vector<bool> replaceValid, std::vector<bool> orientedValid,
+      std::vector<core::KinodynamicOrientedPathPtr_t> orientedPaths,
+      std::vector<core::KinodynamicPathPtr_t> resultPaths);
 
-  core::PathPtr_t steer(core::ConfigurationIn_t q1, core::ConfigurationIn_t q2) const;
+  core::PathPtr_t steer(core::ConfigurationIn_t q1,
+                        core::ConfigurationIn_t q2) const;
 
  private:
   const SteeringMethodKinodynamicPtr_t sm_;

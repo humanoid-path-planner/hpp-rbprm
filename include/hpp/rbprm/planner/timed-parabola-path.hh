@@ -42,9 +42,12 @@ class TimedParabolaPath : public ParabolaPath {
   /// \param device Robot corresponding to configurations
   /// \param init, end Start and end configurations of the path
   /// \param parabolaPath : the path used to compute the position at given time
-  static TimedParabolaPathPtr_t create(const core::DevicePtr_t& device, core::ConfigurationIn_t init,
-                                       core::ConfigurationIn_t end, ParabolaPathPtr_t parabolaPath) {
-    TimedParabolaPath* ptr = new TimedParabolaPath(device, init, end, parabolaPath);
+  static TimedParabolaPathPtr_t create(const core::DevicePtr_t& device,
+                                       core::ConfigurationIn_t init,
+                                       core::ConfigurationIn_t end,
+                                       ParabolaPathPtr_t parabolaPath) {
+    TimedParabolaPath* ptr =
+        new TimedParabolaPath(device, init, end, parabolaPath);
     TimedParabolaPathPtr_t shPtr(ptr);
     ptr->init(shPtr);
     return shPtr;
@@ -54,10 +57,13 @@ class TimedParabolaPath : public ParabolaPath {
   /// \param device Robot corresponding to configurations
   /// \param init, end Start and end configurations of the path
   /// \param length Distance between the configurations.
-  static TimedParabolaPathPtr_t create(const core::DevicePtr_t& device, core::ConfigurationIn_t init,
-                                       core::ConfigurationIn_t end, core::value_type length,
+  static TimedParabolaPathPtr_t create(const core::DevicePtr_t& device,
+                                       core::ConfigurationIn_t init,
+                                       core::ConfigurationIn_t end,
+                                       core::value_type length,
                                        core::vector_t coefficients) {
-    TimedParabolaPath* ptr = new TimedParabolaPath(device, init, end, length, coefficients);
+    TimedParabolaPath* ptr =
+        new TimedParabolaPath(device, init, end, length, coefficients);
     TimedParabolaPathPtr_t shPtr(ptr);
     ptr->init(shPtr);
     return shPtr;
@@ -69,13 +75,17 @@ class TimedParabolaPath : public ParabolaPath {
   /// \param length Distance between the configurations.
   /// \param V0, Vimp initial and final velocity vectors
   /// \param initialROMnames, endROMnames initial and final ROM names
-  static TimedParabolaPathPtr_t create(const core::DevicePtr_t& device, core::ConfigurationIn_t init,
-                                       core::ConfigurationIn_t end, core::value_type length,
-                                       core::vector_t coefficients, core::vector_t V0, core::vector_t Vimp,
+  static TimedParabolaPathPtr_t create(const core::DevicePtr_t& device,
+                                       core::ConfigurationIn_t init,
+                                       core::ConfigurationIn_t end,
+                                       core::value_type length,
+                                       core::vector_t coefficients,
+                                       core::vector_t V0, core::vector_t Vimp,
                                        std::vector<std::string> initialROMnames,
                                        std::vector<std::string> endROMnames) {
     TimedParabolaPath* ptr =
-        new TimedParabolaPath(device, init, end, length, coefficients, V0, Vimp, initialROMnames, endROMnames);
+        new TimedParabolaPath(device, init, end, length, coefficients, V0, Vimp,
+                              initialROMnames, endROMnames);
     TimedParabolaPathPtr_t shPtr(ptr);
     ptr->init(shPtr);
     return shPtr;
@@ -94,8 +104,9 @@ class TimedParabolaPath : public ParabolaPath {
   /// \param path path to copy
   /// \param constraints the path is subject to
   /// <!> constraints part NOT IMPLEMENTED YET
-  static TimedParabolaPathPtr_t createCopy(const TimedParabolaPathPtr_t& path,
-                                           const core::ConstraintSetPtr_t& /*constraints*/) {
+  static TimedParabolaPathPtr_t createCopy(
+      const TimedParabolaPathPtr_t& path,
+      const core::ConstraintSetPtr_t& /*constraints*/) {
     // TimedParabolaPath* ptr = new TimedParabolaPath (*path, constraints);
     TimedParabolaPath* ptr = new TimedParabolaPath(*path);
     TimedParabolaPathPtr_t shPtr(ptr);
@@ -113,7 +124,8 @@ class TimedParabolaPath : public ParabolaPath {
   ///
   /// \param constraints constraints to apply to the copy
   /// \precond *this should not have constraints.
-  virtual core::PathPtr_t copy(const core::ConstraintSetPtr_t& constraints) const {
+  virtual core::PathPtr_t copy(
+      const core::ConstraintSetPtr_t& constraints) const {
     return createCopy(weak_.lock(), constraints);
   }
 
@@ -159,17 +171,22 @@ class TimedParabolaPath : public ParabolaPath {
 
  protected:
   /// Constructor
-  TimedParabolaPath(const core::DevicePtr_t& robot, core::ConfigurationIn_t init, core::ConfigurationIn_t end,
+  TimedParabolaPath(const core::DevicePtr_t& robot,
+                    core::ConfigurationIn_t init, core::ConfigurationIn_t end,
                     ParabolaPathPtr_t parabolaPath);
 
   /// Constructor
-  TimedParabolaPath(const core::DevicePtr_t& robot, core::ConfigurationIn_t init, core::ConfigurationIn_t end,
+  TimedParabolaPath(const core::DevicePtr_t& robot,
+                    core::ConfigurationIn_t init, core::ConfigurationIn_t end,
                     core::value_type length, core::vector_t coefficients);
 
   /// Constructor with velocities and ROMnames
-  TimedParabolaPath(const core::DevicePtr_t& robot, core::ConfigurationIn_t init, core::ConfigurationIn_t end,
-                    core::value_type length, core::vector_t coefs, core::vector_t V0, core::vector_t Vimp,
-                    std::vector<std::string> initialROMnames, std::vector<std::string> endROMnames);
+  TimedParabolaPath(const core::DevicePtr_t& robot,
+                    core::ConfigurationIn_t init, core::ConfigurationIn_t end,
+                    core::value_type length, core::vector_t coefs,
+                    core::vector_t V0, core::vector_t Vimp,
+                    std::vector<std::string> initialROMnames,
+                    std::vector<std::string> endROMnames);
 
   /// Copy constructor
   TimedParabolaPath(const TimedParabolaPath& path);
@@ -180,7 +197,8 @@ class TimedParabolaPath : public ParabolaPath {
   }
 
   /// Param is the time
-  virtual bool impl_compute(core::ConfigurationOut_t result, core::value_type t) const;
+  virtual bool impl_compute(core::ConfigurationOut_t result,
+                            core::value_type t) const;
 
   virtual double computeTimedLength(double x_theta, double v0, double alpha0);
   virtual double computeTimedLength(ParabolaPathPtr_t parabolaPath);
@@ -188,7 +206,8 @@ class TimedParabolaPath : public ParabolaPath {
   /// Print path in a stream
   virtual std::ostream& print(std::ostream& os) const {
     os << "TimedParabolaPath:" << std::endl;
-    os << "interval: [ " << timeRange().first << ", " << timeRange().second << " ]" << std::endl;
+    os << "interval: [ " << timeRange().first << ", " << timeRange().second
+       << " ]" << std::endl;
     os << "initial configuration: " << initial_.transpose() << std::endl;
     os << "final configuration:   " << end_.transpose() << std::endl;
     return os;

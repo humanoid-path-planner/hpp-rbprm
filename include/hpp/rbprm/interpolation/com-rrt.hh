@@ -19,20 +19,19 @@
 #ifndef HPP_RBPRM_COM_RRT_HH
 #define HPP_RBPRM_COM_RRT_HH
 
-#include <hpp/rbprm/config.hh>
-#include <hpp/rbprm/rbprm-fullbody.hh>
-#include <hpp/rbprm/rbprm-state.hh>
-#include <hpp/rbprm/rbprm-device.hh>
-#include <hpp/rbprm/interpolation/time-constraint-steering.hh>
-#include <hpp/rbprm/interpolation/time-constraint-helper.hh>
-#include <hpp/rbprm/interpolation/time-constraint-path.hh>
-#include <hpp/rbprm/interpolation/com-rrt-shooter.hh>
+#include <hpp/core/config-projector.hh>
 #include <hpp/core/path.hh>
 #include <hpp/core/problem.hh>
-#include <hpp/core/config-projector.hh>
-
-#include <vector>
+#include <hpp/rbprm/config.hh>
+#include <hpp/rbprm/interpolation/com-rrt-shooter.hh>
+#include <hpp/rbprm/interpolation/time-constraint-helper.hh>
+#include <hpp/rbprm/interpolation/time-constraint-path.hh>
+#include <hpp/rbprm/interpolation/time-constraint-steering.hh>
+#include <hpp/rbprm/rbprm-device.hh>
+#include <hpp/rbprm/rbprm-fullbody.hh>
+#include <hpp/rbprm/rbprm-state.hh>
 #include <map>
+#include <vector>
 
 namespace hpp {
 namespace rbprm {
@@ -40,30 +39,49 @@ namespace interpolation {
 
 struct SetComRRTConstraints;
 
-typedef TimeConstraintHelper<TimeConstraintPath, ComRRTShooterFactory, SetComRRTConstraints> ComRRTHelper;
+typedef TimeConstraintHelper<TimeConstraintPath, ComRRTShooterFactory,
+                             SetComRRTConstraints>
+    ComRRTHelper;
 struct SetComRRTConstraints {
-  void operator()(ComRRTHelper& helper, const State& from, const State& to) const;
+  void operator()(ComRRTHelper& helper, const State& from,
+                  const State& to) const;
 };
 
-core::PathPtr_t comRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemSolverPtr_t problemSolver, const PathPtr_t comPath,
-                       const State& startState, const State& nextState, const std::size_t numOptimizations,
+core::PathPtr_t comRRT(RbPrmFullBodyPtr_t fullbody,
+                       core::ProblemSolverPtr_t problemSolver,
+                       const PathPtr_t comPath, const State& startState,
+                       const State& nextState,
+                       const std::size_t numOptimizations,
                        const bool keepExtraDof =
-                           false);  // needed because of the definition of t_rrt struct, but problemSolver is not used
+                           false);  // needed because of the definition of t_rrt
+                                    // struct, but problemSolver is not used
 
-core::PathPtr_t comRRT(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem, const PathPtr_t comPath,
-                       const State& startState, const State& nextState, const std::size_t numOptimizations,
+core::PathPtr_t comRRT(RbPrmFullBodyPtr_t fullbody,
+                       core::ProblemPtr_t referenceProblem,
+                       const PathPtr_t comPath, const State& startState,
+                       const State& nextState,
+                       const std::size_t numOptimizations,
                        const bool keepExtraDof = false);
 
-core::PathPtr_t comRRTFromPath(RbPrmFullBodyPtr_t fullbody, core::ProblemSolverPtr_t problemSolver,
-                               const PathPtr_t comPath, const PathPtr_t guidePath, const CIT_StateFrame& startState,
-                               const CIT_StateFrame& endState, const std::size_t numOptimizations);
+core::PathPtr_t comRRTFromPath(RbPrmFullBodyPtr_t fullbody,
+                               core::ProblemSolverPtr_t problemSolver,
+                               const PathPtr_t comPath,
+                               const PathPtr_t guidePath,
+                               const CIT_StateFrame& startState,
+                               const CIT_StateFrame& endState,
+                               const std::size_t numOptimizations);
 
-core::Configuration_t projectOnCom(RbPrmFullBodyPtr_t fullbody, core::ProblemPtr_t referenceProblem,
-                                   const State& model, const fcl::Vec3f& targetCom, bool& success);
+core::Configuration_t projectOnCom(RbPrmFullBodyPtr_t fullbody,
+                                   core::ProblemPtr_t referenceProblem,
+                                   const State& model,
+                                   const fcl::Vec3f& targetCom, bool& success);
 
-/*typedef std::vector<pinocchio::vector_t,Eigen::aligned_allocator<pinocchio::vector_t> > T_Configuration;
-core::PathPtr_t generateComTraj(const T_Configuration& configurations, const pinocchio::value_type dt, const
-pinocchio::ConfigurationIn_t & initSpeed, const pinocchio::ConfigurationIn_t endSpeed);*/
+/*typedef
+std::vector<pinocchio::vector_t,Eigen::aligned_allocator<pinocchio::vector_t> >
+T_Configuration; core::PathPtr_t generateComTraj(const T_Configuration&
+configurations, const pinocchio::value_type dt, const
+pinocchio::ConfigurationIn_t & initSpeed, const pinocchio::ConfigurationIn_t
+endSpeed);*/
 }  // namespace interpolation
 }  // namespace rbprm
 }  // namespace hpp

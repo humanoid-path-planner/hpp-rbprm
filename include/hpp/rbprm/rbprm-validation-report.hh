@@ -19,8 +19,8 @@
 #ifndef HPP_RBPRM_VALIDATION_REPORT_HH
 #define HPP_RBPRM_VALIDATION_REPORT_HH
 
-#include <hpp/core/validation-report.hh>
 #include <hpp/core/collision-validation-report.hh>
+#include <hpp/core/validation-report.hh>
 
 namespace hpp {
 namespace core {
@@ -33,10 +33,12 @@ typedef std::shared_ptr<RbprmValidationReport> RbprmValidationReportPtr_t;
 
 /// Validate a configuration with respect to collision
 ///
-struct HPP_CORE_DLLAPI RbprmValidationReport : public CollisionValidationReport {
+struct HPP_CORE_DLLAPI RbprmValidationReport
+    : public CollisionValidationReport {
   /// Directing vector between collision point of geometries
-  std::map<std::string, CollisionValidationReportPtr_t> ROMReports;  // name ; collision report
-  std::map<std::string, bool> ROMFilters;                            // name ; true if valid
+  std::map<std::string, CollisionValidationReportPtr_t>
+      ROMReports;                          // name ; collision report
+  std::map<std::string, bool> ROMFilters;  // name ; true if valid
 
   bool trunkInCollision;
   bool romsValid;
@@ -44,11 +46,13 @@ struct HPP_CORE_DLLAPI RbprmValidationReport : public CollisionValidationReport 
   /// Write report in a stream
   virtual std::ostream& print(std::ostream& os) const {
     if (trunkInCollision) {
-      os << "Collision between object " << object1->name() << " and " << object2->name();
+      os << "Collision between object " << object1->name() << " and "
+         << object2->name();
     }
     if (!romsValid) {
       os << "Rom filters not respected : " << std::endl;
-      for (std::map<std::string, bool>::const_iterator it = ROMFilters.begin(); it != ROMFilters.end(); ++it) {
+      for (std::map<std::string, bool>::const_iterator it = ROMFilters.begin();
+           it != ROMFilters.end(); ++it) {
         if (!it->second) os << " " << it->first << std::endl;
       }
     }

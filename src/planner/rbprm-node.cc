@@ -16,14 +16,16 @@
 // hpp-core  If not, see
 // <http://www.gnu.org/licenses/>.
 
-#include <hpp/rbprm/planner/rbprm-node.hh>
 #include <hpp/fcl/collision_data.h>
-#include "hpp/rbprm/utils/algorithms.h"
+
+#include <hpp/core/collision-validation-report.hh>
+#include <hpp/pinocchio/configuration.hh>
+#include <hpp/rbprm/planner/rbprm-node.hh>
+#include <hpp/rbprm/rbprm-device.hh>
 #include <hpp/util/debug.hh>
 #include <hpp/util/timer.hh>
-#include <hpp/pinocchio/configuration.hh>
-#include <hpp/core/collision-validation-report.hh>
-#include <hpp/rbprm/rbprm-device.hh>
+
+#include "hpp/rbprm/utils/algorithms.h"
 namespace hpp {
 namespace core {
 
@@ -41,24 +43,28 @@ Eigen::Quaterniond RbprmNode::getQuaternion() {
   return quat;
 }
 
-bool computeIntersectionSurface(const core::CollisionValidationReportPtr_t report, geom::T_Point& inter,
-                                geom::Point& pn, pinocchio::DeviceData& deviceData) {
+bool computeIntersectionSurface(
+    const core::CollisionValidationReportPtr_t report, geom::T_Point& inter,
+    geom::Point& pn, pinocchio::DeviceData& deviceData) {
   core::CollisionObjectConstPtr_t obj_rom = report->object1;
   core::CollisionObjectConstPtr_t obj_env = report->object2;
-  // hppDout(notice,"~~ compute intersection between : "<<obj_rom->name() << " and "<<obj_env->name());
-  // convert the two objects  :
+  // hppDout(notice,"~~ compute intersection between : "<<obj_rom->name() << "
+  // and "<<obj_env->name()); convert the two objects  :
   geom::BVHModelOBConst_Ptr_t model_rom = geom::GetModel(obj_rom, deviceData);
   geom::BVHModelOBConst_Ptr_t model_env = geom::GetModel(obj_env, deviceData);
 
   hppStartBenchmark(COMPUTE_INTERSECTION);
   geom::T_Point plane = geom::intersectPolygonePlane(model_rom, model_env, pn);
-  // plane contains a list of points : the intersections between model_rom and the infinite plane defined by model_env.
-  // but they may not be contained inside the shape defined by model_env
+  // plane contains a list of points : the intersections between model_rom and
+  // the infinite plane defined by model_env. but they may not be contained
+  // inside the shape defined by model_env
   hppStopBenchmark(COMPUTE_INTERSECTION);
   hppDisplayBenchmark(COMPUTE_INTERSECTION);
   if (plane.size() > 0)
     inter = geom::compute3DIntersection(
-        plane, geom::convertBVH(model_env));  // hull contain only points inside the model_env shape
+        plane,
+        geom::convertBVH(
+            model_env));  // hull contain only points inside the model_env shape
   else
     return false;
   if (inter.size() == 0)
@@ -67,7 +73,8 @@ bool computeIntersectionSurface(const core::CollisionValidationReportPtr_t repor
     return true;
 }
 
-bool centerOfRomIntersection(const core::CollisionValidationReportPtr_t report, geom::Point& pn, geom::Point& center,
+bool centerOfRomIntersection(const core::CollisionValidationReportPtr_t report,
+                             geom::Point& pn, geom::Point& center,
                              pinocchio::DeviceData& deviceData) {
   geom::T_Point hull;
   bool success = computeIntersectionSurface(report, hull, pn, deviceData);
@@ -81,17 +88,21 @@ bool centerOfRomIntersection(const core::CollisionValidationReportPtr_t report, 
 }
 
 /**
- * @brief approximateContactPoint Compute the approximation of the contact Point.
- * Current implementation : closest point of the reference config inside the contact surface.
+ * @brief approximateContactPoint Compute the approximation of the contact
+ * Point. Current implementation : closest point of the reference config inside
+ * the contact surface.
  * @param report the collision report
  * @param pn output the normal of the contact
  * @param result output the contact point
- * @param config configuration of the robot (only the root's configuration is used here)
+ * @param config configuration of the robot (only the root's configuration is
+ * used here)
  * @param device
  * @return bool success
  */
-bool approximateContactPoint(const std::string romName, const core::CollisionValidationReportPtr_t report,
-                             geom::Point& pn, geom::Point& result, core::ConfigurationPtr_t config,
+bool approximateContactPoint(const std::string romName,
+                             const core::CollisionValidationReportPtr_t report,
+                             geom::Point& pn, geom::Point& result,
+                             core::ConfigurationPtr_t config,
                              pinocchio::RbPrmDevicePtr_t device) {
   geom::T_Point hull;
   pinocchio::DeviceSync deviceSync(device);
@@ -101,19 +112,26 @@ bool approximateContactPoint(const std::string romName, const core::CollisionVal
   if (success) {
     fcl::Vec3f reference = device->getEffectorReference(romName);
     if (reference.norm() != 0) {
-      // hppDout(notice,"Reference position for rom"<<romName<<" = "<<reference.transpose());
+      // hppDout(notice,"Reference position for rom"<<romName<<" =
+      // "<<reference.transpose());
       fcl::Transform3f tRoot;
-      tRoot.setTranslation(fcl::Vec3f((*config)[0], (*config)[1], (*config)[2]));
-      fcl::Quaternion3f quat((*config)[6], (*config)[3], (*config)[4], (*config)[5]);
+      tRoot.setTranslation(
+          fcl::Vec3f((*config)[0], (*config)[1], (*config)[2]));
+      fcl::Quaternion3f quat((*config)[6], (*config)[3], (*config)[4],
+                             (*config)[5]);
       tRoot.setRotation(quat.matrix());
       reference = (tRoot * reference).getTranslation();
       geom::Point refPoint(reference);
-      // hppDout(notice,"Reference after root transform = "<<refPoint.transpose());
+      // hppDout(notice,"Reference after root transform =
+      // "<<refPoint.transpose());
       geom::projectPointInsidePlan(hull, refPoint, pn, hull.front(), result);
-      hppDout(notice, "Approximate contact point found : " << result.transpose());
+      hppDout(notice,
+              "Approximate contact point found : " << result.transpose());
       return true;
     } else {
-      hppDout(notice, "No reference end effector position defined, use center of intersection as approximation");
+      hppDout(notice,
+              "No reference end effector position defined, use center of "
+              "intersection as approximation");
       result = geom::center(hull.begin(), hull.end());
       return true;
     }
@@ -123,9 +141,11 @@ bool approximateContactPoint(const std::string romName, const core::CollisionVal
   }
 }
 
-void computeNodeMatrixForOnePoint(const geom::Point pn, const geom::Point center, const double sizeFootX,
-                                  const double sizeFootY, const bool rectangularContact, const double mu,
-                                  const Eigen::Quaterniond quat, size_t& indexRom, MatrixXX& V, Matrix6X& IP_hat) {
+void computeNodeMatrixForOnePoint(
+    const geom::Point pn, const geom::Point center, const double sizeFootX,
+    const double sizeFootY, const bool rectangularContact, const double mu,
+    const Eigen::Quaterniond quat, size_t& indexRom, MatrixXX& V,
+    Matrix6X& IP_hat) {
   Vector3 ti1, ti2;
   // hppDout(notice,"normal for this contact : "<<getNormal());
   hppDout(notice, "mu used in computeNodeMatrix : " << mu);
@@ -142,7 +162,8 @@ void computeNodeMatrixForOnePoint(const geom::Point pn, const geom::Point center
   // hppDout(info,"t"<<indexRom<<"1 : "<<ti1.transpose());
   // hppDout(info,"t"<<indexRom<<"2 : "<<ti2.transpose());
 
-  // fill V with generating ray ([ n_i + \mu t_{i1} & n_i - \mu t_{i1} & n_i + \mu t_{i2} & n_i - \mu t_{i2}]
+  // fill V with generating ray ([ n_i + \mu t_{i1} & n_i - \mu t_{i1} & n_i +
+  // \mu t_{i2} & n_i - \mu t_{i2}]
   MatrixXX Vi = MatrixXX::Zero(3, 4);
   Vi.col(0) = (pn + mu * ti1);
   Vi.col(1) = (pn - mu * ti1);
@@ -159,7 +180,9 @@ void computeNodeMatrixForOnePoint(const geom::Point pn, const geom::Point center
     // hppDout(notice,"shift x = "<<shiftX.transpose());
     // hppDout(notice,"shift y = "<<shiftY.transpose());
 
-    hppDout(notice, "Center of rom collision :  [" << center[0] << " , " << center[1] << " , " << center[2] << "]");
+    hppDout(notice, "Center of rom collision :  ["
+                        << center[0] << " , " << center[1] << " , " << center[2]
+                        << "]");
     for (size_t i = 0; i < 4; ++i) {
       // make a rectangle around center :
       pContact = center;
@@ -174,13 +197,16 @@ void computeNodeMatrixForOnePoint(const geom::Point pn, const geom::Point center
 
       // fill IP_hat with position : [I_3  pi_hat] ^T
       IP_hat.block<3, 3>(0, 3 * (indexRom + i)) = MatrixXX::Identity(3, 3);
-      IP_hat.block<3, 3>(3, 3 * (indexRom + i)) = centroidal_dynamics::crossMatrix(pContact);
+      IP_hat.block<3, 3>(3, 3 * (indexRom + i)) =
+          centroidal_dynamics::crossMatrix(pContact);
 
-      hppDout(notice,
-              "position of rom collision :  [" << pContact[0] << " , " << pContact[1] << " , " << pContact[2] << "]");
-      // ssContacts<<"["<<pContact[0]<<" , "<<pContact[1]<<" , "<<pContact[2]<<"],";
-      // hppDout(info,"p"<<(indexRom+i)<<"^T = "<<pContact.transpose());
-      // hppDout(info,"IP_hat at iter "<<indexRom<< " = \n"<<IP_hat);
+      hppDout(notice, "position of rom collision :  [" << pContact[0] << " , "
+                                                       << pContact[1] << " , "
+                                                       << pContact[2] << "]");
+      // ssContacts<<"["<<pContact[0]<<" , "<<pContact[1]<<" ,
+      // "<<pContact[2]<<"],"; hppDout(info,"p"<<(indexRom+i)<<"^T =
+      // "<<pContact.transpose()); hppDout(info,"IP_hat at iter "<<indexRom<< "
+      // = \n"<<IP_hat);
 
       // hppDout(notice,"V"<<indexRom<<" = \n"<<Vi);
       V.block<3, 4>(3 * (indexRom + i), 4 * (indexRom + i)) = Vi;
@@ -190,9 +216,11 @@ void computeNodeMatrixForOnePoint(const geom::Point pn, const geom::Point center
   } else {
     // fill IP_hat with position : [I_3  pi_hat] ^T
     IP_hat.block<3, 3>(0, 3 * indexRom) = MatrixXX::Identity(3, 3);
-    IP_hat.block<3, 3>(3, 3 * indexRom) = centroidal_dynamics::crossMatrix(center);
+    IP_hat.block<3, 3>(3, 3 * indexRom) =
+        centroidal_dynamics::crossMatrix(center);
 
-    // hppDout(notice,"Center of rom collision :  ["<<center[0]<<" , "<<center[1]<<" , "<<center[2]<<"]");
+    // hppDout(notice,"Center of rom collision :  ["<<center[0]<<" ,
+    // "<<center[1]<<" , "<<center[2]<<"]");
     hppDout(info, "p" << indexRom << "^T = " << center.transpose());
     // hppDout(info,"IP_hat at iter "<<indexRom<< " = \n"<<IP_hat);
 
@@ -203,12 +231,15 @@ void computeNodeMatrixForOnePoint(const geom::Point pn, const geom::Point center
   }
 }
 
-void RbprmNode::fillNodeMatrices(ValidationReportPtr_t report, bool rectangularContact, double sizeFootX,
-                                 double sizeFootY, double m, double mu, pinocchio::RbPrmDevicePtr_t device) {
+void RbprmNode::fillNodeMatrices(ValidationReportPtr_t report,
+                                 bool rectangularContact, double sizeFootX,
+                                 double sizeFootY, double m, double mu,
+                                 pinocchio::RbPrmDevicePtr_t device) {
   assert(device && "Error in dynamic cast of problem device to rbprmDevice");
   hppStartBenchmark(FILL_NODE_MATRICE);
 
-  core::RbprmValidationReportPtr_t rbReport = std::dynamic_pointer_cast<core::RbprmValidationReport>(report);
+  core::RbprmValidationReportPtr_t rbReport =
+      std::dynamic_pointer_cast<core::RbprmValidationReport>(report);
   // checks : (use assert ? )
   if (!rbReport) {
     hppDout(error, "~~ Validation Report cannot be cast");
@@ -217,35 +248,45 @@ void RbprmNode::fillNodeMatrices(ValidationReportPtr_t report, bool rectangularC
   collisionReport(rbReport);
 
   if (rbReport->trunkInCollision) {
-    hppDout(error, "~~ ComputeGIWC : trunk is in collision");  // shouldn't happen
+    hppDout(error,
+            "~~ ComputeGIWC : trunk is in collision");  // shouldn't happen
   }
   if (!rbReport->romsValid) {
-    hppDout(error, "~~ ComputeGIWC : roms filter not respected");  // shouldn't happen
+    hppDout(error,
+            "~~ ComputeGIWC : roms filter not respected");  // shouldn't happen
   }
 
   hppDout(notice, "Robot mass used to compute matrices : " << m);
   assert(m > 0. && " Robot mass during computation of dynamic matrices is 0.");
   // FIX ME : position of contact is in center of the collision surface
-  size_type numContactpoints = (rbReport->ROMReports.size() + 3 * rectangularContact * rbReport->ROMReports.size());
+  size_type numContactpoints =
+      (rbReport->ROMReports.size() +
+       3 * rectangularContact * rbReport->ROMReports.size());
   setNumberOfContacts(numContactpoints);
   hppDout(notice, "number of contact points = " << numContactpoints);
   MatrixXX V = MatrixXX::Zero(3 * numContactpoints, 4 * numContactpoints);
   Matrix6X IP_hat = Matrix6X::Zero(6, 3 * numContactpoints);
   // get the 2 object in contact for each ROM :
-  hppDout(info, "~~ Number of roms in collision : " << rbReport->ROMReports.size());
+  hppDout(info,
+          "~~ Number of roms in collision : " << rbReport->ROMReports.size());
   size_t indexRom = 0;
   std::ostringstream ssContact;
   ssContact << "[";
   bool pointExist;
-  for (std::map<std::string, core::CollisionValidationReportPtr_t>::const_iterator it = rbReport->ROMReports.begin();
+  for (std::map<std::string,
+                core::CollisionValidationReportPtr_t>::const_iterator it =
+           rbReport->ROMReports.begin();
        it != rbReport->ROMReports.end(); ++it) {
     hppDout(info, "~~ for rom : " << it->first);
     geom::Point pn, contactPoint;
-    pointExist = approximateContactPoint(it->first, it->second, pn, contactPoint, configuration(), device);
-    ssContact << "[" << contactPoint[0] << " , " << contactPoint[1] << " , " << contactPoint[2] << "],";
+    pointExist = approximateContactPoint(it->first, it->second, pn,
+                                         contactPoint, configuration(), device);
+    ssContact << "[" << contactPoint[0] << " , " << contactPoint[1] << " , "
+              << contactPoint[2] << "],";
 
     if (!pointExist) {
-      hppDout(error, "Unable to compute the approximation of the contact point");
+      hppDout(error,
+              "Unable to compute the approximation of the contact point");
       // save infos needed for LP problem in node structure
       // FIXME : Or retry with another obstacle ???
       setV(V);
@@ -261,13 +302,15 @@ void RbprmNode::fillNodeMatrices(ValidationReportPtr_t report, bool rectangularC
       setH(m * H);
       Vector6 h = Vector6::Zero(6);
       Vector3 g;
-      g << 0, 0, -9.81;  // FIXME : retrieve it from somewhere ? instead of hardcoded
+      g << 0, 0,
+          -9.81;  // FIXME : retrieve it from somewhere ? instead of hardcoded
       h.head(3) = -g;
       h.tail(3) = c.cross(-g);
       seth(m * h);
     }
 
-    computeNodeMatrixForOnePoint(pn, contactPoint, sizeFootX, sizeFootY, rectangularContact, mu, getQuaternion(),
+    computeNodeMatrixForOnePoint(pn, contactPoint, sizeFootX, sizeFootY,
+                                 rectangularContact, mu, getQuaternion(),
                                  indexRom, V, IP_hat);
 
   }  // for each ROMS
@@ -286,7 +329,8 @@ void RbprmNode::fillNodeMatrices(ValidationReportPtr_t report, bool rectangularC
   setH(m * H);
   Vector6 h = Vector6::Zero(6);
   Vector3 g;
-  g << 0, 0, -9.81;  // FIXME : retrieve it from somewhere ? instead of hardcoded
+  g << 0, 0,
+      -9.81;  // FIXME : retrieve it from somewhere ? instead of hardcoded
   h.head(3) = -g;
   h.tail(3) = c.cross(-g);
   seth(m * h);
@@ -304,27 +348,39 @@ void RbprmNode::fillNodeMatrices(ValidationReportPtr_t report, bool rectangularC
   hppDisplayBenchmark(FILL_NODE_MATRICE);
 }
 
-void RbprmNode::chooseBestContactSurface(ValidationReportPtr_t report, pinocchio::RbPrmDevicePtr_t device) {
+void RbprmNode::chooseBestContactSurface(ValidationReportPtr_t report,
+                                         pinocchio::RbPrmDevicePtr_t device) {
   assert(device && "Error in dynamic cast of problem device to rbprmDevice");
-  core::RbprmValidationReportPtr_t rbReport = std::dynamic_pointer_cast<core::RbprmValidationReport>(report);
-  for (std::map<std::string, core::CollisionValidationReportPtr_t>::const_iterator it = rbReport->ROMReports.begin();
+  core::RbprmValidationReportPtr_t rbReport =
+      std::dynamic_pointer_cast<core::RbprmValidationReport>(report);
+  for (std::map<std::string,
+                core::CollisionValidationReportPtr_t>::const_iterator it =
+           rbReport->ROMReports.begin();
        it != rbReport->ROMReports.end(); ++it) {
     core::AllCollisionsValidationReportPtr_t romReports =
-        std::dynamic_pointer_cast<core::AllCollisionsValidationReport>(it->second);
+        std::dynamic_pointer_cast<core::AllCollisionsValidationReport>(
+            it->second);
     if (!romReports) {
-      hppDout(warning, "For rom : " << it->first
-                                    << " unable to cast in a AllCollisionsValidationReport, did you correctly call "
-                                       "computeAllContacts(true) before generating the report ? ");
+      hppDout(
+          warning,
+          "For rom : "
+              << it->first
+              << " unable to cast in a AllCollisionsValidationReport, did you "
+                 "correctly call "
+                 "computeAllContacts(true) before generating the report ? ");
       return;
     }
     if (romReports->collisionReports.size() > 1) {
-      // for each rom , for each different environnement surface in collision with the rom:
-      // 1) compute the projection of the reference position inside the intersection of the rom and the environnement
-      // surface 2) find the surface with the minimal distance between the reference and the projection 3) modify the
-      // report such that this surface is at the top of the list
+      // for each rom , for each different environnement surface in collision
+      // with the rom: 1) compute the projection of the reference position
+      // inside the intersection of the rom and the environnement surface 2)
+      // find the surface with the minimal distance between the reference and
+      // the projection 3) modify the report such that this surface is at the
+      // top of the list
 
       fcl::Vec3f reference = device->getEffectorReference(it->first);
-      hppDout(notice, "Reference position for rom" << it->first << " = " << reference);
+      hppDout(notice,
+              "Reference position for rom" << it->first << " = " << reference);
       core::ConfigurationPtr_t q = configuration();
       fcl::Transform3f tRoot;
       tRoot.setTranslation(fcl::Vec3f((*q)[0], (*q)[1], (*q)[2]));
@@ -337,16 +393,21 @@ void RbprmNode::chooseBestContactSurface(ValidationReportPtr_t report, pinocchio
       geom::Point normal, proj;
       double minDistance = std::numeric_limits<double>::max();
       double distance;
-      CollisionValidationReportPtr_t bestReport(romReports->collisionReports.front());
+      CollisionValidationReportPtr_t bestReport(
+          romReports->collisionReports.front());
       bool successInter;
       geom::T_Point intersection;
-      hppDout(notice, "Number of possible surfaces for rom : " << romReports->collisionReports.size());
-      for (std::vector<CollisionValidationReportPtr_t>::const_iterator itAff = romReports->collisionReports.begin();
+      hppDout(notice, "Number of possible surfaces for rom : "
+                          << romReports->collisionReports.size());
+      for (std::vector<CollisionValidationReportPtr_t>::const_iterator itAff =
+               romReports->collisionReports.begin();
            itAff != romReports->collisionReports.end(); ++itAff) {
         pinocchio::DeviceSync deviceSync(device);
-        successInter = computeIntersectionSurface(*itAff, intersection, normal, deviceSync.d());
+        successInter = computeIntersectionSurface(*itAff, intersection, normal,
+                                                  deviceSync.d());
         if (successInter) {
-          distance = geom::projectPointInsidePlan(intersection, refPoint, normal, intersection.front(), proj);
+          distance = geom::projectPointInsidePlan(
+              intersection, refPoint, normal, intersection.front(), proj);
           hppDout(notice, "Distance found : " << distance);
           if (distance < minDistance) {
             minDistance = distance;

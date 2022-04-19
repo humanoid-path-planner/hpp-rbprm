@@ -19,8 +19,8 @@
 #ifndef HPP_RBPRM_TIMECONSTRAINT_PATH_HH
 #define HPP_RBPRM_TIMECONSTRAINT_PATH_HH
 
-#include <hpp/core/fwd.hh>
 #include <hpp/core/config.hh>
+#include <hpp/core/fwd.hh>
 #include <hpp/core/path.hh>
 #include <hpp/rbprm/interpolation/time-dependant.hh>
 
@@ -48,10 +48,14 @@ class HPP_CORE_DLLAPI TimeConstraintPath : public core::Path {
   /// \param device Robot corresponding to configurations
   /// \param init, end Start and end configurations of the path
   /// \param length Distance between the configurations.
-  static TimeConstraintPathPtr_t create(const core::DevicePtr_t& device, core::ConfigurationIn_t init,
-                                        core::ConfigurationIn_t end, core::value_type length,
-                                        const std::size_t pathDofRank, const T_TimeDependant& tds) {
-    TimeConstraintPath* ptr = new TimeConstraintPath(device, init, end, length, pathDofRank, tds);
+  static TimeConstraintPathPtr_t create(const core::DevicePtr_t& device,
+                                        core::ConfigurationIn_t init,
+                                        core::ConfigurationIn_t end,
+                                        core::value_type length,
+                                        const std::size_t pathDofRank,
+                                        const T_TimeDependant& tds) {
+    TimeConstraintPath* ptr =
+        new TimeConstraintPath(device, init, end, length, pathDofRank, tds);
     TimeConstraintPathPtr_t shPtr(ptr);
     ptr->init(shPtr);
     ptr->checkPath();
@@ -63,11 +67,15 @@ class HPP_CORE_DLLAPI TimeConstraintPath : public core::Path {
   /// \param init, end Start and end configurations of the path
   /// \param length Distance between the configurations.
   /// \param constraints the path is subject to
-  static TimeConstraintPathPtr_t create(const core::DevicePtr_t& device, core::ConfigurationIn_t init,
-                                        core::ConfigurationIn_t end, core::value_type length,
-                                        core::ConstraintSetPtr_t constraints, const std::size_t pathDofRank,
+  static TimeConstraintPathPtr_t create(const core::DevicePtr_t& device,
+                                        core::ConfigurationIn_t init,
+                                        core::ConfigurationIn_t end,
+                                        core::value_type length,
+                                        core::ConstraintSetPtr_t constraints,
+                                        const std::size_t pathDofRank,
                                         const T_TimeDependant& tds) {
-    TimeConstraintPath* ptr = new TimeConstraintPath(device, init, end, length, constraints, pathDofRank, tds);
+    TimeConstraintPath* ptr = new TimeConstraintPath(
+        device, init, end, length, constraints, pathDofRank, tds);
     TimeConstraintPathPtr_t shPtr(ptr);
     ptr->init(shPtr);
     ptr->checkPath();
@@ -76,7 +84,8 @@ class HPP_CORE_DLLAPI TimeConstraintPath : public core::Path {
 
   /// Create copy and return shared pointer
   /// \param path path to copy
-  static TimeConstraintPathPtr_t createCopy(const TimeConstraintPathPtr_t& path) {
+  static TimeConstraintPathPtr_t createCopy(
+      const TimeConstraintPathPtr_t& path) {
     TimeConstraintPath* ptr = new TimeConstraintPath(*path);
     TimeConstraintPathPtr_t shPtr(ptr);
     ptr->initCopy(shPtr);
@@ -87,8 +96,9 @@ class HPP_CORE_DLLAPI TimeConstraintPath : public core::Path {
   /// Create copy and return shared pointer
   /// \param path path to copy
   /// \param constraints the path is subject to
-  static TimeConstraintPathPtr_t createCopy(const TimeConstraintPathPtr_t& path,
-                                            const core::ConstraintSetPtr_t& constraints) {
+  static TimeConstraintPathPtr_t createCopy(
+      const TimeConstraintPathPtr_t& path,
+      const core::ConstraintSetPtr_t& constraints) {
     TimeConstraintPath* ptr = new TimeConstraintPath(*path, constraints);
     TimeConstraintPathPtr_t shPtr(ptr);
     ptr->initCopy(shPtr);
@@ -106,7 +116,8 @@ class HPP_CORE_DLLAPI TimeConstraintPath : public core::Path {
   ///
   /// \param constraints constraints to apply to the copy
   /// \precond *this should not have constraints.
-  virtual core::PathPtr_t copy(const core::ConstraintSetPtr_t& constraints) const {
+  virtual core::PathPtr_t copy(
+      const core::ConstraintSetPtr_t& constraints) const {
     return createCopy(weak_.lock(), constraints);
   }
 
@@ -153,25 +164,31 @@ class HPP_CORE_DLLAPI TimeConstraintPath : public core::Path {
   /// Print path in a stream
   virtual std::ostream& print(std::ostream& os) const {
     os << "TimeConstraintPath:" << std::endl;
-    os << "interval: [ " << timeRange().first << ", " << timeRange().second << " ]" << std::endl;
+    os << "interval: [ " << timeRange().first << ", " << timeRange().second
+       << " ]" << std::endl;
     os << "initial configuration: " << initial_.transpose() << std::endl;
     os << "final configuration:   " << end_.transpose() << std::endl;
     return os;
   }
   /// Constructor
-  TimeConstraintPath(const core::DevicePtr_t& robot, core::ConfigurationIn_t init, core::ConfigurationIn_t end,
-                     core::value_type length, const std::size_t pathDofRank, const T_TimeDependant& tds);
+  TimeConstraintPath(const core::DevicePtr_t& robot,
+                     core::ConfigurationIn_t init, core::ConfigurationIn_t end,
+                     core::value_type length, const std::size_t pathDofRank,
+                     const T_TimeDependant& tds);
 
   /// Constructor with constraints
-  TimeConstraintPath(const core::DevicePtr_t& robot, core::ConfigurationIn_t init, core::ConfigurationIn_t end,
-                     core::value_type length, core::ConstraintSetPtr_t constraints, const std::size_t pathDofRank,
-                     const T_TimeDependant& tds);
+  TimeConstraintPath(const core::DevicePtr_t& robot,
+                     core::ConfigurationIn_t init, core::ConfigurationIn_t end,
+                     core::value_type length,
+                     core::ConstraintSetPtr_t constraints,
+                     const std::size_t pathDofRank, const T_TimeDependant& tds);
 
   /// Copy constructor
   TimeConstraintPath(const TimeConstraintPath& path);
 
   /// Copy constructor with constraints
-  TimeConstraintPath(const TimeConstraintPath& path, const core::ConstraintSetPtr_t& constraints);
+  TimeConstraintPath(const TimeConstraintPath& path,
+                     const core::ConstraintSetPtr_t& constraints);
 
   void init(TimeConstraintPathPtr_t self) {
     parent_t::init(self);
@@ -183,7 +200,8 @@ class HPP_CORE_DLLAPI TimeConstraintPath : public core::Path {
     weak_ = self;
   }
 
-  virtual bool impl_compute(core::ConfigurationOut_t result, core::value_type param) const;
+  virtual bool impl_compute(core::ConfigurationOut_t result,
+                            core::value_type param) const;
 
  private:
   void updateConstraints(core::ConfigurationOut_t configuration) const;

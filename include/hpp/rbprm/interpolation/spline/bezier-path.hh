@@ -20,9 +20,10 @@
 #define HPP_RBPRM_BEZIER_PATH_HH
 
 #include <ndcurves/bezier_curve.h>
+
 #include <hpp/core/path.hh>
-#include <vector>
 #include <map>
+#include <vector>
 
 namespace hpp {
 namespace rbprm {
@@ -37,8 +38,9 @@ typedef std::shared_ptr<const BezierPath> BezierPathConstPtr_t;
 /// \{
 /// Bezier curve representation between two configurations
 ///
-/// This class only implement the bezier curve of dimension 3, need to template the dimension of the points
-/// Use the Bezier curve for the translation of the root and standard linear interpolation for the other DoF
+/// This class only implement the bezier curve of dimension 3, need to template
+/// the dimension of the points Use the Bezier curve for the translation of the
+/// root and standard linear interpolation for the other DoF
 
 class BezierPath : public core::Path {
  public:
@@ -50,8 +52,11 @@ class BezierPath : public core::Path {
   /// \param device Robot corresponding to configurations
   /// \param curve the curve that define this path
   /// \param timeRange : the time definition of the curve.
-  static BezierPathPtr_t create(const core::DevicePtr_t& device, const bezier_Ptr& curve, core::ConfigurationIn_t init,
-                                core::ConfigurationIn_t end, core::interval_t timeRange) {
+  static BezierPathPtr_t create(const core::DevicePtr_t& device,
+                                const bezier_Ptr& curve,
+                                core::ConfigurationIn_t init,
+                                core::ConfigurationIn_t end,
+                                core::interval_t timeRange) {
     BezierPath* ptr = new BezierPath(device, curve, init, end, timeRange);
     BezierPathPtr_t shPtr(ptr);
     ptr->init(shPtr);
@@ -64,11 +69,14 @@ class BezierPath : public core::Path {
   /// \param wpBegin iterator to the first waypoint
   /// \param wpEnd iterator to the last wp
   /// \param length Distance between the configurations.
-  static BezierPathPtr_t create(const core::DevicePtr_t& device,
-                                std::vector<bezier_t::point_t>::const_iterator wpBegin,
-                                std::vector<bezier_t::point_t>::const_iterator wpEnd, core::ConfigurationIn_t init,
-                                core::ConfigurationIn_t end, core::interval_t timeRange) {
-    BezierPath* ptr = new BezierPath(device, wpBegin, wpEnd, init, end, timeRange);
+  static BezierPathPtr_t create(
+      const core::DevicePtr_t& device,
+      std::vector<bezier_t::point_t>::const_iterator wpBegin,
+      std::vector<bezier_t::point_t>::const_iterator wpEnd,
+      core::ConfigurationIn_t init, core::ConfigurationIn_t end,
+      core::interval_t timeRange) {
+    BezierPath* ptr =
+        new BezierPath(device, wpBegin, wpEnd, init, end, timeRange);
     BezierPathPtr_t shPtr(ptr);
     ptr->init(shPtr);
     ptr->checkPath();
@@ -87,7 +95,9 @@ class BezierPath : public core::Path {
   /// Create copy and return shared pointer
   /// \param path path to copy
   /// \param constraints the path is subject to
-  static BezierPathPtr_t createCopy(const BezierPathPtr_t& path, const core::ConstraintSetPtr_t& constraints) {
+  static BezierPathPtr_t createCopy(
+      const BezierPathPtr_t& path,
+      const core::ConstraintSetPtr_t& constraints) {
     BezierPath* ptr = new BezierPath(*path, constraints);
     BezierPathPtr_t shPtr(ptr);
     ptr->initCopy(shPtr);
@@ -105,7 +115,8 @@ class BezierPath : public core::Path {
   ///
   /// \param constraints constraints to apply to the copy
   /// \precond *this should not have constraints.
-  virtual core::PathPtr_t copy(const core::ConstraintSetPtr_t& constraints) const {
+  virtual core::PathPtr_t copy(
+      const core::ConstraintSetPtr_t& constraints) const {
     return createCopy(weak_.lock(), constraints);
   }
 
@@ -132,31 +143,37 @@ class BezierPath : public core::Path {
   /// Print path in a stream
   virtual std::ostream& print(std::ostream& os) const {
     os << "BezierPath:" << std::endl;
-    os << "interval: [ " << timeRange().first << ", " << timeRange().second << " ]" << std::endl;
+    os << "interval: [ " << timeRange().first << ", " << timeRange().second
+       << " ]" << std::endl;
     os << "initial configuration: " << initial().transpose() << std::endl;
     os << "final configuration:   " << end().transpose() << std::endl;
     os << "Curve of degree :" << curve_->degree_ << std::endl;
     os << "waypoints = " << std::endl;
-    for (bezier_t::cit_point_t wpit = curve_->waypoints().begin(); wpit != curve_->waypoints().end(); ++wpit) {
+    for (bezier_t::cit_point_t wpit = curve_->waypoints().begin();
+         wpit != curve_->waypoints().end(); ++wpit) {
       os << (*wpit).transpose() << std::endl;
     }
     return os;
   }
 
   /// constructor with curve
-  BezierPath(const core::DevicePtr_t& robot, const bezier_Ptr& curve, core::ConfigurationIn_t init,
-             core::ConfigurationIn_t end, core::interval_t timeRange);
+  BezierPath(const core::DevicePtr_t& robot, const bezier_Ptr& curve,
+             core::ConfigurationIn_t init, core::ConfigurationIn_t end,
+             core::interval_t timeRange);
 
   /// constructor with waypoints
-  BezierPath(const core::DevicePtr_t& robot, std::vector<bezier_t::point_t>::const_iterator wpBegin,
-             std::vector<bezier_t::point_t>::const_iterator wpEnd, core::ConfigurationIn_t init,
-             core::ConfigurationIn_t end, core::interval_t timeRange);
+  BezierPath(const core::DevicePtr_t& robot,
+             std::vector<bezier_t::point_t>::const_iterator wpBegin,
+             std::vector<bezier_t::point_t>::const_iterator wpEnd,
+             core::ConfigurationIn_t init, core::ConfigurationIn_t end,
+             core::interval_t timeRange);
 
   /// Copy constructor
   BezierPath(const BezierPath& path);
 
   /// Copy constructor with constraints
-  BezierPath(const BezierPath& path, const core::ConstraintSetPtr_t& constraints);
+  BezierPath(const BezierPath& path,
+             const core::ConstraintSetPtr_t& constraints);
 
   void init(BezierPathPtr_t self) {
     parent_t::init(self);
@@ -169,12 +186,13 @@ class BezierPath : public core::Path {
     weak_ = self;
   }
 
-  virtual bool impl_compute(core::ConfigurationOut_t result, core::value_type param) const;
+  virtual bool impl_compute(core::ConfigurationOut_t result,
+                            core::value_type param) const;
 
   /*
   /// Virtual implementation of derivative
-  virtual void impl_derivative (core::vectorOut_t result, const core::value_type& t,
-                                core::size_type order) const;
+  virtual void impl_derivative (core::vectorOut_t result, const
+  core::value_type& t, core::size_type order) const;
    */
 
  private:

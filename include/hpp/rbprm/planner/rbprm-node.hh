@@ -1,9 +1,9 @@
 #ifndef HPP_RBPRM_NODE_HH
 #define HPP_RBPRM_NODE_HH
 
+#include <hpp/centroidal-dynamics/centroidal_dynamics.hh>
 #include <hpp/core/node.hh>
 #include <hpp/rbprm/rbprm-validation-report.hh>
-#include <hpp/centroidal-dynamics/centroidal_dynamics.hh>
 
 namespace hpp {
 namespace pinocchio {
@@ -29,7 +29,8 @@ class HPP_CORE_DLLAPI RbprmNode : public Node {
   /// Constructor
   /// \param configuration configuration stored in the new node
   /// \param connectedComponent connected component the node belongs to.
-  RbprmNode(const ConfigurationPtr_t& configuration, ConnectedComponentPtr_t connectedComponent)
+  RbprmNode(const ConfigurationPtr_t& configuration,
+            ConnectedComponentPtr_t connectedComponent)
       : Node(configuration, connectedComponent) {}
 
   fcl::Vec3f getNormal() { return normal_; }
@@ -43,7 +44,9 @@ class HPP_CORE_DLLAPI RbprmNode : public Node {
 
   RbprmValidationReportPtr_t getReport() { return collisionReport_; }
 
-  void collisionReport(RbprmValidationReportPtr_t report) { collisionReport_ = report; }
+  void collisionReport(RbprmValidationReportPtr_t report) {
+    collisionReport_ = report;
+  }
 
   void setV(MatrixXX V) { V_ = V; }
 
@@ -69,10 +72,12 @@ class HPP_CORE_DLLAPI RbprmNode : public Node {
 
   size_type getNumberOfContacts() { return numberOfContacts_; }
 
-  void fillNodeMatrices(ValidationReportPtr_t report, bool rectangularContact, double sizeFootx, double sizeFooty,
-                        double m, double mu, pinocchio::RbPrmDevicePtr_t device);
+  void fillNodeMatrices(ValidationReportPtr_t report, bool rectangularContact,
+                        double sizeFootx, double sizeFooty, double m, double mu,
+                        pinocchio::RbPrmDevicePtr_t device);
 
-  void chooseBestContactSurface(ValidationReportPtr_t report, hpp::pinocchio::RbPrmDevicePtr_t device);
+  void chooseBestContactSurface(ValidationReportPtr_t report,
+                                hpp::pinocchio::RbPrmDevicePtr_t device);
 
   Eigen::Quaterniond getQuaternion();
 

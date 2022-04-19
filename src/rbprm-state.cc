@@ -84,21 +84,27 @@ std::string State::RemoveFirstContact() {
   return contactId;
 }
 
-void State::contactCreations(const State& previous, std::vector<std::string>& outList) const {
-  for (std::map<std::string, fcl::Vec3f>::const_iterator cit = contactPositions_.begin();
+void State::contactCreations(const State& previous,
+                             std::vector<std::string>& outList) const {
+  for (std::map<std::string, fcl::Vec3f>::const_iterator cit =
+           contactPositions_.begin();
        cit != contactPositions_.end(); ++cit) {
     const std::string& name = cit->first;
     bool newContact(true);
-    if (previous.contactPositions_.find(name) != previous.contactPositions_.end()) {
-      newContact = (previous.contactPositions_.at(name) - cit->second).norm() > 0.01;
+    if (previous.contactPositions_.find(name) !=
+        previous.contactPositions_.end()) {
+      newContact =
+          (previous.contactPositions_.at(name) - cit->second).norm() > 0.01;
     }
-    if (newContact && std::find(outList.begin(), outList.end(), name) == outList.end()) {
+    if (newContact &&
+        std::find(outList.begin(), outList.end(), name) == outList.end()) {
       outList.push_back(name);
     }
   }
 }
 
-void State::contactBreaks(const State& previous, std::vector<std::string>& outList) const {
+void State::contactBreaks(const State& previous,
+                          std::vector<std::string>& outList) const {
   previous.contactCreations(*this, outList);
 }
 
@@ -115,12 +121,16 @@ std::vector<std::string> State::contactCreations(const State& previous) const {
 }
 
 namespace {
-// Given known contact variations, computes all effector that were not in contacts
-std::vector<std::string> freeLimbMotions(const std::vector<std::string>& allEffectors,
-                                         const std::vector<std::string>& contactVariations, const State& current) {
+// Given known contact variations, computes all effector that were not in
+// contacts
+std::vector<std::string> freeLimbMotions(
+    const std::vector<std::string>& allEffectors,
+    const std::vector<std::string>& contactVariations, const State& current) {
   std::vector<std::string> res;
-  for (std::vector<std::string>::const_iterator cit = allEffectors.begin(); cit != allEffectors.end(); ++cit) {
-    if (std::find(contactVariations.begin(), contactVariations.end(), *cit) == contactVariations.end() &&
+  for (std::vector<std::string>::const_iterator cit = allEffectors.begin();
+       cit != allEffectors.end(); ++cit) {
+    if (std::find(contactVariations.begin(), contactVariations.end(), *cit) ==
+            contactVariations.end() &&
         !current.contacts_.at(*cit)) {
       res.push_back(*cit);
     }
@@ -129,8 +139,8 @@ std::vector<std::string> freeLimbMotions(const std::vector<std::string>& allEffe
 }
 }  // namespace
 
-std::vector<std::string> State::freeVariations(const State& previous,
-                                               const std::vector<std::string>& allEffectors) const {
+std::vector<std::string> State::freeVariations(
+    const State& previous, const std::vector<std::string>& allEffectors) const {
   return freeLimbMotions(allEffectors, contactVariations(previous), *this);
 }
 
@@ -144,22 +154,26 @@ std::vector<std::string> State::contactVariations(const State& previous) const {
 std::vector<std::string> State::fixedContacts(const State& previous) const {
   std::vector<std::string> res;
   std::vector<std::string> variations = contactVariations(previous);
-  for (std::map<std::string, fcl::Vec3f>::const_iterator cit = contactPositions_.begin();
+  for (std::map<std::string, fcl::Vec3f>::const_iterator cit =
+           contactPositions_.begin();
        cit != contactPositions_.end(); ++cit) {
     const std::string& name = cit->first;
-    if (std::find(variations.begin(), variations.end(), name) == variations.end()) {
+    if (std::find(variations.begin(), variations.end(), name) ==
+        variations.end()) {
       res.push_back(name);
     }
   }
   return res;
 }
 
-std::vector<std::string> State::allVariations(const State& previous,
-                                              const std::vector<std::string>& allEffectors) const {
+std::vector<std::string> State::allVariations(
+    const State& previous, const std::vector<std::string>& allEffectors) const {
   std::vector<std::string> res;
   std::vector<std::string> fixedContacts = this->fixedContacts(previous);
-  for (std::vector<std::string>::const_iterator cit = allEffectors.begin(); cit != allEffectors.end(); ++cit) {
-    if (std::find(fixedContacts.begin(), fixedContacts.end(), *cit) == fixedContacts.end()) {
+  for (std::vector<std::string>::const_iterator cit = allEffectors.begin();
+       cit != allEffectors.end(); ++cit) {
+    if (std::find(fixedContacts.begin(), fixedContacts.end(), *cit) ==
+        fixedContacts.end()) {
       res.push_back(*cit);
     }
   }
@@ -176,7 +190,8 @@ void State::print() const {
   std::cout << std::endl;*/
 
   std::cout << " \t contacts " << std::endl;
-  for (std::map<std::string, bool>::const_iterator cit = contacts_.begin(); cit != contacts_.end(); ++cit) {
+  for (std::map<std::string, bool>::const_iterator cit = contacts_.begin();
+       cit != contacts_.end(); ++cit) {
     std::cout << cit->first << ": " << cit->second << std::endl;
   }
 
@@ -199,7 +214,8 @@ void State::print() const {
 }
 
 void State::printInternal(std::stringstream& ss) const {
-  std::map<std::string, fcl::Vec3f>::const_iterator cit = contactNormals_.begin();
+  std::map<std::string, fcl::Vec3f>::const_iterator cit =
+      contactNormals_.begin();
   for (unsigned int c = 0; c < nbContacts; ++c, ++cit) {
     const std::string& name = cit->first;
     const fcl::Vec3f& position = contactPositions_.at(name);
@@ -225,7 +241,8 @@ void State::printInternal(std::stringstream& ss) const {
 void State::print(std::stringstream& ss) const {
   ss << nbContacts << "\n";
   ss << "";
-  std::map<std::string, fcl::Vec3f>::const_iterator cit = contactNormals_.begin();
+  std::map<std::string, fcl::Vec3f>::const_iterator cit =
+      contactNormals_.begin();
   for (unsigned int c = 0; c < nbContacts; ++c, ++cit) {
     ss << " " << cit->first << " ";
   }
@@ -237,12 +254,15 @@ void State::print(std::stringstream& ss, const State& previous) const {
   ss << nbContacts << "\n";
   std::vector<std::string> ncontacts;
   ss << "";
-  for (std::map<std::string, fcl::Vec3f>::const_iterator cit = contactPositions_.begin();
+  for (std::map<std::string, fcl::Vec3f>::const_iterator cit =
+           contactPositions_.begin();
        cit != contactPositions_.end(); ++cit) {
     const std::string& name = cit->first;
     bool newContact(true);
-    if (previous.contactPositions_.find(name) != previous.contactPositions_.end()) {
-      newContact = (previous.contactPositions_.at(name) - cit->second).norm() > 0.01;
+    if (previous.contactPositions_.find(name) !=
+        previous.contactPositions_.end()) {
+      newContact =
+          (previous.contactPositions_.at(name) - cit->second).norm() > 0.01;
     }
     if (newContact) {
       ncontacts.push_back(name);
@@ -251,8 +271,9 @@ void State::print(std::stringstream& ss, const State& previous) const {
   }
   ss << "\n";
   /*ss << "broken Contacts: ";
-  for(std::map<std::string, fcl::Vec3f>::const_iterator cit = previous.contactPositions_.begin();
-      cit != previous.contactPositions_.end(); ++cit)
+  for(std::map<std::string, fcl::Vec3f>::const_iterator cit =
+  previous.contactPositions_.begin(); cit != previous.contactPositions_.end();
+  ++cit)
   {
       const std::string& name = cit->first;
       if(contactPositions_.find(name) == contactPositions_.end())
@@ -289,10 +310,13 @@ void State::print(std::stringstream& ss, const State& previous) const {
 pinocchio::value_type effectorDistance(const State& from, const State& to) {
   std::vector<std::string> variations = to.contactCreations(from);
   pinocchio::value_type norm = 0.;
-  for (std::vector<std::string>::const_iterator cit = variations.begin(); cit != variations.end(); ++cit) {
+  for (std::vector<std::string>::const_iterator cit = variations.begin();
+       cit != variations.end(); ++cit) {
     std::string name = *cit;
     if (from.contactPositions_.find(name) != from.contactPositions_.end()) {
-      norm = std::max(norm, (from.contactPositions_.at(name) - to.contactPositions_.at(name)).norm());
+      norm = std::max(norm, (from.contactPositions_.at(name) -
+                             to.contactPositions_.at(name))
+                                .norm());
     }
   }
   return norm;

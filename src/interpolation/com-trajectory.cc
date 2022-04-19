@@ -16,20 +16,23 @@
 // hpp-core  If not, see
 // <http://www.gnu.org/licenses/>.
 
+#include <hpp/constraints/locked-joint.hh>
+#include <hpp/core/config-projector.hh>
+#include <hpp/pinocchio/configuration.hh>
+#include <hpp/pinocchio/device.hh>
 #include <hpp/rbprm/interpolation/com-trajectory.hh>
 #include <hpp/rbprm/interpolation/time-constraint-utils.hh>
-#include <hpp/pinocchio/device.hh>
-#include <hpp/pinocchio/configuration.hh>
-#include <hpp/core/config-projector.hh>
-#include <hpp/constraints/locked-joint.hh>
 
 using namespace hpp::core;
 
 namespace hpp {
 namespace rbprm {
 namespace interpolation {
-ComTrajectory::ComTrajectory(pinocchio::vector3_t init, pinocchio::vector3_t end, pinocchio::vector3_t initSpeed,
-                             pinocchio::vector3_t acceleration, core::value_type length)
+ComTrajectory::ComTrajectory(pinocchio::vector3_t init,
+                             pinocchio::vector3_t end,
+                             pinocchio::vector3_t initSpeed,
+                             pinocchio::vector3_t acceleration,
+                             core::value_type length)
     : parent_t(interval_t(0, length), 3, 3),
       initial_(init),
       end_(end),
@@ -41,12 +44,14 @@ ComTrajectory::ComTrajectory(pinocchio::vector3_t init, pinocchio::vector3_t end
   assert(!constraints());
 }
 
-pinocchio::value_type normalize(const ComTrajectory& path, pinocchio::value_type param) {
+pinocchio::value_type normalize(const ComTrajectory& path,
+                                pinocchio::value_type param) {
   value_type u;
   if (path.timeRange().second == 0)
     u = 0;
   else
-    u = (param - path.timeRange().first) / (path.timeRange().second - path.timeRange().first);
+    u = (param - path.timeRange().first) /
+        (path.timeRange().second - path.timeRange().first);
   return u;
 }
 
@@ -59,7 +64,8 @@ ComTrajectory::ComTrajectory(const ComTrajectory& path)
       acceleration_(path.acceleration_),
       length_(path.length_) {}
 
-bool ComTrajectory::impl_compute(ConfigurationOut_t result, value_type param) const {
+bool ComTrajectory::impl_compute(ConfigurationOut_t result,
+                                 value_type param) const {
   if (param == timeRange().first || timeRange().second == 0) {
     result = initial();
   } else if (param == timeRange().second) {
@@ -73,7 +79,8 @@ bool ComTrajectory::impl_compute(ConfigurationOut_t result, value_type param) co
 
 PathPtr_t ComTrajectory::extract(const interval_t& subInterval) const {
   // Length is assumed to be proportional to interval range
-  value_type l = std::min(fabs(subInterval.second - subInterval.first), length_);
+  value_type l =
+      std::min(fabs(subInterval.second - subInterval.first), length_);
 
   bool success;
   Configuration_t q1((*this)(subInterval.first, success));

@@ -19,12 +19,11 @@
 #ifndef HPP_RBPRM_STATE_HH
 #define HPP_RBPRM_STATE_HH
 
-#include <hpp/rbprm/config.hh>
-#include <hpp/pinocchio/device.hh>
-#include <hpp/rbprm/rbprm-limb.hh>
-
-#include <queue>
 #include <algorithm>
+#include <hpp/pinocchio/device.hh>
+#include <hpp/rbprm/config.hh>
+#include <hpp/rbprm/rbprm-limb.hh>
+#include <queue>
 
 namespace hpp {
 namespace rbprm {
@@ -35,8 +34,9 @@ typedef std::pair<pinocchio::value_type, rbprm::State> StateFrame;
 typedef std::vector<StateFrame> T_StateFrame;
 typedef T_StateFrame::const_iterator CIT_StateFrame;
 
-/// Helper class that maintains active contacts at a given state, as well as their locations
-/// can be used to determine contact transition wrt a previous State
+/// Helper class that maintains active contacts at a given state, as well as
+/// their locations can be used to determine contact transition wrt a previous
+/// State
 struct HPP_RBPRM_DLLAPI State {
   State() : nbContacts(0), stable(false) {}
   State(const State& other);
@@ -57,48 +57,60 @@ struct HPP_RBPRM_DLLAPI State {
   /// the id of the removed contact
   std::string RemoveFirstContact();
 
-  /// Given a antecedent State, computes the list of contact changes (creations an destructions)
+  /// Given a antecedent State, computes the list of contact changes (creations
+  /// an destructions)
   ///
   /// \return the list of all modified contacts between two States
   std::vector<std::string> contactVariations(const State& previous) const;
 
-  /// Given an antecedent State and a list of effectors, computes the list of effectors
-  /// that were not in contact in any of the two states
+  /// Given an antecedent State and a list of effectors, computes the list of
+  /// effectors that were not in contact in any of the two states
   ///
   /// \return the list of all modified contacts between two States
-  std::vector<std::string> freeVariations(const State& previous, const std::vector<std::string>& allEffectors) const;
+  std::vector<std::string> freeVariations(
+      const State& previous,
+      const std::vector<std::string>& allEffectors) const;
 
   /// Given an antecedent State and a list of effectors, computes the list of
-  /// all the effectors that moved between the two States (ie contact was not maintained)
+  /// all the effectors that moved between the two States (ie contact was not
+  /// maintained)
   ///
   /// \return the list of all modified effectors between two States
-  std::vector<std::string> allVariations(const State& previous, const std::vector<std::string>& allEffectors) const;
+  std::vector<std::string> allVariations(
+      const State& previous,
+      const std::vector<std::string>& allEffectors) const;
 
-  /// Given a antecedent State, computes the list of Contacts that were maintained between the two States (both
-  /// active at the same location)
+  /// Given a antecedent State, computes the list of Contacts that were
+  /// maintained between the two States (both active at the same location)
   ///
   /// \return the list of all preserved contacts between two States
   std::vector<std::string> fixedContacts(const State& previous) const;
 
-  /// Given a antecedent State, computes the list of Contacts that were created between the two States
+  /// Given a antecedent State, computes the list of Contacts that were created
+  /// between the two States
   ///
   /// \return the list of all created contacts between two States
-  void contactCreations(const State& previous, std::vector<std::string>& outList) const;
+  void contactCreations(const State& previous,
+                        std::vector<std::string>& outList) const;
 
-  /// Given a antecedent State, computes the list of Contacts that were created between the two States
+  /// Given a antecedent State, computes the list of Contacts that were created
+  /// between the two States
   ///
   /// \return the list of all created contacts between two States
   std::vector<std::string> contactCreations(const State& previous) const;
 
-  /// Given a antecedent State, computes the list of Contacts that were broken between the two States
+  /// Given a antecedent State, computes the list of Contacts that were broken
+  /// between the two States
   ///
   /// \return the list of all broken contacts between two States
   std::vector<std::string> contactBreaks(const State& previous) const;
 
-  /// Given a antecedent State, computes the list of Contacts that were broken between the two States
+  /// Given a antecedent State, computes the list of Contacts that were broken
+  /// between the two States
   ///
   /// \return the list of all broken contacts between two States
-  void contactBreaks(const State& previous, std::vector<std::string>& outList) const;
+  void contactBreaks(const State& previous,
+                     std::vector<std::string>& outList) const;
 
   void print() const;
   void print(std::stringstream& ss) const;
@@ -117,14 +129,17 @@ struct HPP_RBPRM_DLLAPI State {
 };  // struct State
 /// Given two State, compute the contact effectors distance travelled
 /// between two states
-HPP_RBPRM_DLLAPI pinocchio::value_type effectorDistance(const State& from, const State& to);
+HPP_RBPRM_DLLAPI pinocchio::value_type effectorDistance(const State& from,
+                                                        const State& to);
 
 /// Given a State and a list of effectors, computes the list of
-/// all the effectors that moved between the two States (ie contact was not maintained)
+/// all the effectors that moved between the two States (ie contact was not
+/// maintained)
 ///
 /// \return the list of all modified effectors between two States
 template <typename Iter>
-HPP_RBPRM_DLLAPI std::vector<std::string> freeEffectors(const State& state, Iter start, Iter end) {
+HPP_RBPRM_DLLAPI std::vector<std::string> freeEffectors(const State& state,
+                                                        Iter start, Iter end) {
   std::vector<std::string> res;
   for (Iter it = start; it != end; ++it) {
     const std::string& eff = *it;

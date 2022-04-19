@@ -20,13 +20,13 @@
 #define HPP_RBPRM_VALIDATION_HH
 
 #include <hpp/core/collision-validation-report.hh>
-#include <hpp/core/config-validation.hh>
 #include <hpp/core/collision-validation.hh>
+#include <hpp/core/config-validation.hh>
 #include <hpp/core/problem-solver.hh>
-#include <hpp/rbprm/rbprm-rom-validation.hh>
-#include <hpp/rbprm/rbprm-device.hh>
-#include <hpp/rbprm/rbprm-validation-report.hh>
 #include <hpp/rbprm/config.hh>
+#include <hpp/rbprm/rbprm-device.hh>
+#include <hpp/rbprm/rbprm-rom-validation.hh>
+#include <hpp/rbprm/rbprm-validation-report.hh>
 
 namespace hpp {
 namespace rbprm {
@@ -45,12 +45,13 @@ typedef hpp::core::Container<hpp::core::AffordanceObjects_t> affMap_t;
 ///
 class HPP_RBPRM_DLLAPI RbPrmValidation : public core::CollisionValidation {
  public:
-  static RbPrmValidationPtr_t create(const pinocchio::RbPrmDevicePtr_t& robot,
-                                     const std::vector<std::string>& filter = std::vector<std::string>(),
-                                     const std::map<std::string, std::vector<std::string> >& affFilters =
-                                         std::map<std::string, std::vector<std::string> >(),
-                                     const affMap_t& affordances = affMap_t(),
-                                     const core::ObjectStdVector_t& geometries = core::ObjectStdVector_t());
+  static RbPrmValidationPtr_t create(
+      const pinocchio::RbPrmDevicePtr_t& robot,
+      const std::vector<std::string>& filter = std::vector<std::string>(),
+      const std::map<std::string, std::vector<std::string> >& affFilters =
+          std::map<std::string, std::vector<std::string> >(),
+      const affMap_t& affordances = affMap_t(),
+      const core::ObjectStdVector_t& geometries = core::ObjectStdVector_t());
 
   /// Compute whether the configuration is valid
   ///
@@ -62,43 +63,52 @@ class HPP_RBPRM_DLLAPI RbPrmValidation : public core::CollisionValidation {
   /// Compute whether the configuration is valid
   ///
   /// \param config the config to check for validity,
-  /// \retval validationReport report on validation (used only for rom shape). This parameter will
+  /// \retval validationReport report on validation (used only for rom shape).
+  /// This parameter will
   ///         dynamically cast into CollisionValidationReport type,
   /// \return whether the whole config is valid.
-  virtual bool validate(const core::Configuration_t& config, core::ValidationReportPtr_t& validationReport);
+  virtual bool validate(const core::Configuration_t& config,
+                        core::ValidationReportPtr_t& validationReport);
 
   /// Compute whether the configuration is valid
   ///
   /// \param config the config to check for validity,
-  /// \retval validationReport report on validation (used only for rom shape). This parameter will
+  /// \retval validationReport report on validation (used only for rom shape).
+  /// This parameter will
   ///         dynamically cast into CollisionValidationReport type,
   /// \return whether the whole config is valid.
-  virtual bool validate(const core::Configuration_t& config, const std::vector<std::string>& filter);
+  virtual bool validate(const core::Configuration_t& config,
+                        const std::vector<std::string>& filter);
 
   /// Compute whether the configuration is valid
   ///
   /// \param config the config to check for validity,
-  /// \retval validationReport report on validation (used only for rom shape). This parameter will
+  /// \retval validationReport report on validation (used only for rom shape).
+  /// This parameter will
   ///         dynamically cast into CollisionValidationReport type,
-  /// \param filter specify constraints on all roms required to be in contact, will return
-  /// false if all specified roms are not colliding
-  /// \return whether the whole config is valid.
-  virtual bool validate(const core::Configuration_t& config, core::ValidationReportPtr_t& validationReport,
+  /// \param filter specify constraints on all roms required to be in contact,
+  /// will return false if all specified roms are not colliding \return whether
+  /// the whole config is valid.
+  virtual bool validate(const core::Configuration_t& config,
+                        core::ValidationReportPtr_t& validationReport,
                         const std::vector<std::string>& filter);
 
   /// Add an obstacle to validation
   /// \param object obstacle added
   /// Store obstacle and build a collision pair with each body of the robot.
   /// \notice this function has to be called for trunk validation and rom
-  /// validation separately unless they use same obstacles (not usually the case)
+  /// validation separately unless they use same obstacles (not usually the
+  /// case)
   virtual void addObstacle(const core::CollisionObjectConstPtr_t& object);
 
   /// Remove a collision pair between a joint and an obstacle
   /// \param the joint that holds the inner objects,
   /// \param the obstacle to remove.
-  /// \notice This is applied for both trunk and rom shapes. This can be done for a single
-  /// shape through trunkValidation_ and romValidation_ attributes.
-  virtual void removeObstacleFromJoint(const core::JointPtr_t& joint, const core::CollisionObjectPtr_t& obstacle);
+  /// \notice This is applied for both trunk and rom shapes. This can be done
+  /// for a single shape through trunkValidation_ and romValidation_ attributes.
+  virtual void removeObstacleFromJoint(
+      const core::JointPtr_t& joint,
+      const core::CollisionObjectPtr_t& obstacle);
 
   /// Rearrange the collisions pairs of all configValidation in a random manner
   /// \brief randomnizeCollisionPairs
@@ -107,18 +117,23 @@ class HPP_RBPRM_DLLAPI RbPrmValidation : public core::CollisionValidation {
 
   /// \brief set if the collision validation should compute all the possible
   /// contacts or stop after the first pairs in collision
-  /// This method set the parameter for all the romValidations_ objects (but not the trunk)
+  /// This method set the parameter for all the romValidations_ objects (but not
+  /// the trunk)
   ///
   void computeAllContacts(bool computeAllContacts);
 
  private:
-  /// Compute whether the configuration is valid for the root (collision and joint-bound)
+  /// Compute whether the configuration is valid for the root (collision and
+  /// joint-bound)
   ///
   /// \param config the config to check for validity,
-  /// \retval validationReport report on validation (used only for rom shape). This parameter will
+  /// \retval validationReport report on validation (used only for rom shape).
+  /// This parameter will
   ///         dynamically cast into CollisionValidationReport type,
   /// \return whether the whole config is valid.
-  virtual bool validateTrunk(const core::Configuration_t& config, hpp::core::ValidationReportPtr_t& validationReport);
+  virtual bool validateTrunk(
+      const core::Configuration_t& config,
+      hpp::core::ValidationReportPtr_t& validationReport);
 
   /// Compute whether the roms configurations are valid
   /// \param config the config to check for validity,
@@ -127,22 +142,27 @@ class HPP_RBPRM_DLLAPI RbPrmValidation : public core::CollisionValidation {
 
   /// Compute whether the roms configurations are valid
   /// \param config the config to check for validity,
-  /// \param validationReport the report (can be cast to rbprmValidationReport) with info on the trunk and ROM states,
-  /// \return whether the whole config is valid.
-  bool validateRoms(const core::Configuration_t& config, core::RbprmValidationReportPtr_t& validationReport);
+  /// \param validationReport the report (can be cast to rbprmValidationReport)
+  /// with info on the trunk and ROM states, \return whether the whole config is
+  /// valid.
+  bool validateRoms(const core::Configuration_t& config,
+                    core::RbprmValidationReportPtr_t& validationReport);
 
   /// Compute whether the roms configurations are valid
   /// \param config the config to check for validity,
-  /// \param filter specify constraints on all roms required to be in contact, will return
-  /// false if all specified roms are not colliding
-  /// \return whether the whole config is valid.
-  bool validateRoms(const core::Configuration_t& config, const std::vector<std::string>& filter);
+  /// \param filter specify constraints on all roms required to be in contact,
+  /// will return false if all specified roms are not colliding \return whether
+  /// the whole config is valid.
+  bool validateRoms(const core::Configuration_t& config,
+                    const std::vector<std::string>& filter);
 
   /// \param config the config to check for validity,
-  /// \param filter specify constraints on all roms required to be in contact, will return
-  /// \param validationReport the report (can be cast to rbprmValidationReport) with info on the trunk and ROM states,
-  /// \return whether the whole config is valid.
-  bool validateRoms(const core::Configuration_t& config, const std::vector<std::string>& filter,
+  /// \param filter specify constraints on all roms required to be in contact,
+  /// will return \param validationReport the report (can be cast to
+  /// rbprmValidationReport) with info on the trunk and ROM states, \return
+  /// whether the whole config is valid.
+  bool validateRoms(const core::Configuration_t& config,
+                    const std::vector<std::string>& filter,
                     core::RbprmValidationReportPtr_t& validationReport);
 
  public:
@@ -154,9 +174,11 @@ class HPP_RBPRM_DLLAPI RbPrmValidation : public core::CollisionValidation {
   std::vector<std::string> defaultFilter_;
 
  protected:
-  RbPrmValidation(const pinocchio::RbPrmDevicePtr_t& robot, const std::vector<std::string>& filter,
-                  const std::map<std::string, std::vector<std::string> >& affFilters, const affMap_t& affordances,
-                  const core::ObjectStdVector_t& geometries);
+  RbPrmValidation(
+      const pinocchio::RbPrmDevicePtr_t& robot,
+      const std::vector<std::string>& filter,
+      const std::map<std::string, std::vector<std::string> >& affFilters,
+      const affMap_t& affordances, const core::ObjectStdVector_t& geometries);
 
  private:
   core::ValidationReportPtr_t unusedReport_;

@@ -16,11 +16,11 @@
 // hpp-core  If not, see
 // <http://www.gnu.org/licenses/>.
 
+#include <hpp/pinocchio/configuration.hh>
+#include <hpp/pinocchio/device.hh>
 #include <hpp/rbprm/interpolation/spline/bezier-path.hh>
 #include <hpp/util/debug.hh>
 #include <hpp/util/exception.hh>
-#include <hpp/pinocchio/device.hh>
-#include <hpp/pinocchio/configuration.hh>
 
 namespace hpp {
 namespace rbprm {
@@ -32,36 +32,53 @@ using core::interval_t;
 using core::Path;
 using pinocchio::value_type;
 
-BezierPath::BezierPath(const DevicePtr_t& robot, const bezier_Ptr& curve, core::ConfigurationIn_t init,
+BezierPath::BezierPath(const DevicePtr_t& robot, const bezier_Ptr& curve,
+                       core::ConfigurationIn_t init,
                        core::ConfigurationIn_t end, interval_t timeRange)
     : parent_t(timeRange, robot->configSize(), robot->numberDof()),
       device_(robot),
       curve_(curve),
       initial_(init),
       end_(end) {
-  hppDout(notice, "Create a bezier path, with init config : " << pinocchio::displayConfig(initial_));
-  hppDout(notice, "                            end config : " << pinocchio::displayConfig(end_));
-  assert(timeRange.first >= curve_->min() && "The time range is outside the curve definition");
-  assert(timeRange.second <= curve_->max() && "The time range is outside the curve definition");
+  hppDout(notice, "Create a bezier path, with init config : "
+                      << pinocchio::displayConfig(initial_));
+  hppDout(notice, "                            end config : "
+                      << pinocchio::displayConfig(end_));
+  assert(timeRange.first >= curve_->min() &&
+         "The time range is outside the curve definition");
+  assert(timeRange.second <= curve_->max() &&
+         "The time range is outside the curve definition");
 }
 
-BezierPath::BezierPath(const core::DevicePtr_t& robot, std::vector<bezier_t::point_t>::const_iterator wpBegin,
-                       std::vector<bezier_t::point_t>::const_iterator wpEnd, core::ConfigurationIn_t init,
+BezierPath::BezierPath(const core::DevicePtr_t& robot,
+                       std::vector<bezier_t::point_t>::const_iterator wpBegin,
+                       std::vector<bezier_t::point_t>::const_iterator wpEnd,
+                       core::ConfigurationIn_t init,
                        core::ConfigurationIn_t end, core::interval_t timeRange)
     : parent_t(timeRange, robot->configSize(), robot->numberDof()),
       device_(robot),
-      curve_(bezier_Ptr(new bezier_t(wpBegin, wpEnd, timeRange.second - timeRange.first))),
+      curve_(bezier_Ptr(
+          new bezier_t(wpBegin, wpEnd, timeRange.second - timeRange.first))),
       initial_(init),
       end_(end) {
-  hppDout(notice, "Create a bezier path, with init config : " << pinocchio::displayConfig(initial_));
-  hppDout(notice, "                            end config : " << pinocchio::displayConfig(end_));
-  assert(timeRange.first == 0 && "Bezier path cannot be created from waypoint with initiale time different from 0");
+  hppDout(notice, "Create a bezier path, with init config : "
+                      << pinocchio::displayConfig(initial_));
+  hppDout(notice, "                            end config : "
+                      << pinocchio::displayConfig(end_));
+  assert(timeRange.first == 0 &&
+         "Bezier path cannot be created from waypoint with initiale time "
+         "different from 0");
 }
 
 BezierPath::BezierPath(const BezierPath& path)
-    : parent_t(path), device_(path.device_), curve_(path.curve_), initial_(path.initial_), end_(path.end_) {}
+    : parent_t(path),
+      device_(path.device_),
+      curve_(path.curve_),
+      initial_(path.initial_),
+      end_(path.end_) {}
 
-BezierPath::BezierPath(const BezierPath& path, const core::ConstraintSetPtr_t& constraints)
+BezierPath::BezierPath(const BezierPath& path,
+                       const core::ConstraintSetPtr_t& constraints)
     : parent_t(path, constraints),
       device_(path.device_),
       curve_(path.curve_),
@@ -73,7 +90,8 @@ BezierPath::BezierPath(const BezierPath& path, const core::ConstraintSetPtr_t& c
 /// Get the initial configuration
 core::Configuration_t BezierPath::initial() const {
   core::Configuration_t result(device_->configSize());
-  core::value_type u = curve_->min() + timeRange().first / (curve_->max() - curve_->min());
+  core::value_type u =
+      curve_->min() + timeRange().first / (curve_->max() - curve_->min());
   if (u < 0.)  // may happen because of float precision
     u = 0.;
   pinocchio::interpolate(device_, initial_, end_, u, result);
@@ -84,7 +102,8 @@ core::Configuration_t BezierPath::initial() const {
 /// Get the final configuration
 core::Configuration_t BezierPath::end() const {
   core::Configuration_t result(device_->configSize());
-  core::value_type u = curve_->min() + timeRange().second / (curve_->max() - curve_->min());
+  core::value_type u =
+      curve_->min() + timeRange().second / (curve_->max() - curve_->min());
   if (u > 1.)  // may happen because of float precision
     u = 1.;
   pinocchio::interpolate(device_, initial_, end_, u, result);

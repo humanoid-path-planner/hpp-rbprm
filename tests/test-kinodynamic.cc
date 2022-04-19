@@ -17,15 +17,15 @@
 // along with hpp-core.  If not, see <http://www.gnu.org/licenses/>.
 
 #define BOOST_TEST_MODULE test - kinodynamic
-#include <pinocchio/fwd.hpp>
 #include <boost/test/included/unit_test.hpp>
-
-#include <hpp/core/problem-solver.hh>
 #include <hpp/core/path-vector.hh>
+#include <hpp/core/problem-solver.hh>
+#include <hpp/pinocchio/configuration.hh>
 #include <hpp/rbprm/rbprm-device.hh>
+#include <pinocchio/fwd.hpp>
+
 #include "tools-fullbody.hh"
 #include "tools-obstacle.hh"
-#include <hpp/pinocchio/configuration.hh>
 
 using namespace hpp;
 using namespace rbprm;
@@ -35,21 +35,33 @@ bool checkPathVector(core::PathPtr_t path) {
   BOOST_CHECK(pv->numberPaths() > 0);
   if (pv->numberPaths() == 1) return true;
 
-  size_type idAcc = path->outputSize() - 3;  // because acceleration may be set à 0 in init/end config of paths
+  size_type idAcc =
+      path->outputSize() -
+      3;  // because acceleration may be set à 0 in init/end config of paths
 
   core::PathPtr_t previousPath = pv->pathAtRank(0);
   bool successPath;
-  if (previousPath->initial().head(idAcc) != (*previousPath)(0., successPath).head(idAcc)) {
+  if (previousPath->initial().head(idAcc) !=
+      (*previousPath)(0., successPath).head(idAcc)) {
     std::cout << "init config not equal to config at time 0" << std::endl;
-    std::cout << "init config : " << hpp::pinocchio::displayConfig(previousPath->initial()) << std::endl;
-    std::cout << "t=0  config : " << hpp::pinocchio::displayConfig((*previousPath)(0., successPath)) << std::endl;
+    std::cout << "init config : "
+              << hpp::pinocchio::displayConfig(previousPath->initial())
+              << std::endl;
+    std::cout << "t=0  config : "
+              << hpp::pinocchio::displayConfig((*previousPath)(0., successPath))
+              << std::endl;
     return false;
   }
-  if (previousPath->end().head(idAcc) != (*previousPath)(previousPath->length(), successPath).head(idAcc)) {
+  if (previousPath->end().head(idAcc) !=
+      (*previousPath)(previousPath->length(), successPath).head(idAcc)) {
     std::cout << "end config not equal to config at time length()" << std::endl;
-    std::cout << "end  config : " << hpp::pinocchio::displayConfig(previousPath->end()) << std::endl;
+    std::cout << "end  config : "
+              << hpp::pinocchio::displayConfig(previousPath->end())
+              << std::endl;
     std::cout << "t=l  config : "
-              << hpp::pinocchio::displayConfig((*previousPath)(previousPath->length(), successPath)) << std::endl;
+              << hpp::pinocchio::displayConfig(
+                     (*previousPath)(previousPath->length(), successPath))
+              << std::endl;
     return false;
   }
 
@@ -57,22 +69,40 @@ bool checkPathVector(core::PathPtr_t path) {
   for (size_t i = 1; i < pv->numberPaths(); ++i) {
     currentPath = pv->pathAtRank(i);
     if (previousPath->end().head(idAcc) != currentPath->initial().head(idAcc)) {
-      std::cout << "previous path end not equal to current init, for id" << i << std::endl;
-      std::cout << "end previous : " << hpp::pinocchio::displayConfig(previousPath->end()) << std::endl;
-      std::cout << "init current : " << hpp::pinocchio::displayConfig(currentPath->initial()) << std::endl;
+      std::cout << "previous path end not equal to current init, for id" << i
+                << std::endl;
+      std::cout << "end previous : "
+                << hpp::pinocchio::displayConfig(previousPath->end())
+                << std::endl;
+      std::cout << "init current : "
+                << hpp::pinocchio::displayConfig(currentPath->initial())
+                << std::endl;
       return false;
     }
-    if (currentPath->initial().head(idAcc) != (*currentPath)(0., successPath).head(idAcc)) {
-      std::cout << "init config not equal to config at time 0 at index " << i << std::endl;
-      std::cout << "init config : " << hpp::pinocchio::displayConfig(currentPath->initial()) << std::endl;
-      std::cout << "t=0  config : " << hpp::pinocchio::displayConfig((*currentPath)(0., successPath)) << std::endl;
+    if (currentPath->initial().head(idAcc) !=
+        (*currentPath)(0., successPath).head(idAcc)) {
+      std::cout << "init config not equal to config at time 0 at index " << i
+                << std::endl;
+      std::cout << "init config : "
+                << hpp::pinocchio::displayConfig(currentPath->initial())
+                << std::endl;
+      std::cout << "t=0  config : "
+                << hpp::pinocchio::displayConfig(
+                       (*currentPath)(0., successPath))
+                << std::endl;
       return false;
     }
-    if (currentPath->end().head(idAcc) != (*currentPath)(currentPath->length(), successPath).head(idAcc)) {
-      std::cout << "end config not equal to config at time length() at index " << i << std::endl;
-      std::cout << "end  config : " << hpp::pinocchio::displayConfig(currentPath->end()) << std::endl;
+    if (currentPath->end().head(idAcc) !=
+        (*currentPath)(currentPath->length(), successPath).head(idAcc)) {
+      std::cout << "end config not equal to config at time length() at index "
+                << i << std::endl;
+      std::cout << "end  config : "
+                << hpp::pinocchio::displayConfig(currentPath->end())
+                << std::endl;
       std::cout << "t=l  config : "
-                << hpp::pinocchio::displayConfig((*currentPath)(currentPath->length(), successPath)) << std::endl;
+                << hpp::pinocchio::displayConfig(
+                       (*currentPath)(currentPath->length(), successPath))
+                << std::endl;
       return false;
     }
     previousPath = currentPath;
@@ -105,7 +135,8 @@ BOOST_AUTO_TEST_CASE(load_abstract_model_hyq) {
   hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadHyQAbsract();
   // for(size_t i = 0 ; i < rbprmDevice->data().mass.size() ; ++i)
   //  std::cout<<"mass : "<<i<<" = "<<rbprmDevice->data().mass[i]<<std::endl;
-  // BOOST_CHECK_CLOSE(rbprmDevice->mass(),70.,1e-2); // FIXME : need to investigate and open an issue
+  // BOOST_CHECK_CLOSE(rbprmDevice->mass(),70.,1e-2); // FIXME : need to
+  // investigate and open an issue
   hpp::core::ProblemSolverPtr_t ps = hpp::core::ProblemSolver::create();
   ps->robot(rbprmDevice);
   BOOST_CHECK_CLOSE(rbprmDevice->mass(), 76.07, 1e-2);
@@ -118,7 +149,8 @@ BOOST_AUTO_TEST_CASE(load_abstract_model_SimpleHumanoid) {
   hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadSimpleHumanoidAbsract();
   // for(size_t i = 0 ; i < rbprmDevice->data().mass.size() ; ++i)
   //  std::cout<<"mass : "<<i<<" = "<<rbprmDevice->data().mass[i]<<std::endl;
-  // BOOST_CHECK_CLOSE(rbprmDevice->mass(),70.,1e-2); // FIXME : need to investigate and open an issue
+  // BOOST_CHECK_CLOSE(rbprmDevice->mass(),70.,1e-2); // FIXME : need to
+  // investigate and open an issue
   hpp::core::ProblemSolverPtr_t ps = hpp::core::ProblemSolver::create();
   ps->robot(rbprmDevice);
   BOOST_CHECK_CLOSE(rbprmDevice->mass(), 70., 1e-2);
@@ -139,9 +171,11 @@ BOOST_AUTO_TEST_CASE(straight_line) {
   boundsSO3.push_back(-0.1);
   boundsSO3.push_back(0.1);
   bShooter.so3Bounds_ = boundsSO3;
-  hpp::core::ProblemSolverPtr_t ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
+  hpp::core::ProblemSolverPtr_t ps =
+      configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
   hpp::core::ProblemSolver& pSolver = *ps;
-  loadObstacleWithAffordance(pSolver, std::string("hpp_environments"), std::string("multicontact/ground"),
+  loadObstacleWithAffordance(pSolver, std::string("hpp_environments"),
+                             std::string("multicontact/ground"),
                              std::string("planning"));
   // configure planner
   pSolver.addPathOptimizer(std::string("RandomShortcutDynamic"));
@@ -154,12 +188,19 @@ BOOST_AUTO_TEST_CASE(straight_line) {
   // set problem parameters :
   double aMax = 0.1;
   double vMax = 0.3;
-  pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"), core::Parameter(vMax));
-  pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"), core::Parameter(aMax));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"), core::Parameter(0.2));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"), core::Parameter(0.12));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"), core::Parameter(0.5));
-  pSolver.problem()->setParameter(std::string("ConfigurationShooter/sampleExtraDOF"), core::Parameter(false));
+  pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"),
+                                  core::Parameter(vMax));
+  pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"),
+                                  core::Parameter(aMax));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"),
+                                  core::Parameter(0.2));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"),
+                                  core::Parameter(0.12));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),
+                                  core::Parameter(0.5));
+  pSolver.problem()->setParameter(
+      std::string("ConfigurationShooter/sampleExtraDOF"),
+      core::Parameter(false));
 
   for (size_type i = 0; i < 2; ++i) {
     rbprmDevice->extraConfigSpace().lower(i) = -vMax;
@@ -191,7 +232,8 @@ BOOST_AUTO_TEST_CASE(straight_line) {
   BOOST_CHECK(checkPath(pSolver.paths().back(), 0.5));
   BOOST_CHECK_EQUAL(pSolver.paths().size(), 1);
   BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 8., 1e-6);
-  core::PathVectorPtr_t pv = std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back());
+  core::PathVectorPtr_t pv =
+      std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back());
   BOOST_CHECK_EQUAL(pv->numberPaths(), 1);
   pSolver.solve();
   BOOST_CHECK_EQUAL(pSolver.paths().size(), 3);
@@ -221,9 +263,11 @@ BOOST_AUTO_TEST_CASE(square_v0) {
   boundsSO3.push_back(-0.1);
   boundsSO3.push_back(0.1);
   bShooter.so3Bounds_ = boundsSO3;
-  hpp::core::ProblemSolverPtr_t ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
+  hpp::core::ProblemSolverPtr_t ps =
+      configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
   hpp::core::ProblemSolver& pSolver = *ps;
-  loadObstacleWithAffordance(pSolver, std::string("hpp_environments"), std::string("multicontact/ground"),
+  loadObstacleWithAffordance(pSolver, std::string("hpp_environments"),
+                             std::string("multicontact/ground"),
                              std::string("planning"));
   // configure planner
   pSolver.addPathOptimizer(std::string("RandomShortcutDynamic"));
@@ -236,12 +280,19 @@ BOOST_AUTO_TEST_CASE(square_v0) {
   // set problem parameters :
   double aMax = 0.5;
   double vMax = 1.;
-  pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"), core::Parameter(vMax));
-  pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"), core::Parameter(aMax));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"), core::Parameter(0.2));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"), core::Parameter(0.12));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"), core::Parameter(0.5));
-  pSolver.problem()->setParameter(std::string("ConfigurationShooter/sampleExtraDOF"), core::Parameter(false));
+  pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"),
+                                  core::Parameter(vMax));
+  pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"),
+                                  core::Parameter(aMax));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"),
+                                  core::Parameter(0.2));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"),
+                                  core::Parameter(0.12));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),
+                                  core::Parameter(0.5));
+  pSolver.problem()->setParameter(
+      std::string("ConfigurationShooter/sampleExtraDOF"),
+      core::Parameter(false));
 
   for (size_type i = 0; i < 2; ++i) {
     rbprmDevice->extraConfigSpace().lower(i) = -vMax;
@@ -270,11 +321,16 @@ BOOST_AUTO_TEST_CASE(square_v0) {
   BOOST_CHECK(success);
   pSolver.finishSolveStepByStep();
   BOOST_CHECK_EQUAL(pSolver.paths().size(), 1);
-  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8284271247461898, 1e-10);
+  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8284271247461898,
+                    1e-10);
   pSolver.optimizePath(pSolver.paths().back());
   BOOST_CHECK_EQUAL(pSolver.paths().size(), 2);
-  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8284271247461898, 1e-10);
-  BOOST_CHECK_EQUAL(std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())->numberPaths(), 1);
+  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8284271247461898,
+                    1e-10);
+  BOOST_CHECK_EQUAL(
+      std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
+          ->numberPaths(),
+      1);
 
   pSolver.resetGoalConfigs();
   q_goal(0) = 0.;
@@ -284,11 +340,16 @@ BOOST_AUTO_TEST_CASE(square_v0) {
   BOOST_CHECK(success);
   pSolver.finishSolveStepByStep();
   BOOST_CHECK_EQUAL(pSolver.paths().size(), 3);
-  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8284271247461898, 1e-10);
+  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8284271247461898,
+                    1e-10);
   pSolver.optimizePath(pSolver.paths().back());
   BOOST_CHECK_EQUAL(pSolver.paths().size(), 4);
-  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8284271247461898, 1e-10);
-  BOOST_CHECK_EQUAL(std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())->numberPaths(), 1);
+  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8284271247461898,
+                    1e-10);
+  BOOST_CHECK_EQUAL(
+      std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
+          ->numberPaths(),
+      1);
 
   pSolver.resetGoalConfigs();
   q_goal(0) = -1.;
@@ -298,11 +359,16 @@ BOOST_AUTO_TEST_CASE(square_v0) {
   BOOST_CHECK(success);
   pSolver.finishSolveStepByStep();
   BOOST_CHECK_EQUAL(pSolver.paths().size(), 5);
-  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8284271247461898, 1e-10);
+  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8284271247461898,
+                    1e-10);
   pSolver.optimizePath(pSolver.paths().back());
   BOOST_CHECK_EQUAL(pSolver.paths().size(), 6);
-  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8284271247461898, 1e-10);
-  BOOST_CHECK_EQUAL(std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())->numberPaths(), 1);
+  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8284271247461898,
+                    1e-10);
+  BOOST_CHECK_EQUAL(
+      std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
+          ->numberPaths(),
+      1);
 
   pSolver.resetGoalConfigs();
   q_goal(0) = -1.;
@@ -312,11 +378,16 @@ BOOST_AUTO_TEST_CASE(square_v0) {
   BOOST_CHECK(success);
   pSolver.finishSolveStepByStep();
   BOOST_CHECK_EQUAL(pSolver.paths().size(), 7);
-  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8284271247461898, 1e-10);
+  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8284271247461898,
+                    1e-10);
   pSolver.optimizePath(pSolver.paths().back());
   BOOST_CHECK_EQUAL(pSolver.paths().size(), 8);
-  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8284271247461898, 1e-10);
-  BOOST_CHECK_EQUAL(std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())->numberPaths(), 1);
+  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8284271247461898,
+                    1e-10);
+  BOOST_CHECK_EQUAL(
+      std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
+          ->numberPaths(),
+      1);
 
   pSolver.resetGoalConfigs();
   q_goal(0) = -1.5;
@@ -326,11 +397,16 @@ BOOST_AUTO_TEST_CASE(square_v0) {
   BOOST_CHECK(success);
   pSolver.finishSolveStepByStep();
   BOOST_CHECK_EQUAL(pSolver.paths().size(), 9);
-  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 3.4641016151377544, 1e-10);
+  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 3.4641016151377544,
+                    1e-10);
   pSolver.optimizePath(pSolver.paths().back());
   BOOST_CHECK_EQUAL(pSolver.paths().size(), 10);
-  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 3.4641016151377544, 1e-10);
-  BOOST_CHECK_EQUAL(std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())->numberPaths(), 1);
+  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 3.4641016151377544,
+                    1e-10);
+  BOOST_CHECK_EQUAL(
+      std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
+          ->numberPaths(),
+      1);
 
   pSolver.resetGoalConfigs();
   q_goal(0) = 0.;
@@ -340,11 +416,16 @@ BOOST_AUTO_TEST_CASE(square_v0) {
   BOOST_CHECK(success);
   pSolver.finishSolveStepByStep();
   BOOST_CHECK_EQUAL(pSolver.paths().size(), 11);
-  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8284271247461898, 1e-10);
+  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8284271247461898,
+                    1e-10);
   pSolver.optimizePath(pSolver.paths().back());
   BOOST_CHECK_EQUAL(pSolver.paths().size(), 12);
-  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8284271247461898, 1e-10);
-  BOOST_CHECK_EQUAL(std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())->numberPaths(), 1);
+  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8284271247461898,
+                    1e-10);
+  BOOST_CHECK_EQUAL(
+      std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
+          ->numberPaths(),
+      1);
 
   pSolver.resetGoalConfigs();
   q_goal(0) = 1;
@@ -354,11 +435,16 @@ BOOST_AUTO_TEST_CASE(square_v0) {
   BOOST_CHECK(success);
   pSolver.finishSolveStepByStep();
   BOOST_CHECK_EQUAL(pSolver.paths().size(), 13);
-  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8284271247461898, 1e-10);
+  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8284271247461898,
+                    1e-10);
   pSolver.optimizePath(pSolver.paths().back());
   BOOST_CHECK_EQUAL(pSolver.paths().size(), 14);
-  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8284271247461898, 1e-10);
-  BOOST_CHECK_EQUAL(std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())->numberPaths(), 1);
+  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8284271247461898,
+                    1e-10);
+  BOOST_CHECK_EQUAL(
+      std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
+          ->numberPaths(),
+      1);
 
   pSolver.resetGoalConfigs();
   q_goal(0) = 1.3;
@@ -368,11 +454,16 @@ BOOST_AUTO_TEST_CASE(square_v0) {
   BOOST_CHECK(success);
   pSolver.finishSolveStepByStep();
   BOOST_CHECK_EQUAL(pSolver.paths().size(), 15);
-  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 3.2249030993194197, 1e-10);
+  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 3.2249030993194197,
+                    1e-10);
   pSolver.optimizePath(pSolver.paths().back());
   BOOST_CHECK_EQUAL(pSolver.paths().size(), 16);
-  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 3.2249030993194197, 1e-10);
-  BOOST_CHECK_EQUAL(std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())->numberPaths(), 1);
+  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 3.2249030993194197,
+                    1e-10);
+  BOOST_CHECK_EQUAL(
+      std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
+          ->numberPaths(),
+      1);
 }
 
 BOOST_AUTO_TEST_CASE(straight_velocity) {
@@ -387,9 +478,11 @@ BOOST_AUTO_TEST_CASE(straight_velocity) {
   boundsSO3.push_back(-0.1);
   boundsSO3.push_back(0.1);
   bShooter.so3Bounds_ = boundsSO3;
-  hpp::core::ProblemSolverPtr_t ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
+  hpp::core::ProblemSolverPtr_t ps =
+      configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
   hpp::core::ProblemSolver& pSolver = *ps;
-  loadObstacleWithAffordance(pSolver, std::string("hpp_environments"), std::string("multicontact/ground"),
+  loadObstacleWithAffordance(pSolver, std::string("hpp_environments"),
+                             std::string("multicontact/ground"),
                              std::string("planning"));
   // configure planner
   pSolver.addPathOptimizer(std::string("RandomShortcutDynamic"));
@@ -402,12 +495,19 @@ BOOST_AUTO_TEST_CASE(straight_velocity) {
   // set problem parameters :
   double aMax = 0.5;
   double vMax = 1.5;
-  pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"), core::Parameter(vMax));
-  pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"), core::Parameter(aMax));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"), core::Parameter(0.2));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"), core::Parameter(0.12));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"), core::Parameter(0.5));
-  pSolver.problem()->setParameter(std::string("ConfigurationShooter/sampleExtraDOF"), core::Parameter(false));
+  pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"),
+                                  core::Parameter(vMax));
+  pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"),
+                                  core::Parameter(aMax));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"),
+                                  core::Parameter(0.2));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"),
+                                  core::Parameter(0.12));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),
+                                  core::Parameter(0.5));
+  pSolver.problem()->setParameter(
+      std::string("ConfigurationShooter/sampleExtraDOF"),
+      core::Parameter(false));
 
   for (size_type i = 0; i < 2; ++i) {
     rbprmDevice->extraConfigSpace().lower(i) = -vMax;
@@ -435,13 +535,18 @@ BOOST_AUTO_TEST_CASE(straight_velocity) {
   BOOST_CHECK(success);
   pSolver.finishSolveStepByStep();
   BOOST_CHECK_EQUAL(pSolver.paths().size(), 1);
-  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 1.4641016151377546, 1e-10);
+  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 1.4641016151377546,
+                    1e-10);
   pSolver.optimizePath(pSolver.paths().back());
   BOOST_CHECK_EQUAL(pSolver.paths().size(), 2);
-  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 1.4641016151377546, 1e-10);
+  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 1.4641016151377546,
+                    1e-10);
   BOOST_CHECK(checkPathVector(pSolver.paths().back()));
   BOOST_CHECK(checkPath(pSolver.paths().back(), 1.7));
-  BOOST_CHECK_EQUAL(std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())->numberPaths(), 1);
+  BOOST_CHECK_EQUAL(
+      std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
+          ->numberPaths(),
+      1);
 
   pSolver.resetGoalConfigs();
   q_goal(0) = 0.;
@@ -458,7 +563,10 @@ BOOST_AUTO_TEST_CASE(straight_velocity) {
   BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.642220510185596, 1e-10);
   BOOST_CHECK(checkPathVector(pSolver.paths().back()));
   BOOST_CHECK(checkPath(pSolver.paths().back(), 1.7));
-  BOOST_CHECK_EQUAL(std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())->numberPaths(), 1);
+  BOOST_CHECK_EQUAL(
+      std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
+          ->numberPaths(),
+      1);
 
   pSolver.resetGoalConfigs();
   q_goal(0) = 1.;
@@ -468,13 +576,18 @@ BOOST_AUTO_TEST_CASE(straight_velocity) {
   BOOST_CHECK(success);
   pSolver.finishSolveStepByStep();
   BOOST_CHECK_EQUAL(pSolver.paths().size(), 5);
-  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8741411087489799, 1e-10);
+  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8741411087489799,
+                    1e-10);
   pSolver.optimizePath(pSolver.paths().back());
   BOOST_CHECK_EQUAL(pSolver.paths().size(), 6);
-  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8741411087489799, 1e-10);
+  BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8741411087489799,
+                    1e-10);
   BOOST_CHECK(checkPathVector(pSolver.paths().back()));
   BOOST_CHECK(checkPath(pSolver.paths().back(), 1.7));
-  BOOST_CHECK_EQUAL(std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())->numberPaths(), 1);
+  BOOST_CHECK_EQUAL(
+      std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
+          ->numberPaths(),
+      1);
 
   pSolver.resetGoalConfigs();
   q_goal(0) = -1.;
@@ -491,7 +604,10 @@ BOOST_AUTO_TEST_CASE(straight_velocity) {
   BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 4.16227766016838, 1e-10);
   BOOST_CHECK(checkPathVector(pSolver.paths().back()));
   BOOST_CHECK(checkPath(pSolver.paths().back(), 1.7));
-  BOOST_CHECK_EQUAL(std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())->numberPaths(), 1);
+  BOOST_CHECK_EQUAL(
+      std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
+          ->numberPaths(),
+      1);
 }
 
 BOOST_AUTO_TEST_CASE(straight_line_amax_mu05) {
@@ -506,9 +622,11 @@ BOOST_AUTO_TEST_CASE(straight_line_amax_mu05) {
   boundsSO3.push_back(-0.1);
   boundsSO3.push_back(0.1);
   bShooter.so3Bounds_ = boundsSO3;
-  hpp::core::ProblemSolverPtr_t ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
+  hpp::core::ProblemSolverPtr_t ps =
+      configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
   hpp::core::ProblemSolver& pSolver = *ps;
-  loadObstacleWithAffordance(pSolver, std::string("hpp_environments"), std::string("multicontact/ground"),
+  loadObstacleWithAffordance(pSolver, std::string("hpp_environments"),
+                             std::string("multicontact/ground"),
                              std::string("planning"));
   // configure planner
   pSolver.addPathOptimizer(std::string("RandomShortcutDynamic"));
@@ -521,12 +639,19 @@ BOOST_AUTO_TEST_CASE(straight_line_amax_mu05) {
   // set problem parameters :
   double aMax = 10.;
   double vMax = 1.;
-  pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"), core::Parameter(vMax));
-  pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"), core::Parameter(aMax));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"), core::Parameter(0.2));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"), core::Parameter(0.12));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"), core::Parameter(0.5));
-  pSolver.problem()->setParameter(std::string("ConfigurationShooter/sampleExtraDOF"), core::Parameter(false));
+  pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"),
+                                  core::Parameter(vMax));
+  pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"),
+                                  core::Parameter(aMax));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"),
+                                  core::Parameter(0.2));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"),
+                                  core::Parameter(0.12));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),
+                                  core::Parameter(0.5));
+  pSolver.problem()->setParameter(
+      std::string("ConfigurationShooter/sampleExtraDOF"),
+      core::Parameter(false));
 
   for (size_type i = 0; i < 2; ++i) {
     rbprmDevice->extraConfigSpace().lower(i) = -vMax;
@@ -570,9 +695,11 @@ BOOST_AUTO_TEST_CASE(straight_line_amax_mu005) {
   boundsSO3.push_back(-0.1);
   boundsSO3.push_back(0.1);
   bShooter.so3Bounds_ = boundsSO3;
-  hpp::core::ProblemSolverPtr_t ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
+  hpp::core::ProblemSolverPtr_t ps =
+      configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
   hpp::core::ProblemSolver& pSolver = *ps;
-  loadObstacleWithAffordance(pSolver, std::string("hpp_environments"), std::string("multicontact/ground"),
+  loadObstacleWithAffordance(pSolver, std::string("hpp_environments"),
+                             std::string("multicontact/ground"),
                              std::string("planning"));
   // configure planner
   pSolver.addPathOptimizer(std::string("RandomShortcutDynamic"));
@@ -585,12 +712,19 @@ BOOST_AUTO_TEST_CASE(straight_line_amax_mu005) {
   // set problem parameters :
   double aMax = 10.;
   double vMax = 1.;
-  pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"), core::Parameter(vMax));
-  pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"), core::Parameter(aMax));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"), core::Parameter(0.2));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"), core::Parameter(0.12));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"), core::Parameter(0.05));
-  pSolver.problem()->setParameter(std::string("ConfigurationShooter/sampleExtraDOF"), core::Parameter(false));
+  pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"),
+                                  core::Parameter(vMax));
+  pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"),
+                                  core::Parameter(aMax));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"),
+                                  core::Parameter(0.2));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"),
+                                  core::Parameter(0.12));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),
+                                  core::Parameter(0.05));
+  pSolver.problem()->setParameter(
+      std::string("ConfigurationShooter/sampleExtraDOF"),
+      core::Parameter(false));
 
   for (size_type i = 0; i < 2; ++i) {
     rbprmDevice->extraConfigSpace().lower(i) = -vMax;
@@ -634,9 +768,11 @@ BOOST_AUTO_TEST_CASE(straight_line_amax_mu001) {
   boundsSO3.push_back(-0.1);
   boundsSO3.push_back(0.1);
   bShooter.so3Bounds_ = boundsSO3;
-  hpp::core::ProblemSolverPtr_t ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
+  hpp::core::ProblemSolverPtr_t ps =
+      configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
   hpp::core::ProblemSolver& pSolver = *ps;
-  loadObstacleWithAffordance(pSolver, std::string("hpp_environments"), std::string("multicontact/ground"),
+  loadObstacleWithAffordance(pSolver, std::string("hpp_environments"),
+                             std::string("multicontact/ground"),
                              std::string("planning"));
   // configure planner
   pSolver.addPathOptimizer(std::string("RandomShortcutDynamic"));
@@ -649,12 +785,19 @@ BOOST_AUTO_TEST_CASE(straight_line_amax_mu001) {
   // set problem parameters :
   double aMax = 10.;
   double vMax = 1.;
-  pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"), core::Parameter(vMax));
-  pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"), core::Parameter(aMax));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"), core::Parameter(0.2));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"), core::Parameter(0.12));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"), core::Parameter(0.01));
-  pSolver.problem()->setParameter(std::string("ConfigurationShooter/sampleExtraDOF"), core::Parameter(false));
+  pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"),
+                                  core::Parameter(vMax));
+  pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"),
+                                  core::Parameter(aMax));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"),
+                                  core::Parameter(0.2));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"),
+                                  core::Parameter(0.12));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),
+                                  core::Parameter(0.01));
+  pSolver.problem()->setParameter(
+      std::string("ConfigurationShooter/sampleExtraDOF"),
+      core::Parameter(false));
 
   for (size_type i = 0; i < 2; ++i) {
     rbprmDevice->extraConfigSpace().lower(i) = -vMax;
@@ -698,9 +841,11 @@ BOOST_AUTO_TEST_CASE(straight_line_amax_mu5) {
   boundsSO3.push_back(-0.1);
   boundsSO3.push_back(0.1);
   bShooter.so3Bounds_ = boundsSO3;
-  hpp::core::ProblemSolverPtr_t ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
+  hpp::core::ProblemSolverPtr_t ps =
+      configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
   hpp::core::ProblemSolver& pSolver = *ps;
-  loadObstacleWithAffordance(pSolver, std::string("hpp_environments"), std::string("multicontact/ground"),
+  loadObstacleWithAffordance(pSolver, std::string("hpp_environments"),
+                             std::string("multicontact/ground"),
                              std::string("planning"));
   // configure planner
   pSolver.addPathOptimizer(std::string("RandomShortcutDynamic"));
@@ -713,12 +858,19 @@ BOOST_AUTO_TEST_CASE(straight_line_amax_mu5) {
   // set problem parameters :
   double aMax = 10.;
   double vMax = 1.;
-  pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"), core::Parameter(vMax));
-  pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"), core::Parameter(aMax));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"), core::Parameter(0.2));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"), core::Parameter(0.12));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"), core::Parameter(5.));
-  pSolver.problem()->setParameter(std::string("ConfigurationShooter/sampleExtraDOF"), core::Parameter(false));
+  pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"),
+                                  core::Parameter(vMax));
+  pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"),
+                                  core::Parameter(aMax));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"),
+                                  core::Parameter(0.2));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"),
+                                  core::Parameter(0.12));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),
+                                  core::Parameter(5.));
+  pSolver.problem()->setParameter(
+      std::string("ConfigurationShooter/sampleExtraDOF"),
+      core::Parameter(false));
 
   for (size_type i = 0; i < 2; ++i) {
     rbprmDevice->extraConfigSpace().lower(i) = -vMax;
@@ -762,9 +914,11 @@ BOOST_AUTO_TEST_CASE(straight_line_amax_feetChange) {
   boundsSO3.push_back(-0.1);
   boundsSO3.push_back(0.1);
   bShooter.so3Bounds_ = boundsSO3;
-  hpp::core::ProblemSolverPtr_t ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
+  hpp::core::ProblemSolverPtr_t ps =
+      configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
   hpp::core::ProblemSolver& pSolver = *ps;
-  loadObstacleWithAffordance(pSolver, std::string("hpp_environments"), std::string("multicontact/ground"),
+  loadObstacleWithAffordance(pSolver, std::string("hpp_environments"),
+                             std::string("multicontact/ground"),
                              std::string("planning"));
   // configure planner
   pSolver.addPathOptimizer(std::string("RandomShortcutDynamic"));
@@ -777,12 +931,19 @@ BOOST_AUTO_TEST_CASE(straight_line_amax_feetChange) {
   // set problem parameters :
   double aMax = 10.;
   double vMax = 1.;
-  pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"), core::Parameter(vMax));
-  pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"), core::Parameter(aMax));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"), core::Parameter(0.05));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"), core::Parameter(0.05));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"), core::Parameter(0.5));
-  pSolver.problem()->setParameter(std::string("ConfigurationShooter/sampleExtraDOF"), core::Parameter(false));
+  pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"),
+                                  core::Parameter(vMax));
+  pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"),
+                                  core::Parameter(aMax));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"),
+                                  core::Parameter(0.05));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"),
+                                  core::Parameter(0.05));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),
+                                  core::Parameter(0.5));
+  pSolver.problem()->setParameter(
+      std::string("ConfigurationShooter/sampleExtraDOF"),
+      core::Parameter(false));
 
   for (size_type i = 0; i < 2; ++i) {
     rbprmDevice->extraConfigSpace().lower(i) = -vMax;
@@ -815,8 +976,11 @@ BOOST_AUTO_TEST_CASE(straight_line_amax_feetChange) {
 }
 
 BOOST_AUTO_TEST_CASE(nav_bauzil) {
-  std::cout << "start nav_bauzil test case, this may take a couple of minutes ..." << std::endl;
-  // this test case may take up to a minute to execute. Usually after ~5 minutes it should be considered as a failure.
+  std::cout
+      << "start nav_bauzil test case, this may take a couple of minutes ..."
+      << std::endl;
+  // this test case may take up to a minute to execute. Usually after ~5 minutes
+  // it should be considered as a failure.
   hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadSimpleHumanoidAbsract();
   rbprmDevice->setDimensionExtraConfigSpace(6);
   BindShooter bShooter;
@@ -828,9 +992,11 @@ BOOST_AUTO_TEST_CASE(nav_bauzil) {
   boundsSO3.push_back(-0.1);
   boundsSO3.push_back(0.1);
   bShooter.so3Bounds_ = boundsSO3;
-  hpp::core::ProblemSolverPtr_t ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
+  hpp::core::ProblemSolverPtr_t ps =
+      configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
   hpp::core::ProblemSolver& pSolver = *ps;
-  loadObstacleWithAffordance(pSolver, std::string("hpp_environments"), std::string("multicontact/floor_bauzil"),
+  loadObstacleWithAffordance(pSolver, std::string("hpp_environments"),
+                             std::string("multicontact/floor_bauzil"),
                              std::string("planning"));
   // configure planner
   pSolver.addPathOptimizer(std::string("RandomShortcutDynamic"));
@@ -843,14 +1009,22 @@ BOOST_AUTO_TEST_CASE(nav_bauzil) {
   // set problem parameters :
   double aMax = 0.1;
   double vMax = 0.3;
-  pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"), core::Parameter(vMax));
-  pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"), core::Parameter(aMax));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"), core::Parameter(0.2));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"), core::Parameter(0.12));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"), core::Parameter(0.5));
-  pSolver.problem()->setParameter(std::string("ConfigurationShooter/sampleExtraDOF"), core::Parameter(false));
-  pSolver.problem()->setParameter(std::string("PathOptimization/RandomShortcut/NumberOfLoops"),
-                                  core::Parameter((core::size_type)50));
+  pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"),
+                                  core::Parameter(vMax));
+  pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"),
+                                  core::Parameter(aMax));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"),
+                                  core::Parameter(0.2));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"),
+                                  core::Parameter(0.12));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),
+                                  core::Parameter(0.5));
+  pSolver.problem()->setParameter(
+      std::string("ConfigurationShooter/sampleExtraDOF"),
+      core::Parameter(false));
+  pSolver.problem()->setParameter(
+      std::string("PathOptimization/RandomShortcut/NumberOfLoops"),
+      core::Parameter((core::size_type)50));
 
   for (size_type i = 0; i < 2; ++i) {
     rbprmDevice->extraConfigSpace().lower(i) = -vMax;
@@ -877,7 +1051,9 @@ BOOST_AUTO_TEST_CASE(nav_bauzil) {
 
   pSolver.solve();
   BOOST_CHECK_EQUAL(pSolver.paths().size(), 2);
-  std::cout << "Solve complete, start optimization. This may take few minutes ..." << std::endl;
+  std::cout
+      << "Solve complete, start optimization. This may take few minutes ..."
+      << std::endl;
   BOOST_CHECK(checkPathVector(pSolver.paths().back()));
   BOOST_CHECK(checkPath(pSolver.paths().back(), 0.5));
   for (size_t i = 0; i < 10; ++i) {
@@ -891,8 +1067,11 @@ BOOST_AUTO_TEST_CASE(nav_bauzil) {
 }
 
 BOOST_AUTO_TEST_CASE(nav_bauzil_oriented) {
-  std::cout << "start nav_bauzil_oriented test case, this may take a couple of minutes ..." << std::endl;
-  // this test case may take up to a minute to execute. Usually after ~5 minutes it should be considered as a failure.
+  std::cout << "start nav_bauzil_oriented test case, this may take a couple of "
+               "minutes ..."
+            << std::endl;
+  // this test case may take up to a minute to execute. Usually after ~5 minutes
+  // it should be considered as a failure.
   hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadSimpleHumanoidAbsract();
   rbprmDevice->setDimensionExtraConfigSpace(6);
   BindShooter bShooter;
@@ -904,9 +1083,11 @@ BOOST_AUTO_TEST_CASE(nav_bauzil_oriented) {
   boundsSO3.push_back(-0.1);
   boundsSO3.push_back(0.1);
   bShooter.so3Bounds_ = boundsSO3;
-  hpp::core::ProblemSolverPtr_t ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
+  hpp::core::ProblemSolverPtr_t ps =
+      configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
   hpp::core::ProblemSolver& pSolver = *ps;
-  loadObstacleWithAffordance(pSolver, std::string("hpp_environments"), std::string("multicontact/floor_bauzil"),
+  loadObstacleWithAffordance(pSolver, std::string("hpp_environments"),
+                             std::string("multicontact/floor_bauzil"),
                              std::string("planning"));
   // configure planner
   pSolver.addPathOptimizer(std::string("RandomShortcutDynamic"));
@@ -919,15 +1100,24 @@ BOOST_AUTO_TEST_CASE(nav_bauzil_oriented) {
   // set problem parameters :
   double aMax = 0.1;
   double vMax = 0.3;
-  pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"), core::Parameter(vMax));
-  pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"), core::Parameter(aMax));
-  pSolver.problem()->setParameter(std::string("Kinodynamic/forceAllOrientation"), core::Parameter(true));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"), core::Parameter(0.2));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"), core::Parameter(0.12));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"), core::Parameter(0.5));
-  pSolver.problem()->setParameter(std::string("ConfigurationShooter/sampleExtraDOF"), core::Parameter(false));
-  pSolver.problem()->setParameter(std::string("PathOptimization/RandomShortcut/NumberOfLoops"),
-                                  core::Parameter((core::size_type)50));
+  pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"),
+                                  core::Parameter(vMax));
+  pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"),
+                                  core::Parameter(aMax));
+  pSolver.problem()->setParameter(
+      std::string("Kinodynamic/forceAllOrientation"), core::Parameter(true));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"),
+                                  core::Parameter(0.2));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"),
+                                  core::Parameter(0.12));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),
+                                  core::Parameter(0.5));
+  pSolver.problem()->setParameter(
+      std::string("ConfigurationShooter/sampleExtraDOF"),
+      core::Parameter(false));
+  pSolver.problem()->setParameter(
+      std::string("PathOptimization/RandomShortcut/NumberOfLoops"),
+      core::Parameter((core::size_type)50));
 
   for (size_type i = 0; i < 2; ++i) {
     rbprmDevice->extraConfigSpace().lower(i) = -vMax;
@@ -954,7 +1144,9 @@ BOOST_AUTO_TEST_CASE(nav_bauzil_oriented) {
 
   pSolver.solve();
   BOOST_CHECK_EQUAL(pSolver.paths().size(), 2);
-  std::cout << "Solve complete, start optimization. This may take few minutes ..." << std::endl;
+  std::cout
+      << "Solve complete, start optimization. This may take few minutes ..."
+      << std::endl;
   BOOST_CHECK(checkPathVector(pSolver.paths().back()));
   BOOST_CHECK(checkPath(pSolver.paths().back(), 0.5));
   for (size_t i = 0; i < 10; ++i) {
@@ -968,8 +1160,11 @@ BOOST_AUTO_TEST_CASE(nav_bauzil_oriented) {
 }
 
 BOOST_AUTO_TEST_CASE(nav_bauzil_oriented_kino) {
-  std::cout << "start nav_bauzil_oriented_kino test case, this may take a couple of minutes ..." << std::endl;
-  // this test case may take up to a minute to execute. Usually after ~5 minutes it should be considered as a failure.
+  std::cout << "start nav_bauzil_oriented_kino test case, this may take a "
+               "couple of minutes ..."
+            << std::endl;
+  // this test case may take up to a minute to execute. Usually after ~5 minutes
+  // it should be considered as a failure.
   hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadSimpleHumanoidAbsract();
   rbprmDevice->setDimensionExtraConfigSpace(6);
   BindShooter bShooter;
@@ -981,9 +1176,11 @@ BOOST_AUTO_TEST_CASE(nav_bauzil_oriented_kino) {
   boundsSO3.push_back(-0.1);
   boundsSO3.push_back(0.1);
   bShooter.so3Bounds_ = boundsSO3;
-  hpp::core::ProblemSolverPtr_t ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
+  hpp::core::ProblemSolverPtr_t ps =
+      configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
   hpp::core::ProblemSolver& pSolver = *ps;
-  loadObstacleWithAffordance(pSolver, std::string("hpp_environments"), std::string("multicontact/floor_bauzil"),
+  loadObstacleWithAffordance(pSolver, std::string("hpp_environments"),
+                             std::string("multicontact/floor_bauzil"),
                              std::string("planning"));
   // configure planner
   pSolver.addPathOptimizer(std::string("RandomShortcutDynamic"));
@@ -996,15 +1193,24 @@ BOOST_AUTO_TEST_CASE(nav_bauzil_oriented_kino) {
   // set problem parameters :
   double aMax = 0.1;
   double vMax = 0.3;
-  pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"), core::Parameter(vMax));
-  pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"), core::Parameter(aMax));
-  pSolver.problem()->setParameter(std::string("Kinodynamic/forceAllOrientation"), core::Parameter(true));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"), core::Parameter(0.2));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"), core::Parameter(0.12));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"), core::Parameter(0.5));
-  pSolver.problem()->setParameter(std::string("ConfigurationShooter/sampleExtraDOF"), core::Parameter(true));
-  pSolver.problem()->setParameter(std::string("PathOptimization/RandomShortcut/NumberOfLoops"),
-                                  core::Parameter((core::size_type)50));
+  pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"),
+                                  core::Parameter(vMax));
+  pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"),
+                                  core::Parameter(aMax));
+  pSolver.problem()->setParameter(
+      std::string("Kinodynamic/forceAllOrientation"), core::Parameter(true));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"),
+                                  core::Parameter(0.2));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"),
+                                  core::Parameter(0.12));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),
+                                  core::Parameter(0.5));
+  pSolver.problem()->setParameter(
+      std::string("ConfigurationShooter/sampleExtraDOF"),
+      core::Parameter(true));
+  pSolver.problem()->setParameter(
+      std::string("PathOptimization/RandomShortcut/NumberOfLoops"),
+      core::Parameter((core::size_type)50));
 
   for (size_type i = 0; i < 2; ++i) {
     rbprmDevice->extraConfigSpace().lower(i) = -vMax;
@@ -1031,7 +1237,9 @@ BOOST_AUTO_TEST_CASE(nav_bauzil_oriented_kino) {
 
   pSolver.solve();
   BOOST_CHECK_EQUAL(pSolver.paths().size(), 2);
-  std::cout << "Solve complete, start optimization. This may take few minutes ..." << std::endl;
+  std::cout
+      << "Solve complete, start optimization. This may take few minutes ..."
+      << std::endl;
   BOOST_CHECK(checkPathVector(pSolver.paths().back()));
   BOOST_CHECK(checkPath(pSolver.paths().back(), 0.5));
   for (size_t i = 0; i < 10; ++i) {
@@ -1045,8 +1253,11 @@ BOOST_AUTO_TEST_CASE(nav_bauzil_oriented_kino) {
 }
 
 BOOST_AUTO_TEST_CASE(nav_bauzil_hyq) {
-  std::cout << "start nav_bauzil_hyq test case, this may take a couple of minutes ..." << std::endl;
-  // this test case may take up to a minute to execute. Usually after ~5 minutes it should be considered as a failure.
+  std::cout
+      << "start nav_bauzil_hyq test case, this may take a couple of minutes ..."
+      << std::endl;
+  // this test case may take up to a minute to execute. Usually after ~5 minutes
+  // it should be considered as a failure.
   hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadHyQAbsract();
   rbprmDevice->rootJoint()->lowerBound(2, 0.62);
   rbprmDevice->rootJoint()->upperBound(2, 0.62);
@@ -1060,9 +1271,11 @@ BOOST_AUTO_TEST_CASE(nav_bauzil_hyq) {
   boundsSO3.push_back(-0.1);
   boundsSO3.push_back(0.1);
   bShooter.so3Bounds_ = boundsSO3;
-  hpp::core::ProblemSolverPtr_t ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
+  hpp::core::ProblemSolverPtr_t ps =
+      configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
   hpp::core::ProblemSolver& pSolver = *ps;
-  loadObstacleWithAffordance(pSolver, std::string("hpp_environments"), std::string("multicontact/floor_bauzil"),
+  loadObstacleWithAffordance(pSolver, std::string("hpp_environments"),
+                             std::string("multicontact/floor_bauzil"),
                              std::string("planning"));
   // configure planner
   pSolver.addPathOptimizer(std::string("RandomShortcutDynamic"));
@@ -1075,14 +1288,22 @@ BOOST_AUTO_TEST_CASE(nav_bauzil_hyq) {
   // set problem parameters :
   double aMax = 0.5;
   double vMax = 0.3;
-  pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"), core::Parameter(vMax));
-  pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"), core::Parameter(aMax));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"), core::Parameter(0.01));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"), core::Parameter(0.01));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"), core::Parameter(0.5));
-  pSolver.problem()->setParameter(std::string("ConfigurationShooter/sampleExtraDOF"), core::Parameter(false));
-  pSolver.problem()->setParameter(std::string("PathOptimization/RandomShortcut/NumberOfLoops"),
-                                  core::Parameter((core::size_type)50));
+  pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"),
+                                  core::Parameter(vMax));
+  pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"),
+                                  core::Parameter(aMax));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"),
+                                  core::Parameter(0.01));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"),
+                                  core::Parameter(0.01));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),
+                                  core::Parameter(0.5));
+  pSolver.problem()->setParameter(
+      std::string("ConfigurationShooter/sampleExtraDOF"),
+      core::Parameter(false));
+  pSolver.problem()->setParameter(
+      std::string("PathOptimization/RandomShortcut/NumberOfLoops"),
+      core::Parameter((core::size_type)50));
 
   for (size_type i = 0; i < 2; ++i) {
     rbprmDevice->extraConfigSpace().lower(i) = -vMax;
@@ -1110,7 +1331,9 @@ BOOST_AUTO_TEST_CASE(nav_bauzil_hyq) {
 
   pSolver.solve();
   BOOST_CHECK_EQUAL(pSolver.paths().size(), 2);
-  std::cout << "Solve complete, start optimization. This may take few minutes ..." << std::endl;
+  std::cout
+      << "Solve complete, start optimization. This may take few minutes ..."
+      << std::endl;
   BOOST_CHECK(checkPathVector(pSolver.paths().back()));
   BOOST_CHECK(checkPath(pSolver.paths().back(), 0.5));
   for (size_t i = 0; i < 10; ++i) {
@@ -1124,8 +1347,11 @@ BOOST_AUTO_TEST_CASE(nav_bauzil_hyq) {
 }
 
 BOOST_AUTO_TEST_CASE(nav_bauzil_oriented_hyq) {
-  std::cout << "start nav_bauzil_oriented_hyq test case, this may take a couple of minutes ..." << std::endl;
-  // this test case may take up to a minute to execute. Usually after ~5 minutes it should be considered as a failure.
+  std::cout << "start nav_bauzil_oriented_hyq test case, this may take a "
+               "couple of minutes ..."
+            << std::endl;
+  // this test case may take up to a minute to execute. Usually after ~5 minutes
+  // it should be considered as a failure.
   hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadHyQAbsract();
   rbprmDevice->rootJoint()->lowerBound(2, 0.62);
   rbprmDevice->rootJoint()->upperBound(2, 0.62);
@@ -1139,9 +1365,11 @@ BOOST_AUTO_TEST_CASE(nav_bauzil_oriented_hyq) {
   boundsSO3.push_back(-0.1);
   boundsSO3.push_back(0.1);
   bShooter.so3Bounds_ = boundsSO3;
-  hpp::core::ProblemSolverPtr_t ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
+  hpp::core::ProblemSolverPtr_t ps =
+      configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
   hpp::core::ProblemSolver& pSolver = *ps;
-  loadObstacleWithAffordance(pSolver, std::string("hpp_environments"), std::string("multicontact/floor_bauzil"),
+  loadObstacleWithAffordance(pSolver, std::string("hpp_environments"),
+                             std::string("multicontact/floor_bauzil"),
                              std::string("planning"));
   // configure planner
   pSolver.addPathOptimizer(std::string("RandomShortcutDynamic"));
@@ -1154,15 +1382,24 @@ BOOST_AUTO_TEST_CASE(nav_bauzil_oriented_hyq) {
   // set problem parameters :
   double aMax = 0.5;
   double vMax = 0.3;
-  pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"), core::Parameter(vMax));
-  pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"), core::Parameter(aMax));
-  pSolver.problem()->setParameter(std::string("Kinodynamic/forceAllOrientation"), core::Parameter(true));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"), core::Parameter(0.01));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"), core::Parameter(0.01));
-  pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"), core::Parameter(0.5));
-  pSolver.problem()->setParameter(std::string("ConfigurationShooter/sampleExtraDOF"), core::Parameter(false));
-  pSolver.problem()->setParameter(std::string("PathOptimization/RandomShortcut/NumberOfLoops"),
-                                  core::Parameter((core::size_type)50));
+  pSolver.problem()->setParameter(std::string("Kinodynamic/velocityBound"),
+                                  core::Parameter(vMax));
+  pSolver.problem()->setParameter(std::string("Kinodynamic/accelerationBound"),
+                                  core::Parameter(aMax));
+  pSolver.problem()->setParameter(
+      std::string("Kinodynamic/forceAllOrientation"), core::Parameter(true));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootX"),
+                                  core::Parameter(0.01));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/sizeFootY"),
+                                  core::Parameter(0.01));
+  pSolver.problem()->setParameter(std::string("DynamicPlanner/friction"),
+                                  core::Parameter(0.5));
+  pSolver.problem()->setParameter(
+      std::string("ConfigurationShooter/sampleExtraDOF"),
+      core::Parameter(false));
+  pSolver.problem()->setParameter(
+      std::string("PathOptimization/RandomShortcut/NumberOfLoops"),
+      core::Parameter((core::size_type)50));
 
   for (size_type i = 0; i < 2; ++i) {
     rbprmDevice->extraConfigSpace().lower(i) = -vMax;
@@ -1190,7 +1427,9 @@ BOOST_AUTO_TEST_CASE(nav_bauzil_oriented_hyq) {
 
   pSolver.solve();
   BOOST_CHECK_EQUAL(pSolver.paths().size(), 2);
-  std::cout << "Solve complete, start optimization. This may take few minutes ..." << std::endl;
+  std::cout
+      << "Solve complete, start optimization. This may take few minutes ..."
+      << std::endl;
   BOOST_CHECK(checkPathVector(pSolver.paths().back()));
   BOOST_CHECK(checkPath(pSolver.paths().back(), 0.5));
   for (size_t i = 0; i < 10; ++i) {
@@ -1206,9 +1445,11 @@ BOOST_AUTO_TEST_CASE(nav_bauzil_oriented_hyq) {
 /*
 // too slow to be added in the test suite ...
 BOOST_AUTO_TEST_CASE (nav_bauzil_hard) {
-    std::cout<<"start nav_bauzil_hard test case, this may take several minutes ..."<<std::endl;
-  // this test case may take up to 5 minute to execute. Usually after ~10 minutes it should be considered as a failure.
-    hpp::pinocchio::RbPrmDevicePtr_t rbprmDevice = loadSimpleHumanoidAbsract();
+    std::cout<<"start nav_bauzil_hard test case, this may take several minutes
+..."<<std::endl;
+  // this test case may take up to 5 minute to execute. Usually after ~10
+minutes it should be considered as a failure. hpp::pinocchio::RbPrmDevicePtr_t
+rbprmDevice = loadSimpleHumanoidAbsract();
     rbprmDevice->rootJoint()->lowerBound(0, -2.3);
     rbprmDevice->rootJoint()->lowerBound(1, -1.5);
     rbprmDevice->rootJoint()->lowerBound(2, 0.98);
@@ -1225,7 +1466,8 @@ BOOST_AUTO_TEST_CASE (nav_bauzil_hard) {
     boundsSO3.push_back(-0.1);
     boundsSO3.push_back(0.1);
     bShooter.so3Bounds_ = boundsSO3;
-    hpp::core::ProblemSolverPtr_t  ps = configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
+    hpp::core::ProblemSolverPtr_t  ps =
+configureRbprmProblemSolverForSupportLimbs(rbprmDevice, bShooter);
     hpp::core::ProblemSolver& pSolver = *ps;
     loadObstacleWithAffordance(pSolver, std::string("hpp_environments"),
                                std::string("multicontact/floor_bauzil"),std::string("planning"));
@@ -1265,18 +1507,19 @@ BOOST_AUTO_TEST_CASE (nav_bauzil_hard) {
 
     // define the planning problem :
     core::Configuration_t q_init(rbprmDevice->configSize());
-    q_init << -0.7, 2., 0.98, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.07, 0, 0, 0.0, 0.0, 0.0;
-    core::Configuration_t q_goal(rbprmDevice->configSize());
-    q_goal << 0., -1., 0.98, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.1, 0, 0, 0.0, 0.0, 0.0;
+    q_init << -0.7, 2., 0.98, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.07, 0, 0, 0.0,
+0.0, 0.0; core::Configuration_t q_goal(rbprmDevice->configSize()); q_goal << 0.,
+-1., 0.98, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.1, 0, 0, 0.0, 0.0, 0.0;
 
     pSolver.initConfig(ConfigurationPtr_t(new core::Configuration_t(q_init)));
-    pSolver.addGoalConfig(ConfigurationPtr_t(new core::Configuration_t(q_goal)));
+    pSolver.addGoalConfig(ConfigurationPtr_t(new
+core::Configuration_t(q_goal)));
     BOOST_CHECK_CLOSE(pSolver.robot()->mass(),70.,1e-2);
 
     pSolver.solve();
     BOOST_CHECK_EQUAL(pSolver.paths().size(),2);
-    std::cout<<"Solve complete, start optimization. This may take few minutes ..."<<std::endl;
-    BOOST_CHECK(checkPathVector(pSolver.paths().back()));
+    std::cout<<"Solve complete, start optimization. This may take few minutes
+..."<<std::endl; BOOST_CHECK(checkPathVector(pSolver.paths().back()));
     BOOST_CHECK(checkPath(pSolver.paths().back(),0.5));
     for(size_t i = 0 ; i < 10 ; ++i){
       pSolver.optimizePath(pSolver.paths().back());

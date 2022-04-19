@@ -19,25 +19,27 @@
 #ifndef HPP_RBPRM_TOOLS_HH
 #define HPP_RBPRM_TOOLS_HH
 
-#include <iostream>
-
+#include <Eigen/Core>
 #include <hpp/core/config-validation.hh>
-#include <hpp/pinocchio/joint.hh>
-#include <hpp/rbprm/config.hh>
 #include <hpp/pinocchio/collision-object.hh>
 #include <hpp/pinocchio/frame.hh>
-#include <Eigen/Core>
+#include <hpp/pinocchio/joint.hh>
+#include <hpp/rbprm/config.hh>
+#include <iostream>
 
 namespace hpp {
 namespace tools {
 /// Uses Rodriguez formula to find transformation between two vectors.
-Eigen::Matrix3d GetRotationMatrix(const Eigen::Vector3d& from, const Eigen::Vector3d& to);
+Eigen::Matrix3d GetRotationMatrix(const Eigen::Vector3d& from,
+                                  const Eigen::Vector3d& to);
 fcl::Matrix3f GetZRotMatrix(const core::value_type theta);
 fcl::Matrix3f GetYRotMatrix(const core::value_type theta);
 fcl::Matrix3f GetXRotMatrix(const core::value_type theta);
-pinocchio::Configuration_t interpolate(pinocchio::ConfigurationIn_t q1, pinocchio::ConfigurationIn_t q2,
+pinocchio::Configuration_t interpolate(pinocchio::ConfigurationIn_t q1,
+                                       pinocchio::ConfigurationIn_t q2,
                                        const pinocchio::value_type& u);
-pinocchio::value_type distance(pinocchio::ConfigurationIn_t q1, pinocchio::ConfigurationIn_t q2);
+pinocchio::value_type distance(pinocchio::ConfigurationIn_t q1,
+                               pinocchio::ConfigurationIn_t q2);
 
 template <typename K, typename V>
 void addToMap(const K& key, const V& value);
@@ -59,20 +61,25 @@ void RemoveEffectorCollisionRec(T& validation, pinocchio::JointPtr_t joint,
 /// \param spared Name of the root of the unlocked kinematic chain
 /// \param joint Root of the considered kinematic chain to block
 /// \param projector Projector on which to block the joints
-void LockJointRec(const std::string& spared, const pinocchio::JointPtr_t joint, core::ConfigProjectorPtr_t projector);
+void LockJointRec(const std::string& spared, const pinocchio::JointPtr_t joint,
+                  core::ConfigProjectorPtr_t projector);
 
 /// Lock all joints in a kinematic chain, except for a list of subchains
 /// \param spared names of the root of the unlocked kinematic chains
 /// \param joint Root of the considered kinematic chain to block
 /// \param projector Projector on which to block the joints
-void LockJointRec(const std::vector<std::string>& spared, const pinocchio::JointPtr_t joint,
+void LockJointRec(const std::vector<std::string>& spared,
+                  const pinocchio::JointPtr_t joint,
                   core::ConfigProjectorPtr_t projector);
 
 /// Lock a single joint
 /// \param joint of the considered kinematic chain to block
 /// \param projector Projector on which to block the joints
-/// \param constant if false, joint lock constraint can be updated with rightHandSide method
-void LockJoint(const pinocchio::JointPtr_t joint, core::ConfigProjectorPtr_t projector, const bool constant = true);
+/// \param constant if false, joint lock constraint can be updated with
+/// rightHandSide method
+void LockJoint(const pinocchio::JointPtr_t joint,
+               core::ConfigProjectorPtr_t projector,
+               const bool constant = true);
 
 /// Some io tools for serialization
 namespace io {
@@ -93,8 +100,9 @@ fcl::Vec3f readVecFCL(std::ifstream& myfile, std::string& line);
 }  // namespace io
 
 template <typename T>
-void RemoveEffectorCollisionRec(T& validation, pinocchio::JointPtr_t joint,
-                                const pinocchio::CollisionObjectPtr_t obstacle) {
+void RemoveEffectorCollisionRec(
+    T& validation, pinocchio::JointPtr_t joint,
+    const pinocchio::CollisionObjectPtr_t obstacle) {
   try {
     validation.removeObstacleFromJoint(joint, obstacle);
   } catch (const std::runtime_error& e) {
@@ -110,7 +118,8 @@ void RemoveEffectorCollisionRec(T& validation, pinocchio::JointPtr_t joint,
 template <typename T>
 void RemoveEffectorCollision(T& validation, pinocchio::JointPtr_t effectorJoint,
                              const core::ObjectStdVector_t& obstacles) {
-  for (core::ObjectStdVector_t::const_iterator cit = obstacles.begin(); cit != obstacles.end(); ++cit) {
+  for (core::ObjectStdVector_t::const_iterator cit = obstacles.begin();
+       cit != obstacles.end(); ++cit) {
     RemoveEffectorCollision<T>(validation, effectorJoint, *cit);
   }
 }
@@ -127,13 +136,16 @@ void RemoveEffectorCollision(T& validation, pinocchio::JointPtr_t effectorJoint,
   }
   // then sons
   for (std::size_t i = 0; i < effectorJoint->numberChildJoints(); ++i) {
-    RemoveEffectorCollisionRec<T>(validation, effectorJoint->childJoint(i), obstacle);
+    RemoveEffectorCollisionRec<T>(validation, effectorJoint->childJoint(i),
+                                  obstacle);
   }
 }
 
 template <typename T>
-void addLimbCollisionRec(pinocchio::JointPtr_t joint, const pinocchio::Frame& effector,
-                         const core::ObjectStdVector_t& collisionObjects, T& collisionValidation,
+void addLimbCollisionRec(pinocchio::JointPtr_t joint,
+                         const pinocchio::Frame& effector,
+                         const core::ObjectStdVector_t& collisionObjects,
+                         T& collisionValidation,
                          const bool disableEffectorCollision) {
   if (disableEffectorCollision) {
     if (joint->name() == effector.name())
@@ -143,21 +155,26 @@ void addLimbCollisionRec(pinocchio::JointPtr_t joint, const pinocchio::Frame& ef
     else if (joint->numberChildJoints() == 0)
       return;  // TODO only disable collision for frame
   }
-  for (core::ObjectStdVector_t::const_iterator cit = collisionObjects.begin(); cit != collisionObjects.end(); ++cit)
+  for (core::ObjectStdVector_t::const_iterator cit = collisionObjects.begin();
+       cit != collisionObjects.end(); ++cit)
     collisionValidation.addObstacleToJoint(*cit, joint, false);
   for (std::size_t i = 0; i < joint->numberChildJoints(); ++i)
-    addLimbCollisionRec<T>(joint->childJoint(i), effector, collisionObjects, collisionValidation,
-                           disableEffectorCollision);
+    addLimbCollisionRec<T>(joint->childJoint(i), effector, collisionObjects,
+                           collisionValidation, disableEffectorCollision);
 }
 
 template <typename T>
-void RemoveNonLimbCollisionRec(const pinocchio::JointPtr_t joint, const std::string& limbname,
-                               const core::ObjectStdVector_t& collisionObjects, T& collisionValidation) {
+void RemoveNonLimbCollisionRec(const pinocchio::JointPtr_t joint,
+                               const std::string& limbname,
+                               const core::ObjectStdVector_t& collisionObjects,
+                               T& collisionValidation) {
   if (joint->name() == limbname) return;
-  for (core::ObjectStdVector_t::const_iterator cit = collisionObjects.begin(); cit != collisionObjects.end(); ++cit) {
+  for (core::ObjectStdVector_t::const_iterator cit = collisionObjects.begin();
+       cit != collisionObjects.end(); ++cit) {
     try {
       if (joint->linkedBody()) {
-        std::cout << "remiove obstacle: " << limbname << " " << joint->name() << " " << (*cit)->name() << std::endl;
+        std::cout << "remiove obstacle: " << limbname << " " << joint->name()
+                  << " " << (*cit)->name() << std::endl;
         collisionValidation.removeObstacleFromJoint(joint, *cit);
       }
     } catch (const std::runtime_error& e) {
@@ -166,15 +183,20 @@ void RemoveNonLimbCollisionRec(const pinocchio::JointPtr_t joint, const std::str
     }
   }
   for (std::size_t i = 0; i < joint->numberChildJoints(); ++i) {
-    RemoveNonLimbCollisionRec(joint->childJoint(i), limbname, collisionObjects, collisionValidation);
+    RemoveNonLimbCollisionRec(joint->childJoint(i), limbname, collisionObjects,
+                              collisionValidation);
   }
 }
 
 template <typename T>
-void RemoveNonLimbCollisionRec(const pinocchio::JointPtr_t joint, const std::vector<std::string>& keepers,
-                               const core::ObjectStdVector_t& collisionObjects, T& collisionValidation) {
-  if (std::find(keepers.begin(), keepers.end(), joint->name()) != keepers.end()) return;
-  for (core::ObjectStdVector_t::const_iterator cit = collisionObjects.begin(); cit != collisionObjects.end(); ++cit) {
+void RemoveNonLimbCollisionRec(const pinocchio::JointPtr_t joint,
+                               const std::vector<std::string>& keepers,
+                               const core::ObjectStdVector_t& collisionObjects,
+                               T& collisionValidation) {
+  if (std::find(keepers.begin(), keepers.end(), joint->name()) != keepers.end())
+    return;
+  for (core::ObjectStdVector_t::const_iterator cit = collisionObjects.begin();
+       cit != collisionObjects.end(); ++cit) {
     try {
       collisionValidation.removeObstacleFromJoint(joint, *cit);
     } catch (const std::runtime_error& e) {
@@ -183,7 +205,8 @@ void RemoveNonLimbCollisionRec(const pinocchio::JointPtr_t joint, const std::vec
     }
   }
   for (std::size_t i = 0; i < joint->numberChildJoints(); ++i) {
-    RemoveNonLimbCollisionRec(joint->childJoint(i), keepers, collisionObjects, collisionValidation);
+    RemoveNonLimbCollisionRec(joint->childJoint(i), keepers, collisionObjects,
+                              collisionValidation);
   }
 }
 

@@ -20,23 +20,23 @@
 #ifndef TOOLSOBSTACLE_HH
 #define TOOLSOBSTACLE_HH
 
-#include <pinocchio/parsers/urdf.hpp>
-#include <hpp/pinocchio/urdf/util.hh>
-#include <hpp/pinocchio/device.hh>
-#include <hpp/pinocchio/fwd.hh>
-#include <hpp/core/problem.hh>
-#include <hpp/core/problem-solver.hh>
-#include <hpp/core/config-validations.hh>
 #include <hpp/affordance/affordance-extraction.hh>
 #include <hpp/affordance/operations.hh>
-#include <hpp/rbprm/rbprm-shooter.hh>
+#include <hpp/core/config-validations.hh>
+#include <hpp/core/problem-solver.hh>
+#include <hpp/core/problem.hh>
+#include <hpp/pinocchio/device.hh>
+#include <hpp/pinocchio/fwd.hh>
+#include <hpp/pinocchio/urdf/util.hh>
+#include <hpp/rbprm/dynamic/dynamic-path-validation.hh>
+#include <hpp/rbprm/planner/dynamic-planner.hh>
+#include <hpp/rbprm/planner/oriented-path-optimizer.hh>
+#include <hpp/rbprm/planner/random-shortcut-dynamic.hh>
+#include <hpp/rbprm/planner/rbprm-steering-kinodynamic.hh>
 #include <hpp/rbprm/rbprm-device.hh>
 #include <hpp/rbprm/rbprm-path-validation.hh>
-#include <hpp/rbprm/planner/dynamic-planner.hh>
-#include <hpp/rbprm/planner/rbprm-steering-kinodynamic.hh>
-#include <hpp/rbprm/planner/random-shortcut-dynamic.hh>
-#include <hpp/rbprm/planner/oriented-path-optimizer.hh>
-#include <hpp/rbprm/dynamic/dynamic-path-validation.hh>
+#include <hpp/rbprm/rbprm-shooter.hh>
+#include <pinocchio/parsers/urdf.hpp>
 
 #if BOOST_VERSION / 100 % 1000 >= 60
 #include <boost/bind/bind.hpp>
@@ -48,8 +48,10 @@ using namespace boost::placeholders;
 using namespace hpp;
 using namespace hpp::core;
 
-void addAffObjects(hpp::core::ProblemSolver& problemSolver, const affordance::OperationBases_t& ops,
-                   const std::vector<affordance::CollisionObjects_t>& affObjs, const std::string obstacleNameNonAff) {
+void addAffObjects(hpp::core::ProblemSolver& problemSolver,
+                   const affordance::OperationBases_t& ops,
+                   const std::vector<affordance::CollisionObjects_t>& affObjs,
+                   const std::string obstacleNameNonAff) {
   const std::string affSuffix = "aff";
   std::string obstacleName(obstacleNameNonAff);
   obstacleName += affSuffix;
@@ -65,7 +67,8 @@ void addAffObjects(hpp::core::ProblemSolver& problemSolver, const affordance::Op
       objs.push_back(std::make_pair(ig, obj));
     }
     if (problemSolver.affordanceObjects.has(ops[opIdx]->affordance_)) {
-      AffordanceObjects_t mapObjs = problemSolver.affordanceObjects.get(ops[opIdx]->affordance_);
+      AffordanceObjects_t mapObjs =
+          problemSolver.affordanceObjects.get(ops[opIdx]->affordance_);
       objs.insert(objs.begin() + objs.size(), mapObjs.begin(), mapObjs.end());
     }
     problemSolver.affordanceObjects.erase(ops[opIdx]->affordance_);
@@ -73,15 +76,20 @@ void addAffObjects(hpp::core::ProblemSolver& problemSolver, const affordance::Op
   }
 }
 
-void affordanceAnalysis(ProblemSolver& problemSolver, const std::string& obstacleName,
-                        const affordance::OperationBases_t& operations, std::vector<double> reduceSizes) {
+void affordanceAnalysis(ProblemSolver& problemSolver,
+                        const std::string& obstacleName,
+                        const affordance::OperationBases_t& operations,
+                        std::vector<double> reduceSizes) {
   std::list<std::string> obstacles = problemSolver.obstacleNames(true, true);
-  std::list<std::string>::iterator objIt = std::find(obstacles.begin(), obstacles.end(), obstacleName);
+  std::list<std::string>::iterator objIt =
+      std::find(obstacles.begin(), obstacles.end(), obstacleName);
   while (reduceSizes.size() < operations.size()) reduceSizes.push_back(0.);
-  if (objIt == obstacles.end()) throw std::runtime_error("No obstacle by given name found. Unable to analyse.");
+  if (objIt == obstacles.end())
+    throw std::runtime_error(
+        "No obstacle by given name found. Unable to analyse.");
   try {
-    affordance::SemanticsDataPtr_t aff =
-        affordance::affordanceAnalysis((problemSolver.obstacle(obstacleName)->fcl()), operations);
+    affordance::SemanticsDataPtr_t aff = affordance::affordanceAnalysis(
+        (problemSolver.obstacle(obstacleName)->fcl()), operations);
     std::vector<std::vector<fcl::CollisionObjectPtr_t> > affObjs =
         affordance::getReducedAffordanceObjects(aff, reduceSizes);
     // add fcl::CollisionObstacles to problemSolver
@@ -91,21 +99,30 @@ void affordanceAnalysis(ProblemSolver& problemSolver, const std::string& obstacl
   }
 }
 
-affordance::OperationBases_t createOperations(hpp::core::ProblemSolver& pSolver) {
+affordance::OperationBases_t createOperations(
+    hpp::core::ProblemSolver& pSolver) {
   pSolver.affordanceConfigs.add("Support", vector3_t(0.3, 0.3, 0.05));
   pSolver.affordanceConfigs.add("Lean", vector3_t(0.1, 0.3, 0.05));
   pSolver.affordanceConfigs.add("Support45", vector3_t(0.1, 0.3, 0.05));
   if (!pSolver.affordanceConfigs.has("Support"))
-    throw std::runtime_error("No 'Support' affordance type found Afford::createOperations ()");
-  const hpp::pinocchio::vector3_t& sconf = pSolver.affordanceConfigs.get("Support");
+    throw std::runtime_error(
+        "No 'Support' affordance type found Afford::createOperations ()");
+  const hpp::pinocchio::vector3_t& sconf =
+      pSolver.affordanceConfigs.get("Support");
   if (!pSolver.affordanceConfigs.has("Lean"))
-    throw std::runtime_error("No 'Lean' affordance type found in Afford::createOperations ()");
-  const hpp::pinocchio::vector3_t& lconf = pSolver.affordanceConfigs.get("Lean");
+    throw std::runtime_error(
+        "No 'Lean' affordance type found in Afford::createOperations ()");
+  const hpp::pinocchio::vector3_t& lconf =
+      pSolver.affordanceConfigs.get("Lean");
   if (!pSolver.affordanceConfigs.has("Support45"))
-    throw std::runtime_error("No 'Support45' affordance type found in Afford::createOperations ()");
-  const hpp::pinocchio::vector3_t& s45conf = pSolver.affordanceConfigs.get("Support45");
-  affordance::SupportOperationPtr_t support(new affordance::SupportOperation(sconf[0], sconf[1], sconf[2]));
-  affordance::LeanOperationPtr_t lean(new affordance::LeanOperation(lconf[0], lconf[1], lconf[2]));
+    throw std::runtime_error(
+        "No 'Support45' affordance type found in Afford::createOperations ()");
+  const hpp::pinocchio::vector3_t& s45conf =
+      pSolver.affordanceConfigs.get("Support45");
+  affordance::SupportOperationPtr_t support(
+      new affordance::SupportOperation(sconf[0], sconf[1], sconf[2]));
+  affordance::LeanOperationPtr_t lean(
+      new affordance::LeanOperation(lconf[0], lconf[1], lconf[2]));
   affordance::Support45OperationPtr_t support45(
       new affordance::Support45Operation(s45conf[0], s45conf[1], s45conf[2]));
 
@@ -117,101 +134,137 @@ affordance::OperationBases_t createOperations(hpp::core::ProblemSolver& pSolver)
   return operations;
 }
 
-void loadObstacleWithAffordance(hpp::core::ProblemSolver& pSolver, std::string packagename, std::string filename,
-                                std::string prefix, const affordance::OperationBases_t& operations,
+void loadObstacleWithAffordance(hpp::core::ProblemSolver& pSolver,
+                                std::string packagename, std::string filename,
+                                std::string prefix,
+                                const affordance::OperationBases_t& operations,
                                 std::vector<double> reduceSizes) {
   DevicePtr_t device(hpp::pinocchio::Device::create(prefix));
   if (packagename.empty())
-    hpp::pinocchio::urdf::loadModelFromString(device, 0, "", "anchor", filename, "");
+    hpp::pinocchio::urdf::loadModelFromString(device, 0, "", "anchor", filename,
+                                              "");
   else
-    hpp::pinocchio::urdf::loadUrdfModel(device, "anchor", packagename, filename);
+    hpp::pinocchio::urdf::loadUrdfModel(device, "anchor", packagename,
+                                        filename);
   device->controlComputation(hpp::pinocchio::JOINT_POSITION);
   pSolver.addObstacle(device, true, true);
   std::list<std::string> obstacles = pSolver.obstacleNames(true, false);
-  for (std::list<std::string>::const_iterator cit = obstacles.begin(); cit != obstacles.end(); ++cit) {
-    if ((*cit).find(prefix) == 0) affordanceAnalysis(pSolver, *cit, operations, reduceSizes);
+  for (std::list<std::string>::const_iterator cit = obstacles.begin();
+       cit != obstacles.end(); ++cit) {
+    if ((*cit).find(prefix) == 0)
+      affordanceAnalysis(pSolver, *cit, operations, reduceSizes);
   }
 }
 
-void loadObstacleWithAffordance(hpp::core::ProblemSolver& pSolver, std::string packagename, std::string filename,
+void loadObstacleWithAffordance(hpp::core::ProblemSolver& pSolver,
+                                std::string packagename, std::string filename,
                                 std::string prefix) {
   affordance::OperationBases_t operations = createOperations(pSolver);
   std::vector<double> reduceSizes;
   while (reduceSizes.size() < operations.size()) reduceSizes.push_back(0.);
-  return loadObstacleWithAffordance(pSolver, packagename, filename, prefix, operations, reduceSizes);
+  return loadObstacleWithAffordance(pSolver, packagename, filename, prefix,
+                                    operations, reduceSizes);
 }
 
 void loadDarpa(hpp::core::ProblemSolver& pSolver) {
-  loadObstacleWithAffordance(pSolver, std::string("hpp_environments"), std::string("multicontact/darpa"),
+  loadObstacleWithAffordance(pSolver, std::string("hpp_environments"),
+                             std::string("multicontact/darpa"),
                              std::string("planning"));
 }
 
 typedef hpp::core::Container<hpp::core::AffordanceObjects_t> affMap_t;
 struct BindShooter {
-  BindShooter(const std::size_t shootLimit = 10000, const std::size_t displacementLimit = 100)
+  BindShooter(const std::size_t shootLimit = 10000,
+              const std::size_t displacementLimit = 100)
       : shootLimit_(shootLimit), displacementLimit_(displacementLimit) {}
 
-  hpp::rbprm::RbPrmShooterPtr_t create(/*const hpp::pinocchio::DevicePtr_t& robot,*/ core::ProblemConstPtr_t problem,
-                                       const hpp::core::ProblemSolverPtr_t problemSolver) {
-    hpp::core::Container<hpp::core::AffordanceObjects_t> affMap_ = problemSolver->affordanceObjects;
+  hpp::rbprm::RbPrmShooterPtr_t create(
+      /*const hpp::pinocchio::DevicePtr_t& robot,*/ core::ProblemConstPtr_t
+          problem,
+      const hpp::core::ProblemSolverPtr_t problemSolver) {
+    hpp::core::Container<hpp::core::AffordanceObjects_t> affMap_ =
+        problemSolver->affordanceObjects;
     affMap_ = problemSolver->affordanceObjects;
     hpp::pinocchio::RbPrmDevicePtr_t robotcast =
         std::static_pointer_cast<hpp::pinocchio::RbPrmDevice>(problem->robot());
     if (affMap_.map.empty()) {
-      throw std::runtime_error("No affordances found. Unable to create shooter object.");
+      throw std::runtime_error(
+          "No affordances found. Unable to create shooter object.");
     }
-    rbprm::RbPrmShooterPtr_t shooter =
-        hpp::rbprm::RbPrmShooter::create(robotcast, problemSolver->problem()->collisionObstacles(), affMap_,
-                                         romFilter_, affFilter_, shootLimit_, displacementLimit_);
+    rbprm::RbPrmShooterPtr_t shooter = hpp::rbprm::RbPrmShooter::create(
+        robotcast, problemSolver->problem()->collisionObstacles(), affMap_,
+        romFilter_, affFilter_, shootLimit_, displacementLimit_);
     if (!so3Bounds_.empty()) shooter->BoundSO3(so3Bounds_);
     return shooter;
   }
 
-  hpp::core::PathValidationPtr_t createPathValidation(const hpp::pinocchio::DevicePtr_t& robot,
-                                                      const hpp::pinocchio::value_type& val,
-                                                      const hpp::core::ProblemSolverPtr_t problemSolver) {
-    hpp::pinocchio::RbPrmDevicePtr_t robotcast = std::static_pointer_cast<hpp::pinocchio::RbPrmDevice>(robot);
-    hpp::core::Container<hpp::core::AffordanceObjects_t> affMap_ = problemSolver->affordanceObjects;
+  hpp::core::PathValidationPtr_t createPathValidation(
+      const hpp::pinocchio::DevicePtr_t& robot,
+      const hpp::pinocchio::value_type& val,
+      const hpp::core::ProblemSolverPtr_t problemSolver) {
+    hpp::pinocchio::RbPrmDevicePtr_t robotcast =
+        std::static_pointer_cast<hpp::pinocchio::RbPrmDevice>(robot);
+    hpp::core::Container<hpp::core::AffordanceObjects_t> affMap_ =
+        problemSolver->affordanceObjects;
     if (affMap_.map.empty()) {
-      throw std::runtime_error("No affordances found. Unable to create Path Validaton object.");
+      throw std::runtime_error(
+          "No affordances found. Unable to create Path Validaton object.");
     }
     hpp::rbprm::RbPrmValidationPtr_t validation(
-        hpp::rbprm::RbPrmValidation::create(robotcast, romFilter_, affFilter_, affMap_));
-    hpp::rbprm::RbPrmPathValidationPtr_t collisionChecking = hpp::rbprm::RbPrmPathValidation::create(robot, val);
+        hpp::rbprm::RbPrmValidation::create(robotcast, romFilter_, affFilter_,
+                                            affMap_));
+    hpp::rbprm::RbPrmPathValidationPtr_t collisionChecking =
+        hpp::rbprm::RbPrmPathValidation::create(robot, val);
     collisionChecking->add(validation);
-    problemSolver->problem()->configValidation(core::ConfigValidations::create());
+    problemSolver->problem()->configValidation(
+        core::ConfigValidations::create());
     problemSolver->problem()->configValidations()->add(validation);
     return collisionChecking;
   }
 
-  hpp::core::PathValidationPtr_t createDynamicPathValidation(const hpp::pinocchio::DevicePtr_t& robot,
-                                                             const hpp::pinocchio::value_type& val,
-                                                             const hpp::core::ProblemSolverPtr_t problemSolver) {
-    hpp::pinocchio::RbPrmDevicePtr_t robotcast = std::static_pointer_cast<hpp::pinocchio::RbPrmDevice>(robot);
-    hpp::core::Container<hpp::core::AffordanceObjects_t> affMap_ = problemSolver->affordanceObjects;
+  hpp::core::PathValidationPtr_t createDynamicPathValidation(
+      const hpp::pinocchio::DevicePtr_t& robot,
+      const hpp::pinocchio::value_type& val,
+      const hpp::core::ProblemSolverPtr_t problemSolver) {
+    hpp::pinocchio::RbPrmDevicePtr_t robotcast =
+        std::static_pointer_cast<hpp::pinocchio::RbPrmDevice>(robot);
+    hpp::core::Container<hpp::core::AffordanceObjects_t> affMap_ =
+        problemSolver->affordanceObjects;
     if (affMap_.map.empty()) {
-      throw std::runtime_error("No affordances found. Unable to create Path Validaton object.");
+      throw std::runtime_error(
+          "No affordances found. Unable to create Path Validaton object.");
     }
     hpp::rbprm::RbPrmValidationPtr_t validation(
-        hpp::rbprm::RbPrmValidation::create(robotcast, romFilter_, affFilter_, affMap_));
-    hpp::rbprm::DynamicPathValidationPtr_t collisionChecking = hpp::rbprm::DynamicPathValidation::create(robot, val);
+        hpp::rbprm::RbPrmValidation::create(robotcast, romFilter_, affFilter_,
+                                            affMap_));
+    hpp::rbprm::DynamicPathValidationPtr_t collisionChecking =
+        hpp::rbprm::DynamicPathValidation::create(robot, val);
     collisionChecking->add(validation);
-    problemSolver->problem()->configValidation(core::ConfigValidations::create());
+    problemSolver->problem()->configValidation(
+        core::ConfigValidations::create());
     problemSolver->problem()->configValidations()->add(validation);
     // build the dynamicValidation :
     double sizeFootX, sizeFootY, mass, mu;
     bool rectangularContact;
-    sizeFootX = problemSolver->problem()->getParameter(std::string("DynamicPlanner/sizeFootX")).floatValue() / 2.;
-    sizeFootY = problemSolver->problem()->getParameter(std::string("DynamicPlanner/sizeFootY")).floatValue() / 2.;
+    sizeFootX = problemSolver->problem()
+                    ->getParameter(std::string("DynamicPlanner/sizeFootX"))
+                    .floatValue() /
+                2.;
+    sizeFootY = problemSolver->problem()
+                    ->getParameter(std::string("DynamicPlanner/sizeFootY"))
+                    .floatValue() /
+                2.;
     if (sizeFootX > 0. && sizeFootY > 0.)
       rectangularContact = 1;
     else
       rectangularContact = 0;
     mass = robot->mass();
-    mu = problemSolver->problem()->getParameter(std::string("DynamicPlanner/friction")).floatValue();
+    mu = problemSolver->problem()
+             ->getParameter(std::string("DynamicPlanner/friction"))
+             .floatValue();
     hppDout(notice, "mu define in python : " << mu);
-    DynamicValidationPtr_t dynamicVal =
-        DynamicValidation::create(rectangularContact, sizeFootX, sizeFootY, mass, mu, robot);
+    DynamicValidationPtr_t dynamicVal = DynamicValidation::create(
+        rectangularContact, sizeFootX, sizeFootY, mass, mu, robot);
     collisionChecking->addDynamicValidator(dynamicVal);
 
     return collisionChecking;
@@ -235,15 +288,17 @@ std::vector<double> addSo3LimitsHyQ() {
   return res;
 }
 
-hpp::core::ProblemSolverPtr_t configureRbprmProblemSolverForSupportLimbs(const DevicePtr_t& robot,
-                                                                         BindShooter& bShooter) {
+hpp::core::ProblemSolverPtr_t configureRbprmProblemSolverForSupportLimbs(
+    const DevicePtr_t& robot, BindShooter& bShooter) {
   hpp::core::ProblemSolverPtr_t ps = hpp::core::ProblemSolver::create();
 
   /*bind shooter init*/
-  hpp::pinocchio::RbPrmDevicePtr_t robotcast = std::static_pointer_cast<hpp::pinocchio::RbPrmDevice>(robot);
+  hpp::pinocchio::RbPrmDevicePtr_t robotcast =
+      std::static_pointer_cast<hpp::pinocchio::RbPrmDevice>(robot);
   std::vector<std::string> affNames;
   affNames.push_back(std::string("Support"));
-  for (std::map<std::string, DevicePtr_t>::const_iterator cit = robotcast->robotRoms_.begin();
+  for (std::map<std::string, DevicePtr_t>::const_iterator cit =
+           robotcast->robotRoms_.begin();
        cit != robotcast->robotRoms_.end(); ++cit) {
     bShooter.affFilter_.insert(std::make_pair(cit->first, affNames));
     bShooter.romFilter_.push_back(cit->first);
@@ -251,15 +306,22 @@ hpp::core::ProblemSolverPtr_t configureRbprmProblemSolverForSupportLimbs(const D
   /*END bind shoorther init*/
 
   ps->robot(robot);
-  ps->configurationShooters.add("RbprmShooter", boost::bind(&BindShooter::create, boost::ref(bShooter), _1, ps));
+  ps->configurationShooters.add(
+      "RbprmShooter",
+      boost::bind(&BindShooter::create, boost::ref(bShooter), _1, ps));
   ps->pathValidations.add("RbprmPathValidation",
-                          boost::bind(&BindShooter::createPathValidation, boost::ref(bShooter), _1, _2, ps));
+                          boost::bind(&BindShooter::createPathValidation,
+                                      boost::ref(bShooter), _1, _2, ps));
   ps->pathValidations.add("RbprmDynamicPathValidation",
-                          boost::bind(&BindShooter::createDynamicPathValidation, boost::ref(bShooter), _1, _2, ps));
+                          boost::bind(&BindShooter::createDynamicPathValidation,
+                                      boost::ref(bShooter), _1, _2, ps));
   ps->pathPlanners.add("DynamicPlanner", DynamicPlanner::createWithRoadmap);
-  ps->steeringMethods.add("RBPRMKinodynamic", SteeringMethodKinodynamic::create);
-  ps->pathOptimizers.add("RandomShortcutDynamic", RandomShortcutDynamic::create);
-  ps->pathOptimizers.add("OrientedPathOptimizer", OrientedPathOptimizer::create);
+  ps->steeringMethods.add("RBPRMKinodynamic",
+                          SteeringMethodKinodynamic::create);
+  ps->pathOptimizers.add("RandomShortcutDynamic",
+                         RandomShortcutDynamic::create);
+  ps->pathOptimizers.add("OrientedPathOptimizer",
+                         OrientedPathOptimizer::create);
   return ps;
 }
 #endif  // TOOLSOBSTACLE_HH

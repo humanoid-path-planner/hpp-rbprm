@@ -16,12 +16,12 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with hpp-core.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "test-tools.hh"
+#include "hpp/core/straight-path.hh"
 #include "hpp/rbprm/interpolation/rbprm-path-interpolation.hh"
 #include "hpp/rbprm/rbprm-fullbody.hh"
 #include "hpp/rbprm/rbprm-state.hh"
-#include "hpp/core/straight-path.hh"
 #include "hpp/rbprm/tools.hh"
+#include "test-tools.hh"
 
 #define BOOST_TEST_MODULE test - fullbody
 #include <boost/test/included/unit_test.hpp>
@@ -33,7 +33,8 @@ using namespace hpp::model;
 using namespace hpp::rbprm;
 using namespace hpp::rbprm::interpolation;
 
-/*hpp::rbprm::RbPrmInterpolationPtr_t initInterpolation(const core::ObjectStdVector_t& collisionObjects)
+/*hpp::rbprm::RbPrmInterpolationPtr_t initInterpolation(const
+core::ObjectStdVector_t& collisionObjects)
 {
     DevicePtr_t device = initDevice();
     fcl::Vec3f offset(0,0,0);
@@ -45,7 +46,8 @@ using namespace hpp::rbprm::interpolation;
     start.configuration_ = robot->device_->currentConfiguration();
     end.configuration_ = robot->device_->currentConfiguration();
     end.configuration_.head(3) = Eigen::Vector3d(1,0,0);
-    core::PathPtr_t path = core::StraightPath::create(robot->device_,start.configuration_,end.configuration_,1);
+    core::PathPtr_t path =
+core::StraightPath::create(robot->device_,start.configuration_,end.configuration_,1);
     return RbPrmInterpolation::create(path, robot, start, end);
 }
 
@@ -55,14 +57,17 @@ BOOST_AUTO_TEST_CASE (initInterpolationTest) {
     objects.push_back(colObject);
     initInterpolation(objects);*/
 
-void AddToState(const std::string& name, const fcl::Transform3f& transform, const fcl::Vec3f normal, State& state) {
+void AddToState(const std::string& name, const fcl::Transform3f& transform,
+                const fcl::Vec3f normal, State& state) {
   state.contacts_[name] = true;
   state.contactPositions_[name] = transform.getTranslation();
   state.contactNormals_[name] = normal;
   state.contactRotation_[name] = transform.getRotation();
 }
 
-void addState(const State& s1, T_StateFrame& states) { states.push_back(std::make_pair(states.size(), s1)); }
+void addState(const State& s1, T_StateFrame& states) {
+  states.push_back(std::make_pair(states.size(), s1));
+}
 
 BOOST_AUTO_TEST_CASE(FilteringStates) {
   fcl::Vec3f nz(0, 0, 1);
@@ -105,7 +110,8 @@ BOOST_AUTO_TEST_CASE(FilteringStates) {
   addState(s0, states);
   addState(s3, states);
   addState(s4, states);
-  BOOST_CHECK_MESSAGE(FilterStates(states, true).size() == 2, "State list not filtered");
+  BOOST_CHECK_MESSAGE(FilterStates(states, true).size() == 2,
+                      "State list not filtered");
   BOOST_CHECK_MESSAGE((FilterStates(states, true).back().first == 2),
                       "middle state not filtered");  // middle state is removed
 
@@ -116,7 +122,8 @@ BOOST_AUTO_TEST_CASE(FilteringStates) {
 
   addState(s4a, states);
   BOOST_CHECK(FilterStates(states, true).size() == 2);
-  BOOST_CHECK(FilterStates(states, true).back().first == 3);  // middle state is removed
+  BOOST_CHECK(FilterStates(states, true).back().first ==
+              3);  // middle state is removed
 
   // x then y => no shortcut
   State s5;
@@ -140,7 +147,8 @@ BOOST_AUTO_TEST_CASE(FilteringStates) {
   addState(s7, states);
   addState(s8, states);
   BOOST_CHECK(FilterStates(states, true).size() == 2);
-  BOOST_CHECK(FilterStates(states, true).back().first == 2);  // middle state is removed
+  BOOST_CHECK(FilterStates(states, true).back().first ==
+              2);  // middle state is removed
 
   // break, then recreate with other
   State s9, s10;

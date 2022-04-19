@@ -16,11 +16,13 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with hpp-core.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "test-tools.hh"
-#include <hpp/rbprm/sampling/sample-db.hh>
-#include <hpp/fcl/octree.h>
-#include <hpp/fcl/distance.h>
 #include <hpp/fcl/collision.h>
+#include <hpp/fcl/distance.h>
+#include <hpp/fcl/octree.h>
+
+#include <hpp/rbprm/sampling/sample-db.hh>
+
+#include "test-tools.hh"
 
 #define BOOST_TEST_MODULE test - sampling
 #include <boost/test/included/unit_test.hpp>
@@ -38,9 +40,11 @@ BOOST_AUTO_TEST_CASE(sampleGeneration) {
   DevicePtr_t robot = initDevice();
   JointPtr_t joint = robot->getJointByName("arm");
   SampleVector_t res = GenerateSamples(joint, "elbow", 10);
-  for (SampleVector_t::const_iterator cit = res.begin(); cit != res.end(); ++cit) {
+  for (SampleVector_t::const_iterator cit = res.begin(); cit != res.end();
+       ++cit) {
     const Sample& s = *cit;
-    BOOST_CHECK_MESSAGE(s.configuration_.rows() == 8, "Sample should contain 8  variables");
+    BOOST_CHECK_MESSAGE(s.configuration_.rows() == 8,
+                        "Sample should contain 8  variables");
   }
 }
 
@@ -48,9 +52,11 @@ BOOST_AUTO_TEST_CASE(sampleContainerGeneration) {
   DevicePtr_t robot = initDevice();
   JointPtr_t joint = robot->getJointByName("arm");
   SampleDB sc(joint, "elbow", 10, 0.1);
-  for (SampleVector_t::const_iterator cit = sc.samples_.begin(); cit != sc.samples_.end(); ++cit) {
+  for (SampleVector_t::const_iterator cit = sc.samples_.begin();
+       cit != sc.samples_.end(); ++cit) {
     const Sample& s = *cit;
-    BOOST_CHECK_MESSAGE(s.configuration_.rows() == 8, "Sample should contain 8  variables");
+    BOOST_CHECK_MESSAGE(s.configuration_.rows() == 8,
+                        "Sample should contain 8  variables");
   }
 }
 
@@ -59,18 +65,23 @@ BOOST_AUTO_TEST_CASE(octreeRequest) {
   DevicePtr_t robot = initDevice();
   JointPtr_t joint = robot->getJointByName("arm");
   SampleDB sc(joint, "elbow", 100, 0.1);
-  rbprm::sampling::T_OctreeReport reports =
-      rbprm::sampling::GetCandidates(sc, fcl::Transform3f(), obstacle, fcl::Vec3f(1, 0, 0));
+  rbprm::sampling::T_OctreeReport reports = rbprm::sampling::GetCandidates(
+      sc, fcl::Transform3f(), obstacle, fcl::Vec3f(1, 0, 0));
   double manipulability = std::numeric_limits<double>::max();
-  BOOST_CHECK_MESSAGE(!reports.empty(), "No matching found, this should not be the case");
-  for (rbprm::sampling::T_OctreeReport::const_iterator cit = reports.begin(); cit != reports.end(); ++cit) {
+  BOOST_CHECK_MESSAGE(!reports.empty(),
+                      "No matching found, this should not be the case");
+  for (rbprm::sampling::T_OctreeReport::const_iterator cit = reports.begin();
+       cit != reports.end(); ++cit) {
     const rbprm::sampling::OctreeReport& report = *cit;
-    BOOST_CHECK_MESSAGE(report.value_ <= manipulability, "samples must be ordered by their decreasing manipulability");
+    BOOST_CHECK_MESSAGE(
+        report.value_ <= manipulability,
+        "samples must be ordered by their decreasing manipulability");
     manipulability = report.value_;
   }
   fcl::Transform3f toofarLocation;
   toofarLocation.setTranslation(fcl::Vec3f(-10, -10, -10));
-  reports = rbprm::sampling::GetCandidates(sc, toofarLocation, obstacle, fcl::Vec3f(1, 0, 0));
+  reports = rbprm::sampling::GetCandidates(sc, toofarLocation, obstacle,
+                                           fcl::Vec3f(1, 0, 0));
   BOOST_CHECK_MESSAGE(reports.empty(), "samples found by request");
 }
 }  // namespace

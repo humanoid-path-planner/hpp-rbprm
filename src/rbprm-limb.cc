@@ -14,34 +14,42 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-rbprm. If not, see <http://www.gnu.org/licenses/>.
 
+#include <hpp/pinocchio/joint.hh>
+#include <hpp/rbprm/contact_generation/kinematics_constraints.hh>
 #include <hpp/rbprm/rbprm-limb.hh>
 #include <hpp/rbprm/sampling/sample-db.hh>
-#include <hpp/pinocchio/joint.hh>
 #include <hpp/rbprm/tools.hh>
-#include <hpp/rbprm/contact_generation/kinematics_constraints.hh>
 #include <pinocchio/spatial/se3.hpp>
 namespace hpp {
 namespace rbprm {
 
-RbPrmLimbPtr_t RbPrmLimb::create(const pinocchio::JointPtr_t limb, const std::string& effectorName,
-                                 const fcl::Vec3f& offset, const fcl::Vec3f& limbOffset, const fcl::Vec3f& normal,
-                                 const double x, const double y, const std::size_t nbSamples,
-                                 const hpp::rbprm::sampling::heuristic evaluate, const double resolution,
-                                 hpp::rbprm::ContactType contactType, const bool disableEffectorCollision,
-                                 const bool grasp, const std::string& kinematicsConstraintsPath,
-                                 const double kinematicConstraintsMinDistance) {
-  RbPrmLimb* rbprmDevice =
-      new RbPrmLimb(limb, effectorName, offset, limbOffset, normal, x, y, nbSamples, evaluate, resolution, contactType,
-                    disableEffectorCollision, grasp, kinematicsConstraintsPath, kinematicConstraintsMinDistance);
+RbPrmLimbPtr_t RbPrmLimb::create(
+    const pinocchio::JointPtr_t limb, const std::string& effectorName,
+    const fcl::Vec3f& offset, const fcl::Vec3f& limbOffset,
+    const fcl::Vec3f& normal, const double x, const double y,
+    const std::size_t nbSamples, const hpp::rbprm::sampling::heuristic evaluate,
+    const double resolution, hpp::rbprm::ContactType contactType,
+    const bool disableEffectorCollision, const bool grasp,
+    const std::string& kinematicsConstraintsPath,
+    const double kinematicConstraintsMinDistance) {
+  RbPrmLimb* rbprmDevice = new RbPrmLimb(
+      limb, effectorName, offset, limbOffset, normal, x, y, nbSamples, evaluate,
+      resolution, contactType, disableEffectorCollision, grasp,
+      kinematicsConstraintsPath, kinematicConstraintsMinDistance);
   RbPrmLimbPtr_t res(rbprmDevice);
   res->init(res);
   return res;
 }
 
-RbPrmLimbPtr_t RbPrmLimb::create(const pinocchio::DevicePtr_t device, std::ifstream& fileStream, const bool loadValues,
-                                 const hpp::rbprm::sampling::heuristic evaluate, const bool disableEffectorCollision,
+RbPrmLimbPtr_t RbPrmLimb::create(const pinocchio::DevicePtr_t device,
+                                 std::ifstream& fileStream,
+                                 const bool loadValues,
+                                 const hpp::rbprm::sampling::heuristic evaluate,
+                                 const bool disableEffectorCollision,
                                  const bool grasp) {
-  RbPrmLimb* rbprmDevice = new RbPrmLimb(device, fileStream, loadValues, evaluate, disableEffectorCollision, grasp);
+  RbPrmLimb* rbprmDevice =
+      new RbPrmLimb(device, fileStream, loadValues, evaluate,
+                    disableEffectorCollision, grasp);
   RbPrmLimbPtr_t res(rbprmDevice);
   res->init(res);
   return res;
@@ -55,7 +63,8 @@ RbPrmLimb::~RbPrmLimb() {
 
 void RbPrmLimb::init(const RbPrmLimbWkPtr_t& weakPtr) { weakPtr_ = weakPtr; }
 
-pinocchio::Frame GetEffector(const pinocchio::JointPtr_t limb, const std::string name = "") {
+pinocchio::Frame GetEffector(const pinocchio::JointPtr_t limb,
+                             const std::string name = "") {
   if (name != "") return limb->robot()->getFrameByName(name);
   pinocchio::JointPtr_t current = limb;
   while (current->numberChildJoints() != 0) {
@@ -74,13 +83,15 @@ fcl::Matrix3f GetEffectorTransform(const pinocchio::Frame& effector) {
   return rot.transpose();
 }
 
-fcl::Vec3f computeEffectorReferencePosition(const pinocchio::JointPtr_t& limb, const std::string& effectorName) {
+fcl::Vec3f computeEffectorReferencePosition(const pinocchio::JointPtr_t& limb,
+                                            const std::string& effectorName) {
   core::DevicePtr_t device = limb->robot();
   core::Configuration_t referenceConfig = device->neutralConfiguration();
   pinocchio::Transform3f tRoot(1);
   pinocchio::Transform3f tJoint_world(1), tJoint_robot(1);
   tRoot.translation(fcl::Vec3f(referenceConfig.head<3>()));
-  // fcl::Quaternion3f quatRoot(referenceConfig[6],referenceConfig[3],referenceConfig[4],referenceConfig[5]);
+  // fcl::Quaternion3f
+  // quatRoot(referenceConfig[6],referenceConfig[3],referenceConfig[4],referenceConfig[5]);
   tRoot.rotation(Eigen::Quaterniond(referenceConfig.segment<4>(3)).matrix());
   hppDout(notice, "Create limb, reference root transform : " << tRoot);
   // retrieve transform of each effector joint
@@ -94,11 +105,16 @@ fcl::Vec3f computeEffectorReferencePosition(const pinocchio::JointPtr_t& limb, c
   return tJoint_robot.translation();
 }
 
-RbPrmLimb::RbPrmLimb(const pinocchio::JointPtr_t& limb, const std::string& effectorName, const fcl::Vec3f& offset,
-                     const fcl::Vec3f& limbOffset, const fcl::Vec3f& normal, const double x, const double y,
-                     const std::size_t nbSamples, const hpp::rbprm::sampling::heuristic evaluate,
-                     const double resolution, ContactType contactType, bool disableEndEffectorCollision, bool grasps,
-                     const std::string& kinematicsConstraintsPath, const double kinematicConstraintsMinDistance)
+RbPrmLimb::RbPrmLimb(const pinocchio::JointPtr_t& limb,
+                     const std::string& effectorName, const fcl::Vec3f& offset,
+                     const fcl::Vec3f& limbOffset, const fcl::Vec3f& normal,
+                     const double x, const double y,
+                     const std::size_t nbSamples,
+                     const hpp::rbprm::sampling::heuristic evaluate,
+                     const double resolution, ContactType contactType,
+                     bool disableEndEffectorCollision, bool grasps,
+                     const std::string& kinematicsConstraintsPath,
+                     const double kinematicConstraintsMinDistance)
     : limb_(limb),
       effector_(GetEffector(limb, effectorName)),
       effectorDefaultRotation_(GetEffectorTransform(effector_)),
@@ -111,14 +127,18 @@ RbPrmLimb::RbPrmLimb(const pinocchio::JointPtr_t& limb, const std::string& effec
       y_(y),
       contactType_(contactType),
       evaluate_(evaluate),
-      sampleContainer_(limb, effector_.name(), nbSamples, offset, limbOffset, resolution),
+      sampleContainer_(limb, effector_.name(), nbSamples, offset, limbOffset,
+                       resolution),
       disableEndEffectorCollision_(disableEndEffectorCollision),
       grasps_(grasps),
-      effectorReferencePosition_(computeEffectorReferencePosition(limb, effectorName)),
+      effectorReferencePosition_(
+          computeEffectorReferencePosition(limb, effectorName)),
       kinematicConstraints_(reachability::loadConstraintsFromObj(
-          kinematicsConstraintsPath.empty() ? ("package://" + limb_->robot()->name() + "-rbprm/com_inequalities/" +
-                                               limb_->name() + "_com_constraints.obj")
-                                            : kinematicsConstraintsPath,
+          kinematicsConstraintsPath.empty()
+              ? ("package://" + limb_->robot()->name() +
+                 "-rbprm/com_inequalities/" + limb_->name() +
+                 "_com_constraints.obj")
+              : kinematicsConstraintsPath,
           kinematicConstraintsMinDistance)) {
   // NOTHING
   hppDout(notice, "Create limb, normal = " << normal);
@@ -127,11 +147,13 @@ RbPrmLimb::RbPrmLimb(const pinocchio::JointPtr_t& limb, const std::string& effec
 }
 
 pinocchio::Transform3f RbPrmLimb::octreeRoot() const {
-  if (limb_->parentJoint()) return limb_->parentJoint()->currentTransformation();
+  if (limb_->parentJoint())
+    return limb_->parentJoint()->currentTransformation();
   return limb_->currentTransformation();
 }
 
-bool saveLimbInfoAndDatabase(const hpp::rbprm::RbPrmLimbPtr_t limb, std::ofstream& fp) {
+bool saveLimbInfoAndDatabase(const hpp::rbprm::RbPrmLimbPtr_t limb,
+                             std::ofstream& fp) {
   fp << limb->limb_->name() << std::endl;
   fp << limb->effector_.name() << std::endl;
   tools::io::writeRotMatrixFCL(limb->effectorDefaultRotation_, fp);
@@ -149,13 +171,15 @@ bool saveLimbInfoAndDatabase(const hpp::rbprm::RbPrmLimbPtr_t limb, std::ofstrea
 
 namespace tools {
 namespace io {
-hpp::pinocchio::JointPtr_t extractJoint(const hpp::pinocchio::DevicePtr_t device, std::ifstream& myfile) {
+hpp::pinocchio::JointPtr_t extractJoint(
+    const hpp::pinocchio::DevicePtr_t device, std::ifstream& myfile) {
   std::string name;
   getline(myfile, name);
   return device->getJointByName(name);
 }
 
-hpp::pinocchio::Frame extractFrame(const hpp::pinocchio::DevicePtr_t device, std::ifstream& myfile) {
+hpp::pinocchio::Frame extractFrame(const hpp::pinocchio::DevicePtr_t device,
+                                   std::ifstream& myfile) {
   std::string name;
   getline(myfile, name);
   return device->getFrameByName(name);
@@ -170,9 +194,11 @@ std::ostream& operator<<(std::ostream& out, hpp::rbprm::ContactType ctype) {
 }  // namespace tools
 using namespace hpp::tools::io;
 
-hpp::rbprm::RbPrmLimb::RbPrmLimb(const pinocchio::DevicePtr_t device, std::ifstream& fileStream, const bool loadValues,
-                                 const hpp::rbprm::sampling::heuristic evaluate, bool disableEndEffectorCollision,
-                                 bool grasps)
+hpp::rbprm::RbPrmLimb::RbPrmLimb(const pinocchio::DevicePtr_t device,
+                                 std::ifstream& fileStream,
+                                 const bool loadValues,
+                                 const hpp::rbprm::sampling::heuristic evaluate,
+                                 bool disableEndEffectorCollision, bool grasps)
     : limb_(extractJoint(device, fileStream)),
       effector_(extractFrame(device, fileStream)),
       effectorDefaultRotation_(tools::io::readRotMatrixFCL(fileStream)),
@@ -185,9 +211,11 @@ hpp::rbprm::RbPrmLimb::RbPrmLimb(const pinocchio::DevicePtr_t device, std::ifstr
       sampleContainer_(fileStream, loadValues),
       disableEndEffectorCollision_(disableEndEffectorCollision),
       grasps_(grasps),
-      effectorReferencePosition_(computeEffectorReferencePosition(limb_, effector_.name())),
+      effectorReferencePosition_(
+          computeEffectorReferencePosition(limb_, effector_.name())),
       kinematicConstraints_(reachability::loadConstraintsFromObj(
-          "package://" + limb_->robot()->name() + "-rbprm/com_inequalities/" + limb_->name() + "_com_constraints.obj",
+          "package://" + limb_->robot()->name() + "-rbprm/com_inequalities/" +
+              limb_->name() + "_com_constraints.obj",
           0.3)) {
   // NOTHING
 }

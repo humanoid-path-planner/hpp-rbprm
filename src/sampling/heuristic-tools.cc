@@ -4,8 +4,10 @@ namespace hpp {
 namespace rbprm {
 namespace sampling {
 
-HeuristicParam::HeuristicParam(const std::map<std::string, fcl::Vec3f>& cp, const fcl::Vec3f& comPos,
-                               const fcl::Vec3f& comSp, const fcl::Vec3f& comAcc, const std::string& sln,
+HeuristicParam::HeuristicParam(const std::map<std::string, fcl::Vec3f>& cp,
+                               const fcl::Vec3f& comPos,
+                               const fcl::Vec3f& comSp,
+                               const fcl::Vec3f& comAcc, const std::string& sln,
                                const fcl::Transform3f& tf)
     : contactPositions_(cp),
       comPosition_(comPos),
@@ -23,7 +25,8 @@ HeuristicParam::HeuristicParam(const HeuristicParam& zhp)
 HeuristicParam& HeuristicParam::operator=(const HeuristicParam& zhp) {
   if (this != &zhp) {
     this->contactPositions_.clear();
-    this->contactPositions_.insert(zhp.contactPositions_.begin(), zhp.contactPositions_.end());
+    this->contactPositions_.insert(zhp.contactPositions_.begin(),
+                                   zhp.contactPositions_.end());
     this->comPosition_ = zhp.comPosition_;
     this->comSpeed_ = zhp.comSpeed_;
     this->comAcceleration_ = zhp.comAcceleration_;
@@ -33,7 +36,8 @@ HeuristicParam& HeuristicParam::operator=(const HeuristicParam& zhp) {
   return *this;
 }
 
-fcl::Vec3f transform(const fcl::Vec3f& p, const fcl::Vec3f& tr, const fcl::Matrix3f& ro) {
+fcl::Vec3f transform(const fcl::Vec3f& p, const fcl::Vec3f& tr,
+                     const fcl::Matrix3f& ro) {
   fcl::Vec3f res(p[0] * ro(0, 0) + p[1] * ro(0, 1) + p[2] * ro(0, 2) + tr[0],
                  p[0] * ro(1, 0) + p[1] * ro(1, 1) + p[2] * ro(1, 2) + tr[1],
                  p[0] * ro(2, 0) + p[1] * ro(2, 1) + p[2] * ro(2, 2) + tr[2]);
@@ -84,21 +88,26 @@ Plane& Plane::operator=(const Plane& pe) {
 }
 
 fcl::Vec3f orthogonalProjection(const fcl::Vec3f& point, const Plane& plane) {
-  double k(((plane.a * point[0]) + (plane.b * point[1]) + (plane.c * point[2]) + plane.d) /
-           (std::pow(plane.a, 2) + std::pow(plane.b, 2) + std::pow(plane.c, 2)));
-  return fcl::Vec3f(point[0] - k * plane.a, point[1] - k * plane.b, point[2] - k * plane.c);
+  double k(
+      ((plane.a * point[0]) + (plane.b * point[1]) + (plane.c * point[2]) +
+       plane.d) /
+      (std::pow(plane.a, 2) + std::pow(plane.b, 2) + std::pow(plane.c, 2)));
+  return fcl::Vec3f(point[0] - k * plane.a, point[1] - k * plane.b,
+                    point[2] - k * plane.c);
 }
 
-std::vector<Vec2D> computeSupportPolygon(const std::map<std::string, fcl::Vec3f>& contactPositions) {
+std::vector<Vec2D> computeSupportPolygon(
+    const std::map<std::string, fcl::Vec3f>& contactPositions) {
   Plane h_plane(0, 0, 1, 0);  // horizontal plane
   std::vector<Vec2D> res;
-  for (std::map<std::string, fcl::Vec3f>::const_iterator cit = contactPositions.begin(); cit != contactPositions.end();
-       ++cit) {
+  for (std::map<std::string, fcl::Vec3f>::const_iterator cit =
+           contactPositions.begin();
+       cit != contactPositions.end(); ++cit) {
     fcl::Vec3f proj(orthogonalProjection(cit->second, h_plane));
     Vec2D vertex_2D(proj[0], proj[1]);
     res.push_back(vertex_2D);
-    // res.push_back(Vec2D(cit->second[0], cit->second[1])); // because the plane is horizontal, we just have to remove
-    // the z (vertical) component
+    // res.push_back(Vec2D(cit->second[0], cit->second[1])); // because the
+    // plane is horizontal, we just have to remove the z (vertical) component
   }
   return res;
 }
@@ -119,8 +128,9 @@ double computeAngle(const Vec2D& center, const Vec2D& end1, const Vec2D& end2) {
   return std::acos(sp / (norm1 * norm2));
 }
 
-void scanningProcess(const Vec2D& basePoint, std::vector<Vec2D>& subset, double& angle, const Vec2D& currentPoint,
-                     bool higher, bool direction) {
+void scanningProcess(const Vec2D& basePoint, std::vector<Vec2D>& subset,
+                     double& angle, const Vec2D& currentPoint, bool higher,
+                     bool direction) {
   // higher == true --> currentPoint is above basePoint
   // higher == false --> currentPoint is below basePoint
   // direction == true --> scan to the right
@@ -130,24 +140,35 @@ void scanningProcess(const Vec2D& basePoint, std::vector<Vec2D>& subset, double&
 
   if (subset.size() == 1) {
     // init
-    angle = computeAngle(basePoint, Vec2D(basePoint.x + direction_val, basePoint.y), currentPoint);
+    angle =
+        computeAngle(basePoint, Vec2D(basePoint.x + direction_val, basePoint.y),
+                     currentPoint);
     subset.push_back(currentPoint);
   } else if ((higher_val * currentPoint.y) >= (higher_val * subset.back().y)) {
-    double opening(computeAngle(subset.back(), Vec2D(subset.back().x + direction_val, subset.back().y), currentPoint));
+    double opening(computeAngle(
+        subset.back(), Vec2D(subset.back().x + direction_val, subset.back().y),
+        currentPoint));
     if (opening <= angle) {
       subset.push_back(currentPoint);
       angle = opening;
     } else {
       subset.pop_back();
-      opening = computeAngle(subset.back(), Vec2D(subset.back().x + direction_val, subset.back().y), currentPoint);
+      opening =
+          computeAngle(subset.back(),
+                       Vec2D(subset.back().x + direction_val, subset.back().y),
+                       currentPoint);
       bool convex(false);
       if (subset.size() == 1) convex = true;
       while (!convex) {
         Vec2D base(subset[subset.size() - 2]);
-        angle = computeAngle(base, Vec2D(base.x + direction_val, base.y), subset.back());
+        angle = computeAngle(base, Vec2D(base.x + direction_val, base.y),
+                             subset.back());
         if (angle < opening) {
           subset.pop_back();
-          opening = computeAngle(subset.back(), Vec2D(subset.back().x + direction_val, subset.back().y), currentPoint);
+          opening = computeAngle(
+              subset.back(),
+              Vec2D(subset.back().x + direction_val, subset.back().y),
+              currentPoint);
         } else
           convex = true;
         if (subset.size() == 1) convex = true;
@@ -185,12 +206,15 @@ std::vector<Vec2D> convexHull(std::vector<Vec2D> set) {
     tr_lower_set.push_back(basePoint);
     double upperAngle, lowerAngle;
     for (unsigned int i = 1; i < sortedSet.size(); ++i) {
-      if (sortedSet[i].y >= basePoint.y)  // if the point is upper than basePoint
+      if (sortedSet[i].y >=
+          basePoint.y)  // if the point is upper than basePoint
       {
-        scanningProcess(basePoint, tr_upper_set, upperAngle, sortedSet[i], true, true);
+        scanningProcess(basePoint, tr_upper_set, upperAngle, sortedSet[i], true,
+                        true);
       } else  // if the point is lower than basePoint
       {
-        scanningProcess(basePoint, tr_lower_set, lowerAngle, sortedSet[i], false, true);
+        scanningProcess(basePoint, tr_lower_set, lowerAngle, sortedSet[i],
+                        false, true);
       }
     }
 
@@ -201,16 +225,20 @@ std::vector<Vec2D> convexHull(std::vector<Vec2D> set) {
     std::vector<Vec2D> tl_lower_set;
     tl_lower_set.push_back(basePoint);
     for (int i = (int)sortedSet.size() - 2; i >= 0; --i) {
-      if (sortedSet[i].y >= basePoint.y)  // if the point is upper than basePoint
+      if (sortedSet[i].y >=
+          basePoint.y)  // if the point is upper than basePoint
       {
-        scanningProcess(basePoint, tl_upper_set, upperAngle, sortedSet[i], true, false);
+        scanningProcess(basePoint, tl_upper_set, upperAngle, sortedSet[i], true,
+                        false);
       } else  // if the point is lower than basePoint
       {
-        scanningProcess(basePoint, tl_lower_set, lowerAngle, sortedSet[i], false, false);
+        scanningProcess(basePoint, tl_lower_set, lowerAngle, sortedSet[i],
+                        false, false);
       }
     }
 
-    /* merge the four subsets without keeping the duplicates (subsets boundaries, ...) */
+    /* merge the four subsets without keeping the duplicates (subsets
+     * boundaries, ...) */
     for (unsigned int i = 0; i < tr_upper_set.size(); ++i) {
       res_tmp.push_back(tr_upper_set[i]);
     }
@@ -234,7 +262,8 @@ std::vector<Vec2D> convexHull(std::vector<Vec2D> set) {
 Vec2D weightedCentroidConvex2D(const std::vector<Vec2D>& convexPolygon) {
   if (convexPolygon.empty())
     throw std::string(
-        "Impossible to find the weighted centroid of nothing (the specified convex polygon has no vertices)");
+        "Impossible to find the weighted centroid of nothing (the specified "
+        "convex polygon has no vertices)");
 
   Vec2D res;
   if (convexPolygon.size() == 1)
@@ -244,8 +273,10 @@ Vec2D weightedCentroidConvex2D(const std::vector<Vec2D>& convexPolygon) {
     double resY((convexPolygon[0].y + convexPolygon[1].y) / 2.0);
     res = Vec2D(resX, resY);
   } else {
-    // get the longest edge and define the minimum admissible threshold for counting a vertex as a single point
-    double maxDist(Vec2D::euclideanDist(convexPolygon.back(), convexPolygon.front()));
+    // get the longest edge and define the minimum admissible threshold for
+    // counting a vertex as a single point
+    double maxDist(
+        Vec2D::euclideanDist(convexPolygon.back(), convexPolygon.front()));
     for (unsigned int i = 0; i < convexPolygon.size() - 1; ++i) {
       double dist(Vec2D::euclideanDist(convexPolygon[i], convexPolygon[i + 1]));
       if (dist > maxDist) maxDist = dist;
@@ -299,7 +330,8 @@ Vec2D weightedCentroidConvex2D(const std::vector<Vec2D>& convexPolygon) {
   return res;
 }
 
-void removeNonGroundContacts(std::map<std::string, fcl::Vec3f>& contacts, double groundThreshold) {
+void removeNonGroundContacts(std::map<std::string, fcl::Vec3f>& contacts,
+                             double groundThreshold) {
   std::map<std::string, fcl::Vec3f>::const_iterator cit = contacts.begin();
   double minZ(cit->second[2]);
   for (; cit != contacts.end(); ++cit) {
@@ -307,9 +339,11 @@ void removeNonGroundContacts(std::map<std::string, fcl::Vec3f>& contacts, double
   }
   std::vector<std::string> outOfTheGround;
   for (cit = contacts.begin(); cit != contacts.end(); ++cit) {
-    if (std::abs(cit->second[2] - minZ) > std::abs(groundThreshold)) outOfTheGround.push_back(cit->first);
+    if (std::abs(cit->second[2] - minZ) > std::abs(groundThreshold))
+      outOfTheGround.push_back(cit->first);
   }
-  for (unsigned int i = 0; i < outOfTheGround.size(); ++i) contacts.erase(outOfTheGround[i]);
+  for (unsigned int i = 0; i < outOfTheGround.size(); ++i)
+    contacts.erase(outOfTheGround[i]);
 }
 
 }  // namespace sampling

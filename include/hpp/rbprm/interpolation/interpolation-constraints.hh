@@ -19,20 +19,19 @@
 #ifndef HPP_RBPRM_INTERPOLATION_CONSTRAINTS_HH
 #define HPP_RBPRM_INTERPOLATION_CONSTRAINTS_HH
 
-#include <pinocchio/fwd.hpp>
-#include <pinocchio/multibody/frame.hpp>
-
-#include <hpp/rbprm/interpolation/time-dependant.hh>
-#include <hpp/rbprm/interpolation/time-constraint-utils.hh>
-#include <hpp/core/path.hh>
-#include <hpp/core/problem.hh>
-#include <hpp/core/config-projector.hh>
+#include <hpp/constraints/configuration-constraint.hh>
 #include <hpp/constraints/relative-com.hh>
 #include <hpp/constraints/symbolic-calculus.hh>
 #include <hpp/constraints/symbolic-function.hh>
-#include <hpp/constraints/configuration-constraint.hh>
+#include <hpp/core/config-projector.hh>
+#include <hpp/core/path.hh>
+#include <hpp/core/problem.hh>
 #include <hpp/pinocchio/configuration.hh>
 #include <hpp/pinocchio/frame.hh>
+#include <hpp/rbprm/interpolation/time-constraint-utils.hh>
+#include <hpp/rbprm/interpolation/time-dependant.hh>
+#include <pinocchio/fwd.hpp>
+#include <pinocchio/multibody/frame.hpp>
 namespace hpp {
 namespace rbprm {
 namespace interpolation {
@@ -43,20 +42,25 @@ template <class Helper_T>
 void CreateContactConstraints(const State& from, const State& to);
 
 // template<class Helper_T, typename Reference>
-// void CreateComConstraint(Helper_T& helper, const Reference& ref, const fcl::Vec3f& initTarget=fcl::Vec3f());
+// void CreateComConstraint(Helper_T& helper, const Reference& ref, const
+// fcl::Vec3f& initTarget=fcl::Vec3f());
 
 template <class Helper_T, typename Reference>
-void CreateEffectorConstraint(Helper_T& helper, const Reference& ref, const pinocchio::Frame effectorJoint,
+void CreateEffectorConstraint(Helper_T& helper, const Reference& ref,
+                              const pinocchio::Frame effectorJoint,
                               const fcl::Vec3f& initTarget = fcl::Vec3f());
 
 template <class Helper_T, typename Reference>
-void Create6DEffectorConstraint(Helper_T& helper, const Reference& ref, const pinocchio::Frame effectorJoint,
-                                const fcl::Transform3f& initTarget = fcl::Transform3f());
+void Create6DEffectorConstraint(
+    Helper_T& helper, const Reference& ref,
+    const pinocchio::Frame effectorJoint,
+    const fcl::Transform3f& initTarget = fcl::Transform3f());
 
 template <class Helper_T, typename Reference>
-void CreateOrientationConstraint(Helper_T& helper, const Reference& ref, const pinocchio::Frame effector,
-                                 const pinocchio::DevicePtr_t endEffectorDevice,
-                                 const fcl::Transform3f& initTarget = fcl::Transform3f());
+void CreateOrientationConstraint(
+    Helper_T& helper, const Reference& ref, const pinocchio::Frame effector,
+    const pinocchio::DevicePtr_t endEffectorDevice,
+    const fcl::Transform3f& initTarget = fcl::Transform3f());
 
 // Implementation
 
@@ -75,7 +79,8 @@ struct VecRightSide : public RightHandSideFunctor {
   /// \param dim dimension of the right hand side. If the dimension of
   ///        the output of ref is bigger than dim, only the first
   ///        coefficients will be used.
-  VecRightSide(const Reference ref, const int dim = 3, const bool times_ten = false)
+  VecRightSide(const Reference ref, const int dim = 3,
+               const bool times_ten = false)
       : ref_(ref), dim_(dim), times_ten_(times_ten) {}
   ~VecRightSide() {}
   /// Compute and set right hand side of constraint.
@@ -89,13 +94,16 @@ struct VecRightSide : public RightHandSideFunctor {
   /// \f[
   /// \mathbf{rhs} = \mathbf{ref} (a + u (b-a))
   /// \f]
-  virtual void operator()(constraints::ImplicitPtr_t eq, const constraints::value_type& normalized_input,
+  virtual void operator()(constraints::ImplicitPtr_t eq,
+                          const constraints::value_type& normalized_input,
                           pinocchio::ConfigurationOut_t /*conf*/) const {
     const std::pair<core::value_type, core::value_type>& tR(ref_->timeRange());
-    constraints::value_type unNormalized = (tR.second - tR.first) * normalized_input + tR.first;
+    constraints::value_type unNormalized =
+        (tR.second - tR.first) * normalized_input + tR.first;
     bool success;
     if (times_ten_) {
-      eq->rightHandSide(ref_->operator()(unNormalized, success).head(dim_));  // * (10000) ;
+      eq->rightHandSide(
+          ref_->operator()(unNormalized, success).head(dim_));  // * (10000) ;
       assert(success && "path operator () did not succeed");
     } else {
       eq->rightHandSide(ref_->operator()(unNormalized, success).head(dim_));
@@ -110,26 +118,32 @@ struct VecRightSide : public RightHandSideFunctor {
 };
 
 typedef constraints::PointCom PointCom;
-typedef constraints::CalculusBaseAbstract<PointCom::ValueType_t, PointCom::JacobianType_t> s_t;
+typedef constraints::CalculusBaseAbstract<PointCom::ValueType_t,
+                                          PointCom::JacobianType_t>
+    s_t;
 typedef constraints::SymbolicFunction<s_t> PointComFunction;
 typedef constraints::SymbolicFunction<s_t>::Ptr_t PointComFunctionPtr_t;
 
 template <class Helper_T, typename Reference>
-void CreateComConstraint(Helper_T& helper, const Reference& ref, const fcl::Vec3f& initTarget = fcl::Vec3f()) {
+void CreateComConstraint(Helper_T& helper, const Reference& ref,
+                         const fcl::Vec3f& initTarget = fcl::Vec3f()) {
   pinocchio::DevicePtr_t device = helper.rootProblem_->robot();
   // constraints::ComparisonType equals = constraints::Equality;
   core::ConfigProjectorPtr_t& proj = helper.proj_;
-  pinocchio::CenterOfMassComputationPtr_t comComp = pinocchio::CenterOfMassComputation::create(device);
+  pinocchio::CenterOfMassComputationPtr_t comComp =
+      pinocchio::CenterOfMassComputation::create(device);
   comComp->add(device->rootJoint());
   comComp->compute();
-  PointComFunctionPtr_t comFunc =
-      PointComFunction::create("COM-constraint", device, /*10000 **/ PointCom::create(comComp));
+  PointComFunctionPtr_t comFunc = PointComFunction::create(
+      "COM-constraint", device, /*10000 **/ PointCom::create(comComp));
   ComparisonTypes_t equals(3, constraints::Equality);
-  constraints::ImplicitPtr_t comEq = constraints::Implicit::create(comFunc, equals);
+  constraints::ImplicitPtr_t comEq =
+      constraints::Implicit::create(comFunc, equals);
   proj->add(comEq);
   proj->rightHandSide(comEq, initTarget);
   helper.steeringMethod_->tds_.push_back(
-      TimeDependant(comEq, std::shared_ptr<VecRightSide<Reference> >(new VecRightSide<Reference>(ref, 3, true))));
+      TimeDependant(comEq, std::shared_ptr<VecRightSide<Reference> >(
+                               new VecRightSide<Reference>(ref, 3, true))));
 }
 
 template <class Helper_T, typename Reference>
@@ -137,7 +151,8 @@ void CreatePosturalTaskConstraint(Helper_T& helper, const Reference& ref) {
   pinocchio::DevicePtr_t device = helper.rootProblem_->robot();
   // core::ComparisonTypePtr_t equals = core::Equality::create ();
   core::ConfigProjectorPtr_t& proj = helper.proj_;
-  hppDout(notice, "create postural task, ref config = " << pinocchio::displayConfig(ref));
+  hppDout(notice, "create postural task, ref config = "
+                      << pinocchio::displayConfig(ref));
   std::vector<bool> mask(device->numberDof(), false);
   Configuration_t weight(device->numberDof());
 
@@ -191,17 +206,21 @@ void CreatePosturalTaskConstraint(Helper_T& helper, const Reference& ref) {
   for (size_type i = 0; i < weight.size(); i++) weight[i] = weight[i] / moy;
 
   constraints::ConfigurationConstraintPtr_t postFunc =
-      constraints::ConfigurationConstraint::create("Postural_Task", device, ref, weight);
+      constraints::ConfigurationConstraint::create("Postural_Task", device, ref,
+                                                   weight);
   ComparisonTypes_t comps;
   comps.push_back(constraints::Equality);
-  const constraints::ImplicitPtr_t posturalTask = constraints::Implicit::create(postFunc, comps);
+  const constraints::ImplicitPtr_t posturalTask =
+      constraints::Implicit::create(postFunc, comps);
   proj->add(posturalTask, 1);
   // proj->updateRightHandSide();
 }
 
-inline constraints::PositionPtr_t createPositionMethod(pinocchio::DevicePtr_t device, const fcl::Vec3f& initTarget,
-                                                       const pinocchio::Frame effectorFrame) {
-  // std::vector<bool> mask; mask.push_back(false); mask.push_back(false); mask.push_back(true);
+inline constraints::PositionPtr_t createPositionMethod(
+    pinocchio::DevicePtr_t device, const fcl::Vec3f& initTarget,
+    const pinocchio::Frame effectorFrame) {
+  // std::vector<bool> mask; mask.push_back(false); mask.push_back(false);
+  // mask.push_back(true);
   std::vector<bool> mask;
   mask.push_back(true);
   mask.push_back(true);
@@ -211,26 +230,31 @@ inline constraints::PositionPtr_t createPositionMethod(pinocchio::DevicePtr_t de
   globalFrame = globalFrame.Identity();
   globalFrame.translation(initTarget);
   pinocchio::JointPtr_t effectorJoint = effectorFrame.joint();
-  return constraints::Position::create("", device, effectorJoint, effectorFrame.positionInParentFrame() * localFrame,
-                                       globalFrame, mask);
+  return constraints::Position::create(
+      "", device, effectorJoint,
+      effectorFrame.positionInParentFrame() * localFrame, globalFrame, mask);
 }
 
-inline constraints::OrientationPtr_t createOrientationMethod(pinocchio::DevicePtr_t device,
-                                                             const fcl::Transform3f& initTarget,
-                                                             const pinocchio::Frame effectorFrame) {
-  // std::vector<bool> mask; mask.push_back(false); mask.push_back(false); mask.push_back(true);
+inline constraints::OrientationPtr_t createOrientationMethod(
+    pinocchio::DevicePtr_t device, const fcl::Transform3f& initTarget,
+    const pinocchio::Frame effectorFrame) {
+  // std::vector<bool> mask; mask.push_back(false); mask.push_back(false);
+  // mask.push_back(true);
   std::vector<bool> mask;
   mask.push_back(true);
   mask.push_back(true);
   mask.push_back(true);
   pinocchio::JointPtr_t effectorJoint = effectorFrame.joint();
   pinocchio::Transform3f rotation(1);
-  rotation.rotation(effectorFrame.positionInParentFrame().rotation() * initTarget.getRotation());
-  return constraints::Orientation::create("", device, effectorJoint, rotation, mask);
+  rotation.rotation(effectorFrame.positionInParentFrame().rotation() *
+                    initTarget.getRotation());
+  return constraints::Orientation::create("", device, effectorJoint, rotation,
+                                          mask);
 }
 
 template <class Helper_T, typename Reference>
-void CreateEffectorConstraint(Helper_T& helper, const Reference& ref, const pinocchio::Frame effectorFr,
+void CreateEffectorConstraint(Helper_T& helper, const Reference& ref,
+                              const pinocchio::Frame effectorFr,
                               const fcl::Vec3f& initTarget) {
   pinocchio::DevicePtr_t device = helper.rootProblem_->robot();
   ComparisonTypes_t equals(3, constraints::Equality);
@@ -238,12 +262,13 @@ void CreateEffectorConstraint(Helper_T& helper, const Reference& ref, const pino
   core::ConfigProjectorPtr_t& proj = helper.proj_;
 
   pinocchio::Frame effectorFrame = device->getFrameByName(effectorFr.name());
-  constraints::ImplicitPtr_t effEq =
-      constraints::Implicit::create(createPositionMethod(device, initTarget, effectorFrame), equals);
+  constraints::ImplicitPtr_t effEq = constraints::Implicit::create(
+      createPositionMethod(device, initTarget, effectorFrame), equals);
   proj->add(effEq);
   proj->rightHandSide(effEq, initTarget);
   helper.steeringMethod_->tds_.push_back(
-      TimeDependant(effEq, std::shared_ptr<VecRightSide<Reference> >(new VecRightSide<Reference>(ref, 3))));
+      TimeDependant(effEq, std::shared_ptr<VecRightSide<Reference> >(
+                               new VecRightSide<Reference>(ref, 3))));
 }
 
 /// Time varying right hand side of constraint
@@ -260,9 +285,12 @@ struct funEvaluator : public RightHandSideFunctor {
   /// \param ref Reference path of right hand side.
   /// \param method mapping from the output space of ref to a vector
   ///        space of dimension the right hand side of the constraint.
-  funEvaluator(const Reference& ref, const fun& method) : ref_(ref), method_(method), dim_(method_->inputSize()) {}
+  funEvaluator(const Reference& ref, const fun& method)
+      : ref_(ref), method_(method), dim_(method_->inputSize()) {}
   /// Time range of reference path of right hand side
-  const std::pair<core::value_type, core::value_type> timeRange() { return ref_->timeRange(); }
+  const std::pair<core::value_type, core::value_type> timeRange() {
+    return ref_->timeRange();
+  }
   /// Compute and set right hand side of constraint
   /// \param eq Implicit constraint,
   /// \param normalized_input real valued parameter between 0 and 1,
@@ -275,13 +303,17 @@ struct funEvaluator : public RightHandSideFunctor {
   /// \mathbf{rhs} = \mathbf{M} \left(\mathbf{ref} (a + u (b-a))\right)
   /// \f]
   /// where \f$\mathbf{M}\f$ is the method provided to the constructor.
-  void operator()(constraints::ImplicitPtr_t eq, const constraints::value_type& normalized_input,
+  void operator()(constraints::ImplicitPtr_t eq,
+                  const constraints::value_type& normalized_input,
                   pinocchio::ConfigurationOut_t /*conf*/) const {
     const std::pair<core::value_type, core::value_type>& tR(ref_->timeRange());
     bool success;
     // maps from interval [0,1] to definition interval.
-    constraints::value_type unNormalized = (tR.second - tR.first) * normalized_input + tR.first;
-    eq->rightHandSide(method_->operator()((ref_->operator()(unNormalized, success))).vector());
+    constraints::value_type unNormalized =
+        (tR.second - tR.first) * normalized_input + tR.first;
+    eq->rightHandSide(
+        method_->operator()((ref_->operator()(unNormalized, success)))
+            .vector());
     assert(success && "path operator () did not succeed");
   }
 
@@ -291,45 +323,57 @@ struct funEvaluator : public RightHandSideFunctor {
 };
 
 template <class Helper_T, typename Reference>
-void CreateOrientationConstraint(Helper_T& helper, const Reference& ref, const pinocchio::Frame effectorFr,
-                                 const pinocchio::DevicePtr_t endEffectorDevice, const fcl::Transform3f& initTarget) {
+void CreateOrientationConstraint(Helper_T& helper, const Reference& ref,
+                                 const pinocchio::Frame effectorFr,
+                                 const pinocchio::DevicePtr_t endEffectorDevice,
+                                 const fcl::Transform3f& initTarget) {
   pinocchio::DevicePtr_t device = helper.rootProblem_->robot();
   ComparisonTypes_t equals;
   equals.push_back(constraints::Equality);
   core::ConfigProjectorPtr_t& proj = helper.proj_;
   pinocchio::Frame effectorFrame = device->getFrameByName(effectorFr.name());
-  constraints::OrientationPtr_t orCons = createOrientationMethod(device, initTarget, effectorFrame);
+  constraints::OrientationPtr_t orCons =
+      createOrientationMethod(device, initTarget, effectorFrame);
   constraints::OrientationPtr_t orConsRef = createOrientationMethod(
       endEffectorDevice, initTarget,
-      endEffectorDevice->getFrameByName(endEffectorDevice->rootJoint()
-                                            ->childJoint(0)
-                                            ->name()));  // same orientation constraint but for a freeflyer device that
-                                                         // represent the end effector (same dim as the ref path)
-  constraints::ImplicitPtr_t effEq = constraints::Implicit::create(orCons, equals);
+      endEffectorDevice->getFrameByName(
+          endEffectorDevice->rootJoint()
+              ->childJoint(0)
+              ->name()));  // same orientation constraint but for a freeflyer
+                           // device that represent the end effector (same dim
+                           // as the ref path)
+  constraints::ImplicitPtr_t effEq =
+      constraints::Implicit::create(orCons, equals);
   proj->add(effEq);
   // proj->updateRightHandSide();
   std::shared_ptr<funEvaluator<Reference, constraints::OrientationPtr_t> > orEv(
-      new funEvaluator<Reference, constraints::OrientationPtr_t>(ref, orConsRef));
+      new funEvaluator<Reference, constraints::OrientationPtr_t>(ref,
+                                                                 orConsRef));
   helper.steeringMethod_->tds_.push_back(TimeDependant(effEq, orEv));
 }
 
 template <class Helper_T, typename Reference>
-void Create6DEffectorConstraint(Helper_T& helper, const Reference& ref, const pinocchio::Frame effectorJoint,
+void Create6DEffectorConstraint(Helper_T& helper, const Reference& ref,
+                                const pinocchio::Frame effectorJoint,
                                 const fcl::Transform3f& initTarget) {
-  // CreateEffectorConstraint(helper, ref, effectorJoint, initTarget.getTranslation());
+  // CreateEffectorConstraint(helper, ref, effectorJoint,
+  // initTarget.getTranslation());
   pinocchio::DevicePtr_t device = helper.rootProblem_->robot();
   // reduce dof if reference path is of lower dimension
   bool success;
   if (ref->operator()(0, success).rows() < device->configSize()) {
     device = device->clone();
-    device->setDimensionExtraConfigSpace(device->extraConfigSpace().dimension() - 1);
+    device->setDimensionExtraConfigSpace(
+        device->extraConfigSpace().dimension() - 1);
   }
   ComparisonTypes_t equals;
   equals.push_back(constraints::Equality);
   core::ConfigProjectorPtr_t& proj = helper.proj_;
   pinocchio::Frame effector = device->getFrameByName(effectorJoint.name());
-  constraints::OrientationPtr_t orCons = createOrientationMethod(device, initTarget, effector);
-  constraints::ImplicitPtr_t effEq = constraints::Implicit::create(orCons, equals);
+  constraints::OrientationPtr_t orCons =
+      createOrientationMethod(device, initTarget, effector);
+  constraints::ImplicitPtr_t effEq =
+      constraints::Implicit::create(orCons, equals);
   proj->add(effEq);
   // proj->updateRightHandSide();
   std::shared_ptr<funEvaluator<Reference, constraints::OrientationPtr_t> > orEv(
@@ -337,12 +381,15 @@ void Create6DEffectorConstraint(Helper_T& helper, const Reference& ref, const pi
   helper.steeringMethod_->tds_.push_back(TimeDependant(effEq, orEv));
 }
 
-void addContactConstraints(rbprm::RbPrmFullBodyPtr_t fullBody, pinocchio::DevicePtr_t device,
-                           core::ConfigProjectorPtr_t projector, const State& state,
+void addContactConstraints(rbprm::RbPrmFullBodyPtr_t fullBody,
+                           pinocchio::DevicePtr_t device,
+                           core::ConfigProjectorPtr_t projector,
+                           const State& state,
                            const std::vector<std::string> active);
 
 template <class Helper_T>
-void CreateContactConstraints(Helper_T& helper, const State& from, const State& to) {
+void CreateContactConstraints(Helper_T& helper, const State& from,
+                              const State& to) {
   pinocchio::DevicePtr_t device = helper.rootProblem_->robot();
   std::vector<std::string> fixed = to.fixedContacts(from);
   addContactConstraints(helper.fullbody_, device, helper.proj_, from, fixed);
@@ -350,9 +397,11 @@ void CreateContactConstraints(Helper_T& helper, const State& from, const State& 
 
 std::string getEffectorLimb(const State& startState, const State& nextState);
 
-fcl::Vec3f getNormal(const std::string& effector, const State& state, bool& found);
+fcl::Vec3f getNormal(const std::string& effector, const State& state,
+                     bool& found);
 
-pinocchio::Frame getEffector(RbPrmFullBodyPtr_t fullbody, const State& startState, const State& nextState);
+pinocchio::Frame getEffector(RbPrmFullBodyPtr_t fullbody,
+                             const State& startState, const State& nextState);
 
 DevicePtr_t createFreeFlyerDevice();
 

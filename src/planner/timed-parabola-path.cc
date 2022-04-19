@@ -16,13 +16,13 @@
 // hpp-core  If not, see
 // <http://www.gnu.org/licenses/>.
 
-#include <hpp/util/debug.hh>
+#include <hpp/core/config-projector.hh>
+#include <hpp/core/straight-path.hh>
 #include <hpp/pinocchio/configuration.hh>
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/joint.hh>
-#include <hpp/core/config-projector.hh>
 #include <hpp/rbprm/planner/timed-parabola-path.hh>
-#include <hpp/core/straight-path.hh>
+#include <hpp/util/debug.hh>
 
 // coefficient[3] = theta
 // coefficient[4] = alpha
@@ -36,37 +36,50 @@ using core::vector_t;
 using pinocchio::displayConfig;
 
 /// Constructor
-TimedParabolaPath::TimedParabolaPath(const core::DevicePtr_t& robot, core::ConfigurationIn_t init,
-                                     core::ConfigurationIn_t end, ParabolaPathPtr_t parabolaPath)
+TimedParabolaPath::TimedParabolaPath(const core::DevicePtr_t& robot,
+                                     core::ConfigurationIn_t init,
+                                     core::ConfigurationIn_t end,
+                                     ParabolaPathPtr_t parabolaPath)
     : parent_t(*parabolaPath),
       device_(robot),
       initial_(init),
       end_(end),
       parabolaPath_(parabolaPath),
       length_(computeTimedLength(parabolaPath)) {
-  hppDout(notice, "timed path constructor : end = " << pinocchio::displayConfig(end_));
+  hppDout(notice,
+          "timed path constructor : end = " << pinocchio::displayConfig(end_));
 }
 
 /// Constructor
-TimedParabolaPath::TimedParabolaPath(const core::DevicePtr_t& robot, core::ConfigurationIn_t init,
-                                     core::ConfigurationIn_t end, core::value_type length, core::vector_t coefficients)
+TimedParabolaPath::TimedParabolaPath(const core::DevicePtr_t& robot,
+                                     core::ConfigurationIn_t init,
+                                     core::ConfigurationIn_t end,
+                                     core::value_type length,
+                                     core::vector_t coefficients)
     : parent_t(robot, init, end, length, coefficients),
       device_(robot),
       initial_(init),
       end_(end),
-      parabolaPath_(ParabolaPath::create(robot, init, end, length, coefficients)),
+      parabolaPath_(
+          ParabolaPath::create(robot, init, end, length, coefficients)),
       length_(computeTimedLength(parabolaPath_)) {}
 
 /// Constructor with velocities and ROMnames
-TimedParabolaPath::TimedParabolaPath(const core::DevicePtr_t& robot, core::ConfigurationIn_t init,
-                                     core::ConfigurationIn_t end, core::value_type length, core::vector_t coefs,
-                                     core::vector_t V0, core::vector_t Vimp, std::vector<std::string> initialROMnames,
+TimedParabolaPath::TimedParabolaPath(const core::DevicePtr_t& robot,
+                                     core::ConfigurationIn_t init,
+                                     core::ConfigurationIn_t end,
+                                     core::value_type length,
+                                     core::vector_t coefs, core::vector_t V0,
+                                     core::vector_t Vimp,
+                                     std::vector<std::string> initialROMnames,
                                      std::vector<std::string> endROMnames)
-    : parent_t(robot, init, end, length, coefs, V0, Vimp, initialROMnames, endROMnames),
+    : parent_t(robot, init, end, length, coefs, V0, Vimp, initialROMnames,
+               endROMnames),
       device_(robot),
       initial_(init),
       end_(end),
-      parabolaPath_(ParabolaPath::create(robot, init, end, length, coefs, V0, Vimp, initialROMnames, endROMnames)),
+      parabolaPath_(ParabolaPath::create(robot, init, end, length, coefs, V0,
+                                         Vimp, initialROMnames, endROMnames)),
       length_(computeTimedLength(parabolaPath_)) {}
 
 /// Copy constructor
@@ -82,7 +95,8 @@ TimedParabolaPath::TimedParabolaPath(const TimedParabolaPath& path)
 /// \param subInterval interval of definition of the extract path
 /// If upper bound of subInterval is smaller than lower bound,
 /// result is reversed.
-core::PathPtr_t TimedParabolaPath::extract(const core::interval_t& /*subInterval*/) const {
+core::PathPtr_t TimedParabolaPath::extract(
+    const core::interval_t& /*subInterval*/) const {
   // TODO
   throw core::projection_error("Extract is not implemented for parabola paths");
 }
@@ -92,11 +106,13 @@ core::PathPtr_t TimedParabolaPath::extract(const core::interval_t& /*subInterval
 core::PathPtr_t TimedParabolaPath::reverse() const {
   hppDout(notice, " ~ reverse timed path parabola !!!!!!!!!!!!!!!!!!!!!!");
   core::PathPtr_t reversePath = parabolaPath_->reverse();
-  ParabolaPathPtr_t paraReverse = std::dynamic_pointer_cast<ParabolaPath>(reversePath);
+  ParabolaPathPtr_t paraReverse =
+      std::dynamic_pointer_cast<ParabolaPath>(reversePath);
   return TimedParabolaPath::create(device_, end_, initial_, paraReverse);
 }
 
-double TimedParabolaPath::computeTimedLength(double x_theta, double v0, double alpha0) {
+double TimedParabolaPath::computeTimedLength(double x_theta, double v0,
+                                             double alpha0) {
   return x_theta / (v0 * cos(alpha0));
 }
 
@@ -105,11 +121,14 @@ double TimedParabolaPath::computeTimedLength(ParabolaPathPtr_t parabolaPath) {
   const value_type Y = parabolaPath->end()[1] - parabolaPath->initial()[1];
   ;
   // theta = coef[3]
-  const value_type X_theta = X * cos(parabolaPath->coefficients()[3]) + Y * sin(parabolaPath->coefficients()[3]);
-  return computeTimedLength(X_theta, parabolaPath->V0_.norm(), parabolaPath->coefficients()[4]);
+  const value_type X_theta = X * cos(parabolaPath->coefficients()[3]) +
+                             Y * sin(parabolaPath->coefficients()[3]);
+  return computeTimedLength(X_theta, parabolaPath->V0_.norm(),
+                            parabolaPath->coefficients()[4]);
 }
 
-bool TimedParabolaPath::impl_compute(core::ConfigurationOut_t result, value_type t) const {
+bool TimedParabolaPath::impl_compute(core::ConfigurationOut_t result,
+                                     value_type t) const {
   if (t == 0 || initial_(0) == end_(0)) {
     result = initial_;
     return true;
@@ -132,7 +151,9 @@ bool TimedParabolaPath::impl_compute(core::ConfigurationOut_t result, value_type
   result = (*parabolaPath_)(u, successPath);
   if (successPath) {
     // TODO : compute extraDOF
-    const size_type indexEcs = device_->configSize() - device_->extraConfigSpace().dimension();  // ecs index
+    const size_type indexEcs =
+        device_->configSize() -
+        device_->extraConfigSpace().dimension();  // ecs index
     // velocity :
     vector_t vel = parabolaPath_->evaluateVelocity(u);
     result[indexEcs] = vel[0];

@@ -16,10 +16,10 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with hpp-core.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "test-tools.hh"
+#include <Eigen/Geometry>
 #include <hpp/rbprm/rbprm-shooter.hh>
 
-#include <Eigen/Geometry>
+#include "test-tools.hh"
 
 #define BOOST_TEST_MODULE test - rbprm - shooter
 #include <boost/test/included/unit_test.hpp>
@@ -59,32 +59,37 @@ BOOST_AUTO_TEST_CASE(shooterCreationWithFilters) {
 
   std::vector<std::string> filter;
 
-  RbPrmShooterPtr_t shooter = RbPrmShooter::create(robot, collisionObjects, filter);
+  RbPrmShooterPtr_t shooter =
+      RbPrmShooter::create(robot, collisionObjects, filter);
   for (int i = 0; i < 100; ++i) {
-    BOOST_CHECK_MESSAGE(validator->validate(*(shooter->shoot()), validationReport, filter),
-                        "Reachability condition should be verified by shooter");
+    BOOST_CHECK_MESSAGE(
+        validator->validate(*(shooter->shoot()), validationReport, filter),
+        "Reachability condition should be verified by shooter");
   }
 
   filter.push_back("rom");
   shooter = RbPrmShooter::create(robot, collisionObjects, filter);
   for (int i = 0; i < 100; ++i) {
-    BOOST_CHECK_MESSAGE(validator->validate(*(shooter->shoot()), validationReport, filter),
-                        "Reachability condition should be verified by shooter");
+    BOOST_CHECK_MESSAGE(
+        validator->validate(*(shooter->shoot()), validationReport, filter),
+        "Reachability condition should be verified by shooter");
   }
 
   filter.push_back("rom2");
   shooter = RbPrmShooter::create(robot, collisionObjects, filter);
   for (int i = 0; i < 100; ++i) {
-    BOOST_CHECK_MESSAGE(validator->validate(*(shooter->shoot()), validationReport, filter),
-                        "Reachability condition should be verified by shooter");
+    BOOST_CHECK_MESSAGE(
+        validator->validate(*(shooter->shoot()), validationReport, filter),
+        "Reachability condition should be verified by shooter");
   }
 
   filter.clear();
   filter.push_back("rom2");
   shooter = RbPrmShooter::create(robot, collisionObjects, filter);
   for (int i = 0; i < 100; ++i) {
-    BOOST_CHECK_MESSAGE(validator->validate(*(shooter->shoot()), validationReport, filter),
-                        "Reachability condition should be verified by shooter");
+    BOOST_CHECK_MESSAGE(
+        validator->validate(*(shooter->shoot()), validationReport, filter),
+        "Reachability condition should be verified by shooter");
   }
 }
 
@@ -100,7 +105,8 @@ BOOST_AUTO_TEST_CASE(shooterCreationWithSO3Limits) {
 
   std::vector<std::string> filter;
 
-  RbPrmShooterPtr_t shooter = RbPrmShooter::create(robot, collisionObjects, filter);
+  RbPrmShooterPtr_t shooter =
+      RbPrmShooter::create(robot, collisionObjects, filter);
   std::vector<double> bounds;
   bounds.push_back(0);
   bounds.push_back(0);

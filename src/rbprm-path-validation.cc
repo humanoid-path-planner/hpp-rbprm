@@ -14,14 +14,14 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-rbprm. If not, see <http://www.gnu.org/licenses/>.
 
-#include <hpp/rbprm/rbprm-path-validation.hh>
-#include <hpp/core/path.hh>
-#include <hpp/rbprm/rbprm-validation.hh>
+#include <hpp/core/collision-path-validation-report.hh>
 #include <hpp/core/config-validation.hh>
 #include <hpp/core/config-validations.hh>
 #include <hpp/core/path-validation-report.hh>
+#include <hpp/core/path.hh>
 #include <hpp/core/validation-report.hh>
-#include <hpp/core/collision-path-validation-report.hh>
+#include <hpp/rbprm/rbprm-path-validation.hh>
+#include <hpp/rbprm/rbprm-validation.hh>
 
 namespace hpp {
 namespace rbprm {
@@ -29,24 +29,28 @@ namespace rbprm {
 using core::Configuration_t;
 using core::value_type;
 
-RbPrmPathValidationPtr_t RbPrmPathValidation::create(const core::DevicePtr_t& robot,
-                                                     const core::value_type& stepSize) {
+RbPrmPathValidationPtr_t RbPrmPathValidation::create(
+    const core::DevicePtr_t& robot, const core::value_type& stepSize) {
   RbPrmPathValidation* ptr(new RbPrmPathValidation(robot, stepSize));
   RbPrmPathValidationPtr_t shPtr(ptr);
   return shPtr;
 }
 
-RbPrmPathValidation::RbPrmPathValidation(const core::DevicePtr_t& /*robot*/, const core::value_type& stepSize)
+RbPrmPathValidation::RbPrmPathValidation(const core::DevicePtr_t& /*robot*/,
+                                         const core::value_type& stepSize)
     : core::pathValidation::Discretized(stepSize) {}
 
-void RbPrmPathValidation::add(const core::ConfigValidationPtr_t& configValidation) {
+void RbPrmPathValidation::add(
+    const core::ConfigValidationPtr_t& configValidation) {
   core::pathValidation::Discretized::add(configValidation);
-  rbprmValidation_ = std::dynamic_pointer_cast<RbPrmValidation>(configValidation);
+  rbprmValidation_ =
+      std::dynamic_pointer_cast<RbPrmValidation>(configValidation);
 }
 
-bool RbPrmPathValidation::validate(const core::PathPtr_t& path, bool reverse, core::PathPtr_t& validPart,
-                                   core::PathValidationReportPtr_t& validationReport,
-                                   const std::vector<std::string>& filter) {
+bool RbPrmPathValidation::validate(
+    const core::PathPtr_t& path, bool reverse, core::PathPtr_t& validPart,
+    core::PathValidationReportPtr_t& validationReport,
+    const std::vector<std::string>& filter) {
   core::ValidationReportPtr_t configReport;
   assert(path);
   bool valid = true;
@@ -60,8 +64,8 @@ bool RbPrmPathValidation::validate(const core::PathPtr_t& path, bool reverse, co
     while (finished < 2 && valid) {
       bool success = (*path)(q, t);
       if (!success || !rbprmValidation_->validate(q, configReport, filter)) {
-        validationReport =
-            core::CollisionPathValidationReportPtr_t(new core::CollisionPathValidationReport(t, configReport));
+        validationReport = core::CollisionPathValidationReportPtr_t(
+            new core::CollisionPathValidationReport(t, configReport));
         valid = false;
       } else {
         lastValidTime = t;
@@ -89,8 +93,8 @@ bool RbPrmPathValidation::validate(const core::PathPtr_t& path, bool reverse, co
     while (finished < 2 && valid) {
       bool success = (*path)(q, t);
       if (!success || !rbprmValidation_->validate(q, configReport, filter)) {
-        validationReport =
-            core::CollisionPathValidationReportPtr_t(new core::CollisionPathValidationReport(t, configReport));
+        validationReport = core::CollisionPathValidationReportPtr_t(
+            new core::CollisionPathValidationReport(t, configReport));
         valid = false;
       } else {
         lastValidTime = t;

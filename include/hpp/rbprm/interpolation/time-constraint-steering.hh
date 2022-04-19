@@ -19,12 +19,12 @@
 #ifndef HPP_TIME_CONSTRAINT_STEERING_HH
 #define HPP_TIME_CONSTRAINT_STEERING_HH
 
+#include <hpp/core/config-projector.hh>
+#include <hpp/core/distance.hh>
 #include <hpp/core/path-validation/discretized.hh>
+#include <hpp/core/problem.hh>
 #include <hpp/core/steering-method/straight.hh>
 #include <hpp/core/straight-path.hh>
-#include <hpp/core/problem.hh>
-#include <hpp/core/distance.hh>
-#include <hpp/core/config-projector.hh>
 #include <hpp/rbprm/interpolation/time-constraint-path.hh>
 #include <hpp/rbprm/interpolation/time-dependant.hh>
 
@@ -45,33 +45,41 @@ class TimeConstraintSteering : public hpp::core::steeringMethod::Straight {
 
  public:
   /// Create instance and return shared pointer
-  static TimeConstraintSteeringPtr_t create(const core::ProblemPtr_t& problem, const std::size_t pathDofRank) {
-    TimeConstraintSteering* ptr = new TimeConstraintSteering(problem, pathDofRank);
+  static TimeConstraintSteeringPtr_t create(const core::ProblemPtr_t& problem,
+                                            const std::size_t pathDofRank) {
+    TimeConstraintSteering* ptr =
+        new TimeConstraintSteering(problem, pathDofRank);
     TimeConstraintSteeringPtr_t shPtr(ptr);
     ptr->init(shPtr);
     return shPtr;
   }
   /// Create instance and return shared pointer
-  static TimeConstraintSteeringPtr_t create(const core::DevicePtr_t& device,
-                                            const core::WeighedDistancePtr_t& distance,
-                                            const std::size_t pathDofRank) HPP_CORE_DEPRECATED {
-    TimeConstraintSteering* ptr = new TimeConstraintSteering(device, distance, pathDofRank);
+  static TimeConstraintSteeringPtr_t create(
+      const core::DevicePtr_t& device,
+      const core::WeighedDistancePtr_t& distance,
+      const std::size_t pathDofRank) HPP_CORE_DEPRECATED {
+    TimeConstraintSteering* ptr =
+        new TimeConstraintSteering(device, distance, pathDofRank);
     TimeConstraintSteeringPtr_t shPtr(ptr);
     ptr->init(shPtr);
     return shPtr;
   }
   /// Copy instance and return shared pointer
-  static TimeConstraintSteeringPtr_t createCopy(const TimeConstraintSteeringPtr_t& other) {
+  static TimeConstraintSteeringPtr_t createCopy(
+      const TimeConstraintSteeringPtr_t& other) {
     TimeConstraintSteering* ptr = new TimeConstraintSteering(*other);
     TimeConstraintSteeringPtr_t shPtr(ptr);
     ptr->init(shPtr);
     return shPtr;
   }
   /// Copy instance and return shared pointer
-  virtual core::SteeringMethodPtr_t copy() const { return createCopy(weak_.lock()); }
+  virtual core::SteeringMethodPtr_t copy() const {
+    return createCopy(weak_.lock());
+  }
 
   /// create a path between two configurations
-  virtual core::PathPtr_t impl_compute(core::ConfigurationIn_t q1, core::ConfigurationIn_t q2) const {
+  virtual core::PathPtr_t impl_compute(core::ConfigurationIn_t q1,
+                                       core::ConfigurationIn_t q2) const {
     core::value_type length = problem()->distance()->operator()(q1, q2);
     core::ConstraintSetPtr_t c;
     if (constraints() && constraints()->configProjector()) {
@@ -80,15 +88,19 @@ class TimeConstraintSteering : public hpp::core::steeringMethod::Straight {
     } else {
       c = constraints();
     }
-    core::PathPtr_t path = path_t::create(problem()->robot(), q1, q2, length, c, pathDofRank_, tds_);
+    core::PathPtr_t path = path_t::create(problem()->robot(), q1, q2, length, c,
+                                          pathDofRank_, tds_);
     return path;
   }
 
  protected:
   /// Constructor with robot
   /// Weighed distance is created from robot
-  TimeConstraintSteering(const core::ProblemPtr_t& problem, const std::size_t pathDofRank)
-      : core::steeringMethod::Straight(problem), pathDofRank_(pathDofRank), weak_() {}
+  TimeConstraintSteering(const core::ProblemPtr_t& problem,
+                         const std::size_t pathDofRank)
+      : core::steeringMethod::Straight(problem),
+        pathDofRank_(pathDofRank),
+        weak_() {}
 
   /*/// Constructor with weighed distance
   TimeConstraintSteering (const core::DevicePtr_t& device,
@@ -100,7 +112,10 @@ SteeringMethod (new core::Problem (device)), pathDofRank_(pathDofRank), weak_ ()
   }*/
   /// Copy constructor
   TimeConstraintSteering(const TimeConstraintSteering& other)
-      : core::steeringMethod::Straight(other), pathDofRank_(other.pathDofRank_), weak_(), tds_(other.tds_) {}
+      : core::steeringMethod::Straight(other),
+        pathDofRank_(other.pathDofRank_),
+        weak_(),
+        tds_(other.tds_) {}
 
   /// Store weak pointer to itself
   void init(TimeConstraintSteeringWkPtr_t weak) {

@@ -19,8 +19,8 @@
 #ifndef PP_RBPRM_TIME_DEPENDANT_HH
 #define PP_RBPRM_TIME_DEPENDANT_HH
 
-#include <hpp/rbprm/config.hh>
 #include <hpp/constraints/implicit.hh>
+#include <hpp/rbprm/config.hh>
 #include <vector>
 
 namespace hpp {
@@ -32,7 +32,8 @@ struct RightHandSideFunctor {
   /// Compute and set right hand side of constraint
   /// \param eq Implicit constraint,
   /// \param input real valued parameter between 0 and 1.
-  virtual void operator()(constraints::ImplicitPtr_t eq, const constraints::value_type& input,
+  virtual void operator()(constraints::ImplicitPtr_t eq,
+                          const constraints::value_type& input,
                           pinocchio::ConfigurationOut_t conf) const = 0;
 };
 typedef std::shared_ptr<const RightHandSideFunctor> RightHandSideFunctorPtr_t;
@@ -50,16 +51,20 @@ typedef std::shared_ptr<const RightHandSideFunctor> RightHandSideFunctorPtr_t;
 struct TimeDependant {
   /// Set time varying right hand side
   /// \param s time value in interval [0,1],
-  void operator()(const constraints::value_type s, pinocchio::ConfigurationOut_t conf) const {
+  void operator()(const constraints::value_type s,
+                  pinocchio::ConfigurationOut_t conf) const {
     (*rhsFunc_)(eq_, s, conf);
   }
 
   /// Constructor
   /// \param eq implicit constraint,
   /// \param rhs time-varying right hand side.
-  TimeDependant(const constraints::ImplicitPtr_t& eq, const RightHandSideFunctorPtr_t rhs) : eq_(eq), rhsFunc_(rhs) {}
+  TimeDependant(const constraints::ImplicitPtr_t& eq,
+                const RightHandSideFunctorPtr_t rhs)
+      : eq_(eq), rhsFunc_(rhs) {}
 
-  TimeDependant(const TimeDependant& other) : eq_(other.eq_), rhsFunc_(other.rhsFunc_) {}
+  TimeDependant(const TimeDependant& other)
+      : eq_(other.eq_), rhsFunc_(other.rhsFunc_) {}
 
   constraints::ImplicitPtr_t eq_;
   RightHandSideFunctorPtr_t rhsFunc_;

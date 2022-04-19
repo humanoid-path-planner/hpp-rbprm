@@ -19,21 +19,20 @@
 #ifndef HPP_RBPRM_TIME_CONSTRAINT_UTILS_HH
 #define HPP_RBPRM_TIME_CONSTRAINT_UTILS_HH
 
+#include <hpp/core/config-projector.hh>
+#include <hpp/core/problem.hh>
 #include <hpp/rbprm/config.hh>
-#include <hpp/rbprm/tools.hh>
-#include <hpp/rbprm/rbprm-fullbody.hh>
-#include <hpp/rbprm/rbprm-state.hh>
-#include <hpp/rbprm/rbprm-device.hh>
-#include <hpp/rbprm/interpolation/time-dependant.hh>
-#include <hpp/rbprm/interpolation/time-constraint-steering.hh>
 #include <hpp/rbprm/interpolation/time-constraint-helper.hh>
 #include <hpp/rbprm/interpolation/time-constraint-path-validation.hh>
-#include <hpp/core/problem.hh>
-#include <hpp/core/config-projector.hh>
-
-#include <vector>
-#include <string>
+#include <hpp/rbprm/interpolation/time-constraint-steering.hh>
+#include <hpp/rbprm/interpolation/time-dependant.hh>
+#include <hpp/rbprm/rbprm-device.hh>
+#include <hpp/rbprm/rbprm-fullbody.hh>
+#include <hpp/rbprm/rbprm-state.hh>
+#include <hpp/rbprm/tools.hh>
 #include <map>
+#include <string>
+#include <vector>
 
 namespace hpp {
 namespace rbprm {
@@ -42,19 +41,24 @@ namespace interpolation {
 template <class Helper_T>
 void SetPathValidation(Helper_T& helper) {
   TimeConstraintPathValidationPtr_t pathVal =
-      TimeConstraintPathValidation::create(helper.fullBodyDevice_, 0.05, helper.fullBodyDevice_->configSize() - 1);
+      TimeConstraintPathValidation::create(
+          helper.fullBodyDevice_, 0.05,
+          helper.fullBodyDevice_->configSize() - 1);
   helper.rootProblem_->pathValidation(pathVal);
 }
 
 template <class Helper_T>
-core::ConfigurationPtr_t TimeConfigFromDevice(const Helper_T& helper, const State& state, const double time) {
+core::ConfigurationPtr_t TimeConfigFromDevice(const Helper_T& helper,
+                                              const State& state,
+                                              const double time) {
   core::Configuration_t config(helper.fullBodyDevice_->currentConfiguration());
   config.head(state.configuration_.rows()) = state.configuration_;
   config[config.rows() - 1] = time;
   return core::ConfigurationPtr_t(new core::Configuration_t(config));
 }
 
-inline void UpdateConstraints(core::ConfigurationOut_t configuration, const T_TimeDependant& tds,
+inline void UpdateConstraints(core::ConfigurationOut_t configuration,
+                              const T_TimeDependant& tds,
                               const std::size_t pathDofRank) {
   const core::value_type y = configuration[pathDofRank];
   for (CIT_TimeDependant cit = tds.begin(); cit != tds.end(); ++cit) {

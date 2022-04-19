@@ -27,7 +27,8 @@ namespace interpolation {
 HPP_PREDEF_CLASS(TimeConstraintPathValidation);
 
 class TimeConstraintPathValidation;
-typedef std::shared_ptr<TimeConstraintPathValidation> TimeConstraintPathValidationPtr_t;
+typedef std::shared_ptr<TimeConstraintPathValidation>
+    TimeConstraintPathValidationPtr_t;
 /// \addtogroup validation
 /// \{
 
@@ -35,17 +36,18 @@ typedef std::shared_ptr<TimeConstraintPathValidation> TimeConstraintPathValidati
 ///
 /// Apply some configuration validation algorithms at discretized values
 /// of the path parameter.
-class HPP_CORE_DLLAPI TimeConstraintPathValidation : public core::pathValidation::Discretized {
+class HPP_CORE_DLLAPI TimeConstraintPathValidation
+    : public core::pathValidation::Discretized {
  public:
-  static TimeConstraintPathValidationPtr_t create(const pinocchio::DevicePtr_t& robot,
-                                                  const pinocchio::value_type& stepSize,
-                                                  const std::size_t pathDofRank);
+  static TimeConstraintPathValidationPtr_t create(
+      const pinocchio::DevicePtr_t& robot,
+      const pinocchio::value_type& stepSize, const std::size_t pathDofRank);
 
   /// Compute the largest valid interval starting from the path beginning
-  /// In the context of the LimbRRT algoritm, a path is only valid if the extra DOF
-  /// value of the first configuration of the path is lower than
-  /// the one of the last configuration. See the documentation
-  /// of interpolateStates for details
+  /// In the context of the LimbRRT algoritm, a path is only valid if the extra
+  /// DOF value of the first configuration of the path is lower than the one of
+  /// the last configuration. See the documentation of interpolateStates for
+  /// details
   ///
   /// \param path the path to check for validity,
   /// \param reverse if true check from the end,
@@ -54,14 +56,16 @@ class HPP_CORE_DLLAPI TimeConstraintPathValidation : public core::pathValidation
   /// \retval report information about the validation process. A report
   ///         is allocated if the path is not valid.
   /// \return whether the whole path is valid.
-  virtual bool validate(const core::PathPtr_t& path, bool reverse, core::PathPtr_t& validPart,
+  virtual bool validate(const core::PathPtr_t& path, bool reverse,
+                        core::PathPtr_t& validPart,
                         core::PathValidationReportPtr_t& report);
 
  public:
   const std::size_t pathDofRank_;
 
  protected:
-  TimeConstraintPathValidation(const pinocchio::DevicePtr_t& robot, const pinocchio::value_type& stepSize,
+  TimeConstraintPathValidation(const pinocchio::DevicePtr_t& robot,
+                               const pinocchio::value_type& stepSize,
                                const std::size_t pathDofRank);
 };  // class DiscretizedPathValidation
 /// \}
