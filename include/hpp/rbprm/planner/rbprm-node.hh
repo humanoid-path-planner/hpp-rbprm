@@ -8,7 +8,7 @@
 namespace hpp {
 namespace pinocchio {
 class RbPrmDevice;  // fwd declaration of  rbprmDevice class
-typedef std::shared_ptr<RbPrmDevice> RbPrmDevicePtr_t;
+typedef shared_ptr<RbPrmDevice> RbPrmDevicePtr_t;
 }  // namespace pinocchio
 namespace core {
 

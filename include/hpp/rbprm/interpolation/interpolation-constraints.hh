@@ -142,7 +142,7 @@ void CreateComConstraint(Helper_T& helper, const Reference& ref,
   proj->add(comEq);
   proj->rightHandSide(comEq, initTarget);
   helper.steeringMethod_->tds_.push_back(
-      TimeDependant(comEq, std::shared_ptr<VecRightSide<Reference> >(
+      TimeDependant(comEq, shared_ptr<VecRightSide<Reference> >(
                                new VecRightSide<Reference>(ref, 3, true))));
 }
 
@@ -267,7 +267,7 @@ void CreateEffectorConstraint(Helper_T& helper, const Reference& ref,
   proj->add(effEq);
   proj->rightHandSide(effEq, initTarget);
   helper.steeringMethod_->tds_.push_back(
-      TimeDependant(effEq, std::shared_ptr<VecRightSide<Reference> >(
+      TimeDependant(effEq, shared_ptr<VecRightSide<Reference> >(
                                new VecRightSide<Reference>(ref, 3))));
 }
 
@@ -346,7 +346,7 @@ void CreateOrientationConstraint(Helper_T& helper, const Reference& ref,
       constraints::Implicit::create(orCons, equals);
   proj->add(effEq);
   // proj->updateRightHandSide();
-  std::shared_ptr<funEvaluator<Reference, constraints::OrientationPtr_t> > orEv(
+  shared_ptr<funEvaluator<Reference, constraints::OrientationPtr_t> > orEv(
       new funEvaluator<Reference, constraints::OrientationPtr_t>(ref,
                                                                  orConsRef));
   helper.steeringMethod_->tds_.push_back(TimeDependant(effEq, orEv));
@@ -376,7 +376,7 @@ void Create6DEffectorConstraint(Helper_T& helper, const Reference& ref,
       constraints::Implicit::create(orCons, equals);
   proj->add(effEq);
   // proj->updateRightHandSide();
-  std::shared_ptr<funEvaluator<Reference, constraints::OrientationPtr_t> > orEv(
+  shared_ptr<funEvaluator<Reference, constraints::OrientationPtr_t> > orEv(
       new funEvaluator<Reference, constraints::OrientationPtr_t>(ref, orCons));
   helper.steeringMethod_->tds_.push_back(TimeDependant(effEq, orEv));
 }

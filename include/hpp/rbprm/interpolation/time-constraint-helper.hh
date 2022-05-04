@@ -43,7 +43,7 @@ namespace interpolation {
 ///
 template <class Path_T, class ShooterFactory_T, typename ConstraintFactory_T>
 class HPP_CORE_DLLAPI TimeConstraintHelper {
-  typedef std::shared_ptr<core::pathProjector::Progressive> ProgressivePtr_t;
+  typedef shared_ptr<core::pathProjector::Progressive> ProgressivePtr_t;
   typedef core::pathProjector::Progressive Progressive;
 
  public:
@@ -96,7 +96,7 @@ class HPP_CORE_DLLAPI TimeConstraintHelper {
   core::PathPlannerPtr_t planner_;
   core::PathPtr_t refPath_;
   core::ConfigProjectorPtr_t proj_;
-  std::shared_ptr<TimeConstraintSteering<Path_T> > steeringMethod_;
+  shared_ptr<TimeConstraintSteering<Path_T> > steeringMethod_;
   const ShooterFactory_T& shooterFactory_;
   const ConstraintFactory_T& constraintFactory_;
 };

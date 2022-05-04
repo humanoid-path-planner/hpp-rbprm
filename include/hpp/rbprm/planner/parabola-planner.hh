@@ -33,7 +33,7 @@ namespace rbprm {
 // forward declaration of class Planner
 HPP_PREDEF_CLASS(ParabolaPlanner);
 // Planner objects are manipulated only via shared pointers
-typedef std::shared_ptr<ParabolaPlanner> ParabolaPlannerPtr_t;
+typedef shared_ptr<ParabolaPlanner> ParabolaPlannerPtr_t;
 typedef boost::tuple<core::NodePtr_t, core::ConfigurationPtr_t, core::PathPtr_t>
     DelayedEdge_t;
 typedef std::vector<DelayedEdge_t> DelayedEdges_t;

@@ -25,7 +25,7 @@
 namespace hpp {
 namespace pinocchio {
 class RbPrmDevice;  // fwd declaration of  rbprmDevice class
-typedef std::shared_ptr<RbPrmDevice> RbPrmDevicePtr_t;
+typedef shared_ptr<RbPrmDevice> RbPrmDevicePtr_t;
 }  // namespace pinocchio
 namespace rbprm {
 
@@ -45,7 +45,7 @@ class DynamicValidationReport : public core::ValidationReport {
 };
 
 HPP_PREDEF_CLASS(DynamicValidation);
-typedef std::shared_ptr<DynamicValidation> DynamicValidationPtr_t;
+typedef shared_ptr<DynamicValidation> DynamicValidationPtr_t;
 
 class DynamicValidation : public core::ConfigValidation {
  public:

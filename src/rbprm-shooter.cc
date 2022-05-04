@@ -36,7 +36,7 @@ using namespace fcl;
 namespace {
 static const int SIZE_EULER = 6;
 typedef fcl::BVHModel<OBBRSS> BVHModelOB;
-typedef shared_ptr<const BVHModelOB> BVHModelOBConst_Ptr_t;
+typedef fcl::shared_ptr<const BVHModelOB> BVHModelOBConst_Ptr_t;
 
 BVHModelOBConst_Ptr_t GetModel(
     const pinocchio::FclConstCollisionObjectPtr_t object) {
@@ -48,7 +48,7 @@ BVHModelOBConst_Ptr_t GetModel(
   }
   // assert(object->collisionGeometry()->getNodeType() == BV_OBBRSS);
   const BVHModelOBConst_Ptr_t model =
-      boost::static_pointer_cast<const BVHModelOB>(object->collisionGeometry());
+      static_pointer_cast<const BVHModelOB>(object->collisionGeometry());
   // assert(model->getModelType() == BVH_MODEL_TRIANGLES);
   if (model->getModelType() != BVH_MODEL_TRIANGLES) {
     hppDout(warning, "Collision model is not of type BVH_MODEL_TRIANGLES.");
@@ -431,7 +431,7 @@ void RbPrmShooter::impl_shoot(hpp::core::Configuration_t& config) const {
       HPP_START_TIMECOUNTER(SHOOT_COLLISION);
       found = validator_->validate(config, reportShPtr, filter_);
       RbprmValidationReportPtr_t report =
-          std::dynamic_pointer_cast<RbprmValidationReport>(reportShPtr);
+          dynamic_pointer_cast<RbprmValidationReport>(reportShPtr);
       bool valid = found || !report->trunkInCollision;
       HPP_STOP_TIMECOUNTER(SHOOT_COLLISION);
 
@@ -449,8 +449,7 @@ void RbPrmShooter::impl_shoot(hpp::core::Configuration_t& config) const {
           }
           HPP_START_TIMECOUNTER(SHOOT_COLLISION);
           found = validator_->validate(config, reportShPtr, filter_);
-          report =
-              std::dynamic_pointer_cast<RbprmValidationReport>(reportShPtr);
+          report = dynamic_pointer_cast<RbprmValidationReport>(reportShPtr);
           valid = found || !report->trunkInCollision;
           // found = validator_->validate(config, filter_);
           HPP_STOP_TIMECOUNTER(SHOOT_COLLISION);
@@ -459,7 +458,7 @@ void RbPrmShooter::impl_shoot(hpp::core::Configuration_t& config) const {
       } else if (!valid)  // move out of collision
       {
         // retrieve Contact information
-        report = std::dynamic_pointer_cast<RbprmValidationReport>(reportShPtr);
+        report = dynamic_pointer_cast<RbprmValidationReport>(reportShPtr);
         lastDirection = normalFromTriangleContact(report->result.getContact(0),
                                                   report->object2);
         Translate(

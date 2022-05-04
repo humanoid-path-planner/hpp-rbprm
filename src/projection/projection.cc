@@ -761,7 +761,7 @@ ProjectionReport projectToColFreeComPosition(
       hppDout(notice, "project to col free, collision test : " << res.success_);
       if (!res.success_) {
         CollisionValidationReportPtr_t repCast =
-            std::dynamic_pointer_cast<CollisionValidationReport>(report);
+            dynamic_pointer_cast<CollisionValidationReport>(report);
         hppDout(notice, "collision between " << repCast->object1->name()
                                              << " and "
                                              << repCast->object2->name());

@@ -56,9 +56,9 @@ RandomShortcutDynamicPtr_t RandomShortcutDynamic::create(
 
 RandomShortcutDynamic::RandomShortcutDynamic(core::ProblemConstPtr_t problem)
     : RandomShortcut(problem),
-      sm_(std::dynamic_pointer_cast<SteeringMethodKinodynamic>(
+      sm_(dynamic_pointer_cast<SteeringMethodKinodynamic>(
           problem->steeringMethod())),
-      rbprmPathValidation_(std::dynamic_pointer_cast<RbPrmPathValidation>(
+      rbprmPathValidation_(dynamic_pointer_cast<RbPrmPathValidation>(
           problem->pathValidation())) {
   assert(sm_ &&
          "Random-shortcut-dynamic must use a kinodynamic-steering-method");
@@ -256,7 +256,7 @@ PathPtr_t RandomShortcutDynamic::steer(ConfigurationIn_t q1,
   x1->fillNodeMatrices(
       report, rectangularContact_, sizeFootX_, sizeFootY_,
       problem()->robot()->mass(), mu_,
-      std::dynamic_pointer_cast<pinocchio::RbPrmDevice>(problem()->robot()));
+      dynamic_pointer_cast<pinocchio::RbPrmDevice>(problem()->robot()));
   // call steering method kinodynamic with the newly created node
   hppDout(notice, "Random shortucut, steering method  : ");
   PathPtr_t dp = (*sm_)(x1, q2);

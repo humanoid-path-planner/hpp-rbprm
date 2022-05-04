@@ -52,11 +52,11 @@ bool RbPrmRomValidation::validate(const Configuration_t& config,
 
   bool collision = !hpp::core::CollisionValidation::validate(config, romReport);
   // CollisionValidationReportPtr_t reportCast =
-  // boost::dynamic_pointer_cast<CollisionValidationReport>(romReport);
+  // dynamic_pointer_cast<CollisionValidationReport>(romReport);
   // hppDout(notice,"number of contacts  : "<<reportCast->result.numContacts());
   // hppDout(notice,"contact 1 "<<reportCast->result.getContact(0).pos);
   RbprmValidationReportPtr_t rbprmReport =
-      std::dynamic_pointer_cast<RbprmValidationReport>(validationReport);
+      dynamic_pointer_cast<RbprmValidationReport>(validationReport);
   if (rbprmReport) {
     // hppDout(notice,"rbprm-validation-report correctly cast");
     rbprmReport->ROMFilters.insert(std::make_pair(robot_->name(), collision));

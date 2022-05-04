@@ -39,7 +39,7 @@ HPP_PREDEF_CLASS(RbPrmLimb);
 /// Contains a SampleDB used for computing contact candidates
 ///
 class RbPrmLimb;
-typedef std::shared_ptr<RbPrmLimb> RbPrmLimbPtr_t;
+typedef shared_ptr<RbPrmLimb> RbPrmLimbPtr_t;
 typedef std::map<std::string, const rbprm::RbPrmLimbPtr_t> T_Limb;
 typedef T_Limb::const_iterator CIT_Limb;
 typedef Eigen::Matrix<pinocchio::value_type, Eigen::Dynamic, Eigen::Dynamic>

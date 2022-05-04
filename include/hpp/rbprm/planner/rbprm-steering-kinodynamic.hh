@@ -30,8 +30,7 @@ using core::Path;
 using core::Problem;
 
 HPP_PREDEF_CLASS(SteeringMethodKinodynamic);
-typedef std::shared_ptr<SteeringMethodKinodynamic>
-    SteeringMethodKinodynamicPtr_t;
+typedef shared_ptr<SteeringMethodKinodynamic> SteeringMethodKinodynamicPtr_t;
 
 class HPP_RBPRM_DLLAPI SteeringMethodKinodynamic
     : public core::steeringMethod::Kinodynamic {

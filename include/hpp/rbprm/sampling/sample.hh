@@ -34,7 +34,7 @@ HPP_PREDEF_CLASS(Sample);
 /// assumes that joints are compact, ie they all are consecutive in
 /// configuration.
 class Sample;
-typedef std::shared_ptr<Sample> SamplePtr_t;
+typedef shared_ptr<Sample> SamplePtr_t;
 
 class HPP_RBPRM_DLLAPI Sample {
  public:

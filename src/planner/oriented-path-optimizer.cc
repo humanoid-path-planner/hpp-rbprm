@@ -55,9 +55,9 @@ OrientedPathOptimizerPtr_t OrientedPathOptimizer::create(
 
 OrientedPathOptimizer::OrientedPathOptimizer(core::ProblemConstPtr_t problem)
     : PathOptimizer(problem),
-      sm_(std::dynamic_pointer_cast<SteeringMethodKinodynamic>(
+      sm_(dynamic_pointer_cast<SteeringMethodKinodynamic>(
           problem->steeringMethod())),
-      rbprmPathValidation_(std::dynamic_pointer_cast<RbPrmPathValidation>(
+      rbprmPathValidation_(dynamic_pointer_cast<RbPrmPathValidation>(
           problem->pathValidation())) {
   assert(sm_ &&
          "Random-shortcut-dynamic must use a kinodynamic-steering-method");
@@ -109,7 +109,7 @@ PathVectorPtr_t OrientedPathOptimizer::optimize(const PathVectorPtr_t& path) {
   for (std::size_t i = 0; i < numPaths; ++i) {
     orientedValid[i] = false;
     const PathPtr_t& element(path->pathAtRank(i));
-    castedPath = std::dynamic_pointer_cast<KinodynamicPath>(element);
+    castedPath = dynamic_pointer_cast<KinodynamicPath>(element);
     if (castedPath) {
       resultPaths[i] = castedPath;
       orientedPaths[i] = core::KinodynamicOrientedPath::create(
@@ -244,7 +244,7 @@ core::PathPtr_t OrientedPathOptimizer::steer(ConfigurationIn_t q1,
   x1->fillNodeMatrices(
       report, rectangularContact_, sizeFootX_, sizeFootY_,
       problem()->robot()->mass(), mu_,
-      std::dynamic_pointer_cast<pinocchio::RbPrmDevice>(problem()->robot()));
+      dynamic_pointer_cast<pinocchio::RbPrmDevice>(problem()->robot()));
 
   // call steering method kinodynamic with the newly created node
   hppDout(notice, "Random shortucut, steering method  : ");

@@ -26,7 +26,7 @@ namespace hpp {
 namespace core {
 
 HPP_PREDEF_CLASS(RbprmValidationReport);
-typedef std::shared_ptr<RbprmValidationReport> RbprmValidationReportPtr_t;
+typedef shared_ptr<RbprmValidationReport> RbprmValidationReportPtr_t;
 
 /// \addtogroup validation
 /// \{

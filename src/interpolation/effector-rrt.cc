@@ -893,11 +893,11 @@ core::PathPtr_t effectorRRTFromPath(
       assert(solutionPath->numberPaths() == 3 &&
              "Solution pathVector should have 3 paths (takeoff, mid, landing)");
       BezierPathPtr_t takeoffPath =
-          std::dynamic_pointer_cast<BezierPath>(solutionPath->pathAtRank(0));
+          dynamic_pointer_cast<BezierPath>(solutionPath->pathAtRank(0));
       BezierPathPtr_t midPath =
-          std::dynamic_pointer_cast<BezierPath>(solutionPath->pathAtRank(1));
+          dynamic_pointer_cast<BezierPath>(solutionPath->pathAtRank(1));
       BezierPathPtr_t landingPath =
-          std::dynamic_pointer_cast<BezierPath>(solutionPath->pathAtRank(2));
+          dynamic_pointer_cast<BezierPath>(solutionPath->pathAtRank(2));
       std::vector<bezier_Ptr> allRefEffector;
       allRefEffector.push_back(takeoffPath->getBezier());
       allRefEffector.push_back(midPath->getBezier());

@@ -40,8 +40,8 @@ namespace interpolation {
 template <class Path_T>
 class TimeConstraintSteering : public hpp::core::steeringMethod::Straight {
   typedef Path_T path_t;
-  typedef std::shared_ptr<TimeConstraintSteering> TimeConstraintSteeringPtr_t;
-  typedef std::weak_ptr<TimeConstraintSteering> TimeConstraintSteeringWkPtr_t;
+  typedef shared_ptr<TimeConstraintSteering> TimeConstraintSteeringPtr_t;
+  typedef weak_ptr<TimeConstraintSteering> TimeConstraintSteeringWkPtr_t;
 
  public:
   /// Create instance and return shared pointer

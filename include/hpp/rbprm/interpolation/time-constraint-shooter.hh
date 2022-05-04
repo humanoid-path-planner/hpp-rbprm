@@ -32,7 +32,7 @@ namespace hpp {
 namespace rbprm {
 namespace interpolation {
 HPP_PREDEF_CLASS(TimeConstraintShooter);
-typedef std::shared_ptr<TimeConstraintShooter> TimeConstraintShooterPtr_t;
+typedef shared_ptr<TimeConstraintShooter> TimeConstraintShooterPtr_t;
 
 /// \addtogroup configuration_sampling
 /// \{

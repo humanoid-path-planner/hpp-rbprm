@@ -239,7 +239,7 @@ void RbprmNode::fillNodeMatrices(ValidationReportPtr_t report,
   hppStartBenchmark(FILL_NODE_MATRICE);
 
   core::RbprmValidationReportPtr_t rbReport =
-      std::dynamic_pointer_cast<core::RbprmValidationReport>(report);
+      dynamic_pointer_cast<core::RbprmValidationReport>(report);
   // checks : (use assert ? )
   if (!rbReport) {
     hppDout(error, "~~ Validation Report cannot be cast");
@@ -349,11 +349,10 @@ void RbprmNode::chooseBestContactSurface(ValidationReportPtr_t report,
                                          pinocchio::RbPrmDevicePtr_t device) {
   assert(device && "Error in dynamic cast of problem device to rbprmDevice");
   core::RbprmValidationReportPtr_t rbReport =
-      std::dynamic_pointer_cast<core::RbprmValidationReport>(report);
+      dynamic_pointer_cast<core::RbprmValidationReport>(report);
   for (auto it : rbReport->ROMReports) {
     core::AllCollisionsValidationReportPtr_t romReports =
-        std::dynamic_pointer_cast<core::AllCollisionsValidationReport>(
-            it.second);
+        dynamic_pointer_cast<core::AllCollisionsValidationReport>(it.second);
     if (!romReports) {
       hppDout(
           warning,
