@@ -369,11 +369,9 @@ void DynamicPlanner::oneStep() {
 
   // ######################## now try to connect qrand to end components (in
   // reverse )######################## //
-  for (std::vector<core::ConnectedComponentPtr_t>::const_iterator itcc =
-           endComponents_.begin();
-       itcc != endComponents_.end(); ++itcc) {
+  for (auto& itcc : endComponents_) {
     hppStartBenchmark(NEAREST);
-    near = roadmap()->nearestNode(q_rand, *itcc, distance, true);
+    near = roadmap()->nearestNode(q_rand, itcc, distance, true);
     hppStopBenchmark(NEAREST);
     hppDisplayBenchmark(NEAREST);
 
@@ -487,11 +485,10 @@ void DynamicPlanner::tryConnectInitAndGoals() {
   core::NodePtr_t initNode = roadmap()->initNode();
   core::NodePtr_t x_jump;
   computeGIWC(initNode, true);
-  for (core::NodeVector_t::const_iterator itn = roadmap()->goalNodes().begin();
-       itn != roadmap()->goalNodes().end(); ++itn) {
-    computeGIWC(*itn, true);
+  for (auto& itn : roadmap()->goalNodes()) {
+    computeGIWC(itn, true);
     core::ConfigurationPtr_t q1((initNode)->configuration());
-    core::ConfigurationPtr_t q2((*itn)->configuration());
+    core::ConfigurationPtr_t q2(itn->configuration());
     assert(*q1 != *q2);
     hppStartBenchmark(EXTEND);
     path = extendInternal(qProj_, initNode, q2);
@@ -508,20 +505,20 @@ void DynamicPlanner::tryConnectInitAndGoals() {
     }
     if (projPath) {
       core::PathValidationReportPtr_t report;
-      // roadmap ()->addEdge (initNode, *itn, projPath);  // (TODO a
+      // roadmap ()->addEdge (initNode, itn, projPath);  // (TODO a
       // supprimer)display the path no matter if it's successful or not
 
       bool pathValid =
           pathValidation->validate(projPath, false, validPath, report);
 
-      // roadmap ()->addEdge (initNode, *itn, validPath);  // (TODO a
+      // roadmap ()->addEdge (initNode, itn, validPath);  // (TODO a
       // supprimer)display the path no matter if it's successful or not
 
       if (pathValid &&
           validPath->timeRange().second !=
               path->timeRange().first) {  // connection to goal config
                                           // successfull, add the edge
-        roadmap()->addEdge(initNode, *itn, projPath);
+        roadmap()->addEdge(initNode, itn, projPath);
       } else if (validPath) {
         if (tryJump_) {
           std::vector<std::string> filter;
@@ -547,7 +544,7 @@ void DynamicPlanner::tryConnectInitAndGoals() {
             if (parabolaSuccess) {
               hppDout(notice, "x_goal conf = "
                                   << displayConfig(*(x_goal->configuration())));
-              roadmap()->addEdge(x_jump, *itn, paraPath);
+              roadmap()->addEdge(x_jump, itn, paraPath);
             }
           } else {
             hppDout(notice, "trunk in collision");

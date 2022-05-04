@@ -273,14 +273,11 @@ void RbprmNode::fillNodeMatrices(ValidationReportPtr_t report,
   std::ostringstream ssContact;
   ssContact << "[";
   bool pointExist;
-  for (std::map<std::string,
-                core::CollisionValidationReportPtr_t>::const_iterator it =
-           rbReport->ROMReports.begin();
-       it != rbReport->ROMReports.end(); ++it) {
-    hppDout(info, "~~ for rom : " << it->first);
+  for (auto& it : rbReport->ROMReports) {
+    hppDout(info, "~~ for rom : " << it.first);
     geom::Point pn, contactPoint;
-    pointExist = approximateContactPoint(it->first, it->second, pn,
-                                         contactPoint, configuration(), device);
+    pointExist = approximateContactPoint(it.first, it.second, pn, contactPoint,
+                                         configuration(), device);
     ssContact << "[" << contactPoint[0] << " , " << contactPoint[1] << " , "
               << contactPoint[2] << "],";
 
@@ -353,18 +350,15 @@ void RbprmNode::chooseBestContactSurface(ValidationReportPtr_t report,
   assert(device && "Error in dynamic cast of problem device to rbprmDevice");
   core::RbprmValidationReportPtr_t rbReport =
       std::dynamic_pointer_cast<core::RbprmValidationReport>(report);
-  for (std::map<std::string,
-                core::CollisionValidationReportPtr_t>::const_iterator it =
-           rbReport->ROMReports.begin();
-       it != rbReport->ROMReports.end(); ++it) {
+  for (auto it : rbReport->ROMReports) {
     core::AllCollisionsValidationReportPtr_t romReports =
         std::dynamic_pointer_cast<core::AllCollisionsValidationReport>(
-            it->second);
+            it.second);
     if (!romReports) {
       hppDout(
           warning,
           "For rom : "
-              << it->first
+              << it.first
               << " unable to cast in a AllCollisionsValidationReport, did you "
                  "correctly call "
                  "computeAllContacts(true) before generating the report ? ");
@@ -378,9 +372,9 @@ void RbprmNode::chooseBestContactSurface(ValidationReportPtr_t report,
       // the projection 3) modify the report such that this surface is at the
       // top of the list
 
-      fcl::Vec3f reference = device->getEffectorReference(it->first);
+      fcl::Vec3f reference = device->getEffectorReference(it.first);
       hppDout(notice,
-              "Reference position for rom" << it->first << " = " << reference);
+              "Reference position for rom" << it.first << " = " << reference);
       core::ConfigurationPtr_t q = configuration();
       fcl::Transform3f tRoot;
       tRoot.setTranslation(fcl::Vec3f((*q)[0], (*q)[1], (*q)[2]));
@@ -399,11 +393,9 @@ void RbprmNode::chooseBestContactSurface(ValidationReportPtr_t report,
       geom::T_Point intersection;
       hppDout(notice, "Number of possible surfaces for rom : "
                           << romReports->collisionReports.size());
-      for (std::vector<CollisionValidationReportPtr_t>::const_iterator itAff =
-               romReports->collisionReports.begin();
-           itAff != romReports->collisionReports.end(); ++itAff) {
+      for (auto& itAff : romReports->collisionReports) {
         pinocchio::DeviceSync deviceSync(device);
-        successInter = computeIntersectionSurface(*itAff, intersection, normal,
+        successInter = computeIntersectionSurface(itAff, intersection, normal,
                                                   deviceSync.d());
         if (successInter) {
           distance = geom::projectPointInsidePlan(
@@ -411,7 +403,7 @@ void RbprmNode::chooseBestContactSurface(ValidationReportPtr_t report,
           hppDout(notice, "Distance found : " << distance);
           if (distance < minDistance) {
             minDistance = distance;
-            bestReport = *itAff;
+            bestReport = itAff;
           }
         }
       }
