@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(interpolate_path) {
 
   rbprm::T_StateFrame frams = interpolator->Interpolate(
       ps->affordanceObjects, bShooter.affFilter_, 0.01, 8, false);
-  BOOST_CHECK(frams.back().second.configuration_[0] > (root_end[0] - 0.1));
+  BOOST_CHECK(frams.back().second.configuration_[0] > (root_end[0] - 0.3));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
