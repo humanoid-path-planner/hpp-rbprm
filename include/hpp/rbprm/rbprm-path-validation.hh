@@ -28,7 +28,7 @@ namespace rbprm {
 // forward declaration
 HPP_PREDEF_CLASS(RbPrmPathValidation);
 // Planner objects are manipulated only via shared pointers
-typedef std::shared_ptr<RbPrmPathValidation> RbPrmPathValidationPtr_t;
+typedef shared_ptr<RbPrmPathValidation> RbPrmPathValidationPtr_t;
 
 class HPP_RBPRM_DLLAPI RbPrmPathValidation
     : public core::pathValidation::Discretized {

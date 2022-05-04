@@ -149,7 +149,7 @@ typedef ndcurves::exact_cubic<double, double, true,
     exact_cubic_t;
 typedef ndcurves::curve_constraints<Eigen::Matrix<value_type, 3, 1> >
     curve_constraint_t;
-typedef std::shared_ptr<exact_cubic_t> exact_cubic_Ptr;
+typedef shared_ptr<exact_cubic_t> exact_cubic_Ptr;
 
 struct SetEffectorRRTConstraints {
   SetEffectorRRTConstraints(

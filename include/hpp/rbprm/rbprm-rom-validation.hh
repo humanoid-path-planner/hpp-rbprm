@@ -27,7 +27,7 @@ namespace hpp {
 namespace rbprm {
 
 class RbPrmRomValidation;
-typedef std::shared_ptr<RbPrmRomValidation> RbPrmRomValidationPtr_t;
+typedef shared_ptr<RbPrmRomValidation> RbPrmRomValidationPtr_t;
 
 /// \addtogroup validation
 /// \{

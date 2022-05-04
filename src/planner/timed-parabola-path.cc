@@ -107,7 +107,7 @@ core::PathPtr_t TimedParabolaPath::reverse() const {
   hppDout(notice, " ~ reverse timed path parabola !!!!!!!!!!!!!!!!!!!!!!");
   core::PathPtr_t reversePath = parabolaPath_->reverse();
   ParabolaPathPtr_t paraReverse =
-      std::dynamic_pointer_cast<ParabolaPath>(reversePath);
+      dynamic_pointer_cast<ParabolaPath>(reversePath);
   return TimedParabolaPath::create(device_, end_, initial_, paraReverse);
 }
 

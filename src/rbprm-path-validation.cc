@@ -43,8 +43,7 @@ RbPrmPathValidation::RbPrmPathValidation(const core::DevicePtr_t& /*robot*/,
 void RbPrmPathValidation::add(
     const core::ConfigValidationPtr_t& configValidation) {
   core::pathValidation::Discretized::add(configValidation);
-  rbprmValidation_ =
-      std::dynamic_pointer_cast<RbPrmValidation>(configValidation);
+  rbprmValidation_ = dynamic_pointer_cast<RbPrmValidation>(configValidation);
 }
 
 bool RbPrmPathValidation::validate(

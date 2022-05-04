@@ -36,7 +36,7 @@ struct RightHandSideFunctor {
                           const constraints::value_type& input,
                           pinocchio::ConfigurationOut_t conf) const = 0;
 };
-typedef std::shared_ptr<const RightHandSideFunctor> RightHandSideFunctorPtr_t;
+typedef shared_ptr<const RightHandSideFunctor> RightHandSideFunctorPtr_t;
 
 /// Set time varying right hand side of a constraint (constraints::Implicit)
 ///

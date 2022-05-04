@@ -23,7 +23,7 @@ BVHModelOBConst_Ptr_t GetModel(
     hpp::pinocchio::DeviceData& deviceData) {
   assert(object->fcl()->collisionGeometry()->getNodeType() == fcl::BV_OBBRSS);
   const BVHModelOBConst_Ptr_t model =
-      boost::static_pointer_cast<const hpp::fcl::BVHModel<hpp::fcl::OBBRSS> >(
+      static_pointer_cast<const hpp::fcl::BVHModel<hpp::fcl::OBBRSS> >(
           object->fcl()->collisionGeometry());
   assert(model->getModelType() == hpp::fcl::BVH_MODEL_TRIANGLES);
   // todo avoid recopy, but if we keep the same ptr the geometry is changed

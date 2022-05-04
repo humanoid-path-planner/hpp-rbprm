@@ -41,7 +41,7 @@ namespace rbprm {
 // forward declaration
 HPP_PREDEF_CLASS(OrientedPathOptimizer);
 // Planner objects are manipulated only via shared pointers
-typedef std::shared_ptr<OrientedPathOptimizer> OrientedPathOptimizerPtr_t;
+typedef shared_ptr<OrientedPathOptimizer> OrientedPathOptimizerPtr_t;
 
 class OrientedPathOptimizer : public core::PathOptimizer {
  public:

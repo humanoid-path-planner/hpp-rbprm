@@ -34,7 +34,7 @@ using core::vector_t;
 // forward declaration of class
 HPP_PREDEF_CLASS(SteeringMethodParabola);
 // Planner objects are manipulated only via shared pointers
-typedef std::shared_ptr<SteeringMethodParabola> SteeringMethodParabolaPtr_t;
+typedef shared_ptr<SteeringMethodParabola> SteeringMethodParabolaPtr_t;
 
 /// Steering method that creates StraightPath instances
 ///

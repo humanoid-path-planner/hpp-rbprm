@@ -186,7 +186,7 @@ struct BindShooter {
         problemSolver->affordanceObjects;
     affMap_ = problemSolver->affordanceObjects;
     hpp::pinocchio::RbPrmDevicePtr_t robotcast =
-        std::static_pointer_cast<hpp::pinocchio::RbPrmDevice>(problem->robot());
+        static_pointer_cast<hpp::pinocchio::RbPrmDevice>(problem->robot());
     if (affMap_.map.empty()) {
       throw std::runtime_error(
           "No affordances found. Unable to create shooter object.");
@@ -203,7 +203,7 @@ struct BindShooter {
       const hpp::pinocchio::value_type& val,
       const hpp::core::ProblemSolverPtr_t problemSolver) {
     hpp::pinocchio::RbPrmDevicePtr_t robotcast =
-        std::static_pointer_cast<hpp::pinocchio::RbPrmDevice>(robot);
+        static_pointer_cast<hpp::pinocchio::RbPrmDevice>(robot);
     hpp::core::Container<hpp::core::AffordanceObjects_t> affMap_ =
         problemSolver->affordanceObjects;
     if (affMap_.map.empty()) {
@@ -227,7 +227,7 @@ struct BindShooter {
       const hpp::pinocchio::value_type& val,
       const hpp::core::ProblemSolverPtr_t problemSolver) {
     hpp::pinocchio::RbPrmDevicePtr_t robotcast =
-        std::static_pointer_cast<hpp::pinocchio::RbPrmDevice>(robot);
+        static_pointer_cast<hpp::pinocchio::RbPrmDevice>(robot);
     hpp::core::Container<hpp::core::AffordanceObjects_t> affMap_ =
         problemSolver->affordanceObjects;
     if (affMap_.map.empty()) {
@@ -294,7 +294,7 @@ hpp::core::ProblemSolverPtr_t configureRbprmProblemSolverForSupportLimbs(
 
   /*bind shooter init*/
   hpp::pinocchio::RbPrmDevicePtr_t robotcast =
-      std::static_pointer_cast<hpp::pinocchio::RbPrmDevice>(robot);
+      static_pointer_cast<hpp::pinocchio::RbPrmDevice>(robot);
   std::vector<std::string> affNames;
   affNames.push_back(std::string("Support"));
   for (std::map<std::string, DevicePtr_t>::const_iterator cit =

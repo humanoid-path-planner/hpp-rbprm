@@ -31,7 +31,7 @@ namespace rbprm {
 // forward declaration of class Planner
 HPP_PREDEF_CLASS(DynamicPlanner);
 // Planner objects are manipulated only via shared pointers
-typedef std::shared_ptr<DynamicPlanner> DynamicPlannerPtr_t;
+typedef shared_ptr<DynamicPlanner> DynamicPlannerPtr_t;
 
 using core::Configuration_t;
 using core::Path;

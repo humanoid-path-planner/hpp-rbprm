@@ -31,7 +31,7 @@ using namespace hpp;
 using namespace rbprm;
 
 bool checkPathVector(core::PathPtr_t path) {
-  core::PathVectorPtr_t pv = std::dynamic_pointer_cast<core::PathVector>(path);
+  core::PathVectorPtr_t pv = dynamic_pointer_cast<core::PathVector>(path);
   BOOST_CHECK(pv->numberPaths() > 0);
   if (pv->numberPaths() == 1) return true;
 
@@ -233,21 +233,21 @@ BOOST_AUTO_TEST_CASE(straight_line) {
   BOOST_CHECK_EQUAL(pSolver.paths().size(), 1);
   BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 8., 1e-6);
   core::PathVectorPtr_t pv =
-      std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back());
+      dynamic_pointer_cast<core::PathVector>(pSolver.paths().back());
   BOOST_CHECK_EQUAL(pv->numberPaths(), 1);
   pSolver.solve();
   BOOST_CHECK_EQUAL(pSolver.paths().size(), 3);
   BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 8., 1e-6);
   BOOST_CHECK(checkPathVector(pSolver.paths().back()));
   BOOST_CHECK(checkPath(pSolver.paths().back(), 0.5));
-  pv = std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back());
+  pv = dynamic_pointer_cast<core::PathVector>(pSolver.paths().back());
   BOOST_CHECK_EQUAL(pv->numberPaths(), 1);
   pSolver.optimizePath(pSolver.paths().back());
   BOOST_CHECK_EQUAL(pSolver.paths().size(), 4);
   BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 8., 1e-6);
   BOOST_CHECK(checkPathVector(pSolver.paths().back()));
   BOOST_CHECK(checkPath(pSolver.paths().back(), 0.5));
-  pv = std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back());
+  pv = dynamic_pointer_cast<core::PathVector>(pSolver.paths().back());
   BOOST_CHECK_EQUAL(pv->numberPaths(), 1);
 }
 
@@ -328,7 +328,7 @@ BOOST_AUTO_TEST_CASE(square_v0) {
   BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8284271247461898,
                     1e-10);
   BOOST_CHECK_EQUAL(
-      std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
+      dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
           ->numberPaths(),
       1);
 
@@ -347,7 +347,7 @@ BOOST_AUTO_TEST_CASE(square_v0) {
   BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8284271247461898,
                     1e-10);
   BOOST_CHECK_EQUAL(
-      std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
+      dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
           ->numberPaths(),
       1);
 
@@ -366,7 +366,7 @@ BOOST_AUTO_TEST_CASE(square_v0) {
   BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8284271247461898,
                     1e-10);
   BOOST_CHECK_EQUAL(
-      std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
+      dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
           ->numberPaths(),
       1);
 
@@ -385,7 +385,7 @@ BOOST_AUTO_TEST_CASE(square_v0) {
   BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8284271247461898,
                     1e-10);
   BOOST_CHECK_EQUAL(
-      std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
+      dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
           ->numberPaths(),
       1);
 
@@ -404,7 +404,7 @@ BOOST_AUTO_TEST_CASE(square_v0) {
   BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 3.4641016151377544,
                     1e-10);
   BOOST_CHECK_EQUAL(
-      std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
+      dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
           ->numberPaths(),
       1);
 
@@ -423,7 +423,7 @@ BOOST_AUTO_TEST_CASE(square_v0) {
   BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8284271247461898,
                     1e-10);
   BOOST_CHECK_EQUAL(
-      std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
+      dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
           ->numberPaths(),
       1);
 
@@ -442,7 +442,7 @@ BOOST_AUTO_TEST_CASE(square_v0) {
   BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 2.8284271247461898,
                     1e-10);
   BOOST_CHECK_EQUAL(
-      std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
+      dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
           ->numberPaths(),
       1);
 
@@ -461,7 +461,7 @@ BOOST_AUTO_TEST_CASE(square_v0) {
   BOOST_CHECK_CLOSE(pSolver.paths().back()->length(), 3.2249030993194197,
                     1e-10);
   BOOST_CHECK_EQUAL(
-      std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
+      dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
           ->numberPaths(),
       1);
 }
@@ -544,7 +544,7 @@ BOOST_AUTO_TEST_CASE(straight_velocity) {
   BOOST_CHECK(checkPathVector(pSolver.paths().back()));
   BOOST_CHECK(checkPath(pSolver.paths().back(), 1.7));
   BOOST_CHECK_EQUAL(
-      std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
+      dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
           ->numberPaths(),
       1);
 
@@ -564,7 +564,7 @@ BOOST_AUTO_TEST_CASE(straight_velocity) {
   BOOST_CHECK(checkPathVector(pSolver.paths().back()));
   BOOST_CHECK(checkPath(pSolver.paths().back(), 1.7));
   BOOST_CHECK_EQUAL(
-      std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
+      dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
           ->numberPaths(),
       1);
 
@@ -585,7 +585,7 @@ BOOST_AUTO_TEST_CASE(straight_velocity) {
   BOOST_CHECK(checkPathVector(pSolver.paths().back()));
   BOOST_CHECK(checkPath(pSolver.paths().back(), 1.7));
   BOOST_CHECK_EQUAL(
-      std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
+      dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
           ->numberPaths(),
       1);
 
@@ -605,7 +605,7 @@ BOOST_AUTO_TEST_CASE(straight_velocity) {
   BOOST_CHECK(checkPathVector(pSolver.paths().back()));
   BOOST_CHECK(checkPath(pSolver.paths().back(), 1.7));
   BOOST_CHECK_EQUAL(
-      std::dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
+      dynamic_pointer_cast<core::PathVector>(pSolver.paths().back())
           ->numberPaths(),
       1);
 }

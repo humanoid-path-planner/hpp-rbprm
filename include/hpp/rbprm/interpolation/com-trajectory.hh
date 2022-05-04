@@ -28,7 +28,7 @@ namespace hpp {
 namespace rbprm {
 namespace interpolation {
 HPP_PREDEF_CLASS(ComTrajectory);
-typedef std::shared_ptr<ComTrajectory> ComTrajectoryPtr_t;
+typedef shared_ptr<ComTrajectory> ComTrajectoryPtr_t;
 /// Linear interpolation between two configurations
 ///
 /// Degrees of freedom are interpolated depending on the type of

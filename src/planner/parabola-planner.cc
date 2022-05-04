@@ -69,7 +69,7 @@ ParabolaPlanner::ParabolaPlanner(const core::Problem& problem)
           (core::ProblemPtr_t(&problem)))),
       rbRoadmap_(
           core::RbprmRoadmap::create(problem.distance(), problem.robot())),
-      roadmap_(boost::dynamic_pointer_cast<core::Roadmap>(rbRoadmap_)) {}
+      roadmap_(hpp::dynamic_pointer_cast<core::Roadmap>(rbRoadmap_)) {}
 
 ParabolaPlanner::ParabolaPlanner(const core::Problem& problem,
                                  const core::RoadmapPtr_t& roadmap)
@@ -80,7 +80,7 @@ ParabolaPlanner::ParabolaPlanner(const core::Problem& problem,
           (core::ProblemPtr_t(&problem)))),
       rbRoadmap_(
           core::RbprmRoadmap::create(problem.distance(), problem.robot())),
-      roadmap_(boost::dynamic_pointer_cast<core::Roadmap>(rbRoadmap_)) {}
+      roadmap_(hpp::dynamic_pointer_cast<core::Roadmap>(rbRoadmap_)) {}
 
 void ParabolaPlanner::init(const ParabolaPlannerWkPtr_t& weak) {
   PathPlanner::init(weak);
@@ -196,7 +196,7 @@ void ParabolaPlanner::oneStep() {
   core::DevicePtr_t robot(problem().robot());
   core::PathValidationPtr_t pathValidation(problem().pathValidation());
   RbPrmPathValidationPtr_t rbprmPathValidation =
-      boost::dynamic_pointer_cast<RbPrmPathValidation>(pathValidation);
+      hpp::dynamic_pointer_cast<RbPrmPathValidation>(pathValidation);
   core::SteeringMethodPtr_t sm = problem().steeringMethod();
   core::Nodes_t newNodes;
   std::vector<std::string> filter;
@@ -252,7 +252,7 @@ void ParabolaPlanner::oneStep() {
             // non du tronc
             /* if(report->configurationReport)  {
               fcl::Vec3f normal ( -
-            boost::dynamic_pointer_cast<core::CollisionValidationReport>(report->configurationReport)->result.getContact(0).normal);
+            hpp::dynamic_pointer_cast<core::CollisionValidationReport>(report->configurationReport)->result.getContact(0).normal);
 
               hppDout(notice,"normal = "<<normal);
               // fill extraDof with normal :
@@ -318,7 +318,7 @@ void ParabolaPlanner::oneStep() {
         static_cast<core::RbprmNodePtr_t>(newNode);
     computeGIWC(newNodeCast);
     ParabolaPathPtr_t parabolaPath =
-        boost::dynamic_pointer_cast<ParabolaPath>(validPath);
+        hpp::dynamic_pointer_cast<ParabolaPath>(validPath);
     if (parabolaPath) {
       newNodeCast->setAlphas(parabolaPath->alpha_, parabolaPath->alphaMin_,
                              parabolaPath->alphaMax_);
@@ -371,7 +371,7 @@ core::PathPtr_t ParabolaPlanner::computeRandomParabola(
   core::PathPtr_t validPath, landingPath;
   core::PathValidationPtr_t pathValidation(problem().pathValidation());
   RbPrmPathValidationPtr_t rbprmPathValidation =
-      boost::dynamic_pointer_cast<RbPrmPathValidation>(pathValidation);
+      hpp::dynamic_pointer_cast<RbPrmPathValidation>(pathValidation);
   core::PathValidationReportPtr_t report;
   core::ConfigurationPtr_t q_start(x_start->configuration());
   value_type alpha0, v0;
@@ -392,7 +392,7 @@ core::PathPtr_t ParabolaPlanner::computeRandomParabola(
     if (contactValid) {
       hppDout(notice, "Random parabola land in obstacle");
       fcl::Vec3f normal(
-          -boost::dynamic_pointer_cast<core::CollisionValidationReport>(
+          -hpp::dynamic_pointer_cast<core::CollisionValidationReport>(
                report->configurationReport)
                ->result.getContact(0)
                .normal);
@@ -504,7 +504,7 @@ void ParabolaPlanner::tryDirectPath() {
   core::PathPtr_t validPath, path;
   std::vector<std::string> filter;
   RbPrmPathValidationPtr_t rbprmPathValidation =
-      boost::dynamic_pointer_cast<RbPrmPathValidation>(pathValidation);
+      hpp::dynamic_pointer_cast<RbPrmPathValidation>(pathValidation);
   core::NodePtr_t initNode = roadmap()->initNode();
   for (core::Nodes_t::const_iterator itn = roadmap()->goalNodes().begin();
        itn != roadmap()->goalNodes().end(); ++itn) {
@@ -571,7 +571,7 @@ void ParabolaPlanner::tryDirectPath() {
                 static_cast<core::RbprmNodePtr_t>(newNode);
             computeGIWC(newNodeCast);
             ParabolaPathPtr_t parabolaPath =
-                boost::dynamic_pointer_cast<ParabolaPath>(validPath);
+                hpp::dynamic_pointer_cast<ParabolaPath>(validPath);
             if (parabolaPath) {
               newNodeCast->setAlphas(parabolaPath->alpha_,
                                      parabolaPath->alphaMin_,
@@ -603,7 +603,7 @@ void ParabolaPlanner::configurationShooter(
   core::PathPtr_t validPath,  path;
   std::vector<std::string> filter;
   RbPrmPathValidationPtr_t rbprmPathValidation =
-boost::dynamic_pointer_cast<RbPrmPathValidation>(pathValidation);
+hpp::dynamic_pointer_cast<RbPrmPathValidation>(pathValidation);
   core::NodePtr_t initNode = roadmap ()->initNode();
   for (core::Nodes_t::const_iterator itn = roadmap ()->goalNodes ().begin();itn
 != roadmap ()->goalNodes ().end ();
@@ -687,7 +687,7 @@ void ParabolaPlanner::computeGIWC(const core::RbprmNodePtr_t node,
   hppDout(info, "~~ q = " << displayConfig(*q));
 
   core::RbprmValidationReportPtr_t rbReport =
-      boost::dynamic_pointer_cast<core::RbprmValidationReport>(report);
+      hpp::dynamic_pointer_cast<core::RbprmValidationReport>(report);
   // checks :
   if (!rbReport) {
     hppDout(error, "~~ Validation Report cannot be cast");

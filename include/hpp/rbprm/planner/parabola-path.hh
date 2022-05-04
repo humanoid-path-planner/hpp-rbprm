@@ -30,7 +30,7 @@ using core::size_type;
 // forward declaration of class
 HPP_PREDEF_CLASS(ParabolaPath);
 // Planner objects are manipulated only via shared pointers
-typedef std::shared_ptr<ParabolaPath> ParabolaPathPtr_t;
+typedef shared_ptr<ParabolaPath> ParabolaPathPtr_t;
 
 /// Linear interpolation between two configurations
 ///

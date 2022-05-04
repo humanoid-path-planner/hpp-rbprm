@@ -100,7 +100,7 @@ core::PathPtr_t SteeringMethodKinodynamic::impl_compute(
   hppDisplayBenchmark(steering_kino);
   if (!path) return core::PathPtr_t();
   core::KinodynamicPathPtr_t kinoPath =
-      std::dynamic_pointer_cast<core::KinodynamicPath>(path);
+      dynamic_pointer_cast<core::KinodynamicPath>(path);
   if (kinoPath->length() > maxLength_) {
     rejectedPath_++;
     return core::PathPtr_t();
@@ -221,7 +221,7 @@ core::PathPtr_t SteeringMethodKinodynamic::impl_compute(
 
   if (!path) return core::PathPtr_t();
   core::KinodynamicPathPtr_t kinoPath =
-      std::dynamic_pointer_cast<core::KinodynamicPath>(path);
+      dynamic_pointer_cast<core::KinodynamicPath>(path);
   if (kinoPath->length() > maxLength_) {
     rejectedPath_++;
     return core::PathPtr_t();
@@ -332,7 +332,7 @@ core::PathPtr_t SteeringMethodKinodynamic::computeDirection(
   direction = Vector3(0, 0, 0);
   if (path) {
     core::KinodynamicPathPtr_t kinoPath =
-        std::dynamic_pointer_cast<core::KinodynamicPath>(path);
+        dynamic_pointer_cast<core::KinodynamicPath>(path);
     if (kinoPath) {
       direction = kinoPath->getA1();
       direction.normalize();

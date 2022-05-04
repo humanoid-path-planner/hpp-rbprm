@@ -33,7 +33,7 @@ octomap::OcTree* generateOctree(const T_Sample& samples,
 
 typedef std::map<long int, std::vector<std::size_t> > T_VoxelSample;
 T_VoxelSample getSamplesPerVoxel(
-    const boost::shared_ptr<const octomap::OcTree>& octTree,
+    const fcl::shared_ptr<const octomap::OcTree>& octTree,
     const SampleVector_t& samples) {
   T_VoxelSample res;
   std::size_t sid = 0;
@@ -115,7 +115,7 @@ void sortDB(SampleDB& database) {
 }
 
 std::map<std::size_t, fcl::CollisionObject*> generateBoxesFromOctomap(
-    const boost::shared_ptr<const octomap::OcTree>& octTree,
+    const fcl::shared_ptr<const octomap::OcTree>& octTree,
     const fcl::OcTree* tree) {
   std::map<std::size_t, fcl::CollisionObject*> boxes;
   std::vector<boost::array<FCL_REAL, 6> > boxes_ = tree->toBoxes();
@@ -132,9 +132,8 @@ std::map<std::size_t, fcl::CollisionObject*> generateBoxesFromOctomap(
     Box* box = new Box(size, size, size);
     box->cost_density = cost;
     box->threshold_occupied = threshold;
-    fcl::CollisionObject* obj =
-        new fcl::CollisionObject(boost::shared_ptr<fcl::CollisionGeometry>(box),
-                                 fcl::Transform3f(Vec3f(x, y, z)));
+    fcl::CollisionObject* obj = new fcl::CollisionObject(
+        fcl::CollisionGeometryPtr_t(box), fcl::Transform3f(Vec3f(x, y, z)));
     boxes.insert(std::make_pair(id, obj));
   }
   return boxes;
@@ -150,7 +149,7 @@ SampleDB::SampleDB(const pinocchio::JointPtr_t limb,
       samples_(GenerateSamples(limb, effector, nbSamples, offset, limbOffset)),
       octomapTree_(generateOctree(samples_, resolution)),
       octree_(new fcl::OcTree(octomapTree_)),
-      geometry_(boost::shared_ptr<fcl::CollisionGeometry>(octree_)),
+      geometry_(fcl::CollisionGeometryPtr_t(octree_)),
       treeObject_(geometry_),
       boxes_(generateBoxesFromOctomap(octomapTree_, octree_)) {
   for (T_evaluate::const_iterator cit = data.begin(); cit != data.end();
@@ -370,7 +369,7 @@ bool hpp::rbprm::sampling::saveLimbDatabase(const SampleDB& database,
 }
 
 SampleDB::SampleDB(std::ifstream& myfile, bool loadValues)
-    : treeObject_(boost::shared_ptr<CollisionGeometry>(new fcl::Box(1, 1, 1))) {
+    : treeObject_(CollisionGeometryPtr_t(new fcl::Box(1, 1, 1))) {
   if (!myfile.good()) throw std::runtime_error("Impossible to open database");
   if (myfile.is_open()) {
     std::string line;
@@ -387,10 +386,10 @@ SampleDB::SampleDB(std::ifstream& myfile, bool loadValues)
         readValue(values_, size, myfile, line);
     }
   }
-  octomapTree_ = boost::shared_ptr<const octomap::OcTree>(
+  octomapTree_ = fcl::shared_ptr<const octomap::OcTree>(
       generateOctree(samples_, resolution_));
   octree_ = new fcl::OcTree(octomapTree_);
-  geometry_ = boost::shared_ptr<fcl::CollisionGeometry>(octree_);
+  geometry_ = fcl::CollisionGeometryPtr_t(octree_);
   treeObject_ = fcl::CollisionObject(geometry_);
   boxes_ = generateBoxesFromOctomap(octomapTree_, octree_);
   alignSampleOrderWithOctree(*this);

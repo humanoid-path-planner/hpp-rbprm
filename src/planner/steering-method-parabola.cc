@@ -72,9 +72,9 @@ core::PathPtr_t SteeringMethodParabola::compute_3D_path(
   core::PathPtr_t validPart;
   const core::PathValidationPtr_t pathValidation(problem()->pathValidation());
   RbPrmPathValidationPtr_t rbPathValidation =
-      std::dynamic_pointer_cast<RbPrmPathValidation>(pathValidation);
+      dynamic_pointer_cast<RbPrmPathValidation>(pathValidation);
   pinocchio::RbPrmDevicePtr_t rbDevice =
-      std::dynamic_pointer_cast<pinocchio::RbPrmDevice>(device_.lock());
+      dynamic_pointer_cast<pinocchio::RbPrmDevice>(device_.lock());
   core::PathValidationReportPtr_t pathReport;
   if (!rbDevice) hppDout(error, "Device cannot be cast");
   if (!rbPathValidation) hppDout(error, "PathValidation cannot be cast");
@@ -351,7 +351,7 @@ core::PathPtr_t SteeringMethodParabola::compute_random_3D_path(
     value_type *v0) const {
   const core::PathValidationPtr_t pathValidation(problem()->pathValidation());
   RbPrmPathValidationPtr_t rbPathValidation =
-      std::dynamic_pointer_cast<RbPrmPathValidation>(pathValidation);
+      dynamic_pointer_cast<RbPrmPathValidation>(pathValidation);
   std::vector<std::string> filter;
   core::PathValidationReportPtr_t report;
   core::PathPtr_t validPart;
@@ -846,7 +846,7 @@ void SteeringMethodParabola::fillROMnames(
   const core::Configuration_t config = q;
   problem()->configValidations()->validate(config, report);
   core::RbprmValidationReportPtr_t rbReport =
-      std::dynamic_pointer_cast<core::RbprmValidationReport>(report);
+      dynamic_pointer_cast<core::RbprmValidationReport>(report);
   if (rbReport) {
     hppDout(info, "nbROM= " << rbReport->ROMReports.size());
     for (std::map<std::string,

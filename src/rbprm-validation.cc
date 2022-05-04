@@ -198,7 +198,7 @@ bool RbPrmValidation::validate(
     hpp::core::ValidationReportPtr_t& validationReport,
     const std::vector<std::string>& filter) {
   CollisionValidationReportPtr_t colReport =
-      std::dynamic_pointer_cast<CollisionValidationReport>(validationReport);
+      dynamic_pointer_cast<CollisionValidationReport>(validationReport);
   if (colReport) colReport->result.clear();
 
   RbprmValidationReportPtr_t rbprmReport(new RbprmValidationReport);
@@ -208,7 +208,7 @@ bool RbPrmValidation::validate(
     rbprmReport->trunkInCollision = false;
   } else {
     colReport =
-        std::dynamic_pointer_cast<CollisionValidationReport>(validationReport);
+        dynamic_pointer_cast<CollisionValidationReport>(validationReport);
     rbprmReport->object1 = colReport->object1;
     rbprmReport->object2 = colReport->object2;
     rbprmReport->result = colReport->result;

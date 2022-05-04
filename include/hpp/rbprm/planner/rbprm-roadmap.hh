@@ -10,7 +10,7 @@ namespace hpp {
 namespace core {
 using pinocchio::displayConfig;
 HPP_PREDEF_CLASS(RbprmRoadmap);
-typedef std::shared_ptr<RbprmRoadmap> RbprmRoadmapPtr_t;
+typedef shared_ptr<RbprmRoadmap> RbprmRoadmapPtr_t;
 
 class HPP_CORE_DLLAPI RbprmRoadmap : public Roadmap {
  public:
