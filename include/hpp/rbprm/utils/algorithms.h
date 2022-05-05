@@ -2,16 +2,20 @@
 #ifndef GEOM__ALGORITHMS
 #define GEOM__ALGORITHMS
 
+#include <iostream>
+#include <vector>
+//
+#include <pinocchio/fwd.hpp>
+//
 #include <Eigen/src/Core/util/Macros.h>
+
+#include <Eigen/Dense>
+//
 #include <hpp/fcl/BVH/BVH_model.h>
 #include <hpp/fcl/collision_data.h>
 #include <hpp/fcl/collision_object.h>
 
-#include <Eigen/Dense>
 #include <hpp/pinocchio/collision-object.hh>
-#include <iostream>
-#include <pinocchio/fwd.hpp>
-#include <vector>
 
 namespace geom {
 
