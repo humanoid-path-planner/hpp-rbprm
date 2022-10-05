@@ -12,3 +12,5 @@ fb132ad5b663cb5a5a7aa17f20da2ee3129e21cd
 
 # [Format][Tests] format all tests files (Pierre Fernbach, 2020-03-24)
 45c2f75f7f780f5b0b4acb562a471c87fb27dfb2
+# pre-commit run -a (Guilhem Saurel, 2022-10-05)
+6b6b8c624b83d818a3e2765ec761fe082b9dec9b
