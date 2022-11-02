@@ -1,8 +1,4 @@
-SET(${PROJECT_NAME}_PROJECTION_HEADERS
-  projection.hh
-  )
+set(${PROJECT_NAME}_PROJECTION_HEADERS projection.hh)
 
-INSTALL(FILES
-  ${${PROJECT_NAME}_PROJECTION_HEADERS}
-  DESTINATION include/hpp/rbprm/projection
-  )
+install(FILES ${${PROJECT_NAME}_PROJECTION_HEADERS}
+        DESTINATION include/hpp/rbprm/projection)
