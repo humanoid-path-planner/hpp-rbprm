@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with hpp-core.  If not, see <http://www.gnu.org/licenses/>.
 
-//#include "test-tools.hh"
+// #include "test-tools.hh"
 
 #define BOOST_TEST_MODULE test - limb - rrt
 #include <Eigen/Geometry>
