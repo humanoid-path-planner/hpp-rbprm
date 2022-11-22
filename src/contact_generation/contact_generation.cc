@@ -474,8 +474,8 @@ sampling::T_OctreeReport CollideOctree(const ContactGenHelper& contactGenHelper,
       getAffObjectsForLimb(limbName, contactGenHelper.affordances_,
                            contactGenHelper.affFilters_);
 
-  //#pragma omp parallel for
-  // request samples which collide with each of the collision objects
+  // #pragma omp parallel for
+  //  request samples which collide with each of the collision objects
   sampling::heuristic eval = evaluate == 0 ? limb->evaluate_ : evaluate;
   std::size_t i(0);
   if (affordances.empty()) throw std::runtime_error("No aff objects found!!!");

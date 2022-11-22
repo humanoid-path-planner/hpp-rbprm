@@ -31,14 +31,14 @@
 #include <hpp/rbprm/interpolation/time-constraint-path-validation.hh>
 #include <hpp/rbprm/interpolation/time-constraint-utils.hh>
 #include <hpp/rbprm/interpolation/time-dependant.hh>
-//#include <hpp/constraints/position.hh>
-//#include <hpp/constraints/orientation.hh>
+// #include <hpp/constraints/position.hh>
+// #include <hpp/constraints/orientation.hh>
 #include <hpp/constraints/locked-joint.hh>
 #include <hpp/core/config-projector.hh>
 #include <hpp/core/path-vector.hh>
 #include <hpp/core/subchain-path.hh>
 #include <hpp/pinocchio/joint.hh>
-//#include <hpp/pinocchio/object-factory.hh>
+// #include <hpp/pinocchio/object-factory.hh>
 #include <hpp/constraints/relative-com.hh>
 #include <hpp/constraints/symbolic-calculus.hh>
 #include <hpp/constraints/symbolic-function.hh>

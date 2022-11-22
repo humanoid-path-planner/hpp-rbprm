@@ -22,7 +22,7 @@
 #include <hpp/rbprm/config.hh>
 #include <hpp/rbprm/rbprm-device.hh>
 #include <hpp/rbprm/rbprm-validation.hh>
-//# include <hpp/pinocchio/joint-configuration.hh>
+// # include <hpp/pinocchio/joint-configuration.hh>
 #include <hpp/core/configuration-shooter.hh>
 #include <vector>
 
