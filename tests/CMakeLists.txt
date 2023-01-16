@@ -20,7 +20,12 @@ set(${PROJECT_NAME}_TESTS
     # fullbody
     # interpolate
     # contact-gen
-    reachability rbrrt projection kinodynamic limb-rrt)
+    reachability
+    # rbrrt
+    projection
+    kinodynamic
+    # limb-rrt
+)
 
 foreach(NAME ${${PROJECT_NAME}_TESTS})
   add_unit_test(${NAME} "test-${NAME}.cc")
