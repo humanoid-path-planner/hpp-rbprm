@@ -176,10 +176,10 @@ RbPrmFullBodyPtr_t loadTalos() {
   const std::string rootJointType("freeflyer");
   const std::string prefix("");
   const std::string urdfPath(
-      "package://example-robot-data/robots/talos_data"
+      "package://talos_data"
       "/robots/talos_reduced.urdf");
   const std::string srdfPath(
-      "package://example-robot-data/robots/talos_data"
+      "package://talos_data"
       "/srdf/talos.srdf");
 
   hpp::pinocchio::DevicePtr_t device =
@@ -335,11 +335,10 @@ RbPrmFullBodyPtr_t loadHyQ() {
   hpp::pinocchio::DevicePtr_t device =
       hpp::pinocchio::Device::create(robotName);
 
-  hpp::pinocchio::urdf::loadModel(
-      device, 0, "", rootJointType,
-      "package://example-robot-data/robots/hyq_description/robots/"
-      "hyq_no_sensors.urdf",
-      "package://example-robot-data/robots/hyq_description/srdf/hyq.srdf");
+  hpp::pinocchio::urdf::loadModel(device, 0, "", rootJointType,
+                                  "package://hyq_description/robots/"
+                                  "hyq_no_sensors.urdf",
+                                  "package://hyq_description/srdf/hyq.srdf");
   // [-2,5, -1, 1, 0.3, 4]
 
   /*DevicePtr_t robot =
