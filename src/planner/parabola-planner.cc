@@ -585,8 +585,8 @@ void ParabolaPlanner::tryDirectPath() {
           hppDout(notice, "add delayed edge OK");
         }
       }  // else if path lenght not null
-    }    // if path exist
-  }      // for qgoals
+    }  // if path exist
+  }  // for qgoals
 }
 
 void ParabolaPlanner::configurationShooter(
